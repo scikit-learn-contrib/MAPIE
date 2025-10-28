@@ -11,19 +11,25 @@ from sklearn.utils import check_random_state
 from sklearn.utils.validation import _check_y, check_is_fitted, indexable
 
 from numpy.typing import ArrayLike, NDArray
-from mapie.conformity_scores import (BaseRegressionScore,
-                                     ResidualNormalisedScore)
+from mapie.conformity_scores import BaseRegressionScore, ResidualNormalisedScore
 from mapie.conformity_scores.utils import (
     check_regression_conformity_score,
     check_and_select_conformity_score,
 )
 from mapie.estimator.regressor import EnsembleRegressor
 from mapie.subsample import Subsample
-from mapie.utils import (_check_alpha, _check_alpha_and_n_samples,
-                         _check_cv, _check_estimator_fit_predict,
-                         _check_n_features_in, _check_n_jobs, _check_null_weight,
-                         _check_verbose, _get_effective_calibration_samples,
-                         _check_predict_params)
+from mapie.utils import (
+    _check_alpha,
+    _check_alpha_and_n_samples,
+    _check_cv,
+    _check_estimator_fit_predict,
+    _check_n_features_in,
+    _check_n_jobs,
+    _check_null_weight,
+    _check_verbose,
+    _get_effective_calibration_samples,
+    _check_predict_params,
+)
 from mapie.utils import (
     _transform_confidence_level_to_alpha_list,
     _check_if_param_in_allowed_values,
@@ -140,9 +146,7 @@ class SplitConformalRegressor:
             conformity_score=self._conformity_score,
         )
 
-        self._alphas = _transform_confidence_level_to_alpha_list(
-            confidence_level
-        )
+        self._alphas = _transform_confidence_level_to_alpha_list(confidence_level)
         self._predict_params: dict = {}
 
     def fit(
@@ -221,9 +225,7 @@ class SplitConformalRegressor:
 
         self._predict_params = _prepare_params(predict_params)
         self._mapie_regressor.fit(
-            X_conformalize,
-            y_conformalize,
-            predict_params=self._predict_params
+            X_conformalize, y_conformalize, predict_params=self._predict_params
         )
 
         self._is_conformalized = True
@@ -297,9 +299,7 @@ class SplitConformalRegressor:
             self._is_conformalized,
         )
         predictions = self._mapie_regressor.predict(
-            X,
-            alpha=None,
-            **self._predict_params
+            X, alpha=None, **self._predict_params
         )
         return _cast_point_predictions_to_ndarray(predictions)
 
@@ -401,12 +401,10 @@ class CrossConformalRegressor:
         cv: Union[int, BaseCrossValidator] = 5,
         n_jobs: Optional[int] = None,
         verbose: int = 0,
-        random_state: Optional[Union[int, np.random.RandomState]] = None
+        random_state: Optional[Union[int, np.random.RandomState]] = None,
     ) -> None:
         _check_if_param_in_allowed_values(
-            method,
-            "method",
-            CrossConformalRegressor._VALID_METHODS
+            method, "method", CrossConformalRegressor._VALID_METHODS
         )
         _check_cv_not_string(cv)
 
@@ -423,9 +421,7 @@ class CrossConformalRegressor:
             random_state=random_state,
         )
 
-        self._alphas = _transform_confidence_level_to_alpha_list(
-            confidence_level
-        )
+        self._alphas = _transform_confidence_level_to_alpha_list(confidence_level)
         self.is_fitted_and_conformalized = False
 
         self._predict_params: dict = {}
@@ -472,9 +468,7 @@ class CrossConformalRegressor:
             self.is_fitted_and_conformalized,
         )
 
-        fit_params_, sample_weight = _prepare_fit_params_and_sample_weight(
-            fit_params
-        )
+        fit_params_, sample_weight = _prepare_fit_params_and_sample_weight(fit_params)
         self._predict_params = _prepare_params(predict_params)
         self._mapie_regressor.fit(
             X,
@@ -482,7 +476,7 @@ class CrossConformalRegressor:
             sample_weight,
             groups,
             fit_params=fit_params_,
-            predict_params=self._predict_params
+            predict_params=self._predict_params,
         )
 
         self.is_fitted_and_conformalized = True
@@ -591,7 +585,10 @@ class CrossConformalRegressor:
             aggregate_predictions
         )
         predictions = self._mapie_regressor.predict(
-            X, alpha=None, ensemble=ensemble, **self._predict_params,
+            X,
+            alpha=None,
+            ensemble=ensemble,
+            **self._predict_params,
         )
         return _cast_point_predictions_to_ndarray(predictions)
 
@@ -711,14 +708,12 @@ class JackknifeAfterBootstrapRegressor:
         random_state: Optional[Union[int, np.random.RandomState]] = None,
     ) -> None:
         _check_if_param_in_allowed_values(
-            method,
-            "method",
-            JackknifeAfterBootstrapRegressor._VALID_METHODS
+            method, "method", JackknifeAfterBootstrapRegressor._VALID_METHODS
         )
         _check_if_param_in_allowed_values(
             aggregation_method,
             "aggregation_method",
-            JackknifeAfterBootstrapRegressor._VALID_AGGREGATION_METHODS
+            JackknifeAfterBootstrapRegressor._VALID_AGGREGATION_METHODS,
         )
 
         cv = self._check_and_convert_resampling_to_cv(resampling)
@@ -737,9 +732,7 @@ class JackknifeAfterBootstrapRegressor:
             random_state=random_state,
         )
 
-        self._alphas = _transform_confidence_level_to_alpha_list(
-            confidence_level
-        )
+        self._alphas = _transform_confidence_level_to_alpha_list(confidence_level)
 
         self.is_fitted_and_conformalized = False
         self._predict_params: dict = {}
@@ -782,9 +775,7 @@ class JackknifeAfterBootstrapRegressor:
             self.is_fitted_and_conformalized,
         )
 
-        fit_params_, sample_weight = _prepare_fit_params_and_sample_weight(
-            fit_params
-        )
+        fit_params_, sample_weight = _prepare_fit_params_and_sample_weight(fit_params)
         self._predict_params = _prepare_params(predict_params)
         self._mapie_regressor.fit(
             X,
@@ -891,22 +882,23 @@ class JackknifeAfterBootstrapRegressor:
         )
 
         predictions = self._mapie_regressor.predict(
-            X, alpha=None, ensemble=ensemble, **self._predict_params,
+            X,
+            alpha=None,
+            ensemble=ensemble,
+            **self._predict_params,
         )
         return _cast_point_predictions_to_ndarray(predictions)
 
     @staticmethod
     def _check_and_convert_resampling_to_cv(
-        resampling: Union[int, Subsample]
+        resampling: Union[int, Subsample],
     ) -> Subsample:
         if isinstance(resampling, int):
             cv = Subsample(n_resamplings=resampling)
         elif isinstance(resampling, Subsample):
             cv = resampling
         else:
-            raise ValueError(
-                "resampling must be an integer or a Subsample instance"
-            )
+            raise ValueError("resampling must be an integer or a Subsample instance")
         return cv
 
 
@@ -1150,9 +1142,7 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
         _check_verbose(self.verbose)
         check_random_state(self.random_state)
 
-    def _check_method(
-        self, method: str
-    ) -> str:
+    def _check_method(self, method: str) -> str:
         """
         Check if ``method`` is correct.
 
@@ -1178,9 +1168,7 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
         else:
             return method
 
-    def _check_agg_function(
-        self, agg_function: Optional[str] = None
-    ) -> Optional[str]:
+    def _check_agg_function(self, agg_function: Optional[str] = None) -> Optional[str]:
         """
         Check if ``agg_function`` is correct, and consistent with other
         arguments.
@@ -1209,9 +1197,7 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
         elif (agg_function is None) and (
             type(self.cv).__name__ in self.cv_need_agg_function_
         ):
-            raise ValueError(
-                "You need to specify an aggregation function."
-            )
+            raise ValueError("You need to specify an aggregation function.")
         elif agg_function is not None:
             return agg_function
         else:
@@ -1258,7 +1244,8 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
             return estimator
 
     def _check_ensemble(
-        self, ensemble: bool,
+        self,
+        ensemble: bool,
     ) -> None:
         """
         Check if ``ensemble`` is ``False`` and if ``self.agg_function``
@@ -1277,8 +1264,7 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
         """
         if ensemble and (self.agg_function is None):
             raise ValueError(
-                "The aggregation function has to be in "
-                f"{self.ensemble_agg_functions_}."
+                f"The aggregation function has to be in {self.ensemble_agg_functions_}."
             )
 
     def _check_fit_parameters(
@@ -1286,7 +1272,7 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
         X: ArrayLike,
         y: ArrayLike,
         sample_weight: Optional[ArrayLike] = None,
-        groups: Optional[ArrayLike] = None
+        groups: Optional[ArrayLike] = None,
     ):
         """
         Perform several checks on class parameters.
@@ -1322,16 +1308,21 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
         cv = _check_cv(
             self.cv, test_size=self.test_size, random_state=self.random_state
         )
-        if self.cv in ["split", "prefit"] and \
-                self.method in ["naive", "plus", "minmax"]:
+        if self.cv in ["split", "prefit"] and self.method in [
+            "naive",
+            "plus",
+            "minmax",
+        ]:
             self.method = "base"
         estimator = self._check_estimator(self.estimator)
         agg_function = self._check_agg_function(self.agg_function)
         cs_estimator = check_regression_conformity_score(
             self.conformity_score, self.default_sym_
         )
-        if isinstance(cs_estimator, ResidualNormalisedScore) and \
-           self.cv not in ["split", "prefit"]:
+        if isinstance(cs_estimator, ResidualNormalisedScore) and self.cv not in [
+            "split",
+            "prefit",
+        ]:
             raise ValueError(
                 "The ResidualNormalisedScore can be used only with "
                 "``SplitConformalRegressor``"
@@ -1352,10 +1343,7 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
         sample_weight = cast(Optional[NDArray], sample_weight)
         groups = cast(Optional[NDArray], groups)
 
-        return (
-            estimator, cs_estimator, agg_function, cv,
-            X, y, sample_weight, groups
-        )
+        return (estimator, cs_estimator, agg_function, cv, X, y, sample_weight, groups)
 
     def fit(
         self,
@@ -1363,7 +1351,7 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
         y: ArrayLike,
         sample_weight: Optional[ArrayLike] = None,
         groups: Optional[ArrayLike] = None,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> _MapieRegressor:
         """
         Fit estimator and compute conformity scores used for
@@ -1420,20 +1408,21 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
         y: ArrayLike,
         sample_weight: Optional[ArrayLike] = None,
         groups: Optional[ArrayLike] = None,
-        **kwargs: Any
+        **kwargs: Any,
     ):
-
-        self._fit_params = kwargs.pop('fit_params', {})
+        self._fit_params = kwargs.pop("fit_params", {})
 
         # Checks
-        (estimator,
-         self.conformity_score_function_,
-         agg_function,
-         cv,
-         X,
-         y,
-         sample_weight,
-         groups) = self._check_fit_parameters(X, y, sample_weight, groups)
+        (
+            estimator,
+            self.conformity_score_function_,
+            agg_function,
+            cv,
+            X,
+            y,
+            sample_weight,
+            groups,
+        ) = self._check_fit_parameters(X, y, sample_weight, groups)
 
         self.estimator_ = EnsembleRegressor(
             estimator,
@@ -1442,12 +1431,10 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
             agg_function,
             self.n_jobs,
             self.test_size,
-            self.verbose
+            self.verbose,
         )
 
-        return (
-            X, y, sample_weight, groups
-        )
+        return (X, y, sample_weight, groups)
 
     def fit_estimator(
         self,
@@ -1456,13 +1443,8 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
         sample_weight: Optional[ArrayLike] = None,
         groups: Optional[ArrayLike] = None,
     ) -> _MapieRegressor:
-
         self.estimator_.fit_single_estimator(
-            X,
-            y,
-            sample_weight=sample_weight,
-            groups=groups,
-            **self._fit_params
+            X, y, sample_weight=sample_weight, groups=groups, **self._fit_params
         )
 
         return self
@@ -1473,30 +1455,22 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
         y: ArrayLike,
         sample_weight: Optional[ArrayLike] = None,
         groups: Optional[ArrayLike] = None,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> _MapieRegressor:
-
-        predict_params = kwargs.pop('predict_params', {})
+        predict_params = kwargs.pop("predict_params", {})
         self._predict_params = len(predict_params) > 0
 
         self.estimator_.fit_multi_estimators(
-            X,
-            y,
-            sample_weight,
-            groups,
-            **self._fit_params
+            X, y, sample_weight, groups, **self._fit_params
         )
 
         # Predict on calibration data
-        y_pred = self.estimator_.predict_calib(
-                X, y=y, groups=groups, **predict_params
-        )
+        y_pred = self.estimator_.predict_calib(X, y=y, groups=groups, **predict_params)
 
         # Compute the conformity scores (manage jk-ab case)
-        self.conformity_scores_ = \
-            self.conformity_score_function_.get_conformity_scores(
-                y, y_pred, X=X
-            )
+        self.conformity_scores_ = self.conformity_score_function_.get_conformity_scores(
+            y, y_pred, X=X
+        )
 
         return self
 
@@ -1507,7 +1481,7 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
         alpha: Optional[Union[float, Iterable[float]]] = None,
         optimize_beta: bool = False,
         allow_infinite_bounds: bool = False,
-        **predict_params
+        **predict_params,
     ) -> Union[NDArray, Tuple[NDArray, NDArray]]:
         """
         Predict target on new samples with confidence intervals.
@@ -1570,7 +1544,7 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
               - [:, 1, :]: Upper bound of the prediction interval.
         """
         # Checks
-        if hasattr(self, '_predict_params'):
+        if hasattr(self, "_predict_params"):
             _check_predict_params(self._predict_params, predict_params, self.cv)
         check_is_fitted(self, self.fit_attributes)
         self._check_ensemble(ensemble)
@@ -1588,20 +1562,20 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
             alpha_np = cast(NDArray, alpha)
             if not allow_infinite_bounds:
                 n = _get_effective_calibration_samples(
-                    self.conformity_scores_,
-                    self.conformity_score_function_.sym
+                    self.conformity_scores_, self.conformity_score_function_.sym
                 )
                 _check_alpha_and_n_samples(alpha_np, n)
 
             # Predict the target with confidence intervals
             outputs = self.conformity_score_function_.predict_set(
-                X, alpha_np,
+                X,
+                alpha_np,
                 estimator=self.estimator_,
                 conformity_scores=self.conformity_scores_,
                 ensemble=ensemble,
                 method=self.method,
                 optimize_beta=optimize_beta,
-                allow_infinite_bounds=allow_infinite_bounds
+                allow_infinite_bounds=allow_infinite_bounds,
             )
             y_pred, y_pred_low, y_pred_up = outputs
 

@@ -12,12 +12,21 @@ from sklearn.model_selection import KFold, train_test_split
 from sklearn.pipeline import make_pipeline
 from sklearn.utils.validation import check_is_fitted
 
-from mapie.classification import _MapieClassifier, SplitConformalClassifier, \
-    CrossConformalClassifier
-from mapie.regression.regression import _MapieRegressor, SplitConformalRegressor, \
-    CrossConformalRegressor, JackknifeAfterBootstrapRegressor
-from mapie.regression.quantile_regression import _MapieQuantileRegressor, \
-    ConformalizedQuantileRegressor
+from mapie.classification import (
+    _MapieClassifier,
+    SplitConformalClassifier,
+    CrossConformalClassifier,
+)
+from mapie.regression.regression import (
+    _MapieRegressor,
+    SplitConformalRegressor,
+    CrossConformalRegressor,
+    JackknifeAfterBootstrapRegressor,
+)
+from mapie.regression.quantile_regression import (
+    _MapieQuantileRegressor,
+    ConformalizedQuantileRegressor,
+)
 
 RANDOM_STATE = 1
 
@@ -39,7 +48,10 @@ def dataset_regression():
 @pytest.fixture(scope="module")
 def dataset_classification():
     X, y = make_classification(
-        n_samples=500, n_informative=5, n_classes=4, random_state=RANDOM_STATE,
+        n_samples=500,
+        n_informative=5,
+        n_classes=4,
+        random_state=RANDOM_STATE,
     )
     X_train, X_conf_test, y_train, y_conf_test = train_test_split(
         X, y, random_state=RANDOM_STATE
@@ -52,7 +64,8 @@ def dataset_classification():
 
 def test_scr_same_predictions_prefit_not_prefit(dataset_regression) -> None:
     X_train, X_conformalize, X_test, y_train, y_conformalize, y_test = (
-        dataset_regression)
+        dataset_regression
+    )
     regressor = LinearRegression()
     regressor.fit(X_train, y_train)
     scr_prefit = SplitConformalRegressor(estimator=regressor, prefit=True)
@@ -72,30 +85,25 @@ def test_scr_same_predictions_prefit_not_prefit(dataset_regression) -> None:
             SplitConformalRegressor,
             "predict_interval",
             "dataset_regression",
-            DummyRegressor
+            DummyRegressor,
         ),
         (
             ConformalizedQuantileRegressor,
             "predict_interval",
             "dataset_regression",
-            QuantileRegressor
+            QuantileRegressor,
         ),
         (
             SplitConformalClassifier,
             "predict_set",
             "dataset_classification",
-            DummyClassifier
-        )
-    ]
+            DummyClassifier,
+        ),
+    ],
 )
 class TestWrongMethodsOrderRaisesErrorForSplitTechniques:
     def test_with_prefit_false(
-        self,
-        split_technique,
-        predict_method,
-        dataset,
-        estimator_class,
-        request
+        self, split_technique, predict_method, dataset, estimator_class, request
     ):
         dataset = request.getfixturevalue(dataset)
         X_train, X_conformalize, X_test, y_train, y_conformalize, y_test = dataset
@@ -103,24 +111,19 @@ class TestWrongMethodsOrderRaisesErrorForSplitTechniques:
         technique = split_technique(estimator=estimator, prefit=False)
 
         with pytest.raises(ValueError, match=r"call fit before calling conformalize"):
-            technique.conformalize(
-                X_conformalize,
-                y_conformalize
-            )
+            technique.conformalize(X_conformalize, y_conformalize)
 
         technique.fit(X_train, y_train)
 
         with pytest.raises(ValueError, match=r"fit method already called"):
             technique.fit(X_train, y_train)
         with pytest.raises(
-            ValueError,
-            match=r"call conformalize before calling predict"
+            ValueError, match=r"call conformalize before calling predict"
         ):
             technique.predict(X_test)
 
         with pytest.raises(
-            ValueError,
-            match=f"call conformalize before calling {predict_method}"
+            ValueError, match=f"call conformalize before calling {predict_method}"
         ):
             getattr(technique, predict_method)(X_test)
 
@@ -130,12 +133,7 @@ class TestWrongMethodsOrderRaisesErrorForSplitTechniques:
             technique.conformalize(X_conformalize, y_conformalize)
 
     def test_with_prefit_true(
-        self,
-        split_technique,
-        predict_method,
-        dataset,
-        estimator_class,
-        request
+        self, split_technique, predict_method, dataset, estimator_class, request
     ):
         dataset = request.getfixturevalue(dataset)
         X_train, X_conformalize, X_test, y_train, y_conformalize, y_test = dataset
@@ -150,14 +148,12 @@ class TestWrongMethodsOrderRaisesErrorForSplitTechniques:
         with pytest.raises(ValueError, match=r"The fit method must be skipped"):
             technique.fit(X_train, y_train)
         with pytest.raises(
-            ValueError,
-            match=r"call conformalize before calling predict"
+            ValueError, match=r"call conformalize before calling predict"
         ):
             technique.predict(X_test)
 
         with pytest.raises(
-            ValueError,
-            match=f"call conformalize before calling {predict_method}"
+            ValueError, match=f"call conformalize before calling {predict_method}"
         ):
             getattr(technique, predict_method)(X_test)
 
@@ -174,43 +170,36 @@ class TestWrongMethodsOrderRaisesErrorForSplitTechniques:
             CrossConformalRegressor,
             "predict_interval",
             "dataset_regression",
-            DummyRegressor
+            DummyRegressor,
         ),
         (
             JackknifeAfterBootstrapRegressor,
             "predict_interval",
             "dataset_regression",
-            DummyRegressor
+            DummyRegressor,
         ),
         (
             CrossConformalClassifier,
             "predict_set",
             "dataset_classification",
-            DummyClassifier
+            DummyClassifier,
         ),
-    ]
+    ],
 )
 class TestWrongMethodsOrderRaisesErrorForCrossTechniques:
     def test_wrong_methods_order(
-        self,
-        cross_technique,
-        predict_method,
-        dataset,
-        estimator_class,
-        request
+        self, cross_technique, predict_method, dataset, estimator_class, request
     ):
         dataset = request.getfixturevalue(dataset)
         X_train, X_conformalize, X_test, y_train, y_conformalize, y_test = dataset
         technique = cross_technique(estimator=estimator_class())
 
         with pytest.raises(
-            ValueError,
-            match=r"call fit_conformalize before calling predict"
+            ValueError, match=r"call fit_conformalize before calling predict"
         ):
             technique.predict(X_test)
         with pytest.raises(
-            ValueError,
-            match=f"call fit_conformalize before calling {predict_method}"
+            ValueError, match=f"call fit_conformalize before calling {predict_method}"
         ):
             getattr(technique, predict_method)(X_test)
 
@@ -221,9 +210,7 @@ class TestWrongMethodsOrderRaisesErrorForCrossTechniques:
 
 
 X_toy = np.arange(18).reshape(-1, 1)
-y_toy = np.array(
-    [0, 0, 1, 0, 1, 2, 1, 2, 2, 0, 0, 1, 0, 1, 2, 1, 2, 2]
-)
+y_toy = np.array([0, 0, 1, 0, 1, 2, 1, 2, 2, 0, 0, 1, 0, 1, 2, 1, 2, 2])
 
 
 def MapieSimpleEstimators() -> List[BaseEstimator]:
@@ -293,19 +280,14 @@ def test_no_fit_predict(MapieEstimator: BaseEstimator) -> None:
 def test_default_sample_weight(MapieEstimator: BaseEstimator) -> None:
     """Test default sample weights."""
     mapie_estimator = MapieEstimator()
-    assert (
-        signature(mapie_estimator.fit).parameters["sample_weight"].default
-        is None
-    )
+    assert signature(mapie_estimator.fit).parameters["sample_weight"].default is None
 
 
 @pytest.mark.parametrize("MapieEstimator", MapieSimpleEstimators())
 def test_default_alpha(MapieEstimator: BaseEstimator) -> None:
     """Test default alpha."""
     mapie_estimator = MapieEstimator()
-    assert (
-        signature(mapie_estimator.predict).parameters["alpha"].default is None
-    )
+    assert signature(mapie_estimator.predict).parameters["alpha"].default is None
 
 
 @pytest.mark.parametrize("pack", MapieDefaultEstimators())
@@ -326,9 +308,7 @@ def test_none_estimator(pack: Tuple[BaseEstimator, BaseEstimator]) -> None:
 
 @pytest.mark.parametrize("estimator", [0, "a", KFold(), ["a", "b"]])
 @pytest.mark.parametrize("MapieEstimator", MapieSimpleEstimators())
-def test_invalid_estimator(
-    MapieEstimator: BaseEstimator, estimator: Any
-) -> None:
+def test_invalid_estimator(MapieEstimator: BaseEstimator, estimator: Any) -> None:
     """Test that invalid estimators raise errors."""
     mapie_estimator = MapieEstimator(estimator=estimator)
     with pytest.raises(ValueError, match=r".*Invalid estimator.*"):
@@ -336,9 +316,7 @@ def test_invalid_estimator(
 
 
 @pytest.mark.parametrize("pack", MapieTestEstimators())
-def test_invalid_prefit_estimator(
-    pack: Tuple[BaseEstimator, BaseEstimator]
-) -> None:
+def test_invalid_prefit_estimator(pack: Tuple[BaseEstimator, BaseEstimator]) -> None:
     """Test that non-fitted estimator with prefit cv raise errors."""
     MapieEstimator, estimator = pack
     mapie_estimator = MapieEstimator(estimator=estimator, cv="prefit")
@@ -347,9 +325,7 @@ def test_invalid_prefit_estimator(
 
 
 @pytest.mark.parametrize("pack", MapieTestEstimators())
-def test_valid_prefit_estimator(
-    pack: Tuple[BaseEstimator, BaseEstimator]
-) -> None:
+def test_valid_prefit_estimator(pack: Tuple[BaseEstimator, BaseEstimator]) -> None:
     """Test that fitted estimators with prefit cv raise no errors."""
     MapieEstimator, estimator = pack
     estimator.fit(X_toy, y_toy)
@@ -360,9 +336,7 @@ def test_valid_prefit_estimator(
 
 
 @pytest.mark.parametrize("MapieEstimator", MapieSimpleEstimators())
-@pytest.mark.parametrize(
-    "cv", [-3.14, -2, 0, 1, "cv", LinearRegression(), [1, 2]]
-)
+@pytest.mark.parametrize("cv", [-3.14, -2, 0, 1, "cv", LinearRegression(), [1, 2]])
 def test_invalid_cv(MapieEstimator: BaseEstimator, cv: Any) -> None:
     """Test that invalid cv raise errors."""
     mapie_estimator = MapieEstimator(cv=cv)

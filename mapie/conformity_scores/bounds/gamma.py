@@ -60,10 +60,7 @@ class GammaConformityScore(BaseRegressionScore):
         return not np.any(np.less_equal(y, 0))
 
     def get_signed_conformity_scores(
-        self,
-        y: ArrayLike,
-        y_pred: ArrayLike,
-        **kwargs
+        self, y: ArrayLike, y_pred: ArrayLike, **kwargs
     ) -> NDArray:
         """
         Compute the signed conformity scores from the observed values
@@ -75,10 +72,7 @@ class GammaConformityScore(BaseRegressionScore):
         return np.divide(np.subtract(y, y_pred), y_pred)
 
     def get_estimation_distribution(
-        self,
-        y_pred: ArrayLike,
-        conformity_scores: ArrayLike,
-        **kwargs
+        self, y_pred: ArrayLike, conformity_scores: ArrayLike, **kwargs
     ) -> NDArray:
         """
         Compute samples of the estimation distribution from the predicted

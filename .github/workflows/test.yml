@@ -28,19 +28,23 @@ jobs:
             python-version: "3.9"
             numpy-version: "=1.23"
             sklearn-version: "=1.4"
+            ruff-version: "=0.14.2"
           # latest stable dependencies
           - os: ubuntu-latest
             python-version: "${{ needs.get-latest-python.outputs.latest-python }}"
             numpy-version: ""
             sklearn-version: ""
+            ruff-version: ""
           - os: windows-latest
             python-version: "${{ needs.get-latest-python.outputs.latest-python }}"
             numpy-version: ""
             sklearn-version: ""
+            ruff-version: ""
           - os: macos-latest
             python-version: "${{ needs.get-latest-python.outputs.latest-python }}"
             numpy-version: ""
             sklearn-version: ""
+            ruff-version: ""
     defaults:
       run:
         shell: bash -l {0}
@@ -55,12 +59,16 @@ jobs:
           environment-file: environment.ci.yml
           channels: defaults, conda-forge
           miniconda-version: "latest"
+      - name: Install ruff
+        run: conda install ruff${{ matrix.ruff-version }}
       - name: Install numpy
         run: conda install numpy${{ matrix.numpy-version }}
       - name: Install sklearn
         run: conda install scikit-learn${{ matrix.sklearn-version }}
       - name: Check linting
         run: make lint
+      - name: Check format
+        run: make format
       - name: Check static typing
         run: make type-check
       - name: Test and coverage with pytest

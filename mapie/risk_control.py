@@ -11,7 +11,8 @@ from typing import (
     cast,
     Callable,
     Literal,
-    List, Any,
+    List,
+    Any,
 )
 
 import numpy as np
@@ -21,8 +22,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.multioutput import MultiOutputClassifier
 from sklearn.pipeline import Pipeline
 from sklearn.utils import check_random_state
-from sklearn.utils.validation import (_check_y, _num_samples, check_is_fitted,
-                                      indexable)
+from sklearn.utils.validation import _check_y, _num_samples, check_is_fitted, indexable
 
 from numpy.typing import ArrayLike, NDArray
 from .control_risk.crc_rcps import find_lambda_star, get_r_hat_plus
@@ -162,30 +162,25 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
      [False  True False]
      [False  True False]]
     """
-    valid_methods_by_metric_ = {
-        "precision": ["ltt"],
-        "recall": ["rcps", "crc"]
-    }
+
+    valid_methods_by_metric_ = {"precision": ["ltt"], "recall": ["rcps", "crc"]}
     valid_methods = list(chain(*valid_methods_by_metric_.values()))
     valid_metric_ = list(valid_methods_by_metric_.keys())
     valid_bounds_ = ["hoeffding", "bernstein", "wsr", None]
     lambdas = np.arange(0, 1, 0.01)
     n_lambdas = len(lambdas)
-    fit_attributes = [
-        "single_estimator_",
-        "risks"
-    ]
+    fit_attributes = ["single_estimator_", "risks"]
     sigma_init = 0.25  # Value given in the paper [1]
-    cal_size = .3
+    cal_size = 0.3
 
     def __init__(
         self,
         estimator: Optional[ClassifierMixin] = None,
-        metric_control: Optional[str] = 'recall',
+        metric_control: Optional[str] = "recall",
         method: Optional[str] = None,
         n_jobs: Optional[int] = None,
         random_state: Optional[Union[int, np.random.RandomState]] = None,
-        verbose: int = 0
+        verbose: int = 0,
     ) -> None:
         self.estimator = estimator
         self.metric_control = metric_control
@@ -220,16 +215,15 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
         self.method = cast(str, self.method)
         self.metric_control = cast(str, self.metric_control)
 
-        if self.method not in self.valid_methods_by_metric_[
-            self.metric_control
-        ]:
+        if self.method not in self.valid_methods_by_metric_[self.metric_control]:
             raise ValueError(
                 "Invalid method for metric: "
-                + "You are controlling " + self.metric_control
-                + " and you are using invalid method: " + self.method
-                + ". Use instead: " + "".join(self.valid_methods_by_metric_[
-                    self.metric_control]
-                )
+                + "You are controlling "
+                + self.metric_control
+                + " and you are using invalid method: "
+                + self.method
+                + ". Use instead: "
+                + "".join(self.valid_methods_by_metric_[self.metric_control])
             )
 
     def _check_all_labelled(self, y: NDArray) -> None:
@@ -250,9 +244,7 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
         """
         if not (y.sum(axis=1) > 0).all():
             raise ValueError(
-                "Invalid y. "
-                "All observations should contain at "
-                "least one label."
+                "Invalid y. All observations should contain at least one label."
             )
 
     def _check_delta(self, delta: Optional[float]):
@@ -277,8 +269,7 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
         """
         if (not isinstance(delta, float)) and (delta is not None):
             raise ValueError(
-                "Invalid delta. "
-                f"delta must be a float, not a {type(delta)}"
+                f"Invalid delta. delta must be a float, not a {type(delta)}"
             )
         if (self.method == "rcps") or (self.method == "ltt"):
             if delta is None:
@@ -287,11 +278,8 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
                     "delta cannot be ``None`` when controlling "
                     "Recall with RCPS or Precision with LTT"
                 )
-            elif ((delta <= 0) or (delta >= 1)):
-                raise ValueError(
-                    "Invalid delta. "
-                    "delta must be in ]0, 1["
-                )
+            elif (delta <= 0) or (delta >= 1):
+                raise ValueError("Invalid delta. delta must be in ]0, 1[")
         if (self.method == "crc") and (delta is not None):
             warnings.warn(
                 "WARNING: you are using crc method, hence "
@@ -311,7 +299,8 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
             if self.valid_index[i] == []:
                 warnings.warn(
                     "Warning: LTT method has returned an empty sequence"
-                    + " for alpha=" + str(alpha[i])
+                    + " for alpha="
+                    + str(alpha[i])
                 )
 
     def _check_estimator(
@@ -363,9 +352,7 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
                 "use partial_fit."
             )
         if (estimator is None) and (_refit):
-            estimator = MultiOutputClassifier(
-                LogisticRegression()
-            )
+            estimator = MultiOutputClassifier(LogisticRegression())
             X_train, X_calib, y_train, y_calib = train_test_split(
                 X,
                 y,
@@ -449,8 +436,7 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
                 self.method = "ltt"
 
     def _transform_pred_proba(
-        self,
-        y_pred_proba: Union[Sequence[NDArray], NDArray]
+        self, y_pred_proba: Union[Sequence[NDArray], NDArray]
     ) -> NDArray:
         """If the output of the predict_proba is a list of arrays (output of
         the ``predict_proba`` of ``MultiOutputClassifier``) we transform it
@@ -470,10 +456,7 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
         if isinstance(y_pred_proba, np.ndarray):
             y_pred_proba_array = y_pred_proba
         else:
-            y_pred_proba_stacked = np.stack(
-                y_pred_proba,
-                axis=0
-            )[:, :, 1]
+            y_pred_proba_stacked = np.stack(y_pred_proba, axis=0)[:, :, 1]
             y_pred_proba_array = np.moveaxis(y_pred_proba_stacked, 0, -1)
 
         return np.expand_dims(y_pred_proba_array, axis=2)
@@ -515,10 +498,7 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
 
         X, y = indexable(X, y)
         _check_y(y, multi_output=True)
-        estimator, X, y = self._check_estimator(
-            X, y, self.estimator,
-            _refit
-        )
+        estimator, X, y = self._check_estimator(X, y, self.estimator, _refit)
 
         y = cast(NDArray, y)
         X = cast(NDArray, X)
@@ -534,13 +514,9 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
             self.theta_ = X.shape[1]
 
             if self.metric_control == "recall":
-                self.risks = compute_risk_recall(
-                    self.lambdas, y_pred_proba_array, y
-                )
+                self.risks = compute_risk_recall(self.lambdas, y_pred_proba_array, y)
             else:  # self.metric_control == "precision"
-                self.risks = compute_risk_precision(
-                    self.lambdas, y_pred_proba_array, y
-                )
+                self.risks = compute_risk_precision(self.lambdas, y_pred_proba_array, y)
         else:
             if X.shape[1] != self.theta_:
                 msg = "Number of features %d does not match previous data %d."
@@ -549,26 +525,17 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
             y_pred_proba = self.single_estimator_.predict_proba(X)
             y_pred_proba_array = self._transform_pred_proba(y_pred_proba)
             if self.metric_control == "recall":
-                partial_risk = compute_risk_recall(
-                    self.lambdas,
-                    y_pred_proba_array,
-                    y
-                )
+                partial_risk = compute_risk_recall(self.lambdas, y_pred_proba_array, y)
             else:  # self.metric_control == "precision"
                 partial_risk = compute_risk_precision(
-                    self.lambdas,
-                    y_pred_proba_array,
-                    y
+                    self.lambdas, y_pred_proba_array, y
                 )
             self.risks = np.concatenate([self.risks, partial_risk], axis=0)
 
         return self
 
     def fit(
-        self,
-        X: ArrayLike,
-        y: ArrayLike,
-        calib_size: Optional[float] = .3
+        self, X: ArrayLike, y: ArrayLike, calib_size: Optional[float] = 0.3
     ) -> PrecisionRecallController:
         """
         Fit the base estimator (or use the fitted base estimator) and compute risks.
@@ -600,7 +567,7 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
         X: ArrayLike,
         alpha: Optional[Union[float, Iterable[float]]] = None,
         delta: Optional[float] = None,
-        bound: Optional[Union[str, None]] = None
+        bound: Optional[Union[str, None]] = None,
     ) -> Union[NDArray, Tuple[NDArray, NDArray]]:
         """
         Prediction sets on new samples based on the target risk level.
@@ -660,40 +627,34 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
         y_pred_proba = self.single_estimator_.predict_proba(X)
 
         y_pred_proba_array = self._transform_pred_proba(y_pred_proba)
-        y_pred_proba_array = np.repeat(
-            y_pred_proba_array,
-            len(alpha_np),
-            axis=2
-        )
-        if self.metric_control == 'precision':
+        y_pred_proba_array = np.repeat(y_pred_proba_array, len(alpha_np), axis=2)
+        if self.metric_control == "precision":
             self.n_obs = len(self.risks)
             self.r_hat = self.risks.mean(axis=0)
             self.valid_index = ltt_procedure(
                 np.expand_dims(self.r_hat, axis=0),
                 np.expand_dims(alpha_np, axis=0),
                 cast(float, delta),
-                np.expand_dims(np.array([self.n_obs]), axis=0)
+                np.expand_dims(np.array([self.n_obs]), axis=0),
             )
             self._check_valid_index(alpha_np)
             self.lambdas_star, self.r_star = find_lambda_control_star(
                 self.r_hat, self.valid_index, self.lambdas
             )
             y_pred_proba_array = (
-                y_pred_proba_array >
-                np.array(self.lambdas_star)[np.newaxis, np.newaxis, :]
+                y_pred_proba_array
+                > np.array(self.lambdas_star)[np.newaxis, np.newaxis, :]
             )
 
         else:
             self.r_hat, self.r_hat_plus = get_r_hat_plus(
-                self.risks, self.lambdas, self.method,
-                bound, delta, self.sigma_init
+                self.risks, self.lambdas, self.method, bound, delta, self.sigma_init
             )
             self.lambdas_star = find_lambda_star(
                 self.lambdas, self.r_hat_plus, alpha_np
             )
             y_pred_proba_array = (
-                y_pred_proba_array >
-                self.lambdas_star[np.newaxis, np.newaxis, :]
+                y_pred_proba_array > self.lambdas_star[np.newaxis, np.newaxis, :]
             )
         return y_pred, y_pred_proba_array
 
@@ -793,14 +754,18 @@ class BinaryClassificationRisk:
             If the risk is not defined (condition never met), the value is set to 1,
             and the number of effective samples is set to -1.
         """
-        risk_occurrences = np.array([
-            self._risk_occurrence(y_true_i, y_pred_i)
-            for y_true_i, y_pred_i in zip(y_true, y_pred)
-        ])
-        risk_conditions = np.array([
-            self._risk_condition(y_true_i, y_pred_i)
-            for y_true_i, y_pred_i in zip(y_true, y_pred)
-        ])
+        risk_occurrences = np.array(
+            [
+                self._risk_occurrence(y_true_i, y_pred_i)
+                for y_true_i, y_pred_i in zip(y_true, y_pred)
+            ]
+        )
+        risk_conditions = np.array(
+            [
+                self._risk_condition(y_true_i, y_pred_i)
+                for y_true_i, y_pred_i in zip(y_true, y_pred)
+            ]
+        )
         effective_sample_size = len(y_true) - np.sum(~risk_conditions)
         # Casting needed for MyPy with Python 3.9
         effective_sample_size_int = cast(int, effective_sample_size)
@@ -843,10 +808,11 @@ false_positive_rate = BinaryClassificationRisk(
 
 Risk_str = Literal["precision", "recall", "accuracy", "fpr"]
 Risk = Union[
-    BinaryClassificationRisk, Risk_str,
+    BinaryClassificationRisk,
+    Risk_str,
     List[BinaryClassificationRisk],
     List[Risk_str],
-    List[Union[BinaryClassificationRisk, Risk_str]]
+    List[Union[BinaryClassificationRisk, Risk_str]],
 ]
 
 
@@ -958,6 +924,7 @@ class BinaryClassificationController:
     Angelopoulos, Anastasios N., Stephen, Bates, Emmanuel J. Candès, et al.
     "Learn Then Test: Calibrating Predictive Algorithms to Achieve Risk Control." (2022)
     """
+
     _best_predict_param_choice_map = {
         precision: recall,
         recall: precision,
@@ -979,14 +946,19 @@ class BinaryClassificationController:
         target_level: Union[float, List[float]],
         confidence_level: float = 0.9,
         best_predict_param_choice: Union[
-            Literal["auto"], Risk_str, BinaryClassificationRisk] = "auto",
+            Literal["auto"], Risk_str, BinaryClassificationRisk
+        ] = "auto",
     ):
         self.is_multi_risk = self._check_if_multi_risk_control(risk, target_level)
         self._predict_function = predict_function
         risk_list = risk if isinstance(risk, list) else [risk]
         try:
-            self._risk = [BinaryClassificationController.risk_choice_map[risk]
-                          if isinstance(risk, str) else risk for risk in risk_list]
+            self._risk = [
+                BinaryClassificationController.risk_choice_map[risk]
+                if isinstance(risk, str)
+                else risk
+                for risk in risk_list
+            ]
         except KeyError as e:
             raise ValueError(
                 "When risk is provided as a string, it must be one of: "
@@ -1011,9 +983,7 @@ class BinaryClassificationController:
     # tests just to make sure those subfunctions are called,
     # we don't include .calibrate in the coverage report
     def calibrate(  # pragma: no cover
-        self,
-        X_calibrate: ArrayLike,
-        y_calibrate: ArrayLike
+        self, X_calibrate: ArrayLike, y_calibrate: ArrayLike
     ) -> BinaryClassificationController:
         """
         Calibrate the BinaryClassificationController.
@@ -1036,14 +1006,11 @@ class BinaryClassificationController:
         y_calibrate_ = np.asarray(y_calibrate, dtype=int)
 
         predictions_per_param = self._get_predictions_per_param(
-            X_calibrate,
-            self._predict_params
+            X_calibrate, self._predict_params
         )
 
         risk_values, eff_sample_sizes = self._get_risk_values_and_eff_sample_sizes(
-            y_calibrate_,
-            predictions_per_param,
-            self._risk
+            y_calibrate_, predictions_per_param, self._risk
         )
         valid_params_index = ltt_procedure(
             risk_values,
@@ -1099,7 +1066,8 @@ class BinaryClassificationController:
     def _set_best_predict_param_choice(
         self,
         best_predict_param_choice: Union[
-            Literal["auto"], Risk_str, BinaryClassificationRisk] = "auto",
+            Literal["auto"], Risk_str, BinaryClassificationRisk
+        ] = "auto",
     ) -> BinaryClassificationRisk:
         if best_predict_param_choice == "auto":
             if self.is_multi_risk:
@@ -1107,9 +1075,7 @@ class BinaryClassificationController:
                 return self._risk[0]
             else:
                 try:
-                    return self._best_predict_param_choice_map[
-                        self._risk[0]
-                    ]
+                    return self._best_predict_param_choice_map[self._risk[0]]
                 except KeyError:
                     raise ValueError(
                         "When best_predict_param_choice is 'auto', "
@@ -1138,10 +1104,10 @@ class BinaryClassificationController:
         valid_params_index: List[Any],
     ):
         secondary_risks_per_param, _ = self._get_risk_values_and_eff_sample_sizes(
-                y_calibrate_,
-                predictions_per_param[valid_params_index],
-                [self._best_predict_param_choice]
-            )
+            y_calibrate_,
+            predictions_per_param[valid_params_index],
+            [self._best_predict_param_choice],
+        )
 
         self.best_predict_param = self.valid_predict_params[
             np.argmin(secondary_risks_per_param)
@@ -1159,11 +1125,15 @@ class BinaryClassificationController:
         Returns arrays with shape (n_risks, n_params).
         """
 
-        risks_values_and_eff_sizes = np.array([
-            [risk.get_value_and_effective_sample_size(y_true, predictions)
-             for predictions in predictions_per_param]
-            for risk in risks
-        ])
+        risks_values_and_eff_sizes = np.array(
+            [
+                [
+                    risk.get_value_and_effective_sample_size(y_true, predictions)
+                    for predictions in predictions_per_param
+                ]
+                for risk in risks
+            ]
+        )
 
         risk_values = risks_values_and_eff_sizes[:, :, 0]
         effective_sample_sizes = risks_values_and_eff_sizes[:, :, 1]
@@ -1214,7 +1184,8 @@ class BinaryClassificationController:
         Check if we are in a multi risk setting and if inputs types are correct.
         """
         if (
-            isinstance(risk, list) and isinstance(target_level, list)
+            isinstance(risk, list)
+            and isinstance(target_level, list)
             and len(risk) == len(target_level)
             and len(risk) > 0
         ):
@@ -1223,9 +1194,8 @@ class BinaryClassificationController:
             else:
                 return True
         elif (
-            (isinstance(risk, BinaryClassificationRisk) or isinstance(risk, str))
-            and isinstance(target_level, float)
-        ):
+            isinstance(risk, BinaryClassificationRisk) or isinstance(risk, str)
+        ) and isinstance(target_level, float):
             return False
         else:
             raise ValueError(

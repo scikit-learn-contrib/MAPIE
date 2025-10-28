@@ -8,14 +8,17 @@ from sklearn.linear_model import QuantileRegressor
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.utils import check_random_state
-from sklearn.utils.validation import (_check_y, _num_samples, check_is_fitted,
-                                      indexable)
+from sklearn.utils.validation import _check_y, _num_samples, check_is_fitted, indexable
 
 from numpy.typing import ArrayLike, NDArray
-from mapie.utils import (_check_alpha_and_n_samples,
-                         _check_defined_variables_predict_cqr,
-                         _check_estimator_fit_predict, _check_lower_upper_bounds,
-                         _check_null_weight, _fit_estimator)
+from mapie.utils import (
+    _check_alpha_and_n_samples,
+    _check_defined_variables_predict_cqr,
+    _check_estimator_fit_predict,
+    _check_lower_upper_bounds,
+    _check_null_weight,
+    _fit_estimator,
+)
 
 from .regression import _MapieRegressor
 from mapie.utils import (
@@ -24,7 +27,8 @@ from mapie.utils import (
     _prepare_fit_params_and_sample_weight,
     _raise_error_if_previous_method_not_called,
     _raise_error_if_method_already_called,
-    _raise_error_if_fit_called_in_prefit_mode, _transform_confidence_level_to_alpha,
+    _raise_error_if_fit_called_in_prefit_mode,
+    _transform_confidence_level_to_alpha,
 )
 
 
@@ -98,11 +102,7 @@ class ConformalizedQuantileRegressor:
     def __init__(
         self,
         estimator: Optional[
-            Union[
-                RegressorMixin,
-                Pipeline,
-                List[Union[RegressorMixin, Pipeline]]
-            ]
+            Union[RegressorMixin, Pipeline, List[Union[RegressorMixin, Pipeline]]]
         ] = None,
         confidence_level: float = 0.9,
         prefit: bool = False,
@@ -208,9 +208,7 @@ class ConformalizedQuantileRegressor:
 
         self._predict_params = _prepare_params(predict_params)
         self._mapie_quantile_regressor.conformalize(
-            X_conformalize,
-            y_conformalize,
-            **self._predict_params
+            X_conformalize, y_conformalize, **self._predict_params
         )
 
         self._is_conformalized = True
@@ -269,7 +267,7 @@ class ConformalizedQuantileRegressor:
             optimize_beta=minimize_interval_width,
             allow_infinite_bounds=allow_infinite_bounds,
             symmetry=symmetric_correction,
-            **self._predict_params
+            **self._predict_params,
         )
         return _cast_predictions_to_ndarray_tuple(predictions)
 
@@ -397,6 +395,7 @@ class _MapieQuantileRegressor(_MapieRegressor):
     >>> print(y_pred)
     [ 5.  7.  9. 11. 13. 15.]
     """
+
     valid_methods_ = ["quantile"]
     fit_attributes = [
         "estimators_",
@@ -405,32 +404,19 @@ class _MapieQuantileRegressor(_MapieRegressor):
     ]
 
     quantile_estimator_params = {
-        "GradientBoostingRegressor": {
-            "loss_name": "loss",
-            "alpha_name": "alpha"
-        },
-        "QuantileRegressor": {
-            "loss_name": "quantile",
-            "alpha_name": "quantile"
-        },
+        "GradientBoostingRegressor": {"loss_name": "loss", "alpha_name": "alpha"},
+        "QuantileRegressor": {"loss_name": "quantile", "alpha_name": "quantile"},
         "HistGradientBoostingRegressor": {
             "loss_name": "loss",
-            "alpha_name": "quantile"
+            "alpha_name": "quantile",
         },
-        "LGBMRegressor": {
-            "loss_name": "objective",
-            "alpha_name": "alpha"
-        },
+        "LGBMRegressor": {"loss_name": "objective", "alpha_name": "alpha"},
     }
 
     def __init__(
         self,
         estimator: Optional[
-            Union[
-                RegressorMixin,
-                Pipeline,
-                List[Union[RegressorMixin, Pipeline]]
-            ]
+            Union[RegressorMixin, Pipeline, List[Union[RegressorMixin, Pipeline]]]
         ] = None,
         method: str = "quantile",
         cv: Optional[str] = None,
@@ -481,15 +467,12 @@ class _MapieQuantileRegressor(_MapieRegressor):
         if isinstance(alpha, float):
             if np.any(np.logical_or(alpha <= 0, alpha >= 1.0)):
                 raise ValueError(
-                    "Invalid confidence_level. "
-                    "Allowed values are between 0.0 and 1.0."
+                    "Invalid confidence_level. Allowed values are between 0.0 and 1.0."
                 )
             else:
                 alpha_np = np.array([alpha / 2, 1 - alpha / 2, 0.5])
         else:
-            raise ValueError(
-                "Invalid confidence_level. Allowed values are float."
-            )
+            raise ValueError("Invalid confidence_level. Allowed values are float.")
         return alpha_np
 
     def _check_estimator(
@@ -584,14 +567,10 @@ class _MapieQuantileRegressor(_MapieRegressor):
                         "The base model is not supported. \n"
                         "Give a base model among: \n"
                         f"{self.quantile_estimator_params.keys()} "
-                        "Or, add your base model to"
-                        + " ``quantile_estimator_params``."
+                        "Or, add your base model to" + " ``quantile_estimator_params``."
                     )
 
-    def _check_cv(
-        self,
-        cv: Optional[str] = None
-    ) -> str:
+    def _check_cv(self, cv: Optional[str] = None) -> str:
         """
         Check if cv argument is ``None``, ``"split"`` or ``"prefit"``.
 
@@ -617,9 +596,7 @@ class _MapieQuantileRegressor(_MapieRegressor):
         if cv in ("split", "prefit"):
             return cv
         else:
-            raise ValueError(
-                "Invalid cv method, only valid method is ``split``."
-            )
+            raise ValueError("Invalid cv method, only valid method is ``split``.")
 
     def _train_calib_split(
         self,
@@ -630,9 +607,7 @@ class _MapieQuantileRegressor(_MapieRegressor):
         random_state: Optional[Union[int, np.random.RandomState, None]] = None,
         shuffle: Optional[bool] = True,
         stratify: Optional[ArrayLike] = None,
-    ) -> Tuple[
-        ArrayLike, ArrayLike, ArrayLike, ArrayLike, Optional[ArrayLike]
-    ]:
+    ) -> Tuple[ArrayLike, ArrayLike, ArrayLike, ArrayLike, Optional[ArrayLike]]:
         if sample_weight is None:
             X_train, X_calib, y_train, y_calib = train_test_split(
                 X,
@@ -640,7 +615,7 @@ class _MapieQuantileRegressor(_MapieRegressor):
                 test_size=calib_size,
                 random_state=random_state,
                 shuffle=shuffle,
-                stratify=stratify
+                stratify=stratify,
             )
             sample_weight_train = sample_weight
         else:
@@ -658,7 +633,7 @@ class _MapieQuantileRegressor(_MapieRegressor):
                 test_size=calib_size,
                 random_state=random_state,
                 shuffle=shuffle,
-                stratify=stratify
+                stratify=stratify,
             )
         return X_train, y_train, X_calib, y_calib, sample_weight_train
 
@@ -689,9 +664,7 @@ class _MapieQuantileRegressor(_MapieRegressor):
             accordingly with the prefit estimators.
         """
         if isinstance(estimator, Iterable) is False:
-            raise ValueError(
-                "Estimator for prefit must be an iterable object."
-            )
+            raise ValueError("Estimator for prefit must be an iterable object.")
         if len(estimator) == 3:
             for est in estimator:
                 _check_estimator_fit_predict(est)
@@ -811,10 +784,7 @@ class _MapieQuantileRegressor(_MapieRegressor):
             )
             X_train, y_train, X_calib, y_calib, sample_weight = result
             self._fit_estimators(
-                X=X_train,
-                y=y_train,
-                sample_weight=sample_weight,
-                **fit_params
+                X=X_train, y=y_train, sample_weight=sample_weight, **fit_params
             )
 
         self.conformalize(X_calib, y_calib)
@@ -844,9 +814,7 @@ class _MapieQuantileRegressor(_MapieRegressor):
         random_state: Optional[Union[int, np.random.RandomState]] = None,
         shuffle: Optional[bool] = True,
         stratify: Optional[ArrayLike] = None,
-    ) -> Tuple[
-        ArrayLike, ArrayLike, ArrayLike, ArrayLike, Optional[ArrayLike]
-    ]:
+    ) -> Tuple[ArrayLike, ArrayLike, ArrayLike, ArrayLike, Optional[ArrayLike]]:
         """
         Handles the preparation of training and calibration datasets,
         including validation and splitting.
@@ -858,13 +826,7 @@ class _MapieQuantileRegressor(_MapieRegressor):
 
         if X_calib is None or y_calib is None:
             return self._train_calib_split(
-                X,
-                y,
-                sample_weight,
-                calib_size,
-                random_state,
-                shuffle,
-                stratify
+                X, y, sample_weight, calib_size, random_state, shuffle, stratify
             )
         else:
             return X, y, X_calib, y_calib, sample_weight
@@ -875,7 +837,7 @@ class _MapieQuantileRegressor(_MapieRegressor):
         X: ArrayLike,
         y: ArrayLike,
         sample_weight: Optional[ArrayLike] = None,
-        **fit_params
+        **fit_params,
     ) -> None:
         """
         Fits the estimators with provided training data
@@ -886,9 +848,7 @@ class _MapieQuantileRegressor(_MapieRegressor):
         X, y = indexable(X, y)
         y = _check_y(y)
 
-        sample_weight, X, y = _check_null_weight(
-            sample_weight, X, y
-        )
+        sample_weight, X, y = _check_null_weight(sample_weight, X, y)
 
         if isinstance(checked_estimator, Pipeline):
             estimator = checked_estimator[-1]
@@ -896,9 +856,7 @@ class _MapieQuantileRegressor(_MapieRegressor):
             estimator = checked_estimator
 
         name_estimator = estimator.__class__.__name__
-        alpha_name = self.quantile_estimator_params[name_estimator][
-            "alpha_name"
-        ]
+        alpha_name = self.quantile_estimator_params[name_estimator]["alpha_name"]
 
         for i, alpha_ in enumerate(self.alpha_np):
             cloned_estimator_ = clone(checked_estimator)
@@ -939,26 +897,19 @@ class _MapieQuantileRegressor(_MapieRegressor):
         self.n_calib_samples = _num_samples(y_calib)
         _check_alpha_and_n_samples(self.alpha, self.n_calib_samples)
 
-        y_calib_preds = np.full(
-                shape=(3, self.n_calib_samples),
-                fill_value=np.nan
-            )
+        y_calib_preds = np.full(shape=(3, self.n_calib_samples), fill_value=np.nan)
 
         for i, est in enumerate(self.estimators_):
             y_calib_preds[i] = est.predict(X_calib, **kwargs).ravel()
 
         self.conformity_scores_ = np.full(
-                shape=(3, self.n_calib_samples),
-                fill_value=np.nan
-            )
+            shape=(3, self.n_calib_samples), fill_value=np.nan
+        )
 
         self.conformity_scores_[0] = y_calib_preds[0] - y_calib
         self.conformity_scores_[1] = y_calib - y_calib_preds[1]
         self.conformity_scores_[2] = np.max(
-            [
-                self.conformity_scores_[0],
-                self.conformity_scores_[1]
-            ], axis=0
+            [self.conformity_scores_[0], self.conformity_scores_[1]], axis=0
         )
         return self
 
@@ -1012,7 +963,7 @@ class _MapieQuantileRegressor(_MapieRegressor):
         """
         check_is_fitted(self, self.fit_attributes)
         _check_defined_variables_predict_cqr(ensemble, alpha)
-        alpha = self.alpha if symmetry else self.alpha/2
+        alpha = self.alpha if symmetry else self.alpha / 2
         _check_alpha_and_n_samples(alpha, self.n_calib_samples)
 
         n = self.n_calib_samples
@@ -1028,20 +979,13 @@ class _MapieQuantileRegressor(_MapieRegressor):
         _check_lower_upper_bounds(y_preds[0], y_preds[1], y_preds[2])
         if symmetry:
             quantile = np.full(
-                2,
-                np.quantile(
-                    self.conformity_scores_[2], q, method="higher"
-                )
+                2, np.quantile(self.conformity_scores_[2], q, method="higher")
             )
         else:
             quantile = np.array(
                 [
-                    np.quantile(
-                        self.conformity_scores_[0], q, method="higher"
-                    ),
-                    np.quantile(
-                        self.conformity_scores_[1], q, method="higher"
-                    )
+                    np.quantile(self.conformity_scores_[0], q, method="higher"),
+                    np.quantile(self.conformity_scores_[1], q, method="higher"),
                 ]
             )
         y_pred_low = y_preds[0][:, np.newaxis] - quantile[0]

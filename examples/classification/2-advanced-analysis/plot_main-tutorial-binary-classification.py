@@ -86,15 +86,12 @@ X = np.vstack(
     ]
 )
 y = np.hstack([np.full(n_samples, i) for i in range(n_classes)])
-(X_train, X_conf, X_val,
- y_train, y_conf, y_val) = train_conformalize_test_split(
+(X_train, X_conf, X_val, y_train, y_conf, y_val) = train_conformalize_test_split(
     X, y, train_size=0.35, conformalize_size=0.15, test_size=0.5
 )
 X_c1, X_c2, y_c1, y_c2 = train_test_split(X_conf, y_conf, test_size=0.5)
 
-xx, yy = np.meshgrid(
-    np.arange(x_min, x_max, step), np.arange(x_min, x_max, step)
-)
+xx, yy = np.meshgrid(np.arange(x_min, x_max, step), np.arange(x_min, x_max, step))
 X_test = np.stack([xx.ravel(), yy.ravel()], axis=1)
 
 
@@ -138,9 +135,7 @@ y_pred_proba_max = np.max(y_pred_proba, axis=1)
 
 confidence_level = [0.8, 0.9, 0.95]
 
-calib = CalibratedClassifierCV(
-    estimator=clf, method='sigmoid', cv='prefit'
-)
+calib = CalibratedClassifierCV(estimator=clf, method="sigmoid", cv="prefit")
 calib.fit(X_c1, y_c1)
 
 mapie_clf = SplitConformalClassifier(
@@ -193,13 +188,14 @@ def plot_scores(
 fig, axs = plt.subplots(1, 1, figsize=(10, 5))
 conformity_scores = mapie_clf._mapie_classifier.conformity_scores_
 quantiles = mapie_clf._mapie_classifier.conformity_score_function_.quantiles_
-plot_scores(confidence_level, conformity_scores, quantiles, 'lac', axs)
+plot_scores(confidence_level, conformity_scores, quantiles, "lac", axs)
 plt.show()
 
 
 ##############################################################################
 # We will now compare the differences between the prediction sets of the
 # different values ​​of confidence level.
+
 
 def plot_prediction_decision(y_pred_mapie: NDArray, ax) -> None:
     y_pred_col = list(map(colors.get, y_pred_mapie))
@@ -255,7 +251,7 @@ def plot_results(
     axs = {0: ax1, 1: ax2, 2: ax3, 3: ax4}
     plot_prediction_decision(y_pred_mapie, axs[0])
     for i, confidence_level_ in enumerate(confidence_levels):
-        plot_prediction_set(y_ps_mapie[:, :, i], confidence_level_, axs[i+1])
+        plot_prediction_set(y_ps_mapie[:, :, i], confidence_level_, axs[i + 1])
     plt.show()
 
 
@@ -279,7 +275,7 @@ plot_results(confidence_level, y_pred_mapie, y_ps_mapie)
 
 print(
     f"Accuracy of the model with 'lac' method: "
-    f"{100*np.mean(mapie_clf.predict(X_val) == y_val)}%"
+    f"{100 * np.mean(mapie_clf.predict(X_val) == y_val)}%"
 )
 
 
@@ -289,9 +285,7 @@ print(
 
 confidence_level_ = np.arange(0.02, 0.98, 0.02)
 
-calib = CalibratedClassifierCV(
-    estimator=clf, method='sigmoid', cv='prefit'
-)
+calib = CalibratedClassifierCV(estimator=clf, method="sigmoid", cv="prefit")
 calib.fit(X_c1, y_c1)
 
 mapie_clf = SplitConformalClassifier(
@@ -299,7 +293,7 @@ mapie_clf = SplitConformalClassifier(
     confidence_level=confidence_level_,
     conformity_score="lac",
     prefit=True,
-    random_state=42
+    random_state=42,
 )
 mapie_clf.conformalize(X_c2, y_c2)
 _, y_ps_mapie = mapie_clf.predict_set(X)
@@ -327,7 +321,7 @@ def plot_coverages_widths(confidence_level, coverage, width, conformity_score):
     plt.show()
 
 
-plot_coverages_widths(confidence_level_, coverage, mean_width, 'lac')
+plot_coverages_widths(confidence_level_, coverage, mean_width, "lac")
 
 
 ##############################################################################
@@ -341,9 +335,7 @@ plot_coverages_widths(confidence_level_, coverage, mean_width, 'lac')
 
 confidence_level_ = np.arange(0.99, 0.85, -0.01)
 
-calib = CalibratedClassifierCV(
-    estimator=clf, method='sigmoid', cv='prefit'
-)
+calib = CalibratedClassifierCV(estimator=clf, method="sigmoid", cv="prefit")
 calib.fit(X_c1, y_c1)
 
 mapie_clf = SplitConformalClassifier(
@@ -352,20 +344,18 @@ mapie_clf = SplitConformalClassifier(
 mapie_clf.conformalize(X_c2, y_c2)
 _, y_ps_mapie = mapie_clf.predict_set(X_test)
 
-non_empty = np.mean(
-    np.any(mapie_clf.predict_set(X_test)[1], axis=1), axis=0
-)
+non_empty = np.mean(np.any(mapie_clf.predict_set(X_test)[1], axis=1), axis=0)
 idx = np.argwhere(non_empty < 1)[0, 0]
 
 _, axs = plt.subplots(1, 3, figsize=(15, 5))
 plot_prediction_decision(y_pred_mapie, axs[0])
 _, y_ps = mapie_clf.predict_set(X_test)
 plot_prediction_set(
-    y_ps[:, :, idx-1], np.round(confidence_level_[idx-1], 3), axs[1]
+    y_ps[:, :, idx - 1], np.round(confidence_level_[idx - 1], 3), axs[1]
 )
 _, y_ps = mapie_clf.predict_set(X_test)
 plot_prediction_set(
-    y_ps[:, :, idx+1], np.round(confidence_level_[idx+1], 3), axs[2]
+    y_ps[:, :, idx + 1], np.round(confidence_level_[idx + 1], 3), axs[2]
 )
 
 plt.show()

@@ -9,13 +9,17 @@ from sklearn.calibration import _SigmoidCalibration
 from sklearn.isotonic import IsotonicRegression
 from sklearn.utils import check_random_state
 from sklearn.utils.multiclass import type_of_target
-from sklearn.utils.validation import (_check_y, _num_samples, check_is_fitted,
-                                      indexable)
+from sklearn.utils.validation import _check_y, _num_samples, check_is_fitted, indexable
 
 from numpy.typing import ArrayLike, NDArray
-from .utils import (_check_estimator_classification,
-                    _check_estimator_fit_predict, _check_n_features_in,
-                    _check_null_weight, _fit_estimator, _get_calib_set)
+from .utils import (
+    _check_estimator_classification,
+    _check_estimator_fit_predict,
+    _check_n_features_in,
+    _check_null_weight,
+    _fit_estimator,
+    _get_calib_set,
+)
 
 
 class TopLabelCalibrator(BaseEstimator, ClassifierMixin):
@@ -103,7 +107,7 @@ class TopLabelCalibrator(BaseEstimator, ClassifierMixin):
 
     named_calibrators = {
         "sigmoid": _SigmoidCalibration(),
-        "isotonic": IsotonicRegression(out_of_bounds="clip")
+        "isotonic": IsotonicRegression(out_of_bounds="clip"),
     }
 
     valid_cv = ["prefit", "split"]
@@ -145,10 +149,7 @@ class TopLabelCalibrator(BaseEstimator, ClassifierMixin):
         """
         if cv in self.valid_cv:
             return cv
-        raise ValueError(
-            "Invalid cv argument. "
-            f"Allowed values are {self.valid_cv}."
-        )
+        raise ValueError(f"Invalid cv argument. Allowed values are {self.valid_cv}.")
 
     def _check_calibrator(
         self,
@@ -185,15 +186,13 @@ class TopLabelCalibrator(BaseEstimator, ClassifierMixin):
             else:
                 raise ValueError(
                     "Please provide a string in: "
-                    + (", ").join(self.named_calibrators.keys()) + "."
+                    + (", ").join(self.named_calibrators.keys())
+                    + "."
                 )
         _check_estimator_fit_predict(calibrator)
         return calibrator
 
-    def _get_labels(
-        self,
-        X: ArrayLike
-    ) -> Tuple[NDArray, NDArray]:
+    def _get_labels(self, X: ArrayLike) -> Tuple[NDArray, NDArray]:
         """
         This method depends on the value of ``method`` and collects the labels
         that are needed to transform a multi-class calibration to multiple
@@ -235,7 +234,8 @@ class TopLabelCalibrator(BaseEstimator, ClassifierMixin):
         if type_of_target(y) not in self.valid_inputs:
             raise ValueError(
                 "Make sure to have one of the allowed targets: "
-                + (", ").join(self.valid_inputs) + "."
+                + (", ").join(self.valid_inputs)
+                + "."
             )
 
     def _fit_calibrator(
@@ -281,12 +281,8 @@ class TopLabelCalibrator(BaseEstimator, ClassifierMixin):
 
         if sample_weight is not None:
             sample_weight_ = sample_weight[given_label_indices]
-            (
+            (sample_weight_, top_class_prob_, y_calib_) = _check_null_weight(
                 sample_weight_, top_class_prob_, y_calib_
-            ) = _check_null_weight(
-                sample_weight_,
-                top_class_prob_,
-                y_calib_
             )
         else:
             sample_weight_ = sample_weight
@@ -378,9 +374,7 @@ class TopLabelCalibrator(BaseEstimator, ClassifierMixin):
         """
         idx_labels = np.where(y_pred.ravel() == label)[0].ravel()
         if label not in self.calibrators.keys():
-            calibrated_values[
-                idx_labels, idx
-                ] = max_prob[idx_labels].ravel()
+            calibrated_values[idx_labels, idx] = max_prob[idx_labels].ravel()
             warnings.warn(
                 f"WARNING: This predicted label {label} has not been seen "
                 + " during the calibration and therefore scores will remain"
@@ -458,9 +452,7 @@ class TopLabelCalibrator(BaseEstimator, ClassifierMixin):
             self.single_estimator_ = estimator
             self.classes_ = self.single_estimator_.classes_
             self.n_classes_ = len(self.classes_)
-            self.calibrators = self._fit_calibrators(
-                X, y, sample_weight, calibrator
-            )
+            self.calibrators = self._fit_calibrators(X, y, sample_weight, calibrator)
         if cv == "split":
             results = _get_calib_set(
                 X,
@@ -474,13 +466,13 @@ class TopLabelCalibrator(BaseEstimator, ClassifierMixin):
             X_train, y_train, X_calib, y_calib, sw_train, sw_calib = results
             X_train, y_train = indexable(X_train, y_train)
             y_train = _check_y(y_train)
-            sw_train, X_train, y_train = _check_null_weight(
-                sw_train,
-                X_train,
-                y_train
-            )
+            sw_train, X_train, y_train = _check_null_weight(sw_train, X_train, y_train)
             estimator = _fit_estimator(
-                clone(estimator), X_train, y_train, sw_train, **fit_params,
+                clone(estimator),
+                X_train,
+                y_train,
+                sw_train,
+                **fit_params,
             )
             self.single_estimator_ = estimator
             self.classes_ = self.single_estimator_.classes_

@@ -7,6 +7,7 @@ The symmetric_correction parameter of ConformalizedQuantileRegressor
 An example plot of :class:`~mapie.regression.ConformalizedQuantileRegressor`
 illustrating the impact of the ``symmetric_correction`` parameter.
 """
+
 import numpy as np
 from matplotlib import pyplot as plt
 from sklearn.datasets import make_regression
@@ -25,12 +26,15 @@ X, y = make_regression(
     n_samples=1000, n_features=1, noise=20, random_state=RANDOM_STATE
 )
 
-(
-    X_train, X_conformalize, X_test, y_train, y_conformalize, y_test
-) = train_conformalize_test_split(
-    X, y,
-    train_size=0.6, conformalize_size=0.2, test_size=0.2,
-    random_state=RANDOM_STATE
+(X_train, X_conformalize, X_test, y_train, y_conformalize, y_test) = (
+    train_conformalize_test_split(
+        X,
+        y,
+        train_size=0.6,
+        conformalize_size=0.2,
+        test_size=0.2,
+        random_state=RANDOM_STATE,
+    )
 )
 
 
@@ -44,7 +48,8 @@ gb_reg = GradientBoostingRegressor(
 
 # Using ConformalizedQuantileRegressor
 mapie_qr = ConformalizedQuantileRegressor(
-    estimator=gb_reg, confidence_level=confidence_level)
+    estimator=gb_reg, confidence_level=confidence_level
+)
 mapie_qr.fit(X_train, y_train)
 mapie_qr.conformalize(X_conformalize, y_conformalize)
 y_pred_sym, y_pis_sym = mapie_qr.predict_interval(X_test, symmetric_correction=True)
@@ -56,12 +61,8 @@ print(f"y.shape: {y.shape}")
 print(f"y_pis_sym[:, 0].shape: {y_pis_sym[:, 0].shape}")
 print(f"y_pis_sym[:, 1].shape: {y_pis_sym[:, 1].shape}")
 # Calculate coverage scores
-coverage_score_sym = regression_coverage_score(
-    y_test, y_pis_sym
-)[0]
-coverage_score_asym = regression_coverage_score(
-    y_test, y_pis_asym
-)[0]
+coverage_score_sym = regression_coverage_score(y_test, y_pis_sym)[0]
+coverage_score_asym = regression_coverage_score(y_test, y_pis_asym)[0]
 
 # Sort the values for plotting
 order = np.argsort(X_test[:, 0])

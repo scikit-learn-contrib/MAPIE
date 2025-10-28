@@ -29,7 +29,7 @@ class BaseClassificationScore(BaseConformityScore, metaclass=ABCMeta):
         *,
         classes: Optional[ArrayLike] = None,
         random_state: Optional[Union[int, np.random.RandomState]] = None,
-        **kwargs
+        **kwargs,
     ) -> None:
         """
         Set attributes that are not provided by the user.
@@ -55,7 +55,7 @@ class BaseClassificationScore(BaseConformityScore, metaclass=ABCMeta):
         alpha_np: NDArray,
         y_pred_proba: NDArray,
         cv: Optional[Union[int, str, BaseCrossValidator]],
-        **kwargs
+        **kwargs,
     ) -> NDArray:
         """
         Abstract method to get predictions from an EnsembleClassifier.
@@ -86,7 +86,7 @@ class BaseClassificationScore(BaseConformityScore, metaclass=ABCMeta):
         conformity_scores: NDArray,
         alpha_np: NDArray,
         cv: Optional[Union[int, str, BaseCrossValidator]],
-        **kwargs
+        **kwargs,
     ) -> NDArray:
         """
         Abstract method to get quantiles of the conformity scores.
@@ -118,7 +118,7 @@ class BaseClassificationScore(BaseConformityScore, metaclass=ABCMeta):
         conformity_scores: NDArray,
         alpha_np: NDArray,
         cv: Optional[Union[int, str, BaseCrossValidator]],
-        **kwargs
+        **kwargs,
     ) -> NDArray:
         """
         Abstract method to generate prediction sets based on the probability
@@ -154,7 +154,7 @@ class BaseClassificationScore(BaseConformityScore, metaclass=ABCMeta):
         y_pred_proba: NDArray,
         cv: Optional[Union[int, str, BaseCrossValidator]],
         conformity_scores: NDArray,
-        **kwargs
+        **kwargs,
     ) -> NDArray:
         """
         Compute classes of the prediction sets from the observed values,
@@ -185,9 +185,7 @@ class BaseClassificationScore(BaseConformityScore, metaclass=ABCMeta):
         """
         # Choice of the quantile
         # Predict probabilities
-        y_pred_proba = self.get_predictions(
-            X, alpha_np, y_pred_proba, cv, **kwargs
-        )
+        y_pred_proba = self.get_predictions(X, alpha_np, y_pred_proba, cv, **kwargs)
 
         self.quantiles_ = self.get_conformity_score_quantiles(
             conformity_scores, alpha_np, cv, **kwargs
@@ -200,12 +198,7 @@ class BaseClassificationScore(BaseConformityScore, metaclass=ABCMeta):
 
         return prediction_sets
 
-    def predict_set(
-        self,
-        X: NDArray,
-        alpha_np: NDArray,
-        **kwargs
-    ):
+    def predict_set(self, X: NDArray, alpha_np: NDArray, **kwargs):
         """
         Compute the prediction sets on new samples based on the uncertainty of
         the target confidence set.
@@ -232,6 +225,4 @@ class BaseClassificationScore(BaseConformityScore, metaclass=ABCMeta):
         The output structure depend on the ``get_sets`` method.
             The prediction sets for each sample and each alpha level.
         """
-        return self.get_sets(
-            X=X, alpha_np=alpha_np, **kwargs
-        )
+        return self.get_sets(X=X, alpha_np=alpha_np, **kwargs)

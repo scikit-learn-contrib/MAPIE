@@ -6,9 +6,7 @@ from sklearn.preprocessing import label_binarize
 from sklearn.model_selection import BaseCrossValidator
 
 from mapie.conformity_scores.sets.naive import NaiveConformityScore
-from mapie.conformity_scores.sets.utils import (
-    check_include_last_label
-)
+from mapie.conformity_scores.sets.utils import check_include_last_label
 
 from mapie._machine_precision import EPSILON
 from numpy.typing import ArrayLike, NDArray
@@ -49,7 +47,7 @@ class APSConformityScore(NaiveConformityScore):
         y_pred_proba: NDArray,
         cv: Optional[Union[int, str, BaseCrossValidator]],
         agg_scores: Optional[str] = "mean",
-        **kwargs
+        **kwargs,
     ) -> NDArray:
         """
         Just processes the passed y_pred_proba.
@@ -89,9 +87,7 @@ class APSConformityScore(NaiveConformityScore):
 
     @staticmethod
     def get_true_label_cumsum_proba(
-        y: ArrayLike,
-        y_pred_proba: NDArray,
-        classes: ArrayLike
+        y: ArrayLike, y_pred_proba: NDArray, classes: ArrayLike
     ) -> Tuple[NDArray, NDArray]:
         """
         Compute the cumsumed probability of the true label.
@@ -127,11 +123,7 @@ class APSConformityScore(NaiveConformityScore):
         return true_label_cumsum_proba, cutoff
 
     def get_conformity_scores(
-        self,
-        y: NDArray,
-        y_pred: NDArray,
-        y_enc: Optional[NDArray] = None,
-        **kwargs
+        self, y: NDArray, y_pred: NDArray, y_enc: Optional[NDArray] = None, **kwargs
     ) -> NDArray:
         """
         Get the conformity score.
@@ -157,12 +149,10 @@ class APSConformityScore(NaiveConformityScore):
         classes = cast(NDArray, self.classes)
 
         # Conformity scores
-        conformity_scores, self.cutoff = (
-            self.get_true_label_cumsum_proba(y, y_pred, classes)
+        conformity_scores, self.cutoff = self.get_true_label_cumsum_proba(
+            y, y_pred, classes
         )
-        y_proba_true = np.take_along_axis(
-            y_pred, y_enc.reshape(-1, 1), axis=1
-        )
+        y_proba_true = np.take_along_axis(y_pred, y_enc.reshape(-1, 1), axis=1)
         random_state = check_random_state(self.random_state)
         u = random_state.uniform(size=len(y_pred)).reshape(-1, 1)
         conformity_scores -= u * y_proba_true
@@ -175,7 +165,7 @@ class APSConformityScore(NaiveConformityScore):
         alpha_np: NDArray,
         cv: Optional[Union[int, str, BaseCrossValidator]],
         agg_scores: Optional[str] = "mean",
-        **kwargs
+        **kwargs,
     ) -> NDArray:
         """
         Get the quantiles of the conformity scores for each uncertainty level.
@@ -219,7 +209,7 @@ class APSConformityScore(NaiveConformityScore):
         threshold: NDArray,
         y_pred_proba_last: NDArray,
         prediction_sets: NDArray,
-        **kwargs
+        **kwargs,
     ) -> NDArray:
         """
         Compute the V parameters from Romano+(2020).
@@ -245,9 +235,8 @@ class APSConformityScore(NaiveConformityScore):
         """
         # compute V parameter from Romano+(2020)
         v_param = (
-            (y_proba_last_cumsumed - threshold.reshape(1, -1)) /
-            y_pred_proba_last[:, 0, :]
-        )
+            y_proba_last_cumsumed - threshold.reshape(1, -1)
+        ) / y_pred_proba_last[:, 0, :]
         return v_param
 
     def _add_random_tie_breaking(
@@ -257,7 +246,7 @@ class APSConformityScore(NaiveConformityScore):
         y_pred_proba_cumsum: NDArray,
         y_pred_proba_last: NDArray,
         threshold: NDArray,
-        **kwargs
+        **kwargs,
     ) -> NDArray:
         """
         Randomly remove last label from prediction set based on the
@@ -296,19 +285,12 @@ class APSConformityScore(NaiveConformityScore):
         """
         # get cumsumed probabilities up to last retained label
         y_proba_last_cumsumed = np.squeeze(
-            np.take_along_axis(
-                y_pred_proba_cumsum,
-                y_pred_index_last,
-                axis=1
-            ), axis=1
+            np.take_along_axis(y_pred_proba_cumsum, y_pred_index_last, axis=1), axis=1
         )
 
         # get the V parameter from Romano+(2020) or Angelopoulos+(2020)
         v_param = self._compute_v_parameter(
-            y_proba_last_cumsumed,
-            threshold,
-            y_pred_proba_last,
-            prediction_sets
+            y_proba_last_cumsumed, threshold, y_pred_proba_last, prediction_sets
         )
 
         # get random numbers for each observation and alpha value
@@ -318,10 +300,7 @@ class APSConformityScore(NaiveConformityScore):
         # remove last label from comparison between uniform number and V
         label_to_keep = np.less_equal(v_param - u_param, EPSILON)
         np.put_along_axis(
-            prediction_sets,
-            y_pred_index_last,
-            label_to_keep[:, np.newaxis, :],
-            axis=1
+            prediction_sets, y_pred_index_last, label_to_keep[:, np.newaxis, :], axis=1
         )
         return prediction_sets
 
@@ -333,7 +312,7 @@ class APSConformityScore(NaiveConformityScore):
         cv: Optional[Union[int, str, BaseCrossValidator]],
         agg_scores: Optional[str] = "mean",
         include_last_label: Optional[Union[bool, str]] = True,
-        **kwargs
+        **kwargs,
     ) -> NDArray:
         """
         Generate prediction sets based on the probability predictions,
@@ -412,7 +391,7 @@ class APSConformityScore(NaiveConformityScore):
                 thresholds,
                 include_last_label,
                 prediction_phase=True,
-                **kwargs
+                **kwargs,
             )
         )
         # get the prediction set by taking all probabilities above the last one
@@ -421,9 +400,7 @@ class APSConformityScore(NaiveConformityScore):
                 y_pred_proba - y_pred_proba_last, -EPSILON
             )
         else:
-            y_pred_included = np.less_equal(
-                y_pred_proba - y_pred_proba_last, EPSILON
-            )
+            y_pred_included = np.less_equal(y_pred_proba - y_pred_proba_last, EPSILON)
         # remove last label randomly
         if include_last_label == "randomized":
             y_pred_included = self._add_random_tie_breaking(
@@ -432,7 +409,7 @@ class APSConformityScore(NaiveConformityScore):
                 y_pred_proba_cumsum,
                 y_pred_proba_last,
                 thresholds,
-                **kwargs
+                **kwargs,
             )
         if cv == "prefit" or agg_scores in ["mean"]:
             prediction_sets = y_pred_included
@@ -442,7 +419,7 @@ class APSConformityScore(NaiveConformityScore):
             prediction_sets = np.less_equal(
                 prediction_sets_summed[:, :, np.newaxis]
                 - self.quantiles_[np.newaxis, np.newaxis, :],
-                EPSILON
+                EPSILON,
             )
 
         return prediction_sets

@@ -29,6 +29,7 @@ Aaditya Ramdas, and Ryan J. Tibshirani.
 "Predictive inference with the jackknife+."
 Ann. Statist., 49(1):486–507, February 2021.
 """
+
 from typing import Any, Dict
 
 import numpy as np
@@ -50,7 +51,7 @@ def PIs_vs_dimensions(
     confidence_level: float,
     n_trial: int,
     dimensions: NDArray,
-    random_state: int = 1
+    random_state: int = 1,
 ) -> Dict[str, Dict[int, Dict[str, NDArray]]]:
     """
     Compute the prediction intervals for a linear regression problem.
@@ -122,19 +123,15 @@ def PIs_vs_dimensions(
                     confidence_level=confidence_level,
                     n_jobs=-1,
                     random_state=random_state,
-                    **params
+                    **params,
                 )
                 mapie.fit_conformalize(X_train, y_train)
                 _, y_pis = mapie.predict_interval(
                     X_test, aggregate_predictions="median"
                 )
-                coverage = regression_coverage_score(
-                    y_test, y_pis
-                )[0]
+                coverage = regression_coverage_score(y_test, y_pis)[0]
                 results[strategy][dimension]["coverage"][trial] = coverage
-                width_mean = regression_mean_width_score(
-                    y_pis
-                )[0]
+                width_mean = regression_mean_width_score(y_pis)[0]
                 results[strategy][dimension]["width_mean"][trial] = width_mean
     return results
 
@@ -210,6 +207,7 @@ results = PIs_vs_dimensions(
     confidence_level=confidence_level,
     n_trial=ntrial,
     dimensions=dimensions,
-    random_state=RANDOM_STATE)
+    random_state=RANDOM_STATE,
+)
 plot_simulation_results(results, title="Coverages and interval widths")
 plt.show()

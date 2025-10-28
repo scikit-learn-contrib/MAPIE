@@ -3,9 +3,7 @@ from typing import Optional, cast, Union
 import numpy as np
 
 from mapie.conformity_scores.classification import BaseClassificationScore
-from mapie.conformity_scores.sets.utils import (
-    get_true_label_position
-)
+from mapie.conformity_scores.sets.utils import get_true_label_position
 from sklearn.model_selection import BaseCrossValidator
 
 from mapie._machine_precision import EPSILON
@@ -45,11 +43,7 @@ class TopKConformityScore(BaseClassificationScore):
         super().__init__()
 
     def get_conformity_scores(
-        self,
-        y: NDArray,
-        y_pred: NDArray,
-        y_enc: Optional[NDArray] = None,
-        **kwargs
+        self, y: NDArray, y_pred: NDArray, y_enc: Optional[NDArray] = None, **kwargs
     ) -> NDArray:
         """
         Get the conformity score.
@@ -86,7 +80,7 @@ class TopKConformityScore(BaseClassificationScore):
         alpha_np: NDArray,
         y_pred_proba: NDArray,
         cv: Optional[Union[int, str, BaseCrossValidator]],
-        **kwargs
+        **kwargs,
     ) -> NDArray:
         """
         Just processes the passed y_pred_proba.
@@ -113,9 +107,7 @@ class TopKConformityScore(BaseClassificationScore):
         NDArray
             Array of predictions.
         """
-        y_pred_proba = np.repeat(
-            y_pred_proba[:, :, np.newaxis], len(alpha_np), axis=2
-        )
+        y_pred_proba = np.repeat(y_pred_proba[:, :, np.newaxis], len(alpha_np), axis=2)
         return y_pred_proba
 
     def get_conformity_score_quantiles(
@@ -123,7 +115,7 @@ class TopKConformityScore(BaseClassificationScore):
         conformity_scores: NDArray,
         alpha_np: NDArray,
         cv: Optional[Union[int, str, BaseCrossValidator]],
-        **kwargs
+        **kwargs,
     ) -> NDArray:
         """
         Get the quantiles of the conformity scores for each uncertainty level.
@@ -153,7 +145,7 @@ class TopKConformityScore(BaseClassificationScore):
         conformity_scores: NDArray,
         alpha_np: NDArray,
         cv: Optional[Union[int, str, BaseCrossValidator]],
-        **kwargs
+        **kwargs,
     ) -> NDArray:
         """
         Generate prediction sets based on the probability predictions,
@@ -182,25 +174,19 @@ class TopKConformityScore(BaseClassificationScore):
         y_pred_proba = y_pred_proba[:, :, 0]
         index_sorted = np.fliplr(np.argsort(y_pred_proba, axis=1))
         y_pred_index_last = np.stack(
-            [
-                index_sorted[:, quantile]
-                for quantile in self.quantiles_
-            ], axis=1
+            [index_sorted[:, quantile] for quantile in self.quantiles_], axis=1
         )
         y_pred_proba_last = np.stack(
             [
                 np.take_along_axis(
-                    y_pred_proba,
-                    y_pred_index_last[:, iq].reshape(-1, 1),
-                    axis=1
+                    y_pred_proba, y_pred_index_last[:, iq].reshape(-1, 1), axis=1
                 )
                 for iq, _ in enumerate(self.quantiles_)
-            ], axis=2
+            ],
+            axis=2,
         )
         prediction_sets = np.greater_equal(
-            y_pred_proba[:, :, np.newaxis]
-            - y_pred_proba_last,
-            -EPSILON
+            y_pred_proba[:, :, np.newaxis] - y_pred_proba_last, -EPSILON
         )
 
         return prediction_sets

@@ -28,10 +28,7 @@ class AbsoluteConformityScore(BaseRegressionScore):
         super().__init__(sym=sym, consistency_check=True)
 
     def get_signed_conformity_scores(
-        self,
-        y: ArrayLike,
-        y_pred: ArrayLike,
-        **kwargs
+        self, y: ArrayLike, y_pred: ArrayLike, **kwargs
     ) -> NDArray:
         """
         Compute the signed conformity scores from the predicted values
@@ -41,10 +38,7 @@ class AbsoluteConformityScore(BaseRegressionScore):
         return np.subtract(y, y_pred)
 
     def get_estimation_distribution(
-        self,
-        y_pred: ArrayLike,
-        conformity_scores: ArrayLike,
-        **kwargs
+        self, y_pred: ArrayLike, conformity_scores: ArrayLike, **kwargs
     ) -> NDArray:
         """
         Compute samples of the estimation distribution from the predicted

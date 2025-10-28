@@ -12,6 +12,7 @@ We show here how to use various MAPIE methods on data with homoscedastic data.
 are used to estimate the prediction intervals of 1D homoscedastic
 data using different strategies.
 """
+
 from typing import Tuple
 
 import numpy as np
@@ -27,14 +28,15 @@ from numpy.typing import NDArray
 from mapie.regression import (
     CrossConformalRegressor,
     JackknifeAfterBootstrapRegressor,
-    ConformalizedQuantileRegressor
+    ConformalizedQuantileRegressor,
 )
+
 RANDOM_STATE = 42
 
 
 def f(x: NDArray) -> NDArray:
     """Polynomial function used to generate one-dimensional data"""
-    return np.array(5 * x + 5 * x ** 4 - 9 * x ** 2)
+    return np.array(5 * x + 5 * x**4 - 9 * x**2)
 
 
 def get_homoscedastic_data(
@@ -73,7 +75,11 @@ def get_homoscedastic_data(
     y_true = f(X_true)
     y_true_sigma = np.full(len(y_true), q95 * sigma)
     return (
-        X_train.reshape(-1, 1), y_train, X_true.reshape(-1, 1), y_true, y_true_sigma
+        X_train.reshape(-1, 1),
+        y_train,
+        X_true.reshape(-1, 1),
+        y_true,
+        y_true_sigma,
     )
 
 
@@ -144,10 +150,13 @@ polyn_model = Pipeline(
 polyn_model_quant = Pipeline(
     [
         ("poly", PolynomialFeatures(degree=4)),
-        ("linear", QuantileRegressor(
-            solver="highs-ds",
-            alpha=0,
-        )),
+        (
+            "linear",
+            QuantileRegressor(
+                solver="highs-ds",
+                alpha=0,
+            ),
+        ),
     ]
 )
 
@@ -178,19 +187,17 @@ STRATEGIES = {
     },
 }
 
-fig, ((ax1, ax2, ax3), (ax4, ax5, ax6)) = plt.subplots(
-    2, 3, figsize=(3 * 6, 12)
-)
+fig, ((ax1, ax2, ax3), (ax4, ax5, ax6)) = plt.subplots(2, 3, figsize=(3 * 6, 12))
 axs = [ax1, ax2, ax3, ax4, ax5, ax6]
 for i, (strategy_name, strategy_params) in enumerate(STRATEGIES.items()):
     init_params = strategy_params["init_params"]
     class_ = strategy_params["class"]
     if strategy_name == "conformalized_quantile_regression":
-        X_train, X_conformalize, y_train, y_conformalize = (
-            train_test_split(
-                X_train_conformalize, y_train_conformalize,
-                test_size=0.3, random_state=RANDOM_STATE
-            )
+        X_train, X_conformalize, y_train, y_conformalize = train_test_split(
+            X_train_conformalize,
+            y_train_conformalize,
+            test_size=0.3,
+            random_state=RANDOM_STATE,
         )
         mapie = class_(polyn_model_quant, confidence_level=0.95, **init_params)
         mapie.fit(X_train, y_train)

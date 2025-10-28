@@ -10,31 +10,46 @@ import pytest
 from numpy.random import RandomState
 from sklearn.datasets import make_regression
 from sklearn.linear_model import LinearRegression
-from sklearn.model_selection import (BaseCrossValidator, KFold, LeaveOneOut,
-                                     ShuffleSplit)
+from sklearn.model_selection import BaseCrossValidator, KFold, LeaveOneOut, ShuffleSplit
 from sklearn.utils.validation import check_is_fitted
 
 from numpy.typing import ArrayLike, NDArray
 
 from mapie.regression.quantile_regression import _MapieQuantileRegressor
-from mapie.utils import (_check_alpha, _check_alpha_and_n_samples,
-                         _check_array_inf, _check_array_nan, _check_arrays_length,
-                         _check_binary_zero_one, _check_cv, _check_gamma,
-                         _check_lower_upper_bounds, _check_n_features_in,
-                         _check_n_jobs, _check_n_samples, _check_no_agg_cv,
-                         _check_null_weight, _check_number_bins,
-                         _check_split_strategy, _check_verbose,
-                         _compute_quantiles, _fit_estimator, _get_binning_groups,
-                         train_conformalize_test_split,
-                         _transform_confidence_level_to_alpha,
-                         _transform_confidence_level_to_alpha_list,
-                         _check_if_param_in_allowed_values, _check_cv_not_string,
-                         _cast_point_predictions_to_ndarray,
-                         _cast_predictions_to_ndarray_tuple, _prepare_params,
-                         _prepare_fit_params_and_sample_weight,
-                         _raise_error_if_previous_method_not_called,
-                         _raise_error_if_method_already_called,
-                         _raise_error_if_fit_called_in_prefit_mode)
+from mapie.utils import (
+    _check_alpha,
+    _check_alpha_and_n_samples,
+    _check_array_inf,
+    _check_array_nan,
+    _check_arrays_length,
+    _check_binary_zero_one,
+    _check_cv,
+    _check_gamma,
+    _check_lower_upper_bounds,
+    _check_n_features_in,
+    _check_n_jobs,
+    _check_n_samples,
+    _check_no_agg_cv,
+    _check_null_weight,
+    _check_number_bins,
+    _check_split_strategy,
+    _check_verbose,
+    _compute_quantiles,
+    _fit_estimator,
+    _get_binning_groups,
+    train_conformalize_test_split,
+    _transform_confidence_level_to_alpha,
+    _transform_confidence_level_to_alpha_list,
+    _check_if_param_in_allowed_values,
+    _check_cv_not_string,
+    _cast_point_predictions_to_ndarray,
+    _cast_predictions_to_ndarray_tuple,
+    _prepare_params,
+    _prepare_fit_params_and_sample_weight,
+    _raise_error_if_previous_method_not_called,
+    _raise_error_if_method_already_called,
+    _raise_error_if_fit_called_in_prefit_mode,
+)
 
 
 @pytest.fixture(scope="module")
@@ -46,38 +61,53 @@ def dataset():
 
 
 class TestTrainConformalizeTestSplit:
-
     def test_error_sum_int_is_not_dataset_size(self, dataset):
         X, y = dataset
         with pytest.raises(ValueError):
             train_conformalize_test_split(
-                X, y, train_size=1, conformalize_size=1,
-                test_size=1, random_state=random_state
+                X,
+                y,
+                train_size=1,
+                conformalize_size=1,
+                test_size=1,
+                random_state=random_state,
             )
 
     def test_error_sum_float_is_not_1(self, dataset):
         X, y = dataset
         with pytest.raises(ValueError):
             train_conformalize_test_split(
-                X, y, train_size=0.5, conformalize_size=0.5,
-                test_size=0.5, random_state=random_state
+                X,
+                y,
+                train_size=0.5,
+                conformalize_size=0.5,
+                test_size=0.5,
+                random_state=random_state,
             )
 
     def test_error_sizes_are_int_and_float(self, dataset):
         X, y = dataset
         with pytest.raises(TypeError):
             train_conformalize_test_split(
-                X, y, train_size=5, conformalize_size=0.5,
-                test_size=0.5, random_state=random_state
+                X,
+                y,
+                train_size=5,
+                conformalize_size=0.5,
+                test_size=0.5,
+                random_state=random_state,
             )
 
     def test_3_floats(self, dataset):
         X, y = dataset
-        (
-            X_train, X_conformalize, X_test, y_train, y_conformalize, y_test
-        ) = train_conformalize_test_split(
-            X, y, train_size=0.6, conformalize_size=0.2,
-            test_size=0.2, random_state=random_state
+        (X_train, X_conformalize, X_test, y_train, y_conformalize, y_test) = (
+            train_conformalize_test_split(
+                X,
+                y,
+                train_size=0.6,
+                conformalize_size=0.2,
+                test_size=0.2,
+                random_state=random_state,
+            )
         )
         assert len(X_train) == 60
         assert len(X_conformalize) == 20
@@ -85,11 +115,15 @@ class TestTrainConformalizeTestSplit:
 
     def test_3_ints(self, dataset):
         X, y = dataset
-        (
-            X_train, X_conformalize, X_test, y_train, y_conformalize, y_test
-        ) = train_conformalize_test_split(
-            X, y, train_size=60, conformalize_size=20,
-            test_size=20, random_state=random_state
+        (X_train, X_conformalize, X_test, y_train, y_conformalize, y_test) = (
+            train_conformalize_test_split(
+                X,
+                y,
+                train_size=60,
+                conformalize_size=20,
+                test_size=20,
+                random_state=random_state,
+            )
         )
         assert len(X_train) == 60
         assert len(X_conformalize) == 20
@@ -98,16 +132,34 @@ class TestTrainConformalizeTestSplit:
     def test_random_state(self, dataset):
         X, y = dataset
         (
-            X_train_1, X_conformalize_1, X_test_1, y_train_1, y_conformalize_1, y_test_1
+            X_train_1,
+            X_conformalize_1,
+            X_test_1,
+            y_train_1,
+            y_conformalize_1,
+            y_test_1,
         ) = train_conformalize_test_split(
-            X, y, train_size=60, conformalize_size=20,
-            test_size=20, random_state=random_state
+            X,
+            y,
+            train_size=60,
+            conformalize_size=20,
+            test_size=20,
+            random_state=random_state,
         )
         (
-            X_train_2, X_conformalize_2, X_test_2, y_train_2, y_conformalize_2, y_test_2
+            X_train_2,
+            X_conformalize_2,
+            X_test_2,
+            y_train_2,
+            y_conformalize_2,
+            y_test_2,
         ) = train_conformalize_test_split(
-            X, y, train_size=60, conformalize_size=20,
-            test_size=20, random_state=random_state
+            X,
+            y,
+            train_size=60,
+            conformalize_size=20,
+            test_size=20,
+            random_state=random_state,
         )
         assert np.array_equal(X_train_1, X_train_2)
         assert np.array_equal(X_conformalize_1, X_conformalize_2)
@@ -119,16 +171,34 @@ class TestTrainConformalizeTestSplit:
     def test_different_random_state(self, dataset):
         X, y = dataset
         (
-            X_train_1, X_conformalize_1, X_test_1, y_train_1, y_conformalize_1, y_test_1
+            X_train_1,
+            X_conformalize_1,
+            X_test_1,
+            y_train_1,
+            y_conformalize_1,
+            y_test_1,
         ) = train_conformalize_test_split(
-            X, y, train_size=60, conformalize_size=20,
-            test_size=20, random_state=random_state
+            X,
+            y,
+            train_size=60,
+            conformalize_size=20,
+            test_size=20,
+            random_state=random_state,
         )
         (
-            X_train_2, X_conformalize_2, X_test_2, y_train_2, y_conformalize_2, y_test_2
+            X_train_2,
+            X_conformalize_2,
+            X_test_2,
+            y_train_2,
+            y_conformalize_2,
+            y_test_2,
         ) = train_conformalize_test_split(
-            X, y, train_size=60, conformalize_size=20,
-            test_size=20, random_state=random_state + 1
+            X,
+            y,
+            train_size=60,
+            conformalize_size=20,
+            test_size=20,
+            random_state=random_state + 1,
         )
         assert not np.array_equal(X_train_1, X_train_2)
         assert not np.array_equal(X_conformalize_1, X_conformalize_2)
@@ -139,11 +209,16 @@ class TestTrainConformalizeTestSplit:
 
     def test_shuffle_false(self, dataset):
         X, y = dataset
-        (
-            X_train, X_conformalize, X_test, y_train, y_conformalize, y_test
-        ) = train_conformalize_test_split(
-            X, y, train_size=60, conformalize_size=20,
-            test_size=20, random_state=random_state, shuffle=False
+        (X_train, X_conformalize, X_test, y_train, y_conformalize, y_test) = (
+            train_conformalize_test_split(
+                X,
+                y,
+                train_size=60,
+                conformalize_size=20,
+                test_size=20,
+                random_state=random_state,
+                shuffle=False,
+            )
         )
         assert np.array_equal(np.concatenate((y_train, y_conformalize, y_test)), y)
 
@@ -164,7 +239,7 @@ def point_and_interval_predictions():
         (0.9, 0.1),
         (0.7, 0.3),
         (0.999, 0.001),
-    ]
+    ],
 )
 def test_transform_confidence_level_to_alpha(confidence_level, expected):
     result = _transform_confidence_level_to_alpha(confidence_level)
@@ -179,7 +254,7 @@ class TestTransformConfidenceLevelToAlphaList:
 
     def test_transform_confidence_level_to_alpha_is_called(self):
         with patch(
-            'mapie.utils._transform_confidence_level_to_alpha'
+            "mapie.utils._transform_confidence_level_to_alpha"
         ) as mock_transform_confidence_level_to_alpha:
             _transform_confidence_level_to_alpha_list([0.2, 0.3])
             mock_transform_confidence_level_to_alpha.assert_called()
@@ -234,7 +309,7 @@ def test_prepare_params(params, expected):
 
 class TestPrepareFitParamsAndSampleWeight:
     def test_uses_prepare_params(self):
-        with patch('mapie.utils._prepare_params') as mock_prepare_params:
+        with patch("mapie.utils._prepare_params") as mock_prepare_params:
             _prepare_fit_params_and_sample_weight({"param1": 1})
             mock_prepare_params.assert_called()
 
@@ -242,7 +317,7 @@ class TestPrepareFitParamsAndSampleWeight:
         fit_params = {"sample_weight": [0.1, 0.2, 0.3]}
         assert _prepare_fit_params_and_sample_weight(fit_params) == (
             {},
-            [0.1, 0.2, 0.3]
+            [0.1, 0.2, 0.3],
         )
 
     def test_without_sample_weight(self):
@@ -258,9 +333,12 @@ class TestRaiseErrorIfPreviousMethodNotCalled:
             )
 
     def test_does_nothing_when_previous_method_called(self):
-        assert _raise_error_if_previous_method_not_called(
-            "current_method", "previous_method", True
-        ) is None
+        assert (
+            _raise_error_if_previous_method_not_called(
+                "current_method", "previous_method", True
+            )
+            is None
+        )
 
 
 class TestRaiseErrorIfMethodAlreadyCalled:
@@ -286,9 +364,7 @@ y_toy = np.array([5, 7, 9, 11, 13, 15])
 
 n_features = 10
 
-X, y = make_regression(
-    n_samples=500, n_features=n_features, noise=1.0, random_state=1
-)
+X, y = make_regression(n_samples=500, n_features=n_features, noise=1.0, random_state=1)
 ALPHAS = [
     np.array([0.1]),
     np.array([0.05, 0.1, 0.2]),
@@ -301,31 +377,47 @@ y_scores = prng.random((51, 5))
 y_true = prng.randint(0, 2, 51)
 
 results_binning = {
-    "quantile":
-        [
-            0.03075388, 0.17261836, 0.33281326, 0.43939618,
-            0.54867626, 0.64881987, 0.73440899, 0.77793816,
-            0.89000413, 0.99610621
-        ],
-    "uniform":
-        [
-            0, 0.11111111, 0.22222222, 0.33333333, 0.44444444,
-            0.55555556, 0.66666667, 0.77777778, 0.88888889, 1
-        ],
-    "array split":
-        [
-            0.62689056, 0.74743526, 0.87642114, 0.88321124,
-            0.8916548,  0.94083846, 0.94999075, 0.98759822,
-            0.99610621, np.inf
-        ],
+    "quantile": [
+        0.03075388,
+        0.17261836,
+        0.33281326,
+        0.43939618,
+        0.54867626,
+        0.64881987,
+        0.73440899,
+        0.77793816,
+        0.89000413,
+        0.99610621,
+    ],
+    "uniform": [
+        0,
+        0.11111111,
+        0.22222222,
+        0.33333333,
+        0.44444444,
+        0.55555556,
+        0.66666667,
+        0.77777778,
+        0.88888889,
+        1,
+    ],
+    "array split": [
+        0.62689056,
+        0.74743526,
+        0.87642114,
+        0.88321124,
+        0.8916548,
+        0.94083846,
+        0.94999075,
+        0.98759822,
+        0.99610621,
+        np.inf,
+    ],
 }
 
 
 class DumbEstimator:
-    def fit(
-            self,
-            X: ArrayLike,
-            y: Optional[ArrayLike] = None) -> DumbEstimator:
+    def fit(self, X: ArrayLike, y: Optional[ArrayLike] = None) -> DumbEstimator:
         self.fitted_ = True
         return self
 
@@ -353,20 +445,13 @@ def test_check_null_weight_with_zeros() -> None:
     sample_weight[:1] = 0.0
     sw_out, X_out, y_out = _check_null_weight(sample_weight, X_toy, y_toy)
     np.testing.assert_almost_equal(np.array(sw_out), np.array([1, 1, 1, 1, 1]))
-    np.testing.assert_almost_equal(
-        np.array(X_out), np.array([[1], [2], [3], [4], [5]])
-    )
-    np.testing.assert_almost_equal(
-        np.array(y_out), np.array([7, 9, 11, 13, 15])
-    )
+    np.testing.assert_almost_equal(np.array(X_out), np.array([[1], [2], [3], [4], [5]]))
+    np.testing.assert_almost_equal(np.array(y_out), np.array([7, 9, 11, 13, 15]))
 
 
 @pytest.mark.parametrize("estimator", [LinearRegression(), DumbEstimator()])
 @pytest.mark.parametrize("sample_weight", [None, np.ones_like(y_toy)])
-def test_fit_estimator(
-    estimator: Any,
-    sample_weight: Optional[NDArray]
-) -> None:
+def test_fit_estimator(estimator: Any, sample_weight: Optional[NDArray]) -> None:
     """Test that the returned estimator is always fitted."""
     estimator = _fit_estimator(estimator, X_toy, y_toy, sample_weight)
     check_is_fitted(estimator)
@@ -513,9 +598,7 @@ def test_initial_low_high_pred(caplog) -> None:
 
 def test_final_low_high_pred(caplog) -> None:
     """Test lower/upper predictions crossing"""
-    y_preds = np.array(
-        [[4, 3, 2], [3, 3, 3], [2, 3, 4]]
-    )
+    y_preds = np.array([[4, 3, 2], [3, 3, 3], [2, 3, 4]])
     y_pred_low = np.array([4, 7, 2])
     y_pred_up = np.array([3, 3, 3])
     with caplog.at_level(logging.INFO):
@@ -527,9 +610,7 @@ def test_ensemble_in_predict() -> None:
     """Checking for ensemble defined in predict of CQR"""
     mapie_reg = _MapieQuantileRegressor()
     mapie_reg.fit(X, y)
-    with pytest.warns(
-        UserWarning, match=r"WARNING: Alpha should not be spec.*"
-    ):
+    with pytest.warns(UserWarning, match=r"WARNING: Alpha should not be spec.*"):
         mapie_reg.predict(X, alpha=0.2)
 
 
@@ -611,14 +692,8 @@ def test_quantile_prefit_non_iterable(estimator: Any) -> None:
 @pytest.mark.parametrize("strategy", ["quantile", "uniform", "array split"])
 def test_binning_group_strategies(strategy: str) -> None:
     """Test that different strategies have the correct outputs."""
-    bins_ = _get_binning_groups(
-        y_score, num_bins=10, strategy=strategy
-    )
-    np.testing.assert_allclose(
-        results_binning[strategy],
-        bins_,
-        rtol=1e-05
-    )
+    bins_ = _get_binning_groups(y_score, num_bins=10, strategy=strategy)
+    np.testing.assert_allclose(results_binning[strategy], bins_, rtol=1e-05)
 
 
 def test_wrong_split_strategy() -> None:
@@ -636,19 +711,13 @@ def test_split_strategy_None() -> None:
 @pytest.mark.parametrize("bins", ["random", LinearRegression(), 0.5])
 def test_num_bins_not_int(bins: int) -> None:
     """Test input for bins is an integer."""
-    with pytest.raises(
-        ValueError,
-        match=r"Please provide a bin number as an int*"
-    ):
+    with pytest.raises(ValueError, match=r"Please provide a bin number as an int*"):
         _check_number_bins(num_bins=bins)
 
 
 def test_num_bins_below_zero() -> None:
     """Test input for bins is positive integer."""
-    with pytest.raises(
-        ValueError,
-        match=r"Please provide a bin number greater*"
-    ):
+    with pytest.raises(ValueError, match=r"Please provide a bin number greater*"):
         _check_number_bins(num_bins=-1)
 
 
@@ -656,10 +725,7 @@ def test_binary_target() -> None:
     """
     Test that input of binary will provide an error message for non binary.
     """
-    with pytest.raises(
-        ValueError,
-        match=r"Please provide y_true as a bina*"
-    ):
+    with pytest.raises(ValueError, match=r"Please provide y_true as a bina*"):
         _check_binary_zero_one(np.array([0, 5, 4]))
 
 
@@ -667,10 +733,7 @@ def test_nan_values() -> None:
     """
     Test if array has only non-numerical values like NaNs
     """
-    with pytest.raises(
-        ValueError,
-        match=r"Array contains only NaN*"
-    ):
+    with pytest.raises(ValueError, match=r"Array contains only NaN*"):
         _check_array_nan(np.array([np.nan, np.nan, np.nan, np.nan]))
 
 
@@ -678,10 +741,7 @@ def test_inf_values() -> None:
     """
     Test if array has infinite values like +inf or -inf
     """
-    with pytest.raises(
-        ValueError,
-        match=r"Array contains infinite va*"
-    ):
+    with pytest.raises(ValueError, match=r"Array contains infinite va*"):
         _check_array_inf(np.array([1, 2, -np.inf, 4]))
 
 
@@ -689,10 +749,7 @@ def test_length() -> None:
     """
     Test if the arrays have the same size (length)
     """
-    with pytest.raises(
-        ValueError,
-        match=r"There are arrays with different len*"
-    ):
+    with pytest.raises(ValueError, match=r"There are arrays with different len*"):
         _check_arrays_length(np.array([1, 2, 3]), np.array([4, 5, 6, 7]))
 
 
@@ -712,8 +769,7 @@ def test_valid_gamma(gamma: float) -> None:
 def test_invalid_large_gamma(gamma: float) -> None:
     """Test a non-valid gamma parameter."""
     with pytest.raises(
-        ValueError,
-        match="Invalid gamma. Allowed values are between 0 and 1."
+        ValueError, match="Invalid gamma. Allowed values are between 0 and 1."
     ):
         _check_gamma(gamma)
 
@@ -749,13 +805,16 @@ def test_check_cv_same_split_no_random_state(cv: BaseCrossValidator) -> None:
 
 
 @pytest.mark.parametrize(
-    "cv_result", [
-        (1, True), (2, False),
-        ("split", True), (KFold(5), False),
+    "cv_result",
+    [
+        (1, True),
+        (2, False),
+        ("split", True),
+        (KFold(5), False),
         (ShuffleSplit(1), True),
         (ShuffleSplit(2), False),
         (LeaveOneOut(), False),
-    ]
+    ],
 )
 def test_check_no_agg_cv(cv_result: Tuple) -> None:
     """Test that if `_check_no_agg_cv` function returns the expected result."""
@@ -769,8 +828,7 @@ def test_check_no_agg_cv_value_error(cv: Any) -> None:
     """Test that if `_check_no_agg_cv` function raises value error."""
     array = ["prefit", "split"]
     with pytest.raises(
-        ValueError,
-        match=r"Allowed values must have the `get_n_splits` method"
+        ValueError, match=r"Allowed values must have the `get_n_splits` method"
     ):
         _check_no_agg_cv(X_toy, cv, array)
 
@@ -786,7 +844,7 @@ def test_invalid_n_samples_int_negative(n_samples: int) -> None:
             r"Invalid n_samples. Allowed values "
             r"are float in the range (0.0, 1.0) or"
             r" int in the range [1, inf)"
-        )
+        ),
     ):
         _check_n_samples(X=X, n_samples=n_samples, indices=indices)
 
@@ -802,7 +860,7 @@ def test_invalid_n_samples_int_zero(n_samples: int) -> None:
             r"The value of n_samples is too small. "
             r"You need to increase it so that n_samples*X.shape[0] > 1"
             r"otherwise n_samples should be an int"
-        )
+        ),
     ):
         _check_n_samples(X=X, n_samples=n_samples, indices=indices)
 
@@ -818,6 +876,6 @@ def test_invalid_n_samples_float(n_samples: float) -> None:
             r"Invalid n_samples. Allowed values "
             r"are float in the range (0.0, 1.0) or"
             r" int in the range [1, inf)"
-        )
+        ),
     ):
         _check_n_samples(X=X, n_samples=n_samples, indices=indices)

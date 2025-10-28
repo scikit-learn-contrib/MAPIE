@@ -65,7 +65,8 @@ from sklearn.model_selection import RandomizedSearchCV, TimeSeriesSplit
 
 from mapie.metrics.regression import (
     regression_coverage_score,
-    regression_mean_width_score, coverage_width_based,
+    regression_mean_width_score,
+    coverage_width_based,
 )
 from mapie.regression import TimeSeriesRegressor
 from mapie.subsample import BlockBootstrap
@@ -88,9 +89,7 @@ url_file = (
     "https://raw.githubusercontent.com/scikit-learn-contrib/MAPIE/master/"
     "examples/data/demand_temperature.csv"
 )
-demand_df = pd.read_csv(
-    url_file, parse_dates=True, index_col=0
-)
+demand_df = pd.read_csv(url_file, parse_dates=True, index_col=0)
 demand_df["Date"] = pd.to_datetime(demand_df.index)
 demand_df["Weekofyear"] = demand_df.Date.dt.isocalendar().week.astype("int64")
 demand_df["Weekday"] = demand_df.Date.dt.isocalendar().day.astype("int64")
@@ -105,7 +104,7 @@ for hour in range(1, n_lags):
 # It aims at simulating an effect, such as blackout or lockdown due to a
 # pandemic, that was not taken into account by the model during its training.
 
-demand_df.Demand.iloc[-int(num_test_steps/2):] -= 2
+demand_df.Demand.iloc[-int(num_test_steps / 2) :] -= 2
 
 ##############################################################################
 # The last week of the dataset is considered as test set, the remaining data
@@ -116,9 +115,7 @@ demand_test = demand_df.iloc[-num_test_steps:, :].copy()
 features = ["Weekofyear", "Weekday", "Hour", "Temperature"]
 features += [f"Lag_{hour}" for hour in range(1, n_lags)]
 
-X_train = demand_train.loc[
-    ~np.any(demand_train[features].isnull(), axis=1), features
-]
+X_train = demand_train.loc[~np.any(demand_train[features].isnull(), axis=1), features]
 y_train = demand_train.loc[X_train.index, "Demand"]
 X_test = demand_test.loc[:, features]
 y_test = demand_test["Demand"]
@@ -166,9 +163,7 @@ if model_params_fit_not_done:
     model = cv_obj.best_estimator_
 else:
     # Model: Random Forest previously optimized with a cross-validation
-    model = RandomForestRegressor(
-        max_depth=10, n_estimators=50, random_state=59
-    )
+    model = RandomForestRegressor(max_depth=10, n_estimators=50, random_state=59)
 
 ##############################################################################
 # 3. Estimate prediction intervals on the test set
@@ -220,21 +215,17 @@ mapie_aci = TimeSeriesRegressor(
 mapie_enbpi = mapie_enbpi.fit(X_train, y_train)
 
 y_pred_enbpi_npfit, y_pis_enbpi_npfit = mapie_enbpi.predict(
-    X_test, confidence_level=1-alpha, ensemble=True,
-    allow_infinite_bounds=True
+    X_test, confidence_level=1 - alpha, ensemble=True, allow_infinite_bounds=True
 )
 y_pis_enbpi_npfit = np.clip(y_pis_enbpi_npfit, 1, 10)
-coverage_enbpi_npfit = regression_coverage_score(
-    y_test, y_pis_enbpi_npfit
-)[0]
-width_enbpi_npfit = regression_mean_width_score(
-    y_pis_enbpi_npfit
-)[0]
+coverage_enbpi_npfit = regression_coverage_score(y_test, y_pis_enbpi_npfit)[0]
+width_enbpi_npfit = regression_mean_width_score(y_pis_enbpi_npfit)[0]
 cwc_enbpi_npfit = coverage_width_based(
-    y_test, y_pis_enbpi_npfit[:, 0, 0],
+    y_test,
+    y_pis_enbpi_npfit[:, 0, 0],
     y_pis_enbpi_npfit[:, 1, 0],
     eta=10,
-    confidence_level=0.95
+    confidence_level=0.95,
 )
 
 # For ACI
@@ -243,40 +234,38 @@ mapie_aci = mapie_aci.fit(X_train, y_train)
 y_pred_aci_npfit = np.zeros(y_pred_enbpi_npfit.shape)
 y_pis_aci_npfit = np.zeros(y_pis_enbpi_npfit.shape)
 y_pred_aci_npfit[:gap], y_pis_aci_npfit[:gap, :, :] = mapie_aci.predict(
-    X_test.iloc[:gap, :], confidence_level=1-alpha, ensemble=True,
-    allow_infinite_bounds=True
+    X_test.iloc[:gap, :],
+    confidence_level=1 - alpha,
+    ensemble=True,
+    allow_infinite_bounds=True,
 )
 for step in range(gap, len(X_test), gap):
     mapie_aci.adapt_conformal_inference(
-        X_test.iloc[(step - gap):step, :].to_numpy(),
-        y_test.iloc[(step - gap):step].to_numpy(),
-        gamma=0.05
+        X_test.iloc[(step - gap) : step, :].to_numpy(),
+        y_test.iloc[(step - gap) : step].to_numpy(),
+        gamma=0.05,
     )
     (
-        y_pred_aci_npfit[step:step + gap],
-        y_pis_aci_npfit[step:step + gap, :, :],
+        y_pred_aci_npfit[step : step + gap],
+        y_pis_aci_npfit[step : step + gap, :, :],
     ) = mapie_aci.predict(
-        X_test.iloc[step:(step + gap), :],
-        confidence_level=1-alpha,
+        X_test.iloc[step : (step + gap), :],
+        confidence_level=1 - alpha,
         ensemble=True,
-        allow_infinite_bounds=True
+        allow_infinite_bounds=True,
     )
-    y_pis_aci_npfit[step:step + gap, :, :] = np.clip(
-        y_pis_aci_npfit[step:step + gap, :, :], 1, 10
+    y_pis_aci_npfit[step : step + gap, :, :] = np.clip(
+        y_pis_aci_npfit[step : step + gap, :, :], 1, 10
     )
 
-coverage_aci_npfit = regression_coverage_score(
-    y_test, y_pis_aci_npfit
-)[0]
-width_aci_npfit = regression_mean_width_score(
-    y_pis_aci_npfit
-)[0]
+coverage_aci_npfit = regression_coverage_score(y_test, y_pis_aci_npfit)[0]
+width_aci_npfit = regression_mean_width_score(y_pis_aci_npfit)[0]
 cwc_aci_npfit = coverage_width_based(
     y_test,
     y_pis_aci_npfit[:, 0, 0],
     y_pis_aci_npfit[:, 1, 0],
     eta=10,
-    confidence_level=0.95
+    confidence_level=0.95,
 )
 
 
@@ -293,37 +282,37 @@ mapie_enbpi = mapie_enbpi.fit(X_train, y_train)
 y_pred_enbpi_pfit = np.zeros(y_pred_enbpi_npfit.shape)
 y_pis_enbpi_pfit = np.zeros(y_pis_enbpi_npfit.shape)
 y_pred_enbpi_pfit[:gap], y_pis_enbpi_pfit[:gap, :, :] = mapie_enbpi.predict(
-    X_test.iloc[:gap, :], confidence_level=1-alpha, ensemble=True,
-    allow_infinite_bounds=True
+    X_test.iloc[:gap, :],
+    confidence_level=1 - alpha,
+    ensemble=True,
+    allow_infinite_bounds=True,
 )
 
 for step in range(gap, len(X_test), gap):
     mapie_enbpi.partial_fit(
-        X_test.iloc[(step - gap):step, :],
-        y_test.iloc[(step - gap):step],
+        X_test.iloc[(step - gap) : step, :],
+        y_test.iloc[(step - gap) : step],
     )
     (
-        y_pred_enbpi_pfit[step:step + gap],
-        y_pis_enbpi_pfit[step:step + gap, :, :],
+        y_pred_enbpi_pfit[step : step + gap],
+        y_pis_enbpi_pfit[step : step + gap, :, :],
     ) = mapie_enbpi.predict(
-        X_test.iloc[step:(step + gap), :],
-        confidence_level=1-alpha,
+        X_test.iloc[step : (step + gap), :],
+        confidence_level=1 - alpha,
         ensemble=True,
-        allow_infinite_bounds=True
+        allow_infinite_bounds=True,
     )
-    y_pis_enbpi_pfit[step:step + gap, :, :] = np.clip(
-        y_pis_enbpi_pfit[step:step + gap, :, :], 1, 10
+    y_pis_enbpi_pfit[step : step + gap, :, :] = np.clip(
+        y_pis_enbpi_pfit[step : step + gap, :, :], 1, 10
     )
-coverage_enbpi_pfit = regression_coverage_score(
-    y_test, y_pis_enbpi_pfit
-)[0]
-width_enbpi_pfit = regression_mean_width_score(
-    y_pis_enbpi_pfit
-)[0]
+coverage_enbpi_pfit = regression_coverage_score(y_test, y_pis_enbpi_pfit)[0]
+width_enbpi_pfit = regression_mean_width_score(y_pis_enbpi_pfit)[0]
 cwc_enbpi_pfit = coverage_width_based(
-    y_test, y_pis_enbpi_pfit[:, 0, 0], y_pis_enbpi_pfit[:, 1, 0],
+    y_test,
+    y_pis_enbpi_pfit[:, 0, 0],
+    y_pis_enbpi_pfit[:, 1, 0],
     eta=10,
-    confidence_level=0.95
+    confidence_level=0.95,
 )
 
 
@@ -340,43 +329,43 @@ mapie_aci = mapie_aci.fit(X_train, y_train)
 y_pred_aci_pfit = np.zeros(y_pred_aci_npfit.shape)
 y_pis_aci_pfit = np.zeros(y_pis_aci_npfit.shape)
 y_pred_aci_pfit[:gap], y_pis_aci_pfit[:gap, :, :] = mapie_aci.predict(
-    X_test.iloc[:gap, :], confidence_level=1-alpha, ensemble=True,
-    allow_infinite_bounds=True
+    X_test.iloc[:gap, :],
+    confidence_level=1 - alpha,
+    ensemble=True,
+    allow_infinite_bounds=True,
 )
 
 for step in range(gap, len(X_test), gap):
     mapie_aci.partial_fit(
-        X_test.iloc[(step - gap):step, :],
-        y_test.iloc[(step - gap):step],
+        X_test.iloc[(step - gap) : step, :],
+        y_test.iloc[(step - gap) : step],
     )
     mapie_aci.adapt_conformal_inference(
-        X_test.iloc[(step - gap):step, :].to_numpy(),
-        y_test.iloc[(step - gap):step].to_numpy(),
-        gamma=0.05
+        X_test.iloc[(step - gap) : step, :].to_numpy(),
+        y_test.iloc[(step - gap) : step].to_numpy(),
+        gamma=0.05,
     )
     (
-        y_pred_aci_pfit[step:step + gap],
-        y_pis_aci_pfit[step:step + gap, :, :],
+        y_pred_aci_pfit[step : step + gap],
+        y_pis_aci_pfit[step : step + gap, :, :],
     ) = mapie_aci.predict(
-        X_test.iloc[step:(step + gap), :],
-        confidence_level=1-alpha,
+        X_test.iloc[step : (step + gap), :],
+        confidence_level=1 - alpha,
         ensemble=True,
-        allow_infinite_bounds=True
+        allow_infinite_bounds=True,
     )
-    y_pis_aci_pfit[step:step + gap, :, :] = np.clip(
-        y_pis_aci_pfit[step:step + gap, :, :], 1, 10
+    y_pis_aci_pfit[step : step + gap, :, :] = np.clip(
+        y_pis_aci_pfit[step : step + gap, :, :], 1, 10
     )
 
-coverage_aci_pfit = regression_coverage_score(
-    y_test, y_pis_aci_pfit
-)[0]
-width_aci_pfit = regression_mean_width_score(
-    y_pis_aci_pfit
-)[0]
+coverage_aci_pfit = regression_coverage_score(y_test, y_pis_aci_pfit)[0]
+width_aci_pfit = regression_mean_width_score(y_pis_aci_pfit)[0]
 cwc_aci_pfit = coverage_width_based(
-    y_test, y_pis_aci_pfit[:, 0, 0], y_pis_aci_pfit[:, 1, 0],
+    y_test,
+    y_pis_aci_pfit[:, 0, 0],
+    y_pis_aci_pfit[:, 1, 0],
     eta=0.01,
-    confidence_level=0.95
+    confidence_level=0.95,
 )
 
 ##############################################################################
@@ -396,21 +385,13 @@ y_aci_pis = [y_pis_aci_npfit, y_pis_aci_pfit]
 coverages_aci = [coverage_aci_npfit, coverage_aci_pfit]
 widths_aci = [width_aci_npfit, width_aci_pfit]
 
-fig, axs = plt.subplots(
-    nrows=2, ncols=1, figsize=(14, 8), sharey="row", sharex="col"
-)
+fig, axs = plt.subplots(nrows=2, ncols=1, figsize=(14, 8), sharey="row", sharex="col")
 for i, (ax, w) in enumerate(zip(axs, ["without", "with"])):
     ax.set_ylabel("Hourly demand (GW)")
-    ax.plot(
-        y_train[int(-len(y_test)/2):],
-        lw=2,
-        label="Training data", c="C0"
-    )
+    ax.plot(y_train[int(-len(y_test) / 2) :], lw=2, label="Training data", c="C0")
     ax.plot(y_test, lw=2, label="Test data", c="C1")
 
-    ax.plot(
-        y_test.index, y_enbpi_preds[i], lw=2, c="C2", label="Predictions"
-    )
+    ax.plot(y_test.index, y_enbpi_preds[i], lw=2, c="C2", label="Predictions")
     ax.fill_between(
         y_test.index,
         y_enbpi_pis[i][:, 0, 0],
@@ -420,28 +401,19 @@ for i, (ax, w) in enumerate(zip(axs, ["without", "with"])):
         label="Prediction intervals",
     )
     title = f"EnbPI, {w} update of residuals. "
-    title += (f"Coverage:{coverages_enbpi[i]:.3f} and "
-              f"Width:{widths_enbpi[i]:.3f}")
+    title += f"Coverage:{coverages_enbpi[i]:.3f} and Width:{widths_enbpi[i]:.3f}"
     ax.set_title(title)
     ax.legend()
 fig.tight_layout()
 plt.show()
 
-fig, axs = plt.subplots(
-    nrows=2, ncols=1, figsize=(14, 8), sharey="row", sharex="col"
-)
+fig, axs = plt.subplots(nrows=2, ncols=1, figsize=(14, 8), sharey="row", sharex="col")
 for i, (ax, w) in enumerate(zip(axs, ["without", "with"])):
     ax.set_ylabel("Hourly demand (GW)")
-    ax.plot(
-        y_train[int(-len(y_test)/2):],
-        lw=2,
-        label="Training data", c="C0"
-    )
+    ax.plot(y_train[int(-len(y_test) / 2) :], lw=2, label="Training data", c="C0")
     ax.plot(y_test, lw=2, label="Test data", c="C1")
 
-    ax.plot(
-        y_test.index, y_aci_preds[i], lw=2, c="C2", label="Predictions"
-    )
+    ax.plot(y_test.index, y_aci_preds[i], lw=2, c="C2", label="Predictions")
     ax.fill_between(
         y_test.index,
         y_aci_pis[i][:, 0, 0],
@@ -470,23 +442,23 @@ window = 24
 for i in range(window, len(y_test), 1):
     rolling_coverage_aci_npfit.append(
         regression_coverage_score(
-            y_test[i-window:i], y_pis_aci_npfit[i-window:i]
+            y_test[i - window : i], y_pis_aci_npfit[i - window : i]
         )[0]
     )
     rolling_coverage_aci_pfit.append(
         regression_coverage_score(
-            y_test[i-window:i], y_pis_aci_pfit[i-window:i]
+            y_test[i - window : i], y_pis_aci_pfit[i - window : i]
         )[0]
     )
 
     rolling_coverage_enbpi_npfit.append(
         regression_coverage_score(
-            y_test[i-window:i], y_pis_enbpi_npfit[i-window:i]
+            y_test[i - window : i], y_pis_enbpi_npfit[i - window : i]
         )[0]
     )
     rolling_coverage_enbpi_pfit.append(
         regression_coverage_score(
-            y_test[i-window:i], y_pis_enbpi_pfit[i-window:i]
+            y_test[i - window : i], y_pis_enbpi_pfit[i - window : i]
         )[0]
     )
 
@@ -497,26 +469,34 @@ plt.plot(
     y_test[window:].index,
     rolling_coverage_aci_npfit,
     label="ACI Without update of residuals (NPfit)",
-    linestyle='--', color='r', alpha=0.5
+    linestyle="--",
+    color="r",
+    alpha=0.5,
 )
 plt.plot(
     y_test[window:].index,
     rolling_coverage_aci_pfit,
     label="ACI With update of residuals (Pfit)",
-    linestyle='-', color='r', alpha=0.5
+    linestyle="-",
+    color="r",
+    alpha=0.5,
 )
 
 plt.plot(
     y_test[window:].index,
     rolling_coverage_enbpi_npfit,
     label="ENBPI Without update of residuals (NPfit)",
-    linestyle='--', color='b', alpha=0.5
+    linestyle="--",
+    color="b",
+    alpha=0.5,
 )
 plt.plot(
     y_test[window:].index,
     rolling_coverage_enbpi_pfit,
     label="ENBPI With update of residuals (Pfit)",
-    linestyle='-', color='b', alpha=0.5
+    linestyle="-",
+    color="b",
+    alpha=0.5,
 )
 
 plt.legend()

@@ -13,7 +13,7 @@ from sklearn.model_selection import (
 )
 from sklearn.preprocessing import LabelEncoder
 from sklearn.utils import check_random_state
-from sklearn.utils.validation import (_check_y, check_is_fitted, indexable)
+from sklearn.utils.validation import _check_y, check_is_fitted, indexable
 
 from numpy.typing import ArrayLike, NDArray
 
@@ -21,14 +21,21 @@ from mapie.conformity_scores import BaseClassificationScore
 from mapie.conformity_scores.sets.raps import RAPSConformityScore
 from mapie.conformity_scores.utils import (
     check_classification_conformity_score,
-    check_target, check_and_select_conformity_score,
+    check_target,
+    check_and_select_conformity_score,
 )
 from mapie.estimator.classifier import EnsembleClassifier
 from mapie.utils import (
-    _check_alpha, _check_alpha_and_n_samples, _check_cv,
-    _check_estimator_classification, _check_n_features_in,
-    _check_n_jobs, _check_null_weight, _check_predict_params,
-    _check_verbose, check_proba_normalized,
+    _check_alpha,
+    _check_alpha_and_n_samples,
+    _check_cv,
+    _check_estimator_classification,
+    _check_n_features_in,
+    _check_n_jobs,
+    _check_null_weight,
+    _check_predict_params,
+    _check_verbose,
+    check_proba_normalized,
 )
 from mapie.utils import (
     _transform_confidence_level_to_alpha_list,
@@ -127,12 +134,9 @@ class SplitConformalClassifier:
         random_state: Optional[Union[int, np.random.RandomState]] = None,
     ) -> None:
         self._estimator = estimator
-        self._alphas = _transform_confidence_level_to_alpha_list(
-            confidence_level
-        )
+        self._alphas = _transform_confidence_level_to_alpha_list(confidence_level)
         self._conformity_score = check_and_select_conformity_score(
-            conformity_score,
-            BaseClassificationScore
+            conformity_score, BaseClassificationScore
         )
         self._prefit = prefit
         self._is_fitted = prefit
@@ -409,9 +413,7 @@ class CrossConformalClassifier:
             random_state=random_state,
         )
 
-        self._alphas = _transform_confidence_level_to_alpha_list(
-            confidence_level
-        )
+        self._alphas = _transform_confidence_level_to_alpha_list(confidence_level)
         self.is_fitted_and_conformalized = False
 
         self._predict_params: dict = {}
@@ -458,9 +460,7 @@ class CrossConformalClassifier:
             self.is_fitted_and_conformalized,
         )
 
-        fit_params_, sample_weight = _prepare_fit_params_and_sample_weight(
-            fit_params
-        )
+        fit_params_, sample_weight = _prepare_fit_params_and_sample_weight(fit_params)
         self._predict_params = _prepare_params(predict_params)
         self._mapie_classifier.fit(
             X=X,
@@ -468,7 +468,7 @@ class CrossConformalClassifier:
             sample_weight=sample_weight,
             groups=groups,
             fit_params=fit_params_,
-            predict_params=self._predict_params
+            predict_params=self._predict_params,
         )
 
         self.is_fitted_and_conformalized = True
@@ -557,7 +557,9 @@ class CrossConformalClassifier:
             self.is_fitted_and_conformalized,
         )
         predictions = self._mapie_classifier.predict(
-            X, alpha=None, **self._predict_params,
+            X,
+            alpha=None,
+            **self._predict_params,
         )
         return _cast_point_predictions_to_ndarray(predictions)
 
@@ -712,7 +714,7 @@ class _MapieClassifier(ClassifierMixin, BaseEstimator):
         "conformity_scores_",
         "conformity_score_function_",
         "classes_",
-        "label_encoder_"
+        "label_encoder_",
     ]
 
     def __init__(
@@ -723,7 +725,7 @@ class _MapieClassifier(ClassifierMixin, BaseEstimator):
         n_jobs: Optional[int] = None,
         conformity_score: Optional[BaseClassificationScore] = None,
         random_state: Optional[Union[int, np.random.RandomState]] = None,
-        verbose: int = 0
+        verbose: int = 0,
     ) -> None:
         self.estimator = estimator
         self.cv = cv
@@ -747,7 +749,7 @@ class _MapieClassifier(ClassifierMixin, BaseEstimator):
         check_random_state(self.random_state)
 
     def _get_classes_info(
-            self, estimator: ClassifierMixin, y: NDArray
+        self, estimator: ClassifierMixin, y: NDArray
     ) -> Tuple[int, NDArray]:
         """
         Compute the number of classes and the classes values
@@ -845,18 +847,13 @@ class _MapieClassifier(ClassifierMixin, BaseEstimator):
         cs_estimator.set_external_attributes(
             classes=self.classes_,
             label_encoder=self.label_encoder_,
-            random_state=self.random_state
+            random_state=self.random_state,
         )
-        if (
-            isinstance(cs_estimator, RAPSConformityScore) and
-            not (
-                self.cv in ["split", "prefit"] or
-                isinstance(self.cv, BaseShuffleSplit)
-            )
+        if isinstance(cs_estimator, RAPSConformityScore) and not (
+            self.cv in ["split", "prefit"] or isinstance(self.cv, BaseShuffleSplit)
         ):
             raise ValueError(
-                "RAPS conformity score can only be used "
-                "with SplitConformalClassifier."
+                "RAPS conformity score can only be used with SplitConformalClassifier."
             )
 
         # Cast
@@ -864,15 +861,14 @@ class _MapieClassifier(ClassifierMixin, BaseEstimator):
         sample_weight = cast(NDArray, sample_weight)
         groups = cast(NDArray, groups)
 
-        X, y, y_enc, sample_weight, groups = \
-            cs_estimator.split_data(X, y, y_enc, sample_weight, groups)
+        X, y, y_enc, sample_weight, groups = cs_estimator.split_data(
+            X, y, y_enc, sample_weight, groups
+        )
         self.n_samples_ = cs_estimator.n_samples_
 
         check_target(cs_estimator, y)
 
-        return (
-            estimator, cs_estimator, cv, X, y, y_enc, sample_weight, groups
-        )
+        return (estimator, cs_estimator, cv, X, y, y_enc, sample_weight, groups)
 
     def fit(
         self,
@@ -880,7 +876,7 @@ class _MapieClassifier(ClassifierMixin, BaseEstimator):
         y: ArrayLike,
         sample_weight: Optional[ArrayLike] = None,
         groups: Optional[ArrayLike] = None,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> _MapieClassifier:
         """
         Fit the base estimator or use the fitted base estimator.
@@ -916,8 +912,8 @@ class _MapieClassifier(ClassifierMixin, BaseEstimator):
         _MapieClassifier
             The model itself.
         """
-        fit_params = kwargs.pop('fit_params', {})
-        predict_params = kwargs.pop('predict_params', {})
+        fit_params = kwargs.pop("fit_params", {})
+        predict_params = kwargs.pop("predict_params", {})
 
         if len(predict_params) > 0:
             self._predict_params = True
@@ -925,16 +921,16 @@ class _MapieClassifier(ClassifierMixin, BaseEstimator):
             self._predict_params = False
 
         # Checks
-        (estimator,
-         self.conformity_score_function_,
-         cv,
-         X,
-         y,
-         y_enc,
-         sample_weight,
-         groups) = self._check_fit_parameter(
-            X, y, sample_weight, groups
-        )
+        (
+            estimator,
+            self.conformity_score_function_,
+            cv,
+            X,
+            y,
+            y_enc,
+            sample_weight,
+            groups,
+        ) = self._check_fit_parameter(X, y, sample_weight, groups)
 
         # Cast
         X, y_enc, y = cast(NDArray, X), cast(NDArray, y_enc), cast(NDArray, y)
@@ -952,8 +948,7 @@ class _MapieClassifier(ClassifierMixin, BaseEstimator):
         )
         # Fit the prediction function
         self.estimator_ = self.estimator_.fit(
-            X, y, y_enc=y_enc, sample_weight=sample_weight, groups=groups,
-            **fit_params
+            X, y, y_enc=y_enc, sample_weight=sample_weight, groups=groups, **fit_params
         )
 
         # Predict on calibration data
@@ -963,11 +958,14 @@ class _MapieClassifier(ClassifierMixin, BaseEstimator):
 
         # Compute the conformity scores
         self.conformity_score_function_.set_ref_predictor(self.estimator_)
-        self.conformity_scores_ = \
-            self.conformity_score_function_.get_conformity_scores(
-                y, y_pred_proba, y_enc=y_enc, X=X,
-                sample_weight=sample_weight, groups=groups
-            )
+        self.conformity_scores_ = self.conformity_score_function_.get_conformity_scores(
+            y,
+            y_pred_proba,
+            y_enc=y_enc,
+            X=X,
+            sample_weight=sample_weight,
+            groups=groups,
+        )
         return self
 
     def predict(
@@ -976,7 +974,7 @@ class _MapieClassifier(ClassifierMixin, BaseEstimator):
         alpha: Optional[Union[float, Iterable[float]]] = None,
         include_last_label: Optional[Union[bool, str]] = True,
         agg_scores: Optional[str] = "mean",
-        **predict_params
+        **predict_params,
     ) -> Union[NDArray, Tuple[NDArray, NDArray]]:
         """
         Prediction and prediction sets on new samples based on target
@@ -1047,19 +1045,15 @@ class _MapieClassifier(ClassifierMixin, BaseEstimator):
         """
         # Checks
 
-        if hasattr(self, '_predict_params'):
-            _check_predict_params(
-                self._predict_params,
-                predict_params, self.cv
-            )
+        if hasattr(self, "_predict_params"):
+            _check_predict_params(self._predict_params, predict_params, self.cv)
 
         check_is_fitted(self, self.fit_attributes)
         alpha = cast(Optional[NDArray], _check_alpha(alpha))
 
         # Estimate predictions
         y_pred_proba = self.estimator_.single_estimator_.predict_proba(
-            X,
-            **predict_params
+            X, **predict_params
         )
         y_pred_proba = check_proba_normalized(y_pred_proba, axis=1)
         y_pred = self.label_encoder_.inverse_transform(np.argmax(y_pred_proba, axis=1))
@@ -1076,13 +1070,12 @@ class _MapieClassifier(ClassifierMixin, BaseEstimator):
         # Estimate prediction sets
         if self.estimator_.cv != "prefit":
             y_pred_proba = self.estimator_.predict_agg_proba(
-                X,
-                agg_scores,
-                **predict_params
+                X, agg_scores, **predict_params
             )
 
         prediction_sets = self.conformity_score_function_.predict_set(
-            X, alpha_np,
+            X,
+            alpha_np,
             y_pred_proba=y_pred_proba,
             cv=self.estimator_.cv,
             conformity_scores=self.conformity_scores_,
