@@ -633,7 +633,7 @@ class VennAbersCalibrator(BaseEstimator, ClassifierMixin):
         May be None in prefit mode with multi-class classification.
 
     transformers_ : Optional[Pipeline]
-        Trasnformers from sklearn pipeline to transform categorical attributes.
+        Transformers from sklearn pipeline to transform categorical attributes.
 
     single_estimator_ : Optional[ClassifierMixin]
         The fitted estimator (only for prefit mode).
