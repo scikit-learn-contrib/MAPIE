@@ -520,7 +520,7 @@ def test_random_state_in_fit_overrides() -> None:
     va_cal2 = VennAbersCalibrator(
         estimator=GaussianNB(),
         inductive=True,
-        random_state=999  # Different from fit
+        random_state=999,  # Different from fit
     )
     va_cal2.fit(X_binary_train, y_binary_train, random_state=123)
     probs2 = va_cal2.predict_proba(X_binary_test)
@@ -1640,7 +1640,9 @@ def test_prefit_with_unfitted_estimator_raises_error() -> None:
 def test_cross_val_without_n_splits_raises_error() -> None:
     """Test that cross-validation mode without n_splits raises an error."""
     va_cal = VennAbersCalibrator(
-        estimator=GaussianNB(), inductive=False, n_splits=None  # Missing n_splits
+        estimator=GaussianNB(),
+        inductive=False,
+        n_splits=None,  # Missing n_splits
     )
 
     with pytest.raises(ValueError, match=".*please provide n_splits.*"):
