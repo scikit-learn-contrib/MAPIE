@@ -17,5 +17,5 @@ __all__ = [
     "metrics",
     "utils",
     "subsample",
-    "__version__"
+    "__version__",
 ]

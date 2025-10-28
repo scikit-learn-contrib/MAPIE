@@ -73,13 +73,13 @@ partition = np.concatenate(partition_list)
 noise_0_1 = np.random.normal(0, 0.1, group_size)
 noise_1_2 = np.random.normal(0, 0.5, group_size)
 noise_2_3 = np.random.normal(0, 1, group_size)
-noise_3_4 = np.random.normal(0, .4, group_size)
-noise_4_5 = np.random.normal(0, .2, group_size)
-noise_5_6 = np.random.normal(0, .3, group_size)
-noise_6_7 = np.random.normal(0, .6, group_size)
-noise_7_8 = np.random.normal(0, .7, group_size)
-noise_8_9 = np.random.normal(0, .8, group_size)
-noise_9_10 = np.random.normal(0, .9, group_size)
+noise_3_4 = np.random.normal(0, 0.4, group_size)
+noise_4_5 = np.random.normal(0, 0.2, group_size)
+noise_5_6 = np.random.normal(0, 0.3, group_size)
+noise_6_7 = np.random.normal(0, 0.6, group_size)
+noise_7_8 = np.random.normal(0, 0.7, group_size)
+noise_8_9 = np.random.normal(0, 0.8, group_size)
+noise_9_10 = np.random.normal(0, 0.9, group_size)
 
 y = np.concatenate(
     [
@@ -93,7 +93,8 @@ y = np.concatenate(
         np.sin(X[partition == 7, 0] * 2) + noise_7_8,
         np.sin(X[partition == 8, 0] * 2) + noise_8_9,
         np.sin(X[partition == 9, 0] * 2) + noise_9_10,
-    ], axis=0
+    ],
+    axis=0,
 )
 
 ##############################################################################
@@ -106,15 +107,20 @@ plt.show()
 # 2. Split the dataset into a training set, a conformalization set, and a test set
 # ------------------------------------------------------------------------------------
 
-(X_train, X_conformalize, X_test,
- y_train, y_conformalize, y_test) = train_conformalize_test_split(
-    X, y, train_size=0.4, conformalize_size=0.4, test_size=0.2, random_state=0
+(X_train, X_conformalize, X_test, y_train, y_conformalize, y_test) = (
+    train_conformalize_test_split(
+        X, y, train_size=0.4, conformalize_size=0.4, test_size=0.2, random_state=0
+    )
 )
 
 (partition_train, partition_conformalize, partition_test, _, _, _) = (
     train_conformalize_test_split(
-        partition, y, train_size=0.4, conformalize_size=0.4,
-        test_size=0.2, random_state=0
+        partition,
+        y,
+        train_size=0.4,
+        conformalize_size=0.4,
+        test_size=0.2,
+        random_state=0,
     )
 )
 
@@ -151,8 +157,9 @@ random_forest.fit(X_train, y_train)
 
 
 # We aim for a coverage score of at least 90%.
-split_regressor = SplitConformalRegressor(random_forest, prefit=True,
-                                          confidence_level=0.9)
+split_regressor = SplitConformalRegressor(
+    random_forest, prefit=True, confidence_level=0.9
+)
 split_regressor.conformalize(X_conformalize, y_conformalize)
 
 #######################################################################################
@@ -172,23 +179,21 @@ for group in np.unique(partition_test):
     coverages[group] = {}
     coverages[group]["split"] = regression_coverage_score(
         y_test[partition_test == group],
-        y_prediction_intervals_split[partition_test == group]
+        y_prediction_intervals_split[partition_test == group],
     )
 
 # Plot the coverage by group with the SplitConformalRegressor
 plt.bar(
     np.arange(len(coverages)),
     [float(coverages[group]["split"]) for group in coverages],
-    label="Split"
+    label="Split",
 )
 plt.xticks(
-    np.arange(len(coverages)),
-    [f"Group {group}" for group in coverages],
-    rotation=45
+    np.arange(len(coverages)), [f"Group {group}" for group in coverages], rotation=45
 )
 plt.hlines(0.9, -1, 10, label="90% coverage", color="black", linestyle="--")
 plt.ylabel("Coverage")
-plt.legend(loc='upper left', bbox_to_anchor=(1, 1))
+plt.legend(loc="upper left", bbox_to_anchor=(1, 1))
 plt.tight_layout()
 plt.show()
 
@@ -224,8 +229,9 @@ mondrian_regressor = {}
 partition_groups_conformity = np.unique(partition_conformalize)
 
 for group in partition_groups_conformity:
-    mapie_group_estimator = SplitConformalRegressor(copy(random_forest), prefit=True,
-                                                    confidence_level=0.9)
+    mapie_group_estimator = SplitConformalRegressor(
+        copy(random_forest), prefit=True, confidence_level=0.9
+    )
     indices_groups = np.argwhere(partition_conformalize == group)[:, 0]
     X_group = X_conformalize[indices_groups]
     y_group = y_conformalize[indices_groups]
@@ -248,7 +254,8 @@ for _, group in enumerate(partition_groups_test):
     indices_groups = np.argwhere(partition_test == group)[:, 0]
     X_group = X_test[indices_groups]
     y_pred_group, y_prediction_intervals_group = mondrian_regressor[
-        group].predict_interval(X_group)
+        group
+    ].predict_interval(X_group)
     y_pred_mondrian[indices_groups] = y_pred_group
     y_prediction_intervals_mondrian[indices_groups] = y_prediction_intervals_group
 
@@ -263,11 +270,11 @@ for group in np.unique(partition_test):
     coverages[group] = {}
     coverages[group]["split"] = regression_coverage_score(
         y_test[partition_test == group],
-        y_prediction_intervals_split[partition_test == group]
+        y_prediction_intervals_split[partition_test == group],
     )
     coverages[group]["mondrian"] = regression_coverage_score(
         y_test[partition_test == group],
-        y_prediction_intervals_mondrian[partition_test == group]
+        y_prediction_intervals_mondrian[partition_test == group],
     )
 
 # Plot the coverage by group, plot both methods side by side
@@ -275,21 +282,21 @@ plt.figure(figsize=(10, 5))
 plt.bar(
     np.arange(len(coverages)) * 2,
     [float(coverages[group]["split"]) for group in coverages],
-    label="Split"
+    label="Split",
 )
 plt.bar(
     np.arange(len(coverages)) * 2 + 1,
     [float(coverages[group]["mondrian"]) for group in coverages],
-    label="Mondrian"
+    label="Mondrian",
 )
 plt.xticks(
-    np.arange(len(coverages)) * 2 + .5,
+    np.arange(len(coverages)) * 2 + 0.5,
     [f"Group {group}" for group in coverages],
-    rotation=45
+    rotation=45,
 )
 plt.hlines(0.9, -1, 20, label="90% coverage", color="black", linestyle="--")
 plt.ylabel("Coverage")
-plt.legend(loc='upper left', bbox_to_anchor=(1, 1))
+plt.legend(loc="upper left", bbox_to_anchor=(1, 1))
 plt.tight_layout()
 plt.show()
 
@@ -297,15 +304,17 @@ plt.show()
 # method
 split_coverages = [coverages[group]["split"] for group in coverages]
 average_coverage = np.mean(split_coverages)
-print("Average coverage across the 10 groups with the classic method:",
-      average_coverage)
+print(
+    "Average coverage across the 10 groups with the classic method:", average_coverage
+)
 
 # Compute the coverage average across the 10 groups in the test set with the Mondrian
 # method
 split_coverages = [coverages[group]["mondrian"] for group in coverages]
 average_coverage = np.mean(split_coverages)
-print("Average coverage across the 10 groups with the Mondrian method:",
-      average_coverage)
+print(
+    "Average coverage across the 10 groups with the Mondrian method:", average_coverage
+)
 
 #######################################################################################
 # As expected, both methods achieve an average coverage (marginal coverage) above

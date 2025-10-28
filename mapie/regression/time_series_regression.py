@@ -114,9 +114,7 @@ class TimeSeriesRegressor(_MapieRegressor):
         """
         y_pred = super().predict(X, ensemble=ensemble)
         scores = np.array(
-            self.conformity_score_function_.get_conformity_scores(
-                y, y_pred, X=X
-            )
+            self.conformity_score_function_.get_conformity_scores(y, y_pred, X=X)
         )
         return scores
 
@@ -163,10 +161,10 @@ class TimeSeriesRegressor(_MapieRegressor):
         """
         warnings.warn(
             "WARNING: Deprecated method. "
-            + "The method \"partial_fit\" will be removed in v1.2. "
-            + "Use \"update\" instead to keep "
+            + 'The method "partial_fit" will be removed in v1.2. '
+            + 'Use "update" instead to keep '
             + "the same behavior in the future.",
-            DeprecationWarning
+            DeprecationWarning,
         )
         check_is_fitted(self, self.fit_attributes)
         X, y = cast(NDArray, X), cast(NDArray, y)
@@ -182,15 +180,11 @@ class TimeSeriesRegressor(_MapieRegressor):
         self.conformity_scores_ = np.roll(
             self.conformity_scores_, -len(new_conformity_scores_)
         )
-        self.conformity_scores_[
-            -len(new_conformity_scores_):
-        ] = new_conformity_scores_
+        self.conformity_scores_[-len(new_conformity_scores_) :] = new_conformity_scores_
         return self
 
     def _get_alpha(
-        self,
-        alpha: Optional[Union[float, Iterable[float]]] = None,
-        reset: bool = False
+        self, alpha: Optional[Union[float, Iterable[float]]] = None, reset: bool = False
     ) -> Optional[NDArray]:
         """
         Get and set the current alpha (or confidence_level) value(s) given the
@@ -217,7 +211,7 @@ class TimeSeriesRegressor(_MapieRegressor):
         Optional[Union[float, Iterable[float]]]
             The current alpha value(s) for confidence intervals.
         """
-        if 'current_alpha' not in self.__dict__ or reset:
+        if "current_alpha" not in self.__dict__ or reset:
             self.current_alpha: dict[float, float] = {}
 
         if alpha is not None:
@@ -308,9 +302,9 @@ class TimeSeriesRegressor(_MapieRegressor):
             _, y_pred_bounds = self.predict(
                 x,
                 ensemble=ensemble,
-                confidence_level=1-alpha_np,
+                confidence_level=1 - alpha_np,
                 optimize_beta=optimize_beta,
-                allow_infinite_bounds=True
+                allow_infinite_bounds=True,
             )
 
             for alpha_ix, alpha_0 in enumerate(alpha_np):
@@ -331,7 +325,7 @@ class TimeSeriesRegressor(_MapieRegressor):
         y: ArrayLike,
         ensemble: bool = False,
         confidence_level: Optional[Union[float, Iterable[float]]] = None,
-        gamma: float = 0.,
+        gamma: float = 0.0,
         optimize_beta: bool = False,
     ) -> TimeSeriesRegressor:
         """
@@ -386,12 +380,16 @@ class TimeSeriesRegressor(_MapieRegressor):
             the length of the training set.
         """
         self._check_method(self.method)
-        if self.method == 'enbpi':
+        if self.method == "enbpi":
             return self.partial_fit(X, y, ensemble=ensemble)
-        elif self.method == 'aci':
+        elif self.method == "aci":
             return self.adapt_conformal_inference(
-                X, y, ensemble=ensemble, confidence_level=confidence_level,
-                gamma=gamma, optimize_beta=optimize_beta
+                X,
+                y,
+                ensemble=ensemble,
+                confidence_level=confidence_level,
+                gamma=gamma,
+                optimize_beta=optimize_beta,
             )
         else:
             raise ValueError(
@@ -407,7 +405,7 @@ class TimeSeriesRegressor(_MapieRegressor):
         confidence_level: Optional[Union[float, Iterable[float]]] = None,
         optimize_beta: bool = False,
         allow_infinite_bounds: bool = False,
-        **predict_params
+        **predict_params,
     ) -> Union[NDArray, Tuple[NDArray, NDArray]]:
         """
         Predict target on new samples with confidence intervals.
@@ -456,22 +454,29 @@ class TimeSeriesRegressor(_MapieRegressor):
         alpha = self._transform_confidence_level_to_alpha_array(confidence_level)
         if alpha is None:
             super().predict(
-                X, ensemble=ensemble, alpha=alpha, optimize_beta=optimize_beta,
-                **predict_params
+                X,
+                ensemble=ensemble,
+                alpha=alpha,
+                optimize_beta=optimize_beta,
+                **predict_params,
             )
         if self.method == "aci":
             alpha = self._get_alpha(alpha)
 
         return super().predict(
-            X, ensemble=ensemble, alpha=alpha, optimize_beta=optimize_beta,
-            allow_infinite_bounds=allow_infinite_bounds, **predict_params
+            X,
+            ensemble=ensemble,
+            alpha=alpha,
+            optimize_beta=optimize_beta,
+            allow_infinite_bounds=allow_infinite_bounds,
+            **predict_params,
         )
 
     # The public API changed from alpha to confidence_level.
     # TODO: refactor this class to use confidence_level everywhere
     @staticmethod
     def _transform_confidence_level_to_alpha_array(
-        confidence_level: Optional[Union[float, Iterable[float]]] = None
+        confidence_level: Optional[Union[float, Iterable[float]]] = None,
     ) -> Optional[NDArray]:
         confidence_level = cast(Optional[NDArray], _check_alpha(confidence_level))
         if confidence_level is None:

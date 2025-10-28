@@ -33,6 +33,7 @@ intervals are narrower than the default ones, conversely to high prices
 for which the confidence intervals are higher but visually more relevant.
 The empirical coverage is similar between the two conformity scores.
 """
+
 import matplotlib.pyplot as plt
 import numpy as np
 import requests
@@ -70,8 +71,8 @@ model = RandomForestRegressor(**rf_kwargs)
 # Two sub datasets are extracted: the training and test ones.
 
 dataset_url = (
-    "https://www.kaggle.com" +
-    "/api/v1/datasets/download/shashanknecrothapa/ames-housing-dataset"
+    "https://www.kaggle.com"
+    + "/api/v1/datasets/download/shashanknecrothapa/ames-housing-dataset"
 )
 r = requests.get(dataset_url, stream=True)
 with zipfile.ZipFile(io.BytesIO(r.content)) as z:
@@ -107,13 +108,9 @@ mapie = CrossConformalRegressor(
     model, confidence_level=confidence_level, conformity_score="absolute"
 )
 mapie.fit_conformalize(X_train_conformalize, y_train_conformalize)
-y_pred_absconfscore, y_pis_absconfscore = mapie.predict_interval(
-    X_test
-)
+y_pred_absconfscore, y_pis_absconfscore = mapie.predict_interval(X_test)
 
-coverage_absconfscore = regression_coverage_score(
-    y_test, y_pis_absconfscore
-)[0]
+coverage_absconfscore = regression_coverage_score(y_test, y_pis_absconfscore)[0]
 
 ##############################################################################
 # Prepare the results for matplotlib. Get the prediction intervals and their
@@ -131,9 +128,7 @@ def get_yerr(y_pred, y_pis):
 
 
 yerr_absconfscore = get_yerr(y_pred_absconfscore, y_pis_absconfscore)
-pred_int_width_absconfscore = (
-    y_pis_absconfscore[:, 1, 0] - y_pis_absconfscore[:, 0, 0]
-)
+pred_int_width_absconfscore = y_pis_absconfscore[:, 1, 0] - y_pis_absconfscore[:, 0, 0]
 
 ##############################################################################
 # Then, train the model with:
@@ -142,13 +137,9 @@ mapie = CrossConformalRegressor(
     model, confidence_level=confidence_level, conformity_score="gamma"
 )
 mapie.fit_conformalize(X_train_conformalize, y_train_conformalize)
-y_pred_gammaconfscore, y_pis_gammaconfscore = mapie.predict_interval(
-    X_test
-)
+y_pred_gammaconfscore, y_pis_gammaconfscore = mapie.predict_interval(X_test)
 
-coverage_gammaconfscore = regression_coverage_score(
-    y_test, y_pis_gammaconfscore
-)[0]
+coverage_gammaconfscore = regression_coverage_score(y_test, y_pis_gammaconfscore)[0]
 
 yerr_gammaconfscore = get_yerr(y_pred_gammaconfscore, y_pis_gammaconfscore)
 pred_int_width_gammaconfscore = (

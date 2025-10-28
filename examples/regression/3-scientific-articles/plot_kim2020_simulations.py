@@ -30,6 +30,7 @@ results than [1], and that the targeted coverage level is obtained.
 "Predictive Inference Is Free with the Jackknife+-after-Bootstrap."
 34th Conference on Neural Information Processing Systems (NeurIPS 2020).
 """
+
 from __future__ import annotations
 
 import requests
@@ -50,10 +51,7 @@ from mapie.metrics.regression import (
     regression_coverage_score,
     regression_mean_width_score,
 )
-from mapie.regression import (
-    JackknifeAfterBootstrapRegressor,
-    CrossConformalRegressor
-)
+from mapie.regression import JackknifeAfterBootstrapRegressor, CrossConformalRegressor
 from mapie.subsample import Subsample
 
 
@@ -147,7 +145,7 @@ def compute_PIs(
     cv: Any,
     confidence_level: float,
     agg_function: Optional[str] = None,
-    random_state: int = 1
+    random_state: int = 1,
 ) -> pd.DataFrame:
     """
     Train and test a model with a MAPIE method,
@@ -235,11 +233,7 @@ def get_coverage_width(PIs: pd.DataFrame, y: NDArray) -> Tuple[float, float]:
 
 
 def B_random_from_B_fixed(
-    B: int,
-    train_size: int,
-    m: int,
-    itrial: int = 0,
-    random_state: int = 98765
+    B: int, train_size: int, m: int, itrial: int = 0, random_state: int = 98765
 ) -> int:
     """
     Generates a random number from a binomial distribution.
@@ -331,9 +325,7 @@ def comparison_JAB(
     )
 
     (X, y) = get_X_y()
-    m_vals = np.round(
-        train_size * np.linspace(0.1, 1, num=boostrap_size)
-    ).astype(int)
+    m_vals = np.round(train_size * np.linspace(0.1, 1, num=boostrap_size)).astype(int)
 
     result_index = 0
     for itrial in range(trials):
@@ -363,9 +355,7 @@ def comparison_JAB(
 
         for i_m, m in enumerate(m_vals):
             # J+aB, random B
-            B_random = B_random_from_B_fixed(
-                B_fixed, train_size, m, itrial=i_m
-            )
+            B_random = B_random_from_B_fixed(B_fixed, train_size, m, itrial=i_m)
             subsample_B_random = Subsample(
                 n_resamplings=B_random,
                 n_samples=m,
@@ -508,7 +498,6 @@ def plot_results(results: pd.DataFrame, score: str) -> None:
 
 
 if __name__ == "__main__":
-
     results_coverages_widths = comparison_JAB(
         model=Ridge2(),
         confidence_level=0.9,

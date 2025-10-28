@@ -35,11 +35,15 @@ n_samples = 10000
 X = np.linspace(0, 1, n_samples)
 y = f(X) + rng.normal(0, sigma, n_samples)
 X = X.reshape(-1, 1)
-(X_train, X_conformalize, X_test,
- y_train, y_conformalize, y_test) = train_conformalize_test_split(
-    X, y,
-    train_size=0.8, conformalize_size=0.1, test_size=0.1,
-    random_state=RANDOM_STATE
+(X_train, X_conformalize, X_test, y_train, y_conformalize, y_test) = (
+    train_conformalize_test_split(
+        X,
+        y,
+        train_size=0.8,
+        conformalize_size=0.1,
+        test_size=0.1,
+        random_state=RANDOM_STATE,
+    )
 )
 
 ##############################################################################
@@ -71,9 +75,11 @@ y_pred, y_pred_interval = mapie_regressor.predict_interval(X_test)
 # true labels fall within the predicted intervals).
 
 coverage_score = regression_coverage_score(y_test, y_pred_interval)
-print(f"For a confidence level of {confidence_level:.2f}, "
-      f"the target coverage is {confidence_level:.3f}, "
-      f"and the effective coverage is {coverage_score[0]:.3f}.")
+print(
+    f"For a confidence level of {confidence_level:.2f}, "
+    f"the target coverage is {confidence_level:.3f}, "
+    f"and the effective coverage is {coverage_score[0]:.3f}."
+)
 
 ##############################################################################
 # In this example, the effective coverage is slightly above the target coverage

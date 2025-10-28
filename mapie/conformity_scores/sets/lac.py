@@ -40,11 +40,7 @@ class LACConformityScore(BaseClassificationScore):
         super().__init__()
 
     def get_conformity_scores(
-        self,
-        y: NDArray,
-        y_pred: NDArray,
-        y_enc: Optional[NDArray] = None,
-        **kwargs
+        self, y: NDArray, y_pred: NDArray, y_enc: Optional[NDArray] = None, **kwargs
     ) -> NDArray:
         """
         Get the conformity score.
@@ -69,9 +65,7 @@ class LACConformityScore(BaseClassificationScore):
         y_enc = cast(NDArray, y_enc)
 
         # Conformity scores
-        conformity_scores = np.take_along_axis(
-            1 - y_pred, y_enc.reshape(-1, 1), axis=1
-        )
+        conformity_scores = np.take_along_axis(1 - y_pred, y_enc.reshape(-1, 1), axis=1)
 
         return conformity_scores
 
@@ -82,7 +76,7 @@ class LACConformityScore(BaseClassificationScore):
         y_pred_proba: NDArray,
         cv: Optional[Union[int, str, BaseCrossValidator]],
         agg_scores: Optional[str] = "mean",
-        **kwargs
+        **kwargs,
     ) -> NDArray:
         """
         Just processes the passed y_pred_proba.
@@ -127,7 +121,7 @@ class LACConformityScore(BaseClassificationScore):
         alpha_np: NDArray,
         cv: Optional[Union[int, str, BaseCrossValidator]],
         agg_scores: Optional[str] = "mean",
-        **kwargs
+        **kwargs,
     ) -> NDArray:
         """
         Get the quantiles of the conformity scores for each uncertainty level.
@@ -159,10 +153,7 @@ class LACConformityScore(BaseClassificationScore):
         n = len(conformity_scores)
 
         if cv == "prefit" or agg_scores in ["mean"]:
-            quantiles_ = _compute_quantiles(
-                conformity_scores,
-                alpha_np
-            )
+            quantiles_ = _compute_quantiles(conformity_scores, alpha_np)
         else:
             quantiles_ = (n + 1) * (1 - alpha_np)
 
@@ -175,7 +166,7 @@ class LACConformityScore(BaseClassificationScore):
         alpha_np: NDArray,
         cv: Optional[Union[int, str, BaseCrossValidator]],
         agg_scores: Optional[str] = "mean",
-        **kwargs
+        **kwargs,
     ) -> NDArray:
         """
         Generate prediction sets based on the probability predictions,
@@ -220,11 +211,10 @@ class LACConformityScore(BaseClassificationScore):
             ).sum(axis=2)
             prediction_sets = np.stack(
                 [
-                    np.greater_equal(
-                        y_pred_included - _alpha * (n - 1), -EPSILON
-                    )
+                    np.greater_equal(y_pred_included - _alpha * (n - 1), -EPSILON)
                     for _alpha in alpha_np
-                ], axis=2
+                ],
+                axis=2,
             )
 
         return prediction_sets

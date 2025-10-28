@@ -22,6 +22,7 @@ empty.
 This happens because the model is uncertain at the border between two labels.
 These so-called null regions disappear for larger coverage levels.
 """
+
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.naive_bayes import GaussianNB
@@ -47,9 +48,7 @@ y_train = np.hstack([np.full(n_samples, i) for i in range(n_classes)])
 
 
 # Create test from (x, y) coordinates
-xx, yy = np.meshgrid(
-    np.arange(x_min, x_max, step), np.arange(x_min, x_max, step)
-)
+xx, yy = np.meshgrid(np.arange(x_min, x_max, step), np.arange(x_min, x_max, step))
 X_test = np.stack([xx.ravel(), yy.ravel()], axis=1)
 
 # Apply SplitConformalClassifier on the dataset to get prediction sets
@@ -62,7 +61,7 @@ mapie = SplitConformalClassifier(
     estimator=clf,
     confidence_level=confidence_level,
     prefit=True,
-    conformity_score="lac"
+    conformity_score="lac",
 )
 mapie.conformalize(X_train, y_train)
 y_pred_mapie, y_ps_mapie = mapie.predict_set(X_test)

@@ -96,10 +96,7 @@ def check_regression_conformity_score(
         )
 
 
-def check_target(
-    conformity_score: BaseClassificationScore,
-    y: ArrayLike
-) -> None:
+def check_target(conformity_score: BaseClassificationScore, y: ArrayLike) -> None:
     """
     Check that if the type of target is binary,
     (then the method have to be ``"lac"``), or multi-class.
@@ -119,13 +116,11 @@ def check_target(
         or ``"score"`` or if type of target is not multi-class.
     """
     check_classification_targets(y)
-    if (
-        type_of_target(y) == "binary" and
-        not isinstance(conformity_score, LACConformityScore)
+    if type_of_target(y) == "binary" and not isinstance(
+        conformity_score, LACConformityScore
     ):
         raise ValueError(
-            "Invalid conformity score for binary target. "
-            "The only valid score is 'lac'."
+            "Invalid conformity score for binary target. The only valid score is 'lac'."
         )
 
 

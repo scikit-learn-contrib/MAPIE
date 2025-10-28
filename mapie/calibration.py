@@ -153,7 +153,7 @@ class TopLabelCalibrator(BaseEstimator, ClassifierMixin):
         """
         if cv in self.valid_cv:
             return cv
-        raise ValueError("Invalid cv argument. " f"Allowed values are {self.valid_cv}.")
+        raise ValueError(f"Invalid cv argument. Allowed values are {self.valid_cv}.")
 
     def _check_calibrator(
         self,

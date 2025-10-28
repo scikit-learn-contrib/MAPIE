@@ -442,7 +442,7 @@ def _check_no_agg_cv(
 
 
 def _check_alpha(
-    alpha: Optional[Union[float, Iterable[float]]] = None
+    alpha: Optional[Union[float, Iterable[float]]] = None,
 ) -> Optional[ArrayLike]:
     """
     Check alpha (or confidence_level) and prepare it as a ArrayLike.
@@ -793,7 +793,7 @@ def _check_defined_variables_predict_cqr(
 
 
 def _check_estimator_fit_predict(
-    estimator: Union[RegressorMixin, ClassifierMixin]
+    estimator: Union[RegressorMixin, ClassifierMixin],
 ) -> None:
     """
     Check that the estimator has a fit and precict method.
@@ -1540,7 +1540,7 @@ def _transform_confidence_level_to_alpha(
 
 
 def _transform_confidence_level_to_alpha_list(
-    confidence_level: Union[float, Iterable[float]]
+    confidence_level: Union[float, Iterable[float]],
 ) -> Iterable[float]:
     if isinstance(confidence_level, IterableType):
         confidence_levels = confidence_level
@@ -1572,7 +1572,7 @@ def _check_cv_not_string(cv: Union[int, str, BaseCrossValidator]) -> None:
 
 
 def _cast_point_predictions_to_ndarray(
-    point_predictions: Union[NDArray, Tuple[NDArray, NDArray]]
+    point_predictions: Union[NDArray, Tuple[NDArray, NDArray]],
 ) -> NDArray:
     if isinstance(point_predictions, tuple):
         raise TypeError(
@@ -1583,7 +1583,7 @@ def _cast_point_predictions_to_ndarray(
 
 
 def _cast_predictions_to_ndarray_tuple(
-    predictions: Union[NDArray, Tuple[NDArray, NDArray]]
+    predictions: Union[NDArray, Tuple[NDArray, NDArray]],
 ) -> Tuple[NDArray, NDArray]:
     if not isinstance(predictions, tuple):
         raise TypeError(
@@ -1598,7 +1598,7 @@ def _prepare_params(params: Union[dict, None]) -> dict:
 
 
 def _prepare_fit_params_and_sample_weight(
-    fit_params: Union[dict, None]
+    fit_params: Union[dict, None],
 ) -> Tuple[dict, Optional[ArrayLike]]:
     fit_params_ = _prepare_params(fit_params)
     sample_weight = fit_params_.pop("sample_weight", None)

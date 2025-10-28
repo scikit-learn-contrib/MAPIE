@@ -138,7 +138,7 @@ Let's first give the settings and the notations of the method:
 - Let :math:`R` be the risk associated to a set-valued predictor:
 
 .. math::
-    R(\mathcal{T}_{\hat{\lambda}}) = \mathbb{E}[L(Y, \mathcal{T}_{\lambda}(X))]
+    R(\mathcal{T}_{\lambda}) = \mathbb{E}[L(Y, \mathcal{T}_{\lambda}(X))]
 
 The goal of the method is to compute an Upper Confidence Bound (UCB) :math:`\hat{R}^+(\lambda)` of :math:`R(\lambda)` and then to find
 :math:`\hat{\lambda}` as follows:

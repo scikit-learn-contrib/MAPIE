@@ -5,7 +5,7 @@ from typing import List, Optional, Tuple, Union, cast
 import numpy as np
 from joblib import Parallel, delayed
 from sklearn.base import ClassifierMixin, clone
-from sklearn.model_selection import (BaseCrossValidator, BaseShuffleSplit)
+from sklearn.model_selection import BaseCrossValidator, BaseShuffleSplit
 from sklearn.utils import _safe_indexing
 from sklearn.utils.validation import _num_samples, check_is_fitted
 
@@ -162,24 +162,17 @@ class EnsembleClassifier:
         """
         X_train = _safe_indexing(X, train_index)
         y_train = _safe_indexing(y, train_index)
-        if not (sample_weight is None):
+        if sample_weight is not None:
             sample_weight = _safe_indexing(sample_weight, train_index)
             sample_weight = cast(NDArray, sample_weight)
 
         estimator = _fit_estimator(
-            estimator,
-            X_train,
-            y_train,
-            sample_weight=sample_weight,
-            **fit_params
+            estimator, X_train, y_train, sample_weight=sample_weight, **fit_params
         )
         return estimator
 
     @staticmethod
-    def _check_proba_normalized(
-        y_pred_proba: ArrayLike,
-        axis: int = 1
-    ) -> ArrayLike:
+    def _check_proba_normalized(y_pred_proba: ArrayLike, axis: int = 1) -> ArrayLike:
         """
         Check if, for all the observations, the sum of
         the probabilities is equal to one.
@@ -204,15 +197,12 @@ class EnsembleClassifier:
             np.sum(y_pred_proba, axis=axis),
             1,
             err_msg="The sum of the scores is not equal to one.",
-            rtol=1e-5
+            rtol=1e-5,
         )
         return y_pred_proba
 
     def _predict_proba_oof_estimator(
-        self,
-        estimator: ClassifierMixin,
-        X: ArrayLike,
-        **predict_params
+        self, estimator: ClassifierMixin, X: ArrayLike, **predict_params
     ) -> NDArray:
         """
         Predict probabilities of a test set from a fitted estimator.
@@ -244,7 +234,7 @@ class EnsembleClassifier:
         X: ArrayLike,
         val_index: ArrayLike,
         k: int,
-        **predict_params
+        **predict_params,
     ) -> Tuple[NDArray, ArrayLike, ArrayLike]:
         """
         Perform predictions on a single out-of-fold model on a validation set.
@@ -268,8 +258,9 @@ class EnsembleClassifier:
 
         X_val = _safe_indexing(X, val_index)
         if _num_samples(X_val) > 0:
-            y_pred_proba = self._predict_proba_oof_estimator(estimator, X_val,
-                                                             **predict_params)
+            y_pred_proba = self._predict_proba_oof_estimator(
+                estimator, X_val, **predict_params
+            )
         else:
             y_pred_proba = np.array([])
         val_id = np.full(len(X_val), k, dtype=int)
@@ -331,29 +322,17 @@ class EnsembleClassifier:
         # Computation
         if cv == "prefit":
             single_estimator_ = estimator
-            k_ = (
-                np.full(shape=(n_samples, 1), fill_value=np.nan, dtype=float)
-            )
+            k_ = np.full(shape=(n_samples, 1), fill_value=np.nan, dtype=float)
         else:
             single_estimator_ = self._fit_oof_estimator(
-                clone(estimator),
-                X,
-                y,
-                full_indexes,
-                sample_weight,
-                **fit_params
+                clone(estimator), X, y, full_indexes, sample_weight, **fit_params
             )
             cv = cast(BaseCrossValidator, cv)
             k_ = np.empty_like(y, dtype=int)
 
             estimators_ = Parallel(self.n_jobs, verbose=self.verbose)(
                 delayed(self._fit_oof_estimator)(
-                    clone(estimator),
-                    X,
-                    y_enc,
-                    train_index,
-                    sample_weight,
-                    **fit_params
+                    clone(estimator), X, y_enc, train_index, sample_weight, **fit_params
                 )
                 for train_index, _ in cv.split(X, y, groups)
             )
@@ -373,7 +352,7 @@ class EnsembleClassifier:
         y: NDArray,
         y_enc: NDArray,
         groups: Optional[NDArray] = None,
-        **predict_params
+        **predict_params,
     ) -> Tuple[NDArray, NDArray, NDArray]:
         """
         Perform predictions on X, the calibration set.
@@ -472,7 +451,8 @@ class EnsembleClassifier:
             Parallel(n_jobs=self.n_jobs, verbose=self.verbose)(
                 delayed(self._predict_proba_oof_estimator)(
                     estimator, X, **predict_params
-                ) for estimator in self.estimators_
+                )
+                for estimator in self.estimators_
             )
         )
         if agg_scores == "crossval":

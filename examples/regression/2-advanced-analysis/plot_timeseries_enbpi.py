@@ -74,9 +74,7 @@ features = ["Weekofyear", "Weekday", "Hour", "Temperature"] + [
     f"Lag_{hour}" for hour in range(1, n_lags)
 ]
 
-X_train = demand_train.loc[
-    ~np.any(demand_train[features].isnull(), axis=1), features
-]
+X_train = demand_train.loc[~np.any(demand_train[features].isnull(), axis=1), features]
 y_train = demand_train.loc[X_train.index, "Demand"]
 X_test = demand_test.loc[:, features]
 y_test = demand_test["Demand"]
@@ -104,9 +102,7 @@ if perform_hyperparameters_search:
     model = cv_obj.best_estimator_
 else:
     # Model: Random Forest previously optimized with a cross-validation
-    model = RandomForestRegressor(
-        max_depth=10, n_estimators=50, random_state=59
-    )
+    model = RandomForestRegressor(max_depth=10, n_estimators=50, random_state=59)
 
 # Estimate prediction intervals on test set with best estimator
 alpha = 0.05
@@ -125,15 +121,11 @@ mapie_enpbi = TimeSeriesRegressor(
 print("EnbPI, with no update, width optimization")
 mapie_enpbi = mapie_enpbi.fit(X_train, y_train)
 y_pred_n_update_enbpi, y_pis_n_update_enbpi = mapie_enpbi.predict(
-    X_test, confidence_level=1-alpha, ensemble=True, optimize_beta=True
+    X_test, confidence_level=1 - alpha, ensemble=True, optimize_beta=True
 )
-coverage_n_update_enbpi = regression_coverage_score(
-    y_test, y_pis_n_update_enbpi
-)[0]
+coverage_n_update_enbpi = regression_coverage_score(y_test, y_pis_n_update_enbpi)[0]
 
-width_n_update_enbpi = regression_mean_width_score(
-    y_pis_n_update_enbpi
-)[0]
+width_n_update_enbpi = regression_mean_width_score(y_pis_n_update_enbpi)[0]
 
 print("EnbPI with update, width optimization")
 mapie_enpbi = mapie_enpbi.fit(X_train, y_train)
@@ -145,29 +137,27 @@ step_size = 1
     y_pred_update_enbpi[:step_size],
     y_pis_update_enbpi[:step_size, :, :],
 ) = mapie_enpbi.predict(
-    X_test.iloc[:step_size, :], confidence_level=1-alpha, ensemble=True,
-    optimize_beta=True
+    X_test.iloc[:step_size, :],
+    confidence_level=1 - alpha,
+    ensemble=True,
+    optimize_beta=True,
 )
 
 for step in range(step_size, len(X_test), step_size):
     mapie_enpbi.update(
-        X_test.iloc[(step - step_size):step, :],
-        y_test.iloc[(step - step_size):step],
+        X_test.iloc[(step - step_size) : step, :],
+        y_test.iloc[(step - step_size) : step],
     )
     (
-        y_pred_update_enbpi[step:step + step_size],
-        y_pis_update_enbpi[step:step + step_size, :, :],
+        y_pred_update_enbpi[step : step + step_size],
+        y_pis_update_enbpi[step : step + step_size, :, :],
     ) = mapie_enpbi.predict(
-        X_test.iloc[step:(step + step_size), :],
-        confidence_level=1-alpha,
+        X_test.iloc[step : (step + step_size), :],
+        confidence_level=1 - alpha,
         ensemble=True,
     )
-coverage_update_enbpi = regression_coverage_score(
-    y_test, y_pis_update_enbpi
-)[0]
-width_update_enbpi = regression_mean_width_score(
-    y_pis_update_enbpi
-)[0]
+coverage_update_enbpi = regression_coverage_score(y_test, y_pis_update_enbpi)[0]
+width_update_enbpi = regression_mean_width_score(y_pis_update_enbpi)[0]
 
 # Print results
 print(
@@ -198,9 +188,7 @@ enbpi_update = {
 results = [enbpi_no_update, enbpi_update]
 
 # Plot estimated prediction intervals on test set
-fig, axs = plt.subplots(
-    nrows=2, ncols=1, figsize=(15, 12), sharex="col"
-)
+fig, axs = plt.subplots(nrows=2, ncols=1, figsize=(15, 12), sharex="col")
 
 for i, (ax, w, result) in enumerate(
     zip(axs, ["EnbPI, without update", "EnbPI with update"], results)
@@ -228,13 +216,12 @@ for i, (ax, w, result) in enumerate(
     )
 
     ax.set_title(
-        w + "\n"
-        f"Coverage:{result['coverage']:.3f}  Width:{result['width']:.3f}",
+        w + f"\nCoverage:{result['coverage']:.3f}  Width:{result['width']:.3f}",
         fontweight="bold",
-        size=20
+        size=20,
     )
     plt.xticks(size=15, rotation=45)
     plt.yticks(size=15)
 
-axs[0].legend(prop={'size': 22})
+axs[0].legend(prop={"size": 22})
 plt.show()

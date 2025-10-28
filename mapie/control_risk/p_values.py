@@ -59,32 +59,17 @@ def compute_hoeffding_bentkus_p_value(
     """
     alpha_np = cast(NDArray, _check_alpha(alpha))
     alpha_np = alpha_np[:, np.newaxis]
-    r_hat_repeat = np.repeat(
-        np.expand_dims(r_hat, axis=1),
-        len(alpha_np),
-        axis=1
-    )
-    alpha_repeat = np.repeat(
-        alpha_np.reshape(1, -1),
-        len(r_hat),
-        axis=0
-    )
+    r_hat_repeat = np.repeat(np.expand_dims(r_hat, axis=1), len(alpha_np), axis=1)
+    alpha_repeat = np.repeat(alpha_np.reshape(1, -1), len(r_hat), axis=0)
     if isinstance(n_obs, int):
         n_obs = np.full_like(r_hat, n_obs, dtype=float)
-    n_obs_repeat = np.repeat(
-        np.expand_dims(n_obs, axis=1),
-        len(alpha_np),
-        axis=1
-    )
+    n_obs_repeat = np.repeat(np.expand_dims(n_obs, axis=1), len(alpha_np), axis=1)
 
     hoeffding_p_value = np.exp(
-        -n_obs_repeat * _h1(
-            np.where(
-                r_hat_repeat > alpha_repeat,
-                alpha_repeat,
-                r_hat_repeat
-            ),
-            alpha_repeat
+        -n_obs_repeat
+        * _h1(
+            np.where(r_hat_repeat > alpha_repeat, alpha_repeat, r_hat_repeat),
+            alpha_repeat,
         )
     )
     factor = 1 if binary else np.e
@@ -92,16 +77,12 @@ def compute_hoeffding_bentkus_p_value(
         np.ceil(n_obs_repeat * r_hat_repeat), n_obs_repeat, alpha_repeat
     )
     hb_p_value = np.where(
-        bentkus_p_value > hoeffding_p_value,
-        hoeffding_p_value,
-        bentkus_p_value
+        bentkus_p_value > hoeffding_p_value, hoeffding_p_value, bentkus_p_value
     )
     return hb_p_value
 
 
-def _h1(
-    r_hats: NDArray, alphas: NDArray
-) -> NDArray:
+def _h1(r_hats: NDArray, alphas: NDArray) -> NDArray:
     """
     This function allow us to compute the tighter version of hoeffding inequality.
     When r_hat = 0, the log is undefined, but the limit is 0, so we set the result to 0.

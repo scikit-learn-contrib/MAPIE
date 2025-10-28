@@ -3,9 +3,7 @@ from typing import Tuple, Union, Optional
 import numpy as np
 
 from mapie.conformity_scores.classification import BaseClassificationScore
-from mapie.conformity_scores.sets.utils import (
-    get_last_index_included
-)
+from mapie.conformity_scores.sets.utils import get_last_index_included
 from sklearn.model_selection import BaseCrossValidator
 
 from mapie._machine_precision import EPSILON
@@ -32,12 +30,7 @@ class NaiveConformityScore(BaseClassificationScore):
     def __init__(self) -> None:
         super().__init__()
 
-    def get_conformity_scores(
-        self,
-        y: NDArray,
-        y_pred: NDArray,
-        **kwargs
-    ) -> NDArray:
+    def get_conformity_scores(self, y: NDArray, y_pred: NDArray, **kwargs) -> NDArray:
         """
         Get the conformity score.
 
@@ -63,7 +56,7 @@ class NaiveConformityScore(BaseClassificationScore):
         alpha_np: NDArray,
         y_pred_proba: NDArray,
         cv: Optional[Union[int, str, BaseCrossValidator]],
-        **kwargs
+        **kwargs,
     ) -> NDArray:
         """
         Just processes the passed y_pred_proba.
@@ -88,9 +81,7 @@ class NaiveConformityScore(BaseClassificationScore):
         NDArray
             Array of predictions.
         """
-        y_pred_proba = np.repeat(
-            y_pred_proba[:, :, np.newaxis], len(alpha_np), axis=2
-        )
+        y_pred_proba = np.repeat(y_pred_proba[:, :, np.newaxis], len(alpha_np), axis=2)
         return y_pred_proba
 
     def get_conformity_score_quantiles(
@@ -98,7 +89,7 @@ class NaiveConformityScore(BaseClassificationScore):
         conformity_scores: NDArray,
         alpha_np: NDArray,
         cv: Optional[Union[int, str, BaseCrossValidator]],
-        **kwargs
+        **kwargs,
     ) -> NDArray:
         """
         Get the quantiles of the conformity scores for each uncertainty level.
@@ -123,11 +114,7 @@ class NaiveConformityScore(BaseClassificationScore):
         quantiles_ = 1 - alpha_np
         return quantiles_
 
-    def _add_regularization(
-        self,
-        y_pred_proba_sorted_cumsum: NDArray,
-        **kwargs
-    ):
+    def _add_regularization(self, y_pred_proba_sorted_cumsum: NDArray, **kwargs):
         """
         Add regularization to the sorted cumulative sum of predicted
         probabilities.
@@ -154,7 +141,7 @@ class NaiveConformityScore(BaseClassificationScore):
         y_pred_proba: NDArray,
         thresholds: NDArray,
         include_last_label: Union[bool, str, None],
-        **kwargs
+        **kwargs,
     ) -> Tuple[NDArray, NDArray, NDArray]:
         """
         Function that returns the smallest score
@@ -181,13 +168,9 @@ class NaiveConformityScore(BaseClassificationScore):
             with the RAPS method, the index of the last included score
             and the value of the last included score.
         """
-        index_sorted = np.flip(
-            np.argsort(y_pred_proba, axis=1), axis=1
-        )
+        index_sorted = np.flip(np.argsort(y_pred_proba, axis=1), axis=1)
         # sort probabilities by decreasing order
-        y_pred_proba_sorted = np.take_along_axis(
-            y_pred_proba, index_sorted, axis=1
-        )
+        y_pred_proba_sorted = np.take_along_axis(y_pred_proba, index_sorted, axis=1)
         # get sorted cumulated score
         y_pred_proba_sorted_cumsum = np.cumsum(y_pred_proba_sorted, axis=1)
         y_pred_proba_sorted_cumsum = self._add_regularization(
@@ -196,24 +179,16 @@ class NaiveConformityScore(BaseClassificationScore):
 
         # get cumulated score at their original position
         y_pred_proba_cumsum = np.take_along_axis(
-            y_pred_proba_sorted_cumsum,
-            np.argsort(index_sorted, axis=1),
-            axis=1
+            y_pred_proba_sorted_cumsum, np.argsort(index_sorted, axis=1), axis=1
         )
         # get index of the last included label
         y_pred_index_last = get_last_index_included(
-            y_pred_proba_cumsum,
-            thresholds,
-            include_last_label
+            y_pred_proba_cumsum, thresholds, include_last_label
         )
         # get the probability of the last included label
-        y_pred_proba_last = np.take_along_axis(
-            y_pred_proba,
-            y_pred_index_last,
-            axis=1
-        )
+        y_pred_proba_last = np.take_along_axis(y_pred_proba, y_pred_index_last, axis=1)
 
-        zeros_scores_proba_last = (y_pred_proba_last <= EPSILON)
+        zeros_scores_proba_last = y_pred_proba_last <= EPSILON
 
         # If the last included proba is zero, change it to the
         # smallest non-zero value to avoid inluding them in the
@@ -221,12 +196,10 @@ class NaiveConformityScore(BaseClassificationScore):
         if np.sum(zeros_scores_proba_last) > 0:
             y_pred_proba_last[zeros_scores_proba_last] = np.expand_dims(
                 np.min(
-                    np.ma.masked_less(
-                        y_pred_proba,
-                        EPSILON
-                    ).filled(fill_value=np.inf),
-                    axis=1
-                ), axis=1
+                    np.ma.masked_less(y_pred_proba, EPSILON).filled(fill_value=np.inf),
+                    axis=1,
+                ),
+                axis=1,
             )[zeros_scores_proba_last]
 
         return y_pred_proba_cumsum, y_pred_index_last, y_pred_proba_last
@@ -237,7 +210,7 @@ class NaiveConformityScore(BaseClassificationScore):
         conformity_scores: NDArray,
         alpha_np: NDArray,
         cv: Optional[Union[int, str, BaseCrossValidator]],
-        **kwargs
+        **kwargs,
     ) -> NDArray:
         """
         Generate prediction sets based on the probability predictions,
@@ -264,16 +237,10 @@ class NaiveConformityScore(BaseClassificationScore):
             Array of quantiles with respect to alpha_np.
         """
         # sort labels by decreasing probability
-        _, _, y_pred_proba_last = (
-            self._get_last_included_proba(
-                y_pred_proba,
-                thresholds=self.quantiles_,
-                include_last_label=True
-            )
+        _, _, y_pred_proba_last = self._get_last_included_proba(
+            y_pred_proba, thresholds=self.quantiles_, include_last_label=True
         )
         # get the prediction set by taking all probabilities above the last one
-        prediction_sets = np.greater_equal(
-            y_pred_proba - y_pred_proba_last, -EPSILON
-        )
+        prediction_sets = np.greater_equal(y_pred_proba - y_pred_proba_last, -EPSILON)
 
         return prediction_sets

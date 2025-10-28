@@ -8,8 +8,8 @@
     * `make coverage`
 - [ ] Make sure documentation builds without warnings and shows nicely:
     * `make doc`
-- [ ] Commit every change from the steps below
-- [ ] Update the version number with `bump2version major|minor|patch`
+- [ ] Commit every change from the steps above
+- [ ] Update the version number with `bump2version major|minor|patch` (a commit is automatically made)
 - [ ] Build source distribution:
     * `make clean-build`
     * `make build`
@@ -19,7 +19,7 @@
     * `twine upload --repository-url https://test.pypi.org/legacy/ dist/*` (use `__token__` as username and your api token as password)
 - [ ] Test upload on TestPyPi:
     * create a new empty virtual environment
-    * `pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ mapie`
+    * `pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ mapie` (mapie should install from test.pypi.org, may not work if using uv)
 - [ ] Push the commit created by bump2version: `git push origin master`
 - [ ] Push the tag created by bump2version: `git push --tags`
 - [ ] Create new release on GitHub for this tag.
