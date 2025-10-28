@@ -9,11 +9,12 @@ import numpy as np
 import pytest
 from numpy.typing import NDArray
 
-from mapie.risk_control.methods import (compute_hoeffding_bentkus_p_value,
-                                        find_precision_lambda_star,
-                                        ltt_procedure)
-from mapie.risk_control.risks import (compute_risk_precision,
-                                      compute_risk_recall)
+from mapie.risk_control.methods import (
+    compute_hoeffding_bentkus_p_value,
+    find_precision_lambda_star,
+    ltt_procedure,
+)
+from mapie.risk_control.risks import compute_risk_precision, compute_risk_recall
 
 lambdas = np.array([0.5, 0.9])
 
