@@ -4,7 +4,8 @@
 
 ### Checks that are run in GitHub CI ###
 lint:
-	flake8 examples mapie notebooks --max-line-length=88
+	ruff check examples mapie notebooks
+	ruff format --diff examples mapie notebooks
 
 type-check:
 	mypy mapie
