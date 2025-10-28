@@ -7,8 +7,13 @@ import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
 from .methods import ltt_procedure
-from .risks import (BinaryClassificationRisk, accuracy, false_positive_rate,
-                    precision, recall)
+from .risks import (
+    BinaryClassificationRisk,
+    accuracy,
+    false_positive_rate,
+    precision,
+    recall,
+)
 
 Risk_str = Literal["precision", "recall", "accuracy", "fpr"]
 Risk = Union[
@@ -95,7 +100,8 @@ class BinaryClassificationController:
     >>> from sklearn.linear_model import LogisticRegression
     >>> from sklearn.datasets import make_classification
     >>> from sklearn.model_selection import train_test_split
-    >>> from mapie.risk_control.riks import BinaryClassificationController, precision
+    >>> from mapie.risk_control.binary_classification import BinaryClassificationController
+    >>> from mapie.risk_control.risks import precision
 
     >>> X, y = make_classification(
     ...     n_features=2,
