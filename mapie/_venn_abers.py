@@ -6,7 +6,7 @@ from sklearn.utils.validation import check_is_fitted
 from sklearn.exceptions import NotFittedError
 
 sklearn.set_config(enable_metadata_routing=True)
-np.seterr(divide='ignore', invalid='ignore')
+np.seterr(divide="ignore", invalid="ignore")
 
 """
 Private module containing core Venn-ABERS implementation classes.
@@ -18,7 +18,7 @@ calibration. Users should use VennAbersCalibrator from mapie.calibration instead
 
 def _geo_mean(a):
     """Geometric mean calculation for Venn-ABERS."""
-    return a.prod(axis=1)**(1.0/a.shape[1])
+    return a.prod(axis=1) ** (1.0 / a.shape[1])
 
 
 def calc_p0p1(p_cal, y_cal, precision=None):
@@ -75,8 +75,9 @@ def calc_p0p1(p_cal, y_cal, precision=None):
         Ordered set of unique calibration probabilities
     """
     if precision is not None:
-        cal = np.hstack((np.round(p_cal[:, 1], precision).
-                         reshape(-1, 1), y_cal.reshape(-1, 1)))
+        cal = np.hstack(
+            (np.round(p_cal[:, 1], precision).reshape(-1, 1), y_cal.reshape(-1, 1))
+        )
     else:
         cal = np.hstack((p_cal[:, 1].reshape(-1, 1), y_cal.reshape(-1, 1)))
     ix = np.argsort(cal[:, 0])
@@ -197,8 +198,11 @@ def calc_probs(p0, p1, c, p_test):
     """
     out = p_test[:, 1]
     p0_p1 = np.hstack(
-        (p0[np.searchsorted(c, out, 'right'), 1].
-         reshape(-1, 1), p1[np.searchsorted(c, out, 'left'), 1].reshape(-1, 1)))
+        (
+            p0[np.searchsorted(c, out, "right"), 1].reshape(-1, 1),
+            p1[np.searchsorted(c, out, "left"), 1].reshape(-1, 1),
+        )
+    )
 
     p_prime = np.zeros((len(out), 2))
     p_prime[:, 1] = p0_p1[:, 1] / (1 - p0_p1[:, 0] + p0_p1[:, 1])
@@ -207,8 +211,9 @@ def calc_probs(p0, p1, c, p_test):
     return p_prime, p0_p1
 
 
-def predict_proba_prefitted_va(p_cal, y_cal, p_test,
-                               precision=None, va_tpe='one_vs_one'):
+def predict_proba_prefitted_va(
+    p_cal, y_cal, p_test, precision=None, va_tpe="one_vs_one"
+):
     """
     Generate Venn-ABERS calibrated probabilities
     for multiclass problems using pre-fitted calibration data.
@@ -296,7 +301,7 @@ def predict_proba_prefitted_va(p_cal, y_cal, p_test,
     (2, 3)
     """
     # Validate va_tpe parameter
-    if va_tpe not in ['one_vs_one', 'one_vs_all']:
+    if va_tpe not in ["one_vs_one", "one_vs_all"]:
         raise ValueError(
             f"Invalid va_tpe '{va_tpe}'. "
             f"Allowed values are ['one_vs_one', 'one_vs_all']."
@@ -305,7 +310,7 @@ def predict_proba_prefitted_va(p_cal, y_cal, p_test,
     p_prime = None
     multiclass_p0p1 = None
 
-    if va_tpe == 'one_vs_one':
+    if va_tpe == "one_vs_one":
         classes = np.unique(y_cal)
         class_pairs = []
         for i in range(len(classes) - 1):
@@ -316,10 +321,12 @@ def predict_proba_prefitted_va(p_cal, y_cal, p_test,
         multiclass_p0p1 = []
         for i, class_pair in enumerate(class_pairs):
             pairwise_indices = (y_cal == class_pair[0]) + (y_cal == class_pair[1])
-            binary_cal_probs = p_cal[:, class_pair][pairwise_indices] / \
-                np.sum(p_cal[:, class_pair][pairwise_indices], axis=1).reshape(-1, 1)
-            binary_test_probs = p_test[:, class_pair] / \
-                np.sum(p_test[:, class_pair], axis=1).reshape(-1, 1)
+            binary_cal_probs = p_cal[:, class_pair][pairwise_indices] / np.sum(
+                p_cal[:, class_pair][pairwise_indices], axis=1
+            ).reshape(-1, 1)
+            binary_test_probs = p_test[:, class_pair] / np.sum(
+                p_test[:, class_pair], axis=1
+            ).reshape(-1, 1)
             binary_classes = y_cal[pairwise_indices] == class_pair[1]
 
             va = VennAbers()
@@ -330,20 +337,26 @@ def predict_proba_prefitted_va(p_cal, y_cal, p_test,
 
         p_prime = np.zeros((len(p_test), len(classes)))
 
-        for i, cl_id, in enumerate(classes):
+        for (
+            i,
+            cl_id,
+        ) in enumerate(classes):
             stack_i = [
                 p[:, 0].reshape(-1, 1)
                 for i, p in enumerate(multiclass_probs)
-                if class_pairs[i][0] == cl_id]
+                if class_pairs[i][0] == cl_id
+            ]
             stack_j = [
                 p[:, 1].reshape(-1, 1)
                 for i, p in enumerate(multiclass_probs)
-                if class_pairs[i][1] == cl_id]
+                if class_pairs[i][1] == cl_id
+            ]
             p_stack = stack_i + stack_j
 
-            p_prime[:, i] = 1 / \
-                (np.sum(np.hstack([(1 / p) for p in p_stack]), axis=1) -
-                 (len(classes) - 2))
+            p_prime[:, i] = 1 / (
+                np.sum(np.hstack([(1 / p) for p in p_stack]), axis=1)
+                - (len(classes) - 2)
+            )
 
     else:
         classes = np.unique(y_cal)
@@ -351,7 +364,7 @@ def predict_proba_prefitted_va(p_cal, y_cal, p_test,
         multiclass_probs = []
         multiclass_p0p1 = []
         for _, class_id in enumerate(classes):
-            class_indices = (y_cal == class_id)
+            class_indices = y_cal == class_id
             binary_cal_probs = np.zeros((len(p_cal), 2))
             binary_test_probs = np.zeros((len(p_test), 2))
             binary_cal_probs[:, 1] = p_cal[:, class_id]
@@ -541,16 +554,19 @@ class VennAbersCV:
         probabilities p_cal are rounded to.
         Yields significantly faster computation time for larger calibration datasets
     """
-    def __init__(self,
-                 estimator,
-                 inductive,
-                 n_splits=None,
-                 cal_size=None,
-                 train_proper_size=None,
-                 random_state=None,
-                 shuffle=True,
-                 stratify=None,
-                 precision=None):
+
+    def __init__(
+        self,
+        estimator,
+        inductive,
+        n_splits=None,
+        cal_size=None,
+        train_proper_size=None,
+        random_state=None,
+        shuffle=True,
+        stratify=None,
+        precision=None,
+    ):
         self.estimator = estimator
         self.n_splits = n_splits
         self.clf_p_cal = []
@@ -564,7 +580,7 @@ class VennAbersCV:
         self.precision = precision
 
     def fit(self, _x_train, _y_train, sample_weight=None):
-        """ Fits the IVAP or CVAP calibrator to the training set.
+        """Fits the IVAP or CVAP calibrator to the training set.
 
         Parameters
         ----------
@@ -583,8 +599,8 @@ class VennAbersCV:
 
             # Split sample_weight along with data if provided
             if sample_weight is not None:
-                x_train_proper, x_cal, y_train_proper, \
-                    y_cal, sw_train, sw_cal = train_test_split(
+                x_train_proper, x_cal, y_train_proper, y_cal, sw_train, sw_cal = (
+                    train_test_split(
                         _x_train,
                         _y_train,
                         sample_weight,
@@ -592,7 +608,9 @@ class VennAbersCV:
                         train_size=self.train_proper_size,
                         random_state=self.random_state,
                         shuffle=self.shuffle,
-                        stratify=self.stratify)
+                        stratify=self.stratify,
+                    )
+                )
             else:
                 x_train_proper, x_cal, y_train_proper, y_cal = train_test_split(
                     _x_train,
@@ -601,14 +619,15 @@ class VennAbersCV:
                     train_size=self.train_proper_size,
                     random_state=self.random_state,
                     shuffle=self.shuffle,
-                    stratify=self.stratify
+                    stratify=self.stratify,
                 )
                 sw_train = None
 
             # Fit estimator with sample weights if provided
             if sw_train is not None:
-                self.estimator.fit(x_train_proper, y_train_proper.flatten(),
-                                   sample_weight=sw_train)
+                self.estimator.fit(
+                    x_train_proper, y_train_proper.flatten(), sample_weight=sw_train
+                )
             else:
                 self.estimator.fit(x_train_proper, y_train_proper.flatten())
 
@@ -616,9 +635,11 @@ class VennAbersCV:
             self.clf_p_cal.append(clf_prob)
             self.clf_y_cal.append(y_cal)
         else:
-            kf = StratifiedKFold(n_splits=self.n_splits,
-                                 shuffle=self.shuffle,
-                                 random_state=self.random_state)
+            kf = StratifiedKFold(
+                n_splits=self.n_splits,
+                shuffle=self.shuffle,
+                random_state=self.random_state,
+            )
             for train_index, test_index in kf.split(_x_train, _y_train):
                 # Extract sample weights for this fold if provided
                 fold_sample_weight = None
@@ -627,19 +648,22 @@ class VennAbersCV:
 
                 # Fit estimator with sample weights if provided
                 if fold_sample_weight is not None:
-                    self.estimator.fit(_x_train[train_index],
-                                       _y_train[train_index].flatten(),
-                                       sample_weight=fold_sample_weight)
+                    self.estimator.fit(
+                        _x_train[train_index],
+                        _y_train[train_index].flatten(),
+                        sample_weight=fold_sample_weight,
+                    )
                 else:
-                    self.estimator.fit(_x_train[train_index],
-                                       _y_train[train_index].flatten())
+                    self.estimator.fit(
+                        _x_train[train_index], _y_train[train_index].flatten()
+                    )
 
                 clf_prob = self.estimator.predict_proba(_x_train[test_index])
                 self.clf_p_cal.append(clf_prob)
                 self.clf_y_cal.append(_y_train[test_index])
 
-    def predict_proba(self, _x_test, loss='log', p0_p1_output=False):
-        """ Generates Venn-ABERS calibrated probabilities.
+    def predict_proba(self, _x_test, loss="log", p0_p1_output=False):
+        """Generates Venn-ABERS calibrated probabilities.
 
 
         Parameters
@@ -667,9 +691,11 @@ class VennAbersCV:
         clf_prob_test = self.estimator.predict_proba(_x_test)
         for i in range(self.n_splits):
             va = VennAbers()
-            va.fit(p_cal=self.clf_p_cal[i],
-                   y_cal=self.clf_y_cal[i],
-                   precision=self.precision)
+            va.fit(
+                p_cal=self.clf_p_cal[i],
+                y_cal=self.clf_y_cal[i],
+                precision=self.precision,
+            )
             _, probs = va.predict_proba(p_test=clf_prob_test)
             p0p1_test.append(probs)
         p0_stack = np.hstack([prob[:, 0].reshape(-1, 1) for prob in p0p1_test])
@@ -677,15 +703,21 @@ class VennAbersCV:
 
         p_prime = np.zeros((len(_x_test), 2))
 
-        if loss == 'log':
-            p_prime[:, 1] = _geo_mean(p1_stack) / \
-                (_geo_mean(1-p0_stack) + _geo_mean(p1_stack))
+        if loss == "log":
+            p_prime[:, 1] = _geo_mean(p1_stack) / (
+                _geo_mean(1 - p0_stack) + _geo_mean(p1_stack)
+            )
             p_prime[:, 0] = 1 - p_prime[:, 1]
         else:
-            p_prime[:, 1] = 1 / self.n_splits * (
-                    np.sum(p1_stack, axis=1) +
-                    0.5 * np.sum(p0_stack**2, axis=1) -
-                    0.5 * np.sum(p1_stack**2, axis=1))
+            p_prime[:, 1] = (
+                1
+                / self.n_splits
+                * (
+                    np.sum(p1_stack, axis=1)
+                    + 0.5 * np.sum(p0_stack**2, axis=1)
+                    - 0.5 * np.sum(p1_stack**2, axis=1)
+                )
+            )
             p_prime[:, 0] = 1 - p_prime[:, 1]
 
         if p0_p1_output:
@@ -759,17 +791,19 @@ class VennAbersMultiClass:
         probabilities p_cal are rounded to.
         Yields significantly faster computation time for larger calibration datasets
     """
-    def __init__(self,
-                 estimator,
-                 inductive,
-                 n_splits=None,
-                 cal_size=None,
-                 train_proper_size=None,
-                 random_state=None,
-                 shuffle=True,
-                 stratify=None,
-                 precision=None
-                 ):
+
+    def __init__(
+        self,
+        estimator,
+        inductive,
+        n_splits=None,
+        cal_size=None,
+        train_proper_size=None,
+        random_state=None,
+        shuffle=True,
+        stratify=None,
+        precision=None,
+    ):
         self.estimator = estimator
         self.inductive = inductive
         self.n_splits = n_splits
@@ -812,11 +846,13 @@ class VennAbersMultiClass:
         try:
             check_is_fitted(self.estimator)
         except NotFittedError:
-            if (self.inductive and self.cal_size is None) and\
-               (self.train_proper_size is None):
+            if (self.inductive and self.cal_size is None) and (
+                self.train_proper_size is None
+            ):
                 raise Exception(
                     "For Inductive Venn-ABERS please provide either calibration"
-                    "or proper train set size")
+                    "or proper train set size"
+                )
 
         self.classes = np.unique(_y_train)
         self.n_classes = len(self.classes)
@@ -836,13 +872,12 @@ class VennAbersMultiClass:
         # OneVsOneClassifier will handle the estimator's preprocessing
         # (e.g., if it's a pipeline, it will apply transformations internally)
         self.clf_ovo = OneVsOneClassifier(self.estimator)
-        self.clf_ovo.fit(
-            _x_train, _y_train, **fit_params
-        )
+        self.clf_ovo.fit(_x_train, _y_train, **fit_params)
 
         for pair_id, clf_ovo_estimator in enumerate(self.clf_ovo.estimators_):
-            _pairwise_indices = (_y_train == self.pairwise_id[pair_id][0]) +\
-                (_y_train == self.pairwise_id[pair_id][1])
+            _pairwise_indices = (_y_train == self.pairwise_id[pair_id][0]) + (
+                _y_train == self.pairwise_id[pair_id][1]
+            )
 
             # Extract sample weights for this pair if provided
             pair_sample_weight = None
@@ -860,17 +895,18 @@ class VennAbersMultiClass:
                 random_state=self.random_state,
                 shuffle=self.shuffle,
                 stratify=self.stratify,
-                precision=self.precision
+                precision=self.precision,
             )
             va_cv.fit(
                 _x_train[_pairwise_indices],
-                np.array(_y_train[_pairwise_indices] == self.pairwise_id[pair_id][1])
-                .reshape(-1, 1),
-                sample_weight=pair_sample_weight
+                np.array(
+                    _y_train[_pairwise_indices] == self.pairwise_id[pair_id][1]
+                ).reshape(-1, 1),
+                sample_weight=pair_sample_weight,
             )
             self.multiclass_va_estimators.append(va_cv)
 
-    def predict_proba(self, _x_test, loss='log', p0_p1_output=False):
+    def predict_proba(self, _x_test, loss="log", p0_p1_output=False):
         """
         Generates Venn-ABERS calibrated probabilities.
 
@@ -901,9 +937,9 @@ class VennAbersMultiClass:
 
         if p0_p1_output:
             for i, va_estimator in enumerate(self.multiclass_va_estimators):
-                _p_prime, _p0_p1 = va_estimator.predict_proba(_x_test,
-                                                              loss=loss,
-                                                              p0_p1_output=True)
+                _p_prime, _p0_p1 = va_estimator.predict_proba(
+                    _x_test, loss=loss, p0_p1_output=True
+                )
                 self.multiclass_probs.append(_p_prime)
                 self.multiclass_p0p1.append(_p0_p1)
         else:
@@ -913,21 +949,28 @@ class VennAbersMultiClass:
 
         p_prime = np.zeros((len(_x_test), self.n_classes))
 
-        for i, cl_id, in enumerate(self.classes):
+        for (
+            i,
+            cl_id,
+        ) in enumerate(self.classes):
             stack_i = [
                 p[:, 0].reshape(-1, 1)
                 for i, p in enumerate(self.multiclass_probs)
-                if self.pairwise_id[i][0] == cl_id]
+                if self.pairwise_id[i][0] == cl_id
+            ]
             stack_j = [
                 p[:, 1].reshape(-1, 1)
                 for i, p in enumerate(self.multiclass_probs)
-                if self.pairwise_id[i][1] == cl_id]
+                if self.pairwise_id[i][1] == cl_id
+            ]
             p_stack = stack_i + stack_j
 
-            p_prime[:, i] = 1/(np.sum(np.hstack([(1/p) for p in p_stack]), axis=1) -
-                               (self.n_classes - 2))
+            p_prime[:, i] = 1 / (
+                np.sum(np.hstack([(1 / p) for p in p_stack]), axis=1)
+                - (self.n_classes - 2)
+            )
 
-        p_prime = p_prime/np.sum(p_prime, axis=1).reshape(-1, 1)
+        p_prime = p_prime / np.sum(p_prime, axis=1).reshape(-1, 1)
 
         if p0_p1_output:
             return p_prime, self.multiclass_p0p1

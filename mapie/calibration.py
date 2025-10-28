@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 import warnings
@@ -12,16 +11,19 @@ from sklearn.exceptions import NotFittedError
 from sklearn.pipeline import Pipeline
 from sklearn.utils import check_random_state
 from sklearn.utils.multiclass import type_of_target
-from sklearn.utils.validation import (_check_y, _num_samples, check_is_fitted,
-                                      indexable)
+from sklearn.utils.validation import _check_y, _num_samples, check_is_fitted, indexable
 
 from numpy.typing import ArrayLike, NDArray
-from .utils import (_check_estimator_classification,
-                    _check_estimator_fit_predict, _check_n_features_in,
-                    _check_null_weight, _fit_estimator, _get_calib_set)
+from .utils import (
+    _check_estimator_classification,
+    _check_estimator_fit_predict,
+    _check_n_features_in,
+    _check_null_weight,
+    _fit_estimator,
+    _get_calib_set,
+)
 
-from ._venn_abers import (predict_proba_prefitted_va,
-                          VennAbers, VennAbersMultiClass)
+from ._venn_abers import predict_proba_prefitted_va, VennAbers, VennAbersMultiClass
 
 
 class TopLabelCalibrator(BaseEstimator, ClassifierMixin):
@@ -109,7 +111,7 @@ class TopLabelCalibrator(BaseEstimator, ClassifierMixin):
 
     named_calibrators = {
         "sigmoid": _SigmoidCalibration(),
-        "isotonic": IsotonicRegression(out_of_bounds="clip")
+        "isotonic": IsotonicRegression(out_of_bounds="clip"),
     }
 
     valid_cv = ["prefit", "split"]
@@ -151,10 +153,7 @@ class TopLabelCalibrator(BaseEstimator, ClassifierMixin):
         """
         if cv in self.valid_cv:
             return cv
-        raise ValueError(
-            "Invalid cv argument. "
-            f"Allowed values are {self.valid_cv}."
-        )
+        raise ValueError("Invalid cv argument. " f"Allowed values are {self.valid_cv}.")
 
     def _check_calibrator(
         self,
@@ -191,15 +190,13 @@ class TopLabelCalibrator(BaseEstimator, ClassifierMixin):
             else:
                 raise ValueError(
                     "Please provide a string in: "
-                    + (", ").join(self.named_calibrators.keys()) + "."
+                    + (", ").join(self.named_calibrators.keys())
+                    + "."
                 )
         _check_estimator_fit_predict(calibrator)
         return calibrator
 
-    def _get_labels(
-        self,
-        X: ArrayLike
-    ) -> Tuple[NDArray, NDArray]:
+    def _get_labels(self, X: ArrayLike) -> Tuple[NDArray, NDArray]:
         """
         This method depends on the value of ``method`` and collects the labels
         that are needed to transform a multi-class calibration to multiple
@@ -241,7 +238,8 @@ class TopLabelCalibrator(BaseEstimator, ClassifierMixin):
         if type_of_target(y) not in self.valid_inputs:
             raise ValueError(
                 "Make sure to have one of the allowed targets: "
-                + (", ").join(self.valid_inputs) + "."
+                + (", ").join(self.valid_inputs)
+                + "."
             )
 
     def _fit_calibrator(
@@ -287,12 +285,8 @@ class TopLabelCalibrator(BaseEstimator, ClassifierMixin):
 
         if sample_weight is not None:
             sample_weight_ = sample_weight[given_label_indices]
-            (
+            (sample_weight_, top_class_prob_, y_calib_) = _check_null_weight(
                 sample_weight_, top_class_prob_, y_calib_
-            ) = _check_null_weight(
-                sample_weight_,
-                top_class_prob_,
-                y_calib_
             )
         else:
             sample_weight_ = sample_weight
@@ -384,9 +378,7 @@ class TopLabelCalibrator(BaseEstimator, ClassifierMixin):
         """
         idx_labels = np.where(y_pred.ravel() == label)[0].ravel()
         if label not in self.calibrators.keys():
-            calibrated_values[
-                idx_labels, idx
-                ] = max_prob[idx_labels].ravel()
+            calibrated_values[idx_labels, idx] = max_prob[idx_labels].ravel()
             warnings.warn(
                 f"WARNING: This predicted label {label} has not been seen "
                 + " during the calibration and therefore scores will remain"
@@ -464,9 +456,7 @@ class TopLabelCalibrator(BaseEstimator, ClassifierMixin):
             self.single_estimator_ = estimator
             self.classes_ = self.single_estimator_.classes_
             self.n_classes_ = len(self.classes_)
-            self.calibrators = self._fit_calibrators(
-                X, y, sample_weight, calibrator
-            )
+            self.calibrators = self._fit_calibrators(X, y, sample_weight, calibrator)
         if cv == "split":
             results = _get_calib_set(
                 X,
@@ -480,13 +470,13 @@ class TopLabelCalibrator(BaseEstimator, ClassifierMixin):
             X_train, y_train, X_calib, y_calib, sw_train, sw_calib = results
             X_train, y_train = indexable(X_train, y_train)
             y_train = _check_y(y_train)
-            sw_train, X_train, y_train = _check_null_weight(
-                sw_train,
-                X_train,
-                y_train
-            )
+            sw_train, X_train, y_train = _check_null_weight(sw_train, X_train, y_train)
             estimator = _fit_estimator(
-                clone(estimator), X_train, y_train, sw_train, **fit_params,
+                clone(estimator),
+                X_train,
+                y_train,
+                sw_train,
+                **fit_params,
             )
             self.single_estimator_ = estimator
             self.classes_ = self.single_estimator_.classes_
@@ -752,9 +742,7 @@ class VennAbersCalibrator(BaseEstimator, ClassifierMixin):
         calibration with isotonic regression or Platt scaling.
     """
 
-    fit_attributes = [
-        "va_calibrator_", "classes_", "n_classes_"
-    ]
+    fit_attributes = ["va_calibrator_", "classes_", "n_classes_"]
 
     valid_cv = ["prefit", None]
 
@@ -768,7 +756,7 @@ class VennAbersCalibrator(BaseEstimator, ClassifierMixin):
         random_state: Optional[int] = None,
         shuffle: bool = True,
         stratify: Optional[ArrayLike] = None,
-        precision: Optional[int] = None
+        precision: Optional[int] = None,
     ) -> None:
         self.estimator = estimator
         self.cv = cv
@@ -810,10 +798,7 @@ class VennAbersCalibrator(BaseEstimator, ClassifierMixin):
         """
         if cv in self.valid_cv:
             return cv
-        raise ValueError(
-            "Invalid cv argument. "
-            f"Allowed values are {self.valid_cv}."
-        )
+        raise ValueError("Invalid cv argument. " f"Allowed values are {self.valid_cv}.")
 
     def fit(
         self,
@@ -824,7 +809,7 @@ class VennAbersCalibrator(BaseEstimator, ClassifierMixin):
         random_state: Optional[Union[int, np.random.RandomState, None]] = None,
         shuffle: Optional[bool] = True,
         stratify: Optional[ArrayLike] = None,
-        **fit_params
+        **fit_params,
     ) -> "VennAbersCalibrator":
         """
         Fits the Venn-ABERS calibrator.
@@ -969,18 +954,14 @@ class VennAbersCalibrator(BaseEstimator, ClassifierMixin):
             random_state=random_state_to_use,
             shuffle=shuffle if shuffle is not None else self.shuffle,
             stratify=stratify if stratify is not None else self.stratify,
-            precision=self.precision
+            precision=self.precision,
         )
 
         self.va_calibrator_.fit(X_processed, y, sample_weight=sample_weight)
 
         return self
 
-    def predict_proba(
-        self,
-        X: ArrayLike,
-        loss="log"
-    ) -> NDArray:
+    def predict_proba(self, X: ArrayLike, loss="log") -> NDArray:
         """
         Prediction of the calibrated scores using fitted classifier and
         Venn-ABERS calibrator.
@@ -1000,7 +981,7 @@ class VennAbersCalibrator(BaseEstimator, ClassifierMixin):
         cv = self._check_cv(self.cv)
 
         # Process test data
-        if (self.transformers_ is not None):
+        if self.transformers_ is not None:
             X_processed = self.transformers_.transform(X)
         else:
             X_processed = X
@@ -1015,9 +996,7 @@ class VennAbersCalibrator(BaseEstimator, ClassifierMixin):
 
             # Type guard: ensure n_classes_ is not None after fit
             if self.n_classes_ is None:
-                raise RuntimeError(
-                    "n_classes_ should not be None after fitting"
-                )
+                raise RuntimeError("n_classes_ should not be None after fitting")
 
             if self.n_classes_ <= 2:
                 # Binary classification
@@ -1033,7 +1012,7 @@ class VennAbersCalibrator(BaseEstimator, ClassifierMixin):
                     self.y_cal_,
                     p_test_pred,
                     precision=self.precision,
-                    va_tpe='one_vs_one'
+                    va_tpe="one_vs_one",
                 )
 
             return p_prime
@@ -1053,23 +1032,14 @@ class VennAbersCalibrator(BaseEstimator, ClassifierMixin):
 
         if "loss" in signature(self.va_calibrator_.predict_proba).parameters:
             p_prime = self.va_calibrator_.predict_proba(
-                X_processed,
-                loss=loss,
-                p0_p1_output=False
+                X_processed, loss=loss, p0_p1_output=False
             )
         else:
-            p_prime = self.va_calibrator_.predict_proba(
-                X_processed,
-                p0_p1_output=False
-            )
+            p_prime = self.va_calibrator_.predict_proba(X_processed, p0_p1_output=False)
 
         return p_prime
 
-    def predict(
-        self,
-        X: ArrayLike,
-        loss="log"
-    ) -> NDArray:
+    def predict(self, X: ArrayLike, loss="log") -> NDArray:
         """
         Predict the class of the estimator after Venn-ABERS calibration.
 
@@ -1087,15 +1057,11 @@ class VennAbersCalibrator(BaseEstimator, ClassifierMixin):
 
         # Type guard: ensure n_classes_ is not None after fit
         if self.n_classes_ is None:
-            raise RuntimeError(
-                "n_classes_ should not be None after fitting"
-            )
+            raise RuntimeError("n_classes_ should not be None after fitting")
 
         # Type guard: ensure classes_ is not None after fit
         if self.classes_ is None:
-            raise RuntimeError(
-                "classes_ should not be None after fitting"
-            )
+            raise RuntimeError("classes_ should not be None after fitting")
 
         # Get calibrated probabilities
         p_prime = self.predict_proba(X, loss=loss)

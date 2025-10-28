@@ -5,14 +5,23 @@ from typing import Any, Iterable, Optional, Tuple, Union, cast
 import numpy as np
 from sklearn.base import ClassifierMixin, RegressorMixin
 from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import (BaseCrossValidator, BaseShuffleSplit,
-                                     KFold, LeaveOneOut, ShuffleSplit,
-                                     train_test_split)
+from sklearn.model_selection import (
+    BaseCrossValidator,
+    BaseShuffleSplit,
+    KFold,
+    LeaveOneOut,
+    ShuffleSplit,
+    train_test_split,
+)
 from sklearn.pipeline import Pipeline
 from sklearn.utils import _safe_indexing
 from sklearn.utils.multiclass import type_of_target
-from sklearn.utils.validation import (_check_sample_weight, _num_features,
-                                      check_is_fitted, column_or_1d)
+from sklearn.utils.validation import (
+    _check_sample_weight,
+    _num_features,
+    check_is_fitted,
+    column_or_1d,
+)
 
 from numpy.typing import ArrayLike, NDArray
 import copy
@@ -113,12 +122,11 @@ def train_conformalize_test_split(
     [2]
     """
 
-    _check_train_conf_test_proportions(
-        train_size, conformalize_size, test_size, len(X)
-    )
+    _check_train_conf_test_proportions(train_size, conformalize_size, test_size, len(X))
 
     X_train, X_conformalize_test, y_train, y_conformalize_test = train_test_split(
-        X, y,
+        X,
+        y,
         train_size=train_size,
         random_state=random_state,
         shuffle=shuffle,
@@ -130,7 +138,8 @@ def train_conformalize_test_split(
         test_size_after_split = test_size
 
     X_conformalize, X_test, y_conformalize, y_test = train_test_split(
-        X_conformalize_test, y_conformalize_test,
+        X_conformalize_test,
+        y_conformalize_test,
         test_size=test_size_after_split,
         random_state=random_state,
         shuffle=shuffle,
@@ -141,6 +150,7 @@ def train_conformalize_test_split(
 
 # Following functions are all private utilities
 
+
 def _check_train_conf_test_proportions(
     train_size: Union[float, int],
     conformalize_size: Union[float, int],
@@ -149,18 +159,22 @@ def _check_train_conf_test_proportions(
 ) -> None:
     count_input_proportions = sum([test_size, train_size, conformalize_size])
 
-    if isinstance(train_size, float) and \
-            isinstance(conformalize_size, float) and \
-            isinstance(test_size, float):
+    if (
+        isinstance(train_size, float)
+        and isinstance(conformalize_size, float)
+        and isinstance(test_size, float)
+    ):
         if not isclose(1, count_input_proportions):
             raise ValueError(
                 "When using floats, train_size + conformalize_size"
                 " + test_size must be equal to 1."
             )
 
-    elif isinstance(train_size, int) and \
-            isinstance(conformalize_size, int) and \
-            isinstance(test_size, int):
+    elif (
+        isinstance(train_size, int)
+        and isinstance(conformalize_size, int)
+        and isinstance(test_size, int)
+    ):
         if count_input_proportions != dataset_size:
             raise ValueError(
                 "When using integers, train_size + "
@@ -336,16 +350,12 @@ def _check_cv(
         random_seeds = cast(list, np.random.get_state())[1]
         random_state = np.random.choice(random_seeds)
     if cv is None:
-        return KFold(
-            n_splits=5, shuffle=True, random_state=random_state
-        )
+        return KFold(n_splits=5, shuffle=True, random_state=random_state)
     elif isinstance(cv, int):
         if cv == -1:
             return LeaveOneOut()
         elif cv >= 2:
-            return KFold(
-                n_splits=cv, shuffle=True, random_state=random_state
-            )
+            return KFold(n_splits=cv, shuffle=True, random_state=random_state)
         else:
             raise ValueError(
                 "Invalid cv argument. "
@@ -359,9 +369,7 @@ def _check_cv(
     elif cv == "prefit":
         return cv
     elif cv == "split":
-        return ShuffleSplit(
-            n_splits=1, test_size=test_size, random_state=random_state
-        )
+        return ShuffleSplit(n_splits=1, test_size=test_size, random_state=random_state)
     else:
         raise ValueError(
             "Invalid cv argument. "
@@ -375,7 +383,7 @@ def _check_no_agg_cv(
     cv: Union[int, str, BaseCrossValidator, BaseShuffleSplit],
     no_agg_cv_array: list,
     y: Optional[ArrayLike] = None,
-    groups: Optional[ArrayLike] = None
+    groups: Optional[ArrayLike] = None,
 ) -> bool:
     """
     Check if cross-validator is ``"prefit"``, ``"split"`` or any split
@@ -544,15 +552,12 @@ def _check_n_features_in(
     if cv == "prefit" and hasattr(estimator, "n_features_in_"):
         if cast(Any, estimator).n_features_in_ != n_features_in:
             raise ValueError(
-                "Invalid mismatch between ",
-                "X.shape and estimator.n_features_in_."
+                "Invalid mismatch between ", "X.shape and estimator.n_features_in_."
             )
     return n_features_in
 
 
-def _check_gamma(
-    gamma: float
-) -> None:
+def _check_gamma(gamma: float) -> None:
     """
     Check if gamma is between 0 and 1.
 
@@ -566,9 +571,7 @@ def _check_gamma(
         If gamma is lower than 0 or higher than 1.
     """
     if (gamma < 0) or (gamma > 1):
-        raise ValueError(
-            "Invalid gamma. Allowed values are between 0 and 1."
-        )
+        raise ValueError("Invalid gamma. Allowed values are between 0 and 1.")
 
 
 def _get_effective_calibration_samples(scores: NDArray, sym: bool):
@@ -625,7 +628,7 @@ def _check_alpha_and_n_samples(
     else:
         alphas_ = alphas
     for alpha in alphas_:
-        if n < np.max([1/alpha, 1/(1-alpha)]):
+        if n < np.max([1 / alpha, 1 / (1 - alpha)]):
             raise ValueError(
                 "Number of samples of the score is too low,\n"
                 "1/confidence_level and 1/(1 - confidence_level) must be\n"
@@ -723,26 +726,20 @@ def _check_nan_in_aposteriori_prediction(X: ArrayLike) -> None:
 
 
 def _check_lower_upper_bounds(
-    y_pred_low: NDArray,
-    y_pred_up: NDArray,
-    y_preds: NDArray
+    y_pred_low: NDArray, y_pred_up: NDArray, y_preds: NDArray
 ) -> None:
     y_pred_low = column_or_1d(y_pred_low)
     y_pred_up = column_or_1d(y_pred_up)
     y_preds = column_or_1d(y_preds)
 
     any_inversion = np.any(
-        (y_pred_low > y_pred_up) |
-        (y_preds < y_pred_low) |
-        (y_preds > y_pred_up)
+        (y_pred_low > y_pred_up) | (y_preds < y_pred_low) | (y_preds > y_pred_up)
     )
 
     if any_inversion:
         initial_logger_level = logging.root.level
         logging.basicConfig(level=logging.INFO)
-        logging.info(
-            "The predictions are ill-sorted."
-        )
+        logging.info("The predictions are ill-sorted.")
         logging.basicConfig(level=initial_logger_level)
 
 
@@ -895,8 +892,7 @@ def _get_calib_set(
     shuffle: Optional[bool] = True,
     stratify: Optional[ArrayLike] = None,
 ) -> Tuple[
-    ArrayLike, ArrayLike, ArrayLike, ArrayLike,
-    Optional[NDArray], Optional[NDArray]
+    ArrayLike, ArrayLike, ArrayLike, ArrayLike, Optional[NDArray], Optional[NDArray]
 ]:
     """
     Split the dataset into training and calibration sets.
@@ -925,40 +921,42 @@ def _get_calib_set(
         sample_weight_calib
     """
     if sample_weight is None:
-        (
-            X_train, X_calib, y_train, y_calib
-        ) = train_test_split(
-                X,
-                y,
-                test_size=calib_size,
-                random_state=random_state,
-                shuffle=shuffle,
-                stratify=stratify
+        (X_train, X_calib, y_train, y_calib) = train_test_split(
+            X,
+            y,
+            test_size=calib_size,
+            random_state=random_state,
+            shuffle=shuffle,
+            stratify=stratify,
         )
         sample_weight_train = sample_weight
         sample_weight_calib = None
     else:
         (
-                X_train,
-                X_calib,
-                y_train,
-                y_calib,
-                sample_weight_train,
-                sample_weight_calib,
+            X_train,
+            X_calib,
+            y_train,
+            y_calib,
+            sample_weight_train,
+            sample_weight_calib,
         ) = train_test_split(
-                X,
-                y,
-                sample_weight,
-                test_size=calib_size,
-                random_state=random_state,
-                shuffle=shuffle,
-                stratify=stratify
+            X,
+            y,
+            sample_weight,
+            test_size=calib_size,
+            random_state=random_state,
+            shuffle=shuffle,
+            stratify=stratify,
         )
     X_train, X_calib = cast(ArrayLike, X_train), cast(ArrayLike, X_calib)
     y_train, y_calib = cast(ArrayLike, y_train), cast(ArrayLike, y_calib)
     return (
-        X_train, y_train, X_calib, y_calib,
-        sample_weight_train, sample_weight_calib
+        X_train,
+        y_train,
+        X_calib,
+        y_calib,
+        sample_weight_train,
+        sample_weight_calib,
     )
 
 
@@ -1023,10 +1021,7 @@ def _check_estimator_classification(
     return estimator
 
 
-def check_proba_normalized(
-    y_pred_proba: NDArray,
-    axis: int = -1
-) -> NDArray:
+def check_proba_normalized(y_pred_proba: NDArray, axis: int = -1) -> NDArray:
     """
     Check if for all the samples the sum of the probabilities is equal to one.
 
@@ -1050,7 +1045,7 @@ def check_proba_normalized(
         np.sum(y_pred_proba, axis=axis),
         1,
         err_msg="The sum of the scores is not equal to one.",
-        rtol=1e-5
+        rtol=1e-5,
     )
     return y_pred_proba.astype(np.float64)
 
@@ -1082,12 +1077,8 @@ def _get_binning_groups(
         bins = np.linspace(0.0, 1.0, num_bins)
     else:
         bin_groups = np.array_split(y_score, num_bins)
-        bins = np.sort(np.array(
-                [
-                    bin_group.max() for bin_group in bin_groups[:-1]
-                ]
-                + [np.inf]
-            )
+        bins = np.sort(
+            np.array([bin_group.max() for bin_group in bin_groups[:-1]] + [np.inf])
         )
     return bins
 
@@ -1142,9 +1133,7 @@ def _calc_bins(
     return bins, bin_accs, bin_confs, bin_sizes  # type: ignore
 
 
-def _check_split_strategy(
-    strategy: Optional[str]
-) -> str:
+def _check_split_strategy(strategy: Optional[str]) -> str:
     """
     Checks that the split strategy provided is valid
     and defults None split strategy to "uniform".
@@ -1166,15 +1155,11 @@ def _check_split_strategy(
     if strategy is None:
         strategy = "uniform"
     if strategy not in ["uniform", "quantile", "array split"]:
-        raise ValueError(
-            "Please provide a valid splitting strategy."
-        )
+        raise ValueError("Please provide a valid splitting strategy.")
     return strategy
 
 
-def _check_number_bins(
-    num_bins: int
-) -> int:
+def _check_number_bins(num_bins: int) -> int:
     """
     Checks that the bin specified is a number.
 
@@ -1193,9 +1178,7 @@ def _check_number_bins(
         When num_bins is a negative number is raises an error.
     """
     if isinstance(num_bins, int) is False:
-        raise ValueError(
-            "Please provide a bin number as an integer."
-        )
+        raise ValueError("Please provide a bin number as an integer.")
     elif num_bins < 1:
         raise ValueError(
             """
@@ -1207,9 +1190,7 @@ def _check_number_bins(
         return num_bins
 
 
-def _check_binary_zero_one(
-    y_true: ArrayLike
-) -> NDArray:
+def _check_binary_zero_one(y_true: ArrayLike) -> NDArray:
     """
     Checks if the array is binary and changes a non binary array
     to a zero, one array.
@@ -1232,8 +1213,9 @@ def _check_binary_zero_one(
     """
     y_true = cast(NDArray, column_or_1d(y_true))
     if type_of_target(y_true) == "binary":
-        if ((np.unique(y_true) != np.array([0, 1])).any() and
-                len(np.unique(y_true)) == 2):
+        if (np.unique(y_true) != np.array([0, 1])).any() and len(
+            np.unique(y_true)
+        ) == 2:
             idx_min = np.where(y_true == np.min(y_true))[0]
             y_true[idx_min] = 0
             idx_max = np.where(y_true == np.max(y_true))[0]
@@ -1242,15 +1224,11 @@ def _check_binary_zero_one(
         else:
             return y_true
     else:
-        raise ValueError(
-            "Please provide y_true as a binary array."
-        )
+        raise ValueError("Please provide y_true as a binary array.")
 
 
 def _fix_number_of_classes(
-    n_classes_: int,
-    n_classes_training: NDArray,
-    y_proba: NDArray
+    n_classes_: int, n_classes_training: NDArray, y_proba: NDArray
 ) -> NDArray:
     """
     Fix shape of y_proba of validation set if number of classes
@@ -1269,23 +1247,13 @@ def _fix_number_of_classes(
     NDArray
         Probabilities with the right number of classes.
     """
-    y_pred_full = np.zeros(
-        shape=(len(y_proba), n_classes_)
-    )
+    y_pred_full = np.zeros(shape=(len(y_proba), n_classes_))
     y_index = np.tile(n_classes_training, (len(y_proba), 1))
-    np.put_along_axis(
-        y_pred_full,
-        y_index,
-        y_proba,
-        axis=1
-    )
+    np.put_along_axis(y_pred_full, y_index, y_proba, axis=1)
     return y_pred_full
 
 
-def _check_array_shape_classification(
-    y_true: NDArray,
-    y_pred_set: NDArray
-) -> NDArray:
+def _check_array_shape_classification(y_true: NDArray, y_pred_set: NDArray) -> NDArray:
     """
     Fix shape of y_pred_set (to 3d array of shape (n_obs, n_class, n_alpha)).
 
@@ -1323,10 +1291,7 @@ def _check_array_shape_classification(
     return y_pred_set
 
 
-def _check_array_shape_regression(
-    y_true: NDArray,
-    y_intervals: NDArray
-) -> NDArray:
+def _check_array_shape_regression(y_true: NDArray, y_intervals: NDArray) -> NDArray:
     """
     Fix shape of y_intervals (to 3d array of shape (n_obs, 2, n_alpha)).
 
@@ -1432,9 +1397,7 @@ def _check_array_nan(array: NDArray) -> None:
         If all elements of the array are NaNs
     """
     if np.isnan(array).all() and len(np.unique(array)) > 0:
-        raise ValueError(
-            "Array contains only NaN values."
-        )
+        raise ValueError("Array contains only NaN values.")
 
 
 def _check_array_inf(array: NDArray) -> None:
@@ -1453,9 +1416,7 @@ def _check_array_inf(array: NDArray) -> None:
         If any elements of the array is +inf or -inf.
     """
     if np.isinf(array).any():
-        raise ValueError(
-            "Array contains infinite values."
-        )
+        raise ValueError("Array contains infinite values.")
 
 
 def _check_arrays_length(*arrays: NDArray) -> None:
@@ -1474,15 +1435,11 @@ def _check_arrays_length(*arrays: NDArray) -> None:
     """
     res = [array.shape[0] for array in arrays]
     if len(np.unique(res)) > 1:
-        raise ValueError(
-                "There are arrays with different length"
-            )
+        raise ValueError("There are arrays with different length")
 
 
 def _check_n_samples(
-    X: NDArray,
-    n_samples: Optional[Union[float, int]],
-    indices: NDArray
+    X: NDArray, n_samples: Optional[Union[float, int]], indices: NDArray
 ) -> int:
     """
     Check alpha and prepare it as a ArrayLike.
@@ -1516,26 +1473,26 @@ def _check_n_samples(
                     "The value of n_samples is too small. "
                     "You need to increase it so that n_samples*X.shape[0] > 1"
                     "otherwise n_samples should be an int"
-                    )
+                )
         else:
             raise ValueError(
                 "Invalid n_samples. Allowed values "
                 "are float in the range (0.0, 1.0) or"
                 " int in the range [1, inf)"
-                )
+            )
     elif isinstance(n_samples, int) and n_samples <= 0:
         raise ValueError(
-             "Invalid n_samples. Allowed values "
-             "are float in the range (0.0, 1.0) or"
-             " int in the range [1, inf)"
-             )
+            "Invalid n_samples. Allowed values "
+            "are float in the range (0.0, 1.0) or"
+            " int in the range [1, inf)"
+        )
     return int(n_samples)
 
 
 def _check_predict_params(
     predict_params_used_in_fit: bool,
     predict_params: dict,
-    cv: Optional[Union[int, str, BaseCrossValidator]] = None
+    cv: Optional[Union[int, str, BaseCrossValidator]] = None,
 ) -> None:
     """
     Check that if predict_params is used in the predict method,
