@@ -107,7 +107,6 @@ def calc_p0p1(p_cal, y_cal, precision=None):
     P1 = P[1:] + 1
 
     for i in range(len(p1)):
-
         P1[i, :] = P1[i, :] - 1
 
         if i == 0:

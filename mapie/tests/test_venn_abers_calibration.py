@@ -518,7 +518,9 @@ def test_random_state_in_fit_overrides() -> None:
     probs1 = va_cal1.predict_proba(X_binary_test)
 
     va_cal2 = VennAbersCalibrator(
-        estimator=GaussianNB(), inductive=True, random_state=999  # Different from fit
+        estimator=GaussianNB(),
+        inductive=True,
+        random_state=999  # Different from fit
     )
     va_cal2.fit(X_binary_train, y_binary_train, random_state=123)
     probs2 = va_cal2.predict_proba(X_binary_test)
@@ -1115,9 +1117,9 @@ def test_all_modes_produce_valid_probabilities() -> None:
         # Check valid probabilities
         assert np.all(probs >= 0), f"Mode {mode_name} produced negative probabilities"
         assert np.all(probs <= 1), f"Mode {mode_name} produced probabilities > 1"
-        assert np.allclose(
-            probs.sum(axis=1), 1.0
-        ), f"Mode {mode_name} probabilities don't sum to 1"
+        assert np.allclose(probs.sum(axis=1), 1.0), (
+            f"Mode {mode_name} probabilities don't sum to 1"
+        )
 
 
 # ============================================================================
