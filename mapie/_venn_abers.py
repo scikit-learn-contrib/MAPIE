@@ -513,7 +513,7 @@ class VennAbersCV:
 
     inductive : bool
         True to run the Inductive (IVAP) or False for Cross (CVAP)
-        Venn-ABERS calibtration
+        Venn-ABERS calibration
 
     n_splits: int, default=5
         For CVAP only, number of folds. Must be at least 2.
@@ -749,7 +749,7 @@ class VennAbersMultiClass:
 
     inductive : bool
         True to run the Inductive (IVAP) or False for Cross (CVAP)
-        Venn-ABERS calibtration
+        Venn-ABERS calibration
 
     n_splits: int, default=5
         For CVAP only, number of folds. Must be at least 2.
