@@ -595,15 +595,6 @@ class VennAbersCalibrator(BaseEstimator, ClassifierMixin):
         Only used when ``inductive=False`` and ``cv=None``.
         Uses ``sklearn.model_selection.StratifiedKFold`` functionality.
 
-    cal_size : Optional[float], default=None
-        Proportion of the dataset to use for calibration in Inductive
-        Venn-ABERS (IVAP). Only used when ``inductive=True`` and ``cv=None``.
-
-        - If float, should be between 0.0 and 1.0.
-        - If int, represents the absolute number of calibration samples.
-        - If ``None``, uses the value provided in the ``fit`` method
-            (default 0.33).
-
     train_proper_size : Optional[float], default=None
         Proportion of the dataset to use for proper training in Inductive
         Venn-ABERS (IVAP). Only used when ``inductive=True`` and ``cv=None``.
@@ -714,7 +705,6 @@ class VennAbersCalibrator(BaseEstimator, ClassifierMixin):
     >>> va_cal = VennAbersCalibrator(
     ...     estimator=clf,
     ...     inductive=True,
-    ...     cal_size=0.3,
     ...     random_state=42
     ... )
     >>> _ = va_cal.fit(X_train, y_train)
@@ -774,7 +764,6 @@ class VennAbersCalibrator(BaseEstimator, ClassifierMixin):
         cv: Optional[str] = None,
         inductive: bool = True,
         n_splits: Optional[int] = None,
-        cal_size: Optional[float] = None,
         train_proper_size: Optional[float] = None,
         random_state: Optional[int] = None,
         shuffle: bool = True,
@@ -785,7 +774,6 @@ class VennAbersCalibrator(BaseEstimator, ClassifierMixin):
         self.cv = cv
         self.inductive = inductive
         self.n_splits = n_splits
-        self.cal_size = cal_size
         self.train_proper_size = train_proper_size
         self.random_state = random_state
         self.shuffle = shuffle
@@ -859,13 +847,8 @@ class VennAbersCalibrator(BaseEstimator, ClassifierMixin):
         calib_size : Optional[float], default=0.33
             Proportion of the dataset to use for calibration when using
             Inductive Venn-ABERS (IVAP) mode (``inductive=True`` and ``cv=None``).
-
-            - If float, should be between 0.0 and 1.0 and represents the
-              proportion of the dataset to include in the calibration split.
-            - If int, represents the absolute number of calibration samples.
-            - If ``None``, uses the value from the constructor's ``cal_size``
-              parameter (default 0.33).
-
+            It should be between 0.0 and 1.0 and represents
+            the proportion of the dataset to include in the calibration split.
             This parameter is ignored when ``cv="prefit"`` or when using
             Cross Venn-ABERS (``inductive=False``).
 
@@ -969,9 +952,6 @@ class VennAbersCalibrator(BaseEstimator, ClassifierMixin):
         if not self.inductive and self.n_splits is None:
             raise ValueError("For Cross Venn-ABERS please provide n_splits")
 
-        # For inductive mode, use calib_size parameter
-        cal_size_to_use = self.cal_size if self.cal_size is not None else calib_size
-
         # Check random state
         random_state_to_use: Optional[Union[int, np.random.RandomState]] = None
         if random_state is not None:
@@ -984,7 +964,7 @@ class VennAbersCalibrator(BaseEstimator, ClassifierMixin):
             estimator=last_estimator,
             inductive=self.inductive,
             n_splits=self.n_splits,
-            cal_size=cal_size_to_use,
+            cal_size=calib_size,
             train_proper_size=self.train_proper_size,
             random_state=random_state_to_use,
             shuffle=shuffle if shuffle is not None else self.shuffle,

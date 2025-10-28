@@ -86,7 +86,6 @@ def test_default_parameters() -> None:
     assert va_cal.cv is None
     assert va_cal.inductive is True
     assert va_cal.n_splits is None
-    assert va_cal.cal_size is None
     assert va_cal.train_proper_size is None
     assert va_cal.random_state is None
     assert va_cal.shuffle is True
@@ -183,7 +182,6 @@ def test_inductive_mode_binary() -> None:
     va_cal = VennAbersCalibrator(
         estimator=GaussianNB(),
         inductive=True,
-        cal_size=0.3,
         random_state=random_state
     )
     va_cal.fit(X_binary_train, y_binary_train)
@@ -199,7 +197,6 @@ def test_inductive_mode_multiclass() -> None:
     va_cal = VennAbersCalibrator(
         estimator=GaussianNB(),
         inductive=True,
-        cal_size=0.3,
         random_state=random_state
     )
     va_cal.fit(X_multi_train, y_multi_train)
@@ -333,7 +330,6 @@ def test_prefit_inductive_consistency() -> None:
     va_cal_inductive = VennAbersCalibrator(
         estimator=GaussianNB(),
         inductive=True,
-        cal_size=len(X_binary_cal) / len(X_binary_train),
         random_state=random_state
     )
     # Combine proper and cal sets
@@ -357,7 +353,6 @@ def test_different_estimators_binary(estimator: ClassifierMixin) -> None:
     va_cal = VennAbersCalibrator(
         estimator=estimator,
         inductive=True,
-        cal_size=0.3,
         random_state=random_state
     )
     va_cal.fit(X_binary_train, y_binary_train)
@@ -374,7 +369,6 @@ def test_different_estimators_multiclass(estimator: ClassifierMixin) -> None:
     va_cal = VennAbersCalibrator(
         estimator=estimator,
         inductive=True,
-        cal_size=0.3,
         random_state=random_state
     )
     va_cal.fit(X_multi_train, y_multi_train)
@@ -400,7 +394,6 @@ def test_predict_method_multiclass() -> None:
     va_cal = VennAbersCalibrator(
         estimator=GaussianNB(),
         inductive=True,
-        cal_size=0.3,
         random_state=random_state
     )
     va_cal.fit(X_multi_train, y_multi_train)
@@ -416,7 +409,6 @@ def test_predict_proba_consistency() -> None:
     va_cal = VennAbersCalibrator(
         estimator=GaussianNB(),
         inductive=True,
-        cal_size=0.3,
         random_state=random_state
     )
     va_cal.fit(X_binary_train, y_binary_train)
@@ -435,7 +427,6 @@ def test_predict_proba_shape_binary() -> None:
     va_cal = VennAbersCalibrator(
         estimator=GaussianNB(),
         inductive=True,
-        cal_size=0.3,
         random_state=random_state
     )
     va_cal.fit(X_binary_train, y_binary_train)
@@ -450,7 +441,6 @@ def test_predict_proba_shape_multiclass() -> None:
     va_cal = VennAbersCalibrator(
         estimator=GaussianNB(),
         inductive=True,
-        cal_size=0.3,
         random_state=random_state
     )
     va_cal.fit(X_multi_train, y_multi_train)
@@ -470,7 +460,6 @@ def test_gradient_boosting_with_early_stopping() -> None:
     va_cal = VennAbersCalibrator(
         estimator=gb,
         inductive=True,
-        cal_size=0.3,
         random_state=random_state
     )
 
@@ -490,7 +479,6 @@ def test_sample_weights_none() -> None:
     va_cal = VennAbersCalibrator(
         estimator=GaussianNB(),
         inductive=True,
-        cal_size=0.3,
         random_state=random_state
     )
     va_cal.fit(X_binary_train, y_binary_train, sample_weight=None)
@@ -507,7 +495,6 @@ def test_sample_weights_constant() -> None:
     va_cal_none = VennAbersCalibrator(
         estimator=weighted_estimator,
         inductive=True,
-        cal_size=0.3,
         random_state=random_state
     )
     va_cal_none.fit(X_binary_train, y_binary_train, sample_weight=None)
@@ -515,7 +502,6 @@ def test_sample_weights_constant() -> None:
     va_cal_ones = VennAbersCalibrator(
         estimator=weighted_estimator,
         inductive=True,
-        cal_size=0.3,
         random_state=random_state
     )
     va_cal_ones.fit(
@@ -526,7 +512,6 @@ def test_sample_weights_constant() -> None:
     va_cal_fives = VennAbersCalibrator(
         estimator=weighted_estimator,
         inductive=True,
-        cal_size=0.3,
         random_state=random_state
     )
     va_cal_fives.fit(
@@ -549,7 +534,6 @@ def test_sample_weights_variable() -> None:
     va_cal_uniform = VennAbersCalibrator(
         estimator=RandomForestClassifier(random_state=random_state),
         inductive=True,
-        cal_size=0.3,
         random_state=random_state
     )
     va_cal_uniform.fit(X_binary_train, y_binary_train, sample_weight=None)
@@ -566,7 +550,6 @@ def test_sample_weights_variable() -> None:
     va_cal_weighted = VennAbersCalibrator(
         estimator=estimator_weighted,
         inductive=True,
-        cal_size=0.3,
         random_state=random_state
     )
     va_cal_weighted.fit(
@@ -590,7 +573,6 @@ def test_random_state_reproducibility() -> None:
     va_cal1 = VennAbersCalibrator(
         estimator=GaussianNB(),
         inductive=True,
-        cal_size=0.3,
         random_state=42
     )
     va_cal1.fit(X_binary_train, y_binary_train)
@@ -599,7 +581,6 @@ def test_random_state_reproducibility() -> None:
     va_cal2 = VennAbersCalibrator(
         estimator=GaussianNB(),
         inductive=True,
-        cal_size=0.3,
         random_state=42
     )
     va_cal2.fit(X_binary_train, y_binary_train)
@@ -613,7 +594,6 @@ def test_random_state_in_fit_overrides() -> None:
     va_cal1 = VennAbersCalibrator(
         estimator=GaussianNB(),
         inductive=True,
-        cal_size=0.3,
         random_state=42
     )
     va_cal1.fit(X_binary_train, y_binary_train, random_state=123)
@@ -622,7 +602,6 @@ def test_random_state_in_fit_overrides() -> None:
     va_cal2 = VennAbersCalibrator(
         estimator=GaussianNB(),
         inductive=True,
-        cal_size=0.3,
         random_state=999  # Different from fit
     )
     va_cal2.fit(X_binary_train, y_binary_train, random_state=123)
@@ -636,7 +615,6 @@ def test_different_random_states_give_different_results() -> None:
     va_cal1 = VennAbersCalibrator(
         estimator=GaussianNB(),
         inductive=True,
-        cal_size=0.3,
         random_state=42
     )
     va_cal1.fit(X_binary_train, y_binary_train)
@@ -645,7 +623,6 @@ def test_different_random_states_give_different_results() -> None:
     va_cal2 = VennAbersCalibrator(
         estimator=GaussianNB(),
         inductive=True,
-        cal_size=0.3,
         random_state=123
     )
     va_cal2.fit(X_binary_train, y_binary_train)
@@ -664,7 +641,6 @@ def test_shuffle_parameter() -> None:
     va_cal_shuffle = VennAbersCalibrator(
         estimator=GaussianNB(),
         inductive=True,
-        cal_size=0.3,
         random_state=random_state,
         shuffle=True
     )
@@ -674,7 +650,6 @@ def test_shuffle_parameter() -> None:
     va_cal_no_shuffle = VennAbersCalibrator(
         estimator=GaussianNB(),
         inductive=True,
-        cal_size=0.3,
         random_state=random_state,
         shuffle=False
     )
@@ -689,7 +664,6 @@ def test_shuffle_in_fit_overrides() -> None:
     va_cal = VennAbersCalibrator(
         estimator=GaussianNB(),
         inductive=True,
-        cal_size=0.3,
         random_state=random_state,
         shuffle=False
     )
@@ -705,7 +679,6 @@ def test_stratify_parameter() -> None:
     va_cal = VennAbersCalibrator(
         estimator=GaussianNB(),
         inductive=True,
-        cal_size=0.3,
         random_state=random_state,
         stratify=y_binary_train
     )
@@ -720,7 +693,6 @@ def test_stratify_in_fit_overrides() -> None:
     va_cal = VennAbersCalibrator(
         estimator=GaussianNB(),
         inductive=True,
-        cal_size=0.3,
         random_state=random_state,
         stratify=None
     )
@@ -741,9 +713,8 @@ def test_different_calibration_sizes(cal_size: float) -> None:
     va_cal = VennAbersCalibrator(
         estimator=GaussianNB(),
         inductive=True,
-        cal_size=cal_size,
         random_state=random_state)
-    va_cal.fit(X_binary_train, y_binary_train)
+    va_cal.fit(X_binary_train, y_binary_train, calib_size=cal_size)
     probs = va_cal.predict_proba(X_binary_test)
 
     assert probs.shape == (len(X_binary_test), 2)
@@ -755,7 +726,6 @@ def test_cal_size_in_fit_overrides() -> None:
     va_cal = VennAbersCalibrator(
         estimator=GaussianNB(),
         inductive=True,
-        cal_size=0.2,
         random_state=random_state
     )
     # Override with calib_size in fit
@@ -820,7 +790,6 @@ def test_fitted_attributes_inductive() -> None:
     va_cal = VennAbersCalibrator(
         estimator=GaussianNB(),
         inductive=True,
-        cal_size=0.3,
         random_state=random_state
     )
     va_cal.fit(X_binary_train, y_binary_train)
@@ -906,7 +875,6 @@ def test_pipeline_compatibility() -> None:
     va_cal = VennAbersCalibrator(
         estimator=pipe,
         inductive=True,
-        cal_size=0.3,
         random_state=random_state
     )
     va_cal.fit(X_df, y_series)
@@ -967,7 +935,6 @@ def test_with_pipeline() -> None:
     va_cal = VennAbersCalibrator(
         estimator=pipeline,
         inductive=True,
-        cal_size=0.3,
         random_state=random_state
     )
     va_cal.fit(X_binary_train, y_binary_train)
@@ -1002,7 +969,6 @@ def test_with_column_transformer() -> None:
     va_cal = VennAbersCalibrator(
         estimator=pipeline,
         inductive=True,
-        cal_size=0.3,
         random_state=random_state
     )
 
@@ -1034,43 +1000,16 @@ def test_multiclass_one_vs_one_strategy() -> None:
     assert probs.shape == (len(X_multi_test), 3)
     assert np.allclose(probs.sum(axis=1), 1.0)
 
-
-# ============================================================================
-# Fit Parameters Passing Tests
-# ============================================================================
-
-# def test_fit_parameters_passing() -> None:
-#     """
-#     Test passing fit parameters, here early stopping at iteration 3.
-#     Checks that underlying GradientBoosting estimators have used 3 iterations
-#     only during boosting, instead of default value for n_estimators (=100).
-#     """
-#     gb = GradientBoostingClassifier(random_state=random_state)
-
-#     va_cal = VennAbersCalibrator(
-#         estimator=gb,
-#         inductive=True,
-#         cal_size=0.3,
-#         random_state=random_state
-#     )
-
-#     va_cal.fit(X_binary_train, y_binary_train)
-
-#     # For inductive mode, check the underlying estimator
-#     if hasattr(va_cal.va_calibrator_, 'estimator_'):
-#         assert va_cal.va_calibrator_ is not None
-#         assert va_cal.va_calibrator_.estimator_.estimators_.shape[0] == 3
-
 # ============================================================================
 # Check Fitted Tests
 # ============================================================================
+
 
 def test_check_is_fitted_after_fit() -> None:
     """Test that check_is_fitted passes after fitting."""
     va_cal = VennAbersCalibrator(
         estimator=GaussianNB(),
         inductive=True,
-        cal_size=0.3,
         random_state=random_state
     )
     va_cal.fit(X_binary_train, y_binary_train)
@@ -1091,7 +1030,6 @@ def test_empty_dataset_raises_error() -> None:
     va_cal = VennAbersCalibrator(
         estimator=GaussianNB(),
         inductive=True,
-        cal_size=0.3,
         random_state=random_state
     )
     with pytest.raises(ValueError):
@@ -1106,7 +1044,6 @@ def test_single_class_raises_error() -> None:
     va_cal = VennAbersCalibrator(
         estimator=GaussianNB(),
         inductive=True,
-        cal_size=0.3,
         random_state=random_state
     )
     with pytest.raises(ValueError):
@@ -1121,7 +1058,6 @@ def test_mismatched_X_y_length_raises_error() -> None:
     va_cal = VennAbersCalibrator(
         estimator=GaussianNB(),
         inductive=True,
-        cal_size=0.3,
         random_state=random_state
     )
     with pytest.raises(ValueError):
@@ -1133,7 +1069,6 @@ def test_predict_before_fit_raises_error() -> None:
     va_cal = VennAbersCalibrator(
         estimator=GaussianNB(),
         inductive=True,
-        cal_size=0.3,
         random_state=random_state
     )
     with pytest.raises(Exception):  # NotFittedError or AttributeError
@@ -1145,7 +1080,6 @@ def test_predict_proba_before_fit_raises_error() -> None:
     va_cal = VennAbersCalibrator(
         estimator=GaussianNB(),
         inductive=True,
-        cal_size=0.3,
         random_state=random_state
     )
     with pytest.raises(Exception):  # NotFittedError or AttributeError
@@ -1157,23 +1091,23 @@ def test_invalid_cal_size_raises_error() -> None:
     va_cal = VennAbersCalibrator(
         estimator=GaussianNB(),
         inductive=True,
-        cal_size=1.5,  # Invalid: > 1.0
         random_state=random_state
     )
     with pytest.raises(ValueError):
-        va_cal.fit(X_binary_train, y_binary_train)
+        va_cal.fit(X_binary_train,
+                   y_binary_train,
+                   calib_size=1.5)  # Invalid: > 1.0
 
 
 def test_negative_cal_size_raises_error() -> None:
-    """Test that negative cal_size raises an error."""
+    """Test that negative calib_size raises an error."""
     va_cal = VennAbersCalibrator(
         estimator=GaussianNB(),
         inductive=True,
-        cal_size=-0.1,
         random_state=random_state
     )
     with pytest.raises(ValueError):
-        va_cal.fit(X_binary_train, y_binary_train)
+        va_cal.fit(X_binary_train, y_binary_train, calib_size=-0.1)
 
 
 def test_empty_calibration_set_raises_error() -> None:
@@ -1181,12 +1115,14 @@ def test_empty_calibration_set_raises_error() -> None:
     va_cal = VennAbersCalibrator(
         estimator=GaussianNB(),
         inductive=True,
-        cal_size=0.99,  # Very large cal_size leaves almost no training data
         random_state=random_state
     )
     # This should work but with a very small training set
     try:
-        va_cal.fit(X_binary_train[:10], y_binary_train[:10])
+        # Very large calib_size leaves almost no training data
+        va_cal.fit(X_binary_train[:10],
+                   y_binary_train[:10],
+                   calib_size=0.99)
     except ValueError:
         # Expected if the split is invalid
         pass
@@ -1200,7 +1136,6 @@ def test_very_small_dataset() -> None:
     va_cal = VennAbersCalibrator(
         estimator=GaussianNB(),
         inductive=True,
-        cal_size=0.3,
         random_state=random_state
     )
     va_cal.fit(X_small, y_small)
@@ -1239,7 +1174,6 @@ def test_probabilities_sum_to_one() -> None:
     va_cal = VennAbersCalibrator(
         estimator=GaussianNB(),
         inductive=True,
-        cal_size=0.3,
         random_state=random_state
     )
     va_cal.fit(X_binary_train, y_binary_train)
@@ -1255,7 +1189,6 @@ def test_probabilities_in_valid_range() -> None:
     va_cal = VennAbersCalibrator(
         estimator=GaussianNB(),
         inductive=True,
-        cal_size=0.3,
         random_state=random_state
     )
     va_cal.fit(X_binary_train, y_binary_train)
@@ -1270,7 +1203,6 @@ def test_multiclass_probabilities_sum_to_one() -> None:
     va_cal = VennAbersCalibrator(
         estimator=GaussianNB(),
         inductive=True,
-        cal_size=0.3,
         random_state=random_state
     )
     va_cal.fit(X_multi_train, y_multi_train)
@@ -1285,7 +1217,6 @@ def test_multiclass_probabilities_in_valid_range() -> None:
     va_cal = VennAbersCalibrator(
         estimator=GaussianNB(),
         inductive=True,
-        cal_size=0.3,
         random_state=random_state
     )
     va_cal.fit(X_multi_train, y_multi_train)
@@ -1304,7 +1235,6 @@ def test_inductive_vs_cross_validation_different_results() -> None:
     va_cal_inductive = VennAbersCalibrator(
         estimator=GaussianNB(),
         inductive=True,
-        cal_size=0.3,
         random_state=random_state
     )
     va_cal_inductive.fit(X_binary_train, y_binary_train)
@@ -1326,7 +1256,7 @@ def test_inductive_vs_cross_validation_different_results() -> None:
 def test_all_modes_produce_valid_probabilities() -> None:
     """Test that all calibration modes produce valid probability distributions."""
     modes: List[Tuple[str, Dict[str, Any]]] = [
-        ("inductive", {"inductive": True, "cal_size": 0.3}),
+        ("inductive", {"inductive": True}),
         ("cross_val", {"inductive": False, "n_splits": 5}),
     ]
 
@@ -1370,7 +1300,6 @@ def test_perfect_predictions_no_calibration_needed() -> None:
     va_cal = VennAbersCalibrator(
         estimator=LogisticRegression(random_state=random_state),
         inductive=True,
-        cal_size=0.3,
         random_state=random_state
     )
     va_cal.fit(X_train_p, y_train_p)
@@ -1404,7 +1333,6 @@ def test_imbalanced_dataset() -> None:
     va_cal = VennAbersCalibrator(
         estimator=GaussianNB(),
         inductive=True,
-        cal_size=0.3,
         random_state=random_state,
         stratify=y_train_imb
     )
@@ -1435,7 +1363,6 @@ def test_many_classes() -> None:
     va_cal = VennAbersCalibrator(
         estimator=RandomForestClassifier(random_state=random_state),
         inductive=True,
-        cal_size=0.3,
         random_state=random_state
     )
     va_cal.fit(X_train_many, y_train_many)
@@ -1451,10 +1378,11 @@ def test_small_calibration_set() -> None:
     va_cal = VennAbersCalibrator(
         estimator=GaussianNB(),
         inductive=True,
-        cal_size=0.1,  # Very small calibration set
         random_state=random_state
     )
-    va_cal.fit(X_binary_train, y_binary_train)
+    va_cal.fit(X_binary_train,
+               y_binary_train,
+               calib_size=0.1)  # Very small calibration set
     probs = va_cal.predict_proba(X_binary_test)
 
     # Should still work, though calibration quality may be lower
@@ -1467,10 +1395,11 @@ def test_large_calibration_set() -> None:
     va_cal = VennAbersCalibrator(
         estimator=GaussianNB(),
         inductive=True,
-        cal_size=0.8,  # Very large calibration set
         random_state=random_state
     )
-    va_cal.fit(X_binary_train, y_binary_train)
+    va_cal.fit(X_binary_train,
+               y_binary_train,
+               calib_size=0.8)  # Very large calibration set
     probs = va_cal.predict_proba(X_binary_test)
 
     # Should still work, though training set is small
@@ -1487,7 +1416,6 @@ def test_multiple_fits_same_data() -> None:
     va_cal = VennAbersCalibrator(
         estimator=GaussianNB(),
         inductive=True,
-        cal_size=0.3,
         random_state=random_state
     )
 
@@ -1505,7 +1433,6 @@ def test_predict_single_sample() -> None:
     va_cal = VennAbersCalibrator(
         estimator=GaussianNB(),
         inductive=True,
-        cal_size=0.3,
         random_state=random_state
     )
     va_cal.fit(X_binary_train, y_binary_train)
@@ -1524,7 +1451,6 @@ def test_predict_multiple_times_same_result() -> None:
     va_cal = VennAbersCalibrator(
         estimator=GaussianNB(),
         inductive=True,
-        cal_size=0.3,
         random_state=random_state
     )
     va_cal.fit(X_binary_train, y_binary_train)
@@ -1548,7 +1474,6 @@ def test_pandas_dataframe_input() -> None:
     va_cal = VennAbersCalibrator(
         estimator=GaussianNB(),
         inductive=True,
-        cal_size=0.3,
         random_state=random_state
     )
     va_cal.fit(X_df, y_series)
@@ -1564,7 +1489,6 @@ def test_numpy_array_input() -> None:
     va_cal = VennAbersCalibrator(
         estimator=GaussianNB(),
         inductive=True,
-        cal_size=0.3,
         random_state=random_state
     )
     va_cal.fit(X_binary_train, y_binary_train)
@@ -1584,7 +1508,6 @@ def test_mixed_input_types() -> None:
     va_cal = VennAbersCalibrator(
         estimator=GaussianNB(),
         inductive=True,
-        cal_size=0.3,
         random_state=random_state
     )
     va_cal.fit(X_df, y_array)
@@ -1601,7 +1524,6 @@ def test_with_pandas_dataframe() -> None:
     va_cal = VennAbersCalibrator(
         estimator=GaussianNB(),
         inductive=True,
-        cal_size=0.3,
         random_state=random_state
     )
     va_cal.fit(X_train_df, y_binary_train)
@@ -1618,7 +1540,6 @@ def test_with_pandas_series() -> None:
     va_cal = VennAbersCalibrator(
         estimator=GaussianNB(),
         inductive=True,
-        cal_size=0.3,
         random_state=random_state
     )
     va_cal.fit(X_binary_train, y_train_series)
@@ -1638,7 +1559,6 @@ def test_integration_with_cross_validation() -> None:
     va_cal = VennAbersCalibrator(
         estimator=GaussianNB(),
         inductive=True,
-        cal_size=0.3,
         random_state=random_state
     )
 
@@ -1651,27 +1571,27 @@ def test_integration_with_cross_validation() -> None:
     assert np.all(scores >= 0) and np.all(scores <= 1)
 
 
-def test_integration_with_grid_search() -> None:
-    """Test integration with sklearn's GridSearchCV."""
-    from sklearn.model_selection import GridSearchCV
+# def test_integration_with_grid_search() -> None:
+#     """Test integration with sklearn's GridSearchCV."""
+#     from sklearn.model_selection import GridSearchCV
 
-    va_cal = VennAbersCalibrator(
-        estimator=GaussianNB(),
-        inductive=True,
-        random_state=random_state
-    )
+#     va_cal = VennAbersCalibrator(
+#         estimator=GaussianNB(),
+#         inductive=True,
+#         random_state=random_state
+#     )
 
-    param_grid = {
-        'cal_size': [0.2, 0.3, 0.4],
-    }
+#     param_grid = {
+#         'cal_size': [0.2, 0.3, 0.4],
+#     }
 
-    grid_search = GridSearchCV(
-        va_cal, param_grid, cv=3, scoring='accuracy'
-    )
-    grid_search.fit(X_binary_train, y_binary_train)
+#     grid_search = GridSearchCV(
+#         va_cal, param_grid, cv=3, scoring='accuracy'
+#     )
+#     grid_search.fit(X_binary_train, y_binary_train)
 
-    assert hasattr(grid_search, 'best_params_')
-    assert 'cal_size' in grid_search.best_params_
+#     assert hasattr(grid_search, 'best_params_')
+#     assert 'cal_size' in grid_search.best_params_
 
 
 def test_clone_estimator() -> None:
@@ -1681,7 +1601,6 @@ def test_clone_estimator() -> None:
     va_cal = VennAbersCalibrator(
         estimator=GaussianNB(),
         inductive=True,
-        cal_size=0.3,
         random_state=random_state
     )
     va_cal.fit(X_binary_train, y_binary_train)
@@ -1695,7 +1614,6 @@ def test_clone_estimator() -> None:
         is_fitted = False
 
     # Clone should have same parameters but not be fitted
-    assert va_cal_clone.cal_size == va_cal.cal_size
     assert va_cal_clone.inductive == va_cal.inductive
     assert is_fitted is False
 
@@ -1722,7 +1640,6 @@ def test_large_dataset_performance() -> None:
             n_estimators=10, random_state=random_state
         ),
         inductive=True,
-        cal_size=0.3,
         random_state=random_state,
         precision=2  # Use precision for faster computation
     )
@@ -1754,7 +1671,6 @@ def test_high_dimensional_data() -> None:
     va_cal = VennAbersCalibrator(
         estimator=GaussianNB(),
         inductive=True,
-        cal_size=0.3,
         random_state=random_state
     )
     va_cal.fit(X_train_hd, y_train_hd)
@@ -1778,7 +1694,7 @@ def test_basic_example_from_docstring() -> None:
     X_train, X_test, y_train, y_test = train_test_split(X, y)
 
     clf = GaussianNB()
-    va_cal = VennAbersCalibrator(estimator=clf, inductive=True, cal_size=0.3)
+    va_cal = VennAbersCalibrator(estimator=clf, inductive=True)
     va_cal.fit(X_train, y_train)
 
     p_prime = va_cal.predict_proba(X_test)
@@ -1833,7 +1749,6 @@ def test_comparison_with_uncalibrated() -> None:
     va_cal = VennAbersCalibrator(
         estimator=RandomForestClassifier(random_state=random_state),
         inductive=True,
-        cal_size=0.3,
         random_state=random_state
     )
     va_cal.fit(X_binary_train, y_binary_train)
@@ -1857,7 +1772,6 @@ def test_backward_compatibility_basic_usage() -> None:
     va_cal = VennAbersCalibrator(
         estimator=GaussianNB(),
         inductive=True,
-        cal_size=0.3,
         random_state=random_state)
     va_cal.fit(X_binary_train, y_binary_train)
     probs = va_cal.predict_proba(X_binary_test)
@@ -1928,7 +1842,6 @@ def test_inductive_with_very_small_dataset() -> None:
     va_cal = VennAbersCalibrator(
         estimator=GaussianNB(),
         inductive=True,
-        cal_size=0.3,
         random_state=random_state
     )
 
@@ -1948,7 +1861,6 @@ def test_classes_attribute() -> None:
     va_cal = VennAbersCalibrator(
         estimator=GaussianNB(),
         inductive=True,
-        cal_size=0.3,
         random_state=random_state
     )
     va_cal.fit(X_binary_train, y_binary_train)
@@ -1964,7 +1876,6 @@ def test_n_classes_attribute() -> None:
     va_cal = VennAbersCalibrator(
         estimator=GaussianNB(),
         inductive=True,
-        cal_size=0.3,
         random_state=random_state
     )
     va_cal.fit(X_binary_train, y_binary_train)
@@ -1978,7 +1889,6 @@ def test_va_calibrator_attribute() -> None:
     va_cal = VennAbersCalibrator(
         estimator=GaussianNB(),
         inductive=True,
-        cal_size=0.3,
         random_state=random_state
     )
     va_cal.fit(X_binary_train, y_binary_train)
@@ -2008,7 +1918,6 @@ def test_multiclass_binary_calibration() -> None:
     va_cal = VennAbersCalibrator(
         estimator=GaussianNB(),
         inductive=True,
-        cal_size=0.3,
         random_state=random_state
     )
     va_cal.fit(X_multi_train, y_multi_train)
@@ -2054,7 +1963,6 @@ def test_multiclass_predictions_match_argmax() -> None:
     va_cal = VennAbersCalibrator(
         estimator=GaussianNB(),
         inductive=True,
-        cal_size=0.3,
         random_state=random_state
     )
     va_cal.fit(X_multi_train, y_multi_train)
@@ -2080,7 +1988,6 @@ def test_multiclass_with_different_estimators() -> None:
         va_cal = VennAbersCalibrator(
             estimator=estimator,
             inductive=True,
-            cal_size=0.3,
             random_state=random_state
         )
         va_cal.fit(X_multi_train, y_multi_train)
@@ -2101,7 +2008,6 @@ def test_precision_parameter(precision: Optional[int]) -> None:
     va_cal = VennAbersCalibrator(
         estimator=GaussianNB(),
         inductive=True,
-        cal_size=0.3,
         random_state=random_state,
         precision=precision
     )
@@ -2120,7 +2026,6 @@ def test_precision_speeds_up_computation() -> None:
     va_cal_no_precision = VennAbersCalibrator(
         estimator=GaussianNB(),
         inductive=True,
-        cal_size=0.3,
         random_state=random_state,
         precision=None
     )
@@ -2133,7 +2038,6 @@ def test_precision_speeds_up_computation() -> None:
     va_cal_with_precision = VennAbersCalibrator(
         estimator=GaussianNB(),
         inductive=True,
-        cal_size=0.3,
         random_state=random_state,
         precision=2
     )
@@ -2153,7 +2057,6 @@ def test_different_precision_values(precision: int) -> None:
     va_cal = VennAbersCalibrator(
         estimator=GaussianNB(),
         inductive=True,
-        cal_size=0.3,
         random_state=random_state,
         precision=precision
     )
@@ -2169,7 +2072,6 @@ def test_precision_maintains_calibration_quality() -> None:
     va_cal_high_prec = VennAbersCalibrator(
         estimator=GaussianNB(),
         inductive=True,
-        cal_size=0.3,
         random_state=random_state,
         precision=4
     )
@@ -2179,7 +2081,6 @@ def test_precision_maintains_calibration_quality() -> None:
     va_cal_low_prec = VennAbersCalibrator(
         estimator=GaussianNB(),
         inductive=True,
-        cal_size=0.3,
         random_state=random_state,
         precision=2
     )
@@ -2199,7 +2100,6 @@ def test_precision_parameter_multiclass() -> None:
     va_cal = VennAbersCalibrator(
         estimator=GaussianNB(),
         inductive=True,
-        cal_size=0.3,
         precision=6,
         random_state=random_state
     )
@@ -2298,7 +2198,7 @@ def test_comprehensive_workflow() -> None:
     """Comprehensive test covering multiple aspects of VennAbersCalibrator."""
     # Test all three modes with binary classification
     modes: List[Tuple[str, Dict[str, Any]]] = [
-        ("inductive", {"inductive": True, "cal_size": 0.3}),
+        ("inductive", {"inductive": True}),
         ("cross_val", {"inductive": False, "n_splits": 5}),
     ]
 
@@ -2534,7 +2434,6 @@ def test_venn_abers_cv_p0_p1_output() -> None:
     va_cv = VennAbersCV(
         estimator=GaussianNB(),
         inductive=True,
-        cal_size=0.3,
         random_state=random_state
     )
     va_cv.fit(X_binary_train, y_binary_train)
@@ -2569,7 +2468,7 @@ def test_multiclass_cross_validation_requires_n_splits() -> None:
 
 def test_inductive_missing_size_parameters_raises_error():
     """Test that inductive mode raises error
-    when both cal_size and train_proper_size are None.
+    when train_proper_size is None.
     """
     # Generate multi-class dataset
     X, y = make_classification(
@@ -2584,7 +2483,6 @@ def test_inductive_missing_size_parameters_raises_error():
     va_multi = VennAbersMultiClass(
         estimator=GaussianNB(),
         inductive=True,
-        cal_size=None,
         train_proper_size=None,
         random_state=42
     )
@@ -2861,7 +2759,6 @@ def test_inductive_predict_proba_with_wrong_calibrator_type() -> None:
     va_cal = VennAbersCalibrator(
         estimator=GaussianNB(),
         inductive=True,
-        cal_size=0.3,
         random_state=random_state
     )
     va_cal.fit(X_binary_train, y_binary_train)
@@ -2888,7 +2785,6 @@ def test_inductive_predict_proba_without_loss_parameter() -> None:
     va_cal = VennAbersCalibrator(
         estimator=GaussianNB(),
         inductive=True,
-        cal_size=0.3,
         random_state=random_state
     )
     va_cal.fit(X_binary_train, y_binary_train)
@@ -2904,8 +2800,7 @@ def test_inductive_predict_proba_without_loss_parameter() -> None:
     # Replace with mock that doesn't have loss parameter
     mock_calibrator = MockVennAbersMultiClass(
         estimator=GaussianNB(),
-        inductive=True,
-        cal_size=0.3
+        inductive=True
     )
 
     # Verify the mock's predict_proba doesn't have 'loss' parameter
@@ -2930,7 +2825,6 @@ def test_predict_without_n_classes() -> None:
     va_cal = VennAbersCalibrator(
         estimator=GaussianNB(),
         inductive=True,
-        cal_size=0.3,
         random_state=random_state
     )
     va_cal.fit(X_binary_train, y_binary_train)
@@ -2953,7 +2847,6 @@ def test_predict_without_classes() -> None:
     va_cal = VennAbersCalibrator(
         estimator=GaussianNB(),
         inductive=True,
-        cal_size=0.3,
         random_state=random_state
     )
     va_cal.fit(X_binary_train, y_binary_train)
