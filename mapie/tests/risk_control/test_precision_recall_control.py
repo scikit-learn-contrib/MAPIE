@@ -3,6 +3,7 @@ from typing import Any, Optional
 import numpy as np
 import pandas as pd
 import pytest
+from numpy.typing import NDArray
 from sklearn.compose import ColumnTransformer
 from sklearn.datasets import make_multilabel_classification
 from sklearn.impute import SimpleImputer
@@ -13,8 +14,7 @@ from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils.validation import check_is_fitted
 from typing_extensions import TypedDict
 
-from numpy.typing import NDArray
-from mapie.risk_control import PrecisionRecallController
+from mapie.risk_control.multi_label_classification import PrecisionRecallController
 
 Params = TypedDict(
     "Params",

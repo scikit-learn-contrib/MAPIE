@@ -4,22 +4,24 @@ from typing import List, Union
 import numpy as np
 import pandas as pd
 import pytest
+from numpy.typing import NDArray
 from sklearn.datasets import make_classification
+from sklearn.dummy import DummyClassifier
 from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import precision_score, recall_score
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
-from sklearn.metrics import precision_score, recall_score
-from sklearn.dummy import DummyClassifier
 
-from numpy.typing import NDArray
-from mapie.risk_control import (
+from mapie.risk_control.binary_classification import (
+    BinaryClassificationController,
+    Risk,
+)
+from mapie.risk_control.risks import (
+    BinaryClassificationRisk,
+    accuracy,
+    false_positive_rate,
     precision,
     recall,
-    BinaryClassificationRisk,
-    false_positive_rate,
-    BinaryClassificationController,
-    accuracy,
-    Risk,
 )
 
 random_state = 42
