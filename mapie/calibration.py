@@ -877,10 +877,8 @@ class VennAbersCalibrator(BaseEstimator, ClassifierMixin):
         X, y = indexable(X, y)
         y = _check_y(y)
         sample_weight, X, y = _check_null_weight(sample_weight, X, y)
+
         # Handle categorical features
-
-        from sklearn.pipeline import Pipeline
-
         last_estimator = self.estimator
         X_processed = X
 
