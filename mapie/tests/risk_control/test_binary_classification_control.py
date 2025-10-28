@@ -227,8 +227,7 @@ def test_binary_classification_controller_sklearn_pipeline_with_dataframe() -> N
         confidence_level=0.1,
     )
 
-    controller.calibrate(X_df, y)
-    controller.predict(X_df)
+    controller.calibrate(X_df, y).predict(X_df)
 
 
 def test_set_risk_not_controlled(bcc_dummy):
@@ -598,14 +597,14 @@ def test_functional_multi_risk(
         risk=risks_1,
         target_level=targets_1,
     )
-    bcc_1.calibrate(realistic_X_calib, realistic_y_calib)
+    bcc_1 = bcc_1.calibrate(realistic_X_calib, realistic_y_calib)
 
     bcc_2 = BinaryClassificationController(
         predict_function=realistic_clf.predict_proba,
         risk=risks_2,
         target_level=targets_2,
     )
-    bcc_2.calibrate(realistic_X_calib, realistic_y_calib)
+    bcc_2 = bcc_2.calibrate(realistic_X_calib, realistic_y_calib)
 
     # check that both controllers found valid parameters
     assert len(bcc_1.valid_predict_params) > 1 and len(bcc_2.valid_predict_params) > 1
@@ -629,7 +628,7 @@ def test_functional_multi_risk_vs_twice_mono_risk():
         risk=risks,
         target_level=targets,
     )
-    bcc_multi.calibrate(realistic_X_calib, realistic_y_calib)
+    bcc_multi = bcc_multi.calibrate(realistic_X_calib, realistic_y_calib)
 
     valid_predict_params_mono = []
     for risk, target in zip(risks, targets):
@@ -638,7 +637,7 @@ def test_functional_multi_risk_vs_twice_mono_risk():
             risk=risk,
             target_level=target,
         )
-        bcc_mono.calibrate(realistic_X_calib, realistic_y_calib)
+        bcc_mono = bcc_mono.calibrate(realistic_X_calib, realistic_y_calib)
         valid_predict_params_mono.append(bcc_mono.valid_predict_params)
 
     # check that multi-risk controller found valid parameters

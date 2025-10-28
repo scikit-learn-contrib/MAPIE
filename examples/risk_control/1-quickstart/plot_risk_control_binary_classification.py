@@ -107,7 +107,7 @@ bcc = BinaryClassificationController(
     target_level=target_precision,
     confidence_level=confidence_level,
 )
-bcc.calibrate(X_calib, y_calib)
+bcc = bcc.calibrate(X_calib, y_calib)
 
 print(
     f"{len(bcc.valid_predict_params)} thresholds found that guarantee a precision of "
