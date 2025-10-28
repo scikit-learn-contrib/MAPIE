@@ -857,12 +857,17 @@ class VennAbersCalibrator(BaseEstimator, ClassifierMixin):
             By default ``None``.
 
         calib_size : Optional[float], default=0.33
-            For inductive Venn-ABERS (when ``cv=None`` and ``inductive=True``),
-            this determines the proportion of data used for calibration.
-            If float, should be between 0.0 and 1.0 and represent the proportion
-            of the dataset to include in the calibration split.
-            If int, represents the absolute number of calibration samples.
-            Ignored when ``cv="prefit"``.
+            Proportion of the dataset to use for calibration when using
+            Inductive Venn-ABERS (IVAP) mode (``inductive=True`` and ``cv=None``).
+
+            - If float, should be between 0.0 and 1.0 and represents the
+              proportion of the dataset to include in the calibration split.
+            - If int, represents the absolute number of calibration samples.
+            - If ``None``, uses the value from the constructor's ``cal_size``
+              parameter (default 0.33).
+
+            This parameter is ignored when ``cv="prefit"`` or when using
+            Cross Venn-ABERS (``inductive=False``).
 
         random_state : Optional[Union[int, np.random.RandomState, None]], default=None
             Controls the shuffling applied to the data before applying the split.
