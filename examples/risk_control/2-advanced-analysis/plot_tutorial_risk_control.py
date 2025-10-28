@@ -23,7 +23,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.multioutput import MultiOutputClassifier
 from sklearn.naive_bayes import GaussianNB
 
-from mapie.risk_control import PrecisionRecallController
+from mapie.risk_control.multi_label_classification import PrecisionRecallController
 
 ##############################################################################
 # 1. Construction of the dataset
