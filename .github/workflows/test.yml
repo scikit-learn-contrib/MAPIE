@@ -59,6 +59,8 @@ jobs:
           environment-file: environment.ci.yml
           channels: defaults, conda-forge
           miniconda-version: "latest"
+      - name: Install ruff
+        run: conda install ruff${{ matrix.ruff-version }}
       - name: Install numpy
         run: conda install numpy${{ matrix.numpy-version }}
       - name: Install sklearn
