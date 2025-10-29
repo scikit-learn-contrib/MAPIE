@@ -8,6 +8,7 @@ from typing import Optional, Dict, Any, List, Tuple
 import numpy as np
 import pandas as pd
 import pytest
+import sklearn
 from sklearn.base import ClassifierMixin
 from sklearn.compose import ColumnTransformer
 from sklearn.datasets import make_classification
@@ -416,6 +417,7 @@ def test_gradient_boosting_with_early_stopping() -> None:
 
 def test_sample_weights_none() -> None:
     """Test that sample_weight=None works correctly."""
+    sklearn.set_config(enable_metadata_routing=True)
     va_cal = VennAbersCalibrator(
         estimator=GaussianNB(), inductive=True, random_state=random_state
     )
@@ -427,6 +429,8 @@ def test_sample_weights_none() -> None:
 
 def test_sample_weights_constant() -> None:
     """Test that constant sample weights give same results as None."""
+    sklearn.set_config(enable_metadata_routing=True)
+
     n_samples = len(X_binary_train)
     weighted_estimator = GaussianNB().set_fit_request(sample_weight=True)
 
@@ -457,6 +461,7 @@ def test_sample_weights_constant() -> None:
 
 def test_sample_weights_variable() -> None:
     """Test that variable sample weights affect the results."""
+    sklearn.set_config(enable_metadata_routing=True)
     n_samples = len(X_binary_train)
 
     va_cal_uniform = VennAbersCalibrator(
@@ -1928,6 +1933,7 @@ def test_error_message_for_invalid_cv() -> None:
 def test_venn_abers_cv_with_sample_weight() -> None:
     """Test VennAbersCV with sample weights in cross-validation mode."""
     # Create sample weights - higher weights for some samples
+    sklearn.set_config(enable_metadata_routing=True)
     sample_weight = np.ones(len(y_binary_train))
     sample_weight[: len(y_binary_train) // 2] = 2.0  # Double weight for first half
     weighted_estimator = GaussianNB().set_fit_request(sample_weight=True)
@@ -1961,6 +1967,7 @@ def test_venn_abers_cv_with_sample_weight() -> None:
 
 def test_venn_abers_cv_sample_weight_all_folds() -> None:
     """Test that sample weights are properly used across all CV folds."""
+    sklearn.set_config(enable_metadata_routing=True)
     sample_weight = np.random.RandomState(42).uniform(0.5, 2.0, len(y_binary_train))
     weighted_estimator = GaussianNB().set_fit_request(sample_weight=True)
     va_cal = VennAbersCalibrator(

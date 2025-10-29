@@ -1,12 +1,9 @@
 import numpy as np
-import sklearn
 from sklearn.model_selection import StratifiedKFold, train_test_split
 from sklearn.multiclass import OneVsOneClassifier
 from sklearn.utils.validation import check_is_fitted
 from sklearn.exceptions import NotFittedError
 
-sklearn.set_config(enable_metadata_routing=True)
-np.seterr(divide="ignore", invalid="ignore")
 
 """
 Private module containing core Venn-ABERS implementation classes.
