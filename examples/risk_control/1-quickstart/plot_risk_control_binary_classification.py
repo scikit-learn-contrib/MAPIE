@@ -7,13 +7,13 @@ In this example, we explain how to do risk control for binary classification wit
 
 """
 
-import matplotlib.pyplot as plt
 import numpy as np
+import matplotlib.pyplot as plt
 from sklearn.datasets import make_circles
-from sklearn.inspection import DecisionBoundaryDisplay
-from sklearn.metrics import precision_score
-from sklearn.model_selection import FixedThresholdClassifier
 from sklearn.neural_network import MLPClassifier
+from sklearn.model_selection import FixedThresholdClassifier
+from sklearn.metrics import precision_score
+from sklearn.inspection import DecisionBoundaryDisplay
 
 from mapie.risk_control import BinaryClassificationController
 from mapie.utils import train_conformalize_test_split
@@ -87,8 +87,7 @@ clf = MLPClassifier(max_iter=150, random_state=RANDOM_STATE)
 clf.fit(X_train, y_train)
 
 ##############################################################################
-# Next, we initialize a :class:
-# `~mapie.risk_control.BinaryClassificationController`
+# Next, we initialize a :class:`~mapie.risk_control.BinaryClassificationController`
 # using the probability estimation function from the fitted estimator:
 # ``clf.predict_proba``, a risk or performance metric (here, "precision"),
 # a target risk level, and a confidence level. Then we use the calibration data
@@ -107,7 +106,7 @@ bcc = BinaryClassificationController(
     target_level=target_precision,
     confidence_level=confidence_level,
 )
-bcc = bcc.calibrate(X_calib, y_calib)
+bcc.calibrate(X_calib, y_calib)
 
 print(
     f"{len(bcc.valid_predict_params)} thresholds found that guarantee a precision of "
@@ -182,15 +181,14 @@ plt.show()
 # the precision value to be ill-defined and set to 0.
 
 # Besides computing a set of valid thresholds,
-# :class:`~mapie.risk_control.BinaryClassificationController`
-# also outputs the "best" one, which is the valid threshold that maximizes a
-# secondary objective (recall here).
+# :class:`~mapie.risk_control.BinaryClassificationController` also outputs the "best"
+# one, which is the valid threshold that maximizes a secondary objective
+# (recall here).
 #
 # After obtaining the best threshold, we can use the ``predict`` function of
-# :class:`~mapie.risk_control.BinaryClassificationController`
-# for future predictions, or use scikit-learn's ``FixedThresholdClassifier``
-# as a wrapper to benefit from functionalities like easily plotting the decision
-# boundary as seen below.
+# :class:`~mapie.risk_control.BinaryClassificationController` for future predictions,
+# or use scikit-learn's ``FixedThresholdClassifier`` as a wrapper to benefit
+# from functionalities like easily plotting the decision boundary as seen below.
 
 y_pred = bcc.predict(X_test)
 
