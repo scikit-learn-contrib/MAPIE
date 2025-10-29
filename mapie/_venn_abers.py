@@ -47,7 +47,7 @@ def calc_p0p1(p_cal, y_cal, precision=None):
 
     Parameters
     ----------
-    p_cal : {array-like}, shape (n_samples,)
+    p_cal : {array-like}, shape (n_samples, 2)
     Input data for calibration consisting of calibration set probabilities
 
     y_cal : {array-like}, shape (n_samples,)
@@ -453,7 +453,7 @@ class VennAbers:
 
         Parameters
         ----------
-        p_cal : {array-like}, shape (n_samples,)
+        p_cal : {array-like}, shape (n_samples, 2)
             Input data for calibration consisting of calibration set probabilities
 
         y_cal : {array-like}, shape (n_samples,)
