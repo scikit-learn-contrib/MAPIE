@@ -841,14 +841,14 @@ class VennAbersMultiClass:
 
         # integrity checks
         if not self.inductive and self.n_splits is None:
-            raise Exception("For Cross Venn ABERS please provide n_splits")
+            raise ValueError("For Cross Venn ABERS please provide n_splits")
         try:
             check_is_fitted(self.estimator)
         except NotFittedError:
             if (self.inductive and self.cal_size is None) and (
                 self.train_proper_size is None
             ):
-                raise Exception(
+                raise ValueError(
                     "For Inductive Venn-ABERS please provide either calibration"
                     "or proper train set size"
                 )
