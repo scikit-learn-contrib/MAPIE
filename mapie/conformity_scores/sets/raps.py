@@ -180,9 +180,15 @@ class RAPSConformityScore(APSConformityScore):
             Conformity scores.
         """
         # Compute y_pred and position on the RAPS validation dataset
-        self.y_pred_proba_raps = self.predictor.single_estimator_.predict_proba(
-            self.X_raps
-        )
+        predict_params = kwargs.pop('predict_params', None)
+        if predict_params is not None and len(predict_params) > 0:
+            self.y_pred_proba_raps = self.predictor.single_estimator_.predict_proba(
+                self.X_raps, **predict_params
+            )
+        else:
+            self.y_pred_proba_raps = self.predictor.single_estimator_.predict_proba(
+                self.X_raps
+            )
         self.position_raps = get_true_label_position(
             self.y_pred_proba_raps, self.y_raps
         )

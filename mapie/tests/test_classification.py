@@ -1763,6 +1763,41 @@ def test_predict_parameters_passing() -> None:
     y_pred = mapie_model.predict(X_test, agg_scores="mean", **predict_params)
     np.testing.assert_equal(y_pred, 0)
 
+def test_raps_with_predict_params() -> None:
+    """Test that predict_params are correctly passed when using RAPS."""
+    X, y = make_classification(
+        n_samples=500,
+        n_features=10,
+        n_informative=3,
+        n_classes=3,
+        random_state=random_state,
+    )
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, random_state=random_state
+    )
+    estimator = CustomGradientBoostingClassifier(random_state=random_state)
+    predict_params = {"check_predict_params": True}
+    mapie_clf = _MapieClassifier(
+        estimator=estimator,
+        conformity_score=RAPSConformityScore(size_raps=0.2),
+        cv="split",
+        test_size=0.2,
+        random_state=random_state,
+    )
+
+    mapie_clf.fit(X_train, y_train, predict_params=predict_params)
+
+    y_pred, y_ps = mapie_clf.predict(
+        X_test,
+        alpha=0.1,
+        include_last_label="randomized",
+        agg_scores="mean",
+        **predict_params
+    )
+    # Ensure the output shapes are correct
+    assert y_pred.shape == (X_test.shape[0],)
+    assert y_ps.shape == (X_test.shape[0], len(np.unique(y)), 1)
+
 
 def test_with_no_predict_parameters_passing() -> None:
     """

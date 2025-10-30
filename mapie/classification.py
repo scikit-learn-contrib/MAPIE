@@ -965,6 +965,7 @@ class _MapieClassifier(ClassifierMixin, BaseEstimator):
             X=X,
             sample_weight=sample_weight,
             groups=groups,
+            predict_params=predict_params
         )
         return self
 
