@@ -2,7 +2,6 @@ import logging
 import warnings
 from inspect import signature
 from typing import Any, Iterable, Optional, Tuple, Union, cast
-
 import numpy as np
 from sklearn.base import ClassifierMixin, RegressorMixin
 from sklearn.linear_model import LogisticRegression
