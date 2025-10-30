@@ -306,22 +306,27 @@ def predict_proba_prefitted_va(
     p_prime = None
     multiclass_p0p1 = None
 
+    classes = np.unique(y_cal)
+    class_label_to_idx_map = {label: i for i, label in enumerate(classes)}
+
     if va_tpe == "one_vs_one":
-        classes = np.unique(y_cal)
-        class_pairs = []
+        class_pairs_labels = []
+        classes_pairs_indices = []
         for i in range(len(classes) - 1):
             for j in range(i + 1, len(classes)):
-                class_pairs.append([classes[i], classes[j]])
+                class_pairs_labels.append([classes[i], classes[j]])
+                classes_pairs_indices.append([class_label_to_idx_map[classes[i]],
+                                             class_label_to_idx_map[classes[j]]])
 
         multiclass_probs = []
         multiclass_p0p1 = []
-        for i, class_pair in enumerate(class_pairs):
+        for i, class_pair in enumerate(class_pairs_labels):
             pairwise_indices = (y_cal == class_pair[0]) + (y_cal == class_pair[1])
-            binary_cal_probs = p_cal[:, class_pair][pairwise_indices] / np.sum(
-                p_cal[:, class_pair][pairwise_indices], axis=1
+            binary_cal_probs = p_cal[:, classes_pairs_indices[i]][pairwise_indices] / np.sum(
+                p_cal[:, classes_pairs_indices[i]][pairwise_indices], axis=1
             ).reshape(-1, 1)
-            binary_test_probs = p_test[:, class_pair] / np.sum(
-                p_test[:, class_pair], axis=1
+            binary_test_probs = p_test[:, classes_pairs_indices[i]] / np.sum(
+                p_test[:, classes_pairs_indices[i]], axis=1
             ).reshape(-1, 1)
             binary_classes = y_cal[pairwise_indices] == class_pair[1]
 
@@ -340,12 +345,12 @@ def predict_proba_prefitted_va(
             stack_i = [
                 p[:, 0].reshape(-1, 1)
                 for i, p in enumerate(multiclass_probs)
-                if class_pairs[i][0] == cl_id
+                if class_pairs_labels[i][0] == cl_id
             ]
             stack_j = [
                 p[:, 1].reshape(-1, 1)
                 for i, p in enumerate(multiclass_probs)
-                if class_pairs[i][1] == cl_id
+                if class_pairs_labels[i][1] == cl_id
             ]
             p_stack = stack_i + stack_j
 
@@ -355,17 +360,15 @@ def predict_proba_prefitted_va(
             )
 
     else:
-        classes = np.unique(y_cal)
-
         multiclass_probs = []
         multiclass_p0p1 = []
         for _, class_id in enumerate(classes):
             class_indices = y_cal == class_id
             binary_cal_probs = np.zeros((len(p_cal), 2))
             binary_test_probs = np.zeros((len(p_test), 2))
-            binary_cal_probs[:, 1] = p_cal[:, class_id]
+            binary_cal_probs[:, 1] = p_cal[:, class_label_to_idx_map[class_id]]
             binary_cal_probs[:, 0] = 1 - binary_cal_probs[:, 1]
-            binary_test_probs[:, 1] = p_test[:, class_id]
+            binary_test_probs[:, 1] = p_test[:, class_label_to_idx_map[class_id]]
             binary_test_probs[:, 0] = 1 - binary_test_probs[:, 1]
             binary_classes = class_indices
 
