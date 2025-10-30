@@ -1122,9 +1122,9 @@ def test_all_modes_produce_valid_probabilities() -> None:
         # Check valid probabilities
         assert np.all(probs >= 0), f"Mode {mode_name} produced negative probabilities"
         assert np.all(probs <= 1), f"Mode {mode_name} produced probabilities > 1"
-        assert np.allclose(
-            probs.sum(axis=1), 1.0
-        ), f"Mode {mode_name} probabilities don't sum to 1"
+        assert np.allclose(probs.sum(axis=1), 1.0), (
+            f"Mode {mode_name} probabilities don't sum to 1"
+        )
 
 
 # ============================================================================
