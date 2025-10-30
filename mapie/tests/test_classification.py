@@ -1763,6 +1763,7 @@ def test_predict_parameters_passing() -> None:
     y_pred = mapie_model.predict(X_test, agg_scores="mean", **predict_params)
     np.testing.assert_equal(y_pred, 0)
 
+
 def test_raps_with_predict_params() -> None:
     """Test that predict_params are correctly passed when using RAPS."""
     X, y = make_classification(
@@ -1792,7 +1793,7 @@ def test_raps_with_predict_params() -> None:
         alpha=0.1,
         include_last_label="randomized",
         agg_scores="mean",
-        **predict_params
+        **predict_params,
     )
     # Ensure the output shapes are correct
     assert y_pred.shape == (X_test.shape[0],)
