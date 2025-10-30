@@ -315,16 +315,24 @@ def predict_proba_prefitted_va(
         for i in range(len(classes) - 1):
             for j in range(i + 1, len(classes)):
                 class_pairs_labels.append([classes[i], classes[j]])
-                classes_pairs_indices.append([class_label_to_idx_map[classes[i]],
-                                             class_label_to_idx_map[classes[j]]])
+                classes_pairs_indices.append(
+                    [
+                        class_label_to_idx_map[classes[i]],
+                        class_label_to_idx_map[classes[j]],
+                    ]
+                )
 
         multiclass_probs = []
         multiclass_p0p1 = []
         for i, class_pair in enumerate(class_pairs_labels):
             pairwise_indices = (y_cal == class_pair[0]) + (y_cal == class_pair[1])
-            binary_cal_probs = p_cal[:, classes_pairs_indices[i]][pairwise_indices] / np.sum(
+            binary_cal_probs = p_cal[:, classes_pairs_indices[i]][
+                pairwise_indices
+            ] / np.sum(
                 p_cal[:, classes_pairs_indices[i]][pairwise_indices], axis=1
-            ).reshape(-1, 1)
+            ).reshape(
+                -1, 1
+            )
             binary_test_probs = p_test[:, classes_pairs_indices[i]] / np.sum(
                 p_test[:, classes_pairs_indices[i]], axis=1
             ).reshape(-1, 1)
