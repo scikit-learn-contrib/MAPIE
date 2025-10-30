@@ -330,9 +330,7 @@ def predict_proba_prefitted_va(
                 pairwise_indices
             ] / np.sum(
                 p_cal[:, classes_pairs_indices[i]][pairwise_indices], axis=1
-            ).reshape(
-                -1, 1
-            )
+            ).reshape(-1, 1)
             binary_test_probs = p_test[:, classes_pairs_indices[i]] / np.sum(
                 p_test[:, classes_pairs_indices[i]], axis=1
             ).reshape(-1, 1)
