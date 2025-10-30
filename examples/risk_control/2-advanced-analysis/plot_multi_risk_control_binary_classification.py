@@ -125,10 +125,13 @@ clf.fit(X_train, y_train)
 # Both scenarios use the same list of risks and best parameter choice,
 # but with different target levels for precision and recall.
 #
-# For each scenario, we first fit two single-risk controllers, followed by a multi-risk controller.
-# The objective is to illustrate that, even when single-risk controllers find valid thresholds for both risks,
+# For each scenario, we first fit two mono-risk controllers, followed by a multi-risk controller.
+# The objective is to illustrate that, even when mono-risk controllers find valid thresholds for both risks,
 # the multi-risk controller may not find any threshold that satisfies both simultaneously
 # with statistical guarantees.
+#
+# Note that in the mono-risk case, the best predict parameter is left as "auto".
+# See :class:`~mapie.risk_control.BinaryClassificationController` documentation for more details.
 
 
 ##############################################################################
@@ -143,7 +146,7 @@ bcc_precision_1 = BinaryClassificationController(
     risk="precision",
     target_level=target_levels_1[0],
     confidence_level=confidence_level_1,
-    best_predict_param_choice="recall",
+    best_predict_param_choice="auto",
 )
 bcc_precision_1.calibrate(X_calib, y_calib)
 
@@ -152,7 +155,7 @@ bcc_recall_1 = BinaryClassificationController(
     risk="recall",
     target_level=target_levels_1[1],
     confidence_level=confidence_level_1,
-    best_predict_param_choice="recall",
+    best_predict_param_choice="auto",
 )
 bcc_recall_1.calibrate(X_calib, y_calib)
 
@@ -188,7 +191,7 @@ bcc_precision_2 = BinaryClassificationController(
     risk="precision",
     target_level=target_levels_2[0],
     confidence_level=confidence_level_2,
-    best_predict_param_choice="recall",
+    best_predict_param_choice="auto",
 )
 bcc_precision_2.calibrate(X_calib, y_calib)
 
@@ -197,7 +200,7 @@ bcc_recall_2 = BinaryClassificationController(
     risk="recall",
     target_level=target_levels_2[1],
     confidence_level=confidence_level_2,
-    best_predict_param_choice="recall",
+    best_predict_param_choice="auto",
 )
 bcc_recall_2.calibrate(X_calib, y_calib)
 
@@ -225,13 +228,13 @@ proba_positive_class = clf.predict_proba(X_calib)[:, 1]
 scenarios = [
     {
         "name": "Scenario 1 - Mono Risk",
-        "bcc": bcc_precision_1,
+        "bcc": [bcc_precision_1, bcc_recall_1],
         "target_levels": [target_levels_1[0], target_levels_1[1]],
     },
     {"name": "Scenario 1 - Multi Risk", "bcc": bcc_1, "target_levels": target_levels_1},
     {
         "name": "Scenario 2 - Mono Risk",
-        "bcc": bcc_precision_2,
+        "bcc": [bcc_precision_2, bcc_recall_2],
         "target_levels": [target_levels_2[0], target_levels_2[1]],
     },
     {"name": "Scenario 2 - Multi Risk", "bcc": bcc_2, "target_levels": target_levels_2},
@@ -241,72 +244,96 @@ fig, axes = plt.subplots(2, 2, figsize=(16, 12), sharey=True)
 axes = axes.flatten()
 
 for ax, scenario in zip(axes, scenarios):
-    bcc = scenario["bcc"]
-    target_precision, target_recall = scenario["target_levels"]
-
-    tested_thresholds = bcc._predict_params
-    precisions = np.array(
-        [
-            precision_score(y_calib, (proba_positive_class >= t).astype(int))
-            for t in tested_thresholds
-        ]
-    )
-    recalls = np.array(
-        [
-            recall_score(y_calib, (proba_positive_class >= t).astype(int))
-            for t in tested_thresholds
-        ]
-    )
-
-    if bcc.valid_predict_params is not None and len(bcc.valid_predict_params) > 0:
-        valid_indices = np.array(
-            [t in bcc.valid_predict_params for t in tested_thresholds]
-        )
-        ax.scatter(
-            tested_thresholds[valid_indices],
-            precisions[valid_indices],
-            color="tab:green",
-            marker="o",
-            label="Precision at valid thresholds",
-        )
-        ax.scatter(
-            tested_thresholds[valid_indices],
-            recalls[valid_indices],
-            marker="p",
-            facecolors="none",
-            edgecolors="tab:green",
-            label="Recall at valid thresholds",
-        )
+    if isinstance(scenario["bcc"], list):
+        bcc_precision, bcc_recall = scenario["bcc"]
+        target_precision, target_recall = scenario["target_levels"]
+        tested_thresholds = bcc_precision._predict_params
+        bccs = {"precision": bcc_precision, "recall": bcc_recall}
     else:
-        valid_indices = np.array([False] * len(tested_thresholds))
+        bcc = scenario["bcc"]
+        target_precision, target_recall = scenario["target_levels"]
+        tested_thresholds = bcc._predict_params
+        bccs = {"precision": bcc, "recall": bcc}
 
-    invalid_indices = ~valid_indices
+    metrics = {
+        "precision": np.array(
+            [
+                precision_score(y_calib, (proba_positive_class >= t).astype(int))
+                for t in tested_thresholds
+            ]
+        ),
+        "recall": np.array(
+            [
+                recall_score(y_calib, (proba_positive_class >= t).astype(int))
+                for t in tested_thresholds
+            ]
+        ),
+    }
+
+    valid_indices = {}
+    best_indices = {}
+    for key, controller in bccs.items():
+        valid = controller.valid_predict_params
+        if valid is None:
+            valid = []
+        valid = np.array(valid).tolist()
+        valid_indices[key] = np.array([t in valid for t in tested_thresholds])
+        best_indices[key] = (
+            np.where(tested_thresholds == controller.best_predict_param)[0][0]
+            if controller.best_predict_param in tested_thresholds
+            else None
+        )
+
     ax.scatter(
-        tested_thresholds[invalid_indices],
-        precisions[invalid_indices],
+        tested_thresholds[valid_indices["precision"]],
+        metrics["precision"][valid_indices["precision"]],
+        color="tab:green",
+        marker="o",
+        label="Precision at valid thresholds",
+    )
+    ax.scatter(
+        tested_thresholds[valid_indices["recall"]],
+        metrics["recall"][valid_indices["recall"]],
+        marker="p",
+        facecolors="none",
+        edgecolors="tab:green",
+        label="Recall at valid thresholds",
+    )
+    ax.scatter(
+        tested_thresholds[~valid_indices["precision"]],
+        metrics["precision"][~valid_indices["precision"]],
         color="tab:red",
         marker="o",
         label="Precision at invalid thresholds",
     )
     ax.scatter(
-        tested_thresholds[invalid_indices],
-        recalls[invalid_indices],
+        tested_thresholds[~valid_indices["recall"]],
+        metrics["recall"][~valid_indices["recall"]],
         marker="p",
         facecolors="none",
         edgecolors="tab:orange",
         label="Recall at invalid thresholds",
     )
 
-    if bcc.best_predict_param in tested_thresholds:
-        best_index = np.where(tested_thresholds == bcc.best_predict_param)[0][0]
+    if best_indices["precision"] is not None:
         ax.scatter(
-            tested_thresholds[best_index],
-            precisions[best_index],
+            tested_thresholds[best_indices["precision"]],
+            metrics["precision"][best_indices["precision"]],
             color="tab:green",
             marker="*",
             edgecolors="k",
             s=200,
-            label="Best threshold",
+            label="Precision best threshold",
+        )
+    if best_indices["recall"] is not None:
+        ax.scatter(
+            tested_thresholds[best_indices["recall"]],
+            metrics["recall"][best_indices["recall"]],
+            color="tab:blue",
+            marker="*",
+            edgecolors="k",
+            s=200,
+            label="Recall best threshold",
         )
 
     ax.axhline(target_precision, color="tab:gray", linestyle="--")
