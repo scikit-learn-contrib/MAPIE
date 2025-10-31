@@ -17,15 +17,12 @@ coverage:
 		--cov=mapie \
 		--cov-branch \
 		--cov-report term-missing \
-		--cov-omit=mapie/tests/notebooks/* \
 		--pyargs mapie \
 		--cov-fail-under=100 \
 		--no-cov-on-fail \
 		--doctest-modules \
-		--ignore=mapie/tests/notebooks
-
-
-
+		--ignore=mapie/tests/notebooks \
+		--ignore=mapie/tests/notebooks/_run_notebooks.py
 
 ### Checks that are run in ReadTheDocs CI ###
 doc:
