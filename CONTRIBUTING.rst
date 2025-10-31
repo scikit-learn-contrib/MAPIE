@@ -81,6 +81,13 @@ The coverage should absolutely be 100%.
 
     $ make coverage
 
+If your modification affects notebook-based experiments in ``mapie/tests/notebooks/``,
+you should also ensure that all notebooks run successfully.
+
+.. code-block:: sh
+
+    $ make notebook-tests
+
 Documenting your change
 -----------------------
 

@@ -12,15 +12,15 @@ format:
 type-check:
 	mypy mapie
 
-coverage:
-	pytest -vsx \
-		--cov-branch \
-		--cov=mapie \
-		--cov-report term-missing \
-		--pyargs mapie \
-		--cov-fail-under=100 \
-		--no-cov-on-fail \
-		--doctest-modules
+pytest -vsx \
+    --cov=mapie \
+    --cov-branch \
+    --cov-report term-missing \
+    --pyargs mapie \
+    --cov-fail-under=100 \
+    --no-cov-on-fail \
+    --doctest-modules \
+    --ignore=mapie/tests/notebooks/_run_notebooks.py
 
 
 ### Checks that are run in ReadTheDocs CI ###
@@ -39,7 +39,7 @@ all-checks:
 	$(MAKE) coverage
 
 tests:
-	pytest -vs --doctest-modules mapie
+	pytest -vs --doctest-modules mapie --ignore=mapie/tests/notebooks
 
 clean-doc:
 	$(MAKE) clean -C doc
@@ -55,3 +55,8 @@ clean:
 	rm -rf **__pycache__
 	$(MAKE) clean-build
 	$(MAKE) clean-doc
+
+# Run all notebooks located in mapie/tests/notebooks/
+notebook-tests:
+	@echo "Executing all notebooks in mapie/tests/notebooks/..."
+	python mapie/tests/notebooks/_run_notebooks.py
