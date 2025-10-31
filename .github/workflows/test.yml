@@ -72,7 +72,7 @@ jobs:
       - name: Check static typing
         run: make type-check
       - name: Install notebook dependencies
-        run: conda install nbclient
+        run: conda install jupyter nbclient
       - name: Test notebooks
         run: make notebook-tests
       - name: Test and coverage with pytest
