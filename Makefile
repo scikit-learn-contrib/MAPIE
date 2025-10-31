@@ -17,6 +17,8 @@ coverage:
 		--cov-branch \
 		--cov=mapie \
 		--cov-report term-missing \
+		--cov-config=/dev/null \
+		--cov-omit="mapie/tests/notebooks/*" \
 		--pyargs mapie \
 		--cov-fail-under=100 \
 		--no-cov-on-fail \
