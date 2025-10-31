@@ -10,3 +10,5 @@ pytest-cov
 scikit-learn
 twine
 wheel
+nbclient
+nbformat
