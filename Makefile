@@ -20,7 +20,8 @@ coverage:
 		--pyargs mapie \
 		--cov-fail-under=100 \
 		--no-cov-on-fail \
-		--doctest-modules
+		--doctest-modules \
+		--ignore=mapie/tests/notebooks
 
 
 ### Checks that are run in ReadTheDocs CI ###
