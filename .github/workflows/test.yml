@@ -71,9 +71,9 @@ jobs:
         run: make format
       - name: Check static typing
         run: make type-check
-      - name: Test and coverage with pytest
-        run: make coverage
       - name: Test notebooks
         run: make notebook-tests
+      - name: Test and coverage with pytest
+        run: make coverage
       - name: Code coverage
         run: codecov

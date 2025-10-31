@@ -59,4 +59,4 @@ clean:
 # Run all notebooks located in mapie/tests/notebooks/
 notebook-tests:
 	@echo "Executing all notebooks in mapie/tests/notebooks/..."
-	python mapie/tests/notebooks/run_notebooks.py
+	python mapie/tests/notebooks/_run_notebooks.py
