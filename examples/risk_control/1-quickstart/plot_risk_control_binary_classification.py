@@ -7,13 +7,13 @@ In this example, we explain how to do risk control for binary classification wit
 
 """
 
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 from sklearn.datasets import make_circles
-from sklearn.neural_network import MLPClassifier
-from sklearn.model_selection import FixedThresholdClassifier
-from sklearn.metrics import precision_score
 from sklearn.inspection import DecisionBoundaryDisplay
+from sklearn.metrics import precision_score
+from sklearn.model_selection import FixedThresholdClassifier
+from sklearn.neural_network import MLPClassifier
 
 from mapie.risk_control import BinaryClassificationController
 from mapie.utils import train_conformalize_test_split
@@ -21,7 +21,7 @@ from mapie.utils import train_conformalize_test_split
 RANDOM_STATE = 1
 
 ##############################################################################
-# Fist, load the dataset and then split it into training, calibration
+# First, load the dataset and then split it into training, calibration
 # (for conformalization), and test sets.
 
 X, y = make_circles(n_samples=5000, noise=0.3, factor=0.3, random_state=RANDOM_STATE)
@@ -172,7 +172,7 @@ plt.show()
 # Contrary to the naive way of computing a threshold to satisfy a precision target on
 # calibration data, risk control provides statistical guarantees on unseen data.
 # In the plot above, we can see that not all thresholds corresponding to a precision
-# higher that the target are valid. This is due to the uncertainty inherent to the
+# higher then the target are valid. This is due to the uncertainty inherent to the
 # finite size of the calibration set, which risk control takes into account.
 #
 # In particular, the highest threshold values are considered invalid due to the
