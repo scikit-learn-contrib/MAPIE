@@ -172,7 +172,7 @@ plt.show()
 # Contrary to the naive way of computing a threshold to satisfy a precision target on
 # calibration data, risk control provides statistical guarantees on unseen data.
 # In the plot above, we can see that not all thresholds corresponding to a precision
-# higher then the target are valid. This is due to the uncertainty inherent to the
+# higher than the target are valid. This is due to the uncertainty inherent to the
 # finite size of the calibration set, which risk control takes into account.
 #
 # In particular, the highest threshold values are considered invalid due to the
