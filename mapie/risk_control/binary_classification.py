@@ -78,7 +78,8 @@ class BinaryClassificationController:
         (or maximize) a secondary objective.
         Valid options:
 
-        - "auto" (default)
+        - "auto" (default). For mono risk defined in mapie.risk_control, an automatic choice is made.
+        For multi risk, we use the first risk in the list.
         - An existing risk defined in `mapie.risk_control` accessible through
         its string equivalent: "precision", "recall", "accuracy", or
         "fpr" for false positive rate.
