@@ -6,7 +6,7 @@ Use MAPIE to control multiple risks of a binary classifier
 In this example, we explain how to do multi-risk control for binary classification with MAPIE.
 
 """
-# %%
+
 import warnings
 
 import matplotlib.pyplot as plt
@@ -437,5 +437,3 @@ plt.xlabel("Feature 1")
 plt.ylabel("Feature 2")
 plt.legend()
 plt.show()
-
-# %%
