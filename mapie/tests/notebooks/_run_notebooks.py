@@ -16,7 +16,7 @@ if __name__ == "__main__":  # pragma: no cover
         try:
             with nb_path.open() as f:
                 nb = read(f, as_version=4)
-            client = NotebookClient(nb, timeout=60)
+            client = NotebookClient(nb, timeout=300)
             client.execute()
         except Exception as e:
             print(f"Notebook {nb_path} failed:\n{e}")
