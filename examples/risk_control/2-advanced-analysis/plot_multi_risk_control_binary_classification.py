@@ -379,24 +379,12 @@ for ax, scenario in zip(axes, scenarios):
     ax.set_ylabel("Performance metric value", fontsize=16)
     ax.set_title(scenario["name"], fontsize=16)
     ax.legend(fontsize=16)
-plt.suptitle("Precision and recall by threshold for all scenarios", fontsize=18)
+plt.suptitle("Precision and recall by threshold for all scenarios", fontsize=22)
 plt.tight_layout(rect=[0, 0, 1, 0.95])
 plt.show()
 
 
 ##############################################################################
-# Contrary to the naive way of computing a threshold to satisfy a precision and
-# a recall targets on calibration data, risk control provides statistical guarantees
-# on unseen data. In the plot above, we can see that not all thresholds corresponding
-# to a precision (resp. recall) higher (resp. lower) than the target are valid.
-# This is due to the uncertainty inherent to the finite size of the calibration set,
-# which risk control takes into account.
-#
-# In particular, for instance, for precision, the highest threshold values are considered
-# invalid due to the small number of observations used to compute the precision,
-# following the Learn Then Test procedure. In the most extreme case, no observation
-# is available, which causes the precision value to be ill-defined and set to 0.
-#
 # In scenario 1, both the mono-risk controllers and the multi-risk controller found
 # valid thresholds that satisfy the precision and recall targets individually and jointly.
 # The jointly valid thresholds found by the multi-risk controller are shown as green markers in the plot.
