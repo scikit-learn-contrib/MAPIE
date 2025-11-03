@@ -14,16 +14,13 @@ type-check:
 
 coverage:
 	pytest -vsx \
-		--cov=mapie \
 		--cov-branch \
+		--cov=mapie \
 		--cov-report term-missing \
-		--cov-config=/dev/null \
-		--cov-omit="mapie/tests/notebooks/_run_notebooks.py" \
 		--pyargs mapie \
 		--cov-fail-under=100 \
 		--no-cov-on-fail \
-		--doctest-modules \
-		--ignore=mapie/tests/notebooks/_run_notebooks.py
+		--doctest-modules
 
 ### Checks that are run in ReadTheDocs CI ###
 doc:
