@@ -8,7 +8,7 @@ from nbformat import read
 NOTEBOOKS_DIR = Path(__file__).parent
 notebooks = NOTEBOOKS_DIR.rglob("*.ipynb")
 
-if __name__ == "__main__": # pragma: no cover
+if __name__ == "__main__":  # pragma: no cover
     success = True
 
     for nb_path in notebooks:
