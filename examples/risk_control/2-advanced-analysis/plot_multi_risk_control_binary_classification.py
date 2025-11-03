@@ -6,7 +6,7 @@ Use MAPIE to control multiple risks of a binary classifier
 In this example, we explain how to do multi-risk control for binary classification with MAPIE.
 
 """
-
+# %%
 import warnings
 
 import matplotlib.pyplot as plt
@@ -23,7 +23,7 @@ from mapie.utils import train_conformalize_test_split
 RANDOM_STATE = 1
 
 ##############################################################################
-# Fist, load the dataset and then split it into training, calibration
+# First, load the dataset and then split it into training, calibration
 # (for conformalization), and test sets.
 
 X, y = make_circles(n_samples=5000, noise=0.3, factor=0.3, random_state=RANDOM_STATE)
@@ -91,7 +91,7 @@ clf.fit(X_train, y_train)
 ##############################################################################
 # Next, we initialize a :class:`~mapie.risk_control.BinaryClassificationController`
 # using the probability estimation function from the fitted estimator:
-# ``clf.predict_proba``, a list risk or performance metric (here, ["precision", "recall"]),
+# ``clf.predict_proba``, a list of risk or performance metric (here, ["precision", "recall"]),
 # a list target risk level, and a single confidence level. Then we use the calibration data
 # to compute statistically guaranteed thresholds using a multi-risk control method.
 #
@@ -140,7 +140,7 @@ clf.fit(X_train, y_train)
 target_levels_1 = [0.75, 0.70]
 confidence_level_1 = 0.9
 
-# Cas mono risk
+# Mono risk case
 bcc_precision_1 = BinaryClassificationController(
     predict_function=clf.predict_proba,
     risk="precision",
@@ -159,7 +159,7 @@ bcc_recall_1 = BinaryClassificationController(
 )
 bcc_recall_1.calibrate(X_calib, y_calib)
 
-# Cas multi risk
+# Multi risk case
 bcc_1 = BinaryClassificationController(
     predict_function=clf.predict_proba,
     risk=["precision", "recall"],
@@ -171,11 +171,10 @@ bcc_1.calibrate(X_calib, y_calib)
 
 print(
     f"Scenario 1 - Multiple risks : {len(bcc_1.valid_predict_params)} "
-    "thresholds found that guarantee a precision of "
-    f"at least {target_levels_1[0]} and a recall of at least {target_levels_1[1]} "
-    f"with a confidence of {confidence_level_1}.\n"
-    "Among those, the one that maximizes the secondary objective "
-    "(here, recall, passed in `best_predict_param_choice`) is: "
+    f"thresholds found that guarantee a precision of at least {target_levels_1[0]}\n"
+    f"and a recall of at least {target_levels_1[1]} with a confidence of {confidence_level_1}."
+    "Among those, the one that maximizes\n"
+    "the secondary objective (here, recall, passed in `best_predict_param_choice`) is: "
     f"{bcc_1.best_predict_param:.3f}.\n"
 )
 
@@ -212,7 +211,6 @@ bcc_2 = BinaryClassificationController(
     confidence_level=confidence_level_2,
     best_predict_param_choice="recall",
 )
-bcc_2.calibrate(X_calib, y_calib)
 with warnings.catch_warnings(record=True) as w:
     warnings.simplefilter("always")  # Capture all warnings
     bcc_2.calibrate(X_calib, y_calib)
@@ -227,17 +225,17 @@ with warnings.catch_warnings(record=True) as w:
 proba_positive_class = clf.predict_proba(X_calib)[:, 1]
 scenarios = [
     {
-        "name": "Scenario 1 - Mono Risk",
+        "name": "Scenario 1 - Mono risk",
         "bcc": [bcc_precision_1, bcc_recall_1],
         "target_levels": [target_levels_1[0], target_levels_1[1]],
     },
-    {"name": "Scenario 1 - Multi Risk", "bcc": bcc_1, "target_levels": target_levels_1},
+    {"name": "Scenario 1 - Multi risk", "bcc": bcc_1, "target_levels": target_levels_1},
     {
-        "name": "Scenario 2 - Mono Risk",
+        "name": "Scenario 2 - Mono risk",
         "bcc": [bcc_precision_2, bcc_recall_2],
         "target_levels": [target_levels_2[0], target_levels_2[1]],
     },
-    {"name": "Scenario 2 - Multi Risk", "bcc": bcc_2, "target_levels": target_levels_2},
+    {"name": "Scenario 2 - Multi risk", "bcc": bcc_2, "target_levels": target_levels_2},
 ]
 
 fig, axes = plt.subplots(2, 2, figsize=(16, 12), sharey=True)
@@ -311,30 +309,51 @@ for ax, scenario in zip(axes, scenarios):
         metrics["recall"][~valid_indices["recall"]],
         marker="p",
         facecolors="none",
-        edgecolors="tab:orange",
+        edgecolors="tab:red",
         label="Recall at invalid thresholds",
     )
 
     if best_indices["precision"] is not None:
-        ax.scatter(
-            tested_thresholds[best_indices["precision"]],
-            metrics["precision"][best_indices["precision"]],
-            color="tab:green",
-            marker="*",
-            edgecolors="k",
-            s=200,
-            label="Precision best threshold",
-        )
+        if scenario["name"] == "Scenario 1 - Multi risk":
+            ax.scatter(
+                tested_thresholds[best_indices["precision"]],
+                metrics["precision"][best_indices["precision"]],
+                color="tab:green",
+                marker="*",
+                edgecolors="k",
+                s=200,
+                label="Multi risk best threshold",
+            )
+        else:
+            ax.scatter(
+                tested_thresholds[best_indices["precision"]],
+                metrics["precision"][best_indices["precision"]],
+                color="tab:green",
+                marker="*",
+                edgecolors="k",
+                s=200,
+                label="Precision best threshold",
+            )
     if best_indices["recall"] is not None:
-        ax.scatter(
-            tested_thresholds[best_indices["recall"]],
-            metrics["recall"][best_indices["recall"]],
-            color="tab:blue",
-            marker="*",
-            edgecolors="k",
-            s=200,
-            label="Recall best threshold",
-        )
+        if scenario["name"] == "Scenario 1 - Multi risk":
+            ax.scatter(
+                tested_thresholds[best_indices["recall"]],
+                metrics["recall"][best_indices["recall"]],
+                color="tab:green",
+                marker="*",
+                edgecolors="k",
+                s=200,
+            )
+        else:
+            ax.scatter(
+                tested_thresholds[best_indices["recall"]],
+                metrics["recall"][best_indices["recall"]],
+                color="tab:blue",
+                marker="*",
+                edgecolors="k",
+                s=200,
+                label="Recall best threshold",
+            )
 
     ax.axhline(target_precision, color="tab:gray", linestyle="--")
     ax.text(
@@ -347,21 +366,19 @@ for ax, scenario in zip(axes, scenarios):
     )
     ax.axhline(target_recall, color="tab:blue", linestyle=":")
     ax.text(
-        0.0,
-        target_recall + 0.02,
+        0.4,
+        target_recall - 0.045,
         "Target recall",
         color="tab:blue",
         fontstyle="italic",
         fontsize=14,
     )
-
-    ax.set_xlabel("Threshold", fontsize=14)
-    ax.set_ylabel("Performance metric Value", fontsize=14)
+    ax.tick_params(axis="x", labelsize=16)
+    ax.tick_params(axis="y", labelsize=16)
+    ax.set_xlabel("Threshold", fontsize=16)
+    ax.set_ylabel("Performance metric value", fontsize=16)
     ax.set_title(scenario["name"], fontsize=16)
     ax.legend(fontsize=16)
-
-plt.xticks(fontsize=14)
-plt.yticks(fontsize=14)
 plt.suptitle("Precision and recall by threshold for all scenarios", fontsize=18)
 plt.tight_layout(rect=[0, 0, 1, 0.95])
 plt.show()
@@ -432,3 +449,5 @@ plt.xlabel("Feature 1")
 plt.ylabel("Feature 2")
 plt.legend()
 plt.show()
+
+# %%
