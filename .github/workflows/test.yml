@@ -65,19 +65,19 @@ jobs:
         run: conda install numpy${{ matrix.numpy-version }}
       - name: Install sklearn
         run: conda install scikit-learn${{ matrix.sklearn-version }}
+      - name: Install jupyter
+        run: conda install jupyter nbclient
+      - name: Register Jupyter kernel
+        run: python -m ipykernel install --user --name=python3
       - name: Check linting
         run: make lint
       - name: Check format
         run: make format
       - name: Check static typing
         run: make type-check
-      - name: Install notebook dependencies
-        run: conda install jupyter nbclient
-      - name: Register Jupyter kernel
-        run: python -m ipykernel install --user --name=python3
-      - name: Test notebooks
-        run: make notebook-tests
       - name: Test and coverage with pytest
         run: make coverage
+      - name: Test notebooks
+        run: make notebook-tests
       - name: Code coverage
         run: codecov
