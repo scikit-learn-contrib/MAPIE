@@ -65,8 +65,6 @@ jobs:
         run: conda install numpy${{ matrix.numpy-version }}
       - name: Install sklearn
         run: conda install scikit-learn${{ matrix.sklearn-version }}
-      - name: Install jupyter
-        run: conda install jupyter nbclient
       - name: Register Jupyter kernel
         run: python -m ipykernel install --user --name=python3
       - name: Check linting

@@ -8,3 +8,5 @@ dependencies:
     - mypy<1.15
     - pandas
     - pytest-cov
+    - jupyter
+    - nbclient
