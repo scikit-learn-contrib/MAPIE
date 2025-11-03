@@ -12,7 +12,8 @@ format:
 type-check:
 	mypy mapie
 
-pytest -vsx \
+coverage:
+	pytest -vsx \
     --cov=mapie \
     --cov-branch \
     --cov-report term-missing \
@@ -21,7 +22,6 @@ pytest -vsx \
     --no-cov-on-fail \
     --doctest-modules \
     --ignore=mapie/tests/notebooks/_run_notebooks.py
-
 
 ### Checks that are run in ReadTheDocs CI ###
 doc:
