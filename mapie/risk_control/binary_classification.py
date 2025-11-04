@@ -85,6 +85,13 @@ class BinaryClassificationController:
         "fpr" for false positive rate.
         - A custom instance of BinaryClassificationRisk object
 
+    predict_params : NDArray, default=np.linspace(0, 0.99, 100)
+        The set of thresholds (noted λ in [1]) to consider for controlling the risk (or performance).
+        When `predict_function` is a `predict_proba` method, the shape is (n_lambda,).
+        When `predict_function` is a general function with multiple parameters (multi-dimensional λ),
+        the shape is (n_lambda, lambda_dim).
+        Note that performance is degraded when `predict_params.shape[0]` is large as it is used by the Bonferroni correction [1].
+
     Attributes
     ----------
     valid_predict_params : NDArray
@@ -131,7 +138,7 @@ class BinaryClassificationController:
 
     References
     ----------
-    Angelopoulos, Anastasios N., Stephen, Bates, Emmanuel J. Candès, et al.
+    [1] Angelopoulos, Anastasios N., Stephen, Bates, Emmanuel J. Candès, et al.
     "Learn Then Test: Calibrating Predictive Algorithms to Achieve Risk Control." (2022)
     """
 
@@ -158,6 +165,7 @@ class BinaryClassificationController:
         best_predict_param_choice: Union[
             Literal["auto"], Risk_str, BinaryClassificationRisk
         ] = "auto",
+        predict_params: NDArray = np.linspace(0, 0.99, 100),
     ):
         self.is_multi_risk = self._check_if_multi_risk_control(risk, target_level)
         self._predict_function = predict_function
@@ -184,7 +192,7 @@ class BinaryClassificationController:
             best_predict_param_choice
         )
 
-        self._predict_params: NDArray = np.linspace(0, 0.99, 100)
+        self._predict_params = predict_params
 
         self.valid_predict_params: NDArray = np.array([])
         self.best_predict_param: Optional[float] = None
