@@ -49,7 +49,12 @@ class BinaryClassificationController:
     ----------
     predict_function : Callable[[ArrayLike], NDArray]
         predict_proba method of a fitted binary classifier.
-        Its output signature must be of shape (len(X), 2)
+        Its output signature must be of shape (len(X), 2).
+
+        Or, in the general case of multi-dimensional parameters (thresholds),
+        a function that takes (X, *params) and outputs 0 or 1. This can be useful to e.g.,
+        ensemble multiple binary classifiers with different thresholds for each classifier.
+        In that case, `predict_params` must be provided.
 
     risk : Union[BinaryClassificationRisk, str, List[BinaryClassificationRisk, str]]
         The risk or performance metric to control.
@@ -193,6 +198,9 @@ class BinaryClassificationController:
         )
 
         self._predict_params = predict_params
+        self.is_multi_dimensional_param = self._check_if_multi_dimensional_param(
+            predict_params
+        )
 
         self.valid_predict_params: NDArray = np.array([])
         self.best_predict_param: Optional[float] = None
@@ -421,4 +429,23 @@ class BinaryClassificationController:
                 "a list of target levels of the same length and vice versa. "
                 "If you provide a single BinaryClassificationRisk risk, "
                 "you must provide a single float target level."
+            )
+
+    @staticmethod
+    def _check_if_multi_dimensional_param(
+        predict_params: NDArray,
+    ) -> bool:
+        """
+        Check if the the parameters (the λ) are multi-dimensional.
+        """
+        if predict_params.ndim == 1 or (
+            predict_params.ndim == 2 and predict_params.shape[1] == 1
+        ):
+            return False
+        elif predict_params.ndim == 2 and predict_params.shape[1] > 1:
+            return True
+        else:
+            raise ValueError(
+                "predict_params must be a 1D array of shape (n_lambda,) "
+                "or a 2D array of shape (n_lambda, lambda_dim) with lambda_dim >= 1."
             )
