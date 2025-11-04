@@ -367,30 +367,41 @@ class BinaryClassificationController:
         return risk_values, effective_sample_sizes
 
     def _get_predictions_per_param(self, X: ArrayLike, params: NDArray) -> NDArray:
-        try:
-            predictions_proba = self._predict_function(X)[:, 1]
-        except TypeError as e:
-            if "object is not callable" in str(e):
-                raise TypeError(
-                    "Error when calling the predict_function. "
-                    "Maybe you provided a binary classifier to the "
-                    "predict_function parameter of the BinaryClassificationController. "
-                    "You should provide your classifier's predict_proba method instead."
-                ) from e
-            else:
-                raise
-        except IndexError as e:
-            if "array is 1-dimensional, but 2 were indexed" in str(e):
-                raise IndexError(
-                    "Error when calling the predict_function. "
-                    "Maybe the predict function you provided returns only the "
-                    "probability of the positive class. "
-                    "You should provide a predict function that returns the "
-                    "probabilities of both classes, like scikit-learn estimators."
-                ) from e
-            else:
-                raise
-        return (predictions_proba[:, np.newaxis] >= params).T.astype(int)
+        if self.is_multi_dimensional_param:
+            y_pred = np.empty(params.shape[0], dtype=int)
+            for i in range(params.shape[0]):
+                y_pred[i] = self._predict_function(X, *params[i])
+            if not np.logical_or(y_pred == 0, y_pred == 1).all():
+                raise ValueError(
+                    "The provided predict_function with multi-dimensional "
+                    "parameters must return binary predictions (0 or 1)."
+                )
+        else:
+            try:
+                predictions_proba = self._predict_function(X)[:, 1]
+            except TypeError as e:
+                if "object is not callable" in str(e):
+                    raise TypeError(
+                        "Error when calling the predict_function. "
+                        "Maybe you provided a binary classifier to the "
+                        "predict_function parameter of the BinaryClassificationController. "
+                        "You should provide your classifier's predict_proba method instead."
+                    ) from e
+                else:
+                    raise
+            except IndexError as e:
+                if "array is 1-dimensional, but 2 were indexed" in str(e):
+                    raise IndexError(
+                        "Error when calling the predict_function. "
+                        "Maybe the predict function you provided returns only the "
+                        "probability of the positive class. "
+                        "You should provide a predict function that returns the "
+                        "probabilities of both classes, like scikit-learn estimators."
+                    ) from e
+                else:
+                    raise
+            y_pred = (predictions_proba[:, np.newaxis] >= params).T.astype(int)
+        return y_pred
 
     def _convert_target_level_to_alpha(self, target_level: List[float]) -> NDArray:
         alpha = []
