@@ -793,9 +793,64 @@ class TestCheckIfMultiDimensionalParam:
         predict_params = np.column_stack((lambda1_grid, lambda2_grid))
         predict_params = predict_params[:, :, np.newaxis]
         with pytest.raises(ValueError, match="predict_params must be a 1D array of"):
-            bcc = BinaryClassificationController(
+            BinaryClassificationController(
                 predict_function=dummy_predict,
                 risk=precision,
                 target_level=dummy_target,
                 predict_params=predict_params,
             )
+
+
+def test_functional_multi_dimensional_params():
+    """
+    Functional test for multi-dimensional parameters binary classification controller.
+    """
+
+    def realistic_general_predict(X, param1, param2):
+        probs = realistic_clf.predict_proba(X)[:, 1]
+        return ((probs >= param1) & (probs <= param2)).astype(int)
+
+    grid_param_multi_dim = np.array(
+        [[l1, l2] for l1 in [0.5, 0.6, 0.7] for l2 in [0.8, 0.9, 1.0]]
+    )
+    bcc_multi_dim = BinaryClassificationController(
+        predict_function=realistic_general_predict,
+        risk=precision,
+        target_level=0.6,
+        predict_params=grid_param_multi_dim,
+    )
+    bcc_multi_dim.calibrate(realistic_X_calib, realistic_y_calib)
+
+    # check that controller found valid parameters
+    assert len(bcc_multi_dim.valid_predict_params) > 1
+    assert bcc_multi_dim.best_predict_param is not None
+    assert isinstance(bcc_multi_dim.best_predict_param, tuple)
+    assert len(bcc_multi_dim.best_predict_param) == 2
+
+
+def test_functional_multi_dimensional_params_multi_risk():
+    """
+    Functional test for multi-dimensional parameters binary classification controller.
+    """
+
+    def realistic_general_predict(X, param1, param2):
+        probs = realistic_clf.predict_proba(X)[:, 1]
+        return ((probs >= param1) & (probs <= param2)).astype(int)
+
+    grid_param_multi_dim = np.array(
+        [[l1, l2] for l1 in [0.5, 0.6, 0.7] for l2 in [0.8, 0.9, 1.0]]
+    )
+    bcc_multi_dim = BinaryClassificationController(
+        predict_function=realistic_general_predict,
+        risk=[precision, recall],
+        target_level=[0.65, 0.6],
+        predict_params=grid_param_multi_dim,
+    )
+    bcc_multi_dim.calibrate(realistic_X_calib, realistic_y_calib)
+
+    print(bcc_multi_dim.valid_predict_params)
+    # check that controller found valid parameters
+    assert len(bcc_multi_dim.valid_predict_params) > 1
+    assert bcc_multi_dim.best_predict_param is not None
+    assert isinstance(bcc_multi_dim.best_predict_param, tuple)
+    assert len(bcc_multi_dim.best_predict_param) == 2
