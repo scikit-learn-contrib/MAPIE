@@ -104,8 +104,9 @@ class BinaryClassificationController:
         The valid thresholds that control the risk (or performance).
         Use the calibrate method to compute these.
 
-    best_predict_param : Optional[float]
-        The best threshold that control the risk (or performance).
+    best_predict_param : Optional[Union[float, Tuple[float, ...]]]
+        The best threshold that control the risk (or performance). It is a tuple if multi-dimensional
+        parameters are used.
         Use the calibrate method to compute it.
 
     Examples
@@ -204,7 +205,7 @@ class BinaryClassificationController:
         )
 
         self.valid_predict_params: NDArray = np.array([])
-        self.best_predict_param: Optional[float] = None
+        self.best_predict_param: Optional[Union[float, Tuple[float, ...]]] = None
 
     # All subfunctions are unit-tested. To avoid having to write
     # tests just to make sure those subfunctions are called,
@@ -339,6 +340,8 @@ class BinaryClassificationController:
         self.best_predict_param = self.valid_predict_params[
             np.argmin(secondary_risks_per_param)
         ]
+        if isinstance(self.best_predict_param, np.ndarray):
+            self.best_predict_param = tuple(self.best_predict_param.tolist())
 
     @staticmethod
     def _get_risk_values_and_eff_sample_sizes(
