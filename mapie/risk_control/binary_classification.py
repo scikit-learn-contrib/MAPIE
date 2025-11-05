@@ -253,6 +253,12 @@ class BinaryClassificationController:
         if len(self.valid_predict_params) == 0:
             self._set_risk_not_controlled()
         else:
+            if len(self.valid_predict_params) == len(self._predict_params):
+                warnings.warn(
+                    "All provided predict_params control the risk at the given "
+                    "target and confidence levels. "
+                    "You may want to use more difficult target levels.",
+                )
             self._set_best_predict_param(
                 y_calibrate_,
                 predictions_per_param,
