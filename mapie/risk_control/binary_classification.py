@@ -91,11 +91,12 @@ class BinaryClassificationController:
         - A custom instance of BinaryClassificationRisk object
 
     predict_params : NDArray, default=np.linspace(0, 0.99, 100)
-        The set of thresholds (noted λ in [1]) to consider for controlling the risk (or performance).
-        When `predict_function` is a `predict_proba` method, the shape is (n_lambda,).
-        When `predict_function` is a general function with multiple parameters (multi-dimensional λ),
-        the shape is (n_lambda, lambda_dim).
-        Note that performance is degraded when `predict_params.shape[0]` is large as it is used by the Bonferroni correction [1].
+        The set of parameters (noted λ in [1]) to consider for controlling the risk (or performance).
+        When `predict_function` is a `predict_proba` method, the shape is (n_params,)
+        and the parameter values are used to threshold the probabilities.
+        When `predict_function` is a general function with multi-dimensional parameters (λ) that outputs 0 or 1,
+        the shape is (n_params, params_dim).
+        Note that performance is degraded when `len(predict_params)` is large as it is used by the Bonferroni correction [1].
 
     Attributes
     ----------
@@ -232,7 +233,7 @@ class BinaryClassificationController:
         y_calibrate_ = np.asarray(y_calibrate, dtype=int)
 
         predictions_per_param = self._get_predictions_per_param(
-            X_calibrate, self._predict_params
+            X_calibrate, self._predict_params, is_calibration_step=True
         )
 
         risk_values, eff_sample_sizes = self._get_risk_values_and_eff_sample_sizes(
@@ -366,16 +367,16 @@ class BinaryClassificationController:
 
         return risk_values, effective_sample_sizes
 
-    def _get_predictions_per_param(self, X: ArrayLike, params: NDArray) -> NDArray:
+    def _get_predictions_per_param(
+        self, X: ArrayLike, params: NDArray, is_calibration_step=False
+    ) -> NDArray:
+        """Returns y_pred of shape (n_params, n_samples)"""
         if self.is_multi_dimensional_param:
-            y_pred = np.empty(params.shape[0], dtype=int)
-            for i in range(params.shape[0]):
+            y_pred = np.empty((len(params), len(X)))
+            for i in range(len(params)):
                 y_pred[i] = self._predict_function(X, *params[i])
-            if not np.logical_or(y_pred == 0, y_pred == 1).all():
-                raise ValueError(
-                    "The provided predict_function with multi-dimensional "
-                    "parameters must return binary predictions (0 or 1)."
-                )
+            if is_calibration_step:
+                self._check_predictions(y_pred)
         else:
             try:
                 predictions_proba = self._predict_function(X)[:, 1]
@@ -400,8 +401,10 @@ class BinaryClassificationController:
                     ) from e
                 else:
                     raise
-            y_pred = (predictions_proba[:, np.newaxis] >= params).T.astype(int)
-        return y_pred
+            if is_calibration_step:
+                self._check_predictions(predictions_proba)
+            y_pred = (predictions_proba[:, np.newaxis] >= params).T
+        return y_pred.astype(int)
 
     def _convert_target_level_to_alpha(self, target_level: List[float]) -> NDArray:
         alpha = []
@@ -449,14 +452,41 @@ class BinaryClassificationController:
         """
         Check if the the parameters (the λ) are multi-dimensional.
         """
-        if predict_params.ndim == 1 or (
-            predict_params.ndim == 2 and predict_params.shape[1] == 1
-        ):
+        if predict_params.ndim == 1:
             return False
-        elif predict_params.ndim == 2 and predict_params.shape[1] > 1:
+        elif predict_params.ndim == 2:
             return True
         else:
             raise ValueError(
-                "predict_params must be a 1D array of shape (n_lambda,) "
-                "or a 2D array of shape (n_lambda, lambda_dim) with lambda_dim >= 1."
+                "predict_params must be a 1D array of shape (n_params,) for one-dimensional parameters, "
+                "or a 2D array of shape (n_params, params_dim) for multi-dimensional parameters "
+                "(params_dim=1 is allowed for the case when a one-dimensional parameter is not used as a threshold)."
+            )
+
+    def _check_predictions(self, predictions_per_param: NDArray) -> None:
+        """
+        Checks if predictions are probabilities for one-dimensional parameters,
+        or binary predictions for multi-dimensional parameters.
+        """
+        if (
+            not self.is_multi_dimensional_param
+            and np.logical_or(
+                predictions_per_param == 0, predictions_per_param == 1
+            ).all()
+        ):
+            warnings.warn(
+                "All predictions are either 0 or 1 while the parameters are one-dimensional. "
+                "Make sure that the provided predict_function is a "
+                "predict_proba method or a function that outputs probabilities.",
+            )
+
+        if (
+            self.is_multi_dimensional_param
+            and not np.logical_or(
+                predictions_per_param == 0, predictions_per_param == 1
+            ).all()
+        ):
+            raise ValueError(
+                "The provided predict_function with multi-dimensional "
+                "parameters must return binary predictions (0 or 1)."
             )
