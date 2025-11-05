@@ -382,6 +382,7 @@ class BinaryClassificationController:
                 y_pred[i] = self._predict_function(X, *params[i])
             if is_calibration_step:
                 self._check_predictions(y_pred)
+            y_pred = y_pred.astype(int)
         else:
             try:
                 predictions_proba = self._predict_function(X)[:, 1]
@@ -408,8 +409,8 @@ class BinaryClassificationController:
                     raise
             if is_calibration_step:
                 self._check_predictions(predictions_proba)
-            y_pred = (predictions_proba[:, np.newaxis] >= params).T
-        return y_pred.astype(int)
+            y_pred = (predictions_proba[:, np.newaxis] >= params).T.astype(int)
+        return y_pred
 
     def _convert_target_level_to_alpha(self, target_level: List[float]) -> NDArray:
         alpha = []
