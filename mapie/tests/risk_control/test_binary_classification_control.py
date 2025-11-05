@@ -492,15 +492,11 @@ class TestBinaryClassificationControllerGetPredictionsPerParam:
         bcc = BinaryClassificationController(
             predict_function=binary_predict, risk=precision, target_level=dummy_target
         )
-        print(bcc.is_multi_dimensional_param)
         with pytest.warns(
             UserWarning,
             match=r"All predictions are either 0 or 1 while the parameters are one-dimensional.",
         ):
             bcc.calibrate([1, 2], [0, 1])
-
-
-# TODO: predict with general function but no predict_params should return error message
 
 
 class TestBinaryClassificationControllerPredict:
@@ -803,7 +799,7 @@ class TestCheckIfMultiDimensionalParam:
 
 def test_functional_multi_dimensional_params():
     """
-    Functional test for multi-dimensional parameters binary classification controller.
+    Functional test for multi-dimensional parameters BinaryClassificationController.
     """
 
     def realistic_general_predict(X, param1, param2):
@@ -830,7 +826,7 @@ def test_functional_multi_dimensional_params():
 
 def test_functional_multi_dimensional_params_multi_risk():
     """
-    Functional test for multi-dimensional parameters binary classification controller.
+    Functional test for multi-dimensional parameters BinaryClassificationController with multiple risks.
     """
 
     def realistic_general_predict(X, param1, param2):
@@ -848,7 +844,6 @@ def test_functional_multi_dimensional_params_multi_risk():
     )
     bcc_multi_dim.calibrate(realistic_X_calib, realistic_y_calib)
 
-    print(bcc_multi_dim.valid_predict_params)
     # check that controller found valid parameters
     assert len(bcc_multi_dim.valid_predict_params) > 1
     assert bcc_multi_dim.best_predict_param is not None
