@@ -374,9 +374,11 @@ class BinaryClassificationController:
         self, X: ArrayLike, params: NDArray, is_calibration_step=False
     ) -> NDArray:
         """Returns y_pred of shape (n_params, n_samples)"""
+        n_params = len(params)
+        n_samples = len(np.asarray(X))
         if self.is_multi_dimensional_param:
-            y_pred = np.empty((len(params), len(X)))
-            for i in range(len(params)):
+            y_pred = np.empty((n_params, n_samples))
+            for i in range(n_params):
                 y_pred[i] = self._predict_function(X, *params[i])
             if is_calibration_step:
                 self._check_predictions(y_pred)
