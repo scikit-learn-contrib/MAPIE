@@ -143,7 +143,7 @@ def test_split_BlockBootstrap() -> None:
     trains = np.concatenate([x[0] for x in cv.split(X)])
     tests = np.concatenate([x[1] for x in cv.split(X)])
     trains_expected = np.array([7, 8, 9, 10, 1, 2, 3, 4, 7, 8, 1, 2])
-    tests_expected = np.array([5, 6])
+    tests_expected = np.array([0, 5, 6])
     np.testing.assert_equal(trains, trains_expected)
     np.testing.assert_equal(tests, tests_expected)
 

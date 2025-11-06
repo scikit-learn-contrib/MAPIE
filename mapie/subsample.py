@@ -135,8 +135,8 @@ class BlockBootstrap(BaseCrossValidator):  # type: ignore
     >>> X = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
     >>> for train_index, test_index in cv.split(X):
     ...    print(f"train index is {train_index}, test index is {test_index}")
-    train index is [1 2 3 4 5 6 1 2 3 4 5 6], test index is [8 9 7]
-    train index is [4 5 6 7 8 9 1 2 3 7 8 9], test index is []
+    train index is [1 2 3 4 5 6 1 2 3 4 5 6], test index is [0 8 9 7]
+    train index is [4 5 6 7 8 9 1 2 3 7 8 9], test index is [0]
     """
 
     def __init__(
@@ -201,10 +201,10 @@ class BlockBootstrap(BaseCrossValidator):  # type: ignore
         if self.overlapping:
             blocks = sliding_window_view(indices, window_shape=length)
         else:
-            indices = indices[(n % length) :]
+            indices_used_for_blocks = indices[(n % length) :]
             blocks_number = n // length
             blocks = np.asarray(
-                np.array_split(indices, indices_or_sections=blocks_number)
+                np.split(indices_used_for_blocks, indices_or_sections=blocks_number)
             )
 
         random_state = check_random_state(self.random_state)
