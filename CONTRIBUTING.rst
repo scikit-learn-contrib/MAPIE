@@ -24,16 +24,23 @@ The typical workflow for contributing to `mapie` is:
 4. Push the changes to your fork.
 5. Send a pull request from your fork back to the original ``master`` branch.
 
+
 Local setup
 -----------
 
-We encourage you to use a virtual environment, with Python `3.10`. You'll want to activate it every time you want to work on `mapie`.
+We encourage you to use a virtual environment, with Python `3.10` and pip installed.
+You'll want to activate it every time you want to work on `mapie`.
 
 Using ``pip``, you can install development dependencies with the following command:
 
 .. code-block:: sh
 
-    $ pip install -e '.[dev]'
+    $ python -m pip install -e '.[dev]'
+
+If you don't have ``pip`` installed, you can install it by running:
+.. code-block:: sh
+
+    $ python -m ensurepip --upgrade
 
 Implementing your change
 ------------------------------------------
@@ -57,24 +64,18 @@ Testing your change
 
 See `the tests README.md <https://github.com/scikit-learn-contrib/MAPIE/blob/master/mapie/tests/README.md>`_ for guidance.
 
-The tests absolutely have to pass.
-
-.. code-block:: sh
-
-    $ make tests
-
 The coverage should absolutely be 100%.
 
 .. code-block:: sh
 
     $ make coverage
 
-If your modification affects notebook-based experiments in ``mapie/tests/notebooks/``,
-you should also ensure that all notebooks run successfully.
+The tests absolutely have to pass. You can run the test suite directly (optional) with:
 
 .. code-block:: sh
 
-    $ make notebook-tests
+    $ make tests
+
 
 Documenting your change
 -----------------------
@@ -86,7 +87,7 @@ In order to build the documentation locally, you first need to create a differen
 
 .. code-block:: sh
 
-    $ pip install -e '.[docs]'
+    $ python -m pip install -e '.[docs]'
 
 Finally, once dependencies are installed, you can build the documentation locally by running:
 
