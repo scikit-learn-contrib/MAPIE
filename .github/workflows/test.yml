@@ -75,5 +75,7 @@ jobs:
         run: make type-check
       - name: Test and coverage with pytest
         run: make coverage
+      - name: Test notebooks
+        run: make notebook-tests
       - name: Code coverage
         run: codecov

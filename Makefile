@@ -22,7 +22,6 @@ coverage:
 		--no-cov-on-fail \
 		--doctest-modules
 
-
 ### Checks that are run in ReadTheDocs CI ###
 doc:
 	$(MAKE) html -C doc
@@ -39,7 +38,7 @@ all-checks:
 	$(MAKE) coverage
 
 tests:
-	pytest -vs --doctest-modules mapie
+	pytest -vs --doctest-modules mapie --ignore=mapie/tests/notebooks
 
 clean-doc:
 	$(MAKE) clean -C doc
@@ -55,3 +54,8 @@ clean:
 	rm -rf **__pycache__
 	$(MAKE) clean-build
 	$(MAKE) clean-doc
+
+# Run all notebooks located in mapie/tests/notebooks/
+notebook-tests:
+	@echo "Executing all notebooks in mapie/tests/notebooks/..."
+	python mapie/tests/notebooks/_run_notebooks.py
