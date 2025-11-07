@@ -37,6 +37,7 @@ class RandomClassifier:
         probs = np.array([self._get_prob(x) for x in X])
         return np.vstack([1 - probs, probs]).T
 
+    # pragma: no cover
     def predict(self, X):
         probs = self.predict_proba(X)[:, 1]
         return (probs >= self.threshold).astype(int)
@@ -56,6 +57,7 @@ class LogisticClassifier:
         probs = np.array([self._get_prob(x) for x in X])
         return np.vstack([1 - probs, probs]).T
 
+    # pragma: no cover
     def predict(self, X):
         probs = self.predict_proba(X)[:, 1]
         return (probs >= self.threshold).astype(int)
@@ -68,7 +70,7 @@ def make_logistic_data(n_samples=200, scale=2.0, random_state=None):
     y = rng.binomial(1, probs)
     return X, y
 
-
+# pragma: no cover
 def test_random_classifier_theoretical_validity():
     """Reproduces section 1 of the notebook (random classifier checks)."""
 
@@ -144,7 +146,7 @@ def test_random_classifier_theoretical_validity():
 
     assert not invalid_experiment
 
-
+# pragma: no cover
 def test_logistic_classifier_theoretical_validity():
     """Reproduces section 2 of the notebook (logistic classifier checks)."""
 
