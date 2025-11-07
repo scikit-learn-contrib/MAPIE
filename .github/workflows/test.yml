@@ -14,6 +14,8 @@ jobs:
     steps:
       - uses: snok/latest-python-versions@v1
         id: latest
+        with:
+          min-version: "3.13"
 
   build:
     needs: get-latest-python
