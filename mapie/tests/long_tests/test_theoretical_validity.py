@@ -155,7 +155,6 @@ def test_logistic_classifier_theoretical_validity():
         risk_item, predict_params_item, target_level_item, confidence_level_item = combination
         if len(predict_params_item) == 1:
             predict_params_item = np.array([np.random.choice(np.linspace(0, 0.9, 10))])
-        alpha = float(Decimal("1") - Decimal(str(target_level_item)))
         delta = float(Decimal("1") - Decimal(str(confidence_level_item)))
 
         clf = LogisticClassifier(scale=2.0, threshold=0.5)
