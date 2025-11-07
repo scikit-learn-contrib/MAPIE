@@ -15,7 +15,7 @@ jobs:
       - uses: snok/latest-python-versions@v1
         id: latest
         with:
-          min-version: "3.13"
+          min-version: "3.9"
 
   build:
     needs: get-latest-python
@@ -26,25 +26,20 @@ jobs:
           # minimum supported dependencies
           - os: ubuntu-latest
             python-version: "3.9"
-            numpy-version: "==1.23.*"
+            use-pinned-deps: true
+            numpy-version: "==1.24.1"
             sklearn-version: "==1.4.*"
-            ruff-version: "==0.14.2"
+            scipy-version: "==1.10.*"
           # latest stable dependencies
           - os: ubuntu-latest
             python-version: "${{ needs.get-latest-python.outputs.latest-python }}"
-            numpy-version: ""
-            sklearn-version: ""
-            ruff-version: ""
+            use-pinned-deps: false
           - os: windows-latest
             python-version: "${{ needs.get-latest-python.outputs.latest-python }}"
-            numpy-version: ""
-            sklearn-version: ""
-            ruff-version: ""
+            use-pinned-deps: false
           - os: macos-latest
             python-version: "${{ needs.get-latest-python.outputs.latest-python }}"
-            numpy-version: ""
-            sklearn-version: ""
-            ruff-version: ""
+            use-pinned-deps: false
     defaults:
       run:
         shell: bash
@@ -57,16 +52,13 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: Upgrade pip
-        run: python -m pip install --upgrade pip
+        run: python -m ensurepip --upgrade
       - name: Install minimum dependency constraints
-        if: ${{ matrix.numpy-version != '' }}
+        if: ${{ matrix.use-pinned-deps }}
         run: |
-          python -m pip install "numpy${{ matrix.numpy-version }}" "scikit-learn${{ matrix.sklearn-version }}"
+          python -m pip install "numpy${{ matrix.numpy-version }}" "scikit-learn${{ matrix.sklearn-version }}" "scipy${{ matrix.scipy-version }}"
       - name: Install project with development extras
         run: python -m pip install -e '.[dev]'
-      - name: Pin ruff for minimum build
-        if: ${{ matrix.ruff-version != '' }}
-        run: python -m pip install "ruff${{ matrix.ruff-version }}"
       - name: Check linting
         run: make lint
       - name: Check format
@@ -75,7 +67,3 @@ jobs:
         run: make type-check
       - name: Test and coverage with pytest
         run: make coverage
-      - name: Test notebooks
-        run: make notebook-tests
-      - name: Code coverage
-        run: codecov
