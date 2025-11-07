@@ -194,7 +194,7 @@ def run_pipeline_split(params):
     preds, pred_sets = mapie_classifier.predict_set(
         X_conformalize, **params.get("predict_set", {})
     )
-    preds_using_predict: NDArray = mapie_classifier.predict(X_conformalize)
+    preds_using_predict = mapie_classifier.predict(X_conformalize)
 
     return (
         preds,
@@ -291,7 +291,7 @@ def run_pipeline_cross(params):
 
     preds, pred_sets = mapie_classifier.predict_set(X, **params.get("predict_set", {}))
 
-    preds_using_predict: NDArray = mapie_classifier.predict(X)
+    preds_using_predict = mapie_classifier.predict(X)
 
     return (
         preds,
@@ -638,7 +638,7 @@ def run_pipeline_split_or_quantile(params):
         X_conf, **predict_interval_params
     )
 
-    preds_using_predict: ArrayLike = mapie_regressor.predict(X_conf, **predict_params)
+    preds_using_predict = mapie_regressor.predict(X_conf, **predict_params)
 
     return (
         preds,
