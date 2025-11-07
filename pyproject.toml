@@ -1,8 +1,5 @@
 [build-system]
-requires = [
-    "setuptools",
-    "ruff"
-]
+requires = ["setuptools>=64"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -20,9 +17,9 @@ maintainers = [
 ]
 requires-python = ">=3.9"
 dependencies = [
+    "numpy>=1.24.1",
     "scikit-learn>=1.4",
-    "scipy",
-    "numpy>=1.23"
+    "scipy>=1.10",
 ]
 classifiers = [
     "Intended Audience :: Science/Research",
@@ -92,8 +89,8 @@ include-package-data = true
 [tool.setuptools.packages.find]
 include = ["mapie", "mapie.*"]
 
-[tool.ruff]
 # Exclude ignored directories.
+[tool.ruff]
 exclude = [
     ".coverage",
     ".bzr",
