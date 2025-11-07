@@ -13,7 +13,12 @@ from sklearn.datasets import make_classification
 from sklearn.dummy import check_random_state
 from sklearn.metrics import precision_score, recall_score, accuracy_score
 
-from mapie.risk_control import BinaryClassificationController, precision, accuracy, recall
+from mapie.risk_control import (
+    BinaryClassificationController,
+    precision,
+    accuracy,
+    recall,
+)
 
 
 class RandomClassifier:
@@ -24,7 +29,7 @@ class RandomClassifier:
         self.threshold = threshold
 
     def _get_prob(self, x):
-        local_seed = hash((x, self.seed)) % (2 ** 32)
+        local_seed = hash((x, self.seed)) % (2**32)
         rng = np.random.RandomState(local_seed)
         return np.round(rng.rand(), 2)
 
@@ -59,7 +64,7 @@ class LogisticClassifier:
 def make_logistic_data(n_samples=200, scale=2.0, random_state=None):
     rng = check_random_state(random_state)
     X = rng.uniform(-3, 3, size=n_samples)
-    probs = 1 / (1 + np.exp(- scale * X))
+    probs = 1 / (1 + np.exp(-scale * X))
     y = rng.binomial(1, probs)
     return X, y
 
@@ -81,7 +86,9 @@ def test_random_classifier_theoretical_validity():
     invalid_experiment = False
 
     for combination in product(risk, predict_params, target_level, confidence_level):
-        risk_item, predict_params_item, target_level_item, confidence_level_item = combination
+        risk_item, predict_params_item, target_level_item, confidence_level_item = (
+            combination
+        )
         if len(predict_params_item) == 1:
             predict_params_item = np.array([np.random.choice(np.linspace(0, 0.9, 10))])
         alpha = float(Decimal("1") - Decimal(str(target_level_item)))
@@ -122,7 +129,10 @@ def test_random_classifier_theoretical_validity():
                 if target_level_item > 0.5 and len(valid_parameters) >= 1:
                     nb_errors += 1
             elif risk_item["risk"] == recall:
-                if any(x > alpha for x in valid_parameters) and len(valid_parameters) >= 1:
+                if (
+                    any(x > alpha for x in valid_parameters)
+                    and len(valid_parameters) >= 1
+                ):
                     nb_errors += 1
 
         # Basic checks mirroring the notebook prints (but use assertions)
@@ -152,7 +162,9 @@ def test_logistic_classifier_theoretical_validity():
     invalid_experiment = False
 
     for combination in product(risk, predict_params, target_level, confidence_level):
-        risk_item, predict_params_item, target_level_item, confidence_level_item = combination
+        risk_item, predict_params_item, target_level_item, confidence_level_item = (
+            combination
+        )
         if len(predict_params_item) == 1:
             predict_params_item = np.array([np.random.choice(np.linspace(0, 0.9, 10))])
         delta = float(Decimal("1") - Decimal(str(confidence_level_item)))
@@ -162,7 +174,9 @@ def test_logistic_classifier_theoretical_validity():
         total_nb_valid_params = 0
 
         for _ in range(n_repeats):
-            X_calibrate, y_calibrate = make_logistic_data(n_samples=N, scale=2.0, random_state=None)
+            X_calibrate, y_calibrate = make_logistic_data(
+                n_samples=N, scale=2.0, random_state=None
+            )
 
             controller = BinaryClassificationController(
                 predict_function=clf.predict_proba,
@@ -176,7 +190,9 @@ def test_logistic_classifier_theoretical_validity():
             total_nb_valid_params += len(valid_parameters)
 
             # Estimate empirical risk on a fresh test set
-            X_test, y_test = make_logistic_data(n_samples=N, scale=2.0, random_state=None)
+            X_test, y_test = make_logistic_data(
+                n_samples=N, scale=2.0, random_state=None
+            )
             probs = clf.predict_proba(X_test)[:, 1]
 
             if len(valid_parameters) >= 1:
@@ -184,7 +200,9 @@ def test_logistic_classifier_theoretical_validity():
                     y_pred = (probs >= lambda_).astype(int)
 
                     if risk_item["risk"] == precision:
-                        empirical_metric = precision_score(y_test, y_pred, zero_division=0)
+                        empirical_metric = precision_score(
+                            y_test, y_pred, zero_division=0
+                        )
                     elif risk_item["risk"] == recall:
                         empirical_metric = recall_score(y_test, y_pred, zero_division=0)
                     elif risk_item["risk"] == accuracy:
