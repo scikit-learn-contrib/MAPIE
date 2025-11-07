@@ -14,8 +14,6 @@ jobs:
     steps:
       - uses: snok/latest-python-versions@v1
         id: latest
-        with:
-          min-version: "3.13"
 
   build:
     needs: get-latest-python
@@ -51,9 +49,9 @@ jobs:
 
     steps:
       - name: Git clone
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4.3.0
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5.6.0
         with:
           python-version: ${{ matrix.python-version }}
       - name: Upgrade pip
