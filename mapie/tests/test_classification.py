@@ -1717,7 +1717,8 @@ def test_raise_error_new_class() -> None:
     """
     clf = LogisticRegression()
     clf.fit(X, y)
-    y[-1] = 10
+    y_modified = y.copy()
+    y_modified[-1] = 10
     mapie_clf = _MapieClassifier(
         estimator=clf,
         conformity_score=APSConformityScore(),
@@ -1725,7 +1726,7 @@ def test_raise_error_new_class() -> None:
         random_state=random_state,
     )
     with pytest.raises(ValueError, match=r".*Values in y do not matched values.*"):
-        mapie_clf.fit(X, y)
+        mapie_clf.fit(X, y_modified)
 
 
 def test_fit_parameters_passing() -> None:
@@ -1764,40 +1765,26 @@ def test_predict_parameters_passing() -> None:
     np.testing.assert_equal(y_pred, 0)
 
 
-def test_raps_with_predict_params() -> None:
+def test_raps_with_predict_params_passing() -> None:
     """Test that predict_params are correctly passed when using RAPS."""
-    X, y = make_classification(
-        n_samples=500,
-        n_features=10,
-        n_informative=3,
-        n_classes=3,
-        random_state=random_state,
-    )
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.2, random_state=random_state
     )
-    estimator = CustomGradientBoostingClassifier(random_state=random_state)
-    predict_params = {"check_predict_params": True}
-    mapie_clf = _MapieClassifier(
-        estimator=estimator,
-        conformity_score=RAPSConformityScore(size_raps=0.2),
+    custom_gbc = CustomGradientBoostingClassifier(random_state=random_state)
+    raps_score = RAPSConformityScore(size_raps=0.1)
+    mapie_model = _MapieClassifier(
+        estimator=custom_gbc,
+        conformity_score=raps_score,
         cv="split",
         test_size=0.2,
-        random_state=random_state,
+        random_state=42,
     )
-
-    mapie_clf.fit(X_train, y_train, predict_params=predict_params)
-
-    y_pred, y_ps = mapie_clf.predict(
-        X_test,
-        alpha=0.1,
-        include_last_label="randomized",
-        agg_scores="mean",
-        **predict_params,
+    predict_params = {"check_predict_params": True}
+    mapie_model = mapie_model.fit(X_train, y_train, predict_params=predict_params)
+    # Since check_predict_params=True, y_pred_proba_raps should have all probabilities set to 1.0 for class 0
+    assert np.allclose(raps_score.y_pred_proba_raps[:, 0], 1.0), (
+        "predict_params are not passed successfully to raps score"
     )
-    # Ensure the output shapes are correct
-    assert y_pred.shape == (X_test.shape[0],)
-    assert y_ps.shape == (X_test.shape[0], len(np.unique(y)), 1)
 
 
 def test_with_no_predict_parameters_passing() -> None:
