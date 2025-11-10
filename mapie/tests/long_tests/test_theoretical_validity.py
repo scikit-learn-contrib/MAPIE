@@ -10,7 +10,7 @@ from decimal import Decimal
 
 import numpy as np
 from sklearn.datasets import make_classification
-from sklearn.dummy import check_random_state
+from sklearn.utils import check_random_state
 from sklearn.metrics import precision_score, recall_score, accuracy_score
 
 from mapie.risk_control import (
