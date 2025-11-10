@@ -1,18 +1,20 @@
 from __future__ import annotations
 
-import warnings
 from typing import Iterable, Optional, Tuple, Union, cast
 
 import numpy as np
+from numpy.typing import ArrayLike, NDArray
 from sklearn.base import RegressorMixin
 from sklearn.model_selection import BaseCrossValidator
 from sklearn.utils.validation import check_is_fitted
 
-from numpy.typing import ArrayLike, NDArray
 from mapie.conformity_scores import BaseRegressionScore
 from mapie.regression.regression import _MapieRegressor
-from mapie.utils import _check_alpha, _check_gamma
-from mapie.utils import _transform_confidence_level_to_alpha_list
+from mapie.utils import (
+    _check_alpha,
+    _check_gamma,
+    _transform_confidence_level_to_alpha_list,
+)
 
 
 class TimeSeriesRegressor(_MapieRegressor):
@@ -24,7 +26,7 @@ class TimeSeriesRegressor(_MapieRegressor):
     Both strategies are estimating prediction intervals
     on single-output time series.
 
-    EnbPI allows you to update conformal scores using the ``partial_fit``
+    EnbPI allows you to update conformal scores using the ``update``
     function. It will replace the oldest one with the newest scores.
     It will keep the same amount of total scores
 
@@ -118,7 +120,7 @@ class TimeSeriesRegressor(_MapieRegressor):
         )
         return scores
 
-    def partial_fit(
+    def _update_coformity_scores_with_ensemble(
         self,
         X: ArrayLike,
         y: ArrayLike,
@@ -127,7 +129,7 @@ class TimeSeriesRegressor(_MapieRegressor):
         """
         Update the ``conformity_scores_`` attribute when new data with known
         labels are available.
-        Note: Don't use ``partial_fit`` with samples of the training set.
+        Note: Don't use ``_update_coformity_scores_with_ensemble`` with samples of the training set.
 
         Parameters
         ----------
@@ -159,13 +161,6 @@ class TimeSeriesRegressor(_MapieRegressor):
             If the length of ``y`` is greater than
             the length of the training set.
         """
-        warnings.warn(
-            "WARNING: Deprecated method. "
-            + 'The method "partial_fit" will be removed in v1.2. '
-            + 'Use "update" instead to keep '
-            + "the same behavior in the future.",
-            DeprecationWarning,
-        )
         check_is_fitted(self, self.fit_attributes)
         X, y = cast(NDArray, X), cast(NDArray, y)
         m, n = len(X), len(self.conformity_scores_)
@@ -330,8 +325,8 @@ class TimeSeriesRegressor(_MapieRegressor):
     ) -> TimeSeriesRegressor:
         """
         Update with respect to the used ``method``.
-        ``method="enbpi"`` will call ``partial_fit`` method and
-        ``method="aci"`` will call ``adapt_conformal_inference`` method.
+        ``method="enbpi"`` updates conformity scores via EnbPI,
+        ``method="aci"`` calls ``adapt_conformal_inference``.
 
         Parameters
         ----------
@@ -381,7 +376,7 @@ class TimeSeriesRegressor(_MapieRegressor):
         """
         self._check_method(self.method)
         if self.method == "enbpi":
-            return self.partial_fit(X, y, ensemble=ensemble)
+            return self._update_coformity_scores_with_ensemble(X, y, ensemble=ensemble)
         elif self.method == "aci":
             return self.adapt_conformal_inference(
                 X,
