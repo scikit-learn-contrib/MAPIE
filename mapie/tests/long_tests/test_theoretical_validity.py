@@ -137,7 +137,7 @@ def test_random_classifier_theoretical_validity():  # pragma: no cover
 
         # Basic checks mirroring the notebook prints (but use assertions)
         proportion_not_controlled = nb_errors / n_repeats
-        assert proportion_not_controlled <= delta or proportion_not_controlled >= 0
+        assert proportion_not_controlled <= delta
         # Keep track if any experiment was invalid (mirrors notebook behaviour)
         if proportion_not_controlled > delta:
             invalid_experiment = True
