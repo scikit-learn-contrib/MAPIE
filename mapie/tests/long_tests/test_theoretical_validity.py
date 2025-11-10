@@ -219,7 +219,7 @@ def test_logistic_classifier_theoretical_validity():  # pragma: no cover
                             break
 
         proportion_not_controlled = nb_errors / n_repeats
-        assert proportion_not_controlled <= delta or proportion_not_controlled >= 0
+        assert proportion_not_controlled <= delta
         if proportion_not_controlled > delta:
             invalid_experiment = True
 
