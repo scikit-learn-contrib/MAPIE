@@ -43,7 +43,7 @@ The EnbPI method allows you update the residuals during the prediction,
 each time new observations are available so that the deterioration of
 predictions, or the increase of noise level, can be dynamically taken into
 account. It can be done with :class:`~mapie.regression.TimeSeriesRegressor`
-through the ``partial_fit`` class method called at every step.
+through the ``update`` class method called at every step.
 
 
 The ACI strategy allows you to adapt the conformal inference
@@ -64,9 +64,9 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import RandomizedSearchCV, TimeSeriesSplit
 
 from mapie.metrics.regression import (
+    coverage_width_based,
     regression_coverage_score,
     regression_mean_width_score,
-    coverage_width_based,
 )
 from mapie.regression import TimeSeriesRegressor
 from mapie.subsample import BlockBootstrap
@@ -178,11 +178,11 @@ else:
 # - with a regular ``.fit`` and ``.predict`` process, limiting the use of
 #   trainining set residuals to build prediction intervals
 #
-# - using ``.partial_fit`` in addition to ``.fit`` and ``.predict`` allowing
+# - using ``.update`` in addition to ``.fit`` and ``.predict`` allowing
 #   MAPIE to use new residuals from the test points as new data are becoming
 #   available.
 #
-# - using ``.partial_fit`` and ``.adapt_conformal_inference`` in addition to
+# - using ``.update`` and ``.adapt_conformal_inference`` in addition to
 #   ``.fit`` and ``.predict`` allowing MAPIE to use new residuals from the
 #   test points as new data are becoming available.
 #
@@ -289,7 +289,7 @@ y_pred_enbpi_pfit[:gap], y_pis_enbpi_pfit[:gap, :, :] = mapie_enbpi.predict(
 )
 
 for step in range(gap, len(X_test), gap):
-    mapie_enbpi.partial_fit(
+    mapie_enbpi.update(
         X_test.iloc[(step - gap) : step, :],
         y_test.iloc[(step - gap) : step],
     )
@@ -336,9 +336,9 @@ y_pred_aci_pfit[:gap], y_pis_aci_pfit[:gap, :, :] = mapie_aci.predict(
 )
 
 for step in range(gap, len(X_test), gap):
-    mapie_aci.partial_fit(
-        X_test.iloc[(step - gap) : step, :],
-        y_test.iloc[(step - gap) : step],
+    mapie_aci.update(
+        X_test.iloc[(step - gap) : step, :].to_numpy(),
+        y_test.iloc[(step - gap) : step].to_numpy(),
     )
     mapie_aci.adapt_conformal_inference(
         X_test.iloc[(step - gap) : step, :].to_numpy(),
@@ -514,3 +514,5 @@ plt.show()
 # One can notice that the uncertainty's explosion happens about one day late.
 # This is because enough new residuals are needed to change the quantiles
 # obtained from the residuals distribution.
+
+# %%
