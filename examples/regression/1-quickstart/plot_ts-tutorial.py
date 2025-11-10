@@ -209,7 +209,7 @@ mapie_aci = TimeSeriesRegressor(
 
 
 ##############################################################################
-# Let's start by estimating prediction intervals without partial fit.
+# Let's start by estimating prediction intervals without partial update of the residuals.
 
 # For EnbPI
 mapie_enbpi = mapie_enbpi.fit(X_train, y_train)
@@ -270,7 +270,7 @@ cwc_aci_npfit = coverage_width_based(
 
 
 ##############################################################################
-# Let's now estimate prediction intervals with partial fit. As discussed
+# Let's now estimate prediction intervals with updated residuals. As discussed
 # previously, the update of the residuals and the one-step ahead predictions
 # are performed sequentially in a loop.
 
