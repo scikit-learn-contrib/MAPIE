@@ -3,7 +3,7 @@ from typing import Dict, Optional, Callable, Any, Tuple
 
 import numpy as np
 import pytest
-from numpy._typing import ArrayLike, NDArray
+from numpy._typing import NDArray
 from numpy.random import RandomState
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.compose import TransformedTargetRegressor
