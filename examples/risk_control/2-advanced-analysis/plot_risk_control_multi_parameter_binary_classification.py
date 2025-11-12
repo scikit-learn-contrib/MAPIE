@@ -97,7 +97,7 @@ clf.fit(X_train, y_train)
 #############################################################################
 # Third define a multiparameter prediciton function
 def send_to_human(X, lambda_1, lambda_2):
-    y_score = clf.predict_proba(X)
+    y_score = clf.predict_proba(X)[:,1]
     return (lambda_1 <= y_score) & (y_score < lambda_2)
 
 
@@ -114,6 +114,7 @@ for i in range(6):
         if lambda_2 > 0.99:
             break
         to_explore.append((lambda_1, lambda_2))
+to_explore = np.array(to_explore)
 
 #############################################################################
 # As we want to control the proportion of mail to be verified by a human.
@@ -140,6 +141,7 @@ bcc = BinaryClassificationController(
     risk=prop_positive,
     target_level=target_level,
     confidence_level=confidence_level,
+    best_predict_param_choice="precision",
     predict_params=to_explore,
 )
 bcc.calibrate(X_calib, y_calib)
@@ -155,12 +157,12 @@ matrix = np.zeros((10, 10))
 for valid_params in bcc.valid_predict_params:
     row = valid_params[0] * 10
     col = valid_params[1] * 10
-    matrix[row, col] = 1
+    matrix[int(row), int(col)] = 1
 
 fig, ax = plt.subplots(figsize=(16, 12))
 im = ax.imshow(matrix)
 ax.set_xticks(range(10), labels=(np.array(range(10)) / 10))
-ax.set_yticks(range(10, labels=(np.array(range(10)) / 10)))
+ax.set_yticks(range(10), labels=(np.array(range(10)) / 10))
 ax.set_title("Validated parameters")
 fig.tight_layout()
 plt.show()
