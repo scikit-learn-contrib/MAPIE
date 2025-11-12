@@ -24,28 +24,23 @@ The typical workflow for contributing to `mapie` is:
 4. Push the changes to your fork.
 5. Send a pull request from your fork back to the original ``master`` branch.
 
+
 Local setup
 -----------
 
-We encourage you to use a virtual environment, with Python `3.10`. You'll want to activate it every time you want to work on `mapie`.
+We encourage you to use a virtual environment, with Python `3.10` and pip installed.
+You'll want to activate it every time you want to work on `mapie`.
 
-Using ``pip``, you can install dependencies with the following command:
-
-.. code-block:: sh
-
-    $ pip install -r requirements.dev.txt
-
-If you work on Mac, you may have to install libomp manually in order to install LightGBM:
+Using ``pip``, you can install development dependencies with the following command:
 
 .. code-block:: sh
 
-    $ brew install libomp
+    $ python -m pip install -e '.[dev]'
 
-Finally, install ``mapie`` in development mode:
-
+If you don't have ``pip`` installed, you can install it by running:
 .. code-block:: sh
 
-    $ pip install -e .
+    $ python -m ensurepip --upgrade
 
 Implementing your change
 ------------------------------------------
@@ -69,24 +64,18 @@ Testing your change
 
 See `the tests README.md <https://github.com/scikit-learn-contrib/MAPIE/blob/master/mapie/tests/README.md>`_ for guidance.
 
-The tests absolutely have to pass.
-
-.. code-block:: sh
-
-    $ make tests
-
 The coverage should absolutely be 100%.
 
 .. code-block:: sh
 
     $ make coverage
 
-If your modification affects notebook-based experiments in ``mapie/tests/notebooks/``,
-you should also ensure that all notebooks run successfully.
+The tests absolutely have to pass. You can run the test suite directly (optional) with:
 
 .. code-block:: sh
 
-    $ make notebook-tests
+    $ make tests
+
 
 Documenting your change
 -----------------------
@@ -94,12 +83,11 @@ Documenting your change
 If you're adding a public class or function, then you'll need to add a docstring with a doctest. We follow the `numpy docstring convention <https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html>`_, so please do too.
 Any estimator should follow the `scikit-learn API <https://scikit-learn.org/stable/developers/develop.html>`_, so please follow these guidelines.
 
-In order to build the documentation locally, you first need to create a different virtual environment than the one used for development, and then install some dependencies using ``pip`` with the following commands:
+In order to build the documentation locally, you first need to create a different virtual environment than the one used for development, and then install the documentation dependencies using ``pip`` with the following command. macOS users should install ``libomp`` beforehand if it is not already present (``brew install libomp``) because LightGBM depends on it.
 
 .. code-block:: sh
 
-    $ pip install -r requirements.doc.txt
-    $ pip install -e .
+    $ python -m pip install -e '.[docs]'
 
 Finally, once dependencies are installed, you can build the documentation locally by running:
 

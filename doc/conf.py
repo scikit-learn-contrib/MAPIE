@@ -14,7 +14,6 @@
 
 import os
 import sys
-from distutils.version import LooseVersion
 
 import sphinx
 import sphinx_gallery
@@ -50,11 +49,8 @@ mathjax_path = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"
 # see https://github.com/numpy/numpydoc/issues/69
 numpydoc_show_class_members = False
 
-# pngmath / imgmath compatibility layer for different sphinx versions
-if LooseVersion(sphinx.__version__) < LooseVersion("1.4"):
-    extensions.append("sphinx.ext.pngmath")
-else:
-    extensions.append("sphinx.ext.imgmath")
+# Use the modern `imgmath` extension (we require a recent Sphinx).
+extensions.append("sphinx.ext.imgmath")
 
 # Ensure imgmath_latex is correctly set
 imgmath_latex = 'latex'
@@ -78,7 +74,7 @@ source_suffix = ".rst"
 # source_encoding = "utf-8-sig"
 
 # Generate the plots for the gallery
-plot_gallery = True
+plot_gallery = "True"
 
 # The master toctree document.
 master_doc = "index"
@@ -150,9 +146,6 @@ html_theme = "sphinx_rtd_theme"
 html_theme_options = {
     'collapse_navigation': False,
 }
-
-# Add any paths that contain custom themes here, relative to this directory.
-html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
