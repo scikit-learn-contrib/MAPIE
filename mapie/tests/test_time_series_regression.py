@@ -4,6 +4,7 @@ from typing import Any, Optional, Tuple, Union
 
 import numpy as np
 import pytest
+from numpy.typing import NDArray
 from sklearn import __version__ as sklearn_version
 from sklearn.datasets import make_regression
 from sklearn.linear_model import LinearRegression
@@ -11,12 +12,9 @@ from sklearn.model_selection import KFold, LeaveOneOut, train_test_split
 from sklearn.utils.estimator_checks import check_estimator
 from typing_extensions import TypedDict
 
-from numpy.typing import NDArray
 from mapie.aggregation_functions import aggregate_all
 from mapie.conformity_scores import AbsoluteConformityScore
-from mapie.metrics.regression import (
-    regression_coverage_score,
-)
+from mapie.metrics.regression import regression_coverage_score
 from mapie.regression import TimeSeriesRegressor
 from mapie.subsample import BlockBootstrap
 
@@ -401,13 +399,18 @@ def test_interval_prediction_with_beta_optimize() -> None:
         X_train_val, y_train_val, test_size=1 / 2, random_state=random_state
     )
     estimator = LinearRegression().fit(X_train, y_train)
-    mapie_ts_reg = TimeSeriesRegressor(
-        estimator=estimator,
-        cv=BlockBootstrap(n_resamplings=30, n_blocks=5, random_state=random_state),
-    )
-    mapie_ts_reg.fit(X_val, y_val)
-    mapie_ts_reg.update(X_val, y_val)
-    _, y_pis = mapie_ts_reg.predict(X_test, confidence_level=0.95, optimize_beta=True)
+    with pytest.warns(
+        RuntimeWarning, match=r".*(Mean of empty slice|invalid value encountered).*"
+    ):
+        mapie_ts_reg = TimeSeriesRegressor(
+            estimator=estimator,
+            cv=BlockBootstrap(n_resamplings=30, n_blocks=5, random_state=random_state),
+        )
+        mapie_ts_reg.fit(X_val, y_val)
+        mapie_ts_reg.update(X_val, y_val)
+        _, y_pis = mapie_ts_reg.predict(
+            X_test, confidence_level=0.95, optimize_beta=True
+        )
     width_mean = (y_pis[:, 1, 0] - y_pis[:, 0, 0]).mean()
     coverage = regression_coverage_score(y_test, y_pis)[0]
     np.testing.assert_allclose(width_mean, 3.67, rtol=1e-2)
