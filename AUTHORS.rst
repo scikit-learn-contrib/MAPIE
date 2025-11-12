@@ -52,4 +52,5 @@ Contributors
 * Faustin Pulvéric <faustin.pulveric@gmail.com>
 * Chaoqi Zhang <prncoprs@163.com>
 * Leena Kamran Qidwai
+* Aman Vishnoi <amanvishnoi777@gmail.com>
 To be continued ...
