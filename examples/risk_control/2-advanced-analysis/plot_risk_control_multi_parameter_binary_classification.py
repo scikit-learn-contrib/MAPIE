@@ -155,7 +155,7 @@ matrix = np.zeros((10, 10))
 for valid_params in bcc.valid_predict_params:
     row = valid_params[0] * 10
     col = valid_params[1] * 10
-    m[row, col] = 1
+    matrix[row, col] = 1
 
 fig, ax = plt.subplots(figsize=(16, 12))
 im = ax.imshow(matrix)
