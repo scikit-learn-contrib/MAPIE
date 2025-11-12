@@ -1,8 +1,7 @@
 """
-==========================================================
-Use MAPIE to control risk of a binary classifier with
-    multiple prediction parameters
-==========================================================
+====================================================================================
+Use MAPIE to control risk of a binary classifier with multiple prediction parameters
+====================================================================================
 
 AI is a powerful tool for mail sorting (for example between spam and urgent mails).
 However, because algorithms are not perfects,it sometimes requires manual verification.
@@ -142,7 +141,7 @@ bcc = BinaryClassificationController(
     target_level=target_level,
     confidence_level=confidence_level,
     best_predict_param_choice="precision",
-    predict_params=to_explore,
+    list_predict_params=to_explore,
 )
 bcc.calibrate(X_calib, y_calib)
 
@@ -160,7 +159,7 @@ for valid_params in bcc.valid_predict_params:
     matrix[int(row), int(col)] = 1
 
 fig, ax = plt.subplots(figsize=(16, 12))
-im = ax.imshow(matrix)
+im = ax.imshow(matrix, cmap='inferno')
 ax.set_xticks(range(10), labels=(np.array(range(10)) / 10))
 ax.set_yticks(range(10), labels=(np.array(range(10)) / 10))
 ax.set_title("Validated parameters")

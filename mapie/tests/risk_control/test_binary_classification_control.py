@@ -75,7 +75,7 @@ def bcc_dummy_multi_dim():
         predict_function=dummy_predict_general_2d,
         risk=precision,
         target_level=dummy_target,
-        predict_params=dummy_grid_param_multi_dim,
+        list_predict_params=dummy_grid_param_multi_dim,
     )
 
 
@@ -454,7 +454,7 @@ class TestBinaryClassificationControllerGetPredictionsPerParam:
             predict_function=dummy_predict_general_2d,
             risk=precision,
             target_level=dummy_target,
-            predict_params=dummy_grid_param_multi_dim,
+            list_predict_params=dummy_grid_param_multi_dim,
         )
         dummy_grid_3d = np.array(
             [[l1, l2, l3] for l1 in [0.5, 0.7] for l2 in [0.2, 0.4] for l3 in [0.1]]
@@ -475,7 +475,7 @@ class TestBinaryClassificationControllerGetPredictionsPerParam:
             predict_function=non_binary_predict,
             risk=precision,
             target_level=dummy_target,
-            predict_params=dummy_grid_param_multi_dim,
+            list_predict_params=dummy_grid_param_multi_dim,
         )
         with pytest.raises(
             ValueError,
@@ -756,7 +756,7 @@ class TestCheckIfMultiDimensionalParam:
             predict_function=dummy_predict,
             risk=precision,
             target_level=dummy_target,
-            predict_params=predict_params,
+            list_predict_params=predict_params,
         )
         assert not bcc.is_multi_dimensional_param
 
@@ -768,7 +768,7 @@ class TestCheckIfMultiDimensionalParam:
             predict_function=dummy_predict,
             risk=precision,
             target_level=dummy_target,
-            predict_params=predict_params,
+            list_predict_params=predict_params,
         )
         assert bcc.is_multi_dimensional_param
 
@@ -778,7 +778,7 @@ class TestCheckIfMultiDimensionalParam:
             predict_function=dummy_predict,
             risk=precision,
             target_level=dummy_target,
-            predict_params=dummy_grid_param_multi_dim,
+            list_predict_params=dummy_grid_param_multi_dim,
         )
         assert bcc.is_multi_dimensional_param
 
@@ -793,7 +793,7 @@ class TestCheckIfMultiDimensionalParam:
                 predict_function=dummy_predict,
                 risk=precision,
                 target_level=dummy_target,
-                predict_params=predict_params,
+                list_predict_params=predict_params,
             )
 
 
@@ -813,7 +813,7 @@ def test_functional_multi_dimensional_params():
         predict_function=realistic_general_predict,
         risk=precision,
         target_level=0.6,
-        predict_params=grid_param_multi_dim,
+        list_predict_params=grid_param_multi_dim,
     )
     bcc_multi_dim.calibrate(realistic_X_calib, realistic_y_calib)
 
@@ -840,7 +840,7 @@ def test_functional_multi_dimensional_params_multi_risk():
         predict_function=realistic_general_predict,
         risk=[precision, recall],
         target_level=[0.65, 0.6],
-        predict_params=grid_param_multi_dim,
+        list_predict_params=grid_param_multi_dim,
     )
     bcc_multi_dim.calibrate(realistic_X_calib, realistic_y_calib)
 
