@@ -384,7 +384,7 @@ class EnsembleClassifier:
         check_is_fitted(self, self.fit_attributes)
 
         if self.cv == "prefit":
-            y_pred_proba = self.single_estimator_.predict_proba(X)
+            y_pred_proba = self.single_estimator_.predict_proba(X, **predict_params)
             y_pred_proba = self._check_proba_normalized(y_pred_proba)
         else:
             X = cast(NDArray, X)
