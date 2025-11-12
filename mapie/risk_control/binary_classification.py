@@ -90,7 +90,7 @@ class BinaryClassificationController:
         "fpr" for false positive rate.
         - A custom instance of BinaryClassificationRisk object
 
-    predict_params : NDArray, default=np.linspace(0, 0.99, 100)
+    list_params : NDArray, default=np.linspace(0, 0.99, 100)
         The set of parameters (noted λ in [1]) to consider for controlling the risk (or performance).
         When `predict_function` is a `predict_proba` method, the shape is (n_params,)
         and the parameter values are used to threshold the probabilities.
@@ -172,7 +172,7 @@ class BinaryClassificationController:
         best_predict_param_choice: Union[
             Literal["auto"], Risk_str, BinaryClassificationRisk
         ] = "auto",
-        predict_params: NDArray = np.linspace(0, 0.99, 100),
+        list_params: NDArray = np.linspace(0, 0.99, 100),
     ):
         self.is_multi_risk = self._check_if_multi_risk_control(risk, target_level)
         self._predict_function = predict_function
@@ -199,9 +199,9 @@ class BinaryClassificationController:
             best_predict_param_choice
         )
 
-        self._predict_params = predict_params
+        self._predict_params = list_params
         self.is_multi_dimensional_param = self._check_if_multi_dimensional_param(
-            predict_params
+            self._predict_params
         )
 
         self.valid_predict_params: NDArray = np.array([])
