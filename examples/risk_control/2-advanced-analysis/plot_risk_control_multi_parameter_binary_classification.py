@@ -97,7 +97,7 @@ clf.fit(X_train, y_train)
 #############################################################################
 # Third define a multiparameter prediciton function
 def send_to_human(X, lambda_1, lambda_2):
-    y_score = clf.predict_proba(X)[:,1]
+    y_score = clf.predict_proba(X)[:, 1]
     return (lambda_1 <= y_score) & (y_score < lambda_2)
 
 
@@ -121,7 +121,7 @@ to_explore = np.array(to_explore)
 # We need to define a specific :class:`BinaryClassificationRisk`
 
 prop_positive = BinaryClassificationRisk(
-    risk_occurrence=lambda y_true, y_pred: y_pred == True,
+    risk_occurrence=lambda y_true, y_pred: y_pred,
     risk_condition=lambda y_true, y_pred: True,
     higher_is_better=False,
 )
