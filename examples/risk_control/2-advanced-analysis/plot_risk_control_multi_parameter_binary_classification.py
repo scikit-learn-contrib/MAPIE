@@ -159,7 +159,7 @@ for valid_params in bcc.valid_predict_params:
     matrix[int(row), int(col)] = 1
 
 fig, ax = plt.subplots(figsize=(16, 12))
-im = ax.imshow(matrix, cmap='inferno')
+im = ax.imshow(matrix, cmap="inferno")
 ax.set_xticks(range(10), labels=(np.array(range(10)) / 10))
 ax.set_yticks(range(10), labels=(np.array(range(10)) / 10))
 ax.set_title("Validated parameters")
