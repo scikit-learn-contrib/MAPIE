@@ -644,6 +644,10 @@ class VennAbersCalibrator(BaseEstimator, ClassifierMixin):
     y_cal_ : Optional[NDArray]
         Calibration labels (only for prefit mode with multi-class).
 
+    cv_ensemble: bool, default = True
+        If False then the predictions for the test set are generated using the underlying classifier trained
+        on the whole training set, instead of on the split (in the case of IVAP) or folds (in the case of CVAP)
+
     References
     ----------
     [1] Vovk, Vladimir, Ivan Petej, and Valentina Fedorova.
@@ -757,6 +761,7 @@ class VennAbersCalibrator(BaseEstimator, ClassifierMixin):
         shuffle: bool = True,
         stratify: Optional[ArrayLike] = None,
         precision: Optional[int] = None,
+        cv_ensemble: bool = True,
     ) -> None:
         self.estimator = estimator
         self.cv = cv
@@ -767,6 +772,7 @@ class VennAbersCalibrator(BaseEstimator, ClassifierMixin):
         self.shuffle = shuffle
         self.stratify = stratify
         self.precision = precision
+        self.cv_ensemble = cv_ensemble
 
         # Initialize attributes that will be set during fit
         self.va_calibrator_: Optional[Union[VennAbersMultiClass, VennAbers]] = None
@@ -953,6 +959,7 @@ class VennAbersCalibrator(BaseEstimator, ClassifierMixin):
             shuffle=shuffle if shuffle is not None else self.shuffle,
             stratify=stratify if stratify is not None else self.stratify,
             precision=self.precision,
+            cv_ensemble=self.cv_ensemble,
         )
 
         self.va_calibrator_.fit(X_processed, y, sample_weight=sample_weight)

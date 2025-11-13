@@ -1,8 +1,10 @@
+
 import numpy as np
 from sklearn.model_selection import StratifiedKFold, train_test_split
 from sklearn.multiclass import OneVsOneClassifier
 from sklearn.utils.validation import check_is_fitted
 from sklearn.exceptions import NotFittedError
+from sklearn.base import clone
 
 
 """
@@ -558,6 +560,10 @@ class VennAbersCV:
         Optional number of decimal points to which Venn-Abers calibration
         probabilities p_cal are rounded to.
         Yields significantly faster computation time for larger calibration datasets
+
+    cv_ensemble: bool, default = True
+        If False then the predictions for the test set are generated using the underlying classifier trained
+        on the whole training set, instead of on the split (in the case of IVAP) or folds (in the case of CVAP)
     """
 
     def __init__(
@@ -571,6 +577,7 @@ class VennAbersCV:
         shuffle=True,
         stratify=None,
         precision=None,
+        cv_ensemble=True
     ):
         self.estimator = estimator
         self.n_splits = n_splits
@@ -583,6 +590,8 @@ class VennAbersCV:
         self.shuffle = shuffle
         self.stratify = stratify
         self.precision = precision
+        self.estimators = [] 
+        self.cv_ensemble = cv_ensemble
 
     def fit(self, _x_train, _y_train, sample_weight=None):
         """Fits the IVAP or CVAP calibrator to the training set.
@@ -601,6 +610,13 @@ class VennAbersCV:
         """
         if self.inductive:
             self.n_splits = 1
+
+            estimator_full = clone(self.estimator)
+            if sample_weight is not None:
+                estimator_full.fit(_x_train, _y_train.flatten(), sample_weight=sample_weight)
+            else:
+                estimator_full.fit(_x_train, _y_train.flatten())
+            self.estimators.append(estimator_full)
 
             # Split sample_weight along with data if provided
             if sample_weight is not None:
@@ -628,18 +644,27 @@ class VennAbersCV:
                 )
                 sw_train = None
 
-            # Fit estimator with sample weights if provided
+            estimator_proper = clone(self.estimator)
             if sw_train is not None:
-                self.estimator.fit(
+                estimator_proper.fit(
                     x_train_proper, y_train_proper.flatten(), sample_weight=sw_train
                 )
             else:
-                self.estimator.fit(x_train_proper, y_train_proper.flatten())
+                estimator_proper.fit(x_train_proper, y_train_proper.flatten())
+            self.estimators.append(estimator_proper)
 
-            clf_prob = self.estimator.predict_proba(x_cal)
+            clf_prob = estimator_proper.predict_proba(x_cal)
             self.clf_p_cal.append(clf_prob)
             self.clf_y_cal.append(y_cal)
+
         else:
+            estimator_full = clone(self.estimator)
+            if sample_weight is not None:
+                estimator_full.fit(_x_train, _y_train.flatten(), sample_weight=sample_weight)
+            else:
+                estimator_full.fit(_x_train, _y_train.flatten())
+            self.estimators.append(estimator_full)
+            
             kf = StratifiedKFold(
                 n_splits=self.n_splits,
                 shuffle=self.shuffle,
@@ -651,19 +676,21 @@ class VennAbersCV:
                 if sample_weight is not None:
                     fold_sample_weight = sample_weight[train_index]
 
-                # Fit estimator with sample weights if provided
+                # Clone and fit estimator for this fold (for cv_ensemble=True)
+                estimator_fold = clone(self.estimator)
                 if fold_sample_weight is not None:
-                    self.estimator.fit(
+                    estimator_fold.fit(
                         _x_train[train_index],
                         _y_train[train_index].flatten(),
                         sample_weight=fold_sample_weight,
                     )
                 else:
-                    self.estimator.fit(
+                    estimator_fold.fit(
                         _x_train[train_index], _y_train[train_index].flatten()
                     )
+                self.estimators.append(estimator_fold)
 
-                clf_prob = self.estimator.predict_proba(_x_train[test_index])
+                clf_prob = estimator_fold.predict_proba(_x_train[test_index])
                 self.clf_p_cal.append(clf_prob)
                 self.clf_y_cal.append(_y_train[test_index])
 
@@ -693,7 +720,6 @@ class VennAbersCV:
         """
 
         p0p1_test = []
-        clf_prob_test = self.estimator.predict_proba(_x_test)
         for i in range(self.n_splits):
             va = VennAbers()
             va.fit(
@@ -701,6 +727,9 @@ class VennAbersCV:
                 y_cal=self.clf_y_cal[i],
                 precision=self.precision,
             )
+            clf_prob_test = (self.estimators[i + 1]
+                             if self.cv_ensemble
+                             else self.estimators[0]).predict_proba(_x_test)
             _, probs = va.predict_proba(p_test=clf_prob_test)
             p0p1_test.append(probs)
         p0_stack = np.hstack([prob[:, 0].reshape(-1, 1) for prob in p0p1_test])
@@ -795,6 +824,10 @@ class VennAbersMultiClass:
         Optional number of decimal points to which Venn-Abers calibration
         probabilities p_cal are rounded to.
         Yields significantly faster computation time for larger calibration datasets
+
+    cv_ensemble: bool, default = True
+        If False then the predictions for the test set are generated using the underlying classifier trained
+        on the whole training set, instead of on the split (in the case of IVAP) or folds (in the case of CVAP)
     """
 
     def __init__(
@@ -808,6 +841,7 @@ class VennAbersMultiClass:
         shuffle=True,
         stratify=None,
         precision=None,
+        cv_ensemble=True,
     ):
         self.estimator = estimator
         self.inductive = inductive
@@ -827,6 +861,7 @@ class VennAbersMultiClass:
         self.multiclass_probs = []
         self.multiclass_p0p1 = []
         self.precision = precision
+        self.cv_ensemble = cv_ensemble
 
     def fit(self, _x_train, _y_train, sample_weight=None):
         """
@@ -901,6 +936,7 @@ class VennAbersMultiClass:
                 shuffle=self.shuffle,
                 stratify=self.stratify,
                 precision=self.precision,
+                cv_ensemble=self.cv_ensemble,
             )
             va_cv.fit(
                 _x_train[_pairwise_indices],
