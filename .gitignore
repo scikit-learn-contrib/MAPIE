@@ -89,3 +89,6 @@ target/
 
 # Pyenv
 .python-version
+
+# uv
+uv.lock
