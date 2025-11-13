@@ -2627,22 +2627,22 @@ def test_prefit_classes_none_after_fitting() -> None:
 @pytest.mark.parametrize("cv_ensemble", [True, False])
 def test_cv_ensemble_cross_binary(cv_ensemble):
     """Test cv_ensemble parameter with cross-validation mode for binary classification."""
-    
+
     clf = LogisticRegression(random_state=42)
     va_cal = VennAbersCalibrator(
         estimator=clf,
         inductive=False,
         n_splits=3,
         cv_ensemble=cv_ensemble,
-        random_state=42
+        random_state=42,
     )
-    
+
     va_cal.fit(X_binary_train, y_binary_train)
-    
+
     # Verify predictions work
     proba = va_cal.predict_proba(X_binary_test)
     predictions = va_cal.predict(X_binary_test)
-    
+
     assert proba.shape == (len(X_binary_test), 2)
     assert predictions.shape == (len(X_binary_test),)
     assert np.allclose(proba.sum(axis=1), 1.0)

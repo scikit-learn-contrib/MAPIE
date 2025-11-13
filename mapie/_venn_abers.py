@@ -1,4 +1,3 @@
-
 import numpy as np
 from sklearn.model_selection import StratifiedKFold, train_test_split
 from sklearn.multiclass import OneVsOneClassifier
@@ -577,7 +576,7 @@ class VennAbersCV:
         shuffle=True,
         stratify=None,
         precision=None,
-        cv_ensemble=True
+        cv_ensemble=True,
     ):
         self.estimator = estimator
         self.n_splits = n_splits
@@ -590,7 +589,7 @@ class VennAbersCV:
         self.shuffle = shuffle
         self.stratify = stratify
         self.precision = precision
-        self.estimators = [] 
+        self.estimators = []
         self.cv_ensemble = cv_ensemble
 
     def fit(self, _x_train, _y_train, sample_weight=None):
@@ -613,7 +612,9 @@ class VennAbersCV:
 
             estimator_full = clone(self.estimator)
             if sample_weight is not None:
-                estimator_full.fit(_x_train, _y_train.flatten(), sample_weight=sample_weight)
+                estimator_full.fit(
+                    _x_train, _y_train.flatten(), sample_weight=sample_weight
+                )
             else:
                 estimator_full.fit(_x_train, _y_train.flatten())
             self.estimators.append(estimator_full)
@@ -660,11 +661,13 @@ class VennAbersCV:
         else:
             estimator_full = clone(self.estimator)
             if sample_weight is not None:
-                estimator_full.fit(_x_train, _y_train.flatten(), sample_weight=sample_weight)
+                estimator_full.fit(
+                    _x_train, _y_train.flatten(), sample_weight=sample_weight
+                )
             else:
                 estimator_full.fit(_x_train, _y_train.flatten())
             self.estimators.append(estimator_full)
-            
+
             kf = StratifiedKFold(
                 n_splits=self.n_splits,
                 shuffle=self.shuffle,
@@ -727,9 +730,9 @@ class VennAbersCV:
                 y_cal=self.clf_y_cal[i],
                 precision=self.precision,
             )
-            clf_prob_test = (self.estimators[i + 1]
-                             if self.cv_ensemble
-                             else self.estimators[0]).predict_proba(_x_test)
+            clf_prob_test = (
+                self.estimators[i + 1] if self.cv_ensemble else self.estimators[0]
+            ).predict_proba(_x_test)
             _, probs = va.predict_proba(p_test=clf_prob_test)
             p0p1_test.append(probs)
         p0_stack = np.hstack([prob[:, 0].reshape(-1, 1) for prob in p0p1_test])
