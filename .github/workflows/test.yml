@@ -8,7 +8,7 @@ on:
 
 jobs:
   get-latest-python:
-    runs-on: [self-hosted, self-hosted-ubuntu]
+    runs-on: self-hosted-ubuntu
     outputs:
       latest-python: ${{ steps.latest.outputs.version }}
     steps:
@@ -24,14 +24,14 @@ jobs:
       matrix:
         include:
           # minimum supported dependencies
-          - os: [self-hosted, self-hosted-ubuntu]
+          - os: self-hosted-ubuntu
             python-version: "3.9"
             use-pinned-deps: true
             numpy-version: "==1.24.1"
             sklearn-version: "==1.4.*"
             scipy-version: "==1.10.*"
           # latest stable dependencies
-          - os: [self-hosted, self-hosted-ubuntu]
+          - os: self-hosted-ubuntu
             python-version: "${{ needs.get-latest-python.outputs.latest-python }}"
             use-pinned-deps: false
           - os: windows-latest
