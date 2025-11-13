@@ -1501,7 +1501,7 @@ def test_pipeline_compatibility(strategy: str) -> None:
             "x_num": X,
         }
     )
-    y = np.random.randint(0, 4, size=(100, 1))  # 3 classes
+    y = np.random.randint(0, 4, size=100)  # 3 classes
     numeric_preprocessor = Pipeline(
         [
             ("imputer", SimpleImputer(strategy="mean")),
