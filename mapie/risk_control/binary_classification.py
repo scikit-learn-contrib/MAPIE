@@ -49,7 +49,12 @@ class BinaryClassificationController:
     ----------
     predict_function : Callable[[ArrayLike], NDArray]
         predict_proba method of a fitted binary classifier.
-        Its output signature must be of shape (len(X), 2)
+        Its output signature must be of shape (len(X), 2).
+
+        Or, in the general case of multi-dimensional parameters (thresholds),
+        a function that takes (X, *params) and outputs 0 or 1. This can be useful to e.g.,
+        ensemble multiple binary classifiers with different thresholds for each classifier.
+        In that case, `predict_params` must be provided.
 
     risk : Union[BinaryClassificationRisk, str, List[BinaryClassificationRisk, str]]
         The risk or performance metric to control.
@@ -85,14 +90,23 @@ class BinaryClassificationController:
         "fpr" for false positive rate.
         - A custom instance of BinaryClassificationRisk object
 
+    list_predict_params : NDArray, default=np.linspace(0, 0.99, 100)
+        The set of parameters (noted λ in [1]) to consider for controlling the risk (or performance).
+        When `predict_function` is a `predict_proba` method, the shape is (n_params,)
+        and the parameter values are used to threshold the probabilities.
+        When `predict_function` is a general function with multi-dimensional parameters (λ) that outputs 0 or 1,
+        the shape is (n_params, params_dim).
+        Note that performance is degraded when `len(predict_params)` is large as it is used by the Bonferroni correction [1].
+
     Attributes
     ----------
     valid_predict_params : NDArray
         The valid thresholds that control the risk (or performance).
         Use the calibrate method to compute these.
 
-    best_predict_param : Optional[float]
-        The best threshold that control the risk (or performance).
+    best_predict_param : Optional[Union[float, Tuple[float, ...]]]
+        The best threshold that control the risk (or performance). It is a tuple if multi-dimensional
+        parameters are used.
         Use the calibrate method to compute it.
 
     Examples
@@ -131,7 +145,7 @@ class BinaryClassificationController:
 
     References
     ----------
-    Angelopoulos, Anastasios N., Stephen, Bates, Emmanuel J. Candès, et al.
+    [1] Angelopoulos, Anastasios N., Stephen, Bates, Emmanuel J. Candès, et al.
     "Learn Then Test: Calibrating Predictive Algorithms to Achieve Risk Control." (2022)
     """
 
@@ -158,6 +172,7 @@ class BinaryClassificationController:
         best_predict_param_choice: Union[
             Literal["auto"], Risk_str, BinaryClassificationRisk
         ] = "auto",
+        list_predict_params: NDArray = np.linspace(0, 0.99, 100),
     ):
         self.is_multi_risk = self._check_if_multi_risk_control(risk, target_level)
         self._predict_function = predict_function
@@ -184,10 +199,13 @@ class BinaryClassificationController:
             best_predict_param_choice
         )
 
-        self._predict_params: NDArray = np.linspace(0, 0.99, 100)
+        self._predict_params = list_predict_params
+        self.is_multi_dimensional_param = self._check_if_multi_dimensional_param(
+            self._predict_params
+        )
 
         self.valid_predict_params: NDArray = np.array([])
-        self.best_predict_param: Optional[float] = None
+        self.best_predict_param: Optional[Union[float, Tuple[float, ...]]] = None
 
     # All subfunctions are unit-tested. To avoid having to write
     # tests just to make sure those subfunctions are called,
@@ -216,7 +234,7 @@ class BinaryClassificationController:
         y_calibrate_ = np.asarray(y_calibrate, dtype=int)
 
         predictions_per_param = self._get_predictions_per_param(
-            X_calibrate, self._predict_params
+            X_calibrate, self._predict_params, is_calibration_step=True
         )
 
         risk_values, eff_sample_sizes = self._get_risk_values_and_eff_sample_sizes(
@@ -235,6 +253,12 @@ class BinaryClassificationController:
         if len(self.valid_predict_params) == 0:
             self._set_risk_not_controlled()
         else:
+            if len(self.valid_predict_params) == len(self._predict_params):
+                warnings.warn(
+                    "All provided predict_params control the risk at the given "
+                    "target and confidence levels. "
+                    "You may want to use more difficult target levels.",
+                )
             self._set_best_predict_param(
                 y_calibrate_,
                 predictions_per_param,
@@ -322,6 +346,8 @@ class BinaryClassificationController:
         self.best_predict_param = self.valid_predict_params[
             np.argmin(secondary_risks_per_param)
         ]
+        if isinstance(self.best_predict_param, np.ndarray):
+            self.best_predict_param = tuple(self.best_predict_param.tolist())
 
     @staticmethod
     def _get_risk_values_and_eff_sample_sizes(
@@ -350,31 +376,47 @@ class BinaryClassificationController:
 
         return risk_values, effective_sample_sizes
 
-    def _get_predictions_per_param(self, X: ArrayLike, params: NDArray) -> NDArray:
-        try:
-            predictions_proba = self._predict_function(X)[:, 1]
-        except TypeError as e:
-            if "object is not callable" in str(e):
-                raise TypeError(
-                    "Error when calling the predict_function. "
-                    "Maybe you provided a binary classifier to the "
-                    "predict_function parameter of the BinaryClassificationController. "
-                    "You should provide your classifier's predict_proba method instead."
-                ) from e
-            else:
-                raise
-        except IndexError as e:
-            if "array is 1-dimensional, but 2 were indexed" in str(e):
-                raise IndexError(
-                    "Error when calling the predict_function. "
-                    "Maybe the predict function you provided returns only the "
-                    "probability of the positive class. "
-                    "You should provide a predict function that returns the "
-                    "probabilities of both classes, like scikit-learn estimators."
-                ) from e
-            else:
-                raise
-        return (predictions_proba[:, np.newaxis] >= params).T.astype(int)
+    def _get_predictions_per_param(
+        self, X: ArrayLike, params: NDArray, is_calibration_step=False
+    ) -> NDArray:
+        """Returns y_pred of shape (n_params, n_samples)"""
+        n_params = len(params)
+        n_samples = len(np.asarray(X))
+        if self.is_multi_dimensional_param:
+            y_pred = np.empty((n_params, n_samples))
+            for i in range(n_params):
+                y_pred[i] = self._predict_function(X, *params[i])
+            if is_calibration_step:
+                self._check_predictions(y_pred)
+            y_pred = y_pred.astype(int)
+        else:
+            try:
+                predictions_proba = self._predict_function(X)[:, 1]
+            except TypeError as e:
+                if "object is not callable" in str(e):
+                    raise TypeError(
+                        "Error when calling the predict_function. "
+                        "Maybe you provided a binary classifier to the "
+                        "predict_function parameter of the BinaryClassificationController. "
+                        "You should provide your classifier's predict_proba method instead."
+                    ) from e
+                else:
+                    raise
+            except IndexError as e:
+                if "array is 1-dimensional, but 2 were indexed" in str(e):
+                    raise IndexError(
+                        "Error when calling the predict_function. "
+                        "Maybe the predict function you provided returns only the "
+                        "probability of the positive class. "
+                        "You should provide a predict function that returns the "
+                        "probabilities of both classes, like scikit-learn estimators."
+                    ) from e
+                else:
+                    raise
+            if is_calibration_step:
+                self._check_predictions(predictions_proba)
+            y_pred = (predictions_proba[:, np.newaxis] >= params).T.astype(int)
+        return y_pred
 
     def _convert_target_level_to_alpha(self, target_level: List[float]) -> NDArray:
         alpha = []
@@ -413,4 +455,50 @@ class BinaryClassificationController:
                 "a list of target levels of the same length and vice versa. "
                 "If you provide a single BinaryClassificationRisk risk, "
                 "you must provide a single float target level."
+            )
+
+    @staticmethod
+    def _check_if_multi_dimensional_param(
+        predict_params: NDArray,
+    ) -> bool:
+        """
+        Check if the the parameters (the λ) are multi-dimensional.
+        """
+        if predict_params.ndim == 1:
+            return False
+        elif predict_params.ndim == 2:
+            return True
+        else:
+            raise ValueError(
+                "predict_params must be a 1D array of shape (n_params,) for one-dimensional parameters, "
+                "or a 2D array of shape (n_params, params_dim) for multi-dimensional parameters "
+                "(params_dim=1 is allowed for the case when a one-dimensional parameter is not used as a threshold)."
+            )
+
+    def _check_predictions(self, predictions_per_param: NDArray) -> None:
+        """
+        Checks if predictions are probabilities for one-dimensional parameters,
+        or binary predictions for multi-dimensional parameters.
+        """
+        if (
+            not self.is_multi_dimensional_param
+            and np.logical_or(
+                predictions_per_param == 0, predictions_per_param == 1
+            ).all()
+        ):
+            warnings.warn(
+                "All predictions are either 0 or 1 while the parameters are one-dimensional. "
+                "Make sure that the provided predict_function is a "
+                "predict_proba method or a function that outputs probabilities.",
+            )
+
+        if (
+            self.is_multi_dimensional_param
+            and not np.logical_or(
+                predictions_per_param == 0, predictions_per_param == 1
+            ).all()
+        ):
+            raise ValueError(
+                "The provided predict_function with multi-dimensional "
+                "parameters must return binary predictions (0 or 1)."
             )
