@@ -120,7 +120,7 @@ class TimeSeriesRegressor(_MapieRegressor):
         )
         return scores
 
-    def _update_coformity_scores_with_ensemble(
+    def _update_conformity_scores_with_ensemble(
         self,
         X: ArrayLike,
         y: ArrayLike,
@@ -129,7 +129,7 @@ class TimeSeriesRegressor(_MapieRegressor):
         """
         Update the ``conformity_scores_`` attribute when new data with known
         labels are available.
-        Note: Don't use ``_update_coformity_scores_with_ensemble`` with samples of the training set.
+        Note: Don't use ``_update_conformity_scores_with_ensemble`` with samples of the training set.
 
         Parameters
         ----------
@@ -376,7 +376,7 @@ class TimeSeriesRegressor(_MapieRegressor):
         """
         self._check_method(self.method)
         if self.method == "enbpi":
-            return self._update_coformity_scores_with_ensemble(X, y, ensemble=ensemble)
+            return self._update_conformity_scores_with_ensemble(X, y, ensemble=ensemble)
         elif self.method == "aci":
             return self.adapt_conformal_inference(
                 X,

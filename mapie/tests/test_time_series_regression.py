@@ -355,15 +355,15 @@ def test_MapieTimeSeriesRegressor_if_alpha_is_None() -> None:
         y_pred, y_pis = mapie_ts_reg.predict(X_toy, confidence_level=None)
 
 
-def test_MapieTimeSeriesRegressor_update_coformity_scores_with_ensemble() -> None:
-    """Test ``_update_coformity_scores_with_ensemble``"""
+def test_MapieTimeSeriesRegressor_update_conformity_scores_with_ensemble() -> None:
+    """Test ``_update_conformity_scores_with_ensemble``"""
     mapie_ts_reg = TimeSeriesRegressor(method="enbpi", cv=-1)
     mapie_ts_reg.fit(X_toy, y_toy)
-    mapie_ts_reg._update_coformity_scores_with_ensemble(X_toy, y_toy, ensemble=True)
+    mapie_ts_reg._update_conformity_scores_with_ensemble(X_toy, y_toy, ensemble=True)
     assert round(mapie_ts_reg.conformity_scores_[-1], 2) == round(
         np.abs(CONFORMITY_SCORES[0]), 2
     )
-    mapie_ts_reg._update_coformity_scores_with_ensemble(
+    mapie_ts_reg._update_conformity_scores_with_ensemble(
         X=np.array([UPDATE_DATA[0]]), y=np.array([UPDATE_DATA[1]]), ensemble=True
     )
     assert round(mapie_ts_reg.conformity_scores_[-1], 2) == round(
@@ -371,14 +371,14 @@ def test_MapieTimeSeriesRegressor_update_coformity_scores_with_ensemble() -> Non
     )
 
 
-def test_MapieTimeSeriesRegressor_update_coformity_scores_with_ensemble_too_big() -> (
+def test_MapieTimeSeriesRegressor_update_conformity_scores_with_ensemble_too_big() -> (
     None
 ):
-    """Test that ``_update_coformity_scores_with_ensemble`` raises an error."""
+    """Test that ``_update_conformity_scores_with_ensemble`` raises an error."""
     mapie_ts_reg = TimeSeriesRegressor(method="enbpi", cv=-1)
     mapie_ts_reg.fit(X_toy, y_toy)
     with pytest.raises(ValueError, match=r".*The number of observations*"):
-        mapie_ts_reg = mapie_ts_reg._update_coformity_scores_with_ensemble(X=X, y=y)
+        mapie_ts_reg = mapie_ts_reg._update_conformity_scores_with_ensemble(X=X, y=y)
 
 
 def test_MapieTimeSeriesRegressor_beta_optimize_error() -> None:
