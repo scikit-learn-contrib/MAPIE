@@ -3,11 +3,11 @@
 Use MAPIE to control risk of a binary classifier with multiple prediction parameters
 ====================================================================================
 
-AI is a powerful tool for mail sorting (for example between spam and urgent mails).
-However, because algorithms are not perfects,it sometimes requires manual verification.
-Thus one would like to be able to controlthe amount of mail sent to human validation.
-One way to do so is to define a multi-parameters prediction function based on a
-classifier predicted scores. This would allow to define a rule for mail checking,
+AI is a powerful tool for email sorting (for example between spam and urgent emails).
+However, because algorithms are not perfect, manual verification is sometimes required.
+Thus one would like to be able to control the amount of emails sent to human validation.
+One way to do so is to define a multi-parameter prediction function based on a
+classifier's predicted scores. This would allow defining a rule for email checking,
 which could be adapted by varying the prediction parameters.
 
 In this example, we explain how to do risk control for binary classification relying
@@ -26,8 +26,8 @@ from mapie.utils import train_conformalize_test_split
 RANDOM_STATE = 1
 
 ##############################################################################
-# First, load the dataset and then split it into training, calibration
-# (for conformalization), and test sets.
+# First, load the dataset and then split it into training, calibration,
+# and test sets.
 
 X, y = make_circles(n_samples=5000, noise=0.3, factor=0.3, random_state=RANDOM_STATE)
 (X_train, X_calib, X_test, y_train, y_calib, y_test) = train_conformalize_test_split(
@@ -40,7 +40,7 @@ X, y = make_circles(n_samples=5000, noise=0.3, factor=0.3, random_state=RANDOM_S
 )
 
 # Plot the three datasets to visualize the distribution of the two classes. We can
-# assume that the feature space represents some embedding of e-mails.
+# assume that the feature space represents some embedding of emails.
 fig, axes = plt.subplots(1, 3, figsize=(18, 6))
 titles = ["Training Data", "Calibration Data", "Test Data"]
 datasets = [(X_train, y_train), (X_calib, y_calib), (X_test, y_test)]
@@ -94,7 +94,12 @@ clf.fit(X_train, y_train)
 
 
 #############################################################################
-# Third define a multiparameter prediciton function
+# Third define a multi-parameter prediction function. For an email to be sent
+# to human verification, we want the predicted score of the positive class to be
+# between two thresholds `lambda_1` and `lambda_2`. High (respectively low) values of
+# the score correspond to high confidence that the email is a spam (respectively not a spam).
+# Therefore, emails with intermediate scores are the ones for which the classifier
+# is the least certain, and we want these emails to be verified by a human.
 def send_to_human(X, lambda_1, lambda_2):
     y_score = clf.predict_proba(X)[:, 1]
     return (lambda_1 <= y_score) & (y_score < lambda_2)
@@ -102,7 +107,7 @@ def send_to_human(X, lambda_1, lambda_2):
 
 #############################################################################
 # From the previous function, we know we have a constraint
-# lambda_1 <= lambda_2. We can generate a set of values to explore respecting
+# `lambda_1` <= `lambda_2`. We can generate a set of values to explore respecting
 # this constraint.
 
 to_explore = []
@@ -116,8 +121,9 @@ for i in range(6):
 to_explore = np.array(to_explore)
 
 #############################################################################
-# As we want to control the proportion of mail to be verified by a human.
-# We need to define a specific :class:`BinaryClassificationRisk`
+# Because we want to control the proportion of emails to be verified by a human,
+# we need to define a specific :class:`BinaryClassificationRisk` which represents
+# the fraction of samples predicted as positive (i.e., sent to human verification).
 
 prop_positive = BinaryClassificationRisk(
     risk_occurrence=lambda y_true, y_pred: y_pred,
@@ -129,7 +135,7 @@ prop_positive = BinaryClassificationRisk(
 # Finally, we initialize a :class:`~mapie.risk_control.BinaryClassificationController`
 # using our custom function ``send_to_human``, our custom risk ``prop_positive``,
 # a target risk level (0.2), and a confidence level (0.9). Then we use the calibration
-# data to compute statistically guaranteed thresholds using a multiparameter control
+# data to compute statistically guaranteed thresholds using a multi-parameter control
 # method.
 
 target_level = 0.2
@@ -146,9 +152,9 @@ bcc = BinaryClassificationController(
 bcc.calibrate(X_calib, y_calib)
 
 print(
-    f"Multiple parameters : {len(bcc.valid_predict_params)} "
-    f"thresholds found that guarantee a precision of at least {target_level}\n"
-    f"and a recall of at least {target_level} with a confidence of {confidence_level}."
+    f"{len(bcc.valid_predict_params)} multi-dimensional parameters "
+    f"found that guarantee a proportion of emails sent to verification\n"
+    f"of at most {target_level} with a confidence of {confidence_level}."
 )
 
 #######################################################################
@@ -158,10 +164,12 @@ for valid_params in bcc.valid_predict_params:
     col = valid_params[1] * 10
     matrix[int(row), int(col)] = 1
 
-fig, ax = plt.subplots(figsize=(16, 12))
+fig, ax = plt.subplots(figsize=(6, 6))
 im = ax.imshow(matrix, cmap="inferno")
 ax.set_xticks(range(10), labels=(np.array(range(10)) / 10))
 ax.set_yticks(range(10), labels=(np.array(range(10)) / 10))
-ax.set_title("Validated parameters")
+ax.set_xlabel(r"lambda_2")
+ax.set_ylabel(r"lambda_1")
+ax.set_title("Valid parameters")
 fig.tight_layout()
 plt.show()
