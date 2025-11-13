@@ -8,7 +8,7 @@ on:
 
 jobs:
   get-latest-python:
-    runs-on: self-hosted-ubuntu
+    runs-on: ubuntu-latest
     outputs:
       latest-python: ${{ steps.latest.outputs.version }}
     steps:
