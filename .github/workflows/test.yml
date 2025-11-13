@@ -31,7 +31,7 @@ jobs:
             sklearn-version: "==1.4.*"
             scipy-version: "==1.10.*"
           # latest stable dependencies
-          - os: self-hosted-ubuntu
+          - os: ubuntu-latest
             python-version: "${{ needs.get-latest-python.outputs.latest-python }}"
             use-pinned-deps: false
           - os: windows-latest
