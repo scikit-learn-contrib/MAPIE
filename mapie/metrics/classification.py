@@ -1,14 +1,14 @@
-from typing import cast, Union
+from typing import Union, cast
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 from sklearn.utils import column_or_1d
 
 from mapie.utils import (
-    _check_arrays_length,
-    _check_array_nan,
     _check_array_inf,
+    _check_array_nan,
     _check_array_shape_classification,
+    _check_arrays_length,
     _check_nb_sets_sizes,
     _check_number_bins,
 )
@@ -192,10 +192,13 @@ def classification_ssc(
         ]
 
         for i, indexes in enumerate(indexes_bybins):
-            coverages[alpha, i] = classification_coverage_score(
-                y_true[indexes],
-                np.take_along_axis(y_pred_set[:, :, alpha], indexes, axis=0),
-            ).item()
+            if indexes.size == 0:
+                coverages[alpha, i] = np.nan
+            else:
+                coverages[alpha, i] = classification_coverage_score(
+                    y_true[indexes],
+                    np.take_along_axis(y_pred_set[:, :, alpha], indexes, axis=0),
+                ).item()
     return coverages
 
 
