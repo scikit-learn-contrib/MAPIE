@@ -1,5 +1,5 @@
 """
-Testing for control_risk module.
+Testing for risk_control module.
 Testing for now risks for multilabel classification
 """
 
@@ -7,11 +7,15 @@ from typing import List, Union
 
 import numpy as np
 import pytest
-
 from numpy.typing import NDArray
-from mapie.control_risk.ltt import find_lambda_control_star, ltt_procedure
-from mapie.control_risk.p_values import compute_hoeffding_bentkus_p_value
-from mapie.control_risk.risks import compute_risk_precision, compute_risk_recall
+from scipy.stats import binom
+
+from mapie.risk_control.methods import (
+    compute_hoeffding_bentkus_p_value,
+    find_precision_lambda_star,
+    ltt_procedure,
+)
+from mapie.risk_control.risks import compute_risk_precision, compute_risk_recall
 
 lambdas = np.array([0.5, 0.9])
 
@@ -123,9 +127,9 @@ def test_ltt_different_delta(delta: float) -> None:
     assert ltt_procedure(r_hat, alpha, delta, n)
 
 
-def test_find_lambda_control_star() -> None:
-    """Test _find_lambda_control_star"""
-    assert find_lambda_control_star(r_hat, valid_index, lambdas)
+def test_find_precision_lambda_star() -> None:
+    """Test _find_precision_lambda_star"""
+    assert find_precision_lambda_star(r_hat, valid_index, lambdas)
 
 
 @pytest.mark.parametrize("delta", [0.1, 0.8])
@@ -137,16 +141,16 @@ def test_ltt_type_output_alpha_delta(alpha: NDArray, delta: float) -> None:
 
 
 @pytest.mark.parametrize("valid_index", [[[0, 1]]])
-def test_find_lambda_control_star_output(valid_index: List[List[int]]) -> None:
-    """Test _find_lambda_control_star with a list of list"""
-    assert find_lambda_control_star(r_hat, valid_index, lambdas)
+def test_find_precision_lambda_star_output(valid_index: List[List[int]]) -> None:
+    """Test _find_precision_lambda_star with a list of list"""
+    assert find_precision_lambda_star(r_hat, valid_index, lambdas)
 
 
 def test_warning_valid_index_empty() -> None:
     """Test warning sent when empty list"""
     valid_index = [[]]  # type: List[List[int]]
     with pytest.warns(UserWarning, match=r".*Warning: the risk couldn'*"):
-        find_lambda_control_star(r_hat, valid_index, lambdas)
+        find_precision_lambda_star(r_hat, valid_index, lambdas)
 
 
 def test_invalid_alpha_hb() -> None:
@@ -178,6 +182,44 @@ def test_hb_p_values_n_obs_int_vs_array() -> None:
     pval_array = compute_hoeffding_bentkus_p_value(r_hat, n_obs, alpha)
 
     np.testing.assert_allclose(pval_manual, pval_array, rtol=1e-12)
+
+
+@pytest.mark.parametrize(
+    "risk_hat, binary",
+    [
+        (r, b)
+        for r in [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+        for b in [True, False]
+    ],
+)
+def test_computed_hb_p_value_matches_manual_calculation(risk_hat, binary):
+    """
+    Test that `compute_hoeffding_bentkus_p_value` returns the same result
+    as the manual implementation of the Hoeffding–Bentkus bound term
+    for different risk levels and binary/non-binary settings.
+    """
+    n = 10
+    alpha = 0.1
+
+    # manual calculation
+    factor = 1 if binary else np.e
+
+    def h1(a, b):
+        return a * np.log(a / b) + (1 - a) * np.log((1 - a) / (1 - b))
+
+    term1 = np.exp(-n * h1(min(risk_hat, alpha), alpha))
+    term2 = factor * binom.cdf(np.ceil(n * risk_hat), n, alpha)
+    manual_bound = min(term1, term2)
+
+    # function calculation
+    hb_bound = compute_hoeffding_bentkus_p_value(
+        r_hat=np.array([risk_hat]),
+        n_obs=n,
+        alpha=alpha,
+        binary=binary,
+    )
+
+    assert np.isclose(manual_bound, hb_bound, atol=1e-12)
 
 
 def test_ltt_procedure_n_obs_negative() -> None:

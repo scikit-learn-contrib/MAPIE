@@ -8,6 +8,8 @@ Development Lead
 * Vincent Blot <vincent.blot@capgemini.com>
 * Valentin Laurent <valentin.laurent@capgemini.com>
 * Adrien Le Coz <adrien.le-coz@inria.fr>
+* Hassan Maissoro <hassan.maissoro@capgemini.com>
+* Geoffray Brelurut <geoffray.brelurut@capgemini.com>
 
 Emeritus Core Developers
 ------------------------
@@ -53,4 +55,6 @@ Contributors
 * Chaoqi Zhang <prncoprs@163.com>
 * Leena Kamran Qidwai
 * Omid Gheibi <omidgheibi@gmail.com>
+* Aman Vishnoi <amanvishnoi777@gmail.com>
+* Hannes Körner <HannesMK>
 To be continued ...

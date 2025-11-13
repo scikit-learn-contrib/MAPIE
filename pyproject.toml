@@ -1,8 +1,5 @@
 [build-system]
-requires = [
-    "setuptools",
-    "ruff"
-]
+requires = ["setuptools>=64"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -20,9 +17,9 @@ maintainers = [
 ]
 requires-python = ">=3.9"
 dependencies = [
+    "numpy>=1.24.1",
     "scikit-learn>=1.4",
-    "scipy",
-    "numpy>=1.23"
+    "scipy>=1.10",
 ]
 classifiers = [
     "Intended Audience :: Science/Research",
@@ -48,14 +45,52 @@ Issues = "https://github.com/scikit-learn-contrib/MAPIE/issues"
 Changelog = "https://github.com/scikit-learn-contrib/MAPIE/releases"
 DOWNLOAD = "https://pypi.org/project/MAPIE/#files"
 
+[project.optional-dependencies]
+dev = [
+    "bump2version==1.0.1",
+    "build==1.3.0",
+    "codecov==2.1.13",
+    "mypy<1.15",
+    "pandas==2.3.3",
+    "pytest==8.4.2",
+    "pytest-cov==7.0.0",
+    "ruff==0.14.3",
+    "twine==6.2.0",
+    "wheel==0.45.1",
+]
+docs = [
+    "lightgbm==4.4.0",
+    "matplotlib==3.9.4",
+    "numpydoc==1.9.0",
+    "pandas==2.3.3",
+    "sphinx==7.4.7",
+    "sphinx-gallery==0.19.0",
+    "sphinx_rtd_theme==3.0.2",
+    "typing_extensions==4.0.1",
+]
+notebooks = [
+    "ipykernel==6.31.0",
+    "jupyter==1.1.1",
+    "jupyterlab==4.4.10",
+    "jupytext==1.18.1",
+    "matplotlib==3.9.4",
+    "nbconvert==7.16.6",
+    "pandas==2.3.3",
+    "scikeras==0.13.0",
+    "seaborn==0.13.2",
+    "tensorflow==2.20.0",
+    "tensorflow_datasets==4.8.3",
+    "xgboost==2.1.4",
+]
+
 [tool.setuptools]
 include-package-data = true
 
 [tool.setuptools.packages.find]
 include = ["mapie", "mapie.*"]
 
-[tool.ruff]
 # Exclude ignored directories.
+[tool.ruff]
 exclude = [
     ".coverage",
     ".bzr",

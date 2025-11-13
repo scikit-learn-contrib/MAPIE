@@ -7,21 +7,20 @@ lint:
 	ruff check examples mapie notebooks
 	
 format:
-	ruff format --diff examples mapie notebooks
+	ruff format --check --diff examples mapie notebooks
 
 type-check:
 	mypy mapie
 
 coverage:
 	pytest -vsx \
+		--doctest-modules \
+		--pyargs mapie \
 		--cov-branch \
 		--cov=mapie \
 		--cov-report term-missing \
-		--pyargs mapie \
 		--cov-fail-under=100 \
-		--no-cov-on-fail \
-		--doctest-modules
-
+		--no-cov-on-fail
 
 ### Checks that are run in ReadTheDocs CI ###
 doc:
@@ -39,7 +38,10 @@ all-checks:
 	$(MAKE) coverage
 
 tests:
-	pytest -vs --doctest-modules mapie
+	pytest -vs \
+		--doctest-modules \
+		--pyargs mapie \
+		--ignore=mapie/tests/long_tests
 
 clean-doc:
 	$(MAKE) clean -C doc

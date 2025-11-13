@@ -15,7 +15,7 @@ jobs:
       - uses: snok/latest-python-versions@v1
         id: latest
         with:
-          min-version: "3.13"
+          min-version: "3.9"
 
   build:
     needs: get-latest-python
@@ -26,45 +26,37 @@ jobs:
           # minimum supported dependencies
           - os: ubuntu-latest
             python-version: "3.9"
-            numpy-version: "=1.23"
-            sklearn-version: "=1.4"
-            ruff-version: "=0.14.2"
+            use-pinned-deps: true
+            numpy-version: "==1.24.1"
+            sklearn-version: "==1.4.*"
+            scipy-version: "==1.10.*"
           # latest stable dependencies
           - os: ubuntu-latest
             python-version: "${{ needs.get-latest-python.outputs.latest-python }}"
-            numpy-version: ""
-            sklearn-version: ""
-            ruff-version: ""
+            use-pinned-deps: false
           - os: windows-latest
             python-version: "${{ needs.get-latest-python.outputs.latest-python }}"
-            numpy-version: ""
-            sklearn-version: ""
-            ruff-version: ""
+            use-pinned-deps: false
           - os: macos-latest
             python-version: "${{ needs.get-latest-python.outputs.latest-python }}"
-            numpy-version: ""
-            sklearn-version: ""
-            ruff-version: ""
+            use-pinned-deps: false
     defaults:
       run:
-        shell: bash -l {0}
+        shell: bash
 
     steps:
       - name: Git clone
-        uses: actions/checkout@v2
-      - name: Set up virtual environment
-        uses: conda-incubator/setup-miniconda@v2
+        uses: actions/checkout@v4.3.0
+      - name: Set up Python
+        uses: actions/setup-python@v5.6.0
         with:
           python-version: ${{ matrix.python-version }}
-          environment-file: environment.ci.yml
-          channels: defaults, conda-forge
-          miniconda-version: "latest"
-      - name: Install ruff
-        run: conda install ruff${{ matrix.ruff-version }}
-      - name: Install numpy
-        run: conda install numpy${{ matrix.numpy-version }}
-      - name: Install sklearn
-        run: conda install scikit-learn${{ matrix.sklearn-version }}
+      - name: Install minimum dependency constraints
+        if: ${{ matrix.use-pinned-deps }}
+        run: |
+          python -m pip install "numpy${{ matrix.numpy-version }}" "scikit-learn${{ matrix.sklearn-version }}" "scipy${{ matrix.scipy-version }}"
+      - name: Install project with development extras
+        run: python -m pip install -e '.[dev]'
       - name: Check linting
         run: make lint
       - name: Check format
@@ -73,5 +65,3 @@ jobs:
         run: make type-check
       - name: Test and coverage with pytest
         run: make coverage
-      - name: Code coverage
-        run: codecov

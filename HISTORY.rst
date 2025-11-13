@@ -6,6 +6,8 @@ History
 ------------------
 * Introduce VennAbers calibrator both for binary and multiclass classification
 
+* Fix issue 790 to make `BlockBootstrap` include all non-training indices in the test set
+
 1.1.0 (2025-09-22)
 ------------------
 
