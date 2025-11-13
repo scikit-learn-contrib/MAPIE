@@ -356,15 +356,15 @@ def test_MapieTimeSeriesRegressor_if_alpha_is_None() -> None:
         y_pred, y_pis = mapie_ts_reg.predict(X_toy, confidence_level=None)
 
 
-def test_MapieTimeSeriesRegressor_partial_fit_ensemble() -> None:
-    """Test ``partial_fit``."""
+def test_MapieTimeSeriesRegressor_update_conformity_scores_with_ensemble() -> None:
+    """Test ``_update_conformity_scores_with_ensemble``"""
     mapie_ts_reg = TimeSeriesRegressor(method="enbpi", cv=-1)
     mapie_ts_reg.fit(X_toy, y_toy)
-    mapie_ts_reg.partial_fit(X_toy, y_toy, ensemble=True)
+    mapie_ts_reg._update_conformity_scores_with_ensemble(X_toy, y_toy, ensemble=True)
     assert round(mapie_ts_reg.conformity_scores_[-1], 2) == round(
         np.abs(CONFORMITY_SCORES[0]), 2
     )
-    mapie_ts_reg.partial_fit(
+    mapie_ts_reg._update_conformity_scores_with_ensemble(
         X=np.array([UPDATE_DATA[0]]), y=np.array([UPDATE_DATA[1]]), ensemble=True
     )
     assert round(mapie_ts_reg.conformity_scores_[-1], 2) == round(
@@ -372,12 +372,14 @@ def test_MapieTimeSeriesRegressor_partial_fit_ensemble() -> None:
     )
 
 
-def test_MapieTimeSeriesRegressor_partial_fit_too_big() -> None:
-    """Test ``partial_fit`` raised error."""
+def test_MapieTimeSeriesRegressor_update_conformity_scores_with_ensemble_too_big() -> (
+    None
+):
+    """Test that ``_update_conformity_scores_with_ensemble`` raises an error."""
     mapie_ts_reg = TimeSeriesRegressor(method="enbpi", cv=-1)
     mapie_ts_reg.fit(X_toy, y_toy)
     with pytest.raises(ValueError, match=r".*The number of observations*"):
-        mapie_ts_reg = mapie_ts_reg.partial_fit(X=X, y=y)
+        mapie_ts_reg = mapie_ts_reg._update_conformity_scores_with_ensemble(X=X, y=y)
 
 
 def test_MapieTimeSeriesRegressor_beta_optimize_error() -> None:
@@ -460,14 +462,6 @@ def test_aci__get_alpha_with_unknown_alpha() -> None:
         X_toy, y_toy, gamma=0.1, confidence_level=0.8
     )
     np.testing.assert_allclose(mapie_ts_reg.current_alpha[0.2], 0.3, rtol=1e-3)
-
-
-def test_deprecated_partial_fit_warning() -> None:
-    """Test that a warning is raised if use partial_fit"""
-    mapie_ts_reg = TimeSeriesRegressor(method="enbpi", cv=-1)
-    mapie_ts_reg.fit(X_toy, y_toy)
-    with pytest.warns(DeprecationWarning, match=r".*WARNING: Deprecated method.*"):
-        mapie_ts_reg = mapie_ts_reg.partial_fit(X_toy, y_toy)
 
 
 @pytest.mark.parametrize("method", ["wrong_method"])
