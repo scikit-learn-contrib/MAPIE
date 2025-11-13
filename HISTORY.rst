@@ -5,6 +5,8 @@ History
 1.x.x (2025-xx-xx)
 ------------------
 
+* Fix issue 790 to make `BlockBootstrap` include all non-training indices in the test set
+
 1.1.0 (2025-09-22)
 ------------------
 

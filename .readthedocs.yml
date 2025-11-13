@@ -3,7 +3,7 @@ version: 2
 build:
   os: ubuntu-22.04
   tools:
-    python: "mambaforge-22.9"
+    python: "3.13"
   jobs:
     post_build:
       - cd doc && make doctest
@@ -12,9 +12,8 @@ python:
   install:
     - method: pip
       path: .
-
-conda:
-  environment: environment.doc.yml
+      extra_requirements:
+        - docs
   
 sphinx:
   builder: html
