@@ -2,7 +2,9 @@ name: Publish Python 🐍 distribution 📦 to PyPI and TestPyPI
 
 on:
   push:
-  workflow_dispatch:  # manual TestPyPI publish
+    tags:
+      - "*" # publish real versioned releases to PyPI
+  workflow_dispatch: # manual TestPyPI publish
 
 jobs:
   build:
