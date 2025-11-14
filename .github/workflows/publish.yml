@@ -1,7 +1,9 @@
 name: Publish Python 🐍 distribution 📦 to PyPI and TestPyPI
 
 # Trigger on push (the publish job to PyPI only runs for tag pushes)
-on: push
+on:
+  push
+  workflow_dispatch:  # manual TestPyPI publish
 
 jobs:
   build:
@@ -50,6 +52,7 @@ jobs:
   publish-to-testpypi:
     name: Publish Python 🐍 distribution 📦 to TestPyPI
     needs: [build]
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     environment:
       name: testpypi
