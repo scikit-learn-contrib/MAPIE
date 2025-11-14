@@ -4,6 +4,7 @@
 - [ ] Make sure tests run, pass and cover 100% of the package:
     * `make lint`
     * `make type-check`
+    * `make format`
     * `make coverage`
 - [ ] Make sure documentation builds without warnings and shows nicely:
     * `make doc`

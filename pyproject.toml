@@ -11,9 +11,11 @@ license = "BSD-3-Clause"
 license-files = ["LICENSE"]
 maintainers = [
     {name = "Valentin Laurent", email = "valentin.laurent@capgemini.com"},
-    {name = "Thibault Cordier", email = "thibault.a.cordier@capgemini.com"},
     {name = "Louis Lacombe", email = "louis.lacombe@capgemini.com"},
     {name = "Vincent Blot", email = "vincent.blot@capgemini.com"},
+    {name = "Geoffray Brelurut", email = "geoffray.brelurut@capgemini.com"},
+    {name = "Hassan Maissoro", email = "hassan.maissoro@capgemini.com"},
+    {name = "Adrien Le Coz", email = "adrien.le-coz@inria.fr"},
 ]
 requires-python = ">=3.9"
 dependencies = [
