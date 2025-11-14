@@ -24,7 +24,7 @@ jobs:
       matrix:
         include:
           # minimum supported dependencies
-          - os: ubuntu-latest
+          - os: self-hosted-ubuntu
             python-version: "3.9"
             use-pinned-deps: true
             numpy-version: "==1.24.1"
