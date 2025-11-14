@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "MAPIE"
-version = "1.1.0.dev1"
+version = "1.1.0"
 description = "A scikit-learn-compatible module for estimating prediction intervals."
 readme = "README.rst"
 license = "BSD-3-Clause"
