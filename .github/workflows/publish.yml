@@ -1,9 +1,10 @@
 name: Publish Python 🐍 distribution 📦 to PyPI and TestPyPI
 
-# Trigger on push (the publish job to PyPI only runs for tag pushes)
 on:
-  push
-  workflow_dispatch # manual TestPyPI publish
+  push:
+    tags:
+      - "*"        # publish real versioned releases to PyPI
+  workflow_dispatch:  # manual TestPyPI publish
 
 jobs:
   build:
