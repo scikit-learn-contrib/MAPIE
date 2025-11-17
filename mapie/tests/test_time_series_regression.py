@@ -306,11 +306,12 @@ def test_results_prefit() -> None:
 def test_not_enough_resamplings() -> None:
     """Test that a warning is raised if at least one residual is nan."""
     with pytest.warns(UserWarning, match=r"WARNING: at least one point of*"):
-        mapie_ts_reg = TimeSeriesRegressor(
-            cv=BlockBootstrap(n_resamplings=2, n_blocks=1, random_state=0),
-            agg_function="mean",
-        )
-        mapie_ts_reg.fit(X, y)
+        with pytest.warns(RuntimeWarning):
+            mapie_ts_reg = TimeSeriesRegressor(
+                cv=BlockBootstrap(n_resamplings=2, n_blocks=1, random_state=0),
+                agg_function="mean",
+            )
+            mapie_ts_reg.fit(X, y)
 
 
 def test_no_agg_fx_specified_with_subsample() -> None:
