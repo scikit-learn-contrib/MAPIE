@@ -70,8 +70,9 @@ def test_recall_with_zero_sum_is_equal_nan() -> None:
     """Test compute_recall with nan values"""
     y_toy = np.zeros((4, 3))
     y_preds_proba = prng.rand(4, 3, 1)
-    recall = compute_risk_recall(lambdas, y_preds_proba, y_toy)
-    np.testing.assert_array_equal(recall, np.full_like(recall, np.nan))
+    with pytest.warns(RuntimeWarning):
+        recall = compute_risk_recall(lambdas, y_preds_proba, y_toy)
+        np.testing.assert_array_equal(recall, np.full_like(recall, np.nan))
 
 
 def test_precision_with_zero_sum_is_equal_ones() -> None:
