@@ -1516,7 +1516,7 @@ def test_pipeline_compatibility(strategy: str) -> None:
             ("num", numeric_preprocessor, ["x_num"]),
         ]
     )
-    pipe = make_pipeline(preprocessor, LogisticRegression())
+    pipe = make_pipeline(preprocessor, LogisticRegression(max_iter=500))
     pipe.fit(X, y)
     mapie = _MapieClassifier(estimator=pipe, **STRATEGIES[strategy][0])
     mapie.fit(X, y)
