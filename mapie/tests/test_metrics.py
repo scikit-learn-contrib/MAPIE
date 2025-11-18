@@ -263,8 +263,14 @@ def test_classification_same_length() -> None:
 
 def test_classification_valid_input_shape() -> None:
     """Test that valid inputs shape raise no error."""
-    classification_ssc(y_true_class, y_pred_set_2alphas)
-    classification_ssc_score(y_true_class, y_pred_set_2alphas)
+    with pytest.warns(
+        RuntimeWarning, match=r".*empty slice.*|.*invalid value encountered in divide.*"
+    ):
+        classification_ssc(y_true_class, y_pred_set_2alphas)
+    with pytest.warns(
+        RuntimeWarning, match=r".*empty slice.*|.*invalid value encountered in divide.*"
+    ):
+        classification_ssc_score(y_true_class, y_pred_set_2alphas)
     classification_mean_width_score(y_pred_set_2alphas)
 
 
