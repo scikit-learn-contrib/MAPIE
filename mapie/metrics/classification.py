@@ -192,13 +192,10 @@ def classification_ssc(
         ]
 
         for i, indexes in enumerate(indexes_bybins):
-            if indexes.size == 0:
-                coverages[alpha, i] = np.nan
-            else:
-                coverages[alpha, i] = classification_coverage_score(
-                    y_true[indexes],
-                    np.take_along_axis(y_pred_set[:, :, alpha], indexes, axis=0),
-                ).item()
+            coverages[alpha, i] = classification_coverage_score(
+                y_true[indexes],
+                np.take_along_axis(y_pred_set[:, :, alpha], indexes, axis=0),
+            ).item()
     return coverages
 
 
