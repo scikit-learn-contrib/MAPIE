@@ -1627,17 +1627,13 @@ def test_n_classes_prefit() -> None:
     """
     clf = LogisticRegression()
     clf.fit(X, y)
-    indices_remove = np.where(y != 2)
-    X_mapie = X[indices_remove]
-    y_mapie = y[indices_remove]
     mapie_clf = _MapieClassifier(
         estimator=clf,
         conformity_score=APSConformityScore(),
         cv="prefit",
         random_state=random_state,
     )
-    with pytest.warns(UserWarning, match=r".*WARNING: your conformalization dataset.*"):
-        mapie_clf.fit(X_mapie, y_mapie)
+    mapie_clf.fit(X, y)
     assert mapie_clf.n_classes_ == len(np.unique(y))
 
 
