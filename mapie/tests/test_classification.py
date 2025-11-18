@@ -1594,7 +1594,8 @@ def test_not_all_label_in_calib() -> None:
         cv="prefit",
         random_state=random_state,
     )
-    mapie_clf.fit(X_mapie, y_mapie)
+    with pytest.warns(UserWarning, match=r".*WARNING: your conformalization dataset.*"):
+        mapie_clf.fit(X_mapie, y_mapie)
     y_pred, y_pss = mapie_clf.predict(X, alpha=0.5)
     assert y_pred.shape == (len(X),)
     assert y_pss.shape == (len(X), len(np.unique(y)), 1)
