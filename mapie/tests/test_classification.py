@@ -6,6 +6,7 @@ from typing import Any, Dict, Iterable, Optional, Union
 import numpy as np
 import pandas as pd
 import pytest
+from numpy.typing import ArrayLike, NDArray
 from sklearn.base import ClassifierMixin
 from sklearn.compose import ColumnTransformer
 from sklearn.datasets import make_classification
@@ -25,18 +26,17 @@ from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils.validation import check_is_fitted
 from typing_extensions import TypedDict
 
-from numpy.typing import ArrayLike, NDArray
 from mapie.classification import _MapieClassifier
 from mapie.conformity_scores import (
-    LACConformityScore,
-    RAPSConformityScore,
     APSConformityScore,
     BaseClassificationScore,
-    TopKConformityScore,
+    LACConformityScore,
     NaiveConformityScore,
+    RAPSConformityScore,
+    TopKConformityScore,
 )
-from mapie.utils import check_proba_normalized
 from mapie.metrics.classification import classification_coverage_score
+from mapie.utils import check_proba_normalized
 
 random_state = 42
 
@@ -1407,6 +1407,7 @@ def test_image_cumulated_scores(X: Dict[str, ArrayLike]) -> None:
     np.testing.assert_allclose(y_ps[:, :, 0], cumclf.y_pred_sets)
 
 
+@pytest.mark.filterwarnings("ignore:: UserWarning")
 @pytest.mark.parametrize("y_pred_proba", Y_PRED_PROBA_WRONG)
 def test_sum_proba_to_one_fit(y_pred_proba: NDArray) -> None:
     """
