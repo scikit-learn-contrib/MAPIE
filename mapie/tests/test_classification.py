@@ -1578,24 +1578,20 @@ def test_error_raps_cv_not_prefit(cv: Union[int, None]) -> None:
         mapie.fit(X_toy, y_toy)
 
 
-def test_not_all_label_in_calib() -> None:
+def test_y_pred_shape_in_calib() -> None:
     """
     Test that the true label cumsumed probabilities
     have the correct shape.
     """
     clf = LogisticRegression()
     clf.fit(X, y)
-    indices_remove = np.where(y != 2)
-    X_mapie = X[indices_remove]
-    y_mapie = y[indices_remove]
     mapie_clf = _MapieClassifier(
         estimator=clf,
         conformity_score=APSConformityScore(),
         cv="prefit",
         random_state=random_state,
     )
-    with pytest.warns(UserWarning, match=r".*WARNING: your conformalization dataset.*"):
-        mapie_clf.fit(X_mapie, y_mapie)
+    mapie_clf.fit(X, y)
     y_pred, y_pss = mapie_clf.predict(X, alpha=0.5)
     assert y_pred.shape == (len(X),)
     assert y_pss.shape == (len(X), len(np.unique(y)), 1)
@@ -1644,17 +1640,13 @@ def test_classes_prefit() -> None:
     """
     clf = LogisticRegression()
     clf.fit(X, y)
-    indices_remove = np.where(y != 2)
-    X_mapie = X[indices_remove]
-    y_mapie = y[indices_remove]
     mapie_clf = _MapieClassifier(
         estimator=clf,
         conformity_score=APSConformityScore(),
         cv="prefit",
         random_state=random_state,
     )
-    with pytest.warns(UserWarning, match=r".*WARNING: your conformalization dataset.*"):
-        mapie_clf.fit(X_mapie, y_mapie)
+    mapie_clf.fit(X, y)
     assert (mapie_clf.classes_ == np.unique(y)).all()
 
 
@@ -1665,14 +1657,10 @@ def test_classes_encoder_same_than_model() -> None:
     """
     clf = LogisticRegression()
     clf.fit(X, y)
-    indices_remove = np.where(y != 2)
-    X_mapie = X[indices_remove]
-    y_mapie = y[indices_remove]
     mapie_clf = _MapieClassifier(
         estimator=clf, conformity_score=APSConformityScore(), cv="prefit"
     )
-    with pytest.warns(UserWarning, match=r".*WARNING: your conformalization dataset.*"):
-        mapie_clf.fit(X_mapie, y_mapie)
+    mapie_clf.fit(X, y)
     assert (mapie_clf.label_encoder_.classes_ == np.unique(y)).all()
 
 
