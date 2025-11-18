@@ -421,6 +421,7 @@ def test_valid_splits_classification_ssc(num_bins: int) -> None:
     """Test that valid number of bins for ssc raise no ValueError."""
     classification_ssc(y_true_class, y_pred_set_2alphas, num_bins=num_bins)
 
+
 @pytest.mark.parametrize("num_bins", [3, 2, None])
 @pytest.mark.filterwarnings("ignore:: RuntimeWarning")
 def test_valid_splits_classification_ssc_score(num_bins: int) -> None:
