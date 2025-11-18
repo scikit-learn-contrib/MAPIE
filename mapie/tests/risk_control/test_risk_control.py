@@ -66,6 +66,7 @@ def test_compute_precision() -> None:
     np.testing.assert_equal(precision, test_precision)
 
 
+@pytest.mark.filterwarnings("ignore:: RuntimeWarning")
 def test_recall_with_zero_sum_is_equal_nan() -> None:
     """Test compute_recall with nan values"""
     y_toy = np.zeros((4, 3))

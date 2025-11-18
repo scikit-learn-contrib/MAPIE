@@ -7,10 +7,9 @@ from typing import Union
 import numpy as np
 import pytest
 from numpy.random import RandomState
+from numpy.typing import ArrayLike, NDArray
 from typing_extensions import TypedDict
 
-from numpy.typing import ArrayLike, NDArray
-from mapie.metrics.calibration import spiegelhalter_p_value
 from mapie.metrics.calibration import (
     add_jitter,
     cumulative_differences,
@@ -23,23 +22,24 @@ from mapie.metrics.calibration import (
     kuiper_statistic,
     length_scale,
     sort_xy_by_y,
+    spiegelhalter_p_value,
     spiegelhalter_statistic,
     top_label_ece,
 )
 from mapie.metrics.classification import (
-    classification_mean_width_score,
     classification_coverage_score,
+    classification_mean_width_score,
     classification_ssc,
     classification_ssc_score,
 )
 from mapie.metrics.regression import (
-    regression_mean_width_score,
+    coverage_width_based,
+    hsic,
     regression_coverage_score,
+    regression_mean_width_score,
+    regression_mwi_score,
     regression_ssc,
     regression_ssc_score,
-    hsic,
-    coverage_width_based,
-    regression_mwi_score,
 )
 
 y_toy = np.array([5, 7.5, 9.5, 10.5, 12.5])
@@ -263,8 +263,14 @@ def test_classification_same_length() -> None:
 
 def test_classification_valid_input_shape() -> None:
     """Test that valid inputs shape raise no error."""
-    classification_ssc(y_true_class, y_pred_set_2alphas)
-    classification_ssc_score(y_true_class, y_pred_set_2alphas)
+    with pytest.warns(
+        RuntimeWarning, match=r".*empty slice.*|.*invalid value encountered in divide.*"
+    ):
+        classification_ssc(y_true_class, y_pred_set_2alphas)
+    with pytest.warns(
+        RuntimeWarning, match=r".*empty slice.*|.*invalid value encountered in divide.*"
+    ):
+        classification_ssc_score(y_true_class, y_pred_set_2alphas)
     classification_mean_width_score(y_pred_set_2alphas)
 
 
@@ -410,18 +416,21 @@ def test_invalid_splits_classification_ssc_score(num_bins: int) -> None:
 
 
 @pytest.mark.parametrize("num_bins", [3, 2, None])
+@pytest.mark.filterwarnings("ignore:: RuntimeWarning")
 def test_valid_splits_classification_ssc(num_bins: int) -> None:
-    """Test that valid number of bins for ssc raise no error."""
+    """Test that valid number of bins for ssc raise no ValueError."""
     classification_ssc(y_true_class, y_pred_set_2alphas, num_bins=num_bins)
 
 
 @pytest.mark.parametrize("num_bins", [3, 2, None])
+@pytest.mark.filterwarnings("ignore:: RuntimeWarning")
 def test_valid_splits_classification_ssc_score(num_bins: int) -> None:
-    """Test that valid number of bins for ssc raise no error."""
+    """Test that valid number of bins for ssc raise no ValueError."""
     classification_ssc_score(y_true_class, y_pred_set_2alphas, num_bins=num_bins)
 
 
 @pytest.mark.parametrize("params", [*SSC_CLASSIF])
+@pytest.mark.filterwarnings("ignore:: RuntimeWarning")
 def test_classification_ssc_return_shape(params: str) -> None:
     """Test that the arrays returned by ssc metrics have the correct shape."""
     cond_cov = classification_ssc(y_true_class, **SSC_CLASSIF[params])
@@ -429,6 +438,7 @@ def test_classification_ssc_return_shape(params: str) -> None:
 
 
 @pytest.mark.parametrize("params", [*SSC_CLASSIF])
+@pytest.mark.filterwarnings("ignore:: RuntimeWarning")
 def test_classification_ssc_score_return_shape(params: str) -> None:
     """Test that the arrays returned by ssc metrics have the correct shape."""
     cond_cov_min = classification_ssc_score(y_true_class, **SSC_CLASSIF[params])
@@ -436,6 +446,7 @@ def test_classification_ssc_score_return_shape(params: str) -> None:
 
 
 @pytest.mark.parametrize("params", [*SSC_CLASSIF])
+@pytest.mark.filterwarnings("ignore:: RuntimeWarning")
 def test_classification_ssc_coverage_values(params: str) -> None:
     """Test that the conditional coverage values returned are correct."""
     cond_cov = classification_ssc(y_true_class, **SSC_CLASSIF[params])
@@ -443,6 +454,7 @@ def test_classification_ssc_coverage_values(params: str) -> None:
 
 
 @pytest.mark.parametrize("params", [*SSC_CLASSIF])
+@pytest.mark.filterwarnings("ignore:: RuntimeWarning")
 def test_classification_ssc_score_coverage_values(params: str) -> None:
     """Test that the conditional coverage values returned are correct."""
     cond_cov_min = classification_ssc_score(y_true_class, **SSC_CLASSIF[params])

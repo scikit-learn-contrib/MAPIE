@@ -6,6 +6,7 @@ from typing import Any, Dict, Iterable, Optional, Union
 import numpy as np
 import pandas as pd
 import pytest
+from numpy.typing import ArrayLike, NDArray
 from sklearn.base import ClassifierMixin
 from sklearn.compose import ColumnTransformer
 from sklearn.datasets import make_classification
@@ -25,18 +26,17 @@ from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils.validation import check_is_fitted
 from typing_extensions import TypedDict
 
-from numpy.typing import ArrayLike, NDArray
 from mapie.classification import _MapieClassifier
 from mapie.conformity_scores import (
-    LACConformityScore,
-    RAPSConformityScore,
     APSConformityScore,
     BaseClassificationScore,
-    TopKConformityScore,
+    LACConformityScore,
     NaiveConformityScore,
+    RAPSConformityScore,
+    TopKConformityScore,
 )
-from mapie.utils import check_proba_normalized
 from mapie.metrics.classification import classification_coverage_score
+from mapie.utils import check_proba_normalized
 
 random_state = 42
 
@@ -1407,6 +1407,7 @@ def test_image_cumulated_scores(X: Dict[str, ArrayLike]) -> None:
     np.testing.assert_allclose(y_ps[:, :, 0], cumclf.y_pred_sets)
 
 
+@pytest.mark.filterwarnings("ignore:: UserWarning")
 @pytest.mark.parametrize("y_pred_proba", Y_PRED_PROBA_WRONG)
 def test_sum_proba_to_one_fit(y_pred_proba: NDArray) -> None:
     """
@@ -1501,7 +1502,8 @@ def test_pipeline_compatibility(strategy: str) -> None:
             "x_num": X,
         }
     )
-    y = np.random.randint(0, 4, size=(100, 1))  # 3 classes
+    # 3 classes
+    y = np.random.randint(0, 4, size=(100, 1)).ravel()
     numeric_preprocessor = Pipeline(
         [
             ("imputer", SimpleImputer(strategy="mean")),
@@ -1516,7 +1518,7 @@ def test_pipeline_compatibility(strategy: str) -> None:
             ("num", numeric_preprocessor, ["x_num"]),
         ]
     )
-    pipe = make_pipeline(preprocessor, LogisticRegression())
+    pipe = make_pipeline(preprocessor, LogisticRegression(max_iter=500))
     pipe.fit(X, y)
     mapie = _MapieClassifier(estimator=pipe, **STRATEGIES[strategy][0])
     mapie.fit(X, y)
@@ -1578,23 +1580,20 @@ def test_error_raps_cv_not_prefit(cv: Union[int, None]) -> None:
         mapie.fit(X_toy, y_toy)
 
 
-def test_not_all_label_in_calib() -> None:
+def test_y_pred_shape_in_calib() -> None:
     """
     Test that the true label cumsumed probabilities
     have the correct shape.
     """
     clf = LogisticRegression()
     clf.fit(X, y)
-    indices_remove = np.where(y != 2)
-    X_mapie = X[indices_remove]
-    y_mapie = y[indices_remove]
     mapie_clf = _MapieClassifier(
         estimator=clf,
         conformity_score=APSConformityScore(),
         cv="prefit",
         random_state=random_state,
     )
-    mapie_clf.fit(X_mapie, y_mapie)
+    mapie_clf.fit(X, y)
     y_pred, y_pss = mapie_clf.predict(X, alpha=0.5)
     assert y_pred.shape == (len(X),)
     assert y_pss.shape == (len(X), len(np.unique(y)), 1)
@@ -1626,16 +1625,13 @@ def test_n_classes_prefit() -> None:
     """
     clf = LogisticRegression()
     clf.fit(X, y)
-    indices_remove = np.where(y != 2)
-    X_mapie = X[indices_remove]
-    y_mapie = y[indices_remove]
     mapie_clf = _MapieClassifier(
         estimator=clf,
         conformity_score=APSConformityScore(),
         cv="prefit",
         random_state=random_state,
     )
-    mapie_clf.fit(X_mapie, y_mapie)
+    mapie_clf.fit(X, y)
     assert mapie_clf.n_classes_ == len(np.unique(y))
 
 
@@ -1646,16 +1642,13 @@ def test_classes_prefit() -> None:
     """
     clf = LogisticRegression()
     clf.fit(X, y)
-    indices_remove = np.where(y != 2)
-    X_mapie = X[indices_remove]
-    y_mapie = y[indices_remove]
     mapie_clf = _MapieClassifier(
         estimator=clf,
         conformity_score=APSConformityScore(),
         cv="prefit",
         random_state=random_state,
     )
-    mapie_clf.fit(X_mapie, y_mapie)
+    mapie_clf.fit(X, y)
     assert (mapie_clf.classes_ == np.unique(y)).all()
 
 
@@ -1666,13 +1659,10 @@ def test_classes_encoder_same_than_model() -> None:
     """
     clf = LogisticRegression()
     clf.fit(X, y)
-    indices_remove = np.where(y != 2)
-    X_mapie = X[indices_remove]
-    y_mapie = y[indices_remove]
     mapie_clf = _MapieClassifier(
         estimator=clf, conformity_score=APSConformityScore(), cv="prefit"
     )
-    mapie_clf.fit(X_mapie, y_mapie)
+    mapie_clf.fit(X, y)
     assert (mapie_clf.label_encoder_.classes_ == np.unique(y)).all()
 
 
