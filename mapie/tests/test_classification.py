@@ -1657,7 +1657,8 @@ def test_classes_prefit() -> None:
         cv="prefit",
         random_state=random_state,
     )
-    mapie_clf.fit(X_mapie, y_mapie)
+    with pytest.warns(UserWarning, match=r".*WARNING: your conformalization dataset.*"):
+        mapie_clf.fit(X_mapie, y_mapie)
     assert (mapie_clf.classes_ == np.unique(y)).all()
 
 
@@ -1674,7 +1675,8 @@ def test_classes_encoder_same_than_model() -> None:
     mapie_clf = _MapieClassifier(
         estimator=clf, conformity_score=APSConformityScore(), cv="prefit"
     )
-    mapie_clf.fit(X_mapie, y_mapie)
+    with pytest.warns(UserWarning, match=r".*WARNING: your conformalization dataset.*"):
+        mapie_clf.fit(X_mapie, y_mapie)
     assert (mapie_clf.label_encoder_.classes_ == np.unique(y)).all()
 
 
