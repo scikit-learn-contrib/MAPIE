@@ -4,6 +4,7 @@ History
 
 1.x.x (2025-xx-xx)
 ------------------
+* Introduce VennAbers calibrator both for binary and multiclass classification
 
 1.2.0 (2025-11-17)
 ------------------
