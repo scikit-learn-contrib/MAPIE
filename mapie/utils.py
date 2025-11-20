@@ -1637,3 +1637,14 @@ def _raise_error_if_fit_called_in_prefit_mode(
             "The fit method must be skipped when the prefit parameter is set to True. "
             "Use the conformalize method directly after instanciation."
         )
+
+class NotFittedError(ValueError):
+    pass
+
+
+def check_is_fitted_mapie(obj):
+    if not getattr(obj, "_is_fitted", False):
+        raise NotFittedError(
+            f"{obj.__class__.__name__} is not fitted yet. "
+            "Call .fit() before using this method."
+        )
