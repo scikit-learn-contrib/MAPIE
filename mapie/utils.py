@@ -20,7 +20,7 @@ from sklearn.utils.multiclass import type_of_target
 from sklearn.utils.validation import (
     _check_sample_weight,
     _num_features,
-    check_is_fitted,
+    check_is_fitted as sk_check_is_fitted,
     column_or_1d,
 )
 
@@ -287,12 +287,12 @@ def _fit_estimator(
     --------
     >>> import numpy as np
     >>> from sklearn.linear_model import LinearRegression
-    >>> from sklearn.utils.validation import check_is_fitted
+    >>> from sklearn.utils.validation import check_is_fitted as sk_check_is_fitted
     >>> X = np.array([[0], [1], [2], [3], [4], [5]])
     >>> y = np.array([5, 7, 9, 11, 13, 15])
     >>> estimator = LinearRegression()
     >>> estimator = _fit_estimator(estimator, X, y)
-    >>> check_is_fitted(estimator)
+    >>> sk_check_is_fitted(estimator)
     """
     fit_parameters = signature(estimator.fit).parameters
     supports_sw = "sample_weight" in fit_parameters
@@ -1012,7 +1012,7 @@ def _check_estimator_classification(
             "predict, and predict_proba methods."
         )
     if cv == "prefit":
-        check_is_fitted(est)
+        sk_check_is_fitted(est)
         if not hasattr(est, "classes_"):
             raise AttributeError(
                 "Invalid classifier. "
@@ -1642,7 +1642,7 @@ class NotFittedError(ValueError):
     pass
 
 
-def check_is_fitted_mapie(obj):
+def check_is_fitted(obj):
     if not getattr(obj, "_is_fitted", False):
         raise NotFittedError(
             f"{obj.__class__.__name__} is not fitted yet. "
