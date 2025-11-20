@@ -4,17 +4,18 @@ from typing import List, Optional, Tuple, Union, cast
 
 import numpy as np
 from joblib import Parallel, delayed
+from numpy.typing import ArrayLike, NDArray
 from sklearn.base import RegressorMixin, clone
 from sklearn.model_selection import BaseCrossValidator
 from sklearn.utils import _safe_indexing
-from sklearn.utils.validation import _num_samples, check_is_fitted
+from sklearn.utils.validation import _num_samples
 
-from numpy.typing import ArrayLike, NDArray
 from mapie.aggregation_functions import aggregate_all, phi2D
 from mapie.utils import (
     _check_nan_in_aposteriori_prediction,
     _check_no_agg_cv,
     _fit_estimator,
+    check_is_fitted,
 )
 
 
@@ -169,6 +170,11 @@ class EnsembleRegressor:
         self.n_jobs = n_jobs
         self.test_size = test_size
         self.verbose = verbose
+        self._is_fitted = False
+
+    @property
+    def is_fitted(self):
+        return self._is_fitted
 
     @staticmethod
     def _fit_oof_estimator(
@@ -353,7 +359,7 @@ class EnsembleRegressor:
         NDArray of shape (n_samples_test, 1)
             The predictions.
         """
-        check_is_fitted(self, self.fit_attributes)
+        check_is_fitted(self)
 
         if self.cv == "prefit":
             y_pred = self.single_estimator_.predict(X)
@@ -400,7 +406,7 @@ class EnsembleRegressor:
         """
         Note to developer: this fit method has been broken down into
         fit_single_estimator and fit_multi_estimators,
-        but we kept it so that EnsembleRegressor passes sklearn.check_is_fitted.
+        but we kept it for consistency with the public fit() API.
         Prefer using fit_single_estimator and fit_multi_estimators.
 
         Fit the base estimator under the ``single_estimator_`` attribute.
@@ -439,6 +445,8 @@ class EnsembleRegressor:
         self.fit_single_estimator(X, y, sample_weight, groups, **fit_params)
 
         self.fit_multi_estimators(X, y, sample_weight, groups, **fit_params)
+
+        self._is_fitted = True
 
         return self
 
@@ -560,7 +568,7 @@ class EnsembleRegressor:
             - The multiple predictions for the lower bound of the intervals.
             - The multiple predictions for the upper bound of the intervals.
         """
-        check_is_fitted(self, self.fit_attributes)
+        check_is_fitted(self)
 
         y_pred = self.single_estimator_.predict(X, **predict_params)
         if not return_multi_pred and not ensemble:
