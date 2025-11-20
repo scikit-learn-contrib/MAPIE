@@ -6,8 +6,8 @@ from typing import Any, List, Optional, Tuple, Union
 import numpy as np
 import pandas as pd
 import pytest
+from numpy.typing import NDArray
 from scipy.stats import ttest_1samp
-
 from sklearn.compose import ColumnTransformer
 from sklearn.datasets import make_regression
 from sklearn.dummy import DummyRegressor
@@ -17,19 +17,17 @@ from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import (
     GroupKFold,
     KFold,
+    LeaveOneGroupOut,
     LeaveOneOut,
+    LeavePGroupsOut,
     PredefinedSplit,
     ShuffleSplit,
     train_test_split,
-    LeaveOneGroupOut,
-    LeavePGroupsOut,
 )
 from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.preprocessing import OneHotEncoder
-from sklearn.utils.validation import check_is_fitted
 from typing_extensions import TypedDict
 
-from numpy.typing import NDArray
 from mapie.aggregation_functions import aggregate_all
 from mapie.conformity_scores import (
     AbsoluteConformityScore,
@@ -38,14 +36,13 @@ from mapie.conformity_scores import (
     ResidualNormalisedScore,
 )
 from mapie.estimator.regressor import EnsembleRegressor
-from mapie.metrics.regression import (
-    regression_coverage_score,
-)
+from mapie.metrics.regression import regression_coverage_score
 from mapie.regression.regression import (
-    _MapieRegressor,
     JackknifeAfterBootstrapRegressor,
+    _MapieRegressor,
 )
 from mapie.subsample import Subsample
+from mapie.utils import check_is_fitted
 
 
 class TestCheckAndConvertResamplingToCv:
@@ -254,7 +251,7 @@ def test_valid_method(method: str) -> None:
     """Test that valid methods raise no errors."""
     mapie_reg = _MapieRegressor(method=method)
     mapie_reg.fit(X_toy, y_toy)
-    check_is_fitted(mapie_reg, mapie_reg.fit_attributes)
+    check_is_fitted(mapie_reg)
 
 
 @pytest.mark.parametrize("agg_function", ["dummy", 0, 1, 2.5, [1, 2]])
