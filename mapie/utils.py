@@ -1633,6 +1633,7 @@ def _raise_error_if_fit_called_in_prefit_mode(
             "Use the conformalize method directly after instanciation."
         )
 
+
 class NotFittedError(ValueError):
     pass
 
