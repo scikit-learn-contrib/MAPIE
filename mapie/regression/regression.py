@@ -3,44 +3,44 @@ from __future__ import annotations
 from typing import Any, Iterable, Optional, Tuple, Union, cast
 
 import numpy as np
+from numpy.typing import ArrayLike, NDArray
 from sklearn.base import BaseEstimator, RegressorMixin, clone
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import BaseCrossValidator
 from sklearn.pipeline import Pipeline
 from sklearn.utils import check_random_state
-from sklearn.utils.validation import _check_y, check_is_fitted, indexable
+from sklearn.utils.validation import _check_y, indexable
+from sklearn.utils.validation import check_is_fitted as sk_check_is_fitted
 
-from numpy.typing import ArrayLike, NDArray
 from mapie.conformity_scores import BaseRegressionScore, ResidualNormalisedScore
 from mapie.conformity_scores.utils import (
-    check_regression_conformity_score,
     check_and_select_conformity_score,
+    check_regression_conformity_score,
 )
 from mapie.estimator.regressor import EnsembleRegressor
 from mapie.subsample import Subsample
 from mapie.utils import (
+    _cast_point_predictions_to_ndarray,
+    _cast_predictions_to_ndarray_tuple,
     _check_alpha,
     _check_alpha_and_n_samples,
     _check_cv,
+    _check_cv_not_string,
     _check_estimator_fit_predict,
+    _check_if_param_in_allowed_values,
     _check_n_features_in,
     _check_n_jobs,
     _check_null_weight,
+    _check_predict_params,
     _check_verbose,
     _get_effective_calibration_samples,
-    _check_predict_params,
-)
-from mapie.utils import (
-    _transform_confidence_level_to_alpha_list,
-    _check_if_param_in_allowed_values,
-    _check_cv_not_string,
-    _cast_point_predictions_to_ndarray,
-    _cast_predictions_to_ndarray_tuple,
-    _prepare_params,
     _prepare_fit_params_and_sample_weight,
-    _raise_error_if_previous_method_not_called,
-    _raise_error_if_method_already_called,
+    _prepare_params,
     _raise_error_if_fit_called_in_prefit_mode,
+    _raise_error_if_method_already_called,
+    _raise_error_if_previous_method_not_called,
+    _transform_confidence_level_to_alpha_list,
+    check_is_fitted,
 )
 
 
@@ -1127,6 +1127,11 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
         self.verbose = verbose
         self.conformity_score = conformity_score
         self.random_state = random_state
+        self._is_fitted = False
+
+    @property
+    def is_fitted(self):
+        return self._is_fitted
 
     def _check_parameters(self) -> None:
         """
@@ -1238,9 +1243,9 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
             _check_estimator_fit_predict(estimator)
             if self.cv == "prefit":
                 if isinstance(estimator, Pipeline):
-                    check_is_fitted(estimator[-1])
+                    sk_check_is_fitted(estimator[-1])
                 else:
-                    check_is_fitted(estimator)
+                    sk_check_is_fitted(estimator)
             return estimator
 
     def _check_ensemble(
@@ -1400,6 +1405,8 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
         self.fit_estimator(X, y, sample_weight, groups)
         self.conformalize(X, y, sample_weight, groups, **kwargs)
 
+        self._is_fitted = True
+
         return self
 
     def init_fit(
@@ -1546,7 +1553,7 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
         # Checks
         if hasattr(self, "_predict_params"):
             _check_predict_params(self._predict_params, predict_params, self.cv)
-        check_is_fitted(self, self.fit_attributes)
+        check_is_fitted(self)
         self._check_ensemble(ensemble)
         alpha = cast(Optional[NDArray], _check_alpha(alpha))
 
