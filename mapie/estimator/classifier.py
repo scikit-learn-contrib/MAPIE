@@ -4,13 +4,18 @@ from typing import List, Optional, Tuple, Union, cast
 
 import numpy as np
 from joblib import Parallel, delayed
+from numpy.typing import ArrayLike, NDArray
 from sklearn.base import ClassifierMixin, clone
 from sklearn.model_selection import BaseCrossValidator, BaseShuffleSplit
 from sklearn.utils import _safe_indexing
-from sklearn.utils.validation import _num_samples, check_is_fitted
+from sklearn.utils.validation import _num_samples
 
-from numpy.typing import ArrayLike, NDArray
-from mapie.utils import _check_no_agg_cv, _fit_estimator, _fix_number_of_classes
+from mapie.utils import (
+    _check_no_agg_cv,
+    _fit_estimator,
+    _fix_number_of_classes,
+    check_is_fitted,
+)
 
 
 class EnsembleClassifier:
@@ -121,6 +126,11 @@ class EnsembleClassifier:
         self.n_jobs = n_jobs
         self.test_size = test_size
         self.verbose = verbose
+        self._is_fitted = False
+
+    @property
+    def is_fitted(self):
+        return self._is_fitted
 
     @staticmethod
     def _fit_oof_estimator(
@@ -344,6 +354,8 @@ class EnsembleClassifier:
         self.estimators_ = estimators_
         self.k_ = k_
 
+        self._is_fitted = True
+
         return self
 
     def predict_proba_calib(
@@ -381,7 +393,7 @@ class EnsembleClassifier:
         NDArray of shape (n_samples_test, 1)
             The predictions.
         """
-        check_is_fitted(self, self.fit_attributes)
+        check_is_fitted(self)
 
         if self.cv == "prefit":
             y_pred_proba = self.single_estimator_.predict_proba(X, **predict_params)
@@ -445,7 +457,7 @@ class EnsembleClassifier:
             Predictions of shape
             (n_samples, n_classes)
         """
-        check_is_fitted(self, self.fit_attributes)
+        check_is_fitted(self)
 
         y_pred_proba_k = np.asarray(
             Parallel(n_jobs=self.n_jobs, verbose=self.verbose)(
