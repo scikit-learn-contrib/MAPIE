@@ -733,6 +733,7 @@ class _MapieClassifier(ClassifierMixin, BaseEstimator):
 
     @property
     def is_fitted(self):
+        """Returns True if the estimator is fitted"""
         return self._is_fitted
 
     def _check_parameters(self) -> None:
