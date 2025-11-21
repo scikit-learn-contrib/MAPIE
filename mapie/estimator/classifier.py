@@ -130,6 +130,7 @@ class EnsembleClassifier:
 
     @property
     def is_fitted(self):
+        """Returns True if the estimator is fitted"""
         return self._is_fitted
 
     @staticmethod
