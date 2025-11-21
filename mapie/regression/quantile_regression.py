@@ -809,6 +809,8 @@ class _MapieQuantileRegressor(_MapieRegressor):
         self.estimators_ = list(estimator)
         self.single_estimator_ = self.estimators_[2]
 
+        self._is_fitted = True
+
     def _prepare_train_calib(
         self,
         X: ArrayLike,
@@ -882,6 +884,8 @@ class _MapieQuantileRegressor(_MapieRegressor):
                     **fit_params,
                 )
             )
+
+        self._is_fitted = True
 
         self.single_estimator_ = self.estimators_[2]
 
