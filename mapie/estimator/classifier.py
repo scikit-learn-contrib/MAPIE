@@ -129,7 +129,7 @@ class EnsembleClassifier:
         self._is_fitted = False
 
     @property
-    def is_fitted(self):
+    def is_fitted(self):  # pragma: no cover
         """Returns True if the estimator is fitted"""
         return self._is_fitted
 
