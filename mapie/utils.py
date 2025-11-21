@@ -1,9 +1,14 @@
+import copy
 import logging
 import warnings
+from collections.abc import Iterable as IterableType
+from decimal import Decimal
 from inspect import signature
+from math import isclose
 from typing import Any, Iterable, Optional, Tuple, Union, cast
 
 import numpy as np
+from numpy.typing import ArrayLike, NDArray
 from sklearn.base import ClassifierMixin, RegressorMixin
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import (
@@ -17,18 +22,8 @@ from sklearn.model_selection import (
 from sklearn.pipeline import Pipeline
 from sklearn.utils import _safe_indexing
 from sklearn.utils.multiclass import type_of_target
-from sklearn.utils.validation import (
-    _check_sample_weight,
-    _num_features,
-    check_is_fitted,
-    column_or_1d,
-)
-
-from numpy.typing import ArrayLike, NDArray
-import copy
-from collections.abc import Iterable as IterableType
-from decimal import Decimal
-from math import isclose
+from sklearn.utils.validation import _check_sample_weight, _num_features, column_or_1d
+from sklearn.utils.validation import check_is_fitted as sk_check_is_fitted
 
 
 # This function is the only public utility of MAPIE as of v1 release
@@ -287,12 +282,12 @@ def _fit_estimator(
     --------
     >>> import numpy as np
     >>> from sklearn.linear_model import LinearRegression
-    >>> from sklearn.utils.validation import check_is_fitted
+    >>> from sklearn.utils.validation import check_is_fitted as sk_check_is_fitted
     >>> X = np.array([[0], [1], [2], [3], [4], [5]])
     >>> y = np.array([5, 7, 9, 11, 13, 15])
     >>> estimator = LinearRegression()
     >>> estimator = _fit_estimator(estimator, X, y)
-    >>> check_is_fitted(estimator)
+    >>> sk_check_is_fitted(estimator)
     """
     fit_parameters = signature(estimator.fit).parameters
     supports_sw = "sample_weight" in fit_parameters
@@ -1012,7 +1007,7 @@ def _check_estimator_classification(
             "predict, and predict_proba methods."
         )
     if cv == "prefit":
-        check_is_fitted(est)
+        sk_check_is_fitted(est)
         if not hasattr(est, "classes_"):
             raise AttributeError(
                 "Invalid classifier. "
@@ -1637,3 +1632,13 @@ def _raise_error_if_fit_called_in_prefit_mode(
             "The fit method must be skipped when the prefit parameter is set to True. "
             "Use the conformalize method directly after instanciation."
         )
+
+
+class NotFittedError(ValueError):
+    pass
+
+
+def check_is_fitted(obj):
+    """Check that _is_fitted attribute is True"""
+    if not getattr(obj, "_is_fitted", False):
+        raise NotFittedError(f"{obj.__class__.__name__} is not fitted yet. ")

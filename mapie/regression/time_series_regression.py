@@ -6,7 +6,6 @@ import numpy as np
 from numpy.typing import ArrayLike, NDArray
 from sklearn.base import RegressorMixin
 from sklearn.model_selection import BaseCrossValidator
-from sklearn.utils.validation import check_is_fitted
 
 from mapie.conformity_scores import BaseRegressionScore
 from mapie.regression.regression import _MapieRegressor
@@ -14,6 +13,7 @@ from mapie.utils import (
     _check_alpha,
     _check_gamma,
     _transform_confidence_level_to_alpha_list,
+    check_is_fitted,
 )
 
 
@@ -161,7 +161,7 @@ class TimeSeriesRegressor(_MapieRegressor):
             If the length of ``y`` is greater than
             the length of the training set.
         """
-        check_is_fitted(self, self.fit_attributes)
+        check_is_fitted(self)
         X, y = cast(NDArray, X), cast(NDArray, y)
         m, n = len(X), len(self.conformity_scores_)
         if m > n:
@@ -282,7 +282,7 @@ class TimeSeriesRegressor(_MapieRegressor):
                 f"not with '{self.method}'."
             )
 
-        check_is_fitted(self, self.fit_attributes)
+        check_is_fitted(self)
         _check_gamma(gamma)
         X, y = cast(NDArray, X), cast(NDArray, y)
 

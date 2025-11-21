@@ -23,7 +23,6 @@ from sklearn.model_selection import (
 )
 from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.preprocessing import OneHotEncoder
-from sklearn.utils.validation import check_is_fitted
 from typing_extensions import TypedDict
 
 from mapie.classification import _MapieClassifier
@@ -36,7 +35,7 @@ from mapie.conformity_scores import (
     TopKConformityScore,
 )
 from mapie.metrics.classification import classification_coverage_score
-from mapie.utils import check_proba_normalized
+from mapie.utils import check_is_fitted, check_proba_normalized
 
 random_state = 42
 
@@ -856,7 +855,7 @@ def test_valid_conformity_score(conformity_score: BaseClassificationScore) -> No
         conformity_score=conformity_score, cv="prefit", random_state=random_state
     )
     mapie_clf.fit(X, y)
-    check_is_fitted(mapie_clf, mapie_clf.fit_attributes)
+    check_is_fitted(mapie_clf)
 
 
 @pytest.mark.parametrize(

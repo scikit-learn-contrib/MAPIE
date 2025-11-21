@@ -4,6 +4,7 @@ History
 
 1.x.x (2025-xx-xx)
 ------------------
+* Remove dependency of internal classes on sklearn's check_is_fitted
 
 1.2.0 (2025-11-17)
 ------------------

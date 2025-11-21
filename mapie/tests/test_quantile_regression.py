@@ -6,6 +6,7 @@ from typing import Any, Tuple
 import numpy as np
 import pandas as pd
 import pytest
+from numpy.typing import NDArray
 from sklearn.base import BaseEstimator, RegressorMixin, clone
 from sklearn.compose import ColumnTransformer
 from sklearn.datasets import make_regression
@@ -15,14 +16,11 @@ from sklearn.linear_model import LinearRegression, QuantileRegressor
 from sklearn.model_selection import KFold, LeaveOneOut, train_test_split
 from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.preprocessing import OneHotEncoder
-from sklearn.utils.validation import check_is_fitted
 from typing_extensions import TypedDict
 
-from numpy.typing import NDArray
-from mapie.metrics.regression import (
-    regression_coverage_score,
-)
+from mapie.metrics.regression import regression_coverage_score
 from mapie.regression.quantile_regression import _MapieQuantileRegressor
+from mapie.utils import check_is_fitted
 
 X_toy = np.array(
     [0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5]
@@ -183,7 +181,7 @@ def test_valid_method(strategy: str, estimator: RegressorMixin) -> None:
     """Test that valid strategies and estimators raise no error"""
     mapie_reg = _MapieQuantileRegressor(estimator=estimator, **STRATEGIES[strategy])
     mapie_reg.fit(X_train_toy, y_train_toy, X_calib=X_calib_toy, y_calib=y_calib_toy)
-    check_is_fitted(mapie_reg, mapie_reg.fit_attributes)
+    check_is_fitted(mapie_reg)
     assert mapie_reg.__dict__["method"] == "quantile"
 
 

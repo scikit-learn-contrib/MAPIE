@@ -4,29 +4,30 @@ from typing import Any, List, Tuple
 import numpy as np
 import pytest
 from sklearn.base import BaseEstimator
-from sklearn.datasets import make_regression, make_classification
-from sklearn.dummy import DummyRegressor, DummyClassifier
-from sklearn.exceptions import NotFittedError
+from sklearn.datasets import make_classification, make_regression
+from sklearn.dummy import DummyClassifier, DummyRegressor
 from sklearn.linear_model import LinearRegression, LogisticRegression, QuantileRegressor
 from sklearn.model_selection import KFold, train_test_split
 from sklearn.pipeline import make_pipeline
 from sklearn.utils.validation import check_is_fitted
 
 from mapie.classification import (
-    _MapieClassifier,
-    SplitConformalClassifier,
     CrossConformalClassifier,
-)
-from mapie.regression.regression import (
-    _MapieRegressor,
-    SplitConformalRegressor,
-    CrossConformalRegressor,
-    JackknifeAfterBootstrapRegressor,
+    SplitConformalClassifier,
+    _MapieClassifier,
 )
 from mapie.regression.quantile_regression import (
-    _MapieQuantileRegressor,
     ConformalizedQuantileRegressor,
+    _MapieQuantileRegressor,
 )
+from mapie.regression.regression import (
+    CrossConformalRegressor,
+    JackknifeAfterBootstrapRegressor,
+    SplitConformalRegressor,
+    _MapieRegressor,
+)
+from sklearn.exceptions import NotFittedError as sk_NotFittedError
+from mapie.utils import NotFittedError
 
 RANDOM_STATE = 1
 
@@ -320,7 +321,7 @@ def test_invalid_prefit_estimator(pack: Tuple[BaseEstimator, BaseEstimator]) -> 
     """Test that non-fitted estimator with prefit cv raise errors."""
     MapieEstimator, estimator = pack
     mapie_estimator = MapieEstimator(estimator=estimator, cv="prefit")
-    with pytest.raises(NotFittedError):
+    with pytest.raises(sk_NotFittedError):
         mapie_estimator.fit(X_toy, y_toy)
 
 

@@ -8,15 +8,17 @@ from unittest.mock import patch
 import numpy as np
 import pytest
 from numpy.random import RandomState
+from numpy.typing import ArrayLike, NDArray
 from sklearn.datasets import make_regression
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import BaseCrossValidator, KFold, LeaveOneOut, ShuffleSplit
-from sklearn.utils.validation import check_is_fitted
-
-from numpy.typing import ArrayLike, NDArray
+from sklearn.utils.validation import check_is_fitted as sk_check_is_fitted
 
 from mapie.regression.quantile_regression import _MapieQuantileRegressor
 from mapie.utils import (
+    NotFittedError,
+    _cast_point_predictions_to_ndarray,
+    _cast_predictions_to_ndarray_tuple,
     _check_alpha,
     _check_alpha_and_n_samples,
     _check_array_inf,
@@ -24,7 +26,9 @@ from mapie.utils import (
     _check_arrays_length,
     _check_binary_zero_one,
     _check_cv,
+    _check_cv_not_string,
     _check_gamma,
+    _check_if_param_in_allowed_values,
     _check_lower_upper_bounds,
     _check_n_features_in,
     _check_n_jobs,
@@ -37,18 +41,15 @@ from mapie.utils import (
     _compute_quantiles,
     _fit_estimator,
     _get_binning_groups,
-    train_conformalize_test_split,
+    _prepare_fit_params_and_sample_weight,
+    _prepare_params,
+    _raise_error_if_fit_called_in_prefit_mode,
+    _raise_error_if_method_already_called,
+    _raise_error_if_previous_method_not_called,
     _transform_confidence_level_to_alpha,
     _transform_confidence_level_to_alpha_list,
-    _check_if_param_in_allowed_values,
-    _check_cv_not_string,
-    _cast_point_predictions_to_ndarray,
-    _cast_predictions_to_ndarray_tuple,
-    _prepare_params,
-    _prepare_fit_params_and_sample_weight,
-    _raise_error_if_previous_method_not_called,
-    _raise_error_if_method_already_called,
-    _raise_error_if_fit_called_in_prefit_mode,
+    check_is_fitted,
+    train_conformalize_test_split,
 )
 
 
@@ -454,7 +455,7 @@ def test_check_null_weight_with_zeros() -> None:
 def test_fit_estimator(estimator: Any, sample_weight: Optional[NDArray]) -> None:
     """Test that the returned estimator is always fitted."""
     estimator = _fit_estimator(estimator, X_toy, y_toy, sample_weight)
-    check_is_fitted(estimator)
+    sk_check_is_fitted(estimator)
 
 
 def test_fit_estimator_sample_weight() -> None:
@@ -879,3 +880,20 @@ def test_invalid_n_samples_float(n_samples: float) -> None:
         ),
     ):
         _check_n_samples(X=X, n_samples=n_samples, indices=indices)
+
+
+class DummyModel:
+    pass
+
+
+def test_check_is_fitted_raises_before_fit():
+    model = DummyModel()
+    with pytest.raises(NotFittedError) as excinfo:
+        check_is_fitted(model)
+    assert "DummyModel is not fitted yet" in str(excinfo.value)
+
+
+def test_check_is_fitted_passes_after_fit():
+    model = DummyModel()
+    model._is_fitted = True
+    check_is_fitted(model)
