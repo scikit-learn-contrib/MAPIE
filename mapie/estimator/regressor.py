@@ -446,8 +446,6 @@ class EnsembleRegressor:
 
         self.fit_multi_estimators(X, y, sample_weight, groups, **fit_params)
 
-        self._is_fitted = True
-
         return self
 
     def fit_multi_estimators(
@@ -490,6 +488,8 @@ class EnsembleRegressor:
 
         self.estimators_ = estimators
 
+        self._is_fitted = True
+
         return self
 
     def fit_single_estimator(
@@ -523,6 +523,9 @@ class EnsembleRegressor:
             )
 
         self.single_estimator_ = single_estimator_
+
+        self._is_fitted = True
+
         return self
 
     def predict(
