@@ -6,6 +6,8 @@ This example demonstrates how to use risk control methods for Large Language Mod
 We simulate a scenario where an LLM evaluates answers, and we want to control the risk of hallucination detection.
 """
 
+# sphinx_gallery_thumbnail_number = 2
+
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
