@@ -87,6 +87,26 @@ class TableBasePredictor:
 
 llm_judge = TableBasePredictor(df)
 
+plt.figure()
+plt.hist(
+    df[df["hallucinated"]]["judge_score"],
+    bins=30,
+    alpha=0.8,
+    label="Hallucinated answer",
+    density=True,
+)
+plt.hist(
+    df[~df["hallucinated"]]["judge_score"],
+    bins=30,
+    alpha=0.8,
+    label="Correct answer",
+    density=True,
+)
+plt.xlabel("Judge Score (Probability of Hallucination)")
+plt.ylabel("Density")
+plt.title("Distribution of Judge Scores")
+plt.legend()
+plt.show()
 
 ##############################################################################
 # Next, we split the data into calibration and test sets. We then initialize a
@@ -114,12 +134,15 @@ print(f"The best threshold is: {bcc.best_predict_param}")
 
 y_calib_pred_controlled = bcc.predict(X_calib)
 precision_calib = precision_score(y_calib, y_calib_pred_controlled)
-print(f"Precision on the calibration set is: {precision_calib:.3f}")
 
 y_test_pred_controlled = bcc.predict(X_test)
 precision_test = precision_score(y_test, y_test_pred_controlled)
-print(f"Precision on the test set is: {precision_test:.3f}")
 
+print(
+    "With risk control, the precision is: "
+    f"{precision_calib:.3f} on the calibration set and "
+    f"{precision_test:.3f} on the test set."
+)
 
 ##############################################################################
 # Finally, let us visualize the precision achieved on the calibration set for
