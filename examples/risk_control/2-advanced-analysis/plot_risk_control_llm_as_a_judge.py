@@ -145,9 +145,9 @@ y_test_pred_controlled = bcc.predict(X_test)
 precision_test = precision_score(y_test, y_test_pred_controlled)
 
 print(
-    "With risk control, the precision is: "
-    f"{precision_calib:.3f} on the calibration set and "
-    f"{precision_test:.3f} on the test set."
+    "With risk control, the precision is:\n"
+    f"- {precision_calib:.3f} on the calibration set \n"
+    f"- {precision_test:.3f} on the test set."
 )
 
 ##############################################################################
