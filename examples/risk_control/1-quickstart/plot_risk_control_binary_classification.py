@@ -189,14 +189,14 @@ y_pred_naive = (
 ).astype(int)
 print(
     "With the naive threshold, the precision is:\n "
-    f"{precisions[naive_threshold_index]:.3f} on the calibration set and\n "
-    f"{precision_score(y_test, y_pred_naive):.3f} on the test set."
+    f"- {precisions[naive_threshold_index]:.3f} on the calibration set\n "
+    f"- {precision_score(y_test, y_pred_naive):.3f} on the test set."
 )
 
 print(
-    "With risk control, the precision is:"
-    f" {precisions[best_threshold_index]:.3f} on the calibration set and "
-    f"{precision_score(y_test, bcc.predict(X_test)):.3f} on the test set."
+    "\n\n With risk control, the precision is:\n"
+    f"- {precisions[best_threshold_index]:.3f} on the calibration set\n "
+    f"- {precision_score(y_test, bcc.predict(X_test)):.3f} on the test set."
 )
 
 ##############################################################################
