@@ -221,9 +221,9 @@ proba_positive_class_test = llm_judge.predict_proba(X_test)[:, 1]
 y_pred_naive = (proba_positive_class_test >= naive_threshold).astype(int)
 
 print(
-    "With the naive threshold, the precision is: "
-    f"{precisions[naive_threshold_index]:.3f} on the calibration set and "
-    f"{precision_score(y_test, y_pred_naive):.3f} on the test set."
+    "With the naive threshold, the precision is:\n"
+    f"- {precisions[naive_threshold_index]:.3f} on the calibration set\n"
+    f"- {precision_score(y_test, y_pred_naive):.3f} on the test set."
 )
 
 ##############################################################################
