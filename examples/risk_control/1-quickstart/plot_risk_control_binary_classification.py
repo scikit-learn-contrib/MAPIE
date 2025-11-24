@@ -7,6 +7,8 @@ In this example, we explain how to do risk control for binary classification wit
 
 """
 
+# sphinx_gallery_thumbnail_number = 2
+
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.datasets import make_circles
@@ -18,7 +20,7 @@ from sklearn.neural_network import MLPClassifier
 from mapie.risk_control import BinaryClassificationController
 from mapie.utils import train_conformalize_test_split
 
-RANDOM_STATE = 1
+RANDOM_STATE = 42
 
 ##############################################################################
 # First, load the dataset and then split it into training, calibration
@@ -28,9 +30,9 @@ X, y = make_circles(n_samples=5000, noise=0.3, factor=0.3, random_state=RANDOM_S
 (X_train, X_calib, X_test, y_train, y_calib, y_test) = train_conformalize_test_split(
     X,
     y,
-    train_size=0.8,
+    train_size=0.7,
     conformalize_size=0.1,
-    test_size=0.1,
+    test_size=0.2,
     random_state=RANDOM_STATE,
 )
 
@@ -112,7 +114,7 @@ print(
     f"{len(bcc.valid_predict_params)} thresholds found that guarantee a precision of "
     f"at least {target_precision} with a confidence of {confidence_level}.\n"
     "Among those, the one that maximizes the secondary objective (recall here) is: "
-    f"{bcc.best_predict_param:.3f}."
+    f"{bcc.best_predict_param:.2f}."
 )
 
 
@@ -127,6 +129,10 @@ precisions = np.full(len(tested_thresholds), np.inf)
 for i, threshold in enumerate(tested_thresholds):
     y_pred = (proba_positive_class >= threshold).astype(int)
     precisions[i] = precision_score(y_calib, y_pred)
+
+naive_threshold_index = np.argmin(
+    np.where(precisions >= target_precision, precisions - target_precision, np.inf)
+)
 
 valid_thresholds_indices = np.array(
     [t in bcc.valid_predict_params for t in tested_thresholds]
@@ -155,6 +161,15 @@ plt.scatter(
     edgecolors="k",
     s=300,
 )
+plt.scatter(
+    tested_thresholds[naive_threshold_index],
+    precisions[naive_threshold_index],
+    c="tab:red",
+    label="Naive threshold",
+    marker="*",
+    edgecolors="k",
+    s=300,
+)
 plt.axhline(target_precision, color="tab:gray", linestyle="--")
 plt.text(
     0.7,
@@ -168,9 +183,28 @@ plt.ylabel("Precision")
 plt.legend()
 plt.show()
 
+proba_positive_class_test = clf.predict_proba(X_test)[:, 1]
+y_pred_naive = (
+    proba_positive_class_test >= tested_thresholds[naive_threshold_index]
+).astype(int)
+print(
+    "With the naive threshold, the precision is:\n "
+    f"- {precisions[naive_threshold_index]:.3f} on the calibration set\n "
+    f"- {precision_score(y_test, y_pred_naive):.3f} on the test set."
+)
+
+print(
+    "\n\n With risk control, the precision is:\n"
+    f"- {precisions[best_threshold_index]:.3f} on the calibration set\n "
+    f"- {precision_score(y_test, bcc.predict(X_test)):.3f} on the test set."
+)
+
 ##############################################################################
 # Contrary to the naive way of computing a threshold to satisfy a precision target on
 # calibration data, risk control provides statistical guarantees on unseen data.
+# In this example, the naive threshold results in a precision on the test set that is
+# lower than the target precision while risk control takes a margin to guarantee
+# the target precision on unseen data with high probability.
 # In the plot above, we can see that not all thresholds corresponding to a precision
 # higher than the target are valid. This is due to the uncertainty inherent to the
 # finite size of the calibration set, which risk control takes into account.
@@ -179,12 +213,14 @@ plt.show()
 # small number of observations used to compute the precision, following the Learn Then
 # Test procedure. In the most extreme case, no observation is available, which causes
 # the precision value to be ill-defined and set to 0.
-
+#
 # Besides computing a set of valid thresholds,
 # :class:`~mapie.risk_control.BinaryClassificationController` also outputs the "best"
 # one, which is the valid threshold that maximizes a secondary objective
 # (recall here).
-#
+
+
+##############################################################################
 # After obtaining the best threshold, we can use the ``predict`` function of
 # :class:`~mapie.risk_control.BinaryClassificationController` for future predictions,
 # or use scikit-learn's ``FixedThresholdClassifier`` as a wrapper to benefit
@@ -206,7 +242,7 @@ plt.scatter(
     X_test[y_test == 0, 1],
     edgecolors="k",
     c="tab:blue",
-    alpha=0.5,
+    alpha=0.3,
     label='"negative" class',
 )
 plt.scatter(
@@ -214,7 +250,7 @@ plt.scatter(
     X_test[y_test == 1, 1],
     edgecolors="k",
     c="tab:red",
-    alpha=0.5,
+    alpha=0.3,
     label='"positive" class',
 )
 plt.title("Decision Boundary of FixedThresholdClassifier")
