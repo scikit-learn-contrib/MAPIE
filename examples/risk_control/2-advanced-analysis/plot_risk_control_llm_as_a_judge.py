@@ -34,10 +34,12 @@ df = df.melt(
     ignore_index=False,  # Keep the original index to allow sorting back to pairs
 )
 
-# Sort by index to keep the pairs together (right_answer and hallucinated_answer for the same question)
+# Sort by index to keep the pairs together (right_answer and hallucinated_answer for
+# the same question)
 df = df.sort_index()
 
-# Create the 'hallucinated' flag based on the original column name and drop the helper column 'answer_type'
+# Create the 'hallucinated' flag based on the original column name and drop the helper
+# column 'answer_type'
 df["hallucinated"] = df["answer_type"] == "hallucinated_answer"
 df = df.drop(columns=["answer_type"])
 df = df.reset_index(drop=True)
@@ -45,7 +47,8 @@ df = df.reset_index(drop=True)
 # Create judge input prompts
 df["judge_input"] = df.apply(
     lambda row: f"""
-    You are a judge evaluating whether an answer to a question is faithful to the provided knowledge snippet.
+    You are a judge evaluating whether an answer to a question is faithful to the 
+    provided knowledge snippet.
 
     Knowledge: {row["knowledge"]}
     Question: {row["question"]}
@@ -53,7 +56,8 @@ df["judge_input"] = df.apply(
 
     Does the answer contain information that is NOT supported by the knowledge?
 
-    Provide a score between 0.0 and 1.0 indicating the probability that the answer is a hallucination.
+    Provide a score between 0.0 and 1.0 indicating the probability that the answer is a
+    hallucination.
 """,
     axis=1,
 )
