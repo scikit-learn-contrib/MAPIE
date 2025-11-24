@@ -188,8 +188,8 @@ y_pred_naive = (
     proba_positive_class_test >= tested_thresholds[naive_threshold_index]
 ).astype(int)
 print(
-    "With the naive threshold, the precision is: "
-    f"{precisions[naive_threshold_index]:.3f} on the calibration set and "
+    "With the naive threshold, the precision is:\n "
+    f"{precisions[naive_threshold_index]:.3f} on the calibration set and\n "
     f"{precision_score(y_test, y_pred_naive):.3f} on the test set."
 )
 
