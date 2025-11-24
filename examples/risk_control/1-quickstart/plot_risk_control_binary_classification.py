@@ -213,7 +213,7 @@ print(
 # small number of observations used to compute the precision, following the Learn Then
 # Test procedure. In the most extreme case, no observation is available, which causes
 # the precision value to be ill-defined and set to 0.
-
+#
 # Besides computing a set of valid thresholds,
 # :class:`~mapie.risk_control.BinaryClassificationController` also outputs the "best"
 # one, which is the valid threshold that maximizes a secondary objective
