@@ -1642,3 +1642,49 @@ def check_is_fitted(obj):
     """Check that _is_fitted attribute is True"""
     if not getattr(obj, "is_fitted", False):
         raise NotFittedError(f"{obj.__class__.__name__} is not fitted yet. ")
+
+
+FIT_INDICATORS = [
+    "n_features_in_",
+    "classes_",
+    "coef_",
+    "feature_names_in_",
+    "tree_",
+    "estimators_",
+]
+
+
+def check_user_model_is_fitted(estimator):
+    """
+    Check whether a user-provided estimator is fitted.
+
+    Logic:
+    1. Raise error if no typical fit-related attributes are present.
+    2. If `n_features_in_` exists try a minimal predict-probe. Else, assume fitted but warn.
+    """
+    present_attrs = [attr for attr in FIT_INDICATORS if hasattr(estimator, attr)]
+
+    if not present_attrs:
+        raise NotFittedError(
+            "Estimator does not appear fitted. "
+            f"Missing expected attributes: {FIT_INDICATORS}."
+        )
+
+    if hasattr(estimator, "n_features_in_"):
+        try:
+            estimator.predict(np.zeros((1, estimator.n_features_in_)))
+            return True
+        except Exception as err:
+            warnings.warn(
+                f"Estimator has `n_features_in_` but failed a minimal prediction test "
+                f"(shape={(1, estimator.n_features_in_)}). Error: {err}",
+                UserWarning,
+            )
+            return True
+
+    warnings.warn(
+        f"Estimator exposes fitted-like attributes {present_attrs} but lacks "
+        "`n_features_in_`.",
+        UserWarning,
+    )
+    return True
