@@ -5,6 +5,8 @@ History
 1.x.x (2025-xx-xx)
 ------------------
 * Remove dependency of internal classes on sklearn's check_is_fitted
+* Add an example of risk control with LLM as a judge
+* Add comparison with naive threshold in risk control quick start example
 
 1.2.0 (2025-11-17)
 ------------------
