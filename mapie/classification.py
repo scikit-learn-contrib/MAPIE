@@ -732,7 +732,7 @@ class _MapieClassifier(ClassifierMixin, BaseEstimator):
         self._is_fitted = False
 
     @property
-    def is_fitted(self):  # pragma: no cover
+    def is_fitted(self):
         """Returns True if the estimator is fitted"""
         return self._is_fitted
 
