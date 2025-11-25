@@ -6,7 +6,23 @@ History
 ------------------
 * Introduce VennAbers calibrator both for binary and multiclass classification
 
+* Add an example of risk control with LLM as a judge
+* Add comparison with naive threshold in risk control quick start example
+* Configure self hosted runner for minimal requirements tests
+
+1.2.0 (2025-11-17)
+------------------
+* Implement extension of binary risk control to multi-risk
+* Implement extension of binary risk control to multi-dimensional parameters
+* Reorganise code structure for risk control
+* BinaryClassificationController allows BinaryClassificationRisk and string representations of risks
+* Improve quick start documentation for risk control
+* Add new tutorial for risk control with multiple risks
+* Add new tutorial for risk control with multi-dimensional parameters
+* Fix issue 614 to pass Predict Params to RAPS for conformity score calculation and EnsembleClassifier
 * Fix issue 790 to make `BlockBootstrap` include all non-training indices in the test set
+* Update Python environment: dependancies are now in pyproject.toml
+* Update CI and add long_tests folder for tests requiring more time
 
 1.1.0 (2025-09-22)
 ------------------

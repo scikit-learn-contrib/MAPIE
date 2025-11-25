@@ -1,25 +1,80 @@
-name: Publish to PyPi
+name: Publish Python 🐍 distribution 📦 to PyPI and TestPyPI
 
 on:
-  release:
-    types: [published]
+  push:
+    tags:
+      - "*" # publish real versioned releases to PyPI
+  workflow_dispatch: # manual TestPyPI publish
 
 jobs:
-  deploy:
+  build:
+    name: Build distribution 📦
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4.3.0
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - name: Set up Python
-        uses: actions/setup-python@v5.6.0
+        uses: actions/setup-python@v5
         with:
-          python-version: "3.13"
-      - name: Install build dependencies
-        run: |
-          python -m pip install -e '.[dev]'
-      - name: Build package
-        run: python -m build
-      - name: Publish package
-        uses: pypa/gh-action-pypi-publish@27b31702a0e7fc50959f5ad993c78deac1bdfc29
+          python-version: "3.x"
+      - name: Install pypa/build
+        run: python3 -m pip install --upgrade build --user
+      - name: Build a binary wheel and a source tarball
+        run: python3 -m build
+      - name: Store the distribution packages
+        uses: actions/upload-artifact@v4
         with:
-          user: __token__
-          password: ${{ secrets.PYPI_API_TOKEN_VBL }}
+          name: python-package-distributions
+          path: dist/
+
+  publish-to-pypi:
+    name: Publish Python 🐍 distribution 📦 to PyPI
+    if: startsWith(github.ref, 'refs/tags/')  # only publish to PyPI on tag pushes
+    needs: [build]
+    runs-on: ubuntu-latest
+    # NOTE: create a GitHub Environment named `pypi` in your repo settings and require manual approval
+    environment:
+      name: pypi
+      url: https://pypi.org/project/mapie/
+    permissions:
+      id-token: write  # mandatory for Trusted Publishing
+
+    steps:
+      - name: Download all the dists
+        uses: actions/download-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
+      - name: Publish distribution 📦 to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+
+  publish-to-testpypi:
+    name: Publish Python 🐍 distribution 📦 to TestPyPI
+    needs: [build]
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    environment:
+      name: testpypi
+      url: https://test.pypi.org/project/mapie/
+    permissions:
+      id-token: write
+
+    steps:
+      - name: Download all the dists
+        uses: actions/download-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
+      - name: Publish distribution 📦 to TestPyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+
+# Notes:
+# - Make sure to update the pypi and testpypi Trusted Publishers in the settings of your PyPI and TestPyPI accounts.
+# - Configure GitHub Environments named `pypi` and `testpypi` in your repository settings.
+# - For `pypi` the environment should require manual approval (recommended by PyPI Trusted Publishing).
+# - After switching to Trusted Publishing you should remove any long-lived PYPI API token secrets from the repo and
+#   revoke them on PyPI/TestPyPI as described in the PyPI guide.

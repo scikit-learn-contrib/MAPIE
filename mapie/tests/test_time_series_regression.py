@@ -303,6 +303,7 @@ def test_results_prefit() -> None:
     np.testing.assert_allclose(coverage, COVERAGES["prefit"], rtol=1e-2)
 
 
+@pytest.mark.filterwarnings("ignore:: RuntimeWarning")
 def test_not_enough_resamplings() -> None:
     """Test that a warning is raised if at least one residual is nan."""
     with pytest.warns(UserWarning, match=r"WARNING: at least one point of*"):
