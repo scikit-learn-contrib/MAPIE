@@ -895,5 +895,5 @@ def test_check_is_fitted_raises_before_fit():
 
 def test_check_is_fitted_passes_after_fit():
     model = DummyModel()
-    model._is_fitted = True
+    model.is_fitted = True
     check_is_fitted(model)
