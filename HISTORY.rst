@@ -6,6 +6,7 @@ History
 ------------------
 * Add an example of risk control with LLM as a judge
 * Add comparison with naive threshold in risk control quick start example
+* Configure self hosted runner for minimal requirements tests
 
 1.2.0 (2025-11-17)
 ------------------
