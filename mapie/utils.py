@@ -1640,5 +1640,5 @@ class NotFittedError(ValueError):
 
 def check_is_fitted(obj):
     """Check that _is_fitted attribute is True"""
-    if not getattr(obj, "_is_fitted", False):
+    if not getattr(obj, "is_fitted", False):
         raise NotFittedError(f"{obj.__class__.__name__} is not fitted yet. ")
