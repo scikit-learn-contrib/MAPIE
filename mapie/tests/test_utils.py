@@ -10,7 +10,7 @@ import pytest
 from numpy.random import RandomState
 from numpy.typing import ArrayLike, NDArray
 from sklearn.datasets import make_regression
-from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.model_selection import BaseCrossValidator, KFold, LeaveOneOut, ShuffleSplit
 from sklearn.utils.validation import check_is_fitted as sk_check_is_fitted
 
@@ -49,6 +49,7 @@ from mapie.utils import (
     _transform_confidence_level_to_alpha,
     _transform_confidence_level_to_alpha_list,
     check_is_fitted,
+    check_user_model_is_fitted,
     train_conformalize_test_split,
 )
 
@@ -897,3 +898,59 @@ def test_check_is_fitted_passes_after_fit():
     model = DummyModel()
     model.is_fitted = True
     check_is_fitted(model)
+
+
+def test_check_user_model_is_fitted_unfitted():
+    model = DummyModel()
+    with pytest.raises(NotFittedError):
+        check_user_model_is_fitted(model)
+
+
+def test_check_user_model_is_fitted_raises_for_unfitted_model():
+    model = LinearRegression()
+    with pytest.raises(NotFittedError):
+        check_user_model_is_fitted(model)
+
+
+@pytest.mark.parametrize("Model", [LinearRegression, LogisticRegression])
+def test_check_user_model_is_fitted_sklearn_models(Model):
+    """Check that sklearn classifiers and regressors pass."""
+    X = np.random.randn(20, 4)
+    y = (
+        (np.random.randn(20) > 0).astype(int)
+        if Model is LogisticRegression
+        else np.random.randn(20)
+    )
+    model = Model().fit(X, y)
+    assert check_user_model_is_fitted(model) is True
+
+
+class DummyFittedNoFeatures:
+    """A fake estimator that mimics a fitted model but without n_features_in_."""
+
+    def __init__(self):
+        self.coef_ = np.array([1.0])
+
+    def predict(self, X):
+        return np.array([0.0])
+
+
+def test_check_user_model_fitted_no_n_features_in():
+    model = DummyFittedNoFeatures()
+    with pytest.warns(UserWarning):
+        assert check_user_model_is_fitted(model) is True
+
+
+class PartiallyFitted:
+    def __init__(self):
+        self.coef_ = np.array([1, 2, 3])
+
+
+def test_check_user_model_is_fitted_partial_fit_warning():
+    """
+    Test that a partially fitted user model triggers a UserWarning
+    but still returns True from check_user_model_is_fitted.
+    """
+    model = PartiallyFitted()
+    with pytest.warns(UserWarning):
+        assert check_user_model_is_fitted(model) is True
