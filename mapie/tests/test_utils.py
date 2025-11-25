@@ -12,7 +12,6 @@ from numpy.typing import ArrayLike, NDArray
 from sklearn.datasets import make_regression
 from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.model_selection import BaseCrossValidator, KFold, LeaveOneOut, ShuffleSplit
-from sklearn.utils.validation import check_is_fitted as sk_check_is_fitted
 
 from mapie.regression.quantile_regression import _MapieQuantileRegressor
 from mapie.utils import (
@@ -451,12 +450,15 @@ def test_check_null_weight_with_zeros() -> None:
     np.testing.assert_almost_equal(np.array(y_out), np.array([7, 9, 11, 13, 15]))
 
 
+@pytest.mark.filterwarnings(
+    "ignore:Estimator exposes fitted-like attributes.*:UserWarning"
+)
 @pytest.mark.parametrize("estimator", [LinearRegression(), DumbEstimator()])
 @pytest.mark.parametrize("sample_weight", [None, np.ones_like(y_toy)])
 def test_fit_estimator(estimator: Any, sample_weight: Optional[NDArray]) -> None:
     """Test that the returned estimator is always fitted."""
     estimator = _fit_estimator(estimator, X_toy, y_toy, sample_weight)
-    sk_check_is_fitted(estimator)
+    check_user_model_is_fitted(estimator)
 
 
 def test_fit_estimator_sample_weight() -> None:

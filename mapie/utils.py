@@ -1651,6 +1651,7 @@ FIT_INDICATORS = [
     "feature_names_in_",
     "tree_",
     "estimators_",
+    "fitted_",
 ]
 
 
