@@ -25,17 +25,19 @@ the ``prefit=True`` option of
 :class:`~mapie_v1.classification.SplitConformalClassifier`.
 """
 
+# sphinx_gallery_thumbnail_number = 5
+
 from typing import Any, Dict, List, Optional, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from numpy.typing import NDArray
 from sklearn.model_selection import KFold
 from sklearn.naive_bayes import GaussianNB
 from typing_extensions import TypedDict
 
-from numpy.typing import NDArray
-from mapie.classification import SplitConformalClassifier, CrossConformalClassifier
+from mapie.classification import CrossConformalClassifier, SplitConformalClassifier
 from mapie.metrics.classification import (
     classification_coverage_score,
     classification_mean_width_score,

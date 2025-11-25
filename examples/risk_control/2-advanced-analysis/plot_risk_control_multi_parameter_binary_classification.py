@@ -15,6 +15,8 @@ on multiple prediction parameters with MAPIE.
 
 """
 
+# sphinx_gallery_thumbnail_number = 2
+
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.datasets import make_circles

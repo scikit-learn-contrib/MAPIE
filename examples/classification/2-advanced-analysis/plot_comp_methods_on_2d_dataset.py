@@ -9,6 +9,8 @@ and "aps" on the two-dimensional dataset presented
 by Sadinle et al. (2019).
 """
 
+# sphinx_gallery_thumbnail_number = 5
+
 ##############################################################################
 # We will use MAPIE to estimate a prediction set of several classes such that
 # the probability that the true label of a new test point is included in the
@@ -50,10 +52,10 @@ from typing import List
 
 import matplotlib.pyplot as plt
 import numpy as np
+from numpy.typing import NDArray
 from sklearn.model_selection import train_test_split
 from sklearn.naive_bayes import GaussianNB
 
-from numpy.typing import NDArray
 from mapie.classification import SplitConformalClassifier
 from mapie.metrics.classification import (
     classification_coverage_score,

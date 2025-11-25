@@ -5,6 +5,8 @@ Conformal Predictive Distribution with MAPIE
 
 """
 
+# sphinx_gallery_thumbnail_number = 3
+
 ##############################################################################
 # In this advanced analysis, we propose to use MAPIE for Conformal Predictive
 # Distribution (CPD) in few steps. Here are some reference papers for more
