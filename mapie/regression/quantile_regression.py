@@ -10,7 +10,6 @@ from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.utils import check_random_state
 from sklearn.utils.validation import _check_y, _num_samples, indexable
-from sklearn.utils.validation import check_is_fitted as sk_check_is_fitted
 
 from mapie.utils import (
     _cast_predictions_to_ndarray_tuple,
@@ -27,6 +26,7 @@ from mapie.utils import (
     _raise_error_if_previous_method_not_called,
     _transform_confidence_level_to_alpha,
     check_is_fitted,
+    check_user_model_is_fitted,
 )
 
 from .regression import _MapieRegressor
@@ -674,7 +674,7 @@ class _MapieQuantileRegressor(_MapieRegressor):
         if len(estimator) == 3:
             for est in estimator:
                 _check_estimator_fit_predict(est)
-                sk_check_is_fitted(est)
+                check_user_model_is_fitted(est)
         else:
             raise ValueError(
                 "You need to have provided 3 different estimators, they"

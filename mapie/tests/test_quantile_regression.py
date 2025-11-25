@@ -467,7 +467,7 @@ def test_non_trained_estimator() -> None:
     """
     with pytest.raises(
         ValueError,
-        match=r".*instance is not fitted yet. Call 'fit' with appropriate*",
+        match=r".*Missing expected attributes.*",
     ):
         gb_trained1, gb_trained2, gb_trained3 = clone(gb), clone(gb), clone(gb)
         gb_trained1.fit(X_train, y_train)
