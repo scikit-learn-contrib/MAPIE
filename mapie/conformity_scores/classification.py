@@ -214,12 +214,6 @@ class BaseClassificationScore(BaseConformityScore, metaclass=ABCMeta):
         alpha_np: NDArray of shape (n_alpha, )
             Represents the uncertainty of the confidence set to produce.
 
-        y_pred_proba: NDArray
-            Predicted probabilities from the estimator.
-
-        cv: Optional[Union[int, str, BaseCrossValidator]]
-            Cross-validation strategy used by the estimator.
-
         **kwargs: dict
             Additional keyword arguments.
 
