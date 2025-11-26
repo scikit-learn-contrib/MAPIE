@@ -41,7 +41,7 @@ class BaseClassificationScore(BaseConformityScore, metaclass=ABCMeta):
 
             By default ``None``.
 
-        random_state: Optional[Union[int, RandomState]]
+        random_state: Optional[Union[int, np.random.RandomState]]
             Pseudo random number generator state.
         """
         super().set_external_attributes(**kwargs)
