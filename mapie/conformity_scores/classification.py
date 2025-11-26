@@ -141,8 +141,8 @@ class BaseClassificationScore(BaseConformityScore, metaclass=ABCMeta):
             NDArray of floats between 0 and 1, representing the uncertainty
             of the confidence set.
 
-        estimator: EnsembleClassifier
-            Estimator that is fitted to predict y from X.
+        cv: Optional[Union[int, str, BaseCrossValidator]]
+            Cross-validation strategy used by the estimator.
 
         Returns
         --------
