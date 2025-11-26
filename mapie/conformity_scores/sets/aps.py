@@ -29,7 +29,7 @@ class APSConformityScore(NaiveConformityScore):
     classes: Optional[ArrayLike]
         Names of the classes.
 
-    random_state: Optional[Union[int, RandomState]]
+    random_state: Optional[Union[int, np.random.RandomState]]
         Pseudo random number generator state.
 
     quantiles_: ArrayLike of shape (n_alpha)
