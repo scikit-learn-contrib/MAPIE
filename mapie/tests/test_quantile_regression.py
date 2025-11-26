@@ -461,13 +461,14 @@ def test_prefit_no_fit_predict() -> None:
         mapie_reg.fit(X_calib, y_calib)
 
 
+@pytest.mark.filterwarnings("ignore:Estimator does not appear fitted.*:UserWarning")
 def test_non_trained_estimator() -> None:
     """
     Check that the estimators are all already trained when used in prefit.
     """
     with pytest.raises(
         ValueError,
-        match=r".*Missing expected attributes.*",
+        match=r".*instance is not fitted yet. Call 'fit' with appropriate*",
     ):
         gb_trained1, gb_trained2, gb_trained3 = clone(gb), clone(gb), clone(gb)
         gb_trained1.fit(X_train, y_train)
