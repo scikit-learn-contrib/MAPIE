@@ -37,7 +37,7 @@ class NaiveConformityScore(BaseClassificationScore):
         Parameters
         ----------
         y: NDArray of shape (n_samples,)
-            Observed target values.
+            Observed target values (not used here).
 
         y_pred: NDArray of shape (n_samples,)
             Predicted target values.
@@ -97,11 +97,11 @@ class NaiveConformityScore(BaseClassificationScore):
         Parameters
         -----------
         conformity_scores: NDArray of shape (n_samples,)
-            Conformity scores for each sample.
+            Conformity scores for each sample (not used here).
 
         alpha_np: NDArray of shape (n_alpha,)
             NDArray of floats between 0 and 1, representing the uncertainty
-            of the confidence interval.
+            of the confidence interval (not used here).
 
         cv: Optional[Union[int, str, BaseCrossValidator]]
             Cross-validation strategy used by the estimator (not used here).
@@ -222,11 +222,11 @@ class NaiveConformityScore(BaseClassificationScore):
             Target prediction.
 
         conformity_scores: NDArray of shape (n_samples,)
-            Conformity scores for each sample.
+            Conformity scores for each sample (not used here).
 
         alpha_np: NDArray of shape (n_alpha,)
             NDArray of floats between 0 and 1, representing the uncertainty
-            of the confidence interval.
+            of the confidence interval (not used here).
 
         cv: Optional[Union[int, str, BaseCrossValidator]]
             Cross-validation strategy used by the estimator (not used here).
