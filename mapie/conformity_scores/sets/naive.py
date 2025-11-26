@@ -1,13 +1,12 @@
-from typing import Tuple, Union, Optional
+from typing import Optional, Tuple, Union
 
 import numpy as np
-
-from mapie.conformity_scores.classification import BaseClassificationScore
-from mapie.conformity_scores.sets.utils import get_last_index_included
+from numpy.typing import NDArray
 from sklearn.model_selection import BaseCrossValidator
 
 from mapie._machine_precision import EPSILON
-from numpy.typing import NDArray
+from mapie.conformity_scores.classification import BaseClassificationScore
+from mapie.conformity_scores.sets.utils import get_last_index_included
 
 
 class NaiveConformityScore(BaseClassificationScore):
@@ -20,10 +19,10 @@ class NaiveConformityScore(BaseClassificationScore):
     classes: Optional[ArrayLike]
         Names of the classes.
 
-    random_state: Optional[Union[int, RandomState]]
+    random_state: Optional[Union[int, np.random.RandomState]]
         Pseudo random number generator state.
 
-    quantiles_: ArrayLike of shape (n_alpha)
+    quantiles_: ArrayLike of shape (n_alpha,)
         The quantiles estimated from ``get_sets`` method.
     """
 
