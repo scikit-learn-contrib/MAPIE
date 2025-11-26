@@ -933,3 +933,15 @@ def test_check_user_model_is_fitted_sklearn_models(Model):
     )
     model = Model.fit(X, y)
     assert check_user_model_is_fitted(model) is True
+
+class BrokenPredictModel:
+    """Model with n_features_in_ but predict always fails"""
+    n_features_in_ = 3
+    def predict(self, X):
+        raise RuntimeError("Predict failure")
+
+
+def test_check_user_model_is_fitted_predict_fails():
+    model = BrokenPredictModel()
+    with pytest.raises(NotFittedError, match=r"Estimator has `n_features_in_` but failed"):
+        check_user_model_is_fitted(model)
