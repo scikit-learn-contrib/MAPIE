@@ -48,7 +48,7 @@ class LACConformityScore(BaseClassificationScore):
         Parameters
         ----------
         y: NDArray of shape (n_samples,)
-            Observed target values.
+            Observed target values (not used here).
 
         y_pred: NDArray of shape (n_samples,)
             Predicted target values.
@@ -94,7 +94,7 @@ class LACConformityScore(BaseClassificationScore):
             Predicted probabilities from the estimator.
 
         cv: Optional[Union[int, str, BaseCrossValidator]]
-            Cross-validation strategy used by the estimator.
+            Cross-validation strategy used by the estimator (not used here).
 
         agg_scores: Optional[str]
             Method to aggregate the scores from the base estimators.
