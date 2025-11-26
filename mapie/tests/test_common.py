@@ -5,8 +5,8 @@ import numpy as np
 import pytest
 from sklearn.base import BaseEstimator
 from sklearn.datasets import make_classification, make_regression
+from sklearn.exceptions import NotFittedError as Sk_NotFittedError
 from sklearn.dummy import DummyClassifier, DummyRegressor
-from sklearn.exceptions import NotFittedError as sk_NotFittedError
 from sklearn.linear_model import LinearRegression, LogisticRegression, QuantileRegressor
 from sklearn.model_selection import KFold, train_test_split
 from sklearn.pipeline import make_pipeline
@@ -320,7 +320,7 @@ def test_invalid_prefit_estimator(pack: Tuple[BaseEstimator, BaseEstimator]) -> 
     """Test that non-fitted estimator with prefit cv raise errors."""
     MapieEstimator, estimator = pack
     mapie_estimator = MapieEstimator(estimator=estimator, cv="prefit")
-    with pytest.raises(sk_NotFittedError):
+    with pytest.raises((NotFittedError, Sk_NotFittedError)):
         mapie_estimator.fit(X_toy, y_toy)
 
 
