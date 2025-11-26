@@ -1660,32 +1660,27 @@ def check_user_model_is_fitted(estimator):
     Check whether a user-provided estimator is fitted.
 
     Logic:
-    1. Raise error if no typical fit-related attributes are present.
-    2. If `n_features_in_` exists try a minimal predict-probe. Else, assume fitted but warn.
+    1. Raise warning if no typical fit-related attributes are present.
+    2. If `n_features_in_` exists try a minimal predict-probe and raise error if it fails.
     """
     present_attrs = [attr for attr in FIT_INDICATORS if hasattr(estimator, attr)]
 
     if not present_attrs:
-        raise NotFittedError(
+        warnings.warn(
             "Estimator does not appear fitted. "
-            f"Missing expected attributes: {FIT_INDICATORS}."
+            f"At least one of the expected attributes is missing in : {FIT_INDICATORS}.",
+            UserWarning,
         )
 
     if hasattr(estimator, "n_features_in_"):
         try:
+            if "Pipeline" in str(type(estimator)):
+                estimator = list(estimator.named_steps.values())[-1]
             estimator.predict(np.zeros((1, estimator.n_features_in_)))
             return True
         except Exception as err:
-            warnings.warn(
+            raise NotFittedError(
                 f"Estimator has `n_features_in_` but failed a minimal prediction test "
                 f"(shape={(1, estimator.n_features_in_)}). Error: {err}",
-                UserWarning,
             )
-            return True
-
-    warnings.warn(
-        f"Estimator exposes fitted-like attributes {present_attrs} but lacks "
-        "`n_features_in_`.",
-        UserWarning,
-    )
     return True
