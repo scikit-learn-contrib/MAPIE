@@ -40,6 +40,7 @@ from mapie.utils import (
     _raise_error_if_method_already_called,
     _raise_error_if_previous_method_not_called,
     _transform_confidence_level_to_alpha_list,
+    check_is_fitted,
     check_proba_normalized,
 )
 
@@ -1050,6 +1051,7 @@ class _MapieClassifier(ClassifierMixin, BaseEstimator):
         if hasattr(self, "_predict_params"):
             _check_predict_params(self._predict_params, predict_params, self.cv)
 
+        check_is_fitted(self)
         alpha = cast(Optional[NDArray], _check_alpha(alpha))
 
         # Estimate predictions
