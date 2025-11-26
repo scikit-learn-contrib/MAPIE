@@ -2,11 +2,10 @@ from abc import ABCMeta, abstractmethod
 from typing import Optional, Union
 
 import numpy as np
-
-from mapie.conformity_scores.interface import BaseConformityScore
+from numpy.typing import ArrayLike, NDArray
 from sklearn.model_selection import BaseCrossValidator
 
-from numpy.typing import ArrayLike, NDArray
+from mapie.conformity_scores.interface import BaseConformityScore
 
 
 class BaseClassificationScore(BaseConformityScore, metaclass=ABCMeta):
@@ -17,6 +16,12 @@ class BaseClassificationScore(BaseConformityScore, metaclass=ABCMeta):
 
     Attributes
     ----------
+    classes: Optional[ArrayLike]
+        Names of the classes.
+
+    random_state: Optional[Union[int, np.random.RandomState]]
+        Pseudo random number generator state.
+
     quantiles_: ArrayLike of shape (n_alpha)
         The quantiles estimated from ``get_sets`` method.
     """
