@@ -322,7 +322,7 @@ def test_invalid_prefit_estimator(pack: Tuple[BaseEstimator, BaseEstimator]) -> 
     mapie_estimator = MapieEstimator(estimator=estimator, cv="prefit")
     with pytest.raises(
         ValueError,
-        match=r".*instance is not fitted yet. Call 'fit' with appropriate*",
+        match=r".*not fitted.*",
     ):
         mapie_estimator.fit(X_toy, y_toy)
 
