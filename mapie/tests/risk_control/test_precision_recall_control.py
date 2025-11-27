@@ -163,9 +163,6 @@ class ArrayOutputModel:
     def predict(self, X: NDArray, *args: Any) -> NDArray:
         return self.predict_proba(X) >= 0.3
 
-    def __sklearn_is_fitted__(self):
-        return True
-
 
 X_toy = np.arange(9).reshape(-1, 1)
 y_toy = np.stack(
