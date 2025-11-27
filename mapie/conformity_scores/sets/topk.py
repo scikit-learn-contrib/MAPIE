@@ -1,13 +1,12 @@
-from typing import Optional, cast, Union
+from typing import Optional, Union, cast
 
 import numpy as np
-
-from mapie.conformity_scores.classification import BaseClassificationScore
-from mapie.conformity_scores.sets.utils import get_true_label_position
+from numpy.typing import NDArray
 from sklearn.model_selection import BaseCrossValidator
 
 from mapie._machine_precision import EPSILON
-from numpy.typing import NDArray
+from mapie.conformity_scores.classification import BaseClassificationScore
+from mapie.conformity_scores.sets.utils import get_true_label_position
 from mapie.utils import _compute_quantiles
 
 
@@ -32,7 +31,7 @@ class TopKConformityScore(BaseClassificationScore):
     classes: Optional[ArrayLike]
         Names of the classes.
 
-    random_state: Optional[Union[int, RandomState]]
+    random_state: Optional[Union[int, np.random.RandomState]]
         Pseudo random number generator state.
 
     quantiles_: ArrayLike of shape (n_alpha)
@@ -84,8 +83,6 @@ class TopKConformityScore(BaseClassificationScore):
     ) -> NDArray:
         """
         Just processes the passed y_pred_proba.
-
-        This method should be implemented by any subclass of the current class.
 
         Parameters
         -----------
@@ -157,11 +154,11 @@ class TopKConformityScore(BaseClassificationScore):
             Target prediction.
 
         conformity_scores: NDArray of shape (n_samples,)
-            Conformity scores for each sample.
+            Conformity scores for each sample (not used here).
 
         alpha_np: NDArray of shape (n_alpha,)
             NDArray of floats between 0 and 1, representing the uncertainty
-            of the confidence interval.
+            of the confidence interval (not used here).
 
         cv: Optional[Union[int, str, BaseCrossValidator]]
             Cross-validation strategy used by the estimator (not used here).

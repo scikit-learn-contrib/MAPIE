@@ -1,15 +1,14 @@
 from typing import Optional, Tuple, Union, cast
 
 import numpy as np
-from sklearn.utils import check_random_state
-from sklearn.preprocessing import label_binarize
+from numpy.typing import ArrayLike, NDArray
 from sklearn.model_selection import BaseCrossValidator
-
-from mapie.conformity_scores.sets.naive import NaiveConformityScore
-from mapie.conformity_scores.sets.utils import check_include_last_label
+from sklearn.preprocessing import label_binarize
+from sklearn.utils import check_random_state
 
 from mapie._machine_precision import EPSILON
-from numpy.typing import ArrayLike, NDArray
+from mapie.conformity_scores.sets.naive import NaiveConformityScore
+from mapie.conformity_scores.sets.utils import check_include_last_label
 from mapie.utils import _compute_quantiles
 
 
@@ -30,7 +29,7 @@ class APSConformityScore(NaiveConformityScore):
     classes: Optional[ArrayLike]
         Names of the classes.
 
-    random_state: Optional[Union[int, RandomState]]
+    random_state: Optional[Union[int, np.random.RandomState]]
         Pseudo random number generator state.
 
     quantiles_: ArrayLike of shape (n_alpha)
@@ -65,7 +64,7 @@ class APSConformityScore(NaiveConformityScore):
             Predicted probabilities from the estimator.
 
         cv: Optional[Union[int, str, BaseCrossValidator]]
-            Cross-validation strategy used by the estimator.
+            Cross-validation strategy used by the estimator (not used here).
 
         agg_scores: Optional[str]
             Method to aggregate the scores from the base estimators.
@@ -94,20 +93,20 @@ class APSConformityScore(NaiveConformityScore):
 
         Parameters
         ----------
-        y: NDArray of shape (n_samples, )
+        y: ArrayLike of shape (n_samples, )
             Array with the labels.
 
         y_pred_proba: NDArray of shape (n_samples, n_classes)
             Predictions of the model.
 
-        classes: NDArray of shape (n_classes, )
+        classes: ArrayLike of shape (n_classes, )
             Array with the classes.
 
         Returns
         -------
         Tuple[NDArray, NDArray] of shapes (n_samples, 1) and (n_samples, ).
             The first element is the cumsum probability of the true label.
-            The second is the sorted position of the true label.
+            The second is the 1-based rank of the true label in the sorted probabilities.
         """
         y_true = label_binarize(y=y, classes=classes)
         index_sorted = np.fliplr(np.argsort(y_pred_proba, axis=1))
@@ -136,7 +135,7 @@ class APSConformityScore(NaiveConformityScore):
         y_pred: NDArray of shape (n_samples,)
             Predicted target values.
 
-        y_enc: NDArray of shape (n_samples,)
+        y_enc: Optional[NDArray] of shape (n_samples,)
             Target values as normalized encodings.
 
         Returns
@@ -225,8 +224,8 @@ class APSConformityScore(NaiveConformityScore):
         y_pred_proba_last: NDArray of shape (n_samples, 1, n_alpha)
             Last included probability.
 
-        predicition_sets: NDArray of shape (n_samples, n_alpha)
-            Prediction sets.
+        prediction_sets: NDArray of shape (n_samples, n_alpha)
+            Prediction sets (not used here).
 
         Returns
         --------
@@ -328,7 +327,7 @@ class APSConformityScore(NaiveConformityScore):
 
         alpha_np: NDArray of shape (n_alpha,)
             NDArray of floats between 0 and 1, representing the uncertainty
-            of the confidence interval.
+            of the confidence interval (not used here).
 
         cv: Optional[Union[int, str, BaseCrossValidator]]
             Cross-validation strategy used by the estimator.
