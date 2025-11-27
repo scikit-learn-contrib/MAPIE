@@ -5,7 +5,7 @@ from .risks import (
     accuracy,
     false_positive_rate,
     precision,
-    proportion_positive,
+    positive_fraction,
     recall,
 )
 
@@ -17,5 +17,5 @@ __all__ = [
     "false_positive_rate",
     "precision",
     "recall",
-    "proportion_positive",
+    "positive_fraction",
 ]
