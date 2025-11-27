@@ -321,8 +321,8 @@ def test_invalid_prefit_estimator(pack: Tuple[BaseEstimator, BaseEstimator]) -> 
     MapieEstimator, estimator = pack
     mapie_estimator = MapieEstimator(estimator=estimator, cv="prefit")
     with pytest.raises(
-        ValueError,
-        match=r".*not fitted.*",
+        (AttributeError, ValueError),
+        match=r".*(does not contain 'classes_'|is not fitted).*",
     ):
         mapie_estimator.fit(X_toy, y_toy)
 

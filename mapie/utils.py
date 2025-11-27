@@ -23,7 +23,6 @@ from sklearn.pipeline import Pipeline
 from sklearn.utils import _safe_indexing
 from sklearn.utils.multiclass import type_of_target
 from sklearn.utils.validation import _check_sample_weight, _num_features, column_or_1d
-from sklearn.utils.validation import check_is_fitted as sk_check_is_fitted
 
 
 # This function is the only public utility of MAPIE as of v1 release
@@ -282,12 +281,13 @@ def _fit_estimator(
     --------
     >>> import numpy as np
     >>> from sklearn.linear_model import LinearRegression
-    >>> from sklearn.utils.validation import check_is_fitted as sk_check_is_fitted
+    >>> from mapie.utils import check_user_model_is_fitted
     >>> X = np.array([[0], [1], [2], [3], [4], [5]])
     >>> y = np.array([5, 7, 9, 11, 13, 15])
     >>> estimator = LinearRegression()
     >>> estimator = _fit_estimator(estimator, X, y)
-    >>> sk_check_is_fitted(estimator)
+    >>> check_user_model_is_fitted(estimator)
+    True
     """
     fit_parameters = signature(estimator.fit).parameters
     supports_sw = "sample_weight" in fit_parameters
@@ -1007,13 +1007,8 @@ def _check_estimator_classification(
             "predict, and predict_proba methods."
         )
     if cv == "prefit":
-        sk_check_is_fitted(est)
-        if not hasattr(est, "classes_"):
-            raise AttributeError(
-                "Invalid classifier. "
-                "Fitted classifier does not contain "
-                "'classes_' attribute."
-            )
+        check_user_model_is_fitted(est)
+
     return estimator
 
 
@@ -1660,9 +1655,17 @@ def check_user_model_is_fitted(estimator):
     Check whether a user-provided estimator is fitted.
 
     Logic:
-    1. Raise warning if no typical fit-related attributes are present.
-    2. If `n_features_in_` exists try a minimal predict-probe and raise error if it fails.
+    1. Raise AttributeError for classifiers missing 'classes_'.
+    2. Raise warning if no typical fit-related attributes are present.
+    3. If `n_features_in_` exists, try a minimal predict-probe.
     """
+    if isinstance(estimator, ClassifierMixin) and not hasattr(estimator, "classes_"):
+        raise AttributeError(
+            "Invalid classifier. "
+            "Fitted classifier does not contain "
+            "'classes_' attribute."
+        )
+
     present_attrs = [attr for attr in FIT_INDICATORS if hasattr(estimator, attr)]
 
     if not present_attrs:
