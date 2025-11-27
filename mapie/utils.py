@@ -281,12 +281,12 @@ def _fit_estimator(
     --------
     >>> import numpy as np
     >>> from sklearn.linear_model import LinearRegression
-    >>> from mapie.utils import check_user_model_is_fitted
+    >>> from mapie.utils import check_sklearn_user_model_is_fitted
     >>> X = np.array([[0], [1], [2], [3], [4], [5]])
     >>> y = np.array([5, 7, 9, 11, 13, 15])
     >>> estimator = LinearRegression()
     >>> estimator = _fit_estimator(estimator, X, y)
-    >>> check_user_model_is_fitted(estimator)
+    >>> check_sklearn_user_model_is_fitted(estimator)
     True
     """
     fit_parameters = signature(estimator.fit).parameters
