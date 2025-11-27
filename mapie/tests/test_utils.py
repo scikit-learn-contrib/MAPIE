@@ -49,7 +49,7 @@ from mapie.utils import (
     _transform_confidence_level_to_alpha,
     _transform_confidence_level_to_alpha_list,
     check_is_fitted,
-    check_user_model_is_fitted,
+    check_sklearn_user_model_is_fitted,
     train_conformalize_test_split,
 )
 
@@ -459,7 +459,7 @@ def test_check_null_weight_with_zeros() -> None:
 def test_fit_estimator(estimator: Any, sample_weight: Optional[NDArray]) -> None:
     """Test that the returned estimator is always fitted."""
     estimator = _fit_estimator(estimator, X_toy, y_toy, sample_weight)
-    check_user_model_is_fitted(estimator)
+    check_sklearn_user_model_is_fitted(estimator)
 
 
 def test_fit_estimator_sample_weight() -> None:
@@ -906,13 +906,13 @@ def test_check_is_fitted_passes_after_fit():
 def test_check_user_model_is_fitted_unfitted():
     model = DummyModel()
     with pytest.warns(UserWarning, match=r".*Estimator does not appear fitted.*"):
-        check_user_model_is_fitted(model)
+        check_sklearn_user_model_is_fitted(model)
 
 
 def test_check_user_model_is_fitted_raises_for_unfitted_model():
     model = LinearRegression()
     with pytest.warns(UserWarning, match=r".*Estimator does not appear fitted.*"):
-        check_user_model_is_fitted(model)
+        check_sklearn_user_model_is_fitted(model)
 
 
 @pytest.mark.parametrize(
@@ -932,7 +932,7 @@ def test_check_user_model_is_fitted_sklearn_models(Model):
         else np.random.randn(20)
     )
     model = Model.fit(X, y)
-    assert check_user_model_is_fitted(model) is True
+    assert check_sklearn_user_model_is_fitted(model) is True
 
 
 class BrokenPredictModel:
@@ -949,4 +949,4 @@ def test_check_user_model_is_fitted_predict_fails():
     with pytest.raises(
         NotFittedError, match=r"Estimator has `n_features_in_` but failed"
     ):
-        check_user_model_is_fitted(model)
+        check_sklearn_user_model_is_fitted(model)

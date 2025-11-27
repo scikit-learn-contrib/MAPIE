@@ -26,7 +26,7 @@ from mapie.utils import (
     _raise_error_if_previous_method_not_called,
     _transform_confidence_level_to_alpha,
     check_is_fitted,
-    check_user_model_is_fitted,
+    check_sklearn_user_model_is_fitted,
 )
 
 from .regression import _MapieRegressor
@@ -674,7 +674,7 @@ class _MapieQuantileRegressor(_MapieRegressor):
         if len(estimator) == 3:
             for est in estimator:
                 _check_estimator_fit_predict(est)
-                check_user_model_is_fitted(est)
+                check_sklearn_user_model_is_fitted(est)
         else:
             raise ValueError(
                 "You need to have provided 3 different estimators, they"

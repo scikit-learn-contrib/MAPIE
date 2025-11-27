@@ -25,7 +25,7 @@ from mapie.regression.regression import (
     SplitConformalRegressor,
     _MapieRegressor,
 )
-from mapie.utils import NotFittedError, check_user_model_is_fitted
+from mapie.utils import NotFittedError, check_sklearn_user_model_is_fitted
 
 RANDOM_STATE = 1
 
@@ -334,7 +334,7 @@ def test_valid_prefit_estimator(pack: Tuple[BaseEstimator, BaseEstimator]) -> No
     estimator.fit(X_toy, y_toy)
     mapie_estimator = MapieEstimator(estimator=estimator, cv="prefit")
     mapie_estimator.fit(X_toy, y_toy)
-    check_user_model_is_fitted(mapie_estimator)
+    check_sklearn_user_model_is_fitted(mapie_estimator)
     assert mapie_estimator.n_features_in_ == 1
 
 

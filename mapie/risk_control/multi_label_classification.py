@@ -19,7 +19,7 @@ from mapie.utils import (
     _check_n_jobs,
     _check_verbose,
     check_is_fitted,
-    check_user_model_is_fitted,
+    check_sklearn_user_model_is_fitted,
 )
 
 from .methods import (
@@ -387,7 +387,7 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
                 "Please provide a classifier with fit,"
                 "predict, and predict_proba methods."
             )
-        check_user_model_is_fitted(est)
+        check_sklearn_user_model_is_fitted(est)
         return estimator, X, y
 
     def _check_partial_fit_first_call(self) -> bool:

@@ -10,7 +10,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.utils.validation import check_random_state, indexable
 
 from mapie.conformity_scores import BaseRegressionScore
-from mapie.utils import check_user_model_is_fitted
+from mapie.utils import check_sklearn_user_model_is_fitted
 
 
 class ResidualNormalisedScore(BaseRegressionScore):
@@ -113,9 +113,9 @@ class ResidualNormalisedScore(BaseRegressionScore):
                 )
             if self.prefit:
                 if isinstance(estimator, Pipeline):
-                    check_user_model_is_fitted(estimator[-1])
+                    check_sklearn_user_model_is_fitted(estimator[-1])
                 else:
-                    check_user_model_is_fitted(estimator)
+                    check_sklearn_user_model_is_fitted(estimator)
             return estimator
 
     def _check_parameters(

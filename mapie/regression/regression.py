@@ -40,7 +40,7 @@ from mapie.utils import (
     _raise_error_if_previous_method_not_called,
     _transform_confidence_level_to_alpha_list,
     check_is_fitted,
-    check_user_model_is_fitted,
+    check_sklearn_user_model_is_fitted,
 )
 
 
@@ -1244,9 +1244,9 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
             _check_estimator_fit_predict(estimator)
             if self.cv == "prefit":
                 if isinstance(estimator, Pipeline):
-                    check_user_model_is_fitted(estimator[-1])
+                    check_sklearn_user_model_is_fitted(estimator[-1])
                 else:
-                    check_user_model_is_fitted(estimator)
+                    check_sklearn_user_model_is_fitted(estimator)
             return estimator
 
     def _check_ensemble(

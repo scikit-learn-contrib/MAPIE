@@ -1007,7 +1007,7 @@ def _check_estimator_classification(
             "predict, and predict_proba methods."
         )
     if cv == "prefit":
-        check_user_model_is_fitted(est)
+        check_sklearn_user_model_is_fitted(est)
 
     return estimator
 
@@ -1650,7 +1650,7 @@ FIT_INDICATORS = [
 ]
 
 
-def check_user_model_is_fitted(estimator):
+def check_sklearn_user_model_is_fitted(estimator):
     """
     Check whether a user-provided estimator is fitted.
 
