@@ -4,6 +4,8 @@ History
 
 1.x.x (2025-xx-xx)
 ------------------
+* Introduce VennAbers calibrator both for binary and multiclass classification
+
 * Add an example of risk control with LLM as a judge
 * Add comparison with naive threshold in risk control quick start example
 * Configure self hosted runner for minimal requirements tests
