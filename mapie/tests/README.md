@@ -3,6 +3,7 @@
 - Group tests in a class if more than one test is needed for a given function/functionality
 - Prefer black-box tests (no mocks) if possible, to avoid testing implementation details.
 - Avoid unnecessary comments/docstrings: the code must be self-explanatory as much as possible.
+- Quality > quantity: having high quality understandable tests is better than a ton of unnecessary tests.
 
 # Unit tests
 

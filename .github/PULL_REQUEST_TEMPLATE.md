@@ -37,9 +37,11 @@ Please describe the tests that you ran to verify your changes. Provide instructi
 ## Contribution Documentation
 - [ ] I have updated the [HISTORY.rst](https://github.com/scikit-learn-contrib/MAPIE/blob/master/HISTORY.rst) and [AUTHORS.rst](https://github.com/scikit-learn-contrib/MAPIE/blob/master/AUTHORS.rst) files
 
-## LLM Usage (Optional)
+## LLM Usage
+- [ ] I used a Large Language Model (LLM) for this contribution.
+- [ ] I carefully reviewed and verified all LLM-generated content.
 
-If you used a Large Language Model (LLM) to assist with this contribution, please provide details:
+If you used an LLM, please provide the following details:
 
 - **LLM used**: (e.g., Mistral, Claude, GPT, Gemini, etc.)
 - **Purpose**: (e.g., code generation, documentation, test writing, refactoring, etc.)
