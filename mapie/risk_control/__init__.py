@@ -5,6 +5,7 @@ from .risks import (
     accuracy,
     false_positive_rate,
     precision,
+    proportion_positive,
     recall,
 )
 
