@@ -271,3 +271,9 @@ false_positive_rate = BinaryClassificationRisk(
     risk_condition=lambda y_true, y_pred: y_true == 0,
     higher_is_better=False,
 )
+
+proportion_positive = BinaryClassificationRisk(
+    risk_occurrence=lambda y_true, y_pred: y_pred,
+    risk_condition=lambda y_true, y_pred: True,
+    higher_is_better=False,
+)
