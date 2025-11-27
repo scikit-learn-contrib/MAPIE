@@ -2,14 +2,15 @@ import warnings
 from typing import Optional, Tuple, Union, cast
 
 import numpy as np
+from numpy.typing import ArrayLike, NDArray
 from sklearn.base import RegressorMixin, clone
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
-from sklearn.utils.validation import check_is_fitted, check_random_state, indexable
+from sklearn.utils.validation import check_random_state, indexable
 
-from numpy.typing import ArrayLike, NDArray
 from mapie.conformity_scores import BaseRegressionScore
+from mapie.utils import check_user_model_is_fitted
 
 
 class ResidualNormalisedScore(BaseRegressionScore):
@@ -112,9 +113,9 @@ class ResidualNormalisedScore(BaseRegressionScore):
                 )
             if self.prefit:
                 if isinstance(estimator, Pipeline):
-                    check_is_fitted(estimator[-1])
+                    check_user_model_is_fitted(estimator[-1])
                 else:
-                    check_is_fitted(estimator)
+                    check_user_model_is_fitted(estimator)
             return estimator
 
     def _check_parameters(
