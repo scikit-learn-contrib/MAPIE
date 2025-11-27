@@ -25,6 +25,8 @@ For conservative prediction interval estimates, you can alternatively
 use the CV-minmax strategies.**
 """
 
+# sphinx_gallery_thumbnail_number = 2
+
 import os
 import warnings
 
@@ -32,15 +34,15 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from sklearn.linear_model import LinearRegression, QuantileRegressor
+from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import PolynomialFeatures
-from sklearn.model_selection import train_test_split
 
 from mapie.metrics.regression import regression_coverage_score
 from mapie.regression import (
+    ConformalizedQuantileRegressor,
     CrossConformalRegressor,
     JackknifeAfterBootstrapRegressor,
-    ConformalizedQuantileRegressor,
 )
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"

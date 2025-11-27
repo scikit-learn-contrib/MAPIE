@@ -25,21 +25,23 @@ Calibration section of the documentation or by using the
 or :class:`~mapie.calibration.TopLabelCalibrator` proposed in MAPIE).
 """
 
+# sphinx_gallery_thumbnail_number = 3
+
 from typing import List
 
 import matplotlib.pyplot as plt
 import numpy as np
+from numpy.typing import NDArray
 from sklearn.calibration import CalibratedClassifierCV
 from sklearn.model_selection import train_test_split
 from sklearn.naive_bayes import GaussianNB
 
-from numpy.typing import NDArray
 from mapie.classification import SplitConformalClassifier
-from mapie.utils import train_conformalize_test_split
 from mapie.metrics.classification import (
     classification_coverage_score,
     classification_mean_width_score,
 )
+from mapie.utils import train_conformalize_test_split
 
 ##############################################################################
 # 1. Conformal Prediction method using the softmax score of the true label

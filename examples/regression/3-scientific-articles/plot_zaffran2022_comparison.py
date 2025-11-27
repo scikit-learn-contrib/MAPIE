@@ -39,6 +39,8 @@ distribution shift.
 Advances in Neural Information Processing Systems, 34, 1660-1672.
 """
 
+# sphinx_gallery_thumbnail_number = 2
+
 import datetime
 import pickle
 import ssl
@@ -49,10 +51,10 @@ from urllib.request import urlopen
 import numpy as np
 import pandas as pd
 from matplotlib import pylab as plt
+from numpy.typing import NDArray
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import PredefinedSplit
 
-from numpy.typing import NDArray
 from mapie.conformity_scores import AbsoluteConformityScore
 from mapie.regression import TimeSeriesRegressor
 
