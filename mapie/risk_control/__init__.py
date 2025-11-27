@@ -16,4 +16,5 @@ __all__ = [
     "false_positive_rate",
     "precision",
     "recall",
+    "proportion_positive",
 ]
