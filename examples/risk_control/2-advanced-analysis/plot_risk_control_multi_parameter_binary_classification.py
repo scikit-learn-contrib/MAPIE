@@ -22,7 +22,7 @@ import numpy as np
 from sklearn.datasets import make_circles
 from sklearn.neural_network import MLPClassifier
 
-from mapie.risk_control import BinaryClassificationController, BinaryClassificationRisk
+from mapie.risk_control import BinaryClassificationController, proportion_positive
 from mapie.utils import train_conformalize_test_split
 
 RANDOM_STATE = 1
@@ -124,18 +124,11 @@ to_explore = np.array(to_explore)
 
 #############################################################################
 # Because we want to control the proportion of emails to be verified by a human,
-# we need to define a specific :class:`BinaryClassificationRisk` which represents
+# we use `proportion_positive`, a specific :class:`BinaryClassificationRisk` which represents
 # the fraction of samples predicted as positive (i.e., sent to human verification).
-
-prop_positive = BinaryClassificationRisk(
-    risk_occurrence=lambda y_true, y_pred: y_pred,
-    risk_condition=lambda y_true, y_pred: True,
-    higher_is_better=False,
-)
-
-##############################################################################
+#
 # Finally, we initialize a :class:`~mapie.risk_control.BinaryClassificationController`
-# using our custom function ``send_to_human``, our custom risk ``prop_positive``,
+# using our custom function ``send_to_human``, the chosen risk ``proportion_positive``,
 # a target risk level (0.2), and a confidence level (0.9). Then we use the calibration
 # data to compute statistically guaranteed thresholds using a multi-parameter control
 # method.
@@ -145,7 +138,7 @@ confidence_level = 0.9
 
 bcc = BinaryClassificationController(
     predict_function=send_to_human,
-    risk=prop_positive,
+    risk=proportion_positive,
     target_level=target_level,
     confidence_level=confidence_level,
     best_predict_param_choice="precision",
@@ -175,3 +168,9 @@ ax.set_ylabel(r"lambda_1")
 ax.set_title("Valid parameters")
 fig.tight_layout()
 plt.show()
+ax.set_ylabel(r"lambda_1")
+ax.set_title("Valid parameters")
+fig.tight_layout()
+plt.show()
+
+# %%
