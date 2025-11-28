@@ -429,6 +429,7 @@ class _MapieQuantileRegressor(_MapieRegressor):
         self.cv = cv
         self.alpha = alpha
         self._is_fitted = False
+        self._is_fitted = True if self.cv == "prefit" else False
 
     @property
     def is_fitted(self):
@@ -795,8 +796,6 @@ class _MapieQuantileRegressor(_MapieRegressor):
 
         self.conformalize(X_calib, y_calib)
 
-        self._is_fitted = True
-
         return self
 
     def _initialize_fit_conformalize(self) -> None:
@@ -809,8 +808,6 @@ class _MapieQuantileRegressor(_MapieRegressor):
         self._check_prefit_params(estimator)
         self.estimators_ = list(estimator)
         self.single_estimator_ = self.estimators_[2]
-
-        self._is_fitted = True
 
     def _prepare_train_calib(
         self,
