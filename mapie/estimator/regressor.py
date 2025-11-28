@@ -489,8 +489,6 @@ class EnsembleRegressor:
 
         self.estimators_ = estimators
 
-        self._is_fitted = True
-
         return self
 
     def fit_single_estimator(
