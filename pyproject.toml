@@ -54,7 +54,7 @@ dev = [
     "codecov==2.1.13",
     "mypy<1.15",
     "pandas==2.3.3",
-    "pytest==8.4.2",
+    "pytest-xdist>=3.8.0",
     "pytest-cov==7.0.0",
     "ruff==0.14.3",
     "twine==6.2.0",
