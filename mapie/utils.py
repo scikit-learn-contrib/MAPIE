@@ -1682,8 +1682,10 @@ def check_sklearn_user_model_is_fitted(estimator):
             estimator.predict(np.zeros((1, estimator.n_features_in_)))
             return True
         except Exception as err:
-            raise NotFittedError(
-                f"Estimator has `n_features_in_` but failed a minimal prediction test "
+            raise UserWarning(
+                "Estimator does not appear fitted. "
+                "It has `n_features_in_` but failed a minimal prediction test "
                 f"(shape={(1, estimator.n_features_in_)}). Error: {err}",
+                UserWarning,
             )
     return True

@@ -947,6 +947,7 @@ class BrokenPredictModel:
 def test_check_user_model_is_fitted_predict_fails():
     model = BrokenPredictModel()
     with pytest.raises(
-        NotFittedError, match=r"Estimator has `n_features_in_` but failed"
+        UserWarning,
+        match=r".*has `n_features_in_` but failed a minimal prediction test.*",
     ):
         check_sklearn_user_model_is_fitted(model)
