@@ -4,14 +4,14 @@ import warnings
 from typing import Dict, Optional, Tuple, Union, cast
 
 import numpy as np
+from numpy.typing import ArrayLike, NDArray
 from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin, clone
 from sklearn.calibration import _SigmoidCalibration
 from sklearn.isotonic import IsotonicRegression
 from sklearn.utils import check_random_state
 from sklearn.utils.multiclass import type_of_target
-from sklearn.utils.validation import _check_y, _num_samples, check_is_fitted, indexable
+from sklearn.utils.validation import _check_y, _num_samples, indexable
 
-from numpy.typing import ArrayLike, NDArray
 from .utils import (
     _check_estimator_classification,
     _check_estimator_fit_predict,
@@ -19,6 +19,7 @@ from .utils import (
     _check_null_weight,
     _fit_estimator,
     _get_calib_set,
+    check_is_fitted,
 )
 
 
@@ -123,6 +124,12 @@ class TopLabelCalibrator(BaseEstimator, ClassifierMixin):
         self.estimator = estimator
         self.calibrator = calibrator
         self.cv = cv
+        self._is_fitted = False
+
+    @property
+    def is_fitted(self):
+        """Returns True if the estimator is fitted"""
+        return self._is_fitted
 
     def _check_cv(
         self,
@@ -480,6 +487,9 @@ class TopLabelCalibrator(BaseEstimator, ClassifierMixin):
             self.calibrators = self._fit_calibrators(
                 X_calib, y_calib, sw_calib, calibrator
             )
+
+        self._is_fitted = True
+
         return self
 
     def predict_proba(
@@ -501,7 +511,7 @@ class TopLabelCalibrator(BaseEstimator, ClassifierMixin):
             The calibrated score for each max score and zeros at every
             other position in that line.
         """
-        check_is_fitted(self, self.fit_attributes)
+        check_is_fitted(self)
         self.uncalib_pred = self.single_estimator_.predict_proba(X=X)
 
         max_prob, y_pred = self._get_labels(X)
@@ -537,5 +547,5 @@ class TopLabelCalibrator(BaseEstimator, ClassifierMixin):
         NDArray of shape (n_samples,)
             The class from the scores.
         """
-        check_is_fitted(self, self.fit_attributes)
+        check_is_fitted(self)
         return self.single_estimator_.predict(X)

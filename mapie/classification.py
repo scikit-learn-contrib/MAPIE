@@ -4,49 +4,44 @@ import warnings
 from typing import Any, Iterable, Optional, Tuple, Union, cast
 
 import numpy as np
+from numpy.typing import ArrayLike, NDArray
 from sklearn import clone
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import (
-    BaseCrossValidator,
-    BaseShuffleSplit,
-)
+from sklearn.model_selection import BaseCrossValidator, BaseShuffleSplit
 from sklearn.preprocessing import LabelEncoder
 from sklearn.utils import check_random_state
-from sklearn.utils.validation import _check_y, check_is_fitted, indexable
-
-from numpy.typing import ArrayLike, NDArray
+from sklearn.utils.validation import _check_y, indexable
 
 from mapie.conformity_scores import BaseClassificationScore
 from mapie.conformity_scores.sets.raps import RAPSConformityScore
 from mapie.conformity_scores.utils import (
+    check_and_select_conformity_score,
     check_classification_conformity_score,
     check_target,
-    check_and_select_conformity_score,
 )
 from mapie.estimator.classifier import EnsembleClassifier
 from mapie.utils import (
+    _cast_point_predictions_to_ndarray,
+    _cast_predictions_to_ndarray_tuple,
     _check_alpha,
     _check_alpha_and_n_samples,
     _check_cv,
+    _check_cv_not_string,
     _check_estimator_classification,
     _check_n_features_in,
     _check_n_jobs,
     _check_null_weight,
     _check_predict_params,
     _check_verbose,
-    check_proba_normalized,
-)
-from mapie.utils import (
-    _transform_confidence_level_to_alpha_list,
+    _prepare_fit_params_and_sample_weight,
+    _prepare_params,
     _raise_error_if_fit_called_in_prefit_mode,
     _raise_error_if_method_already_called,
-    _prepare_params,
     _raise_error_if_previous_method_not_called,
-    _cast_predictions_to_ndarray_tuple,
-    _cast_point_predictions_to_ndarray,
-    _check_cv_not_string,
-    _prepare_fit_params_and_sample_weight,
+    _transform_confidence_level_to_alpha_list,
+    check_is_fitted,
+    check_proba_normalized,
 )
 
 
@@ -734,6 +729,12 @@ class _MapieClassifier(ClassifierMixin, BaseEstimator):
         self.conformity_score = conformity_score
         self.random_state = random_state
         self.verbose = verbose
+        self._is_fitted = False
+
+    @property
+    def is_fitted(self):
+        """Returns True if the estimator is fitted"""
+        return self._is_fitted
 
     def _check_parameters(self) -> None:
         """
@@ -967,6 +968,7 @@ class _MapieClassifier(ClassifierMixin, BaseEstimator):
             groups=groups,
             predict_params=predict_params,
         )
+        self._is_fitted = True
         return self
 
     def predict(
@@ -1049,7 +1051,7 @@ class _MapieClassifier(ClassifierMixin, BaseEstimator):
         if hasattr(self, "_predict_params"):
             _check_predict_params(self._predict_params, predict_params, self.cv)
 
-        check_is_fitted(self, self.fit_attributes)
+        check_is_fitted(self)
         alpha = cast(Optional[NDArray], _check_alpha(alpha))
 
         # Estimate predictions

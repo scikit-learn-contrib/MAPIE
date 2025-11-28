@@ -12,9 +12,15 @@ from sklearn.model_selection import train_test_split
 from sklearn.multioutput import MultiOutputClassifier
 from sklearn.pipeline import Pipeline
 from sklearn.utils import check_random_state
-from sklearn.utils.validation import _check_y, _num_samples, check_is_fitted, indexable
+from sklearn.utils.validation import _check_y, _num_samples, indexable
 
-from mapie.utils import _check_alpha, _check_n_jobs, _check_verbose
+from mapie.utils import (
+    _check_alpha,
+    _check_n_jobs,
+    _check_verbose,
+    check_is_fitted,
+    check_sklearn_user_model_is_fitted,
+)
 
 from .methods import (
     find_lambda_star,
@@ -182,6 +188,12 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
         self.n_jobs = n_jobs
         self.random_state = random_state
         self.verbose = verbose
+        self._is_fitted = False
+
+    @property
+    def is_fitted(self):
+        """Returns True if the estimator is fitted"""
+        return self._is_fitted
 
     def _check_parameters(self) -> None:
         """
@@ -375,7 +387,7 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
                 "Please provide a classifier with fit,"
                 "predict, and predict_proba methods."
             )
-        check_is_fitted(est)
+        check_sklearn_user_model_is_fitted(est)
         return estimator, X, y
 
     def _check_partial_fit_first_call(self) -> bool:
@@ -526,6 +538,8 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
                 )
             self.risks = np.concatenate([self.risks, partial_risk], axis=0)
 
+        self._is_fitted = True
+
         return self
 
     def fit(
@@ -608,7 +622,7 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
         self._check_delta(delta)
         self._check_bound(bound)
         alpha = cast(Optional[NDArray], _check_alpha(alpha))
-        check_is_fitted(self, self.fit_attributes)
+        check_is_fitted(self)
 
         # Estimate prediction sets
         y_pred = self.single_estimator_.predict(X)

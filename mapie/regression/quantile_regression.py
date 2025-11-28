@@ -1,35 +1,35 @@
 from __future__ import annotations
 
-from typing import Iterable, List, Optional, Tuple, Union, cast, Any
+from typing import Any, Iterable, List, Optional, Tuple, Union, cast
 
 import numpy as np
+from numpy.typing import ArrayLike, NDArray
 from sklearn.base import RegressorMixin, clone
 from sklearn.linear_model import QuantileRegressor
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.utils import check_random_state
-from sklearn.utils.validation import _check_y, _num_samples, check_is_fitted, indexable
+from sklearn.utils.validation import _check_y, _num_samples, indexable
 
-from numpy.typing import ArrayLike, NDArray
 from mapie.utils import (
+    _cast_predictions_to_ndarray_tuple,
     _check_alpha_and_n_samples,
     _check_defined_variables_predict_cqr,
     _check_estimator_fit_predict,
     _check_lower_upper_bounds,
     _check_null_weight,
     _fit_estimator,
+    _prepare_fit_params_and_sample_weight,
+    _prepare_params,
+    _raise_error_if_fit_called_in_prefit_mode,
+    _raise_error_if_method_already_called,
+    _raise_error_if_previous_method_not_called,
+    _transform_confidence_level_to_alpha,
+    check_is_fitted,
+    check_sklearn_user_model_is_fitted,
 )
 
 from .regression import _MapieRegressor
-from mapie.utils import (
-    _cast_predictions_to_ndarray_tuple,
-    _prepare_params,
-    _prepare_fit_params_and_sample_weight,
-    _raise_error_if_previous_method_not_called,
-    _raise_error_if_method_already_called,
-    _raise_error_if_fit_called_in_prefit_mode,
-    _transform_confidence_level_to_alpha,
-)
 
 
 class ConformalizedQuantileRegressor:
@@ -428,6 +428,13 @@ class _MapieQuantileRegressor(_MapieRegressor):
         )
         self.cv = cv
         self.alpha = alpha
+        self._is_fitted = False
+        self._is_fitted = True if self.cv == "prefit" else False
+
+    @property
+    def is_fitted(self):
+        """Returns True if the estimator is fitted"""
+        return self._is_fitted
 
     def _check_alpha(
         self,
@@ -668,7 +675,7 @@ class _MapieQuantileRegressor(_MapieRegressor):
         if len(estimator) == 3:
             for est in estimator:
                 _check_estimator_fit_predict(est)
-                check_is_fitted(est)
+                check_sklearn_user_model_is_fitted(est)
         else:
             raise ValueError(
                 "You need to have provided 3 different estimators, they"
@@ -876,6 +883,8 @@ class _MapieQuantileRegressor(_MapieRegressor):
                 )
             )
 
+        self._is_fitted = True
+
         self.single_estimator_ = self.estimators_[2]
 
     def conformalize(
@@ -961,7 +970,7 @@ class _MapieQuantileRegressor(_MapieRegressor):
               - [:, 0, :]: Lower bound of the prediction interval.
               - [:, 1, :]: Upper bound of the prediction interval.
         """
-        check_is_fitted(self, self.fit_attributes)
+        check_is_fitted(self)
         _check_defined_variables_predict_cqr(ensemble, alpha)
         alpha = self.alpha if symmetry else self.alpha / 2
         _check_alpha_and_n_samples(alpha, self.n_calib_samples)

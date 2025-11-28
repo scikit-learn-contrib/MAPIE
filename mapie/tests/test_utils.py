@@ -8,15 +8,17 @@ from unittest.mock import patch
 import numpy as np
 import pytest
 from numpy.random import RandomState
-from sklearn.datasets import make_regression
-from sklearn.linear_model import LinearRegression
-from sklearn.model_selection import BaseCrossValidator, KFold, LeaveOneOut, ShuffleSplit
-from sklearn.utils.validation import check_is_fitted
-
 from numpy.typing import ArrayLike, NDArray
+from sklearn.datasets import make_regression
+from sklearn.linear_model import LinearRegression, LogisticRegression
+from sklearn.model_selection import BaseCrossValidator, KFold, LeaveOneOut, ShuffleSplit
+from sklearn.pipeline import Pipeline
 
 from mapie.regression.quantile_regression import _MapieQuantileRegressor
 from mapie.utils import (
+    NotFittedError,
+    _cast_point_predictions_to_ndarray,
+    _cast_predictions_to_ndarray_tuple,
     _check_alpha,
     _check_alpha_and_n_samples,
     _check_array_inf,
@@ -24,7 +26,9 @@ from mapie.utils import (
     _check_arrays_length,
     _check_binary_zero_one,
     _check_cv,
+    _check_cv_not_string,
     _check_gamma,
+    _check_if_param_in_allowed_values,
     _check_lower_upper_bounds,
     _check_n_features_in,
     _check_n_jobs,
@@ -37,18 +41,16 @@ from mapie.utils import (
     _compute_quantiles,
     _fit_estimator,
     _get_binning_groups,
-    train_conformalize_test_split,
+    _prepare_fit_params_and_sample_weight,
+    _prepare_params,
+    _raise_error_if_fit_called_in_prefit_mode,
+    _raise_error_if_method_already_called,
+    _raise_error_if_previous_method_not_called,
     _transform_confidence_level_to_alpha,
     _transform_confidence_level_to_alpha_list,
-    _check_if_param_in_allowed_values,
-    _check_cv_not_string,
-    _cast_point_predictions_to_ndarray,
-    _cast_predictions_to_ndarray_tuple,
-    _prepare_params,
-    _prepare_fit_params_and_sample_weight,
-    _raise_error_if_previous_method_not_called,
-    _raise_error_if_method_already_called,
-    _raise_error_if_fit_called_in_prefit_mode,
+    check_is_fitted,
+    check_sklearn_user_model_is_fitted,
+    train_conformalize_test_split,
 )
 
 
@@ -449,12 +451,15 @@ def test_check_null_weight_with_zeros() -> None:
     np.testing.assert_almost_equal(np.array(y_out), np.array([7, 9, 11, 13, 15]))
 
 
+@pytest.mark.filterwarnings(
+    "ignore:Estimator exposes fitted-like attributes.*:UserWarning"
+)
 @pytest.mark.parametrize("estimator", [LinearRegression(), DumbEstimator()])
 @pytest.mark.parametrize("sample_weight", [None, np.ones_like(y_toy)])
 def test_fit_estimator(estimator: Any, sample_weight: Optional[NDArray]) -> None:
     """Test that the returned estimator is always fitted."""
     estimator = _fit_estimator(estimator, X_toy, y_toy, sample_weight)
-    check_is_fitted(estimator)
+    check_sklearn_user_model_is_fitted(estimator)
 
 
 def test_fit_estimator_sample_weight() -> None:
@@ -879,3 +884,70 @@ def test_invalid_n_samples_float(n_samples: float) -> None:
         ),
     ):
         _check_n_samples(X=X, n_samples=n_samples, indices=indices)
+
+
+class DummyModel:
+    pass
+
+
+def test_check_is_fitted_raises_before_fit():
+    model = DummyModel()
+    with pytest.raises(NotFittedError) as excinfo:
+        check_is_fitted(model)
+    assert "DummyModel is not fitted yet" in str(excinfo.value)
+
+
+def test_check_is_fitted_passes_after_fit():
+    model = DummyModel()
+    model.is_fitted = True
+    check_is_fitted(model)
+
+
+def test_check_user_model_is_fitted_unfitted():
+    model = DummyModel()
+    with pytest.warns(UserWarning, match=r".*Estimator does not appear fitted.*"):
+        check_sklearn_user_model_is_fitted(model)
+
+
+def test_check_user_model_is_fitted_raises_for_unfitted_model():
+    model = LinearRegression()
+    with pytest.warns(UserWarning, match=r".*Estimator does not appear fitted.*"):
+        check_sklearn_user_model_is_fitted(model)
+
+
+@pytest.mark.parametrize(
+    "Model",
+    [
+        LinearRegression(),
+        LogisticRegression(),
+        Pipeline([("LinearRegression", LinearRegression())]),
+    ],
+)
+def test_check_user_model_is_fitted_sklearn_models(Model):
+    """Check that sklearn classifiers and regressors pass."""
+    X = np.random.randn(20, 4)
+    y = (
+        (np.random.randn(20) > 0).astype(int)
+        if isinstance(Model, LogisticRegression)
+        else np.random.randn(20)
+    )
+    model = Model.fit(X, y)
+    assert check_sklearn_user_model_is_fitted(model) is True
+
+
+class BrokenPredictModel:
+    """Model with n_features_in_ but predict always fails"""
+
+    n_features_in_ = 3
+
+    def predict(self, X):
+        raise RuntimeError("Predict failure")
+
+
+def test_check_user_model_is_fitted_predict_fails():
+    model = BrokenPredictModel()
+    with pytest.raises(
+        UserWarning,
+        match=r".*has `n_features_in_` but failed a minimal prediction test.*",
+    ):
+        check_sklearn_user_model_is_fitted(model)

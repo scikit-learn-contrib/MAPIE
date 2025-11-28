@@ -4,29 +4,28 @@ from typing import Any, List, Tuple
 import numpy as np
 import pytest
 from sklearn.base import BaseEstimator
-from sklearn.datasets import make_regression, make_classification
-from sklearn.dummy import DummyRegressor, DummyClassifier
-from sklearn.exceptions import NotFittedError
+from sklearn.datasets import make_classification, make_regression
+from sklearn.dummy import DummyClassifier, DummyRegressor
 from sklearn.linear_model import LinearRegression, LogisticRegression, QuantileRegressor
 from sklearn.model_selection import KFold, train_test_split
 from sklearn.pipeline import make_pipeline
-from sklearn.utils.validation import check_is_fitted
 
 from mapie.classification import (
-    _MapieClassifier,
-    SplitConformalClassifier,
     CrossConformalClassifier,
-)
-from mapie.regression.regression import (
-    _MapieRegressor,
-    SplitConformalRegressor,
-    CrossConformalRegressor,
-    JackknifeAfterBootstrapRegressor,
+    SplitConformalClassifier,
+    _MapieClassifier,
 )
 from mapie.regression.quantile_regression import (
-    _MapieQuantileRegressor,
     ConformalizedQuantileRegressor,
+    _MapieQuantileRegressor,
 )
+from mapie.regression.regression import (
+    CrossConformalRegressor,
+    JackknifeAfterBootstrapRegressor,
+    SplitConformalRegressor,
+    _MapieRegressor,
+)
+from mapie.utils import NotFittedError, check_sklearn_user_model_is_fitted
 
 RANDOM_STATE = 1
 
@@ -315,12 +314,16 @@ def test_invalid_estimator(MapieEstimator: BaseEstimator, estimator: Any) -> Non
         mapie_estimator.fit(X_toy, y_toy)
 
 
+@pytest.mark.filterwarnings("ignore:Estimator does not appear fitted.*:UserWarning")
 @pytest.mark.parametrize("pack", MapieTestEstimators())
 def test_invalid_prefit_estimator(pack: Tuple[BaseEstimator, BaseEstimator]) -> None:
     """Test that non-fitted estimator with prefit cv raise errors."""
     MapieEstimator, estimator = pack
     mapie_estimator = MapieEstimator(estimator=estimator, cv="prefit")
-    with pytest.raises(NotFittedError):
+    with pytest.raises(
+        (AttributeError, ValueError),
+        match=r".*(does not contain 'classes_'|is not fitted).*",
+    ):
         mapie_estimator.fit(X_toy, y_toy)
 
 
@@ -331,7 +334,7 @@ def test_valid_prefit_estimator(pack: Tuple[BaseEstimator, BaseEstimator]) -> No
     estimator.fit(X_toy, y_toy)
     mapie_estimator = MapieEstimator(estimator=estimator, cv="prefit")
     mapie_estimator.fit(X_toy, y_toy)
-    check_is_fitted(mapie_estimator, mapie_estimator.fit_attributes)
+    check_sklearn_user_model_is_fitted(mapie_estimator)
     assert mapie_estimator.n_features_in_ == 1
 
 
