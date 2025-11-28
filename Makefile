@@ -20,7 +20,20 @@ coverage:
 		--cov=mapie \
 		--cov-report term-missing \
 		--cov-fail-under=100 \
-		--no-cov-on-fail
+		--no-cov-on-fail \
+		--ignore=mapie/tests/long_tests \
+		-n auto
+
+coverage-long-tests:
+	pytest -vsx \
+		--doctest-modules \
+		mapie/tests/long_tests \
+		--cov-branch \
+		--cov=mapie \
+		--cov-report term-missing \
+		--cov-fail-under=100 \
+		--no-cov-on-fail \
+		-n auto
 
 ### Checks that are run in ReadTheDocs CI ###
 doc:
@@ -41,7 +54,8 @@ tests:
 	pytest -vs \
 		--doctest-modules \
 		--pyargs mapie \
-		--ignore=mapie/tests/long_tests
+		--ignore=mapie/tests/long_tests \
+		-n auto
 
 clean-doc:
 	$(MAKE) clean -C doc

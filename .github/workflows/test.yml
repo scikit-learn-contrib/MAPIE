@@ -65,3 +65,5 @@ jobs:
         run: make type-check
       - name: Test and coverage with pytest
         run: make coverage
+      - name: Test and coverage for long tests with pytest
+        run: make coverage-long-tests
