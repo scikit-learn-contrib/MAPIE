@@ -14,3 +14,9 @@
 .deprecated p span.versionmodified {
     font-weight: bold;
 }
+
+/* --- Wrap long lines in code blocks --- */
+pre, code {
+    white-space: pre-wrap !important; /* Preserves whitespace and wraps text */
+    word-break: break-all;            /* Forces line breaks in long, unbreakable strings */
+}
