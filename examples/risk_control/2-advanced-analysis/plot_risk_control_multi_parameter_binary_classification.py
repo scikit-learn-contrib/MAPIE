@@ -22,10 +22,7 @@ import numpy as np
 from sklearn.datasets import make_circles
 from sklearn.neural_network import MLPClassifier
 
-from mapie.risk_control import (
-    BinaryClassificationController,
-    predicted_positive_fraction,
-)
+from mapie.risk_control import BinaryClassificationController
 from mapie.utils import train_conformalize_test_split
 
 RANDOM_STATE = 1
@@ -141,7 +138,7 @@ confidence_level = 0.9
 
 bcc = BinaryClassificationController(
     predict_function=send_to_human,
-    risk=predicted_positive_fraction,
+    risk="predicted_positive_fraction",
     target_level=target_level,
     confidence_level=confidence_level,
     best_predict_param_choice="precision",
