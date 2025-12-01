@@ -232,6 +232,10 @@ def ltt_procedure(
         Contain the valid index that satisfy FWER control
         for each alpha (length aren't the same for each alpha).
 
+    p_values : NDArray of shape (n_lambdas, n_alpha)
+        P-values associated with each tested parameter. In the multi-risk setting,
+        they correspond to the maximum over the tested risks.
+
     References
     ----------
     [1] Angelopoulos, A. N., Bates, S., Candès, E. J., Jordan,
