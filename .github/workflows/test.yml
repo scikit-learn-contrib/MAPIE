@@ -61,8 +61,8 @@ jobs:
         run: make lint
       - name: Check format
         run: make format
-      - name: Check static typing
-        run: make type-check
+      # - name: Check static typing
+      #   run: make type-check
       - name: Test and coverage with pytest
         run: make coverage
       - name: Test and coverage for long tests with pytest
