@@ -17,8 +17,12 @@ on multiple prediction parameters with MAPIE.
 
 # sphinx_gallery_thumbnail_number = 2
 
+import matplotlib.patches as patches
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.colors import LinearSegmentedColormap
+from matplotlib.lines import Line2D
+from matplotlib.patches import Patch
 from sklearn.datasets import make_circles
 from sklearn.neural_network import MLPClassifier
 
@@ -153,20 +157,98 @@ print(
 )
 
 #######################################################################
-matrix = np.zeros((10, 10))
-for valid_params in bcc.valid_predict_params:
-    row = valid_params[0] * 10
-    col = valid_params[1] * 10
-    matrix[int(row), int(col)] = 1
+grid_size = 10
+matrix = np.full((grid_size, grid_size), np.nan)
 
-fig, ax = plt.subplots(figsize=(6, 6))
-im = ax.imshow(matrix, cmap="inferno")
-ax.set_xticks(range(10), labels=(np.array(range(10)) / 10))
-ax.set_yticks(range(10), labels=(np.array(range(10)) / 10))
-ax.set_xlabel(r"lambda_2")
-ax.set_ylabel(r"lambda_1")
-ax.set_title("Valid parameters")
-fig.tight_layout()
+for i, (l1, l2) in enumerate(to_explore):
+    row = int(l1 * grid_size)
+    col = int(l2 * grid_size)
+    matrix[row, col] = bcc.p_values[i, 0]
+
+valid_matrix = np.zeros((grid_size, grid_size), dtype=int)
+for l1, l2 in bcc.valid_predict_params:
+    row = int(l1 * grid_size)
+    col = int(l2 * grid_size)
+    valid_matrix[row, col] = 1
+
+fig, ax = plt.subplots(figsize=(7.5, 7.5))
+
+colors = ["#90EE90", "#cc4444"]
+cmap = LinearSegmentedColormap.from_list("green_red_custom", colors)
+masked_matrix = np.ma.masked_invalid(matrix)
+im = ax.imshow(masked_matrix, cmap=cmap, interpolation="nearest")
+
+for i in range(grid_size):
+    for j in range(grid_size):
+        if np.isnan(matrix[i, j]):
+            rect = patches.Rectangle(
+                (j - 0.5, i - 0.5),
+                1,
+                1,
+                hatch="///",
+                facecolor="none",
+                edgecolor="grey",
+                linewidth=0,
+            )
+            ax.add_patch(rect)
+
+for i in range(grid_size):
+    for j in range(grid_size):
+        if valid_matrix[i, j] == 1:
+            neighbors = [(i - 1, j), (i + 1, j), (i, j - 1), (i, j + 1)]
+            if i - 1 < 0 or valid_matrix[i - 1, j] == 0:
+                ax.plot([j - 0.5, j + 0.5], [i - 0.5, i - 0.5], color="#006400", lw=3)
+            if i + 1 >= grid_size or valid_matrix[i + 1, j] == 0:
+                ax.plot([j - 0.5, j + 0.5], [i + 0.5, i + 0.5], color="#006400", lw=3)
+            if j - 1 < 0 or valid_matrix[i, j - 1] == 0:
+                ax.plot([j - 0.5, j - 0.5], [i - 0.5, i + 0.5], color="#006400", lw=3)
+            if j + 1 >= grid_size or valid_matrix[i, j + 1] == 0:
+                ax.plot([j + 0.5, j + 0.5], [i - 0.5, i + 0.5], color="#006400", lw=3)
+
+best_l1, best_l2 = bcc.best_predict_param
+ax.scatter(
+    best_l2 * grid_size,
+    best_l1 * grid_size,
+    c="#006400",
+    marker="*",
+    edgecolors="k",
+    s=300,
+    label="Best threshold pair",
+)
+ax.set_xlabel(r"$\lambda_2$", fontsize=16)
+ax.set_ylabel(r"$\lambda_1$", fontsize=16)
+ax.set_title(
+    "P-values per parameter pair\nwith valid parameter zone highlighted", fontsize=16
+)
+ax.set_xticks(range(grid_size))
+ax.set_xticklabels(np.round(np.arange(grid_size) / grid_size, 2), fontsize=14)
+ax.set_yticks(range(grid_size))
+ax.set_yticklabels(np.round(np.arange(grid_size) / grid_size, 2), fontsize=14)
+
+cbar = plt.colorbar(im, ax=ax, orientation="horizontal", pad=0.2, fraction=0.035)
+cbar.set_label("P-value", fontsize=12)
+legend_elements = [
+    Patch(facecolor="none", edgecolor="grey", hatch="///", label="Non-explored zone"),
+    Line2D(
+        [0],
+        [0],
+        marker="*",
+        color="w",
+        label="Best threshold pair",
+        markerfacecolor="#006400",
+        markeredgecolor="k",
+        markersize=15,
+    ),
+]
+ax.legend(
+    handles=legend_elements,
+    loc="lower center",
+    bbox_to_anchor=(0.5, -0.25),
+    ncol=2,
+    fontsize=12,
+    frameon=False,
+)
+plt.tight_layout()
 plt.show()
 ax.set_ylabel(r"lambda_1")
 ax.set_title("Valid parameters")
