@@ -9,6 +9,7 @@ History
 * Add comparison with naive threshold in risk control quick start example
 * Configure self hosted runner for minimal requirements tests
 * Choose better thumbnails in the lists of examples in the documentation
+* Add a new binary classification risk called `predicted_positive_fraction` and update the examples accordingly.
 * Add a disclosure about LLM usage to the pull request template.
 
 1.2.0 (2025-11-17)

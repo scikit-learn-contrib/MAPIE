@@ -12,10 +12,13 @@ from .risks import (
     accuracy,
     false_positive_rate,
     precision,
+    predicted_positive_fraction,
     recall,
 )
 
-Risk_str = Literal["precision", "recall", "accuracy", "fpr"]
+Risk_str = Literal[
+    "precision", "recall", "accuracy", "fpr", "predicted_positive_fraction"
+]
 Risk = Union[
     BinaryClassificationRisk,
     Risk_str,
@@ -61,8 +64,8 @@ class BinaryClassificationController:
         Valid options:
 
         - An existing risk defined in `mapie.risk_control` accessible through
-        its string equivalent: "precision", "recall", "accuracy", or
-        "fpr" for false positive rate.
+        its string equivalent: "precision", "recall", "accuracy",
+        "fpr" for false positive rate, or "predicted_positive_fraction".
         - A custom instance of BinaryClassificationRisk object
 
         Can be a list of risks in the case of multi risk control.
@@ -86,8 +89,8 @@ class BinaryClassificationController:
         - "auto" (default). For mono risk defined in mapie.risk_control, an automatic choice is made.
         For multi risk, we use the first risk in the list.
         - An existing risk defined in `mapie.risk_control` accessible through
-        its string equivalent: "precision", "recall", "accuracy", or
-        "fpr" for false positive rate.
+        its string equivalent: "precision", "recall", "accuracy",
+        "fpr" for false positive rate, or "predicted_positive_fraction".
         - A custom instance of BinaryClassificationRisk object
 
     list_predict_params : NDArray, default=np.linspace(0, 0.99, 100)
@@ -161,6 +164,7 @@ class BinaryClassificationController:
         "recall": recall,
         "accuracy": accuracy,
         "fpr": false_positive_rate,
+        "predicted_positive_fraction": predicted_positive_fraction,
     }
 
     def __init__(
