@@ -113,10 +113,10 @@ def send_to_human(X, lambda_1, lambda_2):
 # this constraint.
 
 to_explore = []
-for i in range(6):
-    lambda_1 = (i + 1) / 10
-    for j in [1, 2, 3, 4, 5]:
-        lambda_2 = lambda_1 + j / 10
+for i in range(9):
+    lambda_1 = i / 10
+    for j in range(i + 1, 10):
+        lambda_2 = j / 10
         if lambda_2 > 0.99:
             break
         to_explore.append((lambda_1, lambda_2))
