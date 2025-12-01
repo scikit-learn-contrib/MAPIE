@@ -112,6 +112,10 @@ class BinaryClassificationController:
         parameters are used.
         Use the calibrate method to compute it.
 
+    p_values : NDArray
+        P-values associated with each tested parameter in `list_predict_params`.
+        In the multi-risk setting, the value corresponds to the maximum over the tested risks.
+
     Examples
     --------
     >>> import numpy as np
@@ -210,6 +214,7 @@ class BinaryClassificationController:
 
         self.valid_predict_params: NDArray = np.array([])
         self.best_predict_param: Optional[Union[float, Tuple[float, ...]]] = None
+        self.p_values: Optional[NDArray] = None
 
     # All subfunctions are unit-tested. To avoid having to write
     # tests just to make sure those subfunctions are called,
@@ -244,15 +249,18 @@ class BinaryClassificationController:
         risk_values, eff_sample_sizes = self._get_risk_values_and_eff_sample_sizes(
             y_calibrate_, predictions_per_param, self._risk
         )
-        valid_params_index = ltt_procedure(
+        (valid_index, p_values) = ltt_procedure(
             risk_values,
             np.expand_dims(self._alpha, axis=1),
             self._delta,
             eff_sample_sizes,
             True,
-        )[0]
+        )
+        valid_params_index = valid_index[0]
 
         self.valid_predict_params = self._predict_params[valid_params_index]
+
+        self.p_values = p_values
 
         if len(self.valid_predict_params) == 0:
             self._set_risk_not_controlled()
