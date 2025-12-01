@@ -182,7 +182,7 @@ def ltt_procedure(
     delta: float,
     n_obs: NDArray,
     binary: bool = False,
-) -> List[List[Any]]:
+) -> Tuple[List[List[Any]], NDArray]:
     """
     Apply the Learn-Then-Test procedure for risk control.
     Note that we will do a multiple test for ``r_hat`` that are
