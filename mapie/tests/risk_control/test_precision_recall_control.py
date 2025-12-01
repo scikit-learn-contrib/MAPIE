@@ -11,10 +11,10 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.multioutput import MultiOutputClassifier
 from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.preprocessing import OneHotEncoder
-from sklearn.utils.validation import check_is_fitted
 from typing_extensions import TypedDict
 
 from mapie.risk_control import PrecisionRecallController
+from mapie.utils import check_is_fitted
 
 Params = TypedDict(
     "Params",
@@ -163,9 +163,6 @@ class ArrayOutputModel:
     def predict(self, X: NDArray, *args: Any) -> NDArray:
         return self.predict_proba(X) >= 0.3
 
-    def __sklearn_is_fitted__(self):
-        return True
-
 
 X_toy = np.arange(9).reshape(-1, 1)
 y_toy = np.stack(
@@ -208,7 +205,7 @@ def test_valid_method() -> None:
     """Test that valid methods raise no errors."""
     mapie_clf = PrecisionRecallController(random_state=random_state)
     mapie_clf.fit(X_toy, y_toy)
-    check_is_fitted(mapie_clf, mapie_clf.fit_attributes)
+    check_is_fitted(mapie_clf)
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
@@ -219,7 +216,7 @@ def test_valid_metric_method(strategy: str) -> None:
         random_state=random_state, metric_control=args["metric_control"]
     )
     mapie_clf.fit(X_toy, y_toy)
-    check_is_fitted(mapie_clf, mapie_clf.fit_attributes)
+    check_is_fitted(mapie_clf)
 
 
 @pytest.mark.parametrize("bound", BOUNDS)
@@ -228,7 +225,7 @@ def test_valid_bound(bound: str) -> None:
     mapie_clf = PrecisionRecallController(random_state=random_state, method="rcps")
     mapie_clf.fit(X_toy, y_toy)
     mapie_clf.predict(X_toy, bound=bound, delta=0.1)
-    check_is_fitted(mapie_clf, mapie_clf.fit_attributes)
+    check_is_fitted(mapie_clf)
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
