@@ -252,7 +252,7 @@ def ltt_procedure(
     for i in range(alpha_np.shape[1]):
         l_index = np.nonzero(p_values[:, i] <= delta / N)[0].tolist()
         valid_index.append(l_index)
-    return valid_index
+    return valid_index, p_values
 
 
 def compute_hoeffding_bentkus_p_value(
