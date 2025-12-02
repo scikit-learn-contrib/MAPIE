@@ -234,7 +234,8 @@ def test_ltt_procedure_n_obs_negative() -> None:
     n_obs = np.array([[-1]])
     alpha_np = np.array([[0.6]])
     binary = True
-    assert ltt_procedure(r_hat, alpha_np, 0.1, n_obs, binary) == [[]]
+    valid_index, _ = ltt_procedure(r_hat, alpha_np, 0.1, n_obs, binary)
+    assert valid_index == [[]]
 
 
 def test_ltt_multi_risk() -> None:
