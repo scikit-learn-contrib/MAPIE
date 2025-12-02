@@ -137,7 +137,7 @@ def test_find_precision_lambda_star() -> None:
 @pytest.mark.parametrize("alpha", [np.array([[0.5]]), np.array([[0.6, 0.8]])])
 def test_ltt_type_output_alpha_delta(alpha: NDArray, delta: float) -> None:
     """Test type output _ltt_procedure"""
-    valid_index = ltt_procedure(r_hat, alpha, delta, n)
+    valid_index, _ = ltt_procedure(r_hat, alpha, delta, n)
     assert isinstance(valid_index, list)
 
 
