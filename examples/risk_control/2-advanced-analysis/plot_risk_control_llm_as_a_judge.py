@@ -17,6 +17,7 @@ from sklearn.model_selection import train_test_split
 from mapie.risk_control import BinaryClassificationController
 
 RANDOM_STATE = 42
+np.random.seed(RANDOM_STATE)
 
 pd.set_option("display.max_colwidth", None)
 
