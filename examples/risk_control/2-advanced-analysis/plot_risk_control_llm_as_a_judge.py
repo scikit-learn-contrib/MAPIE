@@ -16,7 +16,8 @@ from sklearn.model_selection import train_test_split
 
 from mapie.risk_control import BinaryClassificationController
 
-np.random.seed(0)
+RANDOM_STATE = 42
+
 pd.set_option("display.max_colwidth", None)
 
 ##############################################################################
@@ -138,7 +139,7 @@ X = df.index.to_numpy()  # index is the judge_input
 y = df["hallucinated"].astype(int)
 
 X_calib, X_test, y_calib, y_test = train_test_split(
-    X, y, test_size=0.95, random_state=0
+    X, y, test_size=0.95, random_state=RANDOM_STATE
 )
 target_precision = 0.9
 confidence_level = 0.9
