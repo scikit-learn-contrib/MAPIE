@@ -152,8 +152,9 @@ bcc.calibrate(X_calib, y_calib)
 
 print(
     f"{len(bcc.valid_predict_params)} multi-dimensional parameters "
-    f"found that guarantee a proportion of emails sent to verification\n"
-    f"of at most {target_level} with a confidence of {confidence_level}."
+    f"found that guarantee a proportion of emails sent\n"
+    f"to verification of at most {target_level} with "
+    f"a confidence of {confidence_level}."
 )
 
 #######################################################################
