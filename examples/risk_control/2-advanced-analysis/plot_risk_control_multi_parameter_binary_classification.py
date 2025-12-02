@@ -145,7 +145,7 @@ bcc = BinaryClassificationController(
     risk="predicted_positive_fraction",
     target_level=target_level,
     confidence_level=confidence_level,
-    best_predict_param_choice="precision",
+    best_predict_param_choice="recall",
     list_predict_params=to_explore,
 )
 bcc.calibrate(X_calib, y_calib)
