@@ -174,8 +174,8 @@ for l1, l2 in bcc.valid_predict_params:
 
 fig, ax = plt.subplots(figsize=(7.5, 7.5))
 
-colors = ["#90EE90", "#cc4444"]
-cmap = LinearSegmentedColormap.from_list("green_red_custom", colors)
+colors = ["#BDEE90", "#cc4444"]
+cmap = LinearSegmentedColormap.from_list("green_red_custom", colors, gamma=0.11)
 masked_matrix = np.ma.masked_invalid(matrix)
 im = ax.imshow(masked_matrix, cmap=cmap, interpolation="nearest")
 
@@ -230,6 +230,7 @@ cbar = plt.colorbar(im, ax=ax, orientation="horizontal", pad=0.2, fraction=0.035
 cbar.set_label("P-value", fontsize=12)
 legend_elements = [
     Patch(facecolor="none", edgecolor="grey", hatch="///", label="Non-explored zone"),
+    Patch(facecolor="none", edgecolor="#006400", label="Valid parameter zone", lw=2),
     Line2D(
         [0],
         [0],
