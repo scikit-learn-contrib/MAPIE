@@ -38,7 +38,7 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
 
     Parameters
     ----------
-    predict_function : Callable[[ArrayLike], NDArray]
+    predict_function : Callable[[ArrayLike], NDArray] TOREMOVE
         predict_proba method of a fitted multi-label classifier.
         It should return a list of arrays where the length of the list is n_classes
         and each array is of shape (n_samples, 2) corresponding to the
