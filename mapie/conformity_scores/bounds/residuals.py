@@ -151,8 +151,14 @@ class ResidualNormalisedScore(BaseRegressionScore):
         """
         residual_estimator = self._check_estimator(self.residual_estimator)
         random_state = check_random_state(self.random_state)
-        X, y, y_pred = indexable(X, y, y_pred)
-        return X, y, y_pred, residual_estimator, random_state
+        X_, y_, y_pred_ = indexable(X, y, y_pred)
+        return (
+            cast(NDArray, X_),
+            cast(NDArray, y_),
+            cast(NDArray, y_pred_),
+            residual_estimator,
+            random_state,
+        )
 
     def _fit_residual_estimator(
         self,
