@@ -161,17 +161,20 @@ print(
 grid_size = 10
 matrix = np.full((grid_size, grid_size), np.nan)
 
+# Build p-values matrix
 for i, (l1, l2) in enumerate(to_explore):
     row = int(l1 * grid_size)
     col = int(l2 * grid_size)
     matrix[row, col] = bcc.p_values[i, 0]
 
+# Build valid thresholds mask
 valid_matrix = np.zeros((grid_size, grid_size), dtype=int)
 for l1, l2 in bcc.valid_predict_params:
     row = int(l1 * grid_size)
     col = int(l2 * grid_size)
     valid_matrix[row, col] = 1
 
+# Plot p-value matrix
 fig, ax = plt.subplots(figsize=(7.5, 7.5))
 
 colors = ["#BDEE90", "#cc4444"]
@@ -193,6 +196,7 @@ for i in range(grid_size):
             )
             ax.add_patch(rect)
 
+# Add valid parameters area shape
 for i in range(grid_size):
     for j in range(grid_size):
         if valid_matrix[i, j] == 1:
@@ -206,6 +210,7 @@ for i in range(grid_size):
             if j + 1 >= grid_size or valid_matrix[i, j + 1] == 0:
                 ax.plot([j + 0.5, j + 0.5], [i - 0.5, i + 0.5], color="#006400", lw=3)
 
+# Add best predict param as a star
 best_l1, best_l2 = bcc.best_predict_param
 ax.scatter(
     best_l2 * grid_size,
@@ -216,6 +221,8 @@ ax.scatter(
     s=300,
     label="Best threshold pair",
 )
+
+# Set up axes, theme and legend
 ax.set_xlabel(r"$\lambda_2$", fontsize=16)
 ax.set_ylabel(r"$\lambda_1$", fontsize=16)
 ax.set_title(
