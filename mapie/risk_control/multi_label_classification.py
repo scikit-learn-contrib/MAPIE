@@ -525,7 +525,7 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
         if first_call or _refit:
             self.risks = risk
         else:
-            self.risks = np.concatenate([self.risks, risk], axis=0)
+            self.risks = np.vstack((self.risks, risk))
 
         self._is_fitted = True
 
