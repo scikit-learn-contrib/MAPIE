@@ -89,8 +89,6 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
         List of all valid methods. Either CRC or RCPS
     valid_bounds: List[Union[str, ``None``]]
         List of all valid bounds computation for RCPS only.
-    single_estimator_ : sklearn.ClassifierMixin
-        Estimator fitted on the whole training set.
 
     n_lambdas: int
         Number of thresholds on which we compute the risk.
@@ -162,7 +160,7 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
     valid_bounds_ = ["hoeffding", "bernstein", "wsr", None]
     lambdas = np.arange(0, 1, 0.01)
     n_lambdas = len(lambdas)
-    fit_attributes = ["single_estimator_", "risks"]
+    fit_attributes = ["risks"]
     sigma_init = 0.25  # Value given in the paper [1]
     cal_size = 0.3
 
@@ -424,11 +422,8 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
         self._check_all_labelled(y)
         self.n_samples_ = _num_samples(X)
 
-        estimator = None
-
         # Work
-        self.single_estimator_ = estimator
-        y_pred_proba = self.single_estimator_.predict_proba(X)
+        y_pred_proba = self._predict_function(X)
         y_pred_proba_array = self._transform_pred_proba(y_pred_proba)
 
         if self.metric_control == "recall":
@@ -528,14 +523,13 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
         check_is_fitted(self)
 
         # Estimate prediction sets
-        y_pred = self.single_estimator_.predict(X)
+        y_pred_proba = self._predict_function(X)
+        y_pred = np.stack([proba.argmax(axis=1) for proba in y_pred_proba], axis=1)
 
         if alpha is None:
             return np.array(y_pred)
 
         alpha_np = cast(NDArray, alpha)
-
-        y_pred_proba = self.single_estimator_.predict_proba(X)
 
         y_pred_proba_array = self._transform_pred_proba(y_pred_proba)
         y_pred_proba_array = np.repeat(y_pred_proba_array, len(alpha_np), axis=2)
