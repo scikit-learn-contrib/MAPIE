@@ -2,15 +2,11 @@ from __future__ import annotations
 
 import warnings
 from itertools import chain
-from typing import Iterable, Optional, Sequence, Tuple, Union, cast
+from typing import Callable, Iterable, Optional, Sequence, Tuple, Union, cast
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 from sklearn.base import BaseEstimator, ClassifierMixin
-from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import train_test_split
-from sklearn.multioutput import MultiOutputClassifier
-from sklearn.pipeline import Pipeline
 from sklearn.utils import check_random_state
 from sklearn.utils.validation import _check_y, _num_samples, indexable
 
@@ -19,7 +15,6 @@ from mapie.utils import (
     _check_n_jobs,
     _check_verbose,
     check_is_fitted,
-    check_sklearn_user_model_is_fitted,
 )
 
 from .methods import (
@@ -43,13 +38,11 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
 
     Parameters
     ----------
-    estimator : Optional[ClassifierMixin]
-        Any fitted multi-label classifier with scikit-learn API
-        (i.e. with fit, predict, and predict_proba methods).
-        If ``None``, estimator by default is a sklearn LogisticRegression
-        instance.
-
-         by default ``None``
+    predict_function : Callable[[ArrayLike], NDArray]
+        predict_proba method of a fitted multi-label classifier.
+        It should return a list of arrays where the length of the list is n_classes
+        and each array is of shape (n_samples, 2) corresponding to the
+        probabilities of the negative and positive class for each label.
 
     metric_control : Optional[str]
         Metric to control. Either "recall" or "precision".
@@ -175,14 +168,14 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
 
     def __init__(
         self,
-        estimator: Optional[ClassifierMixin] = None,
+        predict_function: Callable[[ArrayLike], NDArray],
         metric_control: Optional[str] = "recall",
         method: Optional[str] = None,
         n_jobs: Optional[int] = None,
         random_state: Optional[Union[int, np.random.RandomState]] = None,
         verbose: int = 0,
     ) -> None:
-        self.estimator = estimator
+        self._predict_function = predict_function
         self.metric_control = metric_control
         self.method = method
         self.n_jobs = n_jobs
@@ -243,7 +236,7 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
 
         Parameters
         ----------
-        y : NDArray of shape (n_samples, n_labels)
+        y : NDArray of shape (n_samples, n_classes)
             Labels of the observations.
 
         Raises
@@ -312,87 +305,6 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
                     + " for alpha="
                     + str(alpha[i])
                 )
-
-    def _check_estimator(
-        self,
-        X: ArrayLike,
-        y: ArrayLike,
-        estimator: Optional[ClassifierMixin] = None,
-        _refit: Optional[bool] = False,
-    ) -> Tuple[ClassifierMixin, ArrayLike, ArrayLike]:
-        """
-        Check the estimator value. If it is ``None``,
-        it returns a multi-output ``LogisticRegression``
-        instance if necessary.
-
-        Parameters
-        ----------
-        X : ArrayLike of shape (n_samples, n_features)
-            Training data.
-
-        y : ArrayLike of shape (n_samples,)
-            Training labels.
-
-        estimator : Optional[ClassifierMixin], optional
-            Estimator to check, by default ``None``
-
-        _refit : Optional[bool]
-            Whether or not the user is using fit (True) or
-            partial_fit (False).
-
-            By default False
-
-        Raises
-        ------
-        ValueError
-            If the estimator is not ``None``
-            and has no fit, predict, nor predict_proba methods.
-
-        NotFittedError
-            If the estimator is not fitted.
-
-        Warning
-            If estimator is then to warn about the split of the
-            data between train and calibration
-        """
-        if (estimator is None) and (not _refit):
-            raise ValueError(
-                "Invalid estimator with partial_fit. "
-                "If the estimator is ``None`` you can not "
-                "use partial_fit."
-            )
-        if (estimator is None) and (_refit):
-            estimator = MultiOutputClassifier(LogisticRegression())
-            X_train, X_calib, y_train, y_calib = train_test_split(
-                X,
-                y,
-                test_size=self.calib_size,
-                random_state=self.random_state,
-            )
-            estimator.fit(X_train, y_train)
-            warnings.warn(
-                "WARNING: To avoid overfitting, X has been split"
-                + "into X_train and X_calib. The calibration will only"
-                + "be done on X_calib"
-            )
-            return estimator, X_calib, y_calib
-
-        if isinstance(estimator, Pipeline):
-            est = estimator[-1]
-        else:
-            est = estimator
-        if (
-            not hasattr(est, "fit")
-            or not hasattr(est, "predict")
-            or not hasattr(est, "predict_proba")
-        ):
-            raise ValueError(
-                "Invalid estimator. "
-                "Please provide a classifier with fit,"
-                "predict, and predict_proba methods."
-            )
-        check_sklearn_user_model_is_fitted(est)
-        return estimator, X, y
 
     def _check_partial_fit_first_call(self) -> bool:
         """
@@ -505,13 +417,14 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
 
         X, y = indexable(X, y)
         _check_y(y, multi_output=True)
-        estimator, X, y = self._check_estimator(X, y, self.estimator, _refit)
 
         y = cast(NDArray, y)
         X = cast(NDArray, X)
 
         self._check_all_labelled(y)
         self.n_samples_ = _num_samples(X)
+
+        estimator = None
 
         # Work
         self.single_estimator_ = estimator
