@@ -190,6 +190,10 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
         self.verbose = verbose
         self._is_fitted = False
 
+        self._check_parameters()
+        self._check_metric_control()
+        self._check_method()
+
     @property
     def is_fitted(self):
         """Returns True if the estimator is fitted"""
@@ -498,9 +502,6 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
         """
         # Checks
         first_call = self._check_partial_fit_first_call()
-        self._check_parameters()
-        self._check_metric_control()
-        self._check_method()
 
         X, y = indexable(X, y)
         _check_y(y, multi_output=True)
