@@ -166,7 +166,7 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
 
     def __init__(
         self,
-        predict_function: Callable[[ArrayLike], Union[list[NDArray], NDArray]],
+        predict_function: Callable[[ArrayLike], NDArray],
         metric_control: Optional[str] = "recall",
         method: Optional[str] = None,
         n_jobs: Optional[int] = None,
@@ -421,6 +421,8 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
 
         self._check_all_labelled(y)
         self.n_samples_ = _num_samples(X)
+
+        estimator = None
 
         # Work
         y_pred_proba = self._predict_function(X)
