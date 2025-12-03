@@ -414,12 +414,10 @@ def test_reinit_new_fit():
 
 
 @pytest.mark.parametrize("method", WRONG_METHODS)
-def test_method_error_in_fit(method: str) -> None:
+def test_method_error_in_init(method: str) -> None:
     """Test error for wrong method"""
-    mapie_clf = PrecisionRecallController(random_state=random_state, method=method)
-
     with pytest.raises(ValueError, match=r".*Invalid method.*"):
-        mapie_clf.fit(X_toy, y_toy)
+        PrecisionRecallController(random_state=random_state, method=method)
 
 
 def test_method_error_if_no_label_fit() -> None:
@@ -448,13 +446,12 @@ def test_bound_error_in_predict(bound: str) -> None:
 
 
 @pytest.mark.parametrize("metric_control", WRONG_METRICS)
-def test_metric_error_in_fit(metric_control: str) -> None:
+def test_metric_error_in_init(metric_control: str) -> None:
     """Test error for wrong metrics"""
-    mapie_clf = PrecisionRecallController(
-        random_state=random_state, metric_control=metric_control
-    )
     with pytest.raises(ValueError, match=r".*Invalid metric. *"):
-        mapie_clf.fit(X_toy, y_toy)
+        PrecisionRecallController(
+            random_state=random_state, metric_control=metric_control
+        )
 
 
 def test_error_rcps_delta_null() -> None:
@@ -547,7 +544,7 @@ def test_error_partial_fit_different_size() -> None:
     clf = MultiOutputClassifier(LogisticRegression()).fit(X_toy, y_toy)
     mapie_clf = PrecisionRecallController(estimator=clf, random_state=random_state)
     mapie_clf.partial_fit(X_toy, y_toy)
-    with pytest.raises(ValueError, match=r".*Number of features*"):
+    with pytest.raises(ValueError, match=r".*features, but*"):
         mapie_clf.partial_fit(X, y)
 
 
@@ -641,11 +638,8 @@ def test_error_wrong_method_metric_precision(method: str) -> None:
     with invalid method .
     """
     clf = MultiOutputClassifier(LogisticRegression()).fit(X_toy, y_toy)
-    mapie_clf = PrecisionRecallController(
-        clf, method=method, metric_control="precision"
-    )
     with pytest.raises(ValueError, match=r".*Invalid method for metric*"):
-        mapie_clf.fit(X_toy, y_toy)
+        PrecisionRecallController(clf, method=method, metric_control="precision")
 
 
 @pytest.mark.parametrize("method", ["ltt"])
@@ -654,10 +648,9 @@ def test_check_metric_control(method: str) -> None:
     Test that an error is returned when using a metric
     with invalid method .
     """
-    clf = MultiOutputClassifier(LogisticRegression()).fit(X_toy, y_toy)
-    mapie_clf = PrecisionRecallController(clf, method=method, metric_control="recall")
     with pytest.raises(ValueError, match=r".*Invalid method for metric*"):
-        mapie_clf.fit(X_toy, y_toy)
+        clf = MultiOutputClassifier(LogisticRegression()).fit(X_toy, y_toy)
+        PrecisionRecallController(clf, method=method, metric_control="recall")
 
 
 def test_method_none_precision() -> None:
