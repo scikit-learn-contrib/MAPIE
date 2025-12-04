@@ -146,9 +146,6 @@ class ArrayOutputModel:
         proba_out = np.repeat(probas, len(X), axis=0)
         return proba_out
 
-    def predict(self, X: NDArray, *args: Any) -> NDArray:
-        return self.predict_proba(X) >= 0.3
-
 
 X_toy = np.arange(9).reshape(-1, 1)
 y_toy = np.stack(
