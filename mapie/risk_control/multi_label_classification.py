@@ -440,9 +440,7 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
 
         return self
 
-    def fit(
-        self, X: ArrayLike, y: ArrayLike, calib_size: Optional[float] = 0.3
-    ) -> PrecisionRecallController:
+    def fit(self, X: ArrayLike, y: ArrayLike) -> PrecisionRecallController:
         """
         Fit the base estimator (or use the fitted base estimator) and compute risks.
 
@@ -454,18 +452,11 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
         y: NDArray of shape (n_samples, n_classes)
             Training labels.
 
-        calib_size: Optional[float]
-            Size of the calibration dataset with respect to X if the
-            given model is ``None`` need to fit a LogisticRegression.
-
-            By default .3
-
         Returns
         -------
         PrecisionRecallController
             The model itself.
         """
-        self.calib_size = calib_size
         return self.partial_fit(X, y, _refit=True)
 
     def predict(
