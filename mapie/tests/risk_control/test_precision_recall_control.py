@@ -134,17 +134,6 @@ y_toy_mapie = {
 }
 
 
-class WrongOutputModel:
-    def __init__(self):
-        pass
-
-    def predict_proba(self, *args: Any):
-        """Dummy predict_proba."""
-
-    def predict(self, *args: Any):
-        """Dummy predict."""
-
-
 class ArrayOutputModel:
     def __init__(self):
         self.trained_ = True
@@ -198,15 +187,6 @@ multilabel_predict_function = multilabel_estimator.predict_proba
 def test_initialized() -> None:
     """Test that initialization does not crash."""
     PrecisionRecallController(predict_function=toy_predict_function)
-
-
-def test_valid_estimator() -> None:
-    """Test that valid estimators are not corrupted, for all strategies."""
-    mapie_clf = PrecisionRecallController(
-        predict_function=toy_predict_function, random_state=random_state
-    )
-    mapie_clf.fit(X_toy, y_toy)
-    assert isinstance(mapie_clf.single_estimator_, MultiOutputClassifier)
 
 
 def test_valid_method() -> None:
@@ -389,10 +369,10 @@ def test_results_single_and_multi_jobs(strategy: str) -> None:
 )
 def test_valid_prediction(alpha: Any, delta: Any, bound: Any) -> None:
     """Test fit and predict."""
-    model = MultiOutputClassifier(LogisticRegression())
-    model.fit(X_toy, y_toy)
     mapie_clf = PrecisionRecallController(
-        estimator=model, method="rcps", random_state=random_state
+        predict_function=toy_predict_function,
+        method="rcps",
+        random_state=random_state,
     )
 
     mapie_clf.fit(X_toy, y_toy)
@@ -457,7 +437,9 @@ def test_method_error_if_no_label_fit() -> None:
 def test_method_error_if_no_label_partial_fit() -> None:
     """Test error for wrong method"""
     clf = MultiOutputClassifier(LogisticRegression()).fit(X_no_label, y_no_label)
-    mapie_clf = PrecisionRecallController(estimator=clf, random_state=random_state)
+    mapie_clf = PrecisionRecallController(
+        predict_function=clf.predict_proba, random_state=random_state
+    )
     with pytest.raises(ValueError, match=r".*Invalid y.*"):
         mapie_clf.partial_fit(X_no_label, y_no_label)
 
@@ -638,21 +620,6 @@ def test_pipeline_compatibility(strategy: str) -> None:
 
     mapie.fit(X, y)
     mapie.predict(X, bound=args["bound"], delta=0.1)
-
-
-def test_error_no_fit() -> None:
-    """Test error for no fit"""
-    clf = WrongOutputModel()
-    mapie_clf = PrecisionRecallController(estimator=clf, random_state=random_state)
-    with pytest.raises(ValueError, match=r".*Please provide a classifier with*"):
-        mapie_clf.fit(X_toy, y_toy)
-
-
-def test_error_estimator_none_partial() -> None:
-    """Test error estimator none partial"""
-    mapie_clf = PrecisionRecallController(random_state=random_state)
-    with pytest.raises(ValueError, match=r".*Invalid estimator with partial_fit*"):
-        mapie_clf.partial_fit(X_toy, y_toy)
 
 
 def test_partial_fit_first_time():

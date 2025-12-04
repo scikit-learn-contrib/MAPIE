@@ -166,7 +166,7 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
 
     def __init__(
         self,
-        predict_function: Callable[[ArrayLike], NDArray],
+        predict_function: Callable[[ArrayLike], list[NDArray] | NDArray],
         metric_control: Optional[str] = "recall",
         method: Optional[str] = None,
         n_jobs: Optional[int] = None,
@@ -524,14 +524,16 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
 
         # Estimate prediction sets
         y_pred_proba = self._predict_function(X)
-        y_pred = np.stack([proba.argmax(axis=1) for proba in y_pred_proba], axis=1)
+        y_pred_proba_array = self._transform_pred_proba(y_pred_proba)
+
+        y_pred = (
+            y_pred_proba_array.squeeze() > 0.5
+        )  # standard prediction: class predicted if proba > 0.5
 
         if alpha is None:
             return np.array(y_pred)
-
         alpha_np = cast(NDArray, alpha)
 
-        y_pred_proba_array = self._transform_pred_proba(y_pred_proba)
         y_pred_proba_array = np.repeat(y_pred_proba_array, len(alpha_np), axis=2)
         if self.metric_control == "precision":
             self.n_obs = len(self.risks)
