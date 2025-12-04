@@ -177,8 +177,8 @@ for l1, l2 in bcc.valid_predict_params:
 # Plot p-value matrix
 fig, ax = plt.subplots(figsize=(7.5, 7.5))
 
-colors = ["#BDEE90", "#cc4444"]
-cmap = LinearSegmentedColormap.from_list("green_red_custom", colors, gamma=0.11)
+colors = ["#cde2f9", "#96bfd7", "#3765a9"]
+cmap = LinearSegmentedColormap.from_list("custom_blue", colors, gamma=0.5)
 masked_matrix = np.ma.masked_invalid(matrix)
 im = ax.imshow(masked_matrix, cmap=cmap, interpolation="nearest")
 
@@ -202,20 +202,20 @@ for i in range(grid_size):
         if valid_matrix[i, j] == 1:
             neighbors = [(i - 1, j), (i + 1, j), (i, j - 1), (i, j + 1)]
             if i - 1 < 0 or valid_matrix[i - 1, j] == 0:
-                ax.plot([j - 0.5, j + 0.5], [i - 0.5, i - 0.5], color="#006400", lw=3)
+                ax.plot([j - 0.5, j + 0.5], [i - 0.5, i - 0.5], color="#2ecc71", lw=3)
             if i + 1 >= grid_size or valid_matrix[i + 1, j] == 0:
-                ax.plot([j - 0.5, j + 0.5], [i + 0.5, i + 0.5], color="#006400", lw=3)
+                ax.plot([j - 0.5, j + 0.5], [i + 0.5, i + 0.5], color="#2ecc71", lw=3)
             if j - 1 < 0 or valid_matrix[i, j - 1] == 0:
-                ax.plot([j - 0.5, j - 0.5], [i - 0.5, i + 0.5], color="#006400", lw=3)
+                ax.plot([j - 0.5, j - 0.5], [i - 0.5, i + 0.5], color="#2ecc71", lw=3)
             if j + 1 >= grid_size or valid_matrix[i, j + 1] == 0:
-                ax.plot([j + 0.5, j + 0.5], [i - 0.5, i + 0.5], color="#006400", lw=3)
+                ax.plot([j + 0.5, j + 0.5], [i - 0.5, i + 0.5], color="#2ecc71", lw=3)
 
 # Add best predict param as a star
 best_l1, best_l2 = bcc.best_predict_param
 ax.scatter(
     best_l2 * grid_size,
     best_l1 * grid_size,
-    c="#006400",
+    c="#2ecc71",
     marker="*",
     edgecolors="k",
     s=300,
@@ -237,14 +237,14 @@ cbar = plt.colorbar(im, ax=ax, orientation="horizontal", pad=0.2, fraction=0.035
 cbar.set_label("P-value", fontsize=12)
 legend_elements = [
     Patch(facecolor="none", edgecolor="grey", hatch="///", label="Non-explored zone"),
-    Patch(facecolor="none", edgecolor="#006400", label="Valid parameter zone", lw=2),
+    Patch(facecolor="none", edgecolor="#2ecc71", label="Valid parameter zone", lw=2),
     Line2D(
         [0],
         [0],
         marker="*",
         color="w",
         label="Best threshold pair",
-        markerfacecolor="#006400",
+        markerfacecolor="#2ecc71",
         markeredgecolor="k",
         markersize=15,
     ),
