@@ -141,7 +141,7 @@ class ArrayOutputModel:
     def fit(self, *args: Any) -> None:
         """Dummy fit."""
 
-    def predict_proba(self, X: NDArray, *args: Any) -> NDArray:
+    def predict_proba(self, X: NDArray) -> NDArray:
         probas = np.array([[0.9, 0.05, 0.05]])
         proba_out = np.repeat(probas, len(X), axis=0)
         return proba_out
