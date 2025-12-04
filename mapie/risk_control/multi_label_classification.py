@@ -190,6 +190,10 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
         self.verbose = verbose
         self._is_fitted = False
 
+        self._check_parameters()
+        self._check_metric_control()
+        self._check_method()
+
     @property
     def is_fitted(self):
         """Returns True if the estimator is fitted"""
@@ -498,9 +502,6 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
         """
         # Checks
         first_call = self._check_partial_fit_first_call()
-        self._check_parameters()
-        self._check_metric_control()
-        self._check_method()
 
         X, y = indexable(X, y)
         _check_y(y, multi_output=True)
@@ -513,30 +514,19 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
         self.n_samples_ = _num_samples(X)
 
         # Work
-        if first_call or _refit:
-            self.single_estimator_ = estimator
-            y_pred_proba = self.single_estimator_.predict_proba(X)
-            y_pred_proba_array = self._transform_pred_proba(y_pred_proba)
-            self.theta_ = X.shape[1]
+        self.single_estimator_ = estimator
+        y_pred_proba = self.single_estimator_.predict_proba(X)
+        y_pred_proba_array = self._transform_pred_proba(y_pred_proba)
 
-            if self.metric_control == "recall":
-                self.risks = compute_risk_recall(self.lambdas, y_pred_proba_array, y)
-            else:  # self.metric_control == "precision"
-                self.risks = compute_risk_precision(self.lambdas, y_pred_proba_array, y)
+        if self.metric_control == "recall":
+            risk = compute_risk_recall(self.lambdas, y_pred_proba_array, y)
+        else:  # self.metric_control == "precision"
+            risk = compute_risk_precision(self.lambdas, y_pred_proba_array, y)
+
+        if first_call or _refit:
+            self.risks = risk
         else:
-            if X.shape[1] != self.theta_:
-                msg = "Number of features %d does not match previous data %d."
-                raise ValueError(msg % (X.shape[1], self.theta_))
-            self.single_estimator_ = estimator
-            y_pred_proba = self.single_estimator_.predict_proba(X)
-            y_pred_proba_array = self._transform_pred_proba(y_pred_proba)
-            if self.metric_control == "recall":
-                partial_risk = compute_risk_recall(self.lambdas, y_pred_proba_array, y)
-            else:  # self.metric_control == "precision"
-                partial_risk = compute_risk_precision(
-                    self.lambdas, y_pred_proba_array, y
-                )
-            self.risks = np.concatenate([self.risks, partial_risk], axis=0)
+            self.risks = np.vstack((self.risks, risk))
 
         self._is_fitted = True
 
