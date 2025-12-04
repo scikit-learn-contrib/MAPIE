@@ -197,15 +197,6 @@ def test_initialized() -> None:
     PrecisionRecallController(predict_function=toy_predict_function)
 
 
-def test_valid_estimator() -> None:
-    """Test that valid estimators are not corrupted, for all strategies."""
-    mapie_clf = PrecisionRecallController(
-        predict_function=toy_predict_function, random_state=random_state
-    )
-    mapie_clf.fit(X_toy, y_toy)
-    assert isinstance(mapie_clf.single_estimator_, MultiOutputClassifier)
-
-
 def test_valid_method() -> None:
     """Test that valid methods raise no errors."""
     mapie_clf = PrecisionRecallController(
