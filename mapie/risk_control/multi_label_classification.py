@@ -145,7 +145,7 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
     >>> X_toy = np.arange(4).reshape(-1, 1)
     >>> y_toy = np.stack([[1, 0, 1], [1, 0, 0], [0, 1, 1], [0, 1, 0]])
     >>> clf = MultiOutputClassifier(LogisticRegression()).fit(X_toy, y_toy)
-    >>> mapie = PrecisionRecallController(estimator=clf).fit(X_toy, y_toy)
+    >>> mapie = PrecisionRecallController(predict_function=clf.predict_proba).fit(X_toy, y_toy)
     >>> _, y_pi_mapie = mapie.predict(X_toy, alpha=0.3)
     >>> print(y_pi_mapie[:, :, 0])
     [[ True False  True]
@@ -187,7 +187,7 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
 
     @property
     def is_fitted(self):
-        """Returns True if the estimator is fitted"""
+        """Returns True if the controller is fitted"""
         return self._is_fitted
 
     def _check_parameters(self) -> None:
