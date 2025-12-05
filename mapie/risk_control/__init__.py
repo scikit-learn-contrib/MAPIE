@@ -10,7 +10,7 @@ from .risks import (
 )
 
 __all__ = [
-    "MultiLabelClassificationControllerr",
+    "MultiLabelClassificationController",
     "BinaryClassificationController",
     "BinaryClassificationRisk",
     "accuracy",
