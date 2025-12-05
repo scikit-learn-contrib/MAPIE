@@ -1,11 +1,9 @@
-from __future__ import annotations
-
 from typing import Any, Optional
 
 import numpy as np
 import pandas as pd
 import pytest
-from numpy.typing import NDArray
+from numpy.typing import ArrayLike, NDArray
 from sklearn.compose import ColumnTransformer
 from sklearn.datasets import make_multilabel_classification
 from sklearn.impute import SimpleImputer
