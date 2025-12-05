@@ -194,7 +194,7 @@ print(
 )
 
 print(
-    "\n\nWith risk control, the precision is:\n"
+    "\n\nWith risk control, the precision is:\n "
     f"- {precisions[best_threshold_index]:.3f} on the calibration set\n "
     f"- {precision_score(y_test, bcc.predict(X_test)):.3f} on the test set."
 )
