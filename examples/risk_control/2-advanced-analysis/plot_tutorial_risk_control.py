@@ -25,7 +25,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.multioutput import MultiOutputClassifier
 from sklearn.naive_bayes import GaussianNB
 
-from mapie.risk_control import PrecisionRecallController
+from mapie.risk_control import MultiLabelClassificationController
 
 ##############################################################################
 # 1. Construction of the dataset
@@ -92,9 +92,9 @@ plt.show()
 ##############################################################################
 # 2 Recall control risk with CRC and RCPS
 # ----------------------------------------------------------------------------
-# 2.1 Fitting PrecisionRecallController
+# 2.1 Fitting MultiLabelClassificationController
 # ----------------------------------------------------------------------------
-# PrecisionRecallController will be fitted with RCPS and CRC methods. For the
+# MultiLabelClassificationController will be fitted with RCPS and CRC methods. For the
 # RCPS method, we will test all three Upper Confidence Bounds (Hoeffding,
 # Bernstein and Waudby-Smith–Ramdas).
 # The two methods give two different guarantees on the risk:
@@ -125,18 +125,18 @@ alpha = np.arange(0.01, 1, 0.01)
 y_pss, recalls, thresholds, r_hats, r_hat_pluss = {}, {}, {}, {}, {}
 y_test_repeat = np.repeat(y_test[:, :, np.newaxis], len(alpha), 2)
 for i, (name, (method, bound)) in enumerate(method_params.items()):
-    mapie = PrecisionRecallController(
-        estimator=clf, method=method, metric_control="recall"
+    mapie_clf = MultiLabelClassificationController(
+        predict_function=clf.predict_proba, method=method, metric_control="recall"
     )
-    mapie.fit(X_cal, y_cal)
+    mapie_clf.calibrate(X_cal, y_cal)
 
-    _, y_pss[name] = mapie.predict(X_test, alpha=alpha, bound=bound, delta=0.1)
+    _, y_pss[name] = mapie_clf.predict(X_test, alpha=alpha, bound=bound, delta=0.1)
     recalls[name] = (
         (y_test_repeat * y_pss[name]).sum(axis=1) / y_test_repeat.sum(axis=1)
     ).mean(axis=0)
-    thresholds[name] = mapie.lambdas_star
-    r_hats[name] = mapie.r_hat
-    r_hat_pluss[name] = mapie.r_hat_plus
+    thresholds[name] = mapie_clf.lambdas_star
+    r_hats[name] = mapie_clf.r_hat
+    r_hat_pluss[name] = mapie_clf.r_hat_plus
 
 
 ##############################################################################
@@ -182,9 +182,11 @@ plt.show()
 
 fig, axs = plt.subplots(1, len(method_params), figsize=(8 * len(method_params), 8))
 for i, (name, (method, bound)) in enumerate(method_params.items()):
-    axs[i].plot(mapie.lambdas, r_hats[name], label=r"$\hat{R}$", linewidth=2)
+    axs[i].plot(mapie_clf.lambdas, r_hats[name], label=r"$\hat{R}$", linewidth=2)
     if name != "CRC":
-        axs[i].plot(mapie.lambdas, r_hat_pluss[name], label=r"$\hat{R}^+$", linewidth=2)
+        axs[i].plot(
+            mapie_clf.lambdas, r_hat_pluss[name], label=r"$\hat{R}^+$", linewidth=2
+        )
     axs[i].plot([0, 1], [alpha[9], alpha[9]], label=r"$\alpha$")
     axs[i].plot(
         [thresholds[name][9], thresholds[name][9]],
@@ -198,7 +200,7 @@ plt.show()
 ##############################################################################
 # 3. Precision control risk with LTT
 # ----------------------------------------------------------------------------
-# 3.1 Fitting PrecisionRecallController
+# 3.1 Fitting MultiLabelClassificationController
 # ----------------------------------------------------------------------------
 #
 # In this part, we will use LTT to control precision.
@@ -221,10 +223,10 @@ plt.show()
 # doesn't necessarly pass the FWER control! This is what we are going to
 # explore.
 
-mapie_clf = PrecisionRecallController(
-    estimator=clf, method="ltt", metric_control="precision"
+mapie_clf = MultiLabelClassificationController(
+    predict_function=clf.predict_proba, method="ltt", metric_control="precision"
 )
-mapie_clf.fit(X_cal, y_cal)
+mapie_clf.calibrate(X_cal, y_cal)
 
 alpha = 0.1
 _, y_ps = mapie_clf.predict(X_test, alpha=alpha, delta=0.1)

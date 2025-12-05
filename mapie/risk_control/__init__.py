@@ -1,5 +1,5 @@
 from .binary_classification import BinaryClassificationController
-from .multi_label_classification import PrecisionRecallController
+from .multi_label_classification import MultiLabelClassificationController
 from .risks import (
     BinaryClassificationRisk,
     accuracy,
@@ -10,7 +10,7 @@ from .risks import (
 )
 
 __all__ = [
-    "PrecisionRecallController",
+    "MultiLabelClassificationController",
     "BinaryClassificationController",
     "BinaryClassificationRisk",
     "accuracy",
