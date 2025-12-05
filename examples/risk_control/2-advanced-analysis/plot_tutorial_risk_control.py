@@ -1,4 +1,4 @@
-#%%
+# %%
 """
 =========================================================================
 Tutorial for recall and precision control for multi-label classification
@@ -129,7 +129,7 @@ for i, (name, (method, bound)) in enumerate(method_params.items()):
     mapie_clf = MultiLabelClassificationController(
         predict_function=clf.predict_proba, method=method, metric_control="recall"
     )
-    mapi_clf.calibrate(X_cal, y_cal)
+    mapie_clf.calibrate(X_cal, y_cal)
 
     _, y_pss[name] = mapie_clf.predict(X_test, alpha=alpha, bound=bound, delta=0.1)
     recalls[name] = (
@@ -185,7 +185,9 @@ fig, axs = plt.subplots(1, len(method_params), figsize=(8 * len(method_params), 
 for i, (name, (method, bound)) in enumerate(method_params.items()):
     axs[i].plot(mapie_clf.lambdas, r_hats[name], label=r"$\hat{R}$", linewidth=2)
     if name != "CRC":
-        axs[i].plot(mapie_clf.lambdas, r_hat_pluss[name], label=r"$\hat{R}^+$", linewidth=2)
+        axs[i].plot(
+            mapie_clf.lambdas, r_hat_pluss[name], label=r"$\hat{R}^+$", linewidth=2
+        )
     axs[i].plot([0, 1], [alpha[9], alpha[9]], label=r"$\alpha$")
     axs[i].plot(
         [thresholds[name][9], thresholds[name][9]],
