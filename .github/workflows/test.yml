@@ -5,6 +5,7 @@ on:
     branches:
       - master
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
 
 jobs:
   build:
@@ -55,3 +56,6 @@ jobs:
         run: make type-check
       - name: Test and coverage with pytest
         run: make coverage
+      - name: Long tests with pytest
+        if: github.event_name == 'push' || !github.event.pull_request.draft
+        run: make long-tests
