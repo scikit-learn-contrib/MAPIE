@@ -3,7 +3,7 @@ from typing import Any, Optional
 import numpy as np
 import pandas as pd
 import pytest
-from numpy.typing import NDArray
+from numpy.typing import ArrayLike, NDArray
 from sklearn.compose import ColumnTransformer
 from sklearn.datasets import make_multilabel_classification
 from sklearn.impute import SimpleImputer
@@ -141,7 +141,7 @@ class ArrayOutputModel:
     def fit(self, *args: Any) -> None:
         """Dummy fit."""
 
-    def predict_proba(self, X: NDArray) -> NDArray:
+    def predict_proba(self, X: ArrayLike) -> NDArray:
         probas = np.array([[0.9, 0.05, 0.05]])
         proba_out = np.repeat(probas, len(X), axis=0)
         return proba_out
