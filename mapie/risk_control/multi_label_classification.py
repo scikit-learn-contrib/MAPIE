@@ -440,22 +440,24 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
 
         return self
 
-    def calibrate(self, X: ArrayLike, y: ArrayLike) -> MultiLabelClassificationController:
+    def calibrate(
+        self, X: ArrayLike, y: ArrayLike
+    ) -> MultiLabelClassificationController:
         """
-        Use the fitted base estimator and compute risks.
+         Use the fitted base estimator and compute risks.
 
-        Parameters
-        ----------
-        X: ArrayLike of shape (n_samples, n_features)
-            Training data.
+         Parameters
+         ----------
+         X: ArrayLike of shape (n_samples, n_features)
+             Training data.
 
-        y: NDArray of shape (n_samples, n_classes)
-            Training labels.
+         y: NDArray of shape (n_samples, n_classes)
+             Training labels.
 
-        Returns
-        -------
-       MultiLabelClassificationController
-            The model itself.
+         Returns
+         -------
+        MultiLabelClassificationController
+             The model itself.
         """
         return self.partial_calibrate(X, y, _refit=True)
 
