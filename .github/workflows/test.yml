@@ -66,4 +66,5 @@ jobs:
       - name: Test and coverage with pytest
         run: make coverage
       - name: Long tests with pytest
+        if: github.event_name == 'push' || !github.event.pull_request.draft
         run: make long-tests
