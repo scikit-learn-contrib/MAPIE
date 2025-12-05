@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import warnings
 from itertools import chain
-from typing import Callable, Iterable, Optional, Sequence, Tuple, Union, cast
+from typing import Callable, Optional, Sequence, Tuple, Union, cast
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -53,6 +53,26 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
         "recall", then the method can be either "crc" (default) or "rcps".
         If `metric_control` is "precision", then the method used to control
         the precision is "ltt".
+
+    target_level : Optional[Union[float, Iterable[float]]]
+        The minimum performance level for the metric. Must be between 0 and 1.
+        Can be a float or a list of floats.
+        By default ``0.9``.
+
+    confidence_level : Optional[float]
+        Can be a float, or ``None``. If using method="rcps", then it
+        can not be set to ``None``.
+        Between 0 and 1, the level of certainty at which we compute
+        the Upper Confidence Bound of the average risk.
+        Higher ``confidence_level`` produce larger (more conservative) prediction
+        sets.
+        By default ``None``.
+
+    rcps_bound : Optional[Union[str, ``None``]]
+        Method used to compute the Upper Confidence Bound of the
+        average risk. Only necessary with the RCPS method.
+        By default ``None``.
+
 
     n_jobs: Optional[int]
         Number of jobs for parallel processing using joblib
@@ -169,6 +189,9 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
         predict_function: Callable[[ArrayLike], Union[list[NDArray], NDArray]],
         metric_control: Optional[str] = "recall",
         method: Optional[str] = None,
+        target_level: float = 0.9,
+        confidence_level: Optional[float] = None,
+        rcps_bound: Optional[Union[str, None]] = None,
         n_jobs: Optional[int] = None,
         random_state: Optional[Union[int, np.random.RandomState]] = None,
         verbose: int = 0,
@@ -176,6 +199,15 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
         self._predict_function = predict_function
         self.metric_control = metric_control
         self.method = method
+
+        alpha = 1 - target_level  # higher is better for precision/recall
+        self._alpha = cast(NDArray, _check_alpha(alpha))
+        self._delta = 1 - confidence_level if confidence_level is not None else None
+        self._check_delta(confidence_level)
+
+        self._check_bound(rcps_bound)
+        self._rcps_bound = rcps_bound
+
         self.n_jobs = n_jobs
         self.random_state = random_state
         self.verbose = verbose
@@ -464,9 +496,6 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
     def predict(
         self,
         X: ArrayLike,
-        alpha: Optional[Union[float, Iterable[float]]] = None,
-        delta: Optional[float] = None,
-        bound: Optional[Union[str, None]] = None,
     ) -> Union[NDArray, Tuple[NDArray, NDArray]]:
         """
         Prediction sets on new samples based on the target risk level.
@@ -476,28 +505,6 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
         Parameters
         ----------
         X: ArrayLike of shape (n_samples, n_features)
-
-        alpha : Optional[Union[float, Iterable[float]]]
-            The target risk level.
-            Can be a float, a list of floats, or a ``ArrayLike`` of floats,
-            between 0 and 1.
-            Lower ``alpha`` produce larger (more conservative) prediction
-            sets.
-            By default ``None`` (which means alpha=0.1).
-
-        delta : Optional[float]
-            Can be a float, or ``None``. If using method="rcps", then it
-            can not be set to ``None``.
-            Between 0 and 1, the level of certainty at which we compute
-            the Upper Confidence Bound of the average risk.
-            Lower ``delta`` produce larger (more conservative) prediction
-            sets.
-            By default ``None``.
-
-        bound : Optional[Union[str, ``None``]]
-            Method used to compute the Upper Confidence Bound of the
-            average risk. Only necessary with the RCPS method.
-            By default ``None``.
 
         Returns
         -------
@@ -510,9 +517,6 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
         if alpha is not ``None``.
         """
 
-        self._check_delta(delta)
-        self._check_bound(bound)
-        alpha = cast(Optional[NDArray], _check_alpha(alpha))
         check_is_fitted(self)
 
         # Estimate prediction sets
@@ -523,21 +527,17 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
             y_pred_proba_array.squeeze() > 0.5
         )  # standard prediction: class predicted if proba > 0.5
 
-        if alpha is None:
-            return np.array(y_pred)
-        alpha_np = cast(NDArray, alpha)
-
-        y_pred_proba_array = np.repeat(y_pred_proba_array, len(alpha_np), axis=2)
+        y_pred_proba_array = np.repeat(y_pred_proba_array, len(self._alpha), axis=2)
         if self.metric_control == "precision":
             self.n_obs = len(self.risks)
             self.r_hat = self.risks.mean(axis=0)
             self.valid_index, _ = ltt_procedure(
                 np.expand_dims(self.r_hat, axis=0),
-                np.expand_dims(alpha_np, axis=0),
-                cast(float, delta),
+                np.expand_dims(self._alpha, axis=0),
+                cast(float, self._delta),
                 np.expand_dims(np.array([self.n_obs]), axis=0),
             )
-            self._check_valid_index(alpha_np)
+            self._check_valid_index(self._alpha)
             self.lambdas_star, self.r_star = find_precision_lambda_star(
                 self.r_hat, self.valid_index, self.lambdas
             )
@@ -548,10 +548,15 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
 
         else:
             self.r_hat, self.r_hat_plus = get_r_hat_plus(
-                self.risks, self.lambdas, self.method, bound, delta, self.sigma_init
+                self.risks,
+                self.lambdas,
+                self.method,
+                self._rcps_bound,
+                self._delta,
+                self.sigma_init,
             )
             self.lambdas_star = find_lambda_star(
-                self.lambdas, self.r_hat_plus, alpha_np
+                self.lambdas, self.r_hat_plus, self._alpha
             )
             y_pred_proba_array = (
                 y_pred_proba_array > self.lambdas_star[np.newaxis, np.newaxis, :]
