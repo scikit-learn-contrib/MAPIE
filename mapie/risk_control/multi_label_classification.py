@@ -26,7 +26,7 @@ from .methods import (
 from .risks import compute_risk_precision, compute_risk_recall
 
 
-class PrecisionRecallController(BaseEstimator, ClassifierMixin):
+class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
     """
     Prediction sets for multilabel-classification.
 
@@ -141,11 +141,11 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
     >>> import numpy as np
     >>> from sklearn.multioutput import MultiOutputClassifier
     >>> from sklearn.linear_model import LogisticRegression
-    >>> from mapie.risk_control import PrecisionRecallController
+    >>> from mapie.risk_control import MultiLabelClassificationController
     >>> X_toy = np.arange(4).reshape(-1, 1)
     >>> y_toy = np.stack([[1, 0, 1], [1, 0, 0], [0, 1, 1], [0, 1, 0]])
     >>> clf = MultiOutputClassifier(LogisticRegression()).fit(X_toy, y_toy)
-    >>> mapie = PrecisionRecallController(predict_function=clf.predict_proba).fit(X_toy, y_toy)
+    >>> mapie = MultiLabelClassificationController(predict_function=clf.predict_proba).fit(X_toy, y_toy)
     >>> _, y_pi_mapie = mapie.predict(X_toy, alpha=0.3)
     >>> print(y_pi_mapie[:, :, 0])
     [[ True False  True]
@@ -386,7 +386,7 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
         X: ArrayLike,
         y: ArrayLike,
         _refit: Optional[bool] = False,
-    ) -> PrecisionRecallController:
+    ) -> MultiLabelClassificationController:
         """
         Fit the base estimator or use the fitted base estimator on
         batch data to compute risks. All the computed risks will be concatenated each
@@ -407,7 +407,7 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
 
         Returns
         -------
-        PrecisionRecallController
+        MultiLabelClassificationController
             The model itself.
         """
         # Checks
@@ -440,7 +440,7 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
 
         return self
 
-    def fit(self, X: ArrayLike, y: ArrayLike) -> PrecisionRecallController:
+    def fit(self, X: ArrayLike, y: ArrayLike) -> MultiLabelClassificationController:
         """
         Fit the base estimator (or use the fitted base estimator) and compute risks.
 
@@ -454,7 +454,7 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
 
         Returns
         -------
-        PrecisionRecallController
+        MultiLabelClassificationController
             The model itself.
         """
         return self.partial_fit(X, y, _refit=True)

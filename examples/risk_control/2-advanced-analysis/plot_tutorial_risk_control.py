@@ -25,7 +25,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.multioutput import MultiOutputClassifier
 from sklearn.naive_bayes import GaussianNB
 
-from mapie.risk_control import PrecisionRecallController
+from mapie.risk_control import MultiLabelClassificationController
 
 ##############################################################################
 # 1. Construction of the dataset
@@ -92,9 +92,9 @@ plt.show()
 ##############################################################################
 # 2 Recall control risk with CRC and RCPS
 # ----------------------------------------------------------------------------
-# 2.1 Fitting PrecisionRecallController
+# 2.1 Fitting MultiLabelClassificationController
 # ----------------------------------------------------------------------------
-# PrecisionRecallController will be fitted with RCPS and CRC methods. For the
+# MultiLabelClassificationController will be fitted with RCPS and CRC methods. For the
 # RCPS method, we will test all three Upper Confidence Bounds (Hoeffding,
 # Bernstein and Waudby-Smith–Ramdas).
 # The two methods give two different guarantees on the risk:
@@ -125,7 +125,7 @@ alpha = np.arange(0.01, 1, 0.01)
 y_pss, recalls, thresholds, r_hats, r_hat_pluss = {}, {}, {}, {}, {}
 y_test_repeat = np.repeat(y_test[:, :, np.newaxis], len(alpha), 2)
 for i, (name, (method, bound)) in enumerate(method_params.items()):
-    mapie = PrecisionRecallController(
+    mapie = MultiLabelClassificationController(
         predict_function=clf.predict_proba, method=method, metric_control="recall"
     )
     mapie.fit(X_cal, y_cal)
@@ -198,7 +198,7 @@ plt.show()
 ##############################################################################
 # 3. Precision control risk with LTT
 # ----------------------------------------------------------------------------
-# 3.1 Fitting PrecisionRecallController
+# 3.1 Fitting MultiLabelClassificationController
 # ----------------------------------------------------------------------------
 #
 # In this part, we will use LTT to control precision.
@@ -221,7 +221,7 @@ plt.show()
 # doesn't necessarly pass the FWER control! This is what we are going to
 # explore.
 
-mapie_clf = PrecisionRecallController(
+mapie_clf = MultiLabelClassificationController(
     predict_function=clf.predict_proba, method="ltt", metric_control="precision"
 )
 mapie_clf.fit(X_cal, y_cal)
