@@ -1,4 +1,3 @@
-# %%
 """
 =========================================================================
 Tutorial for recall and precision control for multi-label classification

@@ -351,8 +351,8 @@ def test_results_single_and_multi_jobs(strategy: str) -> None:
         metric_control=args["metric_control"],
         random_state=args["random_state"],
     )
-    mapie_clf_single.fit(X, y)
-    mapie_clf_multi.fit(X, y)
+    mapie_clf_single.calibrate(X, y)
+    mapie_clf_multi.calibrate(X, y)
     y_pred_single, y_ps_single = mapie_clf_single.predict(
         X, alpha=0.2, bound=args["bound"], delta=0.9
     )
@@ -634,7 +634,7 @@ def test_partial_calibrate_first_time():
     mclf = MultiLabelClassificationController(
         predict_function=toy_predict_function, random_state=random_state
     )
-    assert mclf._check_partial_callibrate_first_call()
+    assert mclf._check_partial_calibrate_first_call()
 
 
 def test_partial_calibrate_second_time():
@@ -643,7 +643,7 @@ def test_partial_calibrate_second_time():
         predict_function=clf.predict_proba, random_state=random_state
     )
     mclf.partial_calibrate(X, y)
-    assert not mclf._check_partial_callibrate_first_call()
+    assert not mclf._check_partial_calibrate_first_call()
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
