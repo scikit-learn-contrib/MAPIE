@@ -209,7 +209,7 @@ def ltt_procedure(
         probability 1-delta.
         Note: MAPIE 1.2 does not support multiple risks and multiple alphas
         simultaneously.
-        For PrecisionRecallController, the shape should be (1, n_alpha).
+        For MultiLabelClassificationController, the shape should be (1, n_alpha).
         For BinaryClassificationController, the shape should be (n_risks, 1).
 
     delta: float.
