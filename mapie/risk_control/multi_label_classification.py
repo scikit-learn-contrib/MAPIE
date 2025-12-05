@@ -629,7 +629,7 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
         if self.metric_control == "precision":
             self.n_obs = len(self.risks)
             self.r_hat = self.risks.mean(axis=0)
-            self.valid_index = ltt_procedure(
+            self.valid_index, _ = ltt_procedure(
                 np.expand_dims(self.r_hat, axis=0),
                 np.expand_dims(alpha_np, axis=0),
                 cast(float, delta),

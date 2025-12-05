@@ -182,7 +182,7 @@ def ltt_procedure(
     delta: float,
     n_obs: NDArray,
     binary: bool = False,
-) -> List[List[Any]]:
+) -> Tuple[List[List[Any]], NDArray]:
     """
     Apply the Learn-Then-Test procedure for risk control.
     Note that we will do a multiple test for ``r_hat`` that are
@@ -232,6 +232,10 @@ def ltt_procedure(
         Contain the valid index that satisfy FWER control
         for each alpha (length aren't the same for each alpha).
 
+    p_values : NDArray of shape (n_lambdas, n_alpha)
+        P-values associated with each tested parameter. In the multi-risk setting,
+        they correspond to the maximum over the tested risks.
+
     References
     ----------
     [1] Angelopoulos, A. N., Bates, S., Candès, E. J., Jordan,
@@ -252,7 +256,7 @@ def ltt_procedure(
     for i in range(alpha_np.shape[1]):
         l_index = np.nonzero(p_values[:, i] <= delta / N)[0].tolist()
         valid_index.append(l_index)
-    return valid_index
+    return valid_index, p_values
 
 
 def compute_hoeffding_bentkus_p_value(
