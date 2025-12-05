@@ -144,8 +144,8 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
     >>> from mapie.risk_control import MultiLabelClassificationController
     >>> X_toy = np.arange(4).reshape(-1, 1)
     >>> y_toy = np.stack([[1, 0, 1], [1, 0, 0], [0, 1, 1], [0, 1, 0]])
-    >>> clf = MultiOutputClassifier(LogisticRegression()).fit(X_toy, y_toy)
-    >>> mapie = MultiLabelClassificationController(predict_function=clf.predict_proba).fit(X_toy, y_toy)
+    >>> clf = MultiOutputClassifier(LogisticRegression()).calibrate(X_toy, y_toy)
+    >>> mapie = MultiLabelClassificationController(predict_function=clf.predict_proba).calibrate(X_toy, y_toy)
     >>> _, y_pi_mapie = mapie.predict(X_toy, alpha=0.3)
     >>> print(y_pi_mapie[:, :, 0])
     [[ True False  True]
@@ -304,10 +304,10 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
                     + str(alpha[i])
                 )
 
-    def _check_partial_fit_first_call(self) -> bool:
+    def _check_partial_calibrate_first_call(self) -> bool:
         """
-        Check that this is the first time partial_fit
-        or fit is called.
+        Check that this is the first time partial_calibrate
+        or calibrate is called.
 
         Returns
         -------
@@ -381,7 +381,7 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
 
         return np.expand_dims(y_pred_proba_array, axis=2)
 
-    def partial_fit(
+    def partial_calibrate(
         self,
         X: ArrayLike,
         y: ArrayLike,
@@ -390,7 +390,7 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
         """
         Fit the base estimator or use the fitted base estimator on
         batch data to compute risks. All the computed risks will be concatenated each
-        time the partial_fit method is called.
+        time the partial_calibrate method is called.
 
         Parameters
         ----------
@@ -411,7 +411,7 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
             The model itself.
         """
         # Checks
-        first_call = self._check_partial_fit_first_call()
+        first_call = self._check_partial_calibrate_first_call()
 
         X, y = indexable(X, y)
         _check_y(y, multi_output=True)
@@ -440,9 +440,9 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
 
         return self
 
-    def fit(self, X: ArrayLike, y: ArrayLike) -> MultiLabelClassificationController:
+    def calibrate(self, X: ArrayLike, y: ArrayLike) -> MultiLabelClassificationController:
         """
-        Fit the base estimator (or use the fitted base estimator) and compute risks.
+        Use the fitted base estimator and compute risks.
 
         Parameters
         ----------
@@ -454,10 +454,10 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
 
         Returns
         -------
-        MultiLabelClassificationController
+       MultiLabelClassificationController
             The model itself.
         """
-        return self.partial_fit(X, y, _refit=True)
+        return self.partial_calibrate(X, y, _refit=True)
 
     def predict(
         self,
