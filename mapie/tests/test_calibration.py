@@ -275,7 +275,10 @@ def test_correct_results_binary(cv: str) -> None:
     in the correct scores (in a binary setting).
     """
     X_binary, y_binary = make_classification(
-        n_samples=10, n_classes=2, n_informative=4, random_state=random_state
+        n_samples=10,
+        n_classes=2,
+        n_informative=4,
+        random_state=random_state,
     )
     mapie_cal = TopLabelCalibrator(cv=cv)
     mapie_cal.fit(X=X_binary, y=y_binary, random_state=random_state)
@@ -420,7 +423,11 @@ VA_ESTIMATORS = [
 
 # Binary classification dataset
 X_binary, y_binary = make_classification(
-    n_samples=1000, n_features=20, n_classes=2, n_informative=10, random_state=random_state_va
+    n_samples=1000,
+    n_features=20,
+    n_classes=2,
+    n_informative=10,
+    random_state=random_state_va,
 )
 X_binary_train, X_binary_test, y_binary_train, y_binary_test = train_test_split(
     X_binary, y_binary, test_size=0.2, random_state=random_state_va
@@ -431,7 +438,11 @@ X_binary_proper, X_binary_cal, y_binary_proper, y_binary_cal = train_test_split(
 
 # Multi-class classification dataset
 X_multi, y_multi = make_classification(
-    n_samples=1000, n_features=20, n_classes=3, n_informative=10, random_state=random_state_va
+    n_samples=1000,
+    n_features=20,
+    n_classes=3,
+    n_informative=10,
+    random_state=random_state_va,
 )
 X_multi_train, X_multi_test, y_multi_train, y_multi_test = train_test_split(
     X_multi, y_multi, test_size=0.2, random_state=random_state_va
@@ -479,7 +490,9 @@ def test_va_invalid_cv_argument(cv: str) -> None:
 def test_va_prefit_unfitted_estimator_raises_error() -> None:
     """Test that VennAbersCalibrator in 'prefit' mode raises if estimator not fitted."""
     va_cal = VennAbersCalibrator(estimator=GaussianNB(), cv="prefit")
-    with pytest.raises(ValueError, match=r".*For cv='prefit', the estimator must be already fitted*"):
+    with pytest.raises(
+        ValueError, match=r".*For cv='prefit', the estimator must be already fitted*"
+    ):
         va_cal.fit(X_binary_cal, y_binary_cal)
 
 
@@ -490,15 +503,50 @@ def test_va_prefit_requires_estimator() -> None:
         va_cal.fit(X_binary_train, y_binary_train)
 
 
-@pytest.mark.parametrize("mode,mode_params,X_train,y_train,X_test,n_classes", [
-    ("inductive", {"inductive": True}, X_binary_train, y_binary_train, X_binary_test, 2),
-    ("inductive", {"inductive": True}, X_multi_train, y_multi_train, X_multi_test, 3),
-    ("cross_val", {"inductive": False, "n_splits": 3}, X_binary_train, y_binary_train, X_binary_test, 2),
-    ("cross_val", {"inductive": False, "n_splits": 3}, X_multi_train, y_multi_train, X_multi_test, 3),
-])
-def test_va_mode_functionality(mode, mode_params, X_train, y_train, X_test, n_classes) -> None:
+@pytest.mark.parametrize(
+    "mode,mode_params,X_train,y_train,X_test,n_classes",
+    [
+        (
+            "inductive",
+            {"inductive": True},
+            X_binary_train,
+            y_binary_train,
+            X_binary_test,
+            2,
+        ),
+        (
+            "inductive",
+            {"inductive": True},
+            X_multi_train,
+            y_multi_train,
+            X_multi_test,
+            3,
+        ),
+        (
+            "cross_val",
+            {"inductive": False, "n_splits": 3},
+            X_binary_train,
+            y_binary_train,
+            X_binary_test,
+            2,
+        ),
+        (
+            "cross_val",
+            {"inductive": False, "n_splits": 3},
+            X_multi_train,
+            y_multi_train,
+            X_multi_test,
+            3,
+        ),
+    ],
+)
+def test_va_mode_functionality(
+    mode, mode_params, X_train, y_train, X_test, n_classes
+) -> None:
     """Test all modes (inductive/cross-validation) for binary and multiclass."""
-    va_cal = VennAbersCalibrator(estimator=GaussianNB(), random_state=random_state_va, **mode_params)
+    va_cal = VennAbersCalibrator(
+        estimator=GaussianNB(), random_state=random_state_va, **mode_params
+    )
     va_cal.fit(X_train, y_train)
     probs = va_cal.predict_proba(X_test)
     preds = va_cal.predict(X_test)
@@ -512,10 +560,20 @@ def test_va_mode_functionality(mode, mode_params, X_train, y_train, X_test, n_cl
     assert va_cal.n_classes_ == n_classes
 
 
-@pytest.mark.parametrize("X_proper,y_proper,X_cal,y_cal,X_test,n_classes", [
-    (X_binary_proper, y_binary_proper, X_binary_cal, y_binary_cal, X_binary_test, 2),
-    (X_multi_proper, y_multi_proper, X_multi_cal, y_multi_cal, X_multi_test, 3),
-])
+@pytest.mark.parametrize(
+    "X_proper,y_proper,X_cal,y_cal,X_test,n_classes",
+    [
+        (
+            X_binary_proper,
+            y_binary_proper,
+            X_binary_cal,
+            y_binary_cal,
+            X_binary_test,
+            2,
+        ),
+        (X_multi_proper, y_multi_proper, X_multi_cal, y_multi_cal, X_multi_test, 3),
+    ],
+)
 def test_va_prefit_mode(X_proper, y_proper, X_cal, y_cal, X_test, n_classes) -> None:
     """Test prefit mode for binary and multiclass."""
     clf = GaussianNB().fit(X_proper, y_proper)
@@ -531,14 +589,18 @@ def test_va_prefit_mode(X_proper, y_proper, X_cal, y_cal, X_test, n_classes) -> 
 def test_va_cross_validation_requires_n_splits() -> None:
     """Test that CVAP requires n_splits parameter."""
     va_cal = VennAbersCalibrator(estimator=GaussianNB(), inductive=False, n_splits=None)
-    with pytest.raises(ValueError, match=r".*For Cross Venn-ABERS please provide n_splits*"):
+    with pytest.raises(
+        ValueError, match=r".*For Cross Venn-ABERS please provide n_splits*"
+    ):
         va_cal.fit(X_binary_train, y_binary_train)
 
 
 @pytest.mark.parametrize("estimator", VA_ESTIMATORS)
 def test_va_different_estimators(estimator) -> None:
     """Test VennAbersCalibrator with different base estimators."""
-    va_cal = VennAbersCalibrator(estimator=estimator, inductive=True, random_state=random_state_va)
+    va_cal = VennAbersCalibrator(
+        estimator=estimator, inductive=True, random_state=random_state_va
+    )
     va_cal.fit(X_binary_train, y_binary_train)
     probs = va_cal.predict_proba(X_binary_test)
     assert probs.shape == (len(X_binary_test), 2)
@@ -558,10 +620,14 @@ def test_va_sample_weights_constant() -> None:
     n_samples = len(X_binary_train)
     weighted_estimator = GaussianNB().set_fit_request(sample_weight=True)
 
-    va_cal_none = VennAbersCalibrator(estimator=weighted_estimator, inductive=True, random_state=random_state_va)
+    va_cal_none = VennAbersCalibrator(
+        estimator=weighted_estimator, inductive=True, random_state=random_state_va
+    )
     va_cal_none.fit(X_binary_train, y_binary_train, sample_weight=None)
 
-    va_cal_ones = VennAbersCalibrator(estimator=weighted_estimator, inductive=True, random_state=random_state_va)
+    va_cal_ones = VennAbersCalibrator(
+        estimator=weighted_estimator, inductive=True, random_state=random_state_va
+    )
     va_cal_ones.fit(X_binary_train, y_binary_train, sample_weight=np.ones(n_samples))
 
     probs_none = va_cal_none.predict_proba(X_binary_test)
@@ -581,12 +647,16 @@ def test_va_sample_weights_variable() -> None:
     )
     va_cal_uniform.fit(X_binary_train, y_binary_train, sample_weight=None)
 
-    sample_weights = np.random.RandomState(random_state_va).uniform(0.1, 2.0, size=n_samples)
-    estimator_weighted = RandomForestClassifier(n_estimators=10, random_state=random_state_va).set_fit_request(
-        sample_weight=True
+    sample_weights = np.random.RandomState(random_state_va).uniform(
+        0.1, 2.0, size=n_samples
     )
+    estimator_weighted = RandomForestClassifier(
+        n_estimators=10, random_state=random_state_va
+    ).set_fit_request(sample_weight=True)
 
-    va_cal_weighted = VennAbersCalibrator(estimator=estimator_weighted, inductive=True, random_state=random_state_va)
+    va_cal_weighted = VennAbersCalibrator(
+        estimator=estimator_weighted, inductive=True, random_state=random_state_va
+    )
     va_cal_weighted.fit(X_binary_train, y_binary_train, sample_weight=sample_weights)
 
     probs_uniform = va_cal_uniform.predict_proba(X_binary_test)
@@ -601,7 +671,12 @@ def test_va_venn_abers_cv_with_sample_weight() -> None:
     sample_weight[: len(y_binary_train) // 2] = 2.0
 
     weighted_estimator = GaussianNB().set_fit_request(sample_weight=True)
-    va_cal = VennAbersCalibrator(estimator=weighted_estimator, inductive=False, n_splits=3, random_state=random_state_va)
+    va_cal = VennAbersCalibrator(
+        estimator=weighted_estimator,
+        inductive=False,
+        n_splits=3,
+        random_state=random_state_va,
+    )
     va_cal.fit(X_binary_train, y_binary_train, sample_weight=sample_weight)
     probs = va_cal.predict_proba(X_binary_test)
 
@@ -611,26 +686,35 @@ def test_va_venn_abers_cv_with_sample_weight() -> None:
 
 def test_va_random_state_reproducibility() -> None:
     """Test that random_state ensures reproducible results."""
-    va_cal1 = VennAbersCalibrator(estimator=GaussianNB(), inductive=True, random_state=random_state_va)
+    va_cal1 = VennAbersCalibrator(
+        estimator=GaussianNB(), inductive=True, random_state=random_state_va
+    )
     va_cal1.fit(X_binary_train, y_binary_train)
     probs1 = va_cal1.predict_proba(X_binary_test)
 
-    va_cal2 = VennAbersCalibrator(estimator=GaussianNB(), inductive=True, random_state=random_state_va)
+    va_cal2 = VennAbersCalibrator(
+        estimator=GaussianNB(), inductive=True, random_state=random_state_va
+    )
     va_cal2.fit(X_binary_train, y_binary_train)
     probs2 = va_cal2.predict_proba(X_binary_test)
 
     np.testing.assert_array_equal(probs1, probs2)
 
 
-@pytest.mark.parametrize("param_name,override_value", [
-    ("random_state", 123),
-    ("shuffle", False),
-    ("stratify", y_binary_train),
-    ("calib_size", 0.4),
-])
+@pytest.mark.parametrize(
+    "param_name,override_value",
+    [
+        ("random_state", 123),
+        ("shuffle", False),
+        ("stratify", y_binary_train),
+        ("calib_size", 0.4),
+    ],
+)
 def test_va_fit_parameters_override(param_name, override_value) -> None:
     """Test that fit() parameters override constructor parameters."""
-    va_cal = VennAbersCalibrator(estimator=GaussianNB(), inductive=True, random_state=random_state_va)
+    va_cal = VennAbersCalibrator(
+        estimator=GaussianNB(), inductive=True, random_state=random_state_va
+    )
     kwargs = {param_name: override_value}
     va_cal.fit(X_binary_train, y_binary_train, **kwargs)
     probs = va_cal.predict_proba(X_binary_test)
@@ -640,7 +724,9 @@ def test_va_fit_parameters_override(param_name, override_value) -> None:
 @pytest.mark.parametrize("cal_size", [0.2, 0.3, 0.5])
 def test_va_different_calibration_sizes(cal_size: float) -> None:
     """Test that different calibration sizes work correctly."""
-    va_cal = VennAbersCalibrator(estimator=GaussianNB(), inductive=True, random_state=random_state_va)
+    va_cal = VennAbersCalibrator(
+        estimator=GaussianNB(), inductive=True, random_state=random_state_va
+    )
     va_cal.fit(X_binary_train, y_binary_train, calib_size=cal_size)
     probs = va_cal.predict_proba(X_binary_test)
     assert probs.shape == (len(X_binary_test), 2)
@@ -651,7 +737,10 @@ def test_va_different_calibration_sizes(cal_size: float) -> None:
 def test_va_different_n_splits(n_splits: int) -> None:
     """Test that different n_splits values work correctly."""
     va_cal = VennAbersCalibrator(
-        estimator=GaussianNB(), inductive=False, n_splits=n_splits, random_state=random_state_va
+        estimator=GaussianNB(),
+        inductive=False,
+        n_splits=n_splits,
+        random_state=random_state_va,
     )
     va_cal.fit(X_binary_train, y_binary_train)
     probs = va_cal.predict_proba(X_binary_test)
@@ -661,64 +750,92 @@ def test_va_different_n_splits(n_splits: int) -> None:
 
 def test_va_n_splits_too_small_raises_error() -> None:
     """Test that n_splits < 2 raises an error."""
-    va_cal = VennAbersCalibrator(estimator=GaussianNB(), inductive=False, n_splits=1, random_state=random_state_va)
+    va_cal = VennAbersCalibrator(
+        estimator=GaussianNB(),
+        inductive=False,
+        n_splits=1,
+        random_state=random_state_va,
+    )
     with pytest.raises(ValueError):
         va_cal.fit(X_binary_train, y_binary_train)
 
 
 def test_va_pipeline_compatibility() -> None:
     """Test that VennAbersCalibrator works with sklearn pipelines."""
-    X_df = pd.DataFrame({"x_cat": ["A", "A", "B", "A", "A", "B"] * 10, "x_num": [0, 1, 1, 4, np.nan, 5] * 10})
+    X_df = pd.DataFrame(
+        {
+            "x_cat": ["A", "A", "B", "A", "A", "B"] * 10,
+            "x_num": [0, 1, 1, 4, np.nan, 5] * 10,
+        }
+    )
     y_series = pd.Series([0, 1, 0, 1, 0, 1] * 10)
 
     numeric_preprocessor = Pipeline([("imputer", SimpleImputer(strategy="mean"))])
-    categorical_preprocessor = Pipeline(steps=[("encoding", OneHotEncoder(handle_unknown="ignore"))])
-    preprocessor = ColumnTransformer([
-        ("cat", categorical_preprocessor, ["x_cat"]),
-        ("num", numeric_preprocessor, ["x_num"]),
-    ])
+    categorical_preprocessor = Pipeline(
+        steps=[("encoding", OneHotEncoder(handle_unknown="ignore"))]
+    )
+    preprocessor = ColumnTransformer(
+        [
+            ("cat", categorical_preprocessor, ["x_cat"]),
+            ("num", numeric_preprocessor, ["x_num"]),
+        ]
+    )
     pipe = make_pipeline(preprocessor, LogisticRegression(random_state=random_state_va))
     pipe.fit(X_df, y_series)
 
-    va_cal = VennAbersCalibrator(estimator=pipe, inductive=True, random_state=random_state_va)
+    va_cal = VennAbersCalibrator(
+        estimator=pipe, inductive=True, random_state=random_state_va
+    )
     va_cal.fit(X_df, y_series)
     probs = va_cal.predict_proba(X_df)
 
     assert probs.shape == (len(y_series), 2)
 
 
-@pytest.mark.parametrize("X_type,y_type", [
-    (pd.DataFrame, pd.Series),
-    (np.ndarray, np.ndarray),
-    (pd.DataFrame, np.ndarray),
-])
+@pytest.mark.parametrize(
+    "X_type,y_type",
+    [
+        (pd.DataFrame, pd.Series),
+        (np.ndarray, np.ndarray),
+        (pd.DataFrame, np.ndarray),
+    ],
+)
 def test_va_different_input_types(X_type, y_type) -> None:
     """Test with different input data types."""
     X_train = X_type(X_binary_train) if X_type == pd.DataFrame else X_binary_train
     y_train = y_type(y_binary_train) if y_type == pd.Series else y_binary_train
     X_test = X_type(X_binary_test) if X_type == pd.DataFrame else X_binary_test
 
-    va_cal = VennAbersCalibrator(estimator=GaussianNB(), inductive=True, random_state=random_state_va)
+    va_cal = VennAbersCalibrator(
+        estimator=GaussianNB(), inductive=True, random_state=random_state_va
+    )
     va_cal.fit(X_train, y_train)
     probs = va_cal.predict_proba(X_test)
     assert probs.shape == (len(X_test), 2)
 
 
-@pytest.mark.parametrize("X,y,error_match", [
-    (np.array([]).reshape(0, 20), np.array([]), ".*"),
-    (np.zeros((10, 20)), np.zeros(10), ".*"),
-    (X_binary_train[:50], y_binary_train[:40], ".*"),
-])
+@pytest.mark.parametrize(
+    "X,y,error_match",
+    [
+        (np.array([]).reshape(0, 20), np.array([]), ".*"),
+        (np.zeros((10, 20)), np.zeros(10), ".*"),
+        (X_binary_train[:50], y_binary_train[:40], ".*"),
+    ],
+)
 def test_va_invalid_inputs_raise_error(X, y, error_match) -> None:
     """Test that invalid inputs raise appropriate errors."""
-    va_cal = VennAbersCalibrator(estimator=GaussianNB(), inductive=True, random_state=random_state_va)
+    va_cal = VennAbersCalibrator(
+        estimator=GaussianNB(), inductive=True, random_state=random_state_va
+    )
     with pytest.raises(ValueError):
         va_cal.fit(X, y)
 
 
 def test_va_predict_before_fit_raises_error() -> None:
     """Test that calling predict before fit raises an error."""
-    va_cal = VennAbersCalibrator(estimator=GaussianNB(), inductive=True, random_state=random_state_va)
+    va_cal = VennAbersCalibrator(
+        estimator=GaussianNB(), inductive=True, random_state=random_state_va
+    )
     with pytest.raises(Exception):
         va_cal.predict(X_binary_test)
 
@@ -726,7 +843,9 @@ def test_va_predict_before_fit_raises_error() -> None:
 @pytest.mark.parametrize("calib_size", [1.5, -0.1])
 def test_va_invalid_cal_size_raises_error(calib_size) -> None:
     """Test that invalid cal_size values raise an error."""
-    va_cal = VennAbersCalibrator(estimator=GaussianNB(), inductive=True, random_state=random_state_va)
+    va_cal = VennAbersCalibrator(
+        estimator=GaussianNB(), inductive=True, random_state=random_state_va
+    )
     with pytest.raises(ValueError):
         va_cal.fit(X_binary_train, y_binary_train, calib_size=calib_size)
 
@@ -734,7 +853,12 @@ def test_va_invalid_cal_size_raises_error(calib_size) -> None:
 @pytest.mark.parametrize("precision", [None, 2, 4])
 def test_va_precision_parameter(precision: Optional[int]) -> None:
     """Test that precision parameter works correctly."""
-    va_cal = VennAbersCalibrator(estimator=GaussianNB(), inductive=True, random_state=random_state_va, precision=precision)
+    va_cal = VennAbersCalibrator(
+        estimator=GaussianNB(),
+        inductive=True,
+        random_state=random_state_va,
+        precision=precision,
+    )
     va_cal.fit(X_binary_train, y_binary_train)
     probs = va_cal.predict_proba(X_binary_test)
     assert probs.shape == (len(X_binary_test), 2)
@@ -743,7 +867,12 @@ def test_va_precision_parameter(precision: Optional[int]) -> None:
 
 def test_va_precision_parameter_multiclass() -> None:
     """Test that precision parameter works correctly for multiclass."""
-    va_cal = VennAbersCalibrator(estimator=GaussianNB(), inductive=True, precision=4, random_state=random_state_va)
+    va_cal = VennAbersCalibrator(
+        estimator=GaussianNB(),
+        inductive=True,
+        precision=4,
+        random_state=random_state_va,
+    )
     va_cal.fit(X_multi_train, y_multi_train)
     probs = va_cal.predict_proba(X_multi_test)
     assert probs.shape == (len(X_multi_test), 3)
@@ -754,8 +883,12 @@ def test_va_integration_with_cross_validation() -> None:
     """Test integration with sklearn's cross-validation utilities."""
     from sklearn.model_selection import cross_val_score
 
-    va_cal = VennAbersCalibrator(estimator=GaussianNB(), inductive=True, random_state=random_state_va)
-    scores = cross_val_score(va_cal, X_binary_train, y_binary_train, cv=3, scoring="accuracy")
+    va_cal = VennAbersCalibrator(
+        estimator=GaussianNB(), inductive=True, random_state=random_state_va
+    )
+    scores = cross_val_score(
+        va_cal, X_binary_train, y_binary_train, cv=3, scoring="accuracy"
+    )
     assert len(scores) == 3
     assert np.all(scores >= 0) and np.all(scores <= 1)
 
@@ -764,7 +897,9 @@ def test_va_clone_estimator() -> None:
     """Test that VennAbersCalibrator can be cloned."""
     from sklearn.base import clone
 
-    va_cal = VennAbersCalibrator(estimator=GaussianNB(), inductive=True, random_state=random_state_va)
+    va_cal = VennAbersCalibrator(
+        estimator=GaussianNB(), inductive=True, random_state=random_state_va
+    )
     va_cal.fit(X_binary_train, y_binary_train)
     va_cal_clone = clone(va_cal)
 
@@ -780,22 +915,32 @@ def test_va_clone_estimator() -> None:
 
 def test_va_check_is_fitted_after_fit() -> None:
     """Test that check_is_fitted passes after fitting."""
-    va_cal = VennAbersCalibrator(estimator=GaussianNB(), inductive=True, random_state=random_state_va)
+    va_cal = VennAbersCalibrator(
+        estimator=GaussianNB(), inductive=True, random_state=random_state_va
+    )
     va_cal.fit(X_binary_train, y_binary_train)
     check_is_fitted(va_cal)
 
 
 def test_va_predict_proba_prefitted_va_one_vs_all() -> None:
     """Test predict_proba_prefitted_va with one_vs_all strategy."""
-    X, y = make_classification(n_samples=500, n_classes=3, n_informative=10, random_state=random_state_va)
-    X_train, X_temp, y_train, y_temp = train_test_split(X, y, test_size=0.4, random_state=random_state_va)
-    X_cal, X_test, y_cal, y_test = train_test_split(X_temp, y_temp, test_size=0.5, random_state=random_state_va)
+    X, y = make_classification(
+        n_samples=500, n_classes=3, n_informative=10, random_state=random_state_va
+    )
+    X_train, X_temp, y_train, y_temp = train_test_split(
+        X, y, test_size=0.4, random_state=random_state_va
+    )
+    X_cal, X_test, y_cal, y_test = train_test_split(
+        X_temp, y_temp, test_size=0.5, random_state=random_state_va
+    )
 
     clf = GaussianNB().fit(X_train, y_train)
     p_cal = clf.predict_proba(X_cal)
     p_test = clf.predict_proba(X_test)
 
-    p_calibrated, p0p1 = predict_proba_prefitted_va(p_cal, y_cal, p_test, precision=None, va_tpe="one_vs_all")
+    p_calibrated, p0p1 = predict_proba_prefitted_va(
+        p_cal, y_cal, p_test, precision=None, va_tpe="one_vs_all"
+    )
 
     assert p_calibrated.shape == p_test.shape
     assert np.allclose(p_calibrated.sum(axis=1), 1.0)
@@ -805,7 +950,9 @@ def test_va_predict_proba_prefitted_va_one_vs_all() -> None:
 def test_va_predict_proba_prefitted_va_invalid_type() -> None:
     """Test that invalid va_tpe raises ValueError."""
     X, y = make_classification(n_samples=100, n_classes=2, random_state=random_state_va)
-    X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=random_state_va)
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, random_state=random_state_va
+    )
 
     clf = GaussianNB().fit(X_train, y_train)
     p_cal = clf.predict_proba(X_train)
@@ -818,7 +965,9 @@ def test_va_predict_proba_prefitted_va_invalid_type() -> None:
 def test_va_venn_abers_basic() -> None:
     """Test basic VennAbers functionality for binary classification."""
     X, y = make_classification(n_samples=500, n_classes=2, random_state=random_state_va)
-    X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=random_state_va)
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, random_state=random_state_va
+    )
     X_train_proper, X_cal, y_train_proper, y_cal = train_test_split(
         X_train, y_train, test_size=0.2, random_state=random_state_va
     )
@@ -840,7 +989,9 @@ def test_va_venn_abers_cv_p0_p1_output() -> None:
     """Test VennAbersCV predict_proba with p0_p1_output=True."""
     from mapie._venn_abers import VennAbersCV
 
-    va_cv = VennAbersCV(estimator=GaussianNB(), inductive=True, random_state=random_state_va)
+    va_cv = VennAbersCV(
+        estimator=GaussianNB(), inductive=True, random_state=random_state_va
+    )
     va_cv.fit(X_binary_train, y_binary_train)
     p_prime, p0_p1 = va_cv.predict_proba(X_binary_test, p0_p1_output=True)
 
@@ -851,8 +1002,12 @@ def test_va_venn_abers_cv_p0_p1_output() -> None:
 
 def test_va_multiclass_cross_validation_requires_n_splits() -> None:
     """Test that VennAbersMultiClass in CVAP mode requires n_splits parameter."""
-    va_multi = VennAbersMultiClass(estimator=GaussianNB(), inductive=False, n_splits=None)
-    with pytest.raises(Exception, match=r".*For Cross Venn ABERS please provide n_splits.*"):
+    va_multi = VennAbersMultiClass(
+        estimator=GaussianNB(), inductive=False, n_splits=None
+    )
+    with pytest.raises(
+        Exception, match=r".*For Cross Venn ABERS please provide n_splits.*"
+    ):
         va_multi.fit(X_multi_train, y_multi_train)
 
 
@@ -863,7 +1018,12 @@ def test_va_multiclass_p0_p1_output() -> None:
     y_train = np.random.randint(0, n_classes, n_samples)
     X_test = np.random.randn(30, n_features)
 
-    va_multi = VennAbersMultiClass(estimator=GaussianNB(), inductive=True, cal_size=0.3, random_state=random_state_va)
+    va_multi = VennAbersMultiClass(
+        estimator=GaussianNB(),
+        inductive=True,
+        cal_size=0.3,
+        random_state=random_state_va,
+    )
     va_multi.fit(X_train, y_train)
     p_prime, p0_p1_list = va_multi.predict_proba(X_test, loss="log", p0_p1_output=True)
 
@@ -874,9 +1034,18 @@ def test_va_multiclass_p0_p1_output() -> None:
 
 def test_va_inductive_missing_size_parameters_raises_error() -> None:
     """Test that inductive mode raises error when train_proper_size is None."""
-    X_local, y_local = make_classification(n_samples=100, n_classes=3, n_informative=10, random_state=random_state_va)
-    va_multi = VennAbersMultiClass(estimator=GaussianNB(), inductive=True, train_proper_size=None, random_state=random_state_va)
-    with pytest.raises(Exception, match="For Inductive Venn-ABERS please provide either calibration"):
+    X_local, y_local = make_classification(
+        n_samples=100, n_classes=3, n_informative=10, random_state=random_state_va
+    )
+    va_multi = VennAbersMultiClass(
+        estimator=GaussianNB(),
+        inductive=True,
+        train_proper_size=None,
+        random_state=random_state_va,
+    )
+    with pytest.raises(
+        Exception, match="For Inductive Venn-ABERS please provide either calibration"
+    ):
         va_multi.fit(X_local, y_local)
 
 
@@ -887,7 +1056,9 @@ def test_va_prefit_predict_proba_without_single_estimator() -> None:
     va_cal.fit(X_binary_cal, y_binary_cal)
     va_cal.single_estimator_ = None
 
-    with pytest.raises(RuntimeError, match=r"single_estimator_ should not be None in prefit mode"):
+    with pytest.raises(
+        RuntimeError, match=r"single_estimator_ should not be None in prefit mode"
+    ):
         va_cal.predict_proba(X_binary_test)
 
 
@@ -898,17 +1069,23 @@ def test_va_prefit_predict_proba_without_n_classes() -> None:
     va_cal.fit(X_binary_cal, y_binary_cal)
     va_cal.n_classes_ = None
 
-    with pytest.raises(RuntimeError, match=r"n_classes_ should not be None after fitting"):
+    with pytest.raises(
+        RuntimeError, match=r"n_classes_ should not be None after fitting"
+    ):
         va_cal.predict_proba(X_binary_test)
 
 
 def test_va_predict_without_classes() -> None:
     """Test that predict raises RuntimeError when classes_ is None after fitting."""
-    va_cal = VennAbersCalibrator(estimator=GaussianNB(), inductive=True, random_state=random_state_va)
+    va_cal = VennAbersCalibrator(
+        estimator=GaussianNB(), inductive=True, random_state=random_state_va
+    )
     va_cal.fit(X_binary_train, y_binary_train)
     va_cal.classes_ = None
 
-    with pytest.raises(RuntimeError, match=r"classes_ should not be None after fitting"):
+    with pytest.raises(
+        RuntimeError, match=r"classes_ should not be None after fitting"
+    ):
         va_cal.predict(X_binary_test)
 
 
@@ -916,9 +1093,13 @@ def test_va_prefit_classes_none_after_fitting() -> None:
     """Test that fit raises RuntimeError when classes_ is None after fitting estimator."""
     clf = GaussianNB().fit(X_binary_train, y_binary_train)
     clf.classes_ = None
-    va_cal = VennAbersCalibrator(estimator=clf, cv="prefit", random_state=random_state_va)
+    va_cal = VennAbersCalibrator(
+        estimator=clf, cv="prefit", random_state=random_state_va
+    )
 
-    with pytest.raises(RuntimeError, match=r"classes_ should not be None after fitting estimator"):
+    with pytest.raises(
+        RuntimeError, match=r"classes_ should not be None after fitting estimator"
+    ):
         va_cal.fit(X_binary_test, y_binary_test)
 
 
@@ -941,7 +1122,12 @@ def test_va_cv_ensemble_cross_binary(cv_ensemble) -> None:
 
 def test_va_venn_abers_cv_brier_loss() -> None:
     """Test VennAbersCV with Brier loss."""
-    va_cal = VennAbersCalibrator(estimator=GaussianNB(), inductive=False, n_splits=3, random_state=random_state_va)
+    va_cal = VennAbersCalibrator(
+        estimator=GaussianNB(),
+        inductive=False,
+        n_splits=3,
+        random_state=random_state_va,
+    )
     va_cal.fit(X_binary_train, y_binary_train)
     probs_brier = va_cal.predict_proba(X_binary_test, loss="brier")
 
@@ -958,7 +1144,9 @@ def test_va_comprehensive_workflow() -> None:
 
     for mode_name, mode_params in modes:
         va_cal_binary = VennAbersCalibrator(
-            estimator=RandomForestClassifier(n_estimators=10, random_state=random_state_va),
+            estimator=RandomForestClassifier(
+                n_estimators=10, random_state=random_state_va
+            ),
             random_state=random_state_va,
             **mode_params,
         )
@@ -971,7 +1159,9 @@ def test_va_comprehensive_workflow() -> None:
         assert np.allclose(probs_binary.sum(axis=1), 1.0)
 
         va_cal_multi = VennAbersCalibrator(
-            estimator=RandomForestClassifier(n_estimators=10, random_state=random_state_va),
+            estimator=RandomForestClassifier(
+                n_estimators=10, random_state=random_state_va
+            ),
             random_state=random_state_va,
             **mode_params,
         )
@@ -998,28 +1188,43 @@ def test_va_prefit_binary_va_calibrator_none_raises() -> None:
     va_cal = VennAbersCalibrator(estimator=clf, cv="prefit")
     va_cal.fit(X_binary_cal, y_binary_cal)
     va_cal.va_calibrator_ = None
-    with pytest.raises(RuntimeError, match="va_calibrator_ should not be None for binary classification"):
+    with pytest.raises(
+        RuntimeError,
+        match="va_calibrator_ should not be None for binary classification",
+    ):
         va_cal.predict_proba(X_binary_test)
 
 
 def test_va_inductive_va_calibrator_none_raises() -> None:
-    va_cal = VennAbersCalibrator(estimator=GaussianNB(), inductive=True, random_state=random_state_va)
+    va_cal = VennAbersCalibrator(
+        estimator=GaussianNB(), inductive=True, random_state=random_state_va
+    )
     va_cal.fit(X_binary_train, y_binary_train)
     va_cal.va_calibrator_ = None
-    with pytest.raises(RuntimeError, match="va_calibrator_ should not be None in inductive/cross-validation mode"):
+    with pytest.raises(
+        RuntimeError,
+        match="va_calibrator_ should not be None in inductive/cross-validation mode",
+    ):
         va_cal.predict_proba(X_binary_test)
 
 
 def test_va_inductive_va_calibrator_wrong_type_raises() -> None:
-    va_cal = VennAbersCalibrator(estimator=GaussianNB(), inductive=True, random_state=random_state_va)
+    va_cal = VennAbersCalibrator(
+        estimator=GaussianNB(), inductive=True, random_state=random_state_va
+    )
     va_cal.fit(X_binary_train, y_binary_train)
     va_cal.va_calibrator_ = VennAbers()
-    with pytest.raises(RuntimeError, match="va_calibrator_ should be VennAbersMultiClass instance"):
+    with pytest.raises(
+        RuntimeError,
+        match="va_calibrator_ should be VennAbersMultiClass instance",
+    ):
         va_cal.predict_proba(X_binary_test)
 
 
 def test_va_inductive_loss_branch_and_else_branch() -> None:
-    va_cal = VennAbersCalibrator(estimator=GaussianNB(), inductive=True, random_state=random_state_va)
+    va_cal = VennAbersCalibrator(
+        estimator=GaussianNB(), inductive=True, random_state=random_state_va
+    )
     va_cal.fit(X_binary_train, y_binary_train)
     assert "loss" in signature(va_cal.va_calibrator_.predict_proba).parameters
     _ = va_cal.predict_proba(X_binary_test, loss="brier")
