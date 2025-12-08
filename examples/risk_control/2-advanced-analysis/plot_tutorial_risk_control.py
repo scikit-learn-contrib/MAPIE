@@ -17,6 +17,8 @@ Throughout this tutorial, we will answer the following questions:
 
 """
 
+# sphinx_gallery_thumbnail_number = 4
+
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.model_selection import train_test_split
@@ -124,7 +126,7 @@ y_pss, recalls, thresholds, r_hats, r_hat_pluss = {}, {}, {}, {}, {}
 y_test_repeat = np.repeat(y_test[:, :, np.newaxis], len(alpha), 2)
 for i, (name, (method, bound)) in enumerate(method_params.items()):
     mapie = PrecisionRecallController(
-        estimator=clf, method=method, metric_control="recall"
+        predict_function=clf.predict_proba, method=method, metric_control="recall"
     )
     mapie.fit(X_cal, y_cal)
 
@@ -220,7 +222,7 @@ plt.show()
 # explore.
 
 mapie_clf = PrecisionRecallController(
-    estimator=clf, method="ltt", metric_control="precision"
+    predict_function=clf.predict_proba, method="ltt", metric_control="precision"
 )
 mapie_clf.fit(X_cal, y_cal)
 

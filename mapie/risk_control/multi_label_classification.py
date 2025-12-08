@@ -2,19 +2,20 @@ from __future__ import annotations
 
 import warnings
 from itertools import chain
-from typing import Iterable, Optional, Sequence, Tuple, Union, cast
+from typing import Callable, Iterable, Optional, Sequence, Tuple, Union, cast
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 from sklearn.base import BaseEstimator, ClassifierMixin
-from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import train_test_split
-from sklearn.multioutput import MultiOutputClassifier
-from sklearn.pipeline import Pipeline
 from sklearn.utils import check_random_state
-from sklearn.utils.validation import _check_y, _num_samples, check_is_fitted, indexable
+from sklearn.utils.validation import _check_y, _num_samples, indexable
 
-from mapie.utils import _check_alpha, _check_n_jobs, _check_verbose
+from mapie.utils import (
+    _check_alpha,
+    _check_n_jobs,
+    _check_verbose,
+    check_is_fitted,
+)
 
 from .methods import (
     find_lambda_star,
@@ -37,13 +38,11 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
 
     Parameters
     ----------
-    estimator : Optional[ClassifierMixin]
-        Any fitted multi-label classifier with scikit-learn API
-        (i.e. with fit, predict, and predict_proba methods).
-        If ``None``, estimator by default is a sklearn LogisticRegression
-        instance.
-
-         by default ``None``
+    predict_function : Callable[[ArrayLike], NDArray]
+        predict_proba method of a fitted multi-label classifier.
+        It should return a list of arrays where the length of the list is n_classes
+        and each array is of shape (n_samples, 2) corresponding to the
+        probabilities of the negative and positive class for each label.
 
     metric_control : Optional[str]
         Metric to control. Either "recall" or "precision".
@@ -90,8 +89,6 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
         List of all valid methods. Either CRC or RCPS
     valid_bounds: List[Union[str, ``None``]]
         List of all valid bounds computation for RCPS only.
-    single_estimator_ : sklearn.ClassifierMixin
-        Estimator fitted on the whole training set.
 
     n_lambdas: int
         Number of thresholds on which we compute the risk.
@@ -148,7 +145,7 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
     >>> X_toy = np.arange(4).reshape(-1, 1)
     >>> y_toy = np.stack([[1, 0, 1], [1, 0, 0], [0, 1, 1], [0, 1, 0]])
     >>> clf = MultiOutputClassifier(LogisticRegression()).fit(X_toy, y_toy)
-    >>> mapie = PrecisionRecallController(estimator=clf).fit(X_toy, y_toy)
+    >>> mapie = PrecisionRecallController(predict_function=clf.predict_proba).fit(X_toy, y_toy)
     >>> _, y_pi_mapie = mapie.predict(X_toy, alpha=0.3)
     >>> print(y_pi_mapie[:, :, 0])
     [[ True False  True]
@@ -163,25 +160,35 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
     valid_bounds_ = ["hoeffding", "bernstein", "wsr", None]
     lambdas = np.arange(0, 1, 0.01)
     n_lambdas = len(lambdas)
-    fit_attributes = ["single_estimator_", "risks"]
+    fit_attributes = ["risks"]
     sigma_init = 0.25  # Value given in the paper [1]
     cal_size = 0.3
 
     def __init__(
         self,
-        estimator: Optional[ClassifierMixin] = None,
+        predict_function: Callable[[ArrayLike], Union[list[NDArray], NDArray]],
         metric_control: Optional[str] = "recall",
         method: Optional[str] = None,
         n_jobs: Optional[int] = None,
         random_state: Optional[Union[int, np.random.RandomState]] = None,
         verbose: int = 0,
     ) -> None:
-        self.estimator = estimator
+        self._predict_function = predict_function
         self.metric_control = metric_control
         self.method = method
         self.n_jobs = n_jobs
         self.random_state = random_state
         self.verbose = verbose
+        self._is_fitted = False
+
+        self._check_parameters()
+        self._check_metric_control()
+        self._check_method()
+
+    @property
+    def is_fitted(self):
+        """Returns True if the controller is fitted"""
+        return self._is_fitted
 
     def _check_parameters(self) -> None:
         """
@@ -227,7 +234,7 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
 
         Parameters
         ----------
-        y : NDArray of shape (n_samples, n_labels)
+        y : NDArray of shape (n_samples, n_classes)
             Labels of the observations.
 
         Raises
@@ -296,87 +303,6 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
                     + " for alpha="
                     + str(alpha[i])
                 )
-
-    def _check_estimator(
-        self,
-        X: ArrayLike,
-        y: ArrayLike,
-        estimator: Optional[ClassifierMixin] = None,
-        _refit: Optional[bool] = False,
-    ) -> Tuple[ClassifierMixin, ArrayLike, ArrayLike]:
-        """
-        Check the estimator value. If it is ``None``,
-        it returns a multi-output ``LogisticRegression``
-        instance if necessary.
-
-        Parameters
-        ----------
-        X : ArrayLike of shape (n_samples, n_features)
-            Training data.
-
-        y : ArrayLike of shape (n_samples,)
-            Training labels.
-
-        estimator : Optional[ClassifierMixin], optional
-            Estimator to check, by default ``None``
-
-        _refit : Optional[bool]
-            Whether or not the user is using fit (True) or
-            partial_fit (False).
-
-            By default False
-
-        Raises
-        ------
-        ValueError
-            If the estimator is not ``None``
-            and has no fit, predict, nor predict_proba methods.
-
-        NotFittedError
-            If the estimator is not fitted.
-
-        Warning
-            If estimator is then to warn about the split of the
-            data between train and calibration
-        """
-        if (estimator is None) and (not _refit):
-            raise ValueError(
-                "Invalid estimator with partial_fit. "
-                "If the estimator is ``None`` you can not "
-                "use partial_fit."
-            )
-        if (estimator is None) and (_refit):
-            estimator = MultiOutputClassifier(LogisticRegression())
-            X_train, X_calib, y_train, y_calib = train_test_split(
-                X,
-                y,
-                test_size=self.calib_size,
-                random_state=self.random_state,
-            )
-            estimator.fit(X_train, y_train)
-            warnings.warn(
-                "WARNING: To avoid overfitting, X has been split"
-                + "into X_train and X_calib. The calibration will only"
-                + "be done on X_calib"
-            )
-            return estimator, X_calib, y_calib
-
-        if isinstance(estimator, Pipeline):
-            est = estimator[-1]
-        else:
-            est = estimator
-        if (
-            not hasattr(est, "fit")
-            or not hasattr(est, "predict")
-            or not hasattr(est, "predict_proba")
-        ):
-            raise ValueError(
-                "Invalid estimator. "
-                "Please provide a classifier with fit,"
-                "predict, and predict_proba methods."
-            )
-        check_is_fitted(est)
-        return estimator, X, y
 
     def _check_partial_fit_first_call(self) -> bool:
         """
@@ -486,13 +412,9 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
         """
         # Checks
         first_call = self._check_partial_fit_first_call()
-        self._check_parameters()
-        self._check_metric_control()
-        self._check_method()
 
         X, y = indexable(X, y)
         _check_y(y, multi_output=True)
-        estimator, X, y = self._check_estimator(X, y, self.estimator, _refit)
 
         y = cast(NDArray, y)
         X = cast(NDArray, X)
@@ -501,36 +423,24 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
         self.n_samples_ = _num_samples(X)
 
         # Work
-        if first_call or _refit:
-            self.single_estimator_ = estimator
-            y_pred_proba = self.single_estimator_.predict_proba(X)
-            y_pred_proba_array = self._transform_pred_proba(y_pred_proba)
-            self.theta_ = X.shape[1]
+        y_pred_proba = self._predict_function(X)
+        y_pred_proba_array = self._transform_pred_proba(y_pred_proba)
 
-            if self.metric_control == "recall":
-                self.risks = compute_risk_recall(self.lambdas, y_pred_proba_array, y)
-            else:  # self.metric_control == "precision"
-                self.risks = compute_risk_precision(self.lambdas, y_pred_proba_array, y)
+        if self.metric_control == "recall":
+            risk = compute_risk_recall(self.lambdas, y_pred_proba_array, y)
+        else:  # self.metric_control == "precision"
+            risk = compute_risk_precision(self.lambdas, y_pred_proba_array, y)
+
+        if first_call or _refit:
+            self.risks = risk
         else:
-            if X.shape[1] != self.theta_:
-                msg = "Number of features %d does not match previous data %d."
-                raise ValueError(msg % (X.shape[1], self.theta_))
-            self.single_estimator_ = estimator
-            y_pred_proba = self.single_estimator_.predict_proba(X)
-            y_pred_proba_array = self._transform_pred_proba(y_pred_proba)
-            if self.metric_control == "recall":
-                partial_risk = compute_risk_recall(self.lambdas, y_pred_proba_array, y)
-            else:  # self.metric_control == "precision"
-                partial_risk = compute_risk_precision(
-                    self.lambdas, y_pred_proba_array, y
-                )
-            self.risks = np.concatenate([self.risks, partial_risk], axis=0)
+            self.risks = np.vstack((self.risks, risk))
+
+        self._is_fitted = True
 
         return self
 
-    def fit(
-        self, X: ArrayLike, y: ArrayLike, calib_size: Optional[float] = 0.3
-    ) -> PrecisionRecallController:
+    def fit(self, X: ArrayLike, y: ArrayLike) -> PrecisionRecallController:
         """
         Fit the base estimator (or use the fitted base estimator) and compute risks.
 
@@ -542,18 +452,11 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
         y: NDArray of shape (n_samples, n_classes)
             Training labels.
 
-        calib_size: Optional[float]
-            Size of the calibration dataset with respect to X if the
-            given model is ``None`` need to fit a LogisticRegression.
-
-            By default .3
-
         Returns
         -------
         PrecisionRecallController
             The model itself.
         """
-        self.calib_size = calib_size
         return self.partial_fit(X, y, _refit=True)
 
     def predict(
@@ -608,24 +511,25 @@ class PrecisionRecallController(BaseEstimator, ClassifierMixin):
         self._check_delta(delta)
         self._check_bound(bound)
         alpha = cast(Optional[NDArray], _check_alpha(alpha))
-        check_is_fitted(self, self.fit_attributes)
+        check_is_fitted(self)
 
         # Estimate prediction sets
-        y_pred = self.single_estimator_.predict(X)
+        y_pred_proba = self._predict_function(X)
+        y_pred_proba_array = self._transform_pred_proba(y_pred_proba)
+
+        y_pred = (
+            y_pred_proba_array.squeeze() > 0.5
+        )  # standard prediction: class predicted if proba > 0.5
 
         if alpha is None:
             return np.array(y_pred)
-
         alpha_np = cast(NDArray, alpha)
 
-        y_pred_proba = self.single_estimator_.predict_proba(X)
-
-        y_pred_proba_array = self._transform_pred_proba(y_pred_proba)
         y_pred_proba_array = np.repeat(y_pred_proba_array, len(alpha_np), axis=2)
         if self.metric_control == "precision":
             self.n_obs = len(self.risks)
             self.r_hat = self.risks.mean(axis=0)
-            self.valid_index = ltt_procedure(
+            self.valid_index, _ = ltt_procedure(
                 np.expand_dims(self.r_hat, axis=0),
                 np.expand_dims(alpha_np, axis=0),
                 cast(float, delta),

@@ -3,7 +3,7 @@ from typing import Any, Optional
 import numpy as np
 import pandas as pd
 import pytest
-from numpy.typing import NDArray
+from numpy.typing import ArrayLike, NDArray
 from sklearn.compose import ColumnTransformer
 from sklearn.datasets import make_multilabel_classification
 from sklearn.impute import SimpleImputer
@@ -11,10 +11,10 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.multioutput import MultiOutputClassifier
 from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.preprocessing import OneHotEncoder
-from sklearn.utils.validation import check_is_fitted
 from typing_extensions import TypedDict
 
 from mapie.risk_control import PrecisionRecallController
+from mapie.utils import check_is_fitted
 
 Params = TypedDict(
     "Params",
@@ -25,9 +25,6 @@ Params = TypedDict(
         "metric_control": Optional[str],
     },
 )
-
-METHODS = ["crc", "rcps", "ltt"]
-METRICS = ["recall", "precision"]
 
 BOUNDS = ["wsr", "hoeffding", "bernstein"]
 random_state = 42
@@ -137,17 +134,6 @@ y_toy_mapie = {
 }
 
 
-class WrongOutputModel:
-    def __init__(self):
-        pass
-
-    def predict_proba(self, *args: Any):
-        """Dummy predict_proba."""
-
-    def predict(self, *args: Any):
-        """Dummy predict."""
-
-
 class ArrayOutputModel:
     def __init__(self):
         self.trained_ = True
@@ -155,16 +141,11 @@ class ArrayOutputModel:
     def fit(self, *args: Any) -> None:
         """Dummy fit."""
 
-    def predict_proba(self, X: NDArray, *args: Any) -> NDArray:
+    def predict_proba(self, X: ArrayLike) -> NDArray:
+        X = np.asarray(X)  # fix mypy issue for minimum supported requirements
         probas = np.array([[0.9, 0.05, 0.05]])
         proba_out = np.repeat(probas, len(X), axis=0)
         return proba_out
-
-    def predict(self, X: NDArray, *args: Any) -> NDArray:
-        return self.predict_proba(X) >= 0.3
-
-    def __sklearn_is_fitted__(self):
-        return True
 
 
 X_toy = np.arange(9).reshape(-1, 1)
@@ -190,25 +171,29 @@ X_no_label, y_no_label = make_multilabel_classification(
     n_samples=1000, n_classes=5, random_state=random_state, allow_unlabeled=True
 )
 
+toy_estimator = MultiOutputClassifier(
+    LogisticRegression(max_iter=1000, random_state=random_state)
+).fit(X_toy, y_toy)
+toy_predict_function = toy_estimator.predict_proba
+
+multilabel_estimator = MultiOutputClassifier(
+    LogisticRegression(max_iter=1000, random_state=random_state)
+).fit(X, y)
+multilabel_predict_function = multilabel_estimator.predict_proba
+
 
 def test_initialized() -> None:
     """Test that initialization does not crash."""
-    PrecisionRecallController()
-
-
-def test_valid_estimator() -> None:
-    """Test that valid estimators are not corrupted, for all strategies."""
-    clf = MultiOutputClassifier(LogisticRegression()).fit(X_toy, y_toy)
-    mapie_clf = PrecisionRecallController(estimator=clf, random_state=random_state)
-    mapie_clf.fit(X_toy, y_toy)
-    assert isinstance(mapie_clf.single_estimator_, MultiOutputClassifier)
+    PrecisionRecallController(predict_function=toy_predict_function)
 
 
 def test_valid_method() -> None:
     """Test that valid methods raise no errors."""
-    mapie_clf = PrecisionRecallController(random_state=random_state)
+    mapie_clf = PrecisionRecallController(
+        predict_function=toy_predict_function, random_state=random_state
+    )
     mapie_clf.fit(X_toy, y_toy)
-    check_is_fitted(mapie_clf, mapie_clf.fit_attributes)
+    check_is_fitted(mapie_clf)
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
@@ -216,19 +201,25 @@ def test_valid_metric_method(strategy: str) -> None:
     """Test that valid metric raise no errors"""
     args = STRATEGIES[strategy][0]
     mapie_clf = PrecisionRecallController(
-        random_state=random_state, metric_control=args["metric_control"]
+        predict_function=toy_predict_function,
+        random_state=random_state,
+        metric_control=args["metric_control"],
     )
     mapie_clf.fit(X_toy, y_toy)
-    check_is_fitted(mapie_clf, mapie_clf.fit_attributes)
+    check_is_fitted(mapie_clf)
 
 
 @pytest.mark.parametrize("bound", BOUNDS)
 def test_valid_bound(bound: str) -> None:
     """Test that valid methods raise no errors."""
-    mapie_clf = PrecisionRecallController(random_state=random_state, method="rcps")
+    mapie_clf = PrecisionRecallController(
+        predict_function=toy_predict_function,
+        random_state=random_state,
+        method="rcps",
+    )
     mapie_clf.fit(X_toy, y_toy)
     mapie_clf.predict(X_toy, bound=bound, delta=0.1)
-    check_is_fitted(mapie_clf, mapie_clf.fit_attributes)
+    check_is_fitted(mapie_clf)
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
@@ -238,6 +229,7 @@ def test_predict_output_shape(strategy: str, alpha: Any, delta: Any) -> None:
     """Test predict output shape."""
     args = STRATEGIES[strategy][0]
     mapie_clf = PrecisionRecallController(
+        predict_function=multilabel_predict_function,
         method=args["method"],
         metric_control=args["metric_control"],
         random_state=args["random_state"],
@@ -257,6 +249,7 @@ def test_results_for_same_alpha(strategy: str) -> None:
     """
     args = STRATEGIES[strategy][0]
     mapie_clf = PrecisionRecallController(
+        predict_function=multilabel_predict_function,
         method=args["method"],
         metric_control=args["metric_control"],
         random_state=args["random_state"],
@@ -274,9 +267,8 @@ def test_results_for_partial_fit(strategy: str) -> None:
     are similar with two equal values of alpha.
     """
     args = STRATEGIES[strategy][0]
-    clf = MultiOutputClassifier(LogisticRegression()).fit(X, y)
     mapie_clf = PrecisionRecallController(
-        estimator=clf,
+        predict_function=multilabel_predict_function,
         method=args["method"],
         metric_control=args["metric_control"],
         random_state=args["random_state"],
@@ -284,7 +276,7 @@ def test_results_for_partial_fit(strategy: str) -> None:
     mapie_clf.fit(X, y)
 
     mapie_clf_partial = PrecisionRecallController(
-        estimator=clf,
+        predict_function=multilabel_predict_function,
         method=args["method"],
         metric_control=args["metric_control"],
         random_state=args["random_state"],
@@ -309,6 +301,7 @@ def test_results_for_alpha_as_float_and_arraylike(strategy: str, alpha: Any) -> 
     """Test that output values do not depend on type of alpha."""
     args = STRATEGIES[strategy][0]
     mapie_clf = PrecisionRecallController(
+        predict_function=multilabel_predict_function,
         method=args["method"],
         metric_control=args["metric_control"],
         random_state=args["random_state"],
@@ -337,11 +330,13 @@ def test_results_single_and_multi_jobs(strategy: str) -> None:
     """
     args = STRATEGIES[strategy][0]
     mapie_clf_single = PrecisionRecallController(
+        predict_function=multilabel_predict_function,
         n_jobs=1,
         metric_control=args["metric_control"],
         random_state=args["random_state"],
     )
     mapie_clf_multi = PrecisionRecallController(
+        predict_function=multilabel_predict_function,
         n_jobs=-1,
         metric_control=args["metric_control"],
         random_state=args["random_state"],
@@ -372,10 +367,10 @@ def test_results_single_and_multi_jobs(strategy: str) -> None:
 )
 def test_valid_prediction(alpha: Any, delta: Any, bound: Any) -> None:
     """Test fit and predict."""
-    model = MultiOutputClassifier(LogisticRegression())
-    model.fit(X_toy, y_toy)
     mapie_clf = PrecisionRecallController(
-        estimator=model, method="rcps", random_state=random_state
+        predict_function=toy_predict_function,
+        method="rcps",
+        random_state=random_state,
     )
 
     mapie_clf.fit(X_toy, y_toy)
@@ -399,7 +394,7 @@ def test_array_output_model(strategy: str, alpha: Any, delta: Any, bound: Any):
     args = STRATEGIES[strategy][0]
     model = ArrayOutputModel()
     mapie_clf = PrecisionRecallController(
-        estimator=model,
+        predict_function=model.predict_proba,
         method=args["method"],
         metric_control=args["metric_control"],
         random_state=random_state,
@@ -409,25 +404,30 @@ def test_array_output_model(strategy: str, alpha: Any, delta: Any, bound: Any):
 
 
 def test_reinit_new_fit():
-    clf = MultiOutputClassifier(LogisticRegression()).fit(X_toy, y_toy)
-    mapie_clf = PrecisionRecallController(estimator=clf, random_state=random_state)
+    mapie_clf = PrecisionRecallController(
+        predict_function=toy_predict_function, random_state=random_state
+    )
     mapie_clf.fit(X_toy, y_toy)
     mapie_clf.fit(X_toy, y_toy)
     assert len(mapie_clf.risks) == len(X_toy)
 
 
 @pytest.mark.parametrize("method", WRONG_METHODS)
-def test_method_error_in_fit(method: str) -> None:
+def test_method_error_in_init(method: str) -> None:
     """Test error for wrong method"""
-    mapie_clf = PrecisionRecallController(random_state=random_state, method=method)
-
     with pytest.raises(ValueError, match=r".*Invalid method.*"):
-        mapie_clf.fit(X_toy, y_toy)
+        PrecisionRecallController(
+            predict_function=toy_predict_function,
+            random_state=random_state,
+            method=method,
+        )
 
 
 def test_method_error_if_no_label_fit() -> None:
     """Test error for wrong method"""
-    mapie_clf = PrecisionRecallController(random_state=random_state)
+    mapie_clf = PrecisionRecallController(
+        predict_function=multilabel_predict_function, random_state=random_state
+    )
     with pytest.raises(ValueError, match=r".*Invalid y.*"):
         mapie_clf.fit(X_no_label, y_no_label)
 
@@ -435,7 +435,9 @@ def test_method_error_if_no_label_fit() -> None:
 def test_method_error_if_no_label_partial_fit() -> None:
     """Test error for wrong method"""
     clf = MultiOutputClassifier(LogisticRegression()).fit(X_no_label, y_no_label)
-    mapie_clf = PrecisionRecallController(estimator=clf, random_state=random_state)
+    mapie_clf = PrecisionRecallController(
+        predict_function=clf.predict_proba, random_state=random_state
+    )
     with pytest.raises(ValueError, match=r".*Invalid y.*"):
         mapie_clf.partial_fit(X_no_label, y_no_label)
 
@@ -443,7 +445,11 @@ def test_method_error_if_no_label_partial_fit() -> None:
 @pytest.mark.parametrize("bound", WRONG_BOUNDS)
 def test_bound_error_in_predict(bound: str) -> None:
     """Test error for wrong bounds"""
-    mapie_clf = PrecisionRecallController(random_state=random_state, method="rcps")
+    mapie_clf = PrecisionRecallController(
+        predict_function=toy_predict_function,
+        random_state=random_state,
+        method="rcps",
+    )
 
     mapie_clf.fit(X_toy, y_toy)
     with pytest.raises(ValueError, match=r".*bound must be in.*"):
@@ -451,18 +457,23 @@ def test_bound_error_in_predict(bound: str) -> None:
 
 
 @pytest.mark.parametrize("metric_control", WRONG_METRICS)
-def test_metric_error_in_fit(metric_control: str) -> None:
+def test_metric_error_in_init(metric_control: str) -> None:
     """Test error for wrong metrics"""
-    mapie_clf = PrecisionRecallController(
-        random_state=random_state, metric_control=metric_control
-    )
     with pytest.raises(ValueError, match=r".*Invalid metric. *"):
-        mapie_clf.fit(X_toy, y_toy)
+        PrecisionRecallController(
+            predict_function=toy_predict_function,
+            random_state=random_state,
+            metric_control=metric_control,
+        )
 
 
 def test_error_rcps_delta_null() -> None:
     """Test error for RCPS method and delta None"""
-    mapie_clf = PrecisionRecallController(random_state=random_state, method="rcps")
+    mapie_clf = PrecisionRecallController(
+        predict_function=toy_predict_function,
+        random_state=random_state,
+        method="rcps",
+    )
 
     mapie_clf.fit(X_toy, y_toy)
     with pytest.raises(ValueError, match=r".*delta cannot be ``None``*"):
@@ -472,7 +483,9 @@ def test_error_rcps_delta_null() -> None:
 def test_error_ltt_delta_null() -> None:
     """Test error for LTT method and delta None"""
     mapie_clf = PrecisionRecallController(
-        random_state=random_state, metric_control="precision"
+        predict_function=toy_predict_function,
+        random_state=random_state,
+        metric_control="precision",
     )
     mapie_clf.fit(X_toy, y_toy)
     with pytest.raises(ValueError, match=r".*Invalid delta. *"):
@@ -482,7 +495,11 @@ def test_error_ltt_delta_null() -> None:
 @pytest.mark.parametrize("delta", [-1.0, 0, 1, 4, -3])
 def test_error_delta_wrong_value(delta: Any) -> None:
     """Test error for RCPS method and delta None"""
-    mapie_clf = PrecisionRecallController(random_state=random_state, method="rcps")
+    mapie_clf = PrecisionRecallController(
+        predict_function=toy_predict_function,
+        random_state=random_state,
+        method="rcps",
+    )
     mapie_clf.fit(X_toy, y_toy)
     with pytest.raises(ValueError, match=r".*delta must be*"):
         mapie_clf.predict(X_toy, delta=delta)
@@ -492,7 +509,9 @@ def test_error_delta_wrong_value(delta: Any) -> None:
 def test_error_delta_wrong_value_ltt(delta: Any) -> None:
     """Test error for RCPS method and delta None"""
     mapie_clf = PrecisionRecallController(
-        random_state=random_state, metric_control="precision"
+        predict_function=toy_predict_function,
+        random_state=random_state,
+        metric_control="precision",
     )
 
     mapie_clf.fit(X_toy, y_toy)
@@ -502,7 +521,11 @@ def test_error_delta_wrong_value_ltt(delta: Any) -> None:
 
 def test_bound_none_crc() -> None:
     """Test that a warning is raised when bound is not None with CRC method."""
-    mapie_clf = PrecisionRecallController(random_state=random_state, method="crc")
+    mapie_clf = PrecisionRecallController(
+        predict_function=toy_predict_function,
+        random_state=random_state,
+        method="crc",
+    )
 
     mapie_clf.fit(X_toy, y_toy)
     with pytest.warns(UserWarning, match=r"WARNING: you are using crc*"):
@@ -511,23 +534,24 @@ def test_bound_none_crc() -> None:
 
 def test_delta_none_crc() -> None:
     """Test that a warning is raised when estimator is none with CRC method."""
-    mapie_clf = PrecisionRecallController(random_state=random_state, method="crc")
+    mapie_clf = PrecisionRecallController(
+        predict_function=toy_predict_function,
+        random_state=random_state,
+        method="crc",
+    )
     mapie_clf.fit(X_toy, y_toy)
     with pytest.warns(UserWarning, match=r"WARNING: you are using crc*"):
         mapie_clf.predict(X_toy, bound=None, delta=0.1)
 
 
-def test_warning_estimator_none() -> None:
-    """Test that a warning is raised when estimator is None."""
-    mapie_clf = PrecisionRecallController(random_state=random_state)
-    with pytest.warns(UserWarning, match=r"WARNING: To avoid overfitting,*"):
-        mapie_clf.fit(X_toy, y_toy)
-
-
 @pytest.mark.parametrize("delta", [np.arange(0, 1, 0.01), (0.1, 0.2), [0.4, 0.5]])
 def test_error_delta_wrong_type(delta: Any) -> None:
     """Test error for RCPS method and delta None"""
-    mapie_clf = PrecisionRecallController(random_state=random_state, method="rcps")
+    mapie_clf = PrecisionRecallController(
+        predict_function=toy_predict_function,
+        random_state=random_state,
+        method="rcps",
+    )
     mapie_clf.fit(X_toy, y_toy)
     with pytest.raises(ValueError, match=r".*delta must be a float*"):
         mapie_clf.predict(X_toy, delta=delta)
@@ -537,7 +561,9 @@ def test_error_delta_wrong_type(delta: Any) -> None:
 def test_error_delta_wrong_type_ltt(delta: Any) -> None:
     """Test error for LTT method and delta None"""
     mapie_clf = PrecisionRecallController(
-        random_state=random_state, metric_control="precision"
+        predict_function=toy_predict_function,
+        random_state=random_state,
+        metric_control="precision",
     )
 
     mapie_clf.fit(X_toy, y_toy)
@@ -548,9 +574,11 @@ def test_error_delta_wrong_type_ltt(delta: Any) -> None:
 def test_error_partial_fit_different_size() -> None:
     """Test error for partial_fit with different size"""
     clf = MultiOutputClassifier(LogisticRegression()).fit(X_toy, y_toy)
-    mapie_clf = PrecisionRecallController(estimator=clf, random_state=random_state)
+    mapie_clf = PrecisionRecallController(
+        predict_function=clf.predict_proba, random_state=random_state
+    )
     mapie_clf.partial_fit(X_toy, y_toy)
-    with pytest.raises(ValueError, match=r".*Number of features*"):
+    with pytest.raises(ValueError, match=r".*features, but*"):
         mapie_clf.partial_fit(X, y)
 
 
@@ -582,7 +610,7 @@ def test_pipeline_compatibility(strategy: str) -> None:
     pipe = make_pipeline(preprocessor, MultiOutputClassifier(LogisticRegression()))
     pipe.fit(X, y)
     mapie = PrecisionRecallController(
-        estimator=pipe,
+        predict_function=pipe.predict_proba,
         method=args["method"],
         metric_control=args["metric_control"],
         random_state=random_state,
@@ -592,29 +620,18 @@ def test_pipeline_compatibility(strategy: str) -> None:
     mapie.predict(X, bound=args["bound"], delta=0.1)
 
 
-def test_error_no_fit() -> None:
-    """Test error for no fit"""
-    clf = WrongOutputModel()
-    mapie_clf = PrecisionRecallController(estimator=clf, random_state=random_state)
-    with pytest.raises(ValueError, match=r".*Please provide a classifier with*"):
-        mapie_clf.fit(X_toy, y_toy)
-
-
-def test_error_estimator_none_partial() -> None:
-    """Test error estimator none partial"""
-    mapie_clf = PrecisionRecallController(random_state=random_state)
-    with pytest.raises(ValueError, match=r".*Invalid estimator with partial_fit*"):
-        mapie_clf.partial_fit(X_toy, y_toy)
-
-
 def test_partial_fit_first_time():
-    mclf = PrecisionRecallController(random_state=random_state)
+    mclf = PrecisionRecallController(
+        predict_function=toy_predict_function, random_state=random_state
+    )
     assert mclf._check_partial_fit_first_call()
 
 
 def test_partial_fit_second_time():
     clf = MultiOutputClassifier(LogisticRegression()).fit(X, y)
-    mclf = PrecisionRecallController(estimator=clf, random_state=random_state)
+    mclf = PrecisionRecallController(
+        predict_function=clf.predict_proba, random_state=random_state
+    )
     mclf.partial_fit(X, y)
     assert not mclf._check_partial_fit_first_call()
 
@@ -625,15 +642,19 @@ def test_toy_dataset_predictions(strategy: str) -> None:
     Test toy_dataset_predictions.
     """
     args = STRATEGIES[strategy][0]
-    clf = MultiOutputClassifier(LogisticRegression()).fit(X_toy, y_toy)
     mapie_clf = PrecisionRecallController(
-        clf,
+        predict_function=toy_predict_function,
         method=args["method"],
         metric_control=args["metric_control"],
         random_state=random_state,
     )
     mapie_clf.fit(X_toy, y_toy)
-    _, y_ps = mapie_clf.predict(X_toy, alpha=0.2, bound=args["bound"], delta=0.1)
+    _, y_ps = mapie_clf.predict(
+        X_toy,
+        alpha=0.2,
+        bound=args["bound"],
+        delta=0.1,
+    )
     np.testing.assert_allclose(y_ps[:, :, 0], y_toy_mapie[strategy], rtol=1e-6)
 
 
@@ -643,12 +664,12 @@ def test_error_wrong_method_metric_precision(method: str) -> None:
     Test that an error is returned when using a metric
     with invalid method .
     """
-    clf = MultiOutputClassifier(LogisticRegression()).fit(X_toy, y_toy)
-    mapie_clf = PrecisionRecallController(
-        clf, method=method, metric_control="precision"
-    )
     with pytest.raises(ValueError, match=r".*Invalid method for metric*"):
-        mapie_clf.fit(X_toy, y_toy)
+        PrecisionRecallController(
+            predict_function=toy_predict_function,
+            method=method,
+            metric_control="precision",
+        )
 
 
 @pytest.mark.parametrize("method", ["ltt"])
@@ -657,21 +678,25 @@ def test_check_metric_control(method: str) -> None:
     Test that an error is returned when using a metric
     with invalid method .
     """
-    clf = MultiOutputClassifier(LogisticRegression()).fit(X_toy, y_toy)
-    mapie_clf = PrecisionRecallController(clf, method=method, metric_control="recall")
     with pytest.raises(ValueError, match=r".*Invalid method for metric*"):
-        mapie_clf.fit(X_toy, y_toy)
+        PrecisionRecallController(
+            predict_function=toy_predict_function,
+            method=method,
+            metric_control="recall",
+        )
 
 
 def test_method_none_precision() -> None:
-    clf = MultiOutputClassifier(LogisticRegression()).fit(X_toy, y_toy)
-    mapie_clf = PrecisionRecallController(clf, metric_control="precision")
+    mapie_clf = PrecisionRecallController(
+        predict_function=toy_predict_function, metric_control="precision"
+    )
     mapie_clf.fit(X_toy, y_toy)
     assert mapie_clf.method == "ltt"
 
 
 def test_method_none_recall() -> None:
-    clf = MultiOutputClassifier(LogisticRegression()).fit(X_toy, y_toy)
-    mapie_clf = PrecisionRecallController(clf, metric_control="recall")
+    mapie_clf = PrecisionRecallController(
+        predict_function=toy_predict_function, metric_control="recall"
+    )
     mapie_clf.fit(X_toy, y_toy)
     assert mapie_clf.method == "crc"

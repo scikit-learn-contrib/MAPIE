@@ -16,14 +16,21 @@ from sklearn.model_selection import train_test_split
 
 from mapie.risk_control import BinaryClassificationController
 
-np.random.seed(0)
+RANDOM_STATE = 1
+np.random.seed(RANDOM_STATE)
+
+pd.set_option("display.max_colwidth", None)
 
 ##############################################################################
 # First, we load HaluEval Question-Answering Data, an open-source dataset for evaluating hallucination in LLMs.
 # Then, we preprocess the data to create a suitable format for our analysis.
 url = "https://raw.githubusercontent.com/RUCAIBox/HaluEval/main/data/qa_data.json"
 df = pd.read_json(url, lines=True)
-print("Sample of the original dataset:\n\n", df.iloc[0])
+
+print("# Sample of the original dataset:\n")
+for col in df.columns:
+    print(f'"{col}":    {df[col].iloc[0]}\n')
+
 
 # Melt the dataframe to combine right_answer and hallucinated_answer into a single column
 df = df.melt(
@@ -62,7 +69,26 @@ df["judge_input"] = df.apply(
     axis=1,
 )
 
-print("Sample of the processed dataset:\n\n", df.iloc[0])
+
+# Create synthetic judge scores
+def generate_biased_score(is_hallucinated):
+    """Generate a biased score based on whether the answer is hallucinated."""
+    if is_hallucinated:
+        return np.random.beta(a=3, b=1)
+    else:
+        return np.random.beta(a=1, b=3)
+
+
+df["judge_score"] = df["hallucinated"].apply(generate_biased_score)
+
+df = df[["judge_input", "judge_score", "hallucinated"]]
+df = df.set_index("judge_input")
+
+
+print("# Sample of the processed dataset:\n")
+print(f'"{df.index.name}":    {df.index[0]}')
+for col in df.columns:
+    print(f'"{col}":    {df[col].iloc[0]}\n')
 
 
 ##############################################################################
@@ -73,22 +99,12 @@ print("Sample of the processed dataset:\n\n", df.iloc[0])
 
 class TableBasePredictor:
     def __init__(self, df):
-        df["judge_score"] = df["hallucinated"].apply(self.generate_biased_score)
-        self.df = df[["judge_input", "judge_score"]]
-        self.df = self.df.set_index("judge_input")
+        self.df = df
 
     def predict_proba(self, X):
         score_positive = self.df.loc[X]["judge_score"].values
         score_negative = 1 - score_positive
         return np.vstack([score_negative, score_positive]).T
-
-    @staticmethod
-    def generate_biased_score(is_hallucinated):
-        """Generate a biased score based on whether the answer is hallucinated."""
-        if is_hallucinated:
-            return np.random.beta(a=3, b=1)
-        else:
-            return np.random.beta(a=1, b=3)
 
 
 llm_judge = TableBasePredictor(df)
@@ -120,10 +136,12 @@ plt.show()
 # probability estimation function, a risk metric (here, "precision"), a target risk level,
 # and a confidence level. We use the calibration data to compute statistically guaranteed thresholds.
 
-X = df["judge_input"].to_numpy()
+X = df.index.to_numpy()  # index is the judge_input
 y = df["hallucinated"].astype(int)
 
-X_calib, X_test, y_calib, y_test = train_test_split(X, y, test_size=0.8, random_state=0)
+X_calib, X_test, y_calib, y_test = train_test_split(
+    X, y, test_size=0.95, random_state=RANDOM_STATE
+)
 target_precision = 0.9
 confidence_level = 0.9
 
@@ -144,11 +162,6 @@ precision_calib = precision_score(y_calib, y_calib_pred_controlled)
 y_test_pred_controlled = bcc.predict(X_test)
 precision_test = precision_score(y_test, y_test_pred_controlled)
 
-print(
-    "With risk control, the precision is:\n"
-    f"- {precision_calib:.3f} on the calibration set \n"
-    f"- {precision_test:.3f} on the test set."
-)
 
 ##############################################################################
 # Finally, let us visualize the precision achieved on the calibration set for
@@ -224,6 +237,12 @@ print(
     "With the naive threshold, the precision is:\n"
     f"- {precisions[naive_threshold_index]:.3f} on the calibration set\n"
     f"- {precision_score(y_test, y_pred_naive):.3f} on the test set."
+)
+
+print(
+    "\n\nWith risk control, the precision is:\n"
+    f"- {precision_calib:.3f} on the calibration set \n"
+    f"- {precision_test:.3f} on the test set."
 )
 
 ##############################################################################

@@ -2,11 +2,10 @@ from abc import ABCMeta, abstractmethod
 from typing import Optional, Union
 
 import numpy as np
-
-from mapie.conformity_scores.interface import BaseConformityScore
+from numpy.typing import ArrayLike, NDArray
 from sklearn.model_selection import BaseCrossValidator
 
-from numpy.typing import ArrayLike, NDArray
+from mapie.conformity_scores.interface import BaseConformityScore
 
 
 class BaseClassificationScore(BaseConformityScore, metaclass=ABCMeta):
@@ -17,6 +16,12 @@ class BaseClassificationScore(BaseConformityScore, metaclass=ABCMeta):
 
     Attributes
     ----------
+    classes: Optional[ArrayLike]
+        Names of the classes.
+
+    random_state: Optional[Union[int, np.random.RandomState]]
+        Pseudo random number generator state.
+
     quantiles_: ArrayLike of shape (n_alpha)
         The quantiles estimated from ``get_sets`` method.
     """
@@ -41,7 +46,7 @@ class BaseClassificationScore(BaseConformityScore, metaclass=ABCMeta):
 
             By default ``None``.
 
-        random_state: Optional[Union[int, RandomState]]
+        random_state: Optional[Union[int, np.random.RandomState]]
             Pseudo random number generator state.
         """
         super().set_external_attributes(**kwargs)
@@ -71,8 +76,11 @@ class BaseClassificationScore(BaseConformityScore, metaclass=ABCMeta):
             NDArray of floats between ``0`` and ``1``, represents the
             uncertainty of the confidence set.
 
-        estimator: EnsembleClassifier
-            Estimator that is fitted to predict y from X.
+        y_pred_proba: NDArray
+            Predicted probabilities from the estimator.
+
+        cv: Optional[Union[int, str, BaseCrossValidator]]
+            Cross-validation strategy used by the estimator.
 
         Returns
         --------
@@ -102,8 +110,8 @@ class BaseClassificationScore(BaseConformityScore, metaclass=ABCMeta):
             NDArray of floats between 0 and 1, representing the uncertainty
             of the confidence set.
 
-        estimator: EnsembleClassifier
-            Estimator that is fitted to predict y from X.
+        cv: Optional[Union[int, str, BaseCrossValidator]]
+            Cross-validation strategy used by the estimator.
 
         Returns
         --------
@@ -138,8 +146,8 @@ class BaseClassificationScore(BaseConformityScore, metaclass=ABCMeta):
             NDArray of floats between 0 and 1, representing the uncertainty
             of the confidence set.
 
-        estimator: EnsembleClassifier
-            Estimator that is fitted to predict y from X.
+        cv: Optional[Union[int, str, BaseCrossValidator]]
+            Cross-validation strategy used by the estimator.
 
         Returns
         --------
@@ -210,12 +218,6 @@ class BaseClassificationScore(BaseConformityScore, metaclass=ABCMeta):
 
         alpha_np: NDArray of shape (n_alpha, )
             Represents the uncertainty of the confidence set to produce.
-
-        y_pred_proba: NDArray
-            Predicted probabilities from the estimator.
-
-        cv: Optional[Union[int, str, BaseCrossValidator]]
-            Cross-validation strategy used by the estimator.
 
         **kwargs: dict
             Additional keyword arguments.

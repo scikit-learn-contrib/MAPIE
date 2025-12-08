@@ -13,6 +13,8 @@ The coverage width based criterion is computed with the function
 :func:`~mapie.metrics.coverage_width_based`
 """
 
+# sphinx_gallery_thumbnail_number = 2
+
 import os
 import warnings
 
@@ -20,18 +22,18 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from sklearn.linear_model import LinearRegression, QuantileRegressor
+from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import PolynomialFeatures
-from sklearn.model_selection import train_test_split
 
 from mapie.metrics.regression import (
+    coverage_width_based,
     regression_coverage_score,
     regression_mean_width_score,
-    coverage_width_based,
 )
 from mapie.regression import (
-    CrossConformalRegressor,
     ConformalizedQuantileRegressor,
+    CrossConformalRegressor,
     JackknifeAfterBootstrapRegressor,
 )
 

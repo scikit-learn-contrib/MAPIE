@@ -1,8 +1,13 @@
+import copy
 import logging
 import warnings
+from collections.abc import Iterable as IterableType
+from decimal import Decimal
 from inspect import signature
+from math import isclose
 from typing import Any, Iterable, Optional, Tuple, Union, cast
 import numpy as np
+from numpy.typing import ArrayLike, NDArray
 from sklearn.base import ClassifierMixin, RegressorMixin
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import (
@@ -16,18 +21,7 @@ from sklearn.model_selection import (
 from sklearn.pipeline import Pipeline
 from sklearn.utils import _safe_indexing
 from sklearn.utils.multiclass import type_of_target
-from sklearn.utils.validation import (
-    _check_sample_weight,
-    _num_features,
-    check_is_fitted,
-    column_or_1d,
-)
-
-from numpy.typing import ArrayLike, NDArray
-import copy
-from collections.abc import Iterable as IterableType
-from decimal import Decimal
-from math import isclose
+from sklearn.utils.validation import _check_sample_weight, _num_features, column_or_1d
 
 
 # This function is the only public utility of MAPIE as of v1 release
@@ -286,12 +280,13 @@ def _fit_estimator(
     --------
     >>> import numpy as np
     >>> from sklearn.linear_model import LinearRegression
-    >>> from sklearn.utils.validation import check_is_fitted
+    >>> from mapie.utils import check_sklearn_user_model_is_fitted
     >>> X = np.array([[0], [1], [2], [3], [4], [5]])
     >>> y = np.array([5, 7, 9, 11, 13, 15])
     >>> estimator = LinearRegression()
     >>> estimator = _fit_estimator(estimator, X, y)
-    >>> check_is_fitted(estimator)
+    >>> check_sklearn_user_model_is_fitted(estimator)
+    True
     """
     fit_parameters = signature(estimator.fit).parameters
     supports_sw = "sample_weight" in fit_parameters
@@ -1011,13 +1006,8 @@ def _check_estimator_classification(
             "predict, and predict_proba methods."
         )
     if cv == "prefit":
-        check_is_fitted(est)
-        if not hasattr(est, "classes_"):
-            raise AttributeError(
-                "Invalid classifier. "
-                "Fitted classifier does not contain "
-                "'classes_' attribute."
-            )
+        check_sklearn_user_model_is_fitted(est)
+
     return estimator
 
 
@@ -1636,3 +1626,65 @@ def _raise_error_if_fit_called_in_prefit_mode(
             "The fit method must be skipped when the prefit parameter is set to True. "
             "Use the conformalize method directly after instanciation."
         )
+
+
+class NotFittedError(ValueError):
+    pass
+
+
+def check_is_fitted(obj):
+    """Check that .is_fitted property is True"""
+    if not getattr(obj, "is_fitted", False):
+        raise NotFittedError(f"{obj.__class__.__name__} is not fitted yet. ")
+
+
+FIT_INDICATORS = [
+    "n_features_in_",
+    "classes_",
+    "coef_",
+    "feature_names_in_",
+    "tree_",
+    "estimators_",
+    "fitted_",
+]
+
+
+def check_sklearn_user_model_is_fitted(estimator):
+    """
+    Check whether a user-provided estimator is fitted.
+
+    Logic:
+    1. Raise AttributeError for classifiers missing 'classes_'.
+    2. Raise warning if no typical fit-related attributes are present.
+    3. If `n_features_in_` exists, try a minimal predict-probe.
+    """
+    if isinstance(estimator, ClassifierMixin) and not hasattr(estimator, "classes_"):
+        raise AttributeError(
+            "Invalid classifier. "
+            "Fitted classifier does not contain "
+            "'classes_' attribute."
+        )
+
+    present_attrs = [attr for attr in FIT_INDICATORS if hasattr(estimator, attr)]
+
+    if not present_attrs:
+        warnings.warn(
+            "Estimator does not appear fitted. "
+            f"At least one of the expected attributes is missing in : {FIT_INDICATORS}.",
+            UserWarning,
+        )
+
+    if hasattr(estimator, "n_features_in_"):
+        try:
+            if "Pipeline" in str(type(estimator)):
+                estimator = list(estimator.named_steps.values())[-1]
+            estimator.predict(np.zeros((1, estimator.n_features_in_)))
+            return True
+        except Exception as err:
+            raise UserWarning(
+                "Estimator does not appear fitted. "
+                "It has `n_features_in_` but failed a minimal prediction test "
+                f"(shape={(1, estimator.n_features_in_)}). Error: {err}",
+                UserWarning,
+            )
+    return True

@@ -15,12 +15,18 @@ on multiple prediction parameters with MAPIE.
 
 """
 
+# sphinx_gallery_thumbnail_number = 2
+
+import matplotlib.patches as patches
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.colors import LinearSegmentedColormap
+from matplotlib.lines import Line2D
+from matplotlib.patches import Patch
 from sklearn.datasets import make_circles
 from sklearn.neural_network import MLPClassifier
 
-from mapie.risk_control import BinaryClassificationController, BinaryClassificationRisk
+from mapie.risk_control import BinaryClassificationController
 from mapie.utils import train_conformalize_test_split
 
 RANDOM_STATE = 1
@@ -111,10 +117,10 @@ def send_to_human(X, lambda_1, lambda_2):
 # this constraint.
 
 to_explore = []
-for i in range(6):
-    lambda_1 = (i + 1) / 10
-    for j in [1, 2, 3, 4, 5]:
-        lambda_2 = lambda_1 + j / 10
+for i in range(9):
+    lambda_1 = i / 10
+    for j in range(i + 1, 10):
+        lambda_2 = j / 10
         if lambda_2 > 0.99:
             break
         to_explore.append((lambda_1, lambda_2))
@@ -122,18 +128,11 @@ to_explore = np.array(to_explore)
 
 #############################################################################
 # Because we want to control the proportion of emails to be verified by a human,
-# we need to define a specific :class:`BinaryClassificationRisk` which represents
+# we use `predicted_positive_fraction`, a specific :class:`BinaryClassificationRisk` which represents
 # the fraction of samples predicted as positive (i.e., sent to human verification).
-
-prop_positive = BinaryClassificationRisk(
-    risk_occurrence=lambda y_true, y_pred: y_pred,
-    risk_condition=lambda y_true, y_pred: True,
-    higher_is_better=False,
-)
-
-##############################################################################
+#
 # Finally, we initialize a :class:`~mapie.risk_control.BinaryClassificationController`
-# using our custom function ``send_to_human``, our custom risk ``prop_positive``,
+# using our custom function ``send_to_human``, the chosen risk ``predicted_positive_fraction``,
 # a target risk level (0.2), and a confidence level (0.9). Then we use the calibration
 # data to compute statistically guaranteed thresholds using a multi-parameter control
 # method.
@@ -143,32 +142,123 @@ confidence_level = 0.9
 
 bcc = BinaryClassificationController(
     predict_function=send_to_human,
-    risk=prop_positive,
+    risk="predicted_positive_fraction",
     target_level=target_level,
     confidence_level=confidence_level,
-    best_predict_param_choice="precision",
+    best_predict_param_choice="recall",
     list_predict_params=to_explore,
 )
 bcc.calibrate(X_calib, y_calib)
 
 print(
     f"{len(bcc.valid_predict_params)} multi-dimensional parameters "
-    f"found that guarantee a proportion of emails sent to verification\n"
-    f"of at most {target_level} with a confidence of {confidence_level}."
+    f"found that guarantee a proportion of emails sent\n"
+    f"to verification of at most {target_level} with "
+    f"a confidence of {confidence_level}."
 )
 
 #######################################################################
-matrix = np.zeros((10, 10))
-for valid_params in bcc.valid_predict_params:
-    row = valid_params[0] * 10
-    col = valid_params[1] * 10
-    matrix[int(row), int(col)] = 1
+grid_size = 10
+matrix = np.full((grid_size, grid_size), np.nan)
 
-fig, ax = plt.subplots(figsize=(6, 6))
-im = ax.imshow(matrix, cmap="inferno")
-ax.set_xticks(range(10), labels=(np.array(range(10)) / 10))
-ax.set_yticks(range(10), labels=(np.array(range(10)) / 10))
-ax.set_xlabel(r"lambda_2")
+# Build p-values matrix
+for i, (l1, l2) in enumerate(to_explore):
+    row = int(l1 * grid_size)
+    col = int(l2 * grid_size)
+    matrix[row, col] = bcc.p_values[i, 0]
+
+# Build valid thresholds mask
+valid_matrix = np.zeros((grid_size, grid_size), dtype=int)
+for l1, l2 in bcc.valid_predict_params:
+    row = int(l1 * grid_size)
+    col = int(l2 * grid_size)
+    valid_matrix[row, col] = 1
+
+# Plot p-value matrix
+fig, ax = plt.subplots(figsize=(7.5, 7.5))
+
+colors = ["#cde2f9", "#96bfd7", "#3765a9"]
+cmap = LinearSegmentedColormap.from_list("custom_blue", colors, gamma=0.5)
+masked_matrix = np.ma.masked_invalid(matrix)
+im = ax.imshow(masked_matrix, cmap=cmap, interpolation="nearest")
+
+for i in range(grid_size):
+    for j in range(grid_size):
+        if np.isnan(matrix[i, j]):
+            rect = patches.Rectangle(
+                (j - 0.5, i - 0.5),
+                1,
+                1,
+                hatch="///",
+                facecolor="none",
+                edgecolor="grey",
+                linewidth=0,
+            )
+            ax.add_patch(rect)
+
+# Add valid parameters area shape
+for i in range(grid_size):
+    for j in range(grid_size):
+        if valid_matrix[i, j] == 1:
+            neighbors = [(i - 1, j), (i + 1, j), (i, j - 1), (i, j + 1)]
+            if i - 1 < 0 or valid_matrix[i - 1, j] == 0:
+                ax.plot([j - 0.5, j + 0.5], [i - 0.5, i - 0.5], color="#2ecc71", lw=3)
+            if i + 1 >= grid_size or valid_matrix[i + 1, j] == 0:
+                ax.plot([j - 0.5, j + 0.5], [i + 0.5, i + 0.5], color="#2ecc71", lw=3)
+            if j - 1 < 0 or valid_matrix[i, j - 1] == 0:
+                ax.plot([j - 0.5, j - 0.5], [i - 0.5, i + 0.5], color="#2ecc71", lw=3)
+            if j + 1 >= grid_size or valid_matrix[i, j + 1] == 0:
+                ax.plot([j + 0.5, j + 0.5], [i - 0.5, i + 0.5], color="#2ecc71", lw=3)
+
+# Add best predict param as a star
+best_l1, best_l2 = bcc.best_predict_param
+ax.scatter(
+    best_l2 * grid_size,
+    best_l1 * grid_size,
+    c="#2ecc71",
+    marker="*",
+    edgecolors="k",
+    s=300,
+    label="Best threshold pair",
+)
+
+# Set up axes, theme and legend
+ax.set_xlabel(r"$\lambda_2$", fontsize=16)
+ax.set_ylabel(r"$\lambda_1$", fontsize=16)
+ax.set_title(
+    "P-values per parameter pair\nwith valid parameter zone highlighted", fontsize=16
+)
+ax.set_xticks(range(grid_size))
+ax.set_xticklabels(np.round(np.arange(grid_size) / grid_size, 2), fontsize=14)
+ax.set_yticks(range(grid_size))
+ax.set_yticklabels(np.round(np.arange(grid_size) / grid_size, 2), fontsize=14)
+
+cbar = plt.colorbar(im, ax=ax, orientation="horizontal", pad=0.2, fraction=0.035)
+cbar.set_label("P-value", fontsize=12)
+legend_elements = [
+    Patch(facecolor="none", edgecolor="grey", hatch="///", label="Non-explored zone"),
+    Patch(facecolor="none", edgecolor="#2ecc71", label="Valid parameter zone", lw=2),
+    Line2D(
+        [0],
+        [0],
+        marker="*",
+        color="w",
+        label="Best threshold pair",
+        markerfacecolor="#2ecc71",
+        markeredgecolor="k",
+        markersize=15,
+    ),
+]
+ax.legend(
+    handles=legend_elements,
+    loc="lower center",
+    bbox_to_anchor=(0.5, -0.25),
+    ncol=2,
+    fontsize=12,
+    frameon=False,
+)
+plt.tight_layout()
+plt.show()
 ax.set_ylabel(r"lambda_1")
 ax.set_title("Valid parameters")
 fig.tight_layout()

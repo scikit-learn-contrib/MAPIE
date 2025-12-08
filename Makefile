@@ -20,7 +20,12 @@ coverage:
 		--cov=mapie \
 		--cov-report term-missing \
 		--cov-fail-under=100 \
-		--no-cov-on-fail
+		--no-cov-on-fail \
+		--ignore=mapie/tests/long_tests
+
+long-tests:
+	pytest -vsx \
+		mapie/tests/long_tests
 
 ### Checks that are run in ReadTheDocs CI ###
 doc:

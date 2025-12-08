@@ -1,16 +1,15 @@
 from typing import Optional, Tuple, Union, cast
 
 import numpy as np
+from numpy.typing import NDArray
+from sklearn.model_selection import BaseCrossValidator, StratifiedShuffleSplit
 from sklearn.preprocessing import LabelEncoder
-from sklearn.model_selection import StratifiedShuffleSplit, BaseCrossValidator
 from sklearn.utils import _safe_indexing
 from sklearn.utils.validation import _num_samples
 
+from mapie._machine_precision import EPSILON
 from mapie.conformity_scores.sets.aps import APSConformityScore
 from mapie.conformity_scores.sets.utils import get_true_label_position
-
-from mapie._machine_precision import EPSILON
-from numpy.typing import NDArray
 from mapie.metrics.classification import classification_mean_width_score
 from mapie.utils import _check_alpha_and_n_samples, _compute_quantiles
 
@@ -41,7 +40,7 @@ class RAPSConformityScore(APSConformityScore):
     classes: ArrayLike
         Names of the classes.
 
-    random_state: Union[int, RandomState]
+    random_state: Union[int, np.random.RandomState]
         Pseudo random number generator state.
 
     quantiles_: ArrayLike of shape (n_alpha)
@@ -100,19 +99,19 @@ class RAPSConformityScore(APSConformityScore):
 
         Parameters
         ----------
-        X: ArrayLike
+        X: NDArray
             Observed values.
 
-        y: ArrayLike
+        y: NDArray
             Target values.
 
-        y_enc: ArrayLike
+        y_enc: NDArray
             Target values as normalized encodings.
 
-        sample_weight: Optional[ArrayLike] of shape (n_samples,)
+        sample_weight: Optional[NDArray] of shape (n_samples,)
             Non-null sample weights.
 
-        groups: Optional[ArrayLike] of shape (n_samples,)
+        groups: Optional[NDArray] of shape (n_samples,)
             Group labels for the samples used while splitting the dataset into
             train/test set.
             By default ``None``.
@@ -171,7 +170,7 @@ class RAPSConformityScore(APSConformityScore):
         y_pred: NDArray of shape (n_samples,)
             Predicted target values.
 
-        y_enc: NDArray of shape (n_samples,)
+        y_enc: Optional[NDArray] of shape (n_samples,)
             Target values as normalized encodings.
 
         Returns
@@ -370,7 +369,7 @@ class RAPSConformityScore(APSConformityScore):
         agg_scores: Optional[str]
             Method to aggregate the scores from the base estimators.
             If "mean", the scores are averaged. If "crossval", the scores are
-            obtained from cross-validation.
+            obtained from cross-validation (not used here).
 
             By default, ``"mean"``.
 
@@ -383,28 +382,6 @@ class RAPSConformityScore(APSConformityScore):
             See the docstring of
             :meth:`conformity_scores.sets.aps.APSConformityScore.get_prediction_sets`
             for more details.
-
-        X_raps: NDArray of shape (n_samples, n_features)
-            Observed feature values for the RAPS method (split data).
-
-            By default, "None" but must be set to work.
-
-        y_raps_no_enc: NDArray of shape (n_samples,)
-            Observed labels for the RAPS method (split data).
-
-            By default, "None" but must be set to work.
-
-        y_pred_proba_raps: NDArray of shape (n_samples, n_classes)
-            Predicted probabilities for the RAPS method (split data).
-
-            By default, "None" but must be set to work.
-
-        position_raps: NDArray of shape (n_samples,)
-            Position of the points in the split set for the RAPS method
-            (split data). These positions are returned by the function
-            ``get_true_label_position``.
-
-            By default, "None" but must be set to work.
 
         Returns
         --------
@@ -453,17 +430,17 @@ class RAPSConformityScore(APSConformityScore):
         y_pred_proba_sorted_cumsum: NDArray of shape (n_samples, n_classes)
             The sorted cumulative sum of predicted probabilities.
 
-        lambda_: float
+        lambda_: Optional[float]
             The lambda value used in the paper [1].
 
             By default, "None" but must be set to work.
 
-        k_star: int
+        k_star: Optional[int]
             The optimal value of k (called k_reg in the paper [1]).
 
             By default, "None" but must be set to work.
 
-        prediction_phase: bool, optional
+        prediction_phase: bool
             Whether the function is called during the prediction phase.
             If ``True``, the function will use the values of ``lambda_star``
             and ``k_star`` of the object.
@@ -515,7 +492,7 @@ class RAPSConformityScore(APSConformityScore):
         y_pred_proba_last: NDArray of shape (n_samples, 1, n_alpha)
             Last included probability.
 
-        predicition_sets: NDArray of shape (n_samples, n_alpha)
+        prediction_sets: NDArray of shape (n_samples, n_alpha)
             Prediction sets.
 
         Returns

@@ -12,10 +12,13 @@ from .risks import (
     accuracy,
     false_positive_rate,
     precision,
+    predicted_positive_fraction,
     recall,
 )
 
-Risk_str = Literal["precision", "recall", "accuracy", "fpr"]
+Risk_str = Literal[
+    "precision", "recall", "accuracy", "fpr", "predicted_positive_fraction"
+]
 Risk = Union[
     BinaryClassificationRisk,
     Risk_str,
@@ -61,8 +64,8 @@ class BinaryClassificationController:
         Valid options:
 
         - An existing risk defined in `mapie.risk_control` accessible through
-        its string equivalent: "precision", "recall", "accuracy", or
-        "fpr" for false positive rate.
+        its string equivalent: "precision", "recall", "accuracy",
+        "fpr" for false positive rate, or "predicted_positive_fraction".
         - A custom instance of BinaryClassificationRisk object
 
         Can be a list of risks in the case of multi risk control.
@@ -86,8 +89,8 @@ class BinaryClassificationController:
         - "auto" (default). For mono risk defined in mapie.risk_control, an automatic choice is made.
         For multi risk, we use the first risk in the list.
         - An existing risk defined in `mapie.risk_control` accessible through
-        its string equivalent: "precision", "recall", "accuracy", or
-        "fpr" for false positive rate.
+        its string equivalent: "precision", "recall", "accuracy",
+        "fpr" for false positive rate, or "predicted_positive_fraction".
         - A custom instance of BinaryClassificationRisk object
 
     list_predict_params : NDArray, default=np.linspace(0, 0.99, 100)
@@ -108,6 +111,10 @@ class BinaryClassificationController:
         The best threshold that control the risk (or performance). It is a tuple if multi-dimensional
         parameters are used.
         Use the calibrate method to compute it.
+
+    p_values : NDArray
+        P-values associated with each tested parameter in `list_predict_params`.
+        In the multi-risk setting, the value corresponds to the maximum over the tested risks.
 
     Examples
     --------
@@ -161,6 +168,7 @@ class BinaryClassificationController:
         "recall": recall,
         "accuracy": accuracy,
         "fpr": false_positive_rate,
+        "predicted_positive_fraction": predicted_positive_fraction,
     }
 
     def __init__(
@@ -206,6 +214,7 @@ class BinaryClassificationController:
 
         self.valid_predict_params: NDArray = np.array([])
         self.best_predict_param: Optional[Union[float, Tuple[float, ...]]] = None
+        self.p_values: Optional[NDArray] = None
 
     # All subfunctions are unit-tested. To avoid having to write
     # tests just to make sure those subfunctions are called,
@@ -240,15 +249,18 @@ class BinaryClassificationController:
         risk_values, eff_sample_sizes = self._get_risk_values_and_eff_sample_sizes(
             y_calibrate_, predictions_per_param, self._risk
         )
-        valid_params_index = ltt_procedure(
+        (valid_index, p_values) = ltt_procedure(
             risk_values,
             np.expand_dims(self._alpha, axis=1),
             self._delta,
             eff_sample_sizes,
             True,
-        )[0]
+        )
+        valid_params_index = valid_index[0]
 
         self.valid_predict_params = self._predict_params[valid_params_index]
+
+        self.p_values = p_values
 
         if len(self.valid_predict_params) == 0:
             self._set_risk_not_controlled()

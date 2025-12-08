@@ -2,14 +2,16 @@ import warnings
 from typing import Optional, Tuple, Union, cast
 
 import numpy as np
+from numpy.typing import ArrayLike, NDArray
 from sklearn.base import RegressorMixin, clone
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
-from sklearn.utils.validation import check_is_fitted, check_random_state, indexable
+from sklearn.utils import _safe_indexing
+from sklearn.utils.validation import check_random_state, indexable
 
-from numpy.typing import ArrayLike, NDArray
 from mapie.conformity_scores import BaseRegressionScore
+from mapie.utils import check_sklearn_user_model_is_fitted
 
 
 class ResidualNormalisedScore(BaseRegressionScore):
@@ -112,9 +114,9 @@ class ResidualNormalisedScore(BaseRegressionScore):
                 )
             if self.prefit:
                 if isinstance(estimator, Pipeline):
-                    check_is_fitted(estimator[-1])
+                    check_sklearn_user_model_is_fitted(estimator[-1])
                 else:
-                    check_is_fitted(estimator)
+                    check_sklearn_user_model_is_fitted(estimator)
             return estimator
 
     def _check_parameters(
@@ -149,11 +151,14 @@ class ResidualNormalisedScore(BaseRegressionScore):
         """
         residual_estimator = self._check_estimator(self.residual_estimator)
         random_state = check_random_state(self.random_state)
-        X, y, y_pred = indexable(X, y, y_pred)
-        X = np.array(X)
-        y = np.array(y)
-        y_pred = np.array(y_pred)
-        return X, y, y_pred, residual_estimator, random_state
+        X_, y_, y_pred_ = indexable(X, y, y_pred)
+        return (
+            cast(NDArray, X_),
+            cast(NDArray, y_),
+            cast(NDArray, y_pred_),
+            residual_estimator,
+            random_state,
+        )
 
     def _fit_residual_estimator(
         self,
@@ -255,21 +260,28 @@ class ResidualNormalisedScore(BaseRegressionScore):
             )
             self.residual_estimator_ = self._fit_residual_estimator(
                 clone(self.residual_estimator_),
-                X[res_indexes],
-                y[res_indexes],
-                y_pred[res_indexes],
+                _safe_indexing(X, res_indexes),
+                _safe_indexing(y, res_indexes),
+                _safe_indexing(y_pred, res_indexes),
             )
             residuals_pred = np.maximum(
-                np.exp(self._predict_residual_estimator(X[cal_indexes])), self.eps
+                np.exp(
+                    self._predict_residual_estimator(_safe_indexing(X, cal_indexes))
+                ),
+                self.eps,
             )
         else:
             cal_indexes = full_indexes
             residuals_pred = np.maximum(
-                self._predict_residual_estimator(X[cal_indexes]), self.eps
+                self._predict_residual_estimator(_safe_indexing(X, cal_indexes)),
+                self.eps,
             )
 
         signed_conformity_scores = np.divide(
-            np.subtract(y[cal_indexes], y_pred[cal_indexes]), residuals_pred
+            np.subtract(
+                _safe_indexing(y, cal_indexes), _safe_indexing(y_pred, cal_indexes)
+            ),
+            residuals_pred,
         )
 
         # reconstruct array with nan and conformity scores
