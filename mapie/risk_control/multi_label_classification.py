@@ -164,7 +164,7 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
     >>> from mapie.risk_control import MultiLabelClassificationController
     >>> X_toy = np.arange(4).reshape(-1, 1)
     >>> y_toy = np.stack([[1, 0, 1], [1, 0, 0], [0, 1, 1], [0, 1, 0]])
-    >>> clf = MultiOutputClassifier(LogisticRegression()).calibrate(X_toy, y_toy)
+    >>> clf = MultiOutputClassifier(LogisticRegression()).fit(X_toy, y_toy)
     >>> mapie = MultiLabelClassificationController(predict_function=clf.predict_proba).calibrate(X_toy, y_toy)
     >>> _, y_pi_mapie = mapie.predict(X_toy, alpha=0.3)
     >>> print(y_pi_mapie[:, :, 0])
