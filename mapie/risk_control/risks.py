@@ -130,8 +130,9 @@ class BinaryClassificationRisk:
     Define a risk (or a performance metric) to be used with the
     BinaryClassificationController. Predefined instances are implemented,
     see :data:`mapie.risk_control.precision`, :data:`mapie.risk_control.recall`,
-    :data:`mapie.risk_control.accuracy` and
-    :data:`mapie.risk_control.false_positive_rate`.
+    :data:`mapie.risk_control.accuracy`,
+    :data:`mapie.risk_control.false_positive_rate`, and
+    :data:`mapie.risk_control.predicted_positive_fraction`.
 
     Here, a binary classification risk (or performance) is defined by an occurrence and
     a condition. Let's take the example of precision. Precision is the sum of true
