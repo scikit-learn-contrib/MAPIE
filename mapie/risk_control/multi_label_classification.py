@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import warnings
 from itertools import chain
-from typing import Callable, Optional, Sequence, Tuple, Union, cast
+from typing import Callable, Iterable, Optional, Sequence, Tuple, Union, cast
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -189,7 +189,7 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
         predict_function: Callable[[ArrayLike], Union[list[NDArray], NDArray]],
         metric_control: Optional[str] = "recall",
         method: Optional[str] = None,
-        target_level: float = 0.9,
+        target_level: Union[float, Iterable[float]] = 0.9,
         confidence_level: Optional[float] = None,
         rcps_bound: Optional[Union[str, None]] = None,
         n_jobs: Optional[int] = None,
@@ -199,11 +199,18 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
         self._predict_function = predict_function
         self.metric_control = metric_control
         self.method = method
+        self._check_metric_control()
+        self._check_method()
 
-        alpha = 1 - target_level  # higher is better for precision/recall
-        self._alpha = cast(NDArray, _check_alpha(alpha))
+        alpha = []
+        for target in (
+            target_level if isinstance(target_level, Iterable) else [target_level]
+        ):
+            alpha.append(1 - target)  # higher is better for precision/recall
+        self._alpha = np.array(_check_alpha(alpha))
+
+        self._check_confidence_level(confidence_level)
         self._delta = 1 - confidence_level if confidence_level is not None else None
-        self._check_delta(confidence_level)
 
         self._check_bound(rcps_bound)
         self._rcps_bound = rcps_bound
@@ -211,11 +218,9 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
         self.n_jobs = n_jobs
         self.random_state = random_state
         self.verbose = verbose
-        self._is_fitted = False
-
         self._check_parameters()
-        self._check_metric_control()
-        self._check_method()
+
+        self._is_fitted = False
 
     @property
     def is_fitted(self):
@@ -280,43 +285,45 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
                 "Invalid y. All observations should contain at least one label."
             )
 
-    def _check_delta(self, delta: Optional[float]):
+    def _check_confidence_level(self, confidence_level: Optional[float]):
         """
-        Check that delta is not ``None`` when the
+        Check that confidence_level is not ``None`` when the
         method is RCPS and that it is between 0 and 1.
 
         Parameters
         ----------
-        delta : float
+        confidence_level : float
             Probability with which we control the risk. The higher
             the probability, the more conservative the algorithm will be.
 
         Raises
         ------
         ValueError
-            If delta is ``None`` and method is RCPS or
-            if delta is not in [0, 1] and method
+            If confidence_level is ``None`` and method is RCPS or
+            if confidence_level is not in [0, 1] and method
             is RCPS.
         Warning
-            If delta is not ``None`` and method is CRC
+            If confidence_level is not ``None`` and method is CRC
         """
-        if (not isinstance(delta, float)) and (delta is not None):
+        if (not isinstance(confidence_level, float)) and (confidence_level is not None):
             raise ValueError(
-                f"Invalid delta. delta must be a float, not a {type(delta)}"
+                f"Invalid confidence_level. confidence_level must be a float, not a {type(confidence_level)}"
             )
         if (self.method == "rcps") or (self.method == "ltt"):
-            if delta is None:
+            if confidence_level is None:
                 raise ValueError(
-                    "Invalid delta. "
-                    "delta cannot be ``None`` when controlling "
+                    "Invalid confidence_level. "
+                    "confidence_level cannot be ``None`` when controlling "
                     "Recall with RCPS or Precision with LTT"
                 )
-            elif (delta <= 0) or (delta >= 1):
-                raise ValueError("Invalid delta. delta must be in ]0, 1[")
-        if (self.method == "crc") and (delta is not None):
+            elif (confidence_level <= 0) or (confidence_level >= 1):
+                raise ValueError(
+                    "Invalid confidence_level. confidence_level must be in ]0, 1["
+                )
+        if (self.method == "crc") and (confidence_level is not None):
             warnings.warn(
                 "WARNING: you are using crc method, hence "
-                + "even if the delta is not ``None``, it won't be"
+                + "even if the confidence_level is not ``None``, it won't be"
                 + "taken into account"
             )
 

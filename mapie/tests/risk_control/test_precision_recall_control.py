@@ -217,6 +217,7 @@ def test_valid_metric_method(strategy: str) -> None:
         predict_function=toy_predict_function,
         random_state=random_state,
         metric_control=args["metric_control"],
+        confidence_level=0.9,
     )
     mapie_clf.calibrate(X_toy, y_toy)
     check_is_fitted(mapie_clf)
@@ -330,17 +331,37 @@ def test_results_for_alpha_as_float_and_arraylike(strategy: str, alpha: Any) -> 
         method=args["method"],
         metric_control=args["metric_control"],
         random_state=args["random_state"],
+        target_level=alpha[0],
+        confidence_level=0.1,
+        rcps_bound=args["rcps_bound"],
     )
     mapie_clf.calibrate(X, y)
-    y_pred_float1, y_ps_float1 = mapie_clf.predict(
-        X, alpha=alpha[0], bound=args["bound"], delta=0.9
+    y_pred_float1, y_ps_float1 = mapie_clf.predict(X)
+
+    mapie_clf = MultiLabelClassificationController(
+        predict_function=multilabel_predict_function,
+        method=args["method"],
+        metric_control=args["metric_control"],
+        random_state=args["random_state"],
+        target_level=alpha[1],
+        confidence_level=0.1,
+        rcps_bound=args["rcps_bound"],
     )
-    y_pred_float2, y_ps_float2 = mapie_clf.predict(
-        X, alpha=alpha[1], bound=args["bound"], delta=0.9
+    mapie_clf.calibrate(X, y)
+    y_pred_float2, y_ps_float2 = mapie_clf.predict(X)
+
+    mapie_clf = MultiLabelClassificationController(
+        predict_function=multilabel_predict_function,
+        method=args["method"],
+        metric_control=args["metric_control"],
+        random_state=args["random_state"],
+        target_level=alpha,
+        confidence_level=0.1,
+        rcps_bound=args["rcps_bound"],
     )
-    y_pred_array, y_ps_array = mapie_clf.predict(
-        X, alpha=alpha, bound=args["bound"], delta=0.9
-    )
+    mapie_clf.calibrate(X, y)
+    y_pred_array, y_ps_array = mapie_clf.predict(X)
+
     np.testing.assert_allclose(y_pred_float1, y_pred_array)
     np.testing.assert_allclose(y_pred_float2, y_pred_array)
     np.testing.assert_allclose(y_ps_float1[:, :, 0], y_ps_array[:, :, 0])
@@ -382,7 +403,7 @@ def test_results_single_and_multi_jobs(strategy: str) -> None:
 
 @pytest.mark.parametrize(
     "target_level",
-    [[0.8, 0.2], (0.8, 0.2), np.array([0.8, 0.2]), None],
+    [[0.8, 0.2], (0.8, 0.2), np.array([0.8, 0.2])],
 )
 @pytest.mark.parametrize(
     "confidence_level",
@@ -409,7 +430,7 @@ def test_valid_prediction(target_level: Any, confidence_level: Any, bound: Any) 
 
 @pytest.mark.parametrize(
     "target_level",
-    [[0.8, 0.2], (0.8, 0.2), np.array([0.8, 0.2]), None],
+    [[0.8, 0.2], (0.8, 0.2), np.array([0.8, 0.2])],
 )
 @pytest.mark.parametrize(
     "confidence_level",
@@ -501,9 +522,9 @@ def test_metric_error_in_init(metric_control: str) -> None:
         )
 
 
-def test_error_rcps_delta_null() -> None:
-    """Test error for RCPS method and delta None"""
-    with pytest.raises(ValueError, match=r".*delta cannot be ``None``*"):
+def test_error_rcps_confidence_level_null() -> None:
+    """Test error for RCPS method and confidence_level None"""
+    with pytest.raises(ValueError, match=r".*confidence_level cannot be ``None``*"):
         MultiLabelClassificationController(
             predict_function=toy_predict_function,
             random_state=random_state,
@@ -512,9 +533,9 @@ def test_error_rcps_delta_null() -> None:
         )
 
 
-def test_error_ltt_delta_null() -> None:
-    """Test error for LTT method and delta None"""
-    with pytest.raises(ValueError, match=r".*delta cannot be ``None``*"):
+def test_error_ltt_confidence_level_null() -> None:
+    """Test error for LTT method and confidence_level None"""
+    with pytest.raises(ValueError, match=r".*confidence_level cannot be ``None``*"):
         MultiLabelClassificationController(
             predict_function=toy_predict_function,
             random_state=random_state,
@@ -524,9 +545,9 @@ def test_error_ltt_delta_null() -> None:
 
 
 @pytest.mark.parametrize("confidence_level", [-1.0, 0, 1, 4, -3])
-def test_error_delta_wrong_value(confidence_level: Any) -> None:
-    """Test error for RCPS method and delta wrong value"""
-    with pytest.raises(ValueError, match=r".*delta must be*"):
+def test_error_confidence_level_wrong_value(confidence_level: Any) -> None:
+    """Test error for RCPS method and confidence_level wrong value"""
+    with pytest.raises(ValueError, match=r".*confidence_level must be*"):
         MultiLabelClassificationController(
             predict_function=toy_predict_function,
             random_state=random_state,
@@ -536,9 +557,9 @@ def test_error_delta_wrong_value(confidence_level: Any) -> None:
 
 
 @pytest.mark.parametrize("confidence_level", [-1.0, 0, 1, 4, -3])
-def test_error_delta_wrong_value_ltt(confidence_level: Any) -> None:
-    """Test error for LTT method and delta wrong value"""
-    with pytest.raises(ValueError, match=r".*delta must be*"):
+def test_error_confidence_level_wrong_value_ltt(confidence_level: Any) -> None:
+    """Test error for LTT method and confidence_level wrong value"""
+    with pytest.raises(ValueError, match=r".*confidence_level must be*"):
         MultiLabelClassificationController(
             predict_function=toy_predict_function,
             random_state=random_state,
@@ -558,8 +579,8 @@ def test_bound_none_crc() -> None:
         )
 
 
-def test_delta_none_crc() -> None:
-    """Test that a warning is raised when estimator is none with CRC method."""
+def test_confidence_level_none_crc() -> None:
+    """Test that a warning is raised when confidence_level is not none with CRC method."""
     with pytest.warns(UserWarning, match=r"WARNING: you are using crc*"):
         MultiLabelClassificationController(
             predict_function=toy_predict_function,
@@ -572,10 +593,10 @@ def test_delta_none_crc() -> None:
 @pytest.mark.parametrize(
     "confidence_level", [np.arange(0, 1, 0.99), (0.9, 0.8), [0.6, 0.5]]
 )
-def test_error_delta_wrong_type(confidence_level: Any) -> None:
-    """Test error for RCPS method and delta wrong type"""
+def test_error_confidence_level_wrong_type(confidence_level: Any) -> None:
+    """Test error for RCPS method and confidence_level wrong type"""
 
-    with pytest.raises(ValueError, match=r".*delta must be a float*"):
+    with pytest.raises(ValueError, match=r".*confidence_level must be a float*"):
         MultiLabelClassificationController(
             predict_function=toy_predict_function,
             random_state=random_state,
@@ -587,9 +608,9 @@ def test_error_delta_wrong_type(confidence_level: Any) -> None:
 @pytest.mark.parametrize(
     "confidence_level", [np.arange(0, 1, 0.01), (0.1, 0.2), [0.4, 0.5]]
 )
-def test_error_delta_wrong_type_ltt(confidence_level: Any) -> None:
+def test_error_confidence_level_wrong_type_ltt(confidence_level: Any) -> None:
     """Test error for LTT method and confidence_level wrong type"""
-    with pytest.raises(ValueError, match=r".*delta must be a float*"):
+    with pytest.raises(ValueError, match=r".*confidence_level must be a float*"):
         MultiLabelClassificationController(
             predict_function=toy_predict_function,
             random_state=random_state,
@@ -715,7 +736,9 @@ def test_check_metric_control(method: str) -> None:
 
 def test_method_none_precision() -> None:
     mapie_clf = MultiLabelClassificationController(
-        predict_function=toy_predict_function, metric_control="precision"
+        predict_function=toy_predict_function,
+        metric_control="precision",
+        confidence_level=0.9,
     )
     mapie_clf.calibrate(X_toy, y_toy)
     assert mapie_clf.method == "ltt"
