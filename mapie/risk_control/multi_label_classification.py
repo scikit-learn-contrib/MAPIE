@@ -343,9 +343,9 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
                     + str(alpha[i])
                 )
 
-    def _check_partial_calibrate_first_call(self) -> bool:
+    def _check_compute_risks_first_call(self) -> bool:
         """
-        Check that this is the first time partial_calibrate
+        Check that this is the first time compute_risks
         or calibrate is called.
 
         Returns
@@ -420,7 +420,7 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
 
         return np.expand_dims(y_pred_proba_array, axis=2)
 
-    def partial_calibrate(
+    def compute_risks(
         self,
         X: ArrayLike,
         y: ArrayLike,
@@ -429,7 +429,7 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
         """
         Fit the base estimator or use the fitted base estimator on
         batch data to compute risks. All the computed risks will be concatenated each
-        time the partial_calibrate method is called.
+        time the compute_risks method is called.
 
         Parameters
         ----------
@@ -450,7 +450,7 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
             The model itself.
         """
         # Checks
-        first_call = self._check_partial_calibrate_first_call()
+        first_call = self._check_compute_risks_first_call()
 
         X, y = indexable(X, y)
         _check_y(y, multi_output=True)
@@ -461,7 +461,7 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
         self._check_all_labelled(y)
         self.n_samples_ = _num_samples(X)
 
-        # Work
+        # Compute risks
         y_pred_proba = self._predict_function(X)
         y_pred_proba_array = self._transform_pred_proba(y_pred_proba)
 
@@ -475,6 +475,38 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
         else:
             self.risks = np.vstack((self.risks, risk))
 
+        return self
+
+    def compute_lambdas(self) -> MultiLabelClassificationController:
+        """
+        Compute optimal lambdas based on the computed risks.
+        """
+        if self.metric_control == "precision":
+            self.n_obs = len(self.risks)
+            self.r_hat = self.risks.mean(axis=0)
+            self.valid_index, _ = ltt_procedure(
+                np.expand_dims(self.r_hat, axis=0),
+                np.expand_dims(self._alpha, axis=0),
+                cast(float, self._delta),
+                np.expand_dims(np.array([self.n_obs]), axis=0),
+            )
+            self._check_valid_index(self._alpha)
+            self.lambdas_star, self.r_star = find_precision_lambda_star(
+                self.r_hat, self.valid_index, self.lambdas
+            )
+        else:
+            self.r_hat, self.r_hat_plus = get_r_hat_plus(
+                self.risks,
+                self.lambdas,
+                self.method,
+                self._rcps_bound,
+                self._delta,
+                self.sigma_init,
+            )
+            self.lambdas_star = find_lambda_star(
+                self.lambdas, self.r_hat_plus, self._alpha
+            )
+
         self._is_fitted = True
 
         return self
@@ -483,7 +515,9 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
         self, X: ArrayLike, y: ArrayLike
     ) -> MultiLabelClassificationController:
         """
-         Use the fitted base estimator and compute risks.
+         Use the fitted base estimator to compute risks and lambdas.
+         Note that for high dimensional data, you can use the compute_risks
+         method to compute risks batch by batch, followed by compute_lambdas.
 
          Parameters
          ----------
@@ -498,7 +532,11 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
         MultiLabelClassificationController
              The model itself.
         """
-        return self.partial_calibrate(X, y, _refit=True)
+
+        self.compute_risks(X, y, _refit=True)
+        self.compute_lambdas()
+
+        return self
 
     def predict(
         self,
@@ -536,35 +574,12 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
 
         y_pred_proba_array = np.repeat(y_pred_proba_array, len(self._alpha), axis=2)
         if self.metric_control == "precision":
-            self.n_obs = len(self.risks)
-            self.r_hat = self.risks.mean(axis=0)
-            self.valid_index, _ = ltt_procedure(
-                np.expand_dims(self.r_hat, axis=0),
-                np.expand_dims(self._alpha, axis=0),
-                cast(float, self._delta),
-                np.expand_dims(np.array([self.n_obs]), axis=0),
-            )
-            self._check_valid_index(self._alpha)
-            self.lambdas_star, self.r_star = find_precision_lambda_star(
-                self.r_hat, self.valid_index, self.lambdas
-            )
             y_pred_proba_array = (
                 y_pred_proba_array
                 > np.array(self.lambdas_star)[np.newaxis, np.newaxis, :]
             )
 
         else:
-            self.r_hat, self.r_hat_plus = get_r_hat_plus(
-                self.risks,
-                self.lambdas,
-                self.method,
-                self._rcps_bound,
-                self._delta,
-                self.sigma_init,
-            )
-            self.lambdas_star = find_lambda_star(
-                self.lambdas, self.r_hat_plus, self._alpha
-            )
             y_pred_proba_array = (
                 y_pred_proba_array > self.lambdas_star[np.newaxis, np.newaxis, :]
             )

@@ -288,7 +288,7 @@ def test_results_for_same_alpha(strategy: str) -> None:
 def test_results_for_partial_calibrate(strategy: str) -> None:
     """
     Test that predictions and intervals
-    are similar with two equal values of alpha.
+    are similar with with or without partial calibration.
     """
     args = STRATEGIES[strategy][0]
     mapie_clf = MultiLabelClassificationController(
@@ -312,8 +312,8 @@ def test_results_for_partial_calibrate(strategy: str) -> None:
         rcps_bound=args["rcps_bound"],
     )
     for i in range(len(X)):
-        mapie_clf_partial.partial_calibrate(X[i][np.newaxis, :], y[i][np.newaxis, :])
-
+        mapie_clf_partial.compute_risks(X[i][np.newaxis, :], y[i][np.newaxis, :])
+    mapie_clf_partial.compute_lambdas()
     y_pred, y_ps = mapie_clf.predict(X)
 
     y_pred_partial, y_ps_partial = mapie_clf_partial.predict(X)
@@ -488,14 +488,14 @@ def test_method_error_if_no_label_fit() -> None:
         mapie_clf.calibrate(X_no_label, y_no_label)
 
 
-def test_method_error_if_no_label_partial_calibrate() -> None:
+def test_method_error_if_no_label_compute_risks() -> None:
     """Test error for wrong method"""
     clf = MultiOutputClassifier(LogisticRegression()).fit(X_no_label, y_no_label)
     mapie_clf = MultiLabelClassificationController(
         predict_function=clf.predict_proba, random_state=random_state
     )
     with pytest.raises(ValueError, match=r".*Invalid y.*"):
-        mapie_clf.partial_calibrate(X_no_label, y_no_label)
+        mapie_clf.compute_risks(X_no_label, y_no_label)
 
 
 @pytest.mark.parametrize("bound", WRONG_BOUNDS)
@@ -631,15 +631,15 @@ def test_error_confidence_level_wrong_type_ltt(confidence_level: Any) -> None:
         )
 
 
-def test_error_partial_calibrate_different_size() -> None:
-    """Test error for partial_calibrate with different size"""
+def test_error_compute_risks_different_size() -> None:
+    """Test error for compute_risks with different size"""
     clf = MultiOutputClassifier(LogisticRegression()).fit(X_toy, y_toy)
     mapie_clf = MultiLabelClassificationController(
         predict_function=clf.predict_proba, random_state=random_state
     )
-    mapie_clf.partial_calibrate(X_toy, y_toy)
+    mapie_clf.compute_risks(X_toy, y_toy)
     with pytest.raises(ValueError, match=r".*features, but*"):
-        mapie_clf.partial_calibrate(X, y)
+        mapie_clf.compute_risks(X, y)
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
@@ -682,20 +682,20 @@ def test_pipeline_compatibility(strategy: str) -> None:
     mapie_clf.predict(X)
 
 
-def test_partial_calibrate_first_time():
+def test_compute_risks_first_time():
     mclf = MultiLabelClassificationController(
         predict_function=toy_predict_function, random_state=random_state
     )
-    assert mclf._check_partial_calibrate_first_call()
+    assert mclf._check_compute_risks_first_call()
 
 
-def test_partial_calibrate_second_time():
+def test_compute_risks_second_time():
     clf = MultiOutputClassifier(LogisticRegression()).fit(X, y)
     mclf = MultiLabelClassificationController(
         predict_function=clf.predict_proba, random_state=random_state
     )
-    mclf.partial_calibrate(X, y)
-    assert not mclf._check_partial_calibrate_first_call()
+    mclf.compute_risks(X, y)
+    assert not mclf._check_compute_risks_first_call()
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
