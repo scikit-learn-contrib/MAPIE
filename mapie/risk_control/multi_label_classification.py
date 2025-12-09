@@ -113,7 +113,7 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
     n_predict_params: int
         Number of thresholds on which we compute the risk.
 
-    predict_param: NDArray
+    predict_params: NDArray
         Array of parameters (noted λ in [3]) to consider for controlling the risk.
 
     risks : ArrayLike of shape (n_samples_cal, n_predict_params)
@@ -124,19 +124,19 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
 
     r_hat_plus: ArrayLike of shape (n_predict_params)
         Upper confidence bound for each predict_param, computed
-        with different bounds (see predict). Only relevant when
+        with different bounds. Only relevant when
         method="rcps".
 
-    best_predict_param: ArrayLike of shape (n_predict_params)
+    best_predict_param: NDArray of shape (n_alpha)
         Optimal threshold for a given alpha.
 
-    valid_index: List[List[Any]]
-        List of list of all index that satisfy fwer controlling.
+    valid_predict_params: List[List[Any]]
+        List of list of all thresholds that satisfy fwer controlling.
         This attribute is computed when the user wants to
         control precision score.
         Only relevant when metric_control="precision" as it uses
         learn then test (ltt) procedure.
-        Contains n_alpha lists (see predict).
+        Contains n_alpha lists.
 
      sigma_init : Optional[float]
         First variance in the sigma_hat array. The default
@@ -165,8 +165,8 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
     >>> X_toy = np.arange(4).reshape(-1, 1)
     >>> y_toy = np.stack([[1, 0, 1], [1, 0, 0], [0, 1, 1], [0, 1, 0]])
     >>> clf = MultiOutputClassifier(LogisticRegression()).fit(X_toy, y_toy)
-    >>> mapie = MultiLabelClassificationController(predict_function=clf.predict_proba, target_level=0.7).calibrate(X_toy, y_toy)
-    >>> _, y_pi_mapie = mapie.predict(X_toy)
+    >>> mapie_clf = MultiLabelClassificationController(predict_function=clf.predict_proba, target_level=0.7).calibrate(X_toy, y_toy)
+    >>> y_pi_mapie = mapie_clf.predict(X_toy)
     >>> print(y_pi_mapie[:, :, 0])
     [[ True False  True]
      [ True False  True]
@@ -178,8 +178,8 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
     valid_methods = list(chain(*valid_methods_by_metric_.values()))
     valid_metric_ = list(valid_methods_by_metric_.keys())
     valid_bounds_ = ["hoeffding", "bernstein", "wsr", None]
-    _predict_params = np.arange(0, 1, 0.01)
-    n_predict_params = len(_predict_params)
+    predict_params = np.arange(0, 1, 0.01)
+    n_predict_params = len(predict_params)
     fit_attributes = ["risks"]
     sigma_init = 0.25  # Value given in the paper [1]
     cal_size = 0.3
@@ -335,8 +335,8 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
         The user must be less inclined to take risks or
         must choose a higher alpha value.
         """
-        for i in range(len(self.valid_index)):
-            if self.valid_index[i] == []:
+        for i in range(len(self._valid_index)):
+            if self._valid_index[i] == []:
                 warnings.warn(
                     "Warning: LTT method has returned an empty sequence"
                     + " for alpha="
@@ -466,9 +466,9 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
         y_pred_proba_array = self._transform_pred_proba(y_pred_proba)
 
         if self.metric_control == "recall":
-            risk = compute_risk_recall(self._predict_params, y_pred_proba_array, y)
+            risk = compute_risk_recall(self.predict_params, y_pred_proba_array, y)
         else:  # self.metric_control == "precision"
-            risk = compute_risk_precision(self._predict_params, y_pred_proba_array, y)
+            risk = compute_risk_precision(self.predict_params, y_pred_proba_array, y)
 
         if first_call or _refit:
             self.risks = risk
@@ -484,27 +484,30 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
         if self.metric_control == "precision":
             self.n_obs = len(self.risks)
             self.r_hat = self.risks.mean(axis=0)
-            self.valid_index, _ = ltt_procedure(
+            self._valid_index, _ = ltt_procedure(
                 np.expand_dims(self.r_hat, axis=0),
                 np.expand_dims(self._alpha, axis=0),
                 cast(float, self._delta),
                 np.expand_dims(np.array([self.n_obs]), axis=0),
             )
+            self.valid_predict_params = []
+            for index_list in self._valid_index:
+                self.valid_predict_params.append(self.predict_params[index_list])
             self._check_valid_index(self._alpha)
             self.best_predict_param, _ = find_precision_best_predict_param(
-                self.r_hat, self.valid_index, self._predict_params
+                self.r_hat, self._valid_index, self.predict_params
             )
         else:
             self.r_hat, self.r_hat_plus = get_r_hat_plus(
                 self.risks,
-                self._predict_params,
+                self.predict_params,
                 self.method,
                 self._rcps_bound,
                 self._delta,
                 self.sigma_init,
             )
             self.best_predict_param = find_best_predict_param(
-                self._predict_params, self.r_hat_plus, self._alpha
+                self.predict_params, self.r_hat_plus, self._alpha
             )
 
         self._is_fitted = True

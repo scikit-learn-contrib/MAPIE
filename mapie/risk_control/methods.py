@@ -408,15 +408,15 @@ def find_precision_best_predict_param(
         warnings.warn(
             """
             Warning: the risk couldn't be controlled for at least one value of alpha.
-            The corresponding lambdas have been set to 1.
+            The corresponding lambdas have been set to np.nan.
             """
         )
     l_best_predict_param = []  # type: List[Any]
     l_r_star = []  # type: List[Any]
     for i in range(len(valid_index)):
         if len(valid_index[i]) == 0:
-            l_best_predict_param.append(1)
-            l_r_star.append(1)
+            l_best_predict_param.append(np.nan)
+            l_r_star.append(np.nan)
         else:
             idx = np.argmin(valid_index[i])
             l_best_predict_param.append(lambdas[valid_index[i][idx]])
