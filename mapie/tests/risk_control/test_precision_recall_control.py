@@ -579,6 +579,18 @@ def test_bound_none_crc() -> None:
         )
 
 
+def test_bound_none_ltt() -> None:
+    """Test that a warning is raised when bound is not None with LTT method."""
+    with pytest.warns(UserWarning, match=r"WARNING: you are using ltt*"):
+        MultiLabelClassificationController(
+            predict_function=toy_predict_function,
+            random_state=random_state,
+            metric_control="precision",
+            confidence_level=0.9,
+            rcps_bound="wsr",
+        )
+
+
 def test_confidence_level_none_crc() -> None:
     """Test that a warning is raised when confidence_level is not none with CRC method."""
     with pytest.warns(UserWarning, match=r"WARNING: you are using crc*"):
