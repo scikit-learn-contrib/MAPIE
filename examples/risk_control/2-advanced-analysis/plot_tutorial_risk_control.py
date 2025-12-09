@@ -126,11 +126,16 @@ y_pss, recalls, thresholds, r_hats, r_hat_pluss = {}, {}, {}, {}, {}
 y_test_repeat = np.repeat(y_test[:, :, np.newaxis], len(alpha), 2)
 for i, (name, (method, bound)) in enumerate(method_params.items()):
     mapie_clf = MultiLabelClassificationController(
-        predict_function=clf.predict_proba, method=method, metric_control="recall"
+        predict_function=clf.predict_proba,
+        method=method,
+        metric_control="recall",
+        target_level=1 - alpha,
+        confidence_level=0.9,
+        rcps_bound=bound,
     )
     mapie_clf.calibrate(X_cal, y_cal)
 
-    _, y_pss[name] = mapie_clf.predict(X_test, alpha=alpha, bound=bound, delta=0.1)
+    _, y_pss[name] = mapie_clf.predict(X_test)
     recalls[name] = (
         (y_test_repeat * y_pss[name]).sum(axis=1) / y_test_repeat.sum(axis=1)
     ).mean(axis=0)
@@ -223,13 +228,18 @@ plt.show()
 # doesn't necessarly pass the FWER control! This is what we are going to
 # explore.
 
+alpha = 0.1
+
 mapie_clf = MultiLabelClassificationController(
-    predict_function=clf.predict_proba, method="ltt", metric_control="precision"
+    predict_function=clf.predict_proba,
+    method="ltt",
+    metric_control="precision",
+    target_level=1 - alpha,
+    confidence_level=0.9,
 )
 mapie_clf.calibrate(X_cal, y_cal)
 
-alpha = 0.1
-_, y_ps = mapie_clf.predict(X_test, alpha=alpha, delta=0.1)
+_, y_ps = mapie_clf.predict(X_test)
 
 valid_index = mapie_clf.valid_index[0]  # valid_index is a list of list
 
