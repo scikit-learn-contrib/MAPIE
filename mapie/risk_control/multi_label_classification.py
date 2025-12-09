@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import warnings
 from itertools import chain
-from typing import Callable, Iterable, Optional, Sequence, Tuple, Union, cast
+from typing import Callable, Iterable, Optional, Sequence, Union, cast
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -18,8 +18,8 @@ from mapie.utils import (
 )
 
 from .methods import (
-    find_lambda_star,
-    find_precision_lambda_star,
+    find_best_predict_param,
+    find_precision_best_predict_param,
     get_r_hat_plus,
     ltt_procedure,
 )
@@ -110,24 +110,24 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
     valid_bounds: List[Union[str, ``None``]]
         List of all valid bounds computation for RCPS only.
 
-    n_lambdas: int
+    n_predict_params: int
         Number of thresholds on which we compute the risk.
 
-    lambdas: NDArray
-        Array with all the values of lambda.
+    predict_param: NDArray
+        Array of parameters (noted λ in [3]) to consider for controlling the risk.
 
-    risks : ArrayLike of shape (n_samples_cal, n_lambdas)
+    risks : ArrayLike of shape (n_samples_cal, n_predict_params)
         The risk for each observation for each threshold
 
-    r_hat : ArrayLike of shape (n_lambdas)
-        Average risk for each lambda
+    r_hat : ArrayLike of shape (n_predict_params)
+        Average risk for each predict_param
 
-    r_hat_plus: ArrayLike of shape (n_lambdas)
-        Upper confidence bound for each lambda, computed
+    r_hat_plus: ArrayLike of shape (n_predict_params)
+        Upper confidence bound for each predict_param, computed
         with different bounds (see predict). Only relevant when
         method="rcps".
 
-    lambdas_star: ArrayLike of shape (n_lambdas)
+    best_predict_param: ArrayLike of shape (n_predict_params)
         Optimal threshold for a given alpha.
 
     valid_index: List[List[Any]]
@@ -178,8 +178,8 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
     valid_methods = list(chain(*valid_methods_by_metric_.values()))
     valid_metric_ = list(valid_methods_by_metric_.keys())
     valid_bounds_ = ["hoeffding", "bernstein", "wsr", None]
-    lambdas = np.arange(0, 1, 0.01)
-    n_lambdas = len(lambdas)
+    _predict_params = np.arange(0, 1, 0.01)
+    n_predict_params = len(_predict_params)
     fit_attributes = ["risks"]
     sigma_init = 0.25  # Value given in the paper [1]
     cal_size = 0.3
@@ -466,9 +466,9 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
         y_pred_proba_array = self._transform_pred_proba(y_pred_proba)
 
         if self.metric_control == "recall":
-            risk = compute_risk_recall(self.lambdas, y_pred_proba_array, y)
+            risk = compute_risk_recall(self._predict_params, y_pred_proba_array, y)
         else:  # self.metric_control == "precision"
-            risk = compute_risk_precision(self.lambdas, y_pred_proba_array, y)
+            risk = compute_risk_precision(self._predict_params, y_pred_proba_array, y)
 
         if first_call or _refit:
             self.risks = risk
@@ -477,9 +477,9 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
 
         return self
 
-    def compute_lambdas(self) -> MultiLabelClassificationController:
+    def compute_best_predict_param(self) -> MultiLabelClassificationController:
         """
-        Compute optimal lambdas based on the computed risks.
+        Compute optimal predict_params based on the computed risks.
         """
         if self.metric_control == "precision":
             self.n_obs = len(self.risks)
@@ -491,20 +491,20 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
                 np.expand_dims(np.array([self.n_obs]), axis=0),
             )
             self._check_valid_index(self._alpha)
-            self.lambdas_star, _ = find_precision_lambda_star(
-                self.r_hat, self.valid_index, self.lambdas
+            self.best_predict_param, _ = find_precision_best_predict_param(
+                self.r_hat, self.valid_index, self._predict_params
             )
         else:
             self.r_hat, self.r_hat_plus = get_r_hat_plus(
                 self.risks,
-                self.lambdas,
+                self._predict_params,
                 self.method,
                 self._rcps_bound,
                 self._delta,
                 self.sigma_init,
             )
-            self.lambdas_star = find_lambda_star(
-                self.lambdas, self.r_hat_plus, self._alpha
+            self.best_predict_param = find_best_predict_param(
+                self._predict_params, self.r_hat_plus, self._alpha
             )
 
         self._is_fitted = True
@@ -515,9 +515,9 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
         self, X: ArrayLike, y: ArrayLike
     ) -> MultiLabelClassificationController:
         """
-         Use the fitted base estimator to compute risks and lambdas.
-         Note that for high dimensional data, you can use the compute_risks
-         method to compute risks batch by batch, followed by compute_lambdas.
+         Use the fitted base estimator to compute risks and predict_params.
+         Note that for high dimensional data, you can instead use the compute_risks
+         method to compute risks batch by batch, followed by compute_best_predict_param.
 
          Parameters
          ----------
@@ -534,14 +534,14 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
         """
 
         self.compute_risks(X, y, _refit=True)
-        self.compute_lambdas()
+        self.compute_best_predict_param()
 
         return self
 
     def predict(
         self,
         X: ArrayLike,
-    ) -> Union[NDArray, Tuple[NDArray, NDArray]]:
+    ) -> NDArray:
         """
         Prediction sets on new samples based on the target risk level.
         Prediction sets for a given ``alpha`` are deduced from the computed
@@ -553,13 +553,7 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
 
         Returns
         -------
-        Union[NDArray, Tuple[NDArray, NDArray]]
-
-        - NDArray of shape (n_samples,) if alpha is ``None``.
-
-        - Tuple[NDArray, NDArray] of shapes
-        (n_samples, n_classes) and (n_samples, n_classes, n_alpha)
-        if alpha is not ``None``.
+        NDArray of shape (n_samples, n_classes, n_alpha)
         """
 
         check_is_fitted(self)
@@ -568,12 +562,8 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
         y_pred_proba = self._predict_function(X)
         y_pred_proba_array = self._transform_pred_proba(y_pred_proba)
 
-        y_pred = (
-            y_pred_proba_array.squeeze() > 0.5
-        )  # standard prediction: class predicted if proba > 0.5
-
         y_pred_proba_array = np.repeat(y_pred_proba_array, len(self._alpha), axis=2)
         y_pred_proba_array = (
-            y_pred_proba_array > self.lambdas_star[np.newaxis, np.newaxis, :]
+            y_pred_proba_array > self.best_predict_param[np.newaxis, np.newaxis, :]
         )
-        return y_pred, y_pred_proba_array
+        return y_pred_proba_array

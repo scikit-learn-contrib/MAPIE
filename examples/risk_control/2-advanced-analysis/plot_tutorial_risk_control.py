@@ -135,11 +135,11 @@ for i, (name, (method, bound)) in enumerate(method_params.items()):
     )
     mapie_clf.calibrate(X_cal, y_cal)
 
-    _, y_pss[name] = mapie_clf.predict(X_test)
+    y_pss[name] = mapie_clf.predict(X_test)
     recalls[name] = (
         (y_test_repeat * y_pss[name]).sum(axis=1) / y_test_repeat.sum(axis=1)
     ).mean(axis=0)
-    thresholds[name] = mapie_clf.lambdas_star
+    thresholds[name] = mapie_clf.best_predict_param
     r_hats[name] = mapie_clf.r_hat
     r_hat_pluss[name] = mapie_clf.r_hat_plus
 
@@ -239,7 +239,7 @@ mapie_clf = MultiLabelClassificationController(
 )
 mapie_clf.calibrate(X_cal, y_cal)
 
-_, y_ps = mapie_clf.predict(X_test)
+y_ps = mapie_clf.predict(X_test)
 
 valid_index = mapie_clf.valid_index[0]  # valid_index is a list of list
 

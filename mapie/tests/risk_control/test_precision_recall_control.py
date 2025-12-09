@@ -313,12 +313,37 @@ def test_results_for_partial_calibrate(strategy: str) -> None:
     )
     for i in range(len(X)):
         mapie_clf_partial.compute_risks(X[i][np.newaxis, :], y[i][np.newaxis, :])
-    mapie_clf_partial.compute_lambdas()
+    mapie_clf_partial.compute_best_predict_param()
     y_pred, y_ps = mapie_clf.predict(X)
 
     y_pred_partial, y_ps_partial = mapie_clf_partial.predict(X)
     np.testing.assert_allclose(y_pred, y_pred_partial)
     np.testing.assert_allclose(y_ps, y_ps_partial)
+
+
+def test_predict_before_calibrate() -> None:
+    """Test that an error is raised when predict is called before calibrate."""
+    mapie_clf = MultiLabelClassificationController(
+        predict_function=toy_predict_function, random_state=random_state
+    )
+    with pytest.raises(
+        ValueError,
+        match=r".*MultiLabelClassificationController is not fitted yet.*",
+    ):
+        mapie_clf.predict(X_toy)
+
+
+def test_predict_before_compute_best_predict_param() -> None:
+    """Test that an error is raised when predict is called before compute_best_predict_param."""
+    mapie_clf = MultiLabelClassificationController(
+        predict_function=toy_predict_function, random_state=random_state
+    )
+    mapie_clf.compute_risks(X_toy, y_toy)
+    with pytest.raises(
+        ValueError,
+        match=r".*MultiLabelClassificationController is not fitted yet.*",
+    ):
+        mapie_clf.predict(X_toy)
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])

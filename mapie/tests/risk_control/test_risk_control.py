@@ -12,7 +12,7 @@ from scipy.stats import binom
 
 from mapie.risk_control.methods import (
     compute_hoeffding_bentkus_p_value,
-    find_precision_lambda_star,
+    find_precision_best_predict_param,
     ltt_procedure,
 )
 from mapie.risk_control.risks import compute_risk_precision, compute_risk_recall
@@ -128,9 +128,9 @@ def test_ltt_different_delta(delta: float) -> None:
     assert ltt_procedure(r_hat, alpha, delta, n)
 
 
-def test_find_precision_lambda_star() -> None:
-    """Test _find_precision_lambda_star"""
-    assert find_precision_lambda_star(r_hat, valid_index, lambdas)
+def test_find_precision_best_predict_param() -> None:
+    """Test _find_precision_best_predict_param"""
+    assert find_precision_best_predict_param(r_hat, valid_index, lambdas)
 
 
 @pytest.mark.parametrize("delta", [0.1, 0.8])
@@ -142,16 +142,16 @@ def test_ltt_type_output_alpha_delta(alpha: NDArray, delta: float) -> None:
 
 
 @pytest.mark.parametrize("valid_index", [[[0, 1]]])
-def test_find_precision_lambda_star_output(valid_index: List[List[int]]) -> None:
-    """Test _find_precision_lambda_star with a list of list"""
-    assert find_precision_lambda_star(r_hat, valid_index, lambdas)
+def test_find_precision_best_predict_param_output(valid_index: List[List[int]]) -> None:
+    """Test _find_precision_best_predict_param with a list of list"""
+    assert find_precision_best_predict_param(r_hat, valid_index, lambdas)
 
 
 def test_warning_valid_index_empty() -> None:
     """Test warning sent when empty list"""
     valid_index = [[]]  # type: List[List[int]]
     with pytest.warns(UserWarning, match=r".*Warning: the risk couldn'*"):
-        find_precision_lambda_star(r_hat, valid_index, lambdas)
+        find_precision_best_predict_param(r_hat, valid_index, lambdas)
 
 
 def test_invalid_alpha_hb() -> None:
