@@ -187,10 +187,13 @@ plt.show()
 
 fig, axs = plt.subplots(1, len(method_params), figsize=(8 * len(method_params), 8))
 for i, (name, (method, bound)) in enumerate(method_params.items()):
-    axs[i].plot(mapie_clf.lambdas, r_hats[name], label=r"$\hat{R}$", linewidth=2)
+    axs[i].plot(mapie_clf.predict_params, r_hats[name], label=r"$\hat{R}$", linewidth=2)
     if name != "CRC":
         axs[i].plot(
-            mapie_clf.lambdas, r_hat_pluss[name], label=r"$\hat{R}^+$", linewidth=2
+            mapie_clf.predict_params,
+            r_hat_pluss[name],
+            label=r"$\hat{R}^+$",
+            linewidth=2,
         )
     axs[i].plot([0, 1], [alpha[9], alpha[9]], label=r"$\alpha$")
     axs[i].plot(
@@ -243,7 +246,7 @@ y_ps = mapie_clf.predict(X_test)
 
 valid_index = mapie_clf.valid_index[0]  # valid_index is a list of list
 
-lambdas = mapie_clf.lambdas[valid_index]
+lambdas = mapie_clf.predict_params[valid_index]
 
 mini = lambdas[np.argmin(lambdas)]
 maxi = lambdas[np.argmax(lambdas)]
@@ -260,7 +263,7 @@ idx_max = np.argmin(r_hat[valid_index])
 # control precision at the desired level with a high probability.
 
 plt.figure(figsize=(8, 8))
-plt.plot(mapie_clf.lambdas, r_hat, label=r"$\hat{R}_\lambda$")
+plt.plot(mapie_clf.predict_params, r_hat, label=r"$\hat{R}_\lambda$")
 plt.plot([0, 1], [alpha, alpha], label=r"$\alpha$")
 plt.axvspan(mini, maxi, facecolor="red", alpha=0.3, label=r"LTT-$\lambda$")
 plt.plot(

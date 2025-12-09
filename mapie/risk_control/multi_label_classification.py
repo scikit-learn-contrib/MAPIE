@@ -130,6 +130,14 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
     best_predict_param: NDArray of shape (n_alpha)
         Optimal threshold for a given alpha.
 
+    valid_index: List[List[Any]]
+        List of list of all index that satisfy fwer controlling.
+        This attribute is computed when the user wants to
+        control precision score.
+        Only relevant when metric_control="precision" as it uses
+        learn then test (ltt) procedure.
+        Contains n_alpha lists.
+
     valid_predict_params: List[List[Any]]
         List of list of all thresholds that satisfy fwer controlling.
         This attribute is computed when the user wants to
@@ -335,8 +343,8 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
         The user must be less inclined to take risks or
         must choose a higher alpha value.
         """
-        for i in range(len(self._valid_index)):
-            if self._valid_index[i] == []:
+        for i in range(len(self.valid_index)):
+            if self.valid_index[i] == []:
                 warnings.warn(
                     "Warning: LTT method has returned an empty sequence"
                     + " for alpha="
@@ -484,18 +492,18 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
         if self.metric_control == "precision":
             self.n_obs = len(self.risks)
             self.r_hat = self.risks.mean(axis=0)
-            self._valid_index, _ = ltt_procedure(
+            self.valid_index, _ = ltt_procedure(
                 np.expand_dims(self.r_hat, axis=0),
                 np.expand_dims(self._alpha, axis=0),
                 cast(float, self._delta),
                 np.expand_dims(np.array([self.n_obs]), axis=0),
             )
             self.valid_predict_params = []
-            for index_list in self._valid_index:
+            for index_list in self.valid_index:
                 self.valid_predict_params.append(self.predict_params[index_list])
             self._check_valid_index(self._alpha)
             self.best_predict_param, _ = find_precision_best_predict_param(
-                self.r_hat, self._valid_index, self.predict_params
+                self.r_hat, self.valid_index, self.predict_params
             )
         else:
             self.r_hat, self.r_hat_plus = get_r_hat_plus(
