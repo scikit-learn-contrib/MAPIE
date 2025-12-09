@@ -369,7 +369,7 @@ def _h1(r_hats: NDArray, alphas: NDArray) -> NDArray:
 
 def find_precision_lambda_star(
     r_hat: NDArray, valid_index: List[List[Any]], lambdas: NDArray
-) -> Tuple[ArrayLike, ArrayLike]:
+) -> Tuple[NDArray, ArrayLike]:
     """
     Return the lambda that give the minimum precision along
     the lambdas that satisfy FWER control.
@@ -397,11 +397,11 @@ def find_precision_lambda_star(
 
     Returns
     -------
-    l_lambda_star: ArrayLike of shape (n_alpha, ).
+    l_lambda_star: NDArray of shape (n_alpha, ).
         The lambda that gives the minimum precision
         for a given alpha.
 
-    r_star: ArrayLike of shape (n_alpha, ).
+    r_star: NDArray of shape (n_alpha, ).
         The value of lowest risk for a given alpha.
     """
     if [] in valid_index:
@@ -422,4 +422,4 @@ def find_precision_lambda_star(
             l_lambda_star.append(lambdas[valid_index[i][idx]])
             l_r_star.append(r_hat[valid_index[i][idx]])
 
-    return l_lambda_star, l_r_star
+    return np.array(l_lambda_star), l_r_star

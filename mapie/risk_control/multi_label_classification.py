@@ -491,7 +491,7 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
                 np.expand_dims(np.array([self.n_obs]), axis=0),
             )
             self._check_valid_index(self._alpha)
-            self.lambdas_star, self.r_star = find_precision_lambda_star(
+            self.lambdas_star, _ = find_precision_lambda_star(
                 self.r_hat, self.valid_index, self.lambdas
             )
         else:
@@ -573,14 +573,7 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
         )  # standard prediction: class predicted if proba > 0.5
 
         y_pred_proba_array = np.repeat(y_pred_proba_array, len(self._alpha), axis=2)
-        if self.metric_control == "precision":
-            y_pred_proba_array = (
-                y_pred_proba_array
-                > np.array(self.lambdas_star)[np.newaxis, np.newaxis, :]
-            )
-
-        else:
-            y_pred_proba_array = (
-                y_pred_proba_array > self.lambdas_star[np.newaxis, np.newaxis, :]
-            )
+        y_pred_proba_array = (
+            y_pred_proba_array > self.lambdas_star[np.newaxis, np.newaxis, :]
+        )
         return y_pred, y_pred_proba_array
