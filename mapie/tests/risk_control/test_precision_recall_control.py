@@ -256,9 +256,8 @@ def test_predict_output_shape(
         rcps_bound=args["rcps_bound"],
     )
     mapie_clf.calibrate(X, y)
-    y_pred, y_ps = mapie_clf.predict(X)
+    y_ps = mapie_clf.predict(X)
     n_alpha = len(target_level) if hasattr(target_level, "__len__") else 1
-    assert y_pred.shape == y.shape
     assert y_ps.shape == (y.shape[0], y.shape[1], n_alpha)
 
 
@@ -279,7 +278,7 @@ def test_results_for_same_alpha(strategy: str) -> None:
         rcps_bound=args["rcps_bound"],
     )
     mapie_clf.calibrate(X, y)
-    _, y_ps = mapie_clf.predict(X)
+    y_ps = mapie_clf.predict(X)
     np.testing.assert_allclose(y_ps[:, 0, 0], y_ps[:, 0, 1])
     np.testing.assert_allclose(y_ps[:, 1, 0], y_ps[:, 1, 1])
 
@@ -301,6 +300,7 @@ def test_results_for_partial_calibrate(strategy: str) -> None:
         rcps_bound=args["rcps_bound"],
     )
     mapie_clf.calibrate(X, y)
+    y_ps = mapie_clf.predict(X)
 
     mapie_clf_partial = MultiLabelClassificationController(
         predict_function=multilabel_predict_function,
@@ -314,10 +314,8 @@ def test_results_for_partial_calibrate(strategy: str) -> None:
     for i in range(len(X)):
         mapie_clf_partial.compute_risks(X[i][np.newaxis, :], y[i][np.newaxis, :])
     mapie_clf_partial.compute_best_predict_param()
-    y_pred, y_ps = mapie_clf.predict(X)
+    y_ps_partial = mapie_clf_partial.predict(X)
 
-    y_pred_partial, y_ps_partial = mapie_clf_partial.predict(X)
-    np.testing.assert_allclose(y_pred, y_pred_partial)
     np.testing.assert_allclose(y_ps, y_ps_partial)
 
 
@@ -361,7 +359,7 @@ def test_results_for_alpha_as_float_and_arraylike(strategy: str, alpha: Any) -> 
         rcps_bound=args["rcps_bound"],
     )
     mapie_clf.calibrate(X, y)
-    y_pred_float1, y_ps_float1 = mapie_clf.predict(X)
+    y_ps_float1 = mapie_clf.predict(X)
 
     mapie_clf = MultiLabelClassificationController(
         predict_function=multilabel_predict_function,
@@ -373,7 +371,7 @@ def test_results_for_alpha_as_float_and_arraylike(strategy: str, alpha: Any) -> 
         rcps_bound=args["rcps_bound"],
     )
     mapie_clf.calibrate(X, y)
-    y_pred_float2, y_ps_float2 = mapie_clf.predict(X)
+    y_ps_float2 = mapie_clf.predict(X)
 
     mapie_clf = MultiLabelClassificationController(
         predict_function=multilabel_predict_function,
@@ -385,10 +383,8 @@ def test_results_for_alpha_as_float_and_arraylike(strategy: str, alpha: Any) -> 
         rcps_bound=args["rcps_bound"],
     )
     mapie_clf.calibrate(X, y)
-    y_pred_array, y_ps_array = mapie_clf.predict(X)
+    y_ps_array = mapie_clf.predict(X)
 
-    np.testing.assert_allclose(y_pred_float1, y_pred_array)
-    np.testing.assert_allclose(y_pred_float2, y_pred_array)
     np.testing.assert_allclose(y_ps_float1[:, :, 0], y_ps_array[:, :, 0])
     np.testing.assert_allclose(y_ps_float2[:, :, 0], y_ps_array[:, :, 1])
 
@@ -420,9 +416,8 @@ def test_results_single_and_multi_jobs(strategy: str) -> None:
     )
     mapie_clf_single.calibrate(X, y)
     mapie_clf_multi.calibrate(X, y)
-    y_pred_single, y_ps_single = mapie_clf_single.predict(X)
-    y_pred_multi, y_ps_multi = mapie_clf_multi.predict(X)
-    np.testing.assert_allclose(y_pred_single, y_pred_multi)
+    y_ps_single = mapie_clf_single.predict(X)
+    y_ps_multi = mapie_clf_multi.predict(X)
     np.testing.assert_allclose(y_ps_single, y_ps_multi)
 
 
@@ -739,7 +734,7 @@ def test_toy_dataset_predictions(strategy: str) -> None:
         rcps_bound=args["rcps_bound"],
     )
     mapie_clf.calibrate(X_toy, y_toy)
-    _, y_ps = mapie_clf.predict(X_toy)
+    y_ps = mapie_clf.predict(X_toy)
     np.testing.assert_allclose(y_ps[:, :, 0], y_toy_mapie[strategy], rtol=1e-6)
 
 

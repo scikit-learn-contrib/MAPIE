@@ -144,7 +144,7 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
 
     References
     ----------
-    [1] Lihua Lei Jitendra Malik Stephen Bates, Anastasios Angelopoulos,
+    [1] Stephen Bates, Anastasios Angelopoulos, Lihua Lei, Jitendra Malik,
     and Michael I. Jordan. Distribution-free, risk-controlling prediction
     sets. CoRR, abs/2101.02703, 2021.
     URL https://arxiv.org/abs/2101.02703
