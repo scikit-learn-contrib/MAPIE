@@ -31,13 +31,23 @@ Local setup
 We encourage you to use a virtual environment, with Python `3.10` and pip installed.
 You'll want to activate it every time you want to work on `mapie`.
 
-Using ``pip``, you can install development dependencies with the following command:
+Here's how to create and activate a virtual environment called ``mapie_dev`` using `universal-virtualenv <https://pypi.org/project/universal-virtualenv/>`_.
+
+.. code-block:: sh
+
+    $ uv sync --python 3.10 --extra dev
+    $ mv .venv mapie_dev
+    $ source mapie_dev/bin/activate
+
+
+Next, using ``pip``, you can install development dependencies with the following command:
 
 .. code-block:: sh
 
     $ python -m pip install -e '.[dev]'
 
 If you don't have ``pip`` installed, you can install it by running:
+
 .. code-block:: sh
 
     $ python -m ensurepip --upgrade
@@ -85,6 +95,17 @@ Any estimator should follow the `scikit-learn API <https://scikit-learn.org/stab
 
 In order to build the documentation locally, you first need to create a different virtual environment than the one used for development, and then install the documentation dependencies using ``pip`` with the following command. macOS users should install ``libomp`` beforehand if it is not already present (``brew install libomp``) because LightGBM depends on it.
 
+Here's how to create and activate a virtual environment called ``mapie_docs`` using `universal-virtualenv <https://pypi.org/project/universal-virtualenv/>`_.
+
+.. code-block:: sh
+
+    $ uv sync --python 3.10 --extra docs
+    $ mv .venv mapie_docs
+    $ source mapie_docs/bin/activate
+
+
+Next, using ``pip``, you can install documentation dependencies with the following command:
+
 .. code-block:: sh
 
     $ python -m pip install -e '.[docs]'
@@ -95,6 +116,20 @@ Finally, once dependencies are installed, you can build the documentation locall
 
     $ make clean-doc
     $ make doc
+
+
+Running Jupyter notebooks
+-------------------------
+
+To run and edit the Jupyter notebooks located in the ``notebooks/`` folder, you first need to create a different virtual environment than the one used for development, and then install the notebook dependencies using ``pip`` with the following command.
+
+Here's how to create and use a virtual environment called ``mapie_notebooks`` using `universal-virtualenv <https://pypi.org/project/universal-virtualenv/>`_.
+
+.. code-block:: sh
+
+    $ uv sync --python 3.10 --extra notebooks
+    $ uv pip install --upgrade jsonschema referencing jupyter_server jupyterlab_server
+    $ uv run jupyter lab
 
 
 Updating changelog
