@@ -5,7 +5,7 @@ Risk Control for LLM as a Judge
 This example demonstrates how to use risk control methods for Large Language Models (LLMs) acting as judges.
 We simulate a scenario where an LLM evaluates answers, and we want to control the risk of hallucination detection.
 """
-#%%
+
 # sphinx_gallery_thumbnail_number = 2
 
 import numpy as np
@@ -249,5 +249,3 @@ print(
 # While the naive threshold achieves the target precision on the calibration set,
 # it fails to do so on the test set. This highlights the importance of using
 # risk control methods to ensure that performance guarantees hold on unseen data.
-
-# %%
