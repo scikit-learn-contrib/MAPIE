@@ -783,6 +783,7 @@ class VennAbersCalibrator(BaseEstimator, ClassifierMixin):
         self.stratify = stratify
         self.precision = precision
         self.cv_ensemble = cv_ensemble
+        self._is_fitted = False
 
         # Initialize attributes that will be set during fit
         self.va_calibrator_: Optional[Union[VennAbersMultiClass, VennAbers]] = None
@@ -792,6 +793,11 @@ class VennAbersCalibrator(BaseEstimator, ClassifierMixin):
         self.single_estimator_: Optional[ClassifierMixin] = None
         self.p_cal_: Optional[NDArray] = None
         self.y_cal_: Optional[NDArray] = None
+
+    @property
+    def is_fitted(self):
+        """Returns True if the estimator is fitted"""
+        return self._is_fitted
 
     def _check_cv(self, cv: Optional[str]) -> Optional[str]:
         """
@@ -912,10 +918,8 @@ class VennAbersCalibrator(BaseEstimator, ClassifierMixin):
 
         # Prefit mode: estimator is already fitted, only calibrate
         if cv == "prefit":
-            try:
-                check_is_fitted(last_estimator)
-            except NotFittedError:
-                raise ValueError(
+            if last_estimator is None:
+                raise NotFittedError(
                     "For cv='prefit', the estimator must be already fitted"
                 )
 
@@ -944,36 +948,36 @@ class VennAbersCalibrator(BaseEstimator, ClassifierMixin):
                 self.y_cal_ = np.asarray(y)
                 self.va_calibrator_ = None  # Will be used in predict_proba
 
-            return self
-
-        # Standard inductive or cross validation mode
-        # Integrity checks
-        if not self.inductive and self.n_splits is None:
-            raise ValueError("For Cross Venn-ABERS please provide n_splits")
-
-        # Check random state
-        random_state_to_use: Optional[Union[int, np.random.RandomState]] = None
-        if random_state is not None:
-            random_state_to_use = random_state
         else:
-            random_state_to_use = self.random_state
+            # Standard inductive or cross validation mode
+            # Integrity checks
+            if not self.inductive and self.n_splits is None:
+                raise ValueError("For Cross Venn-ABERS please provide n_splits")
 
-        # Initialize and fit the Venn-ABERS calibrator
-        self.va_calibrator_ = VennAbersMultiClass(
-            estimator=last_estimator,
-            inductive=self.inductive,
-            n_splits=self.n_splits,
-            cal_size=calib_size,
-            train_proper_size=self.train_proper_size,
-            random_state=random_state_to_use,
-            shuffle=shuffle if shuffle is not None else self.shuffle,
-            stratify=stratify if stratify is not None else self.stratify,
-            precision=self.precision,
-            cv_ensemble=self.cv_ensemble,
-        )
+            # Check random state
+            random_state_to_use: Optional[Union[int, np.random.RandomState]] = None
+            if random_state is not None:
+                random_state_to_use = random_state
+            else:
+                random_state_to_use = self.random_state
 
-        self.va_calibrator_.fit(X_processed, y, sample_weight=sample_weight)
+            # Initialize and fit the Venn-ABERS calibrator
+            self.va_calibrator_ = VennAbersMultiClass(
+                estimator=last_estimator,
+                inductive=self.inductive,
+                n_splits=self.n_splits,
+                cal_size=calib_size,
+                train_proper_size=self.train_proper_size,
+                random_state=random_state_to_use,
+                shuffle=shuffle if shuffle is not None else self.shuffle,
+                stratify=stratify if stratify is not None else self.stratify,
+                precision=self.precision,
+                cv_ensemble=self.cv_ensemble,
+            )
 
+            self.va_calibrator_.fit(X_processed, y, sample_weight=sample_weight)
+
+        self._is_fitted = True
         return self
 
     def predict_proba(self, X: ArrayLike, loss="log") -> NDArray:
@@ -991,7 +995,7 @@ class VennAbersCalibrator(BaseEstimator, ClassifierMixin):
         NDArray of shape (n_samples, n_classes)
             Venn-ABERS calibrated probabilities.
         """
-        check_is_fitted(self, self.fit_attributes)
+        check_is_fitted(self)
 
         cv = self._check_cv(self.cv)
 
@@ -1068,11 +1072,7 @@ class VennAbersCalibrator(BaseEstimator, ClassifierMixin):
         NDArray of shape (n_samples,)
             The predicted class labels.
         """
-        check_is_fitted(self, self.fit_attributes)
-
-        # Type guard: ensure n_classes_ is not None after fit
-        if self.n_classes_ is None:
-            raise RuntimeError("n_classes_ should not be None after fitting")
+        check_is_fitted(self)
 
         # Type guard: ensure classes_ is not None after fit
         if self.classes_ is None:
@@ -1086,7 +1086,7 @@ class VennAbersCalibrator(BaseEstimator, ClassifierMixin):
         n_classes = self.n_classes_
 
         # Convert probabilities to class predictions
-        if n_classes <= 2:
+        if n_classes and (n_classes <= 2):
             # Binary classification
             y_pred = classes[(p_prime[:, 1] >= 0.5).astype(int)]
         else:

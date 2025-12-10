@@ -1,8 +1,6 @@
 import numpy as np
 from sklearn.model_selection import StratifiedKFold, train_test_split
 from sklearn.multiclass import OneVsOneClassifier
-from sklearn.utils.validation import check_is_fitted
-from sklearn.exceptions import NotFittedError
 from sklearn.base import clone
 
 
@@ -886,16 +884,6 @@ class VennAbersMultiClass:
         # integrity checks
         if not self.inductive and self.n_splits is None:
             raise ValueError("For Cross Venn ABERS please provide n_splits")
-        try:
-            check_is_fitted(self.estimator)
-        except NotFittedError:
-            if (self.inductive and self.cal_size is None) and (
-                self.train_proper_size is None
-            ):
-                raise ValueError(
-                    "For Inductive Venn-ABERS please provide either calibration"
-                    "or proper train set size"
-                )
 
         self.classes = np.unique(_y_train)
         self.n_classes = len(self.classes)
