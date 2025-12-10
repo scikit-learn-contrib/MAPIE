@@ -490,9 +490,7 @@ def test_va_invalid_cv_argument(cv: str) -> None:
 def test_va_prefit_unfitted_estimator_raises_error() -> None:
     """Test that VennAbersCalibrator in 'prefit' mode raises if estimator not fitted."""
     va_cal = VennAbersCalibrator(estimator=GaussianNB(), cv="prefit")
-    with pytest.raises(
-        (ValueError, AttributeError)
-    ):
+    with pytest.raises((ValueError, AttributeError)):
         va_cal.fit(X_binary_cal, y_binary_cal)
 
 
