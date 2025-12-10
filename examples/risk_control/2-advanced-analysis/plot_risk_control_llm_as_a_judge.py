@@ -78,7 +78,8 @@ def generate_biased_score(is_hallucinated):
     else:
         return np.random.beta(a=1, b=3)
 
-# for reproductibility of results across infrastruct
+
+# for reproductibility of results across infrastructure
 np.random.seed(12)
 df["judge_score"] = df["hallucinated"].apply(generate_biased_score)
 
