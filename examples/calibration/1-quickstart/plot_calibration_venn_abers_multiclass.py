@@ -68,9 +68,11 @@ probs_va = va_calibrator.predict_proba(X_test)
 # We compute the mean squared error between predicted probabilities and
 # one-hot encoded labels.
 
+
 def multiclass_brier(y_true: np.ndarray, proba: np.ndarray) -> float:
     y_onehot = label_binarize(y_true, classes=classes)
     return float(np.mean(np.sum((y_onehot - proba) ** 2, axis=1)))
+
 
 brier_raw = multiclass_brier(y_test, probs_raw)
 brier_va = multiclass_brier(y_test, probs_va)
