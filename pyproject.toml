@@ -61,7 +61,7 @@ dev = [
     "wheel==0.45.1",
 ]
 docs = [
-    "lightgbm==4.4.0",
+    "lightgbm==4.6.0",
     "matplotlib==3.9.4",
     "numpydoc==1.9.0",
     "pandas==2.3.3",

@@ -137,8 +137,9 @@ y_pred_proba_max = np.max(y_pred_proba, axis=1)
 
 confidence_level = [0.8, 0.9, 0.95]
 
-calib = CalibratedClassifierCV(estimator=clf, method="sigmoid", cv="prefit")
-calib.fit(X_c1, y_c1)
+# Split the calibration data if needed, or use a different approach
+calib = CalibratedClassifierCV(estimator=GaussianNB(), method="sigmoid", cv=2)
+calib.fit(np.vstack([X_train, X_c1]), np.hstack([y_train, y_c1]))
 
 mapie_clf = SplitConformalClassifier(
     estimator=calib, confidence_level=confidence_level, prefit=True, random_state=42
@@ -287,7 +288,7 @@ print(
 
 confidence_level_ = np.arange(0.02, 0.98, 0.02)
 
-calib = CalibratedClassifierCV(estimator=clf, method="sigmoid", cv="prefit")
+calib = CalibratedClassifierCV(estimator=clf, method="sigmoid", cv=2)
 calib.fit(X_c1, y_c1)
 
 mapie_clf = SplitConformalClassifier(
@@ -337,7 +338,7 @@ plot_coverages_widths(confidence_level_, coverage, mean_width, "lac")
 
 confidence_level_ = np.arange(0.99, 0.85, -0.01)
 
-calib = CalibratedClassifierCV(estimator=clf, method="sigmoid", cv="prefit")
+calib = CalibratedClassifierCV(estimator=clf, method="sigmoid", cv=2)
 calib.fit(X_c1, y_c1)
 
 mapie_clf = SplitConformalClassifier(
