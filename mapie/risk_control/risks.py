@@ -190,7 +190,7 @@ class BinaryClassificationRisk:
         self,
         y_true: NDArray,
         y_pred: NDArray,
-    ) -> Tuple[float, int]:
+    ) -> Tuple[float, int, NDArray, NDArray]:
         """
         Computes the value of a risk given an array of ground
         truth labels and the corresponding predictions. Also returns the number of
@@ -211,10 +211,15 @@ class BinaryClassificationRisk:
 
         Returns
         -------
-        Tuple[float, int]
-            A tuple containing the value of the risk between 0 and 1,
-            and the number of effective samples used to compute that value
-            (between 1 and n_samples).
+        Tuple[float, int, NDArray, NDArray]
+            risk_value : float
+                The value of the risk (between 0 and 1).
+            effective_sample_size : int
+                Number of effective samples used to compute the value.
+            risk_occurrences : NDArray of shape (n_samples,)
+                Binary array indicating occurrences for each sample.
+            risk_conditions : NDArray of shape (n_samples,)
+                Binary array indicating condition satisfied for each sample.
 
             In the case of a performance metric, this function returns 1 - perf_value.
 
@@ -247,7 +252,7 @@ class BinaryClassificationRisk:
         risk_value = 0
         if self.higher_is_better:
             risk_value = 1
-        return risk_value, effective_sample_size_int
+        return risk_value, effective_sample_size_int, risk_occurrences, risk_conditions
 
 
 precision = BinaryClassificationRisk(
