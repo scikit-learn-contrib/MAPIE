@@ -545,4 +545,4 @@ def regression_mwi_score(
     error_below: float = np.sum((y_pred_low - y_true)[y_true < y_pred_low])
     total_error = error_above + error_below
     mwi = (width + total_error * 2 / (1 - confidence_level)) / len(y_true)
-    return mwi
+    return float(mwi)
