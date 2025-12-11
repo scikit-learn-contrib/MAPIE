@@ -61,19 +61,19 @@ dev = [
     "wheel==0.45.1",
 ]
 docs = [
-    "lightgbm==4.4.0",
+    "lightgbm==4.6.0",
     "matplotlib==3.9.4",
     "numpydoc==1.9.0",
     "pandas==2.3.3",
     "sphinx==7.4.7",
     "sphinx-gallery==0.19.0",
     "sphinx_rtd_theme==3.0.2",
-    "typing_extensions==4.0.1",
+    "typing_extensions==4.15.0",
 ]
 notebooks = [
     "ipykernel==6.31.0",
     "jupyter==1.1.1",
-    "jupyterlab==4.4.10",
+    "jupyterlab==4.5.0",
     "jupytext==1.18.1",
     "matplotlib==3.9.4",
     "nbconvert==7.16.6",

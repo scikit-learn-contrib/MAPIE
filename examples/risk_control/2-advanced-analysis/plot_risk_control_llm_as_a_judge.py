@@ -16,7 +16,7 @@ from sklearn.model_selection import train_test_split
 
 from mapie.risk_control import BinaryClassificationController
 
-RANDOM_STATE = 1
+RANDOM_STATE = 0
 np.random.seed(RANDOM_STATE)
 
 pd.set_option("display.max_colwidth", None)
@@ -79,6 +79,8 @@ def generate_biased_score(is_hallucinated):
         return np.random.beta(a=1, b=3)
 
 
+# for reproductibility of results across infrastructure
+np.random.seed(12)
 df["judge_score"] = df["hallucinated"].apply(generate_biased_score)
 
 df = df[["judge_input", "judge_score", "hallucinated"]]
@@ -142,7 +144,7 @@ y = df["hallucinated"].astype(int)
 X_calib, X_test, y_calib, y_test = train_test_split(
     X, y, test_size=0.95, random_state=RANDOM_STATE
 )
-target_precision = 0.9
+target_precision = 0.8
 confidence_level = 0.9
 
 bcc = BinaryClassificationController(

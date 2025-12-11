@@ -33,6 +33,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from numpy.typing import NDArray
 from sklearn.calibration import CalibratedClassifierCV
+from sklearn.frozen import FrozenEstimator
 from sklearn.model_selection import train_test_split
 from sklearn.naive_bayes import GaussianNB
 
@@ -131,13 +132,14 @@ plt.show()
 
 clf = GaussianNB()
 clf.fit(X_train, y_train)
+clf = FrozenEstimator(clf)
 y_pred = clf.predict(X_test)
 y_pred_proba = clf.predict_proba(X_test)
 y_pred_proba_max = np.max(y_pred_proba, axis=1)
 
 confidence_level = [0.8, 0.9, 0.95]
 
-calib = CalibratedClassifierCV(estimator=clf, method="sigmoid", cv="prefit")
+calib = CalibratedClassifierCV(estimator=clf, method="sigmoid")
 calib.fit(X_c1, y_c1)
 
 mapie_clf = SplitConformalClassifier(
@@ -287,7 +289,7 @@ print(
 
 confidence_level_ = np.arange(0.02, 0.98, 0.02)
 
-calib = CalibratedClassifierCV(estimator=clf, method="sigmoid", cv="prefit")
+calib = CalibratedClassifierCV(estimator=clf, method="sigmoid")
 calib.fit(X_c1, y_c1)
 
 mapie_clf = SplitConformalClassifier(
@@ -337,7 +339,7 @@ plot_coverages_widths(confidence_level_, coverage, mean_width, "lac")
 
 confidence_level_ = np.arange(0.99, 0.85, -0.01)
 
-calib = CalibratedClassifierCV(estimator=clf, method="sigmoid", cv="prefit")
+calib = CalibratedClassifierCV(estimator=clf, method="sigmoid")
 calib.fit(X_c1, y_c1)
 
 mapie_clf = SplitConformalClassifier(
