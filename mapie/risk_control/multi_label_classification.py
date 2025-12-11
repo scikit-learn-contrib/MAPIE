@@ -18,7 +18,14 @@ from .methods import (
     get_r_hat_plus,
     ltt_procedure,
 )
-from .risks import compute_risk_precision, compute_risk_recall
+from .risks import (
+    BinaryClassificationRisk,
+    accuracy,
+    false_positive_rate,
+    precision,
+    predicted_positive_fraction,
+    recall,
+)
 
 
 class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
@@ -43,14 +50,18 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
           containing positive probabilities, or positive and negative probabilities
           (assuming last dimension is [neg, pos]).
 
-    metric_control : Optional[str]
-        Metric to control. Either "recall" or "precision".
-        By default ``recall``.
+    risk : Union[BinaryClassificationRisk, str]
+        The risk metric to control. Can be a BinaryClassificationRisk instance
+        (e.g., precision, recall) or a string key corresponding to one of the
+        predefined risks ("precision", "recall").
+        The selected risk determines which conformal prediction methods are valid:
+            - "precision" implies that method must be "ltt"
+            - "recall" implies that method can be "crc" (default) or "rcps"
 
     method : Optional[str]
-        Method to use for the prediction . If `metric_control` is
+        Method to use for the prediction . If `risk` is
         "recall", the method can be either "crc" (default) or "rcps".
-        If `metric_control` is "precision", the method used is "ltt".
+        If `risk` is "precision", the method used is "ltt".
         If ``None``, the default is "crc" for recall and "ltt" for precision.
 
     target_level : Optional[Union[float, Iterable[float]]]
@@ -135,7 +146,7 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
         List of list of all index that satisfy fwer controlling.
         This attribute is computed when the user wants to
         control precision score.
-        Only relevant when metric_control="precision" as it uses
+        Only relevant when risk="precision" as it uses
         learn then test (ltt) procedure.
         Contains n_alpha lists.
 
@@ -143,7 +154,7 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
         List of list of all thresholds that satisfy fwer controlling.
         This attribute is computed when the user wants to
         control precision score.
-        Only relevant when metric_control="precision" as it uses
+        Only relevant when risk="precision" as it uses
         learn then test (ltt) procedure.
         Contains n_alpha lists.
 
@@ -183,7 +194,15 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
      [False  True False]]
     """
 
-    valid_methods_by_metric_ = {"precision": ["ltt"], "recall": ["rcps", "crc"]}
+    risk_choice_map = {
+        "precision": precision,
+        "recall": recall,
+        "accuracy": accuracy,
+        "fpr": false_positive_rate,
+        "predicted_positive_fraction": predicted_positive_fraction,
+    }
+
+    valid_methods_by_metric_ = {"precision": ["ltt"], "recall": ["crc", "rcps"]}
     valid_methods = list(chain(*valid_methods_by_metric_.values()))
     valid_metric_ = list(valid_methods_by_metric_.keys())
     valid_bounds_ = ["hoeffding", "bernstein", "wsr", None]
@@ -194,7 +213,7 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
     def __init__(
         self,
         predict_function: Callable[[ArrayLike], Union[list[NDArray], NDArray]],
-        metric_control: Optional[str] = "recall",
+        risk: Union[BinaryClassificationRisk, str] = "recall",
         method: Optional[str] = None,
         target_level: Union[float, Iterable[float]] = 0.9,
         confidence_level: Optional[float] = None,
@@ -205,16 +224,18 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
         verbose: int = 0,
     ) -> None:
         self._predict_function = predict_function
-        self.metric_control = metric_control
+        self.risk = self._check_and_convert_risk(risk)
         self.method = method
-        self._check_metric_control()
         self._check_method()
 
         alpha = []
         for target in (
             target_level if isinstance(target_level, Iterable) else [target_level]
         ):
-            alpha.append(1 - target)  # higher is better for precision/recall
+            if self.risk.higher_is_better:
+                alpha.append(1 - target)
+            else:
+                alpha.append(target)
         self._alpha = np.array(_check_alpha(alpha))
 
         self._check_confidence_level(confidence_level)
@@ -237,6 +258,19 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
     def is_fitted(self):
         """Returns True if the controller is fitted"""
         return self._is_fitted
+
+    def _check_and_convert_risk(self, risk):
+        """Check and convert risk parameter."""
+        if isinstance(risk, BinaryClassificationRisk):
+            return risk
+
+        if risk not in self.risk_choice_map:
+            raise ValueError(
+                "When risk is provided as a string, it must be one of: "
+                f"{list(self.risk_choice_map.keys())}"
+            )
+
+        return self.risk_choice_map[risk]
 
     def _check_parameters(self) -> None:
         """
@@ -262,17 +296,25 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
             in self.valid_methods_
         """
         self.method = cast(str, self.method)
-        self.metric_control = cast(str, self.metric_control)
+        risk_to_str = {v: k for k, v in self.risk_choice_map.items()}
+        risk_name = risk_to_str.get(self.risk, None)
 
-        if self.method not in self.valid_methods_by_metric_[self.metric_control]:
+        if risk_name is None:
             raise ValueError(
-                "Invalid method for metric: "
-                + "You are controlling "
-                + self.metric_control
-                + " and you are using invalid method: "
-                + self.method
-                + ". Use instead: "
-                + "".join(self.valid_methods_by_metric_[self.metric_control])
+                "The provided BinaryClassificationRisk instance is not associated "
+                "with any predefined conformal method. Only 'precision' and 'recall' "
+                "are currently supported for method selection."
+            )
+
+        valid_methods = self.valid_methods_by_metric_[risk_name]
+        if self.method is None:
+            self.method = valid_methods[0]
+            return
+
+        if self.method not in valid_methods:
+            raise ValueError(
+                f"Invalid method '{self.method}' for risk '{risk_name}'. "
+                f"Valid methods are: {valid_methods}."
             )
 
     def _check_all_labelled(self, y: NDArray) -> None:
@@ -310,11 +352,12 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
         Raises
         ------
         ValueError
-        If confidence_level is ``None`` and method is RCPS or LTT, or
-        if confidence_level is not in [0, 1] and method
-        is RCPS or LTT.
+            If confidence_level is ``None`` and method requires it
+            (RCPS or LTT) or if confidence_level is not in (0, 1).
+
         Warning
             If confidence_level is not ``None`` and method is CRC
+            (because it will be ignored).
         """
         if (not isinstance(confidence_level, float)) and (confidence_level is not None):
             raise ValueError(
@@ -324,18 +367,16 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
             if confidence_level is None:
                 raise ValueError(
                     "Invalid confidence_level. "
-                    "confidence_level cannot be ``None`` when controlling "
-                    "Recall with RCPS or Precision with LTT"
+                    f"confidence_level cannot be ``None`` when using method '{self.method}'."
                 )
             elif (confidence_level <= 0) or (confidence_level >= 1):
                 raise ValueError(
-                    "Invalid confidence_level. confidence_level must be in ]0, 1["
+                    "Invalid confidence_level. confidence_level must be in (0, 1)"
                 )
         if (self.method == "crc") and (confidence_level is not None):
             warnings.warn(
-                "WARNING: you are using crc method, hence "
-                + "even if the confidence_level is not ``None``, it won't be"
-                + "taken into account"
+                "WARNING: you are using method 'crc', hence "
+                "even if confidence_level is not ``None``, it will be ignored."
             )
 
     def _check_valid_index(self, alpha: NDArray):
@@ -386,24 +427,6 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
                 + "even if bound is not ``None``, it won't be"
                 + "taken into account."
             )
-
-    def _check_metric_control(self):
-        """
-        Check that the metrics to control are valid
-        (can be a string or list of string.)
-        """
-        if self.metric_control not in self.valid_metric_:
-            raise ValueError(
-                "Invalid metric. "
-                "Allowed scores must be in the following list "
-                + ", ".join(self.valid_metric_)
-            )
-
-        if self.method is None:
-            if self.metric_control == "recall":
-                self.method = "crc"
-            else:  # self.metric_control == "precision"
-                self.method = "ltt"
 
     def _transform_pred_proba(
         self, y_pred_proba: Union[Sequence[NDArray], NDArray]
@@ -482,10 +505,25 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
         y_pred_proba = self._predict_function(X)
         y_pred_proba_array = self._transform_pred_proba(y_pred_proba)
 
-        if self.metric_control == "recall":
-            risk = compute_risk_recall(self.predict_params, y_pred_proba_array, y)
-        else:  # self.metric_control == "precision"
-            risk = compute_risk_precision(self.predict_params, y_pred_proba_array, y)
+        n_lambdas = len(self.predict_params)
+        n_samples, n_labels, _ = y_pred_proba_array.shape
+
+        y_pred_proba_array_repeat = np.repeat(y_pred_proba_array, n_lambdas, axis=2)
+        y_pred_th = (y_pred_proba_array_repeat > self.predict_params).astype(int)
+
+        risk = np.zeros((n_samples, n_labels, n_lambdas))
+        for j in range(n_labels):
+            for k in range(n_lambdas):
+                _, _, occurrences, conditions = (
+                    self.risk.get_value_and_effective_sample_size(
+                        y[:, j], y_pred_th[:, j, k]
+                    )
+                )
+                effective_sample_size = np.sum(conditions)
+                if effective_sample_size > 0:
+                    risk[:, j, k] = occurrences / effective_sample_size
+                else:
+                    risk[:, j, k] = 1
 
         if first_call or _refit:
             self.risks = risk
@@ -498,14 +536,14 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
         """
         Compute optimal predict_params based on the computed risks.
         """
-        if self.metric_control == "precision":
+        if self.risk == precision:
             self.n_obs = len(self.risks)
             self.r_hat = self.risks.mean(axis=0)
             self.valid_index, _ = ltt_procedure(
-                np.expand_dims(self.r_hat, axis=0),
-                np.expand_dims(self._alpha, axis=0),
+                self.r_hat,
+                np.tile(self._alpha, (self.r_hat.shape[0], 1)),
                 cast(float, self._delta),
-                np.expand_dims(np.array([self.n_obs]), axis=0),
+                np.full_like(self.r_hat, self.n_obs),
             )
             self.valid_predict_params = []
             for index_list in self.valid_index:
@@ -514,7 +552,7 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
             self.best_predict_param, _ = find_precision_best_predict_param(
                 self.r_hat, self.valid_index, self.predict_params
             )
-        else:
+        elif self.risk == recall:
             self.r_hat, self.r_hat_plus = get_r_hat_plus(
                 self.risks,
                 self.predict_params,
@@ -525,6 +563,10 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
             )
             self.best_predict_param = find_best_predict_param(
                 self.predict_params, self.r_hat_plus, self._alpha
+            )
+        else:
+            raise NotImplementedError(
+                "Best predict_param computation is not implemented for the chosen risk."
             )
 
         self._is_fitted = True
