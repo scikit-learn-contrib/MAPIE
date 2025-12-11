@@ -186,4 +186,4 @@ class TopKConformityScore(BaseClassificationScore):
             y_pred_proba[:, :, np.newaxis] - y_pred_proba_last, -EPSILON
         )
 
-        return prediction_sets
+        return cast(NDArray, prediction_sets)

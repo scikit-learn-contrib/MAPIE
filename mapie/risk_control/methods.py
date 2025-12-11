@@ -224,7 +224,7 @@ def find_best_predict_param(
     if not increasing_risk:
         idx_last_zero = len(lambdas) - 1 - idx_last_zero
     best_predict_param = lambdas[idx_last_zero]
-    return best_predict_param
+    return cast(NDArray, best_predict_param)
 
 
 def ltt_procedure(
@@ -458,7 +458,7 @@ def _h1(r_hats: NDArray, alphas: NDArray) -> NDArray:
     mask = r_hats != 0
     elt1[mask] = r_hats[mask] * np.log(r_hats[mask] / alphas[mask])
     elt2 = (1 - r_hats) * np.log((1 - r_hats) / (1 - alphas))
-    return elt1 + elt2
+    return cast(NDArray, elt1 + elt2)
 
 
 def find_precision_best_predict_param(

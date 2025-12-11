@@ -1,4 +1,4 @@
-from typing import Callable, Optional
+from typing import Callable, Optional, cast
 
 import numpy as np
 
@@ -113,7 +113,7 @@ def aggregate_all(agg_function: Optional[str], X: NDArray) -> NDArray:
 
     """
     if agg_function == "median":
-        return np.nanmedian(X, axis=1)
+        return cast(NDArray, np.nanmedian(X, axis=1))
     elif agg_function == "mean":
-        return np.nanmean(X, axis=1)
+        return cast(NDArray, np.nanmean(X, axis=1))
     raise ValueError("Aggregation function called but not defined.")

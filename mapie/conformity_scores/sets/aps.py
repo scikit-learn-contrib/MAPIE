@@ -236,7 +236,7 @@ class APSConformityScore(NaiveConformityScore):
         v_param = (
             y_proba_last_cumsumed - threshold.reshape(1, -1)
         ) / y_pred_proba_last[:, 0, :]
-        return v_param
+        return cast(NDArray, v_param)
 
     def _add_random_tie_breaking(
         self,
@@ -421,4 +421,4 @@ class APSConformityScore(NaiveConformityScore):
                 EPSILON,
             )
 
-        return prediction_sets
+        return cast(NDArray, prediction_sets)
