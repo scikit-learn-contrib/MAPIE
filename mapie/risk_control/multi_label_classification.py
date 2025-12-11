@@ -554,7 +554,7 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
             )
         elif self.risk == recall:
             self.r_hat, self.r_hat_plus = get_r_hat_plus(
-                self.risks,
+                self.risks.mean(axis=1),
                 self.predict_params,
                 self.method,
                 self._rcps_bound,
