@@ -126,7 +126,7 @@ def get_r_hat_plus(
     return r_hat, r_hat_plus
 
 
-def find_lambda_star(
+def find_best_predict_param(
     lambdas: NDArray, r_hat_plus: NDArray, alpha_np: NDArray
 ) -> NDArray:
     """Find the higher value of lambda such that for
@@ -170,10 +170,10 @@ def find_lambda_star(
     bound_rep[:, np.argmax(bound_rep, axis=1)] = np.maximum(
         alphas_np, bound_rep[:, np.argmax(bound_rep, axis=1)]
     )  # to avoid an error if the risk is always higher than alpha
-    lambdas_star = lambdas[
+    best_predict_param = lambdas[
         np.argmin(-np.greater_equal(bound_rep, alphas_np).astype(int), axis=1)
     ]
-    return lambdas_star
+    return best_predict_param
 
 
 def ltt_procedure(
@@ -209,7 +209,7 @@ def ltt_procedure(
         probability 1-delta.
         Note: MAPIE 1.2 does not support multiple risks and multiple alphas
         simultaneously.
-        For PrecisionRecallController, the shape should be (1, n_alpha).
+        For MultiLabelClassificationController, the shape should be (1, n_alpha).
         For BinaryClassificationController, the shape should be (n_risks, 1).
 
     delta: float.
@@ -367,9 +367,9 @@ def _h1(r_hats: NDArray, alphas: NDArray) -> NDArray:
     return elt1 + elt2
 
 
-def find_precision_lambda_star(
+def find_precision_best_predict_param(
     r_hat: NDArray, valid_index: List[List[Any]], lambdas: NDArray
-) -> Tuple[ArrayLike, ArrayLike]:
+) -> Tuple[NDArray, ArrayLike]:
     """
     Return the lambda that give the minimum precision along
     the lambdas that satisfy FWER control.
@@ -397,29 +397,29 @@ def find_precision_lambda_star(
 
     Returns
     -------
-    l_lambda_star: ArrayLike of shape (n_alpha, ).
+    l_best_predict_param: NDArray of shape (n_alpha, ).
         The lambda that gives the minimum precision
         for a given alpha.
 
-    r_star: ArrayLike of shape (n_alpha, ).
+    r_star: NDArray of shape (n_alpha, ).
         The value of lowest risk for a given alpha.
     """
     if [] in valid_index:
         warnings.warn(
             """
             Warning: the risk couldn't be controlled for at least one value of alpha.
-            The corresponding lambdas have been set to 1.
+            The corresponding lambdas have been set to np.nan.
             """
         )
-    l_lambda_star = []  # type: List[Any]
+    l_best_predict_param = []  # type: List[Any]
     l_r_star = []  # type: List[Any]
     for i in range(len(valid_index)):
         if len(valid_index[i]) == 0:
-            l_lambda_star.append(1)
-            l_r_star.append(1)
+            l_best_predict_param.append(np.nan)
+            l_r_star.append(np.nan)
         else:
             idx = np.argmin(valid_index[i])
-            l_lambda_star.append(lambdas[valid_index[i][idx]])
+            l_best_predict_param.append(lambdas[valid_index[i][idx]])
             l_r_star.append(r_hat[valid_index[i][idx]])
 
-    return l_lambda_star, l_r_star
+    return np.array(l_best_predict_param), l_r_star
