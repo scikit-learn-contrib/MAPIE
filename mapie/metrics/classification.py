@@ -14,7 +14,7 @@ from mapie.utils import (
 )
 
 
-def classification_mean_width_score(y_pred_set: ArrayLike) -> float:
+def classification_mean_width_score(y_pred_set: ArrayLike) -> NDArray:
     """
     Mean width of prediction set output by
     :class:`~mapie.classification._MapieClassifier`.
@@ -48,7 +48,7 @@ def classification_mean_width_score(y_pred_set: ArrayLike) -> float:
     _check_array_inf(y_pred_set)
     width = y_pred_set.sum(axis=1)
     mean_width = width.mean(axis=0)
-    return mean_width
+    return cast(NDArray, mean_width)
 
 
 def classification_coverage_score(y_true: NDArray, y_pred_set: NDArray) -> NDArray:
