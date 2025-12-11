@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import warnings
-from typing import Any, Callable, List, Literal, Optional, Tuple, Union
+from typing import Any, Callable, List, Literal, Optional, Tuple, Union, cast
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -304,10 +304,13 @@ class BinaryClassificationController:
                 "Either you forgot to calibrate the controller first, "
                 "or calibration was not successful."
             )
-        return self._get_predictions_per_param(
-            X_test,
-            np.array([self.best_predict_param]),
-        )[0]
+        return cast(
+            NDArray,
+            self._get_predictions_per_param(
+                X_test,
+                np.array([self.best_predict_param]),
+            )[0],
+        )
 
     def _set_best_predict_param_choice(
         self,

@@ -225,7 +225,7 @@ class ResidualNormalisedScore(BaseRegressionScore):
                 + "the residuals and his predict method should return "
                 + "the exponential of the predictions."
             )
-        return pred
+        return cast(NDArray, pred)
 
     def get_signed_conformity_scores(
         self, y: ArrayLike, y_pred: ArrayLike, X: Optional[ArrayLike] = None, **kwargs

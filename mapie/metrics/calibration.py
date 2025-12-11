@@ -207,7 +207,7 @@ def add_jitter(
     random_state_np = check_random_state(random_state)
     noise = noise_amplitude * random_state_np.normal(size=n)
     x_jittered = x * (1 + noise)
-    return x_jittered
+    return cast(NDArray, x_jittered)
 
 
 def sort_xy_by_y(x: NDArray, y: NDArray) -> Tuple[NDArray, NDArray]:
@@ -311,7 +311,7 @@ def cumulative_differences(
     )
     y_true_sorted, y_score_sorted = sort_xy_by_y(y_true, y_score_jittered)
     cumulative_differences = np.cumsum(y_true_sorted - y_score_sorted) / n
-    return cumulative_differences
+    return cast(NDArray, cumulative_differences)
 
 
 def length_scale(s: NDArray) -> float:
@@ -403,7 +403,7 @@ def kolmogorov_smirnov_statistic(y_true: NDArray, y_score: NDArray) -> float:
     cum_diff = cumulative_differences(y_true, y_score)
     sigma = length_scale(y_score)
     ks_stat = np.max(np.abs(cum_diff)) / sigma
-    return ks_stat
+    return float(ks_stat)
 
 
 def kolmogorov_smirnov_cdf(x: float) -> float:

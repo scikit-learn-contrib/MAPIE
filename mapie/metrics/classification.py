@@ -119,7 +119,7 @@ def classification_coverage_score(y_true: NDArray, y_pred_set: NDArray) -> NDArr
         y_true = np.expand_dims(y_true, axis=1)
     y_true = np.expand_dims(y_true, axis=1)
     coverage = np.nanmean(np.take_along_axis(y_pred_set, y_true, axis=1), axis=0)
-    return coverage[0]
+    return cast(NDArray, coverage[0])
 
 
 def classification_ssc(
@@ -243,4 +243,6 @@ def classification_ssc_score(
     _check_array_nan(y_pred_set)
     _check_array_inf(y_pred_set)
 
-    return np.nanmin(classification_ssc(y_true, y_pred_set, num_bins), axis=1)
+    return cast(
+        NDArray, np.nanmin(classification_ssc(y_true, y_pred_set, num_bins), axis=1)
+    )

@@ -1,4 +1,4 @@
-from typing import Optional, Tuple, Union
+from typing import Optional, Tuple, Union, cast
 
 import numpy as np
 from numpy.typing import NDArray
@@ -242,4 +242,4 @@ class NaiveConformityScore(BaseClassificationScore):
         # get the prediction set by taking all probabilities above the last one
         prediction_sets = np.greater_equal(y_pred_proba - y_pred_proba_last, -EPSILON)
 
-        return prediction_sets
+        return cast(NDArray, prediction_sets)

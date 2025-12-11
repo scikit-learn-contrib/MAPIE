@@ -548,4 +548,4 @@ class TopLabelCalibrator(BaseEstimator, ClassifierMixin):
             The class from the scores.
         """
         check_is_fitted(self)
-        return self.single_estimator_.predict(X)
+        return cast(NDArray, self.single_estimator_.predict(X))

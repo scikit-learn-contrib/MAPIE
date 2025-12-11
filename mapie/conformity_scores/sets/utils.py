@@ -1,4 +1,4 @@
-from typing import Optional, Union
+from typing import Optional, Union, cast
 import numpy as np
 
 from numpy.typing import NDArray
@@ -121,4 +121,4 @@ def get_last_index_included(
             ),
             axis=1,
         )
-    return y_pred_index_last[:, np.newaxis, :]
+    return cast(NDArray, y_pred_index_last[:, np.newaxis, :])
