@@ -73,9 +73,9 @@ def expected_calibration_error(
         y_true_, y_score, num_bins, split_strategy
     )
 
-    return float(np.divide(
-        np.sum(bin_sizes * np.abs(bin_accs - bin_confs)), np.sum(bin_sizes)
-    ))
+    return float(
+        np.divide(np.sum(bin_sizes * np.abs(bin_accs - bin_confs)), np.sum(bin_sizes))
+    )
 
 
 def top_label_ece(
