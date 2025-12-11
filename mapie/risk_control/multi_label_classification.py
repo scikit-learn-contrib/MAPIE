@@ -10,12 +10,7 @@ from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.utils import check_random_state
 from sklearn.utils.validation import _check_y, _num_samples, indexable
 
-from mapie.utils import (
-    _check_alpha,
-    _check_n_jobs,
-    _check_verbose,
-    check_is_fitted,
-)
+from mapie.utils import _check_alpha, _check_n_jobs, _check_verbose, check_is_fitted
 
 from .methods import (
     find_best_predict_param,
@@ -42,9 +37,11 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
         predict_proba method of a fitted multi-label classifier.
         It can return either:
         - a list of arrays of length n_classes where each array is of shape
-          (n_samples, 2) with probabilities of the negative and positive class, or
-        - a single ndarray of shape (n_samples, n_classes, 2) with the same
-          probabilities.
+          (n_samples, 2) with probabilities of the negative and positive class
+          (as output by ``MultiOutputClassifier``), or
+        - an ndarray of shape (n_samples, n_classes) or (n_samples, n_classes, 2)
+          containing positive probabilities, or positive and negative probabilities
+          (assuming last dimension is [neg, pos]).
 
     metric_control : Optional[str]
         Metric to control. Either "recall" or "precision".
@@ -416,28 +413,33 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
     def _transform_pred_proba(
         self, y_pred_proba: Union[Sequence[NDArray], NDArray]
     ) -> NDArray:
-        """If the output of the predict_proba is a list of arrays (output of
-        the ``predict_proba`` of ``MultiOutputClassifier``) we transform it
-        into an array of shape (n_samples, n_classes, 1), otherwise, we add
-        one dimension at the end.
+        """Transform predict_function outputs to shape (n_samples, n_classes, 1)
+        containing positive-class probabilities.
 
-        Parameters
-        ----------
-        y_pred_proba : Union[List, NDArray]
-            Output of the multi-label classifier.
-
-        Returns
-        -------
-        NDArray of shape (n_samples, n_classes, 1)
-            Output of the model ready for risk computation.
+        - If a list of arrays is provided (e.g., MultiOutputClassifier), each
+          array is expected to be of shape (n_samples, 2); we take the positive
+          class column.
+        - If an ndarray is provided, it can be of shape (n_samples, n_classes)
+          containing positive-class probabilities, or
+          (n_samples, n_classes, 2) containing both class probabilities.
         """
         if isinstance(y_pred_proba, np.ndarray):
-            y_pred_proba_array = y_pred_proba
+            if y_pred_proba.ndim == 3:
+                # assume last dim is [neg, pos], keep positive class
+                y_pred_pos = y_pred_proba[..., 1]
+            elif y_pred_proba.ndim == 2:
+                # already positive-class probabilities
+                y_pred_pos = y_pred_proba
+            else:
+                raise ValueError(
+                    "When predict_proba returns an ndarray, it must have 2 or 3 "
+                    "dimensions: (n_samples, n_classes) or (n_samples, n_classes, 2)."
+                )
         else:
-            y_pred_proba_stacked = np.stack(y_pred_proba, axis=0)[:, :, 1]
-            y_pred_proba_array = np.moveaxis(y_pred_proba_stacked, 0, -1)
+            # list of length n_classes with (n_samples, 2) arrays
+            y_pred_pos = np.stack([proba[:, 1] for proba in y_pred_proba], axis=1)
 
-        return np.expand_dims(y_pred_proba_array, axis=2)
+        return np.expand_dims(y_pred_pos, axis=2)
 
     def compute_risks(
         self,

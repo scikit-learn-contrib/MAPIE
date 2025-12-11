@@ -151,6 +151,22 @@ class ArrayOutputModel:
         return proba_out
 
 
+class ArrayOutputModel3D:
+    """
+    Dummy model returning ndarray of shape (n_samples, n_classes, 2)
+    to test ndarray handling in _transform_pred_proba.
+    """
+
+    def __init__(self):
+        self.trained_ = True
+
+    def predict_proba(self, X: ArrayLike) -> NDArray:
+        X = np.asarray(X)
+        # 3 labels; positive class probabilities: 0.6, 0.7, 0.8
+        base = np.array([[0.4, 0.6], [0.3, 0.7], [0.2, 0.8]])
+        return np.repeat(base[np.newaxis, ...], len(X), axis=0)
+
+
 X_toy = np.arange(9).reshape(-1, 1)
 y_toy = np.stack(
     [
@@ -736,6 +752,53 @@ def test_toy_dataset_predictions(strategy: str) -> None:
     mapie_clf.calibrate(X_toy, y_toy)
     y_ps = mapie_clf.predict(X_toy)
     np.testing.assert_allclose(y_ps[:, :, 0], y_toy_mapie[strategy], rtol=1e-6)
+
+
+def test_transform_pred_proba_ndarray_2d() -> None:
+    """Ensure 2D ndarray predict_proba is accepted and reshaped."""
+    y_pred = np.array([[0.6, 0.7, 0.8], [0.4, 0.5, 0.6]])
+    clf = MultiLabelClassificationController(predict_function=toy_predict_function)
+    y_out = clf._transform_pred_proba(y_pred)
+    assert y_out.shape == (2, 3, 1)
+    np.testing.assert_allclose(y_out[..., 0], y_pred)
+
+
+def test_transform_pred_proba_ndarray_3d() -> None:
+    """Ensure 3D ndarray predict_proba keeps positive class column."""
+    model = ArrayOutputModel3D()
+    clf = MultiLabelClassificationController(predict_function=model.predict_proba)
+    proba = model.predict_proba(X_toy)
+    y_out = clf._transform_pred_proba(proba)
+    assert y_out.shape == (len(X_toy), 3, 1)
+    np.testing.assert_allclose(y_out[..., 0], proba[..., 1])
+
+
+def test_transform_pred_proba_list_of_arrays() -> None:
+    """Ensure list-of-arrays predict_proba (MultiOutputClassifier style) works."""
+    clf = MultiLabelClassificationController(predict_function=toy_predict_function)
+    proba_list = toy_predict_function(X_toy)  # MultiOutputClassifier returns list
+    y_out = clf._transform_pred_proba(proba_list)
+    assert y_out.shape == (len(X_toy), y_toy.shape[1], 1)
+    expected = np.stack([p[:, 1] for p in proba_list], axis=1)
+    np.testing.assert_allclose(y_out[..., 0], expected)
+
+
+@pytest.mark.parametrize(
+    "metric_control,method", [("recall", "crc"), ("precision", "ltt")]
+)
+def test_calibrate_with_ndarray_predict_proba(metric_control: str, method: str) -> None:
+    """End-to-end check that ndarray predict_proba works for both metrics."""
+    model = ArrayOutputModel3D()
+    mapie_clf = MultiLabelClassificationController(
+        predict_function=model.predict_proba,
+        metric_control=metric_control,
+        method=method,
+        confidence_level=0.9 if method != "crc" else None,
+    )
+    mapie_clf.calibrate(X_toy, y_toy)
+    y_ps = mapie_clf.predict(X_toy)
+    assert y_ps.shape[0] == len(X_toy)
+    assert y_ps.shape[1] == y_toy.shape[1]
 
 
 @pytest.mark.parametrize("method", ["rcps", "crc"])
