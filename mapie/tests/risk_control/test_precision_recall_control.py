@@ -783,6 +783,17 @@ def test_transform_pred_proba_list_of_arrays() -> None:
     np.testing.assert_allclose(y_out[..., 0], expected)
 
 
+def test_transform_pred_proba_ndarray_invalid_dims() -> None:
+    """Ensure ndarray with invalid dimensionality raises a ValueError."""
+    clf = MultiLabelClassificationController(predict_function=toy_predict_function)
+    wrong_shape = np.array([0.6, 0.4, 0.8])  # 1D array instead of 2D/3D
+    with pytest.raises(
+        ValueError,
+        match=r"When predict_proba returns an ndarray, it must have 2 or 3 dimensions.*",
+    ):
+        clf._transform_pred_proba(wrong_shape)
+
+
 @pytest.mark.parametrize(
     "metric_control,method", [("recall", "crc"), ("precision", "ltt")]
 )
