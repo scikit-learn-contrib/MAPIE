@@ -38,11 +38,13 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
 
     Parameters
     ----------
-    predict_function : Callable[[ArrayLike], NDArray]
+    predict_function : Callable[[ArrayLike], Union[list[NDArray], NDArray]]
         predict_proba method of a fitted multi-label classifier.
-        It should return a list of arrays where the length of the list is n_classes
-        and each array is of shape (n_samples, 2) corresponding to the
-        probabilities of the negative and positive class for each label.
+        It can return either:
+        - a list of arrays of length n_classes where each array is of shape
+          (n_samples, 2) with probabilities of the negative and positive class, or
+        - a single ndarray of shape (n_samples, n_classes, 2) with the same
+          probabilities.
 
     metric_control : Optional[str]
         Metric to control. Either "recall" or "precision".
@@ -50,28 +52,29 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
 
     method : Optional[str]
         Method to use for the prediction sets. If `metric_control` is
-        "recall", then the method can be either "crc" (default) or "rcps".
-        If `metric_control` is "precision", then the method used to control
-        the precision is "ltt".
+        "recall", the method can be either "crc" (default) or "rcps".
+        If `metric_control` is "precision", the method used is "ltt".
+        If ``None``, the default is "crc" for recall and "ltt" for precision.
 
     target_level : Optional[Union[float, Iterable[float]]]
         The minimum performance level for the metric. Must be between 0 and 1.
-        Can be a float or a list of floats.
+        Can be a float or any iterable of floats.
         By default ``0.9``.
 
     confidence_level : Optional[float]
-        Can be a float, or ``None``. If using method="rcps", then it
-        can not be set to ``None``.
-        Between 0 and 1, the level of certainty at which we compute
-        the Upper Confidence Bound of the average risk.
-        Higher ``confidence_level`` produce larger (more conservative) prediction
-        sets.
-        By default ``None``.
+        Can be a float, or ``None``. If using method="rcps" or method="ltt"
+        (precision control), then it cannot be set to ``None`` and must lie in
+        (0, 1). Between 0 and 1, the level of certainty at which we compute
+        the Upper Confidence Bound of the average risk. Higher ``confidence_level``
+        produce larger (more conservative) prediction sets. By default ``None``.
 
     rcps_bound : Optional[Union[str, ``None``]]
         Method used to compute the Upper Confidence Bound of the
-        average risk. Only necessary with the RCPS method.
-        By default ``None``.
+        average risk. Only necessary with the RCPS method. If provided when
+        using CRC or LTT it is ignored and a warning is raised. By default ``None``.
+    predict_params : Optional[ArrayLike]
+        Array of parameters (thresholds λ) to consider for controlling the risk.
+        Defaults to np.arange(0, 1, 0.01). Length sets ``n_predict_params``.
 
 
     n_jobs: Optional[int]
@@ -200,6 +203,7 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
         target_level: Union[float, Iterable[float]] = 0.9,
         confidence_level: Optional[float] = None,
         rcps_bound: Optional[Union[str, None]] = None,
+        predict_params: Optional[ArrayLike] = None,
         n_jobs: Optional[int] = None,
         random_state: Optional[Union[int, np.random.RandomState]] = None,
         verbose: int = 0,
@@ -222,6 +226,13 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
 
         self._check_bound(rcps_bound)
         self._rcps_bound = rcps_bound
+
+        self.predict_params = (
+            np.asarray(predict_params)
+            if predict_params is not None
+            else np.array(self.predict_params)
+        )
+        self.n_predict_params = len(self.predict_params)
 
         self.n_jobs = n_jobs
         self.random_state = random_state
@@ -296,7 +307,7 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
     def _check_confidence_level(self, confidence_level: Optional[float]):
         """
         Check that confidence_level is not ``None`` when the
-        method is RCPS and that it is between 0 and 1.
+        method is RCPS or LTT and that it is between 0 and 1.
 
         Parameters
         ----------
@@ -307,9 +318,9 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
         Raises
         ------
         ValueError
-            If confidence_level is ``None`` and method is RCPS or
-            if confidence_level is not in [0, 1] and method
-            is RCPS.
+        If confidence_level is ``None`` and method is RCPS or LTT, or
+        if confidence_level is not in [0, 1] and method
+        is RCPS or LTT.
         Warning
             If confidence_level is not ``None`` and method is CRC
         """
