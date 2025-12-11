@@ -428,7 +428,7 @@ def _check_no_agg_cv(
     elif isinstance(cv, int):
         return cv == 1
     elif hasattr(cv, "get_n_splits"):
-        return cv.get_n_splits(X, y, groups) == 1
+        return bool(cv.get_n_splits(X, y, groups) == 1)
     else:
         raise ValueError(
             "Invalid cv argument. "
@@ -876,7 +876,7 @@ def _compute_quantiles(vector: NDArray, alpha: NDArray) -> NDArray:
                 for i, alpha_ in enumerate(alpha)
             ]
         )[:, 0]
-    return quantiles_
+    return cast(NDArray, quantiles_)
 
 
 def _get_calib_set(
@@ -1071,7 +1071,7 @@ def _get_binning_groups(
         bins = np.sort(
             np.array([bin_group.max() for bin_group in bin_groups[:-1]] + [np.inf])
         )
-    return bins
+    return cast(NDArray, bins)
 
 
 def _calc_bins(

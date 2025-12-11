@@ -1061,7 +1061,7 @@ class _MapieClassifier(ClassifierMixin, BaseEstimator):
         y_pred_proba = check_proba_normalized(y_pred_proba, axis=1)
         y_pred = self.label_encoder_.inverse_transform(np.argmax(y_pred_proba, axis=1))
         if alpha is None:
-            return y_pred
+            return cast(NDArray, y_pred)
 
         # Estimate of probabilities from estimator(s)
         # In all cases: len(y_pred_proba.shape) == 3

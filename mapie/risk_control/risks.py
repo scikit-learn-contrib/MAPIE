@@ -50,7 +50,7 @@ def compute_risk_recall(lambdas: NDArray, y_pred_proba: NDArray, y: NDArray) -> 
 
     y_repeat = np.repeat(y[..., np.newaxis], n_lambdas, axis=2)
     risks = 1 - (_true_positive(y_pred_th, y_repeat) / y.sum(axis=1)[:, np.newaxis])
-    return risks
+    return cast(NDArray, risks)
 
 
 def compute_risk_precision(
@@ -101,7 +101,7 @@ def compute_risk_precision(
         risks = 1 - _true_positive(y_pred_th, y_repeat) / y_pred_th.sum(axis=1)
     risks[np.isnan(risks)] = 1  # nan value indicate high risks.
 
-    return risks
+    return cast(NDArray, risks)
 
 
 def _true_positive(y_pred_th: NDArray, y_repeat: NDArray) -> NDArray:
@@ -122,7 +122,7 @@ def _true_positive(y_pred_th: NDArray, y_repeat: NDArray) -> NDArray:
         The number of true positive.
     """
     tp = (y_pred_th * y_repeat).sum(axis=1)
-    return tp
+    return cast(NDArray, tp)
 
 
 class BinaryClassificationRisk:
