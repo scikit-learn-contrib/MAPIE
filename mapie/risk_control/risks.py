@@ -244,11 +244,9 @@ class BinaryClassificationRisk:
             # In the current LTT implementation, providing n_obs=-1 will result
             # in an infinite p_value, effectively invaliding the lambda
             effective_sample_size_int = -1
-            metric_value = 0 if self.higher_is_better else 1
+        risk_value = 0
         if self.higher_is_better:
-            risk_value = 1 - metric_value
-        else:
-            risk_value = metric_value
+            risk_value = 1
         return risk_value, effective_sample_size_int
 
 
