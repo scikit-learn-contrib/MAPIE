@@ -128,7 +128,7 @@ for i, (name, (method, bound)) in enumerate(method_params.items()):
     mapie_clf = MultiLabelClassificationController(
         predict_function=clf.predict_proba,
         method=method,
-        metric_control="recall",
+        risk="recall",
         target_level=1 - alpha,
         confidence_level=0.9,
         rcps_bound=bound,
@@ -236,7 +236,7 @@ alpha = 0.1
 mapie_clf = MultiLabelClassificationController(
     predict_function=clf.predict_proba,
     method="ltt",
-    metric_control="precision",
+    risk="precision",
     target_level=1 - alpha,
     confidence_level=0.9,
 )
