@@ -15,7 +15,6 @@ from __future__ import annotations
 import matplotlib.pyplot as plt
 from sklearn.calibration import CalibrationDisplay
 from sklearn.datasets import make_classification
-from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.metrics import brier_score_loss
 from sklearn.model_selection import train_test_split
 
@@ -50,9 +49,7 @@ X_train, X_calib, y_train, y_calib = train_test_split(
 )
 
 # Use Random Forest which tends to be miscalibrated
-base_model = RandomForestClassifier(
-    n_estimators=100, max_depth=10, random_state=42
-)
+base_model = RandomForestClassifier(n_estimators=100, max_depth=10, random_state=42)
 base_model.fit(X_train, y_train)
 probs_raw = base_model.predict_proba(X_test)[:, 1]
 raw_brier = brier_score_loss(y_test, probs_raw)
@@ -65,9 +62,7 @@ raw_brier = brier_score_loss(y_test, probs_raw)
 # to learn a calibration mapping that will improve probability estimates.
 
 va_calibrator = VennAbersCalibrator(
-    estimator=RandomForestClassifier(
-        n_estimators=100, max_depth=10, random_state=42
-    ),
+    estimator=RandomForestClassifier(n_estimators=100, max_depth=10, random_state=42),
     inductive=True,
     random_state=42,
 )

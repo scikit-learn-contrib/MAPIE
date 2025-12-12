@@ -15,7 +15,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.calibration import calibration_curve
 from sklearn.datasets import make_classification
-from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import label_binarize
 
@@ -50,9 +49,7 @@ X_train, X_calib, y_train, y_calib = train_test_split(
     X_temp, y_temp, test_size=0.3, random_state=7, stratify=y_temp
 )
 
-base_model = RandomForestClassifier(
-    n_estimators=100, max_depth=10, random_state=7
-)
+base_model = RandomForestClassifier(n_estimators=100, max_depth=10, random_state=7)
 base_model.fit(X_train, y_train)
 probs_raw = base_model.predict_proba(X_test)
 
@@ -64,9 +61,7 @@ probs_raw = base_model.predict_proba(X_test)
 # multi-class problems.
 
 va_calibrator = VennAbersCalibrator(
-    estimator=RandomForestClassifier(
-        n_estimators=100, max_depth=10, random_state=7
-    ),
+    estimator=RandomForestClassifier(n_estimators=100, max_depth=10, random_state=7),
     inductive=True,
     random_state=7,
 )
