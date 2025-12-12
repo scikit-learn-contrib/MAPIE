@@ -6,7 +6,6 @@ from decimal import Decimal
 from inspect import signature
 from math import isclose
 from typing import Any, Iterable, Optional, Tuple, Union, cast
-
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 from sklearn.base import ClassifierMixin, RegressorMixin
