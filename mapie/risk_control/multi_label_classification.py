@@ -186,8 +186,6 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
     valid_methods = list(chain(*valid_methods_by_metric_.values()))
     valid_metric_ = list(valid_methods_by_metric_.keys())
     valid_bounds_ = ["hoeffding", "bernstein", "wsr", None]
-    predict_params = np.arange(0, 1, 0.01)
-    n_predict_params = len(predict_params)
     fit_attributes = ["risks"]
     sigma_init = 0.25  # Value given in the paper [1]
     cal_size = 0.3
@@ -200,7 +198,7 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
         target_level: Union[float, Iterable[float]] = 0.9,
         confidence_level: Optional[float] = None,
         rcps_bound: Optional[Union[str, None]] = None,
-        predict_params: Optional[ArrayLike] = None,
+        predict_params: ArrayLike = np.arange(0, 1, 0.01),
         n_jobs: Optional[int] = None,
         random_state: Optional[Union[int, np.random.RandomState]] = None,
         verbose: int = 0,
@@ -224,11 +222,7 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
         self._check_bound(rcps_bound)
         self._rcps_bound = rcps_bound
 
-        self.predict_params = (
-            np.asarray(predict_params)
-            if predict_params is not None
-            else np.array(self.predict_params)
-        )
+        self.predict_params = np.asarray(predict_params)
         self.n_predict_params = len(self.predict_params)
 
         self.n_jobs = n_jobs
