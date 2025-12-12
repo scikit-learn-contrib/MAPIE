@@ -190,7 +190,7 @@ class BinaryClassificationRisk:
         self,
         y_true: NDArray,
         y_pred: NDArray,
-    ) -> Tuple[float, int, NDArray, NDArray]:
+    ) -> Tuple[float, int]:
         """
         Computes the value of a risk given an array of ground
         truth labels and the corresponding predictions. Also returns the number of
@@ -211,15 +211,10 @@ class BinaryClassificationRisk:
 
         Returns
         -------
-        Tuple[float, int, NDArray, NDArray]
-            risk_value : float
-                The value of the risk (between 0 and 1).
-            effective_sample_size : int
-                Number of effective samples used to compute the value.
-            risk_occurrences : NDArray of shape (n_samples,)
-                Binary array indicating occurrences for each sample.
-            risk_conditions : NDArray of shape (n_samples,)
-                Binary array indicating condition satisfied for each sample.
+        Tuple[float, int]
+            A tuple containing the value of the risk between 0 and 1,
+            and the number of effective samples used to compute that value
+            (between 1 and n_samples).
 
             In the case of a performance metric, this function returns 1 - perf_value.
 
@@ -244,15 +239,14 @@ class BinaryClassificationRisk:
         if effective_sample_size_int != 0:
             risk_sum: int = np.sum(risk_occurrences[risk_conditions])
             risk_value = risk_sum / effective_sample_size_int
+            if self.higher_is_better:
+                risk_value = 1 - risk_value
+            return risk_value, effective_sample_size_int
         else:
             # In this case, the corresponding lambda shouldn't be considered valid.
             # In the current LTT implementation, providing n_obs=-1 will result
             # in an infinite p_value, effectively invaliding the lambda
-            effective_sample_size_int = -1
-        risk_value = 0
-        if self.higher_is_better:
-            risk_value = 1
-        return risk_value, effective_sample_size_int, risk_occurrences, risk_conditions
+            return 1, -1
 
 
 precision = BinaryClassificationRisk(
