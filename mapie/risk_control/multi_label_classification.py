@@ -221,10 +221,12 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
         for target in (
             target_level if isinstance(target_level, Iterable) else [target_level]
         ):
-            if self._risk.higher_is_better:
-                alpha.append(1 - target)
-            else:
-                alpha.append(target)
+            assert self._risk.higher_is_better, (
+                "Current implemented risks (precision and recall) are defined such that "
+                "'higher is better'. The 'lower is better' case is not implemented."
+            )
+            alpha.append(1 - target)  # for higher is better only
+
         self._alpha = np.array(_check_alpha(alpha))
 
         self._check_confidence_level(confidence_level)
@@ -533,10 +535,6 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
             )
             self.best_predict_param = find_best_predict_param(
                 self.predict_params, self.r_hat_plus, self._alpha
-            )
-        else:
-            raise NotImplementedError(
-                "Best predict_param computation is not implemented for the chosen risk."
             )
 
         self._is_fitted = True
