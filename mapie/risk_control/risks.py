@@ -178,8 +178,12 @@ class BinaryClassificationRisk:
 
     def __init__(
         self,
-        risk_occurrence: Callable[[int, int], bool],
-        risk_condition: Callable[[int, int], bool],
+        risk_occurrence: Callable[
+            [NDArray[np.integer], NDArray[np.integer]], NDArray[np.bool_]
+        ],
+        risk_condition: Callable[
+            [NDArray[np.integer], NDArray[np.integer]], NDArray[np.bool_]
+        ],
         higher_is_better: bool,
     ):
         self._risk_occurrence = risk_occurrence
@@ -221,22 +225,13 @@ class BinaryClassificationRisk:
             If the risk is not defined (condition never met), the value is set to 1,
             and the number of effective samples is set to -1.
         """
-        risk_occurrences = np.array(
-            [
-                self._risk_occurrence(y_true_i, y_pred_i)
-                for y_true_i, y_pred_i in zip(y_true, y_pred)
-            ]
-        )
-        risk_conditions = np.array(
-            [
-                self._risk_condition(y_true_i, y_pred_i)
-                for y_true_i, y_pred_i in zip(y_true, y_pred)
-            ]
-        )
+        risk_occurrences = self._risk_occurrence(y_true, y_pred)
+        risk_conditions = self._risk_condition(y_true, y_pred)
+
         effective_sample_size = len(y_true) - np.sum(~risk_conditions)
         # Casting needed for MyPy with Python 3.9
         effective_sample_size_int = cast(int, effective_sample_size)
-        if effective_sample_size_int != 0:
+        if effective_sample_size_int != 0.0:
             risk_sum: int = np.sum(risk_occurrences[risk_conditions])
             risk_value = risk_sum / effective_sample_size_int
             if self.higher_is_better:
@@ -257,7 +252,7 @@ precision = BinaryClassificationRisk(
 
 accuracy = BinaryClassificationRisk(
     risk_occurrence=lambda y_true, y_pred: y_pred == y_true,
-    risk_condition=lambda y_true, y_pred: True,
+    risk_condition=lambda y_true, y_pred: np.repeat(True, len(y_true)),
     higher_is_better=True,
 )
 
@@ -275,6 +270,6 @@ false_positive_rate = BinaryClassificationRisk(
 
 predicted_positive_fraction = BinaryClassificationRisk(
     risk_occurrence=lambda y_true, y_pred: y_pred == 1,
-    risk_condition=lambda y_true, y_pred: True,
+    risk_condition=lambda y_true, y_pred: np.repeat(True, len(y_true)),
     higher_is_better=False,
 )
