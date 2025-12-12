@@ -22,7 +22,7 @@ Params = TypedDict(
         "method": str,
         "rcps_bound": Optional[str],
         "random_state": Optional[int],
-        "risk": Optional[str],
+        "risk": str,
     },
 )
 
