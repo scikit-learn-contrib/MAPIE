@@ -380,7 +380,7 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
         bool
             True if it is the first time, else False.
         """
-        return not hasattr(self, "risks")
+        return not hasattr(self, "_risks")
 
     def _check_bound(self, bound: Optional[str]):
         """
@@ -510,10 +510,10 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
             self.n_obs = len(self._risks)
             self.r_hat = self._risks.mean(axis=0)
             self.valid_index, _ = ltt_procedure(
-                self.r_hat,
-                np.tile(self._alpha, (self.r_hat.shape[0], 1)),
+                np.expand_dims(self.r_hat, axis=0),
+                np.expand_dims(self._alpha, axis=0),
                 cast(float, self._delta),
-                np.full_like(self.r_hat, self.n_obs),
+                np.expand_dims(np.array([self.n_obs]), axis=0),
             )
             self.valid_predict_params = []
             for index_list in self.valid_index:

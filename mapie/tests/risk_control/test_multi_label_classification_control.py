@@ -501,7 +501,7 @@ def test_reinit_new_fit():
     )
     mapie_clf.calibrate(X_toy, y_toy)
     mapie_clf.calibrate(X_toy, y_toy)
-    assert len(mapie_clf.risks) == len(X_toy)
+    assert len(mapie_clf._risks) == len(X_toy)
 
 
 @pytest.mark.parametrize("method", WRONG_METHODS)
@@ -550,9 +550,7 @@ def test_bound_error(bound: str) -> None:
 @pytest.mark.parametrize("metric_control", WRONG_METRICS)
 def test_metric_error_in_init(metric_control: str) -> None:
     """Test error for wrong metrics"""
-    with pytest.raises(
-        ValueError, match=r".*When risk is provided as a string, it must be one of:.*"
-    ):
+    with pytest.raises(ValueError, match=r".*risk must be one of:*"):
         MultiLabelClassificationController(
             predict_function=toy_predict_function,
             random_state=random_state,
