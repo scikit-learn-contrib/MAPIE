@@ -24,26 +24,35 @@ from mapie.calibration import VennAbersCalibrator
 ####################################################################
 # 1. Build a miscalibrated multi-class classifier
 # -----------------------------------------------
-# We generate a 3-class dataset and fit a gradient boosting model,
-# which is often miscalibrated out of the box.
+# We generate a 3-class dataset and fit a random forest model,
+# which is known to be miscalibrated out of the box.
+
+from sklearn.ensemble import RandomForestClassifier
 
 X, y = make_classification(
-    n_samples=2500,
+    n_samples=5000,
     n_features=20,
     n_informative=12,
     n_redundant=2,
     n_classes=3,
     n_clusters_per_class=1,
-    class_sep=1.0,
+    class_sep=0.8,
     random_state=7,
 )
 
 classes = np.unique(y)
-X_train, X_test, y_train, y_test = train_test_split(
+# Split into train, calibration, and test sets
+X_temp, X_test, y_temp, y_test = train_test_split(
     X, y, test_size=0.3, random_state=7, stratify=y
 )
 
-base_model = GradientBoostingClassifier(random_state=7)
+X_train, X_calib, y_train, y_calib = train_test_split(
+    X_temp, y_temp, test_size=0.3, random_state=7, stratify=y_temp
+)
+
+base_model = RandomForestClassifier(
+    n_estimators=100, max_depth=10, random_state=7
+)
 base_model.fit(X_train, y_train)
 probs_raw = base_model.predict_proba(X_test)
 
@@ -51,15 +60,17 @@ probs_raw = base_model.predict_proba(X_test)
 # 2. Calibrate with Venn-ABERS
 # ----------------------------
 # The calibrator refits the base model internally and learns a mapping
-# from a held-out calibration subset. Venn-ABERS natively supports
+# from the held-out calibration set. Venn-ABERS natively supports
 # multi-class problems.
 
 va_calibrator = VennAbersCalibrator(
-    estimator=GradientBoostingClassifier(random_state=7),
+    estimator=RandomForestClassifier(
+        n_estimators=100, max_depth=10, random_state=7
+    ),
     inductive=True,
     random_state=7,
 )
-va_calibrator.fit(X_train, y_train)
+va_calibrator.fit(X_train, y_train, X_calib=X_calib, y_calib=y_calib)
 probs_va = va_calibrator.predict_proba(X_test)
 
 ####################################################################

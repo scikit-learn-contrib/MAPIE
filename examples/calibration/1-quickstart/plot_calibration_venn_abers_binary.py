@@ -22,25 +22,37 @@ from sklearn.model_selection import train_test_split
 from mapie.calibration import VennAbersCalibrator
 
 ####################################################################
-# 1. Build a slightly miscalibrated binary classifier
+# 1. Build a miscalibrated binary classifier
 # ---------------------------------------------------
-# We generate a toy binary dataset and fit a gradient boosting model
-# which is known to be somewhat miscalibrated out of the box.
+# We generate a toy binary dataset and fit a random forest model
+# which is known to be miscalibrated out of the box (produces
+# probabilities too close to 0 or 1). We use a larger dataset to
+# ensure sufficient data for proper calibration.
+
+from sklearn.ensemble import RandomForestClassifier
 
 X, y = make_classification(
-    n_samples=2000,
+    n_samples=5000,
     n_features=20,
     n_informative=10,
     n_redundant=2,
-    class_sep=1.0,
+    class_sep=0.8,
     random_state=42,
 )
 
-X_train, X_test, y_train, y_test = train_test_split(
+# Split into train, calibration, and test sets
+X_temp, X_test, y_temp, y_test = train_test_split(
     X, y, test_size=0.3, random_state=42, stratify=y
 )
 
-base_model = GradientBoostingClassifier(random_state=42)
+X_train, X_calib, y_train, y_calib = train_test_split(
+    X_temp, y_temp, test_size=0.3, random_state=42, stratify=y_temp
+)
+
+# Use Random Forest which tends to be miscalibrated
+base_model = RandomForestClassifier(
+    n_estimators=100, max_depth=10, random_state=42
+)
 base_model.fit(X_train, y_train)
 probs_raw = base_model.predict_proba(X_test)[:, 1]
 raw_brier = brier_score_loss(y_test, probs_raw)
@@ -49,15 +61,17 @@ raw_brier = brier_score_loss(y_test, probs_raw)
 # 2. Calibrate with Venn-ABERS
 # ----------------------------
 # We wrap the same base model in :class:`~mapie.calibration.VennAbersCalibrator`
-# using the inductive mode (default). The calibrator refits the base model
-# internally and learns a calibration mapping from a held-out subset.
+# using the inductive mode (default). The calibrator uses the calibration set
+# to learn a calibration mapping that will improve probability estimates.
 
 va_calibrator = VennAbersCalibrator(
-    estimator=GradientBoostingClassifier(random_state=42),
+    estimator=RandomForestClassifier(
+        n_estimators=100, max_depth=10, random_state=42
+    ),
     inductive=True,
     random_state=42,
 )
-va_calibrator.fit(X_train, y_train)
+va_calibrator.fit(X_train, y_train, X_calib=X_calib, y_calib=y_calib)
 probs_va = va_calibrator.predict_proba(X_test)[:, 1]
 va_brier = brier_score_loss(y_test, probs_va)
 
