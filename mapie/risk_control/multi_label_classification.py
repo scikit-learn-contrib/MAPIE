@@ -417,7 +417,7 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
         - If an ndarray is provided, it can be of shape (n_samples, n_classes)
           containing positive-class probabilities, or
           (n_samples, n_classes, 2) containing both class probabilities, with
-          last dim is [negative, positive].
+          last dim [negative, positive].
         """
         if isinstance(y_pred_proba, np.ndarray):
             if y_pred_proba.ndim == 3:
