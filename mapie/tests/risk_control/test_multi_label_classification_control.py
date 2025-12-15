@@ -858,3 +858,19 @@ def test_method_none_recall() -> None:
     )
     mapie_clf.calibrate(X_toy, y_toy)
     assert mapie_clf.method == "crc"
+
+
+def test_compute_best_predict_param_invalid_risk():
+    """
+    Test that compute_best_predict_param raises error for an unsupported risk value.
+    """
+    mapie_clf = MultiLabelClassificationController(
+        predict_function=toy_predict_function, risk="recall"
+    )
+    mapie_clf.compute_risks(X_toy, y_toy)
+    mapie_clf._risk = "false_pos_rate"
+    with pytest.raises(
+        NotImplementedError,
+        match=r".*risk not implemented.*",
+    ):
+        mapie_clf.compute_best_predict_param()
