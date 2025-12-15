@@ -536,7 +536,10 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
             self.best_predict_param = find_best_predict_param(
                 self.predict_params, self.r_hat_plus, self._alpha
             )
-
+        else:
+            raise NotImplementedError(
+                "risk not implemented. Only 'precision' and 'recall' are currently supported."
+            )
         self._is_fitted = True
 
         return self
