@@ -48,7 +48,7 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
         By default ``recall``.
 
     method : Optional[str]
-        Method to use for the prediction sets. If `metric_control` is
+        Method to use for the prediction . If `metric_control` is
         "recall", the method can be either "crc" (default) or "rcps".
         If `metric_control` is "precision", the method used is "ltt".
         If ``None``, the default is "crc" for recall and "ltt" for precision.
@@ -71,7 +71,8 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
         using CRC or LTT it is ignored and a warning is raised. By default ``None``.
     predict_params : Optional[ArrayLike]
         Array of parameters (thresholds λ) to consider for controlling the risk.
-        Defaults to np.arange(0, 1, 0.01). Length sets ``n_predict_params``.
+        Defaults to np.arange(0, 1, 0.01). Length is used to set
+        ``n_predict_params``.
 
 
     n_jobs: Optional[int]
@@ -415,7 +416,8 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
           class column.
         - If an ndarray is provided, it can be of shape (n_samples, n_classes)
           containing positive-class probabilities, or
-          (n_samples, n_classes, 2) containing both class probabilities.
+          (n_samples, n_classes, 2) containing both class probabilities, with
+          last dim is [negative, positive].
         """
         if isinstance(y_pred_proba, np.ndarray):
             if y_pred_proba.ndim == 3:
