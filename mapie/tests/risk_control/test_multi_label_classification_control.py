@@ -796,9 +796,7 @@ def test_transform_pred_proba_ndarray_invalid_dims() -> None:
         clf._transform_pred_proba(wrong_shape)
 
 
-@pytest.mark.parametrize(
-    "risk,method", [("recall", "crc"), ("precision", "ltt")]
-)
+@pytest.mark.parametrize("risk,method", [("recall", "crc"), ("precision", "ltt")])
 def test_calibrate_with_ndarray_predict_proba(risk: str, method: str) -> None:
     """End-to-end check that ndarray predict_proba works for both metrics."""
     model = ArrayOutputModel3D()
