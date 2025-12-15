@@ -832,7 +832,7 @@ def test_error_wrong_method_metric_precision(method: str) -> None:
 def test_check_metric_control(method: str) -> None:
     """
     Test that an error is returned when using a metric
-    with invalid method .
+    with invalid method.
     """
     with pytest.raises(ValueError, match=r".*Invalid method.*"):
         MultiLabelClassificationController(
