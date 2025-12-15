@@ -547,14 +547,14 @@ def test_bound_error(bound: str) -> None:
         )
 
 
-@pytest.mark.parametrize("metric_control", WRONG_METRICS)
-def test_metric_error_in_init(metric_control: str) -> None:
+@pytest.mark.parametrize("risk", WRONG_METRICS)
+def test_metric_error_in_init(risk: str) -> None:
     """Test error for wrong metrics"""
     with pytest.raises(ValueError, match=r".*risk must be one of:*"):
         MultiLabelClassificationController(
             predict_function=toy_predict_function,
             random_state=random_state,
-            risk=metric_control,
+            risk=risk,
         )
 
 
@@ -797,14 +797,14 @@ def test_transform_pred_proba_ndarray_invalid_dims() -> None:
 
 
 @pytest.mark.parametrize(
-    "metric_control,method", [("recall", "crc"), ("precision", "ltt")]
+    "risk,method", [("recall", "crc"), ("precision", "ltt")]
 )
-def test_calibrate_with_ndarray_predict_proba(metric_control: str, method: str) -> None:
+def test_calibrate_with_ndarray_predict_proba(risk: str, method: str) -> None:
     """End-to-end check that ndarray predict_proba works for both metrics."""
     model = ArrayOutputModel3D()
     mapie_clf = MultiLabelClassificationController(
         predict_function=model.predict_proba,
-        metric_control=metric_control,
+        risk=risk,
         method=method,
         confidence_level=0.9 if method != "crc" else None,
     )
@@ -829,7 +829,7 @@ def test_error_wrong_method_metric_precision(method: str) -> None:
 
 
 @pytest.mark.parametrize("method", ["ltt"])
-def test_check_metric_control(method: str) -> None:
+def test_check_invalid_method_for_risk(method: str) -> None:
     """
     Test that an error is returned when using a metric
     with invalid method.
