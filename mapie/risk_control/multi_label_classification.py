@@ -10,12 +10,7 @@ from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.utils import check_random_state
 from sklearn.utils.validation import _check_y, _num_samples, indexable
 
-from mapie.utils import (
-    _check_alpha,
-    _check_n_jobs,
-    _check_verbose,
-    check_is_fitted,
-)
+from mapie.utils import _check_alpha, _check_n_jobs, _check_verbose, check_is_fitted
 
 from .methods import (
     find_best_predict_param,
@@ -38,40 +33,46 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
 
     Parameters
     ----------
-    predict_function : Callable[[ArrayLike], NDArray]
+    predict_function : Callable[[ArrayLike], Union[list[NDArray], NDArray]]
         predict_proba method of a fitted multi-label classifier.
-        It should return a list of arrays where the length of the list is n_classes
-        and each array is of shape (n_samples, 2) corresponding to the
-        probabilities of the negative and positive class for each label.
+        It can return either:
+        - a list of arrays of length n_classes where each array is of shape
+          (n_samples, 2) with probabilities of the negative and positive class
+          (as output by ``MultiOutputClassifier``), or
+        - an ndarray of shape (n_samples, n_classes) or (n_samples, n_classes, 2)
+          containing positive probabilities, or positive and negative probabilities
+          (assuming last dimension is [neg, pos]).
 
     metric_control : Optional[str]
         Metric to control. Either "recall" or "precision".
         By default ``recall``.
 
     method : Optional[str]
-        Method to use for the prediction sets. If `metric_control` is
-        "recall", then the method can be either "crc" (default) or "rcps".
-        If `metric_control` is "precision", then the method used to control
-        the precision is "ltt".
+        Method to use for the prediction . If `metric_control` is
+        "recall", the method can be either "crc" (default) or "rcps".
+        If `metric_control` is "precision", the method used is "ltt".
+        If ``None``, the default is "crc" for recall and "ltt" for precision.
 
     target_level : Optional[Union[float, Iterable[float]]]
         The minimum performance level for the metric. Must be between 0 and 1.
-        Can be a float or a list of floats.
+        Can be a float or any iterable of floats.
         By default ``0.9``.
 
     confidence_level : Optional[float]
-        Can be a float, or ``None``. If using method="rcps", then it
-        can not be set to ``None``.
-        Between 0 and 1, the level of certainty at which we compute
-        the Upper Confidence Bound of the average risk.
-        Higher ``confidence_level`` produce larger (more conservative) prediction
-        sets.
-        By default ``None``.
+        Can be a float, or ``None``. If using method="rcps" or method="ltt"
+        (precision control), then it cannot be set to ``None`` and must lie in
+        (0, 1). Between 0 and 1, the level of certainty at which we compute
+        the Upper Confidence Bound of the average risk. Higher ``confidence_level``
+        produce larger (more conservative) prediction sets. By default ``None``.
 
     rcps_bound : Optional[Union[str, ``None``]]
         Method used to compute the Upper Confidence Bound of the
-        average risk. Only necessary with the RCPS method.
-        By default ``None``.
+        average risk. Only necessary with the RCPS method. If provided when
+        using CRC or LTT it is ignored and a warning is raised. By default ``None``.
+    predict_params : Optional[ArrayLike]
+        Array of parameters (thresholds λ) to consider for controlling the risk.
+        Defaults to np.arange(0, 1, 0.01). Length is used to set
+        ``n_predict_params``.
 
 
     n_jobs: Optional[int]
@@ -186,8 +187,6 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
     valid_methods = list(chain(*valid_methods_by_metric_.values()))
     valid_metric_ = list(valid_methods_by_metric_.keys())
     valid_bounds_ = ["hoeffding", "bernstein", "wsr", None]
-    predict_params = np.arange(0, 1, 0.01)
-    n_predict_params = len(predict_params)
     fit_attributes = ["risks"]
     sigma_init = 0.25  # Value given in the paper [1]
     cal_size = 0.3
@@ -200,6 +199,7 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
         target_level: Union[float, Iterable[float]] = 0.9,
         confidence_level: Optional[float] = None,
         rcps_bound: Optional[Union[str, None]] = None,
+        predict_params: ArrayLike = np.arange(0, 1, 0.01),
         n_jobs: Optional[int] = None,
         random_state: Optional[Union[int, np.random.RandomState]] = None,
         verbose: int = 0,
@@ -222,6 +222,9 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
 
         self._check_bound(rcps_bound)
         self._rcps_bound = rcps_bound
+
+        self.predict_params = np.asarray(predict_params)
+        self.n_predict_params = len(self.predict_params)
 
         self.n_jobs = n_jobs
         self.random_state = random_state
@@ -296,7 +299,7 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
     def _check_confidence_level(self, confidence_level: Optional[float]):
         """
         Check that confidence_level is not ``None`` when the
-        method is RCPS and that it is between 0 and 1.
+        method is RCPS or LTT and that it is between 0 and 1.
 
         Parameters
         ----------
@@ -307,9 +310,9 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
         Raises
         ------
         ValueError
-            If confidence_level is ``None`` and method is RCPS or
-            if confidence_level is not in [0, 1] and method
-            is RCPS.
+        If confidence_level is ``None`` and method is RCPS or LTT, or
+        if confidence_level is not in [0, 1] and method
+        is RCPS or LTT.
         Warning
             If confidence_level is not ``None`` and method is CRC
         """
@@ -405,28 +408,34 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
     def _transform_pred_proba(
         self, y_pred_proba: Union[Sequence[NDArray], NDArray]
     ) -> NDArray:
-        """If the output of the predict_proba is a list of arrays (output of
-        the ``predict_proba`` of ``MultiOutputClassifier``) we transform it
-        into an array of shape (n_samples, n_classes, 1), otherwise, we add
-        one dimension at the end.
+        """Transform predict_function outputs to shape (n_samples, n_classes, 1)
+        containing positive-class probabilities.
 
-        Parameters
-        ----------
-        y_pred_proba : Union[List, NDArray]
-            Output of the multi-label classifier.
-
-        Returns
-        -------
-        NDArray of shape (n_samples, n_classes, 1)
-            Output of the model ready for risk computation.
+        - If a list of arrays is provided (e.g., MultiOutputClassifier), each
+          array is expected to be of shape (n_samples, 2); we take the positive
+          class column.
+        - If an ndarray is provided, it can be of shape (n_samples, n_classes)
+          containing positive-class probabilities, or
+          (n_samples, n_classes, 2) containing both class probabilities, with
+          last dim [negative, positive].
         """
         if isinstance(y_pred_proba, np.ndarray):
-            y_pred_proba_array = y_pred_proba
+            if y_pred_proba.ndim == 3:
+                # assume last dim is [neg, pos], keep positive class
+                y_pred_pos = y_pred_proba[..., 1]
+            elif y_pred_proba.ndim == 2:
+                # already positive-class probabilities
+                y_pred_pos = y_pred_proba
+            else:
+                raise ValueError(
+                    "When predict_proba returns an ndarray, it must have 2 or 3 "
+                    "dimensions: (n_samples, n_classes) or (n_samples, n_classes, 2)."
+                )
         else:
-            y_pred_proba_stacked = np.stack(y_pred_proba, axis=0)[:, :, 1]
-            y_pred_proba_array = np.moveaxis(y_pred_proba_stacked, 0, -1)
+            # list of length n_classes with (n_samples, 2) arrays
+            y_pred_pos = np.stack([proba[:, 1] for proba in y_pred_proba], axis=1)
 
-        return np.expand_dims(y_pred_proba_array, axis=2)
+        return np.expand_dims(y_pred_pos, axis=2)
 
     def compute_risks(
         self,
