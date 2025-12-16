@@ -751,7 +751,6 @@ def test_toy_dataset_predictions(strategy: str) -> None:
     )
     mapie_clf.calibrate(X_toy, y_toy)
     y_ps = mapie_clf.predict(X_toy)
-    
     np.testing.assert_allclose(y_ps[:, :, 0], y_toy_mapie[strategy], rtol=1e-6)
 
 
