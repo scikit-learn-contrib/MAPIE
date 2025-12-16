@@ -35,20 +35,20 @@ MacOS users should install ``libomp`` beforehand if it is not already present (`
 
 .. code-block:: sh
 
-    $ uv sync --python 3.12 --extra dev --extra docs --extra notebooks
-    $ source .venv/bin/activate
+    uv sync --python 3.12 --extra dev --extra docs --extra notebooks
+    source .venv/bin/activate
 
 Alternatively, using ``pip``, you can install development dependencies with the following command:
 
 .. code-block:: sh
 
-    $ python -m pip install -e '.[dev,docs,notebooks]'
+    python -m pip install -e '.[dev,docs,notebooks]'
 
 If you don't have ``pip`` installed, you can install it by running:
 
 .. code-block:: sh
 
-    $ python -m ensurepip --upgrade
+    python -m ensurepip --upgrade
 
 Implementing your change
 ------------------------------------------
@@ -57,13 +57,13 @@ The linter must pass:
 
 .. code-block:: sh
 
-    $ make lint
+    make lint
 
 The typing must pass.
 
 .. code-block:: sh
 
-    $ make type-check
+    make type-check
 
 
 
@@ -76,13 +76,13 @@ The coverage should absolutely be 100%.
 
 .. code-block:: sh
 
-    $ make coverage
+    make coverage
 
 The tests absolutely have to pass. You can run the test suite directly (optional) with:
 
 .. code-block:: sh
 
-    $ make tests
+    make tests
 
 
 Documenting your change
@@ -96,8 +96,8 @@ Finally, once dependencies are installed, you can build the documentation locall
 
 .. code-block:: sh
 
-    $ make clean-doc
-    $ make doc
+    make clean-doc
+    make doc
 
 
 Running Jupyter notebooks
@@ -109,8 +109,8 @@ You can then use Jupyter lab.
 
 .. code-block:: sh
 
-    $ jupyter lab # if virtual environment is activated
-    $ uv run jupyter lab # if virtual environment is not activated
+    jupyter lab # if virtual environment is activated
+    uv run jupyter lab # if virtual environment is not activated
 
 
 Updating changelog
