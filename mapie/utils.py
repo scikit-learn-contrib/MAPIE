@@ -5,7 +5,8 @@ from collections.abc import Iterable as IterableType
 from decimal import Decimal
 from inspect import signature
 from math import isclose
-from typing import Any, Iterable, Optional, Tuple, Union, cast
+from typing import Any, Iterable, List, Optional, Tuple, Union, cast
+
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 from sklearn.base import ClassifierMixin, RegressorMixin
@@ -1515,6 +1516,60 @@ def _check_predict_params(
                 "without using one 'predict_params' in the predict method. "
                 "Please ensure a similar configuration of 'predict_params' "
                 "is used in the predict method as called in the fit."
+            )
+
+
+def check_valid_ltt_params_index(
+    predict_params: NDArray,
+    valid_index: Union[List[List[Any]], NDArray],
+    alpha: Optional[NDArray] = None,
+) -> None:
+    """
+    Check that valid indices returned by the LTT procedure are not empty
+    and issue warnings if needed.
+
+    This function is generic and can be used for:
+    - BinaryClassificationController (simple list of valid indices)
+    - MultiLabelClassificationController (list of lists of valid indices, one per alpha)
+
+    Parameters
+    ----------
+    predict_params : NDArray
+        Array of tested thresholds / parameters.
+    valid_index : Union[List[List[Any]], NDArray]
+        List of valid indices returned by LTT.
+        - For multi-alpha cases, it should be a list of lists.
+        - For binary classification, it is a simple list of indices.
+    alpha : Optional[NDArray], default=None
+        Array of alpha values corresponding to each level in multi-level classification.
+        If None, alpha is omitted from the warning message.
+
+    Warnings
+    --------
+    - If a sub-list in valid_index is empty, a warning is issued.
+      If alpha is provided, it is included in the message.
+    - For a simple list, if all predict_params are valid, a warning suggests
+      choosing more difficult target levels.
+    """
+    if len(valid_index) > 0 and isinstance(valid_index[0], list):
+        for i, idx_list in enumerate(valid_index):
+            if idx_list == []:
+                warnings.warn(
+                    "Warning: LTT method has returned an empty sequence."
+                    + (
+                        f" The corresponding alpha={alpha[i]}"
+                        if alpha is not None
+                        else ""
+                    )
+                )
+    else:
+        if len(valid_index) == 0:
+            warnings.warn("Warning: LTT method has returned an empty sequence.")
+        elif len(valid_index) == len(predict_params):
+            warnings.warn(
+                "All provided predict_params control the risk at the given "
+                "target and confidence levels. "
+                "You may want to use more difficult target levels."
             )
 
 
