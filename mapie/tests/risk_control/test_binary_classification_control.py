@@ -125,11 +125,12 @@ def test_binary_classification_risk(
     if effective_sample_size != 0:
         expected_value = metric_func(y_true, y_pred)
         expected_n = effective_sample_size
+        if risk_instance.higher_is_better:
+            expected_value = 1 - expected_value
     else:
         expected_value = 1
         expected_n = -1
-    if risk_instance.higher_is_better:
-        expected_value = 1 - expected_value
+
     assert np.isclose(value, expected_value)
     assert n == expected_n
 

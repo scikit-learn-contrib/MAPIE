@@ -15,7 +15,6 @@ from mapie.risk_control.methods import (
     find_precision_best_predict_param,
     ltt_procedure,
 )
-from mapie.risk_control.risks import compute_risk_precision, compute_risk_recall
 
 lambdas = np.array([0.5, 0.9])
 
@@ -52,67 +51,6 @@ wrong_alpha_shape = np.array([[0.1, 0.2], [0.3, 0.4]])
 
 random_state = 42
 prng = np.random.RandomState(random_state)
-
-
-def test_compute_recall_equal() -> None:
-    """Test that compute_recall give good result"""
-    recall = compute_risk_recall(lambdas, y_preds_proba, y_toy)
-    np.testing.assert_equal(recall, test_recall)
-
-
-def test_compute_precision() -> None:
-    """Test that compute_precision give good result"""
-    precision = compute_risk_precision(lambdas, y_preds_proba, y_toy)
-    np.testing.assert_equal(precision, test_precision)
-
-
-@pytest.mark.filterwarnings("ignore:: RuntimeWarning")
-def test_recall_with_zero_sum_is_equal_nan() -> None:
-    """Test compute_recall with nan values"""
-    y_toy = np.zeros((4, 3))
-    y_preds_proba = prng.rand(4, 3, 1)
-    recall = compute_risk_recall(lambdas, y_preds_proba, y_toy)
-    np.testing.assert_array_equal(recall, np.full_like(recall, np.nan))
-
-
-def test_precision_with_zero_sum_is_equal_ones() -> None:
-    """Test compute_precision with nan values"""
-    y_toy = prng.rand(4, 3)
-    y_preds_proba = np.zeros((4, 3, 1))
-    precision = compute_risk_precision(lambdas, y_preds_proba, y_toy)
-    np.testing.assert_array_equal(precision, np.ones_like(precision))
-
-
-def test_compute_recall_shape() -> None:
-    """Test shape when using _compute_recall"""
-    recall = compute_risk_recall(lambdas, y_preds_proba, y_toy)
-    np.testing.assert_equal(recall.shape, test_recall.shape)
-
-
-def test_compute_precision_shape() -> None:
-    """Test shape when using _compute_precision"""
-    precision = compute_risk_precision(lambdas, y_preds_proba, y_toy)
-    np.testing.assert_equal(precision.shape, test_precision.shape)
-
-
-def test_compute_recall_with_wrong_shape() -> None:
-    """Test error when wrong shape in _compute_recall"""
-    with pytest.raises(ValueError, match=r".*y_pred_proba should be a 3d*"):
-        compute_risk_recall(lambdas, y_preds_proba.squeeze(), y_toy)
-    with pytest.raises(ValueError, match=r".*y should be a 2d*"):
-        compute_risk_recall(lambdas, y_preds_proba, np.expand_dims(y_toy, 2))
-    with pytest.raises(ValueError, match=r".*could not be broadcast*"):
-        compute_risk_recall(lambdas, y_preds_proba, y_toy[:-1])
-
-
-def test_compute_precision_with_wrong_shape() -> None:
-    """Test shape when using _compute_precision"""
-    with pytest.raises(ValueError, match=r".*y_pred_proba should be a 3d*"):
-        compute_risk_precision(lambdas, y_preds_proba.squeeze(), y_toy)
-    with pytest.raises(ValueError, match=r".*y should be a 2d*"):
-        compute_risk_precision(lambdas, y_preds_proba, np.expand_dims(y_toy, 2))
-    with pytest.raises(ValueError, match=r".*could not be broadcast*"):
-        compute_risk_precision(lambdas, y_preds_proba, y_toy[:-1])
 
 
 @pytest.mark.parametrize("alpha", [0.5, [0.5], [0.5, 0.9]])

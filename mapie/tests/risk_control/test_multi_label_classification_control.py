@@ -22,7 +22,7 @@ Params = TypedDict(
         "method": str,
         "rcps_bound": Optional[str],
         "random_state": Optional[int],
-        "metric_control": Optional[str],
+        "risk": str,
     },
 )
 
@@ -40,7 +40,7 @@ STRATEGIES = {
             method="crc",
             rcps_bound=None,
             random_state=random_state,
-            metric_control="recall",
+            risk="recall",
         ),
     ),
     "rcps_wsr": (
@@ -48,7 +48,7 @@ STRATEGIES = {
             method="rcps",
             rcps_bound="wsr",
             random_state=random_state,
-            metric_control="recall",
+            risk="recall",
         ),
     ),
     "rcps_hoeffding": (
@@ -56,7 +56,7 @@ STRATEGIES = {
             method="rcps",
             rcps_bound="hoeffding",
             random_state=random_state,
-            metric_control="recall",
+            risk="recall",
         ),
     ),
     "rcps_bernstein": (
@@ -64,7 +64,7 @@ STRATEGIES = {
             method="rcps",
             rcps_bound="bernstein",
             random_state=random_state,
-            metric_control="recall",
+            risk="recall",
         ),
     ),
     "ltt": (
@@ -72,7 +72,7 @@ STRATEGIES = {
             method="ltt",
             rcps_bound=None,
             random_state=random_state,
-            metric_control="precision",
+            risk="precision",
         ),
     ),
 }
@@ -232,7 +232,7 @@ def test_valid_metric_method(strategy: str) -> None:
     mapie_clf = MultiLabelClassificationController(
         predict_function=toy_predict_function,
         random_state=random_state,
-        metric_control=args["metric_control"],
+        risk=args["risk"],
         confidence_level=0.9,
     )
     mapie_clf.calibrate(X_toy, y_toy)
@@ -265,7 +265,7 @@ def test_predict_output_shape(
     mapie_clf = MultiLabelClassificationController(
         predict_function=multilabel_predict_function,
         method=args["method"],
-        metric_control=args["metric_control"],
+        risk=args["risk"],
         random_state=args["random_state"],
         target_level=target_level,
         confidence_level=confidence_level,
@@ -287,7 +287,7 @@ def test_results_for_same_alpha(strategy: str) -> None:
     mapie_clf = MultiLabelClassificationController(
         predict_function=multilabel_predict_function,
         method=args["method"],
-        metric_control=args["metric_control"],
+        risk=args["risk"],
         random_state=args["random_state"],
         target_level=[0.9, 0.9],
         confidence_level=0.9,
@@ -309,7 +309,7 @@ def test_results_for_partial_calibrate(strategy: str) -> None:
     mapie_clf = MultiLabelClassificationController(
         predict_function=multilabel_predict_function,
         method=args["method"],
-        metric_control=args["metric_control"],
+        risk=args["risk"],
         random_state=args["random_state"],
         target_level=[0.9, 0.9],
         confidence_level=0.9,
@@ -321,7 +321,7 @@ def test_results_for_partial_calibrate(strategy: str) -> None:
     mapie_clf_partial = MultiLabelClassificationController(
         predict_function=multilabel_predict_function,
         method=args["method"],
-        metric_control=args["metric_control"],
+        risk=args["risk"],
         random_state=args["random_state"],
         target_level=[0.9, 0.9],
         confidence_level=0.9,
@@ -368,7 +368,7 @@ def test_results_for_alpha_as_float_and_arraylike(strategy: str, alpha: Any) -> 
     mapie_clf = MultiLabelClassificationController(
         predict_function=multilabel_predict_function,
         method=args["method"],
-        metric_control=args["metric_control"],
+        risk=args["risk"],
         random_state=args["random_state"],
         target_level=alpha[0],
         confidence_level=0.1,
@@ -380,7 +380,7 @@ def test_results_for_alpha_as_float_and_arraylike(strategy: str, alpha: Any) -> 
     mapie_clf = MultiLabelClassificationController(
         predict_function=multilabel_predict_function,
         method=args["method"],
-        metric_control=args["metric_control"],
+        risk=args["risk"],
         random_state=args["random_state"],
         target_level=alpha[1],
         confidence_level=0.1,
@@ -392,7 +392,7 @@ def test_results_for_alpha_as_float_and_arraylike(strategy: str, alpha: Any) -> 
     mapie_clf = MultiLabelClassificationController(
         predict_function=multilabel_predict_function,
         method=args["method"],
-        metric_control=args["metric_control"],
+        risk=args["risk"],
         random_state=args["random_state"],
         target_level=alpha,
         confidence_level=0.1,
@@ -415,7 +415,7 @@ def test_results_single_and_multi_jobs(strategy: str) -> None:
     mapie_clf_single = MultiLabelClassificationController(
         predict_function=multilabel_predict_function,
         n_jobs=1,
-        metric_control=args["metric_control"],
+        risk=args["risk"],
         random_state=args["random_state"],
         target_level=0.8,
         confidence_level=0.1,
@@ -424,7 +424,7 @@ def test_results_single_and_multi_jobs(strategy: str) -> None:
     mapie_clf_multi = MultiLabelClassificationController(
         predict_function=multilabel_predict_function,
         n_jobs=-1,
-        metric_control=args["metric_control"],
+        risk=args["risk"],
         random_state=args["random_state"],
         target_level=0.8,
         confidence_level=0.1,
@@ -485,7 +485,7 @@ def test_array_output_model(
     mapie_clf = MultiLabelClassificationController(
         predict_function=model.predict_proba,
         method=args["method"],
-        metric_control=args["metric_control"],
+        risk=args["risk"],
         random_state=random_state,
         target_level=target_level,
         confidence_level=confidence_level,
@@ -501,7 +501,7 @@ def test_reinit_new_fit():
     )
     mapie_clf.calibrate(X_toy, y_toy)
     mapie_clf.calibrate(X_toy, y_toy)
-    assert len(mapie_clf.risks) == len(X_toy)
+    assert len(mapie_clf._risks) == len(X_toy)
 
 
 @pytest.mark.parametrize("method", WRONG_METHODS)
@@ -547,14 +547,14 @@ def test_bound_error(bound: str) -> None:
         )
 
 
-@pytest.mark.parametrize("metric_control", WRONG_METRICS)
-def test_metric_error_in_init(metric_control: str) -> None:
+@pytest.mark.parametrize("risk", WRONG_METRICS)
+def test_metric_error_in_init(risk: str) -> None:
     """Test error for wrong metrics"""
-    with pytest.raises(ValueError, match=r".*Invalid metric. *"):
+    with pytest.raises(ValueError, match=r".*risk must be one of:*"):
         MultiLabelClassificationController(
             predict_function=toy_predict_function,
             random_state=random_state,
-            metric_control=metric_control,
+            risk=risk,
         )
 
 
@@ -575,7 +575,7 @@ def test_error_ltt_confidence_level_null() -> None:
         MultiLabelClassificationController(
             predict_function=toy_predict_function,
             random_state=random_state,
-            metric_control="precision",
+            risk="precision",
             confidence_level=None,
         )
 
@@ -599,7 +599,7 @@ def test_error_confidence_level_wrong_value_ltt(confidence_level: Any) -> None:
         MultiLabelClassificationController(
             predict_function=toy_predict_function,
             random_state=random_state,
-            metric_control="precision",
+            risk="precision",
             confidence_level=confidence_level,
         )
 
@@ -621,7 +621,7 @@ def test_bound_none_ltt() -> None:
         MultiLabelClassificationController(
             predict_function=toy_predict_function,
             random_state=random_state,
-            metric_control="precision",
+            risk="precision",
             confidence_level=0.9,
             rcps_bound="wsr",
         )
@@ -629,7 +629,7 @@ def test_bound_none_ltt() -> None:
 
 def test_confidence_level_none_crc() -> None:
     """Test that a warning is raised when confidence_level is not none with CRC method."""
-    with pytest.warns(UserWarning, match=r"WARNING: you are using crc*"):
+    with pytest.warns(UserWarning, match=r"WARNING: you are using method 'crc'*"):
         MultiLabelClassificationController(
             predict_function=toy_predict_function,
             random_state=random_state,
@@ -662,7 +662,7 @@ def test_error_confidence_level_wrong_type_ltt(confidence_level: Any) -> None:
         MultiLabelClassificationController(
             predict_function=toy_predict_function,
             random_state=random_state,
-            metric_control="precision",
+            risk="precision",
             confidence_level=confidence_level,
         )
 
@@ -708,7 +708,7 @@ def test_pipeline_compatibility(strategy: str) -> None:
     mapie_clf = MultiLabelClassificationController(
         predict_function=pipe.predict_proba,
         method=args["method"],
-        metric_control=args["metric_control"],
+        risk=args["risk"],
         random_state=random_state,
         confidence_level=0.9,
         rcps_bound=args["rcps_bound"],
@@ -743,7 +743,7 @@ def test_toy_dataset_predictions(strategy: str) -> None:
     mapie_clf = MultiLabelClassificationController(
         predict_function=toy_predict_function,
         method=args["method"],
-        metric_control=args["metric_control"],
+        risk=args["risk"],
         random_state=random_state,
         target_level=0.8,
         confidence_level=0.9,
@@ -794,15 +794,13 @@ def test_transform_pred_proba_ndarray_invalid_dims() -> None:
         clf._transform_pred_proba(wrong_shape)
 
 
-@pytest.mark.parametrize(
-    "metric_control,method", [("recall", "crc"), ("precision", "ltt")]
-)
-def test_calibrate_with_ndarray_predict_proba(metric_control: str, method: str) -> None:
+@pytest.mark.parametrize("risk,method", [("recall", "crc"), ("precision", "ltt")])
+def test_calibrate_with_ndarray_predict_proba(risk: str, method: str) -> None:
     """End-to-end check that ndarray predict_proba works for both metrics."""
     model = ArrayOutputModel3D()
     mapie_clf = MultiLabelClassificationController(
         predict_function=model.predict_proba,
-        metric_control=metric_control,
+        risk=risk,
         method=method,
         confidence_level=0.9 if method != "crc" else None,
     )
@@ -818,32 +816,32 @@ def test_error_wrong_method_metric_precision(method: str) -> None:
     Test that an error is returned when using a metric
     with invalid method .
     """
-    with pytest.raises(ValueError, match=r".*Invalid method for metric*"):
+    with pytest.raises(ValueError, match=r".*Invalid method.*"):
         MultiLabelClassificationController(
             predict_function=toy_predict_function,
             method=method,
-            metric_control="precision",
+            risk="precision",
         )
 
 
 @pytest.mark.parametrize("method", ["ltt"])
-def test_check_metric_control(method: str) -> None:
+def test_check_invalid_method_for_risk(method: str) -> None:
     """
     Test that an error is returned when using a metric
-    with invalid method .
+    with invalid method.
     """
-    with pytest.raises(ValueError, match=r".*Invalid method for metric*"):
+    with pytest.raises(ValueError, match=r".*Invalid method.*"):
         MultiLabelClassificationController(
             predict_function=toy_predict_function,
             method=method,
-            metric_control="recall",
+            risk="recall",
         )
 
 
 def test_method_none_precision() -> None:
     mapie_clf = MultiLabelClassificationController(
         predict_function=toy_predict_function,
-        metric_control="precision",
+        risk="precision",
         confidence_level=0.9,
     )
     mapie_clf.calibrate(X_toy, y_toy)
@@ -852,7 +850,23 @@ def test_method_none_precision() -> None:
 
 def test_method_none_recall() -> None:
     mapie_clf = MultiLabelClassificationController(
-        predict_function=toy_predict_function, metric_control="recall"
+        predict_function=toy_predict_function, risk="recall"
     )
     mapie_clf.calibrate(X_toy, y_toy)
     assert mapie_clf.method == "crc"
+
+
+def test_compute_best_predict_param_invalid_risk():
+    """
+    Test that compute_best_predict_param raises error for an unsupported risk value.
+    """
+    mapie_clf = MultiLabelClassificationController(
+        predict_function=toy_predict_function, risk="recall"
+    )
+    mapie_clf.compute_risks(X_toy, y_toy)
+    mapie_clf._risk = "false_pos_rate"
+    with pytest.raises(
+        NotImplementedError,
+        match=r".*risk not implemented.*",
+    ):
+        mapie_clf.compute_best_predict_param()

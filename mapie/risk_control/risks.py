@@ -4,125 +4,6 @@ from typing import Callable, Tuple, cast
 
 import numpy as np
 from numpy.typing import NDArray
-from sklearn.utils.validation import column_or_1d
-
-
-def compute_risk_recall(lambdas: NDArray, y_pred_proba: NDArray, y: NDArray) -> NDArray:
-    """
-    In `PrecisionRecallController` when `metric_control=recall`,
-    compute the recall per observation for each different
-    thresholds lambdas.
-
-    Parameters
-    ----------
-    y_pred_proba: NDArray of shape (n_samples, n_labels, 1)
-        Predicted probabilities for each label and each observation.
-
-    y: NDArray of shape (n_samples, n_labels)
-        True labels.
-
-    lambdas: NDArray of shape (n_lambdas, )
-        Threshold that permit to compute recall.
-
-    Returns
-    -------
-    NDArray of shape (n_samples, n_labels, n_lambdas)
-        Risks for each observation and each value of lambda.
-    """
-    if y_pred_proba.ndim != 3:
-        raise ValueError(
-            "y_pred_proba should be a 3d array, got an array of shape "
-            "{} instead.".format(y_pred_proba.shape)
-        )
-    if y.ndim != 2:
-        raise ValueError(
-            "y should be a 2d array, got an array of shape {} instead.".format(
-                y_pred_proba.shape
-            )
-        )
-    if not np.array_equal(y_pred_proba.shape[:-1], y.shape):
-        raise ValueError("y and y_pred_proba could not be broadcast.")
-    lambdas = cast(NDArray, column_or_1d(lambdas))
-
-    n_lambdas = len(lambdas)
-    y_pred_proba_repeat = np.repeat(y_pred_proba, n_lambdas, axis=2)
-    y_pred_th = (y_pred_proba_repeat > lambdas).astype(int)
-
-    y_repeat = np.repeat(y[..., np.newaxis], n_lambdas, axis=2)
-    risks = 1 - (_true_positive(y_pred_th, y_repeat) / y.sum(axis=1)[:, np.newaxis])
-    return risks
-
-
-def compute_risk_precision(
-    lambdas: NDArray, y_pred_proba: NDArray, y: NDArray
-) -> NDArray:
-    """
-    In `PrecisionRecallController` when `metric_control=precision`,
-    compute the precision per observation for each different
-    thresholds lambdas.
-
-    Parameters
-    ----------
-    y_pred_proba: NDArray of shape (n_samples, n_labels, 1)
-        Predicted probabilities for each label and each observation.
-
-    y: NDArray of shape (n_samples, n_labels)
-        True labels.
-
-    lambdas: NDArray of shape (n_lambdas, )
-        Threshold that permit to compute precision score.
-
-    Returns
-    -------
-    NDArray of shape (n_samples, n_labels, n_lambdas)
-        Risks for each observation and each value of lambda.
-    """
-    if y_pred_proba.ndim != 3:
-        raise ValueError(
-            "y_pred_proba should be a 3d array, got an array of shape "
-            "{} instead.".format(y_pred_proba.shape)
-        )
-    if y.ndim != 2:
-        raise ValueError(
-            "y should be a 2d array, got an array of shape {} instead.".format(
-                y_pred_proba.shape
-            )
-        )
-    if not np.array_equal(y_pred_proba.shape[:-1], y.shape):
-        raise ValueError("y and y_pred_proba could not be broadcast.")
-    lambdas = cast(NDArray, column_or_1d(lambdas))
-
-    n_lambdas = len(lambdas)
-    y_pred_proba_repeat = np.repeat(y_pred_proba, n_lambdas, axis=2)
-    y_pred_th = (y_pred_proba_repeat > lambdas).astype(int)
-
-    y_repeat = np.repeat(y[..., np.newaxis], n_lambdas, axis=2)
-    with np.errstate(divide="ignore", invalid="ignore"):
-        risks = 1 - _true_positive(y_pred_th, y_repeat) / y_pred_th.sum(axis=1)
-    risks[np.isnan(risks)] = 1  # nan value indicate high risks.
-
-    return risks
-
-
-def _true_positive(y_pred_th: NDArray, y_repeat: NDArray) -> NDArray:
-    """
-    Compute the number of true positive.
-
-    Parameters
-    ----------
-    y_pred_proba : NDArray of shape (n_samples, n_labels, 1)
-        Predicted probabilities for each label and each observation.
-
-    y: NDArray of shape (n_samples, n_labels)
-        True labels.
-
-    Returns
-    -------
-    tp: float
-        The number of true positive.
-    """
-    tp = (y_pred_th * y_repeat).sum(axis=1)
-    return tp
 
 
 class BinaryClassificationRisk:
@@ -130,8 +11,9 @@ class BinaryClassificationRisk:
     Define a risk (or a performance metric) to be used with the
     BinaryClassificationController. Predefined instances are implemented,
     see :data:`mapie.risk_control.precision`, :data:`mapie.risk_control.recall`,
-    :data:`mapie.risk_control.accuracy` and
-    :data:`mapie.risk_control.false_positive_rate`.
+    :data:`mapie.risk_control.accuracy`,
+    :data:`mapie.risk_control.false_positive_rate`, and
+    :data:`mapie.risk_control.predicted_positive_fraction`.
 
     Here, a binary classification risk (or performance) is defined by an occurrence and
     a condition. Let's take the example of precision. Precision is the sum of true
@@ -177,8 +59,12 @@ class BinaryClassificationRisk:
 
     def __init__(
         self,
-        risk_occurrence: Callable[[int, int], bool],
-        risk_condition: Callable[[int, int], bool],
+        risk_occurrence: Callable[
+            [NDArray[np.integer], NDArray[np.integer]], NDArray[np.bool_]
+        ],
+        risk_condition: Callable[
+            [NDArray[np.integer], NDArray[np.integer]], NDArray[np.bool_]
+        ],
         higher_is_better: bool,
     ):
         self._risk_occurrence = risk_occurrence
@@ -220,32 +106,23 @@ class BinaryClassificationRisk:
             If the risk is not defined (condition never met), the value is set to 1,
             and the number of effective samples is set to -1.
         """
-        risk_occurrences = np.array(
-            [
-                self._risk_occurrence(y_true_i, y_pred_i)
-                for y_true_i, y_pred_i in zip(y_true, y_pred)
-            ]
-        )
-        risk_conditions = np.array(
-            [
-                self._risk_condition(y_true_i, y_pred_i)
-                for y_true_i, y_pred_i in zip(y_true, y_pred)
-            ]
-        )
+        risk_occurrences = self._risk_occurrence(y_true, y_pred)
+        risk_conditions = self._risk_condition(y_true, y_pred)
+
         effective_sample_size = len(y_true) - np.sum(~risk_conditions)
         # Casting needed for MyPy with Python 3.9
         effective_sample_size_int = cast(int, effective_sample_size)
-        if effective_sample_size_int != 0:
+        if effective_sample_size_int != 0.0:
             risk_sum: int = np.sum(risk_occurrences[risk_conditions])
             risk_value = risk_sum / effective_sample_size_int
+            if self.higher_is_better:
+                risk_value = 1 - risk_value
+            return risk_value, effective_sample_size_int
         else:
             # In this case, the corresponding lambda shouldn't be considered valid.
             # In the current LTT implementation, providing n_obs=-1 will result
             # in an infinite p_value, effectively invaliding the lambda
-            risk_value, effective_sample_size_int = 1, -1
-        if self.higher_is_better:
-            risk_value = 1 - risk_value
-        return risk_value, effective_sample_size_int
+            return 1, -1
 
 
 precision = BinaryClassificationRisk(
@@ -256,7 +133,7 @@ precision = BinaryClassificationRisk(
 
 accuracy = BinaryClassificationRisk(
     risk_occurrence=lambda y_true, y_pred: y_pred == y_true,
-    risk_condition=lambda y_true, y_pred: True,
+    risk_condition=lambda y_true, y_pred: np.repeat(True, len(y_true)),
     higher_is_better=True,
 )
 
@@ -274,6 +151,6 @@ false_positive_rate = BinaryClassificationRisk(
 
 predicted_positive_fraction = BinaryClassificationRisk(
     risk_occurrence=lambda y_true, y_pred: y_pred == 1,
-    risk_condition=lambda y_true, y_pred: True,
+    risk_condition=lambda y_true, y_pred: np.repeat(True, len(y_true)),
     higher_is_better=False,
 )
