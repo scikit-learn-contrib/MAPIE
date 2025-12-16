@@ -248,15 +248,6 @@ def test_binary_classification_controller_sklearn_pipeline_with_dataframe() -> N
     controller.calibrate(X_df, y).predict(X_df)
 
 
-def test_set_risk_not_controlled(bcc_dummy):
-    controller = bcc_dummy
-    with pytest.warns(
-        UserWarning, match=r"No predict parameters were found to control the risk"
-    ):
-        controller._set_risk_not_controlled()
-    assert controller.best_predict_param is None
-
-
 class TestBinaryClassificationControllerSetBestPredictParam:
     @pytest.mark.parametrize("best_predict_param_choice", ["auto", precision, recall])
     def test_only_one_param(self, best_predict_param_choice):
@@ -493,11 +484,12 @@ class TestBinaryClassificationControllerGetPredictionsPerParam:
         bcc = BinaryClassificationController(
             predict_function=binary_predict, risk=precision, target_level=dummy_target
         )
+        y_pred = bcc._get_predictions_per_param([1, 2], np.array([0.1, 0.2]))
         with pytest.warns(
             UserWarning,
             match=r"All predictions are either 0 or 1 while the parameters are one-dimensional.",
         ):
-            bcc.calibrate([1, 2], [0, 1])
+            bcc._check_predictions(y_pred)
 
 
 class TestBinaryClassificationControllerPredict:
