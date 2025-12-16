@@ -6,6 +6,8 @@ from typing import Any, Callable, List, Literal, Optional, Tuple, Union
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
+from mapie.utils import check_valid_ltt_params_index
+
 from .methods import ltt_procedure
 from .risks import (
     BinaryClassificationRisk,
@@ -259,23 +261,21 @@ class BinaryClassificationController:
         valid_params_index = valid_index[0]
 
         self.valid_predict_params = self._predict_params[valid_params_index]
+        if len(self.valid_predict_params) == 0:
+            self.best_predict_param = None
+
+        check_valid_ltt_params_index(
+            predict_params=self._predict_params, valid_index=self.valid_predict_params
+        )
+
+        self._set_best_predict_param(
+            y_calibrate_,
+            predictions_per_param,
+            valid_params_index,
+        )
 
         self.p_values = p_values
 
-        if len(self.valid_predict_params) == 0:
-            self._set_risk_not_controlled()
-        else:
-            if len(self.valid_predict_params) == len(self._predict_params):
-                warnings.warn(
-                    "All provided predict_params control the risk at the given "
-                    "target and confidence levels. "
-                    "You may want to use more difficult target levels.",
-                )
-            self._set_best_predict_param(
-                y_calibrate_,
-                predictions_per_param,
-                valid_params_index,
-            )
         return self
 
     def predict(self, X_test: ArrayLike) -> NDArray:
@@ -334,14 +334,6 @@ class BinaryClassificationController:
                     best_predict_param_choice
                 ]
             return best_predict_param_choice
-
-    def _set_risk_not_controlled(self) -> None:
-        self.best_predict_param = None
-        warnings.warn(
-            "No predict parameters were found to control the risk at the given "
-            "target and confidence levels. "
-            "Try using a larger calibration set or a better model.",
-        )
 
     def _set_best_predict_param(
         self,

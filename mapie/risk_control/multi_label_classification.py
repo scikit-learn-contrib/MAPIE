@@ -9,7 +9,13 @@ from numpy.typing import ArrayLike, NDArray
 from sklearn.utils import check_random_state
 from sklearn.utils.validation import _check_y, _num_samples, indexable
 
-from mapie.utils import _check_alpha, _check_n_jobs, _check_verbose, check_is_fitted
+from mapie.utils import (
+    _check_alpha,
+    _check_n_jobs,
+    _check_verbose,
+    check_is_fitted,
+    check_valid_ltt_params_index,
+)
 
 from .methods import (
     find_best_predict_param,
@@ -355,22 +361,6 @@ class MultiLabelClassificationController:
                 "even if confidence_level is not ``None``, it will be ignored."
             )
 
-    def _check_valid_index(self, alpha: NDArray):
-        """
-        Check if the valid index is empty.
-        If it is, we should warn the user that for the alpha value
-        and delta level chosen, LTT will return no results.
-        The user must be less inclined to take risks or
-        must choose a higher alpha value.
-        """
-        for i in range(len(self.valid_index)):
-            if self.valid_index[i] == []:
-                warnings.warn(
-                    "Warning: LTT method has returned an empty sequence"
-                    + " for alpha="
-                    + str(alpha[i])
-                )
-
     def _check_compute_risks_first_call(self) -> bool:
         """
         Check that this is the first time compute_risks
@@ -519,7 +509,11 @@ class MultiLabelClassificationController:
             self.valid_predict_params = []
             for index_list in self.valid_index:
                 self.valid_predict_params.append(self.predict_params[index_list])
-            self._check_valid_index(self._alpha)
+            check_valid_ltt_params_index(
+                predict_params=self.predict_params,
+                valid_index=self.valid_index,
+                alpha=self._alpha,
+            )
             self.best_predict_param, _ = find_precision_best_predict_param(
                 self.r_hat, self.valid_index, self.predict_params
             )
