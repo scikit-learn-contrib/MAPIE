@@ -270,7 +270,6 @@ def run_one_experiment_with_logistic_classifier(
 ):
     """
     Runs the experiment for one combination of using a LogisticClassifier.
-
     Returns a DataFrame with one row per repeat.
     """
     clf = clf_class(scale=scale, threshold=0.5)
