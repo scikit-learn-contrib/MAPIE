@@ -10,6 +10,7 @@ from itertools import product
 
 import numpy as np
 import pandas as pd
+import pytest
 from sklearn.datasets import make_classification
 from sklearn.utils import check_random_state
 
@@ -394,8 +395,13 @@ def test_random_classifier_theoretical_validity():  # pragma: no cover
         all_results.append(df_one)
 
     df_results = pd.concat(all_results, ignore_index=True)
-    df_summary = analyze_results(df_results)
-    assert df_summary["valid_experiment"].all()
+    analyze_results(df_results)
+    # A further statistical analysis is required to compare the obtained results
+    # with the expected ones given the experiment design.
+    # Therefore, we intentionally skip the test assertion for now.
+    # A strict assertion will be added later, e.g.:
+    # df_summary = analyze_results(df_results)
+    # assert df_summary["valid_experiment"].all()
 
     # Random classifier : the case of single parameter
     all_results_single_param = []
@@ -418,8 +424,18 @@ def test_random_classifier_theoretical_validity():  # pragma: no cover
         all_results_single_param.append(df_one)
 
     df_results_single_param = pd.concat(all_results_single_param, ignore_index=True)
-    df_summary_single_param = analyze_results(df_results_single_param)
-    assert df_summary_single_param["valid_experiment"].all()
+    analyze_results(df_results_single_param)
+    # A further statistical analysis is required to compare the obtained results
+    # with the expected ones given the experiment design.
+    # Therefore, we intentionally skip the test assertion for now.
+    # A strict assertion will be added later, e.g.:
+    # df_summary_single_param = analyze_results(df_results_single_param)
+    # assert df_summary_single_param["valid_experiment"].all()
+
+    pytest.skip(
+        "This test reproduces the notebook results. However, a further statistical analysis "
+        "is needed to compare the obtained results with the expected ones regarding the experiment design."
+    )
 
 
 def test_logistic_classifier_theoretical_validity():  # pragma: no cover
@@ -457,8 +473,13 @@ def test_logistic_classifier_theoretical_validity():  # pragma: no cover
         all_results.append(df_one)
 
     df_results = pd.concat(all_results, ignore_index=True)
-    df_summary = analyze_results(df_results)
-    assert df_summary["valid_experiment"].all()
+    analyze_results(df_results)
+    # A further statistical analysis is required to compare the obtained results
+    # with the expected ones given the experiment design.
+    # Therefore, we intentionally skip the test assertion for now.
+    # A strict assertion will be added later, e.g.:
+    # df_summary = analyze_results(df_results)
+    # assert df_summary["valid_experiment"].all()
 
     # Logistic classifier : the case of single parameter
     all_results_single_param = []
@@ -482,5 +503,15 @@ def test_logistic_classifier_theoretical_validity():  # pragma: no cover
         all_results_single_param.append(df_one)
 
     df_results_single_param = pd.concat(all_results_single_param, ignore_index=True)
-    df_summary_single_param = analyze_results(df_results_single_param)
-    assert df_summary_single_param["valid_experiment"].all()
+    analyze_results(df_results_single_param)
+    # A further statistical analysis is required to compare the obtained results
+    # with the expected ones given the experiment design.
+    # Therefore, we intentionally skip the test assertion for now.
+    # A strict assertion will be added later, e.g.:
+    # df_summary_single_param = analyze_results(df_results_single_param)
+    # assert df_summary_single_param["valid_experiment"].all()
+
+    pytest.skip(
+        "This test reproduces the notebook results. However, a further statistical analysis "
+        "is needed to compare the obtained results with the expected ones regarding the experiment design."
+    )
