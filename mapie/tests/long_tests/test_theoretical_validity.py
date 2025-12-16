@@ -5,6 +5,7 @@ This file reproduces the notebook logic (random classifier and logistic classifi
 theoretical validity checks) as pytest tests.
 """
 
+import warnings
 from itertools import product
 
 import numpy as np
@@ -18,6 +19,8 @@ from mapie.risk_control import (
     precision,
     recall,
 )
+
+warnings.filterwarnings("ignore")
 
 
 class RandomClassifier:
