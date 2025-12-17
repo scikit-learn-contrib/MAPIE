@@ -8,6 +8,8 @@ We simulate a scenario where an LLM evaluates answers, and we want to control th
 
 # sphinx_gallery_thumbnail_number = 2
 
+import os
+
 import datasets
 import numpy as np
 import pandas as pd
@@ -27,7 +29,12 @@ pd.set_option("display.max_colwidth", None)
 # Then, we preprocess the data to create a suitable format for our analysis.
 # url = "https://raw.githubusercontent.com/RUCAIBox/HaluEval/main/data/qa_data.json"
 # df = pd.read_json(url, lines=True)
-df = datasets.load_dataset("mapie-library/HaluEval", split="train").to_pandas()
+token = os.environ.get("HF_TOKEN")
+print(f"DEBUG: Token présent ? {'OUI' if token else 'NON'}")
+print(f"DEBUG: Longueur du token : {len(token) if token else 0}")
+df = datasets.load_dataset(
+    "mapie-library/HaluEval", token=os.environ["HF_TOKEN"], split="train"
+).to_pandas()
 
 
 print("# Sample of the original dataset:\n")
@@ -253,4 +260,6 @@ print(
 ##############################################################################
 # While the naive threshold achieves the target precision on the calibration set,
 # it fails to do so on the test set. This highlights the importance of using
+# risk control methods to ensure that performance guarantees hold on unseen data.
+# risk control methods to ensure that performance guarantees hold on unseen data.
 # risk control methods to ensure that performance guarantees hold on unseen data.
