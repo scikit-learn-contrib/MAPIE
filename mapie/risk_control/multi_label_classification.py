@@ -6,7 +6,6 @@ from typing import Callable, Iterable, Optional, Sequence, Union, cast
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
-from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.utils import check_random_state
 from sklearn.utils.validation import _check_y, _num_samples, indexable
 
@@ -21,7 +20,7 @@ from .methods import (
 from .risks import precision, recall
 
 
-class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
+class MultiLabelClassificationController:
     """
     Prediction sets for multilabel-classification.
 
