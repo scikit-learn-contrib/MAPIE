@@ -1,5 +1,6 @@
 from .binary_classification import BinaryClassificationController
 from .multi_label_classification import MultiLabelClassificationController
+from .semantic_segmentation import SemanticSegmentationController
 from .risks import (
     BinaryClassificationRisk,
     accuracy,
@@ -11,6 +12,7 @@ from .risks import (
 
 __all__ = [
     "MultiLabelClassificationController",
+    "SemanticSegmentationController",
     "BinaryClassificationController",
     "BinaryClassificationRisk",
     "accuracy",
