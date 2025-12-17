@@ -461,7 +461,6 @@ class MultiLabelClassificationController:
         first_call = self._check_compute_risks_first_call()
 
         X, y = indexable(X, y)
-        # _check_y(y, multi_output=True)
 
         y = cast(NDArray, y)
         X = cast(NDArray, X)
@@ -484,7 +483,7 @@ class MultiLabelClassificationController:
             for index_lambda in range(n_lambdas):
                 risk[index_sample, index_lambda], _ = (
                     self._risk.get_value_and_effective_sample_size(
-                        y[index_sample, :].numpy(), y_pred[index_sample, :, index_lambda]
+                        y[index_sample, :], y_pred[index_sample, :, index_lambda]
                     )
                 )
 
