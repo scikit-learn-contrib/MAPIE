@@ -31,7 +31,7 @@
 .. toctree::
    :maxdepth: 2
    :hidden:
-   :caption: Calibrate multi-class predictions
+   :caption: Calibrate classifiers
 
    theoretical_description_calibration
    examples_calibration/index
