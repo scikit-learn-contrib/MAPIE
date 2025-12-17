@@ -1,9 +1,12 @@
 import numpy as np
+from typing import Sequence, Union
 from numpy.typing import ArrayLike, NDArray
-from typing import Sequence, Union, cast
 
 from .multi_label_classification import MultiLabelClassificationController
 from mapie.utils import check_is_fitted
+
+from .risks import precision_image, recall_image
+
 
 
 class SemanticSegmentationController(MultiLabelClassificationController):
@@ -11,6 +14,12 @@ class SemanticSegmentationController(MultiLabelClassificationController):
     Risk controller for semantic segmentation tasks,
     inheriting from MultiLabelClassificationController.
     """
+
+    risk_choice_map = {
+        "precision": precision_image,
+        "recall": recall_image,
+    }
+    
 
     def _transform_pred_proba(
         self, y_pred_proba: Union[Sequence[NDArray], NDArray], ravel: bool = True
@@ -31,17 +40,14 @@ class SemanticSegmentationController(MultiLabelClassificationController):
         """
         if not isinstance(y_pred_proba, np.ndarray):
             y_pred_proba = np.array(y_pred_proba)
-        y_pred_proba_array = cast(NDArray, y_pred_proba)  # for mypy
-
-        if np.min(y_pred_proba_array) < 0 or np.max(y_pred_proba_array) > 1:
+        if np.min(y_pred_proba) < 0 or np.max(y_pred_proba) > 1:
             # Apply sigmoid to convert logits to probabilities
-            y_pred_proba_array = 1 / (1 + np.exp(-y_pred_proba_array))
+            y_pred_proba = 1 / (1 + np.exp(-y_pred_proba))
         if ravel:
-            return y_pred_proba_array.reshape(len(y_pred_proba_array), -1)[
-                ..., np.newaxis
-            ]
-        return y_pred_proba_array
-
+            return y_pred_proba.ravel()[np.newaxis, :, np.newaxis]
+        return y_pred_proba
+    
+    
     def predict(
         self,
         X: ArrayLike,
@@ -68,7 +74,6 @@ class SemanticSegmentationController(MultiLabelClassificationController):
 
         y_pred_proba_array = np.repeat(y_pred_proba_array, len(self._alpha), axis=1)
         y_pred_proba_array = (
-            y_pred_proba_array
-            > self.best_predict_param[np.newaxis, :, np.newaxis, np.newaxis]
+            y_pred_proba_array > self.best_predict_param[np.newaxis, :, np.newaxis, np.newaxis]
         )
         return y_pred_proba_array
