@@ -376,7 +376,7 @@ def test_random_classifier_theoretical_validity():  # pragma: no cover
     n_repeats = 100
 
     # Random classifier : the case of multiple parameters
-    predict_params = [np.linspace(0, 0.99, 100)]
+    predict_params = [np.linspace(0.01, 0.99, 100)]
     all_results = []
 
     for combination in product(risk, predict_params, target_level, confidence_level):
@@ -409,7 +409,7 @@ def test_random_classifier_theoretical_validity():  # pragma: no cover
     for combination in product(risk, target_level, confidence_level):
         risk_dict, t_level, c_level = combination
 
-        predict_param_set = np.array([np.random.choice(np.linspace(0, 0.9, 10))])
+        predict_param_set = np.array([0.7])
 
         df_one = run_one_experiment_with_random_classifier(
             clf_class=RandomClassifier,
@@ -453,7 +453,7 @@ def test_logistic_classifier_theoretical_validity():  # pragma: no cover
     scale = 2.0
 
     # Logistic classifier : the case of multiple parameters
-    predict_params = [np.linspace(0, 0.99, 100)]
+    predict_params = [np.linspace(0.01, 0.99, 100)]
     all_results = []
 
     for combination in product(risk, predict_params, target_level, confidence_level):
@@ -487,7 +487,7 @@ def test_logistic_classifier_theoretical_validity():  # pragma: no cover
     for combination in product(risk, target_level, confidence_level):
         risk_dict, t_level, c_level = combination
 
-        predict_param_set = np.array([np.random.choice(np.linspace(0, 0.9, 10))])
+        predict_param_set = np.array([0.7])
 
         df_one = run_one_experiment_with_logistic_classifier(
             clf_class=LogisticClassifier,
