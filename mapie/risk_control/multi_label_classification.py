@@ -481,7 +481,7 @@ class MultiLabelClassificationController:
             for index_lambda in range(n_lambdas):
                 risk[index_sample, index_lambda], _ = (
                     self._risk.get_value_and_effective_sample_size(
-                        y[index_sample, :].numpy(), y_pred[index_sample, :, index_lambda]
+                        y[index_sample, :], y_pred[index_sample, :, index_lambda]
                     )
                 )
 
