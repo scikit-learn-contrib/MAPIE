@@ -1,5 +1,4 @@
 import numpy as np
-from typing import Sequence, Union
 from numpy.typing import ArrayLike, NDArray
 
 from .multi_label_classification import MultiLabelClassificationController
