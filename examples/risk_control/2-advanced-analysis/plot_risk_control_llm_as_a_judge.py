@@ -8,6 +8,7 @@ We simulate a scenario where an LLM evaluates answers, and we want to control th
 
 # sphinx_gallery_thumbnail_number = 2
 
+import datasets
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
@@ -24,8 +25,10 @@ pd.set_option("display.max_colwidth", None)
 ##############################################################################
 # First, we load HaluEval Question-Answering Data, an open-source dataset for evaluating hallucination in LLMs.
 # Then, we preprocess the data to create a suitable format for our analysis.
-url = "https://raw.githubusercontent.com/RUCAIBox/HaluEval/main/data/qa_data.json"
-df = pd.read_json(url, lines=True)
+# url = "https://raw.githubusercontent.com/RUCAIBox/HaluEval/main/data/qa_data.json"
+# df = pd.read_json(url, lines=True)
+df = datasets.load_dataset("mapie-library/HaluEval", split="train").to_pandas()
+
 
 print("# Sample of the original dataset:\n")
 for col in df.columns:
