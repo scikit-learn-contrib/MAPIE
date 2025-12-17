@@ -50,6 +50,7 @@ from mapie.utils import (
     _transform_confidence_level_to_alpha_list,
     check_is_fitted,
     check_sklearn_user_model_is_fitted,
+    check_valid_ltt_params_index,
     train_conformalize_test_split,
 )
 
@@ -223,6 +224,88 @@ class TestTrainConformalizeTestSplit:
             )
         )
         assert np.array_equal(np.concatenate((y_train, y_conformalize, y_test)), y)
+
+
+class TestCheckValidLTTParamsIndex:
+    def test_warns_empty_sequence_multi_alpha_with_alpha(
+        self,
+    ):
+        predict_params = np.array([0.1, 0.2, 0.3])
+        valid_index = [[], [0, 1]]
+        alpha = np.array([0.1, 0.2])
+
+        with pytest.warns(
+            UserWarning,
+            match=r"LTT method has returned an empty sequence.*alpha=0.1",
+        ):
+            check_valid_ltt_params_index(
+                predict_params=predict_params,
+                valid_index=valid_index,
+                alpha=alpha,
+            )
+
+    def test_warns_empty_sequence_multi_alpha_without_alpha(
+        self,
+    ):
+        predict_params = np.array([0.1, 0.2])
+        valid_index = [[], [1]]
+
+        with pytest.warns(
+            UserWarning,
+            match=r"LTT method has returned an empty sequence\.",
+        ):
+            check_valid_ltt_params_index(
+                predict_params=predict_params,
+                valid_index=valid_index,
+            )
+
+    def test_warns_empty_sequence_binary(self):
+        predict_params = np.array([0.1, 0.2, 0.3])
+        valid_index = []
+
+        with pytest.warns(
+            UserWarning,
+            match=r"LTT method has returned an empty sequence",
+        ):
+            check_valid_ltt_params_index(
+                predict_params=predict_params,
+                valid_index=valid_index,
+            )
+
+    def test_warns_all_predict_params_valid(self):
+        predict_params = np.array([0.1, 0.2, 0.3])
+        valid_index = [0, 1, 2]
+
+        with pytest.warns(
+            UserWarning,
+            match=r"All provided predict_params control the risk",
+        ):
+            check_valid_ltt_params_index(
+                predict_params=predict_params,
+                valid_index=valid_index,
+            )
+
+    def test_no_warning_multi_alpha_non_empty(self, recwarn):
+        predict_params = np.array([0.1, 0.2])
+        valid_index = [[0], [1]]
+        alpha = np.array([0.1, 0.2])
+
+        check_valid_ltt_params_index(
+            predict_params=predict_params,
+            valid_index=valid_index,
+            alpha=alpha,
+        )
+        assert len(recwarn) == 0
+
+    def test_no_warning_binary_partial_valid(self, recwarn):
+        predict_params = np.array([0.1, 0.2, 0.3])
+        valid_index = [1]
+
+        check_valid_ltt_params_index(
+            predict_params=predict_params,
+            valid_index=valid_index,
+        )
+        assert len(recwarn) == 0
 
 
 @pytest.fixture
