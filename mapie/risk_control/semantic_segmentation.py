@@ -8,7 +8,6 @@ from mapie.utils import check_is_fitted
 from .risks import precision_image, recall_image
 
 
-
 class SemanticSegmentationController(MultiLabelClassificationController):
     """
     Risk controller for semantic segmentation tasks,
@@ -19,7 +18,6 @@ class SemanticSegmentationController(MultiLabelClassificationController):
         "precision": precision_image,
         "recall": recall_image,
     }
-    
 
     def _transform_pred_proba(
         self, y_pred_proba: Union[Sequence[NDArray], NDArray], ravel: bool = True
@@ -46,8 +44,7 @@ class SemanticSegmentationController(MultiLabelClassificationController):
         if ravel:
             return y_pred_proba.ravel()[np.newaxis, :, np.newaxis]
         return y_pred_proba
-    
-    
+
     def predict(
         self,
         X: ArrayLike,
@@ -74,6 +71,7 @@ class SemanticSegmentationController(MultiLabelClassificationController):
 
         y_pred_proba_array = np.repeat(y_pred_proba_array, len(self._alpha), axis=1)
         y_pred_proba_array = (
-            y_pred_proba_array > self.best_predict_param[np.newaxis, :, np.newaxis, np.newaxis]
+            y_pred_proba_array
+            > self.best_predict_param[np.newaxis, :, np.newaxis, np.newaxis]
         )
         return y_pred_proba_array
