@@ -21,7 +21,7 @@ from .methods import (
 from .risks import precision, recall
 
 
-class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
+class MultiLabelClassificationController:
     """
     Prediction sets for multilabel-classification.
 
@@ -215,6 +215,8 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
         self._risk_name = risk
         self._risk = self._check_and_convert_risk(risk)
         self.method = method
+        self._check_metric_control()
+        self._get_compute_risk_function()
         self._check_method()
 
         alpha = []
@@ -310,7 +312,7 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
             Raise error if at least one observation
             has no label.
         """
-        if not (y.sum(axis=1) > 0).all():
+        if not (y.sum(axis=tuple(range(1, y.ndim))) > 0).all():
             raise ValueError(
                 "Invalid y. All observations should contain at least one label."
             )
@@ -405,6 +407,34 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
                 + "taken into account."
             )
 
+    def _check_metric_control(self):
+        """
+        Check that the metrics to control are valid
+        (can be a string or list of string.)
+        """
+        if self.metric_control not in self.valid_metric_:
+            raise ValueError(
+                "Invalid metric. "
+                "Allowed scores must be in the following list "
+                + ", ".join(self.valid_metric_)
+            )
+
+        if self.method is None:
+            if self.metric_control == "recall":
+                self.method = "crc"
+            else:  # self.metric_control == "precision"
+                self.method = "ltt"
+    
+    def _get_risk_function(self):
+        """
+        Get the appropriate risk computation function
+        based on the metric to control.
+        """ 
+        if self.metric_control == "recall":
+            self.compute_risk_function = recall
+        else:  # self.metric_control == "precision"
+            self.compute_risk_function = precision
+
     def _transform_pred_proba(
         self, y_pred_proba: Union[Sequence[NDArray], NDArray]
     ) -> NDArray:
@@ -470,7 +500,7 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
         first_call = self._check_compute_risks_first_call()
 
         X, y = indexable(X, y)
-        _check_y(y, multi_output=True)
+        # _check_y(y, multi_output=True)
 
         y = cast(NDArray, y)
         X = cast(NDArray, X)
@@ -482,21 +512,9 @@ class MultiLabelClassificationController(BaseEstimator, ClassifierMixin):
         y_pred_proba = self._predict_function(X)
         y_pred_proba_array = self._transform_pred_proba(y_pred_proba)
 
-        n_lambdas = len(self.predict_params)
-        n_samples = len(y_pred_proba_array)
-
-        y_pred_proba_array_repeat = np.repeat(y_pred_proba_array, n_lambdas, axis=2)
-        y_pred = (y_pred_proba_array_repeat > self.predict_params).astype(int)
-
-        risk = np.zeros((n_samples, n_lambdas))
-        for index_sample in range(n_samples):
-            for index_lambda in range(n_lambdas):
-                risk[index_sample, index_lambda], _ = (
-                    self._risk.get_value_and_effective_sample_size(
-                        y[index_sample, :], y_pred[index_sample, :, index_lambda]
-                    )
-                )
-
+        risk = self.compute_risk_function(
+            self.predict_params, y_pred_proba_array, y
+        )
         if first_call or _refit:
             self._risks = risk
         else:
