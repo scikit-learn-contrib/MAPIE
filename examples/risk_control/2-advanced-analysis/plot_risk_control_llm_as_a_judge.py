@@ -29,11 +29,8 @@ pd.set_option("display.max_colwidth", None)
 # Then, we preprocess the data to create a suitable format for our analysis.
 # url = "https://raw.githubusercontent.com/RUCAIBox/HaluEval/main/data/qa_data.json"
 # df = pd.read_json(url, lines=True)
-token = os.environ.get("HF_TOKEN")
-print(f"DEBUG: Token présent ? {'OUI' if token else 'NON'}")
-print(f"DEBUG: Longueur du token : {len(token) if token else 0}")
 df = datasets.load_dataset(
-    "mapie-library/HaluEval", token=os.environ["HF_TOKEN"], split="train"
+    "mapie-library/HaluEval", token=os.environ.get("HF_TOKEN"), split="train"
 ).to_pandas()
 
 
