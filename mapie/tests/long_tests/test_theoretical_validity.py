@@ -10,7 +10,6 @@ from itertools import product
 
 import numpy as np
 import pandas as pd
-import pytest
 from sklearn.datasets import make_classification
 from sklearn.utils import check_random_state
 
@@ -349,17 +348,78 @@ def analyze_results(df_results):
                 "risk_name": risk_name,
                 "target_level": target_level,
                 "confidence_level": confidence_level,
-                "nb_predict_parameters": nb_predict_parameters,
-                "proportion_not_controlled": proportion_not_controlled,
+                "nb_predict_param": nb_predict_parameters,
+                "prop_not_controlled": proportion_not_controlled,
                 "delta": delta,
-                "mean_nb_valid_thresholds": mean_nb_valid_thresholds,
-                "valid_experiment": valid_experiment,
+                "mean_nb_valid_thr": mean_nb_valid_thresholds,
+                "empirical_control": valid_experiment,
             }
         )
 
     df_summary = pd.DataFrame(summary)
 
     return df_summary
+
+
+# Configurations can be controlled or not using RandomClassifier.
+risk_name_list = [
+    "precision",
+    "precision",
+    "precision",
+    "precision",
+    "recall",
+    "recall",
+    "recall",
+    "recall",
+    "accuracy",
+    "accuracy",
+    "accuracy",
+    "accuracy",
+]
+target_level_list = [0.1, 0.1, 0.9, 0.9, 0.1, 0.1, 0.9, 0.9, 0.1, 0.1, 0.9, 0.9]
+confidence_level_list = [0.8, 0.2, 0.8, 0.2, 0.8, 0.2, 0.8, 0.2, 0.8, 0.2, 0.8, 0.2]
+
+# For predict_params = [np.linspace(0, 0.99, 100)]
+can_be_controlled_vectors_predict_params_random_classifier = [
+    True,
+    True,
+    False,
+    False,
+    True,
+    True,
+    True,
+    True,
+    True,
+    True,
+    False,
+    False,
+]
+
+# For predict_param_set = np.array([0.7])
+can_be_controlled_single_predict_param_random_classifier = [
+    True,
+    True,
+    False,
+    False,
+    True,
+    True,
+    False,
+    False,
+    True,
+    True,
+    False,
+    False,
+]
+
+df_validity_random_classifier = pd.DataFrame(
+    {
+        "risk_name": risk_name_list,
+        "target_level": target_level_list,
+        "confidence_level": confidence_level_list,
+        "is_controlable_exp": can_be_controlled_vectors_predict_params_random_classifier,
+        "is_controlable_exp_single_param": can_be_controlled_single_predict_param_random_classifier,
+    }
+)
 
 
 def test_random_classifier_theoretical_validity():  # pragma: no cover
@@ -395,13 +455,13 @@ def test_random_classifier_theoretical_validity():  # pragma: no cover
         all_results.append(df_one)
 
     df_results = pd.concat(all_results, ignore_index=True)
-    analyze_results(df_results)
-    # A further statistical analysis is required to compare the obtained results
-    # with the expected ones given the experiment design.
-    # Therefore, we intentionally skip the test assertion for now.
-    # A strict assertion will be added later, e.g.:
-    # df_summary = analyze_results(df_results)
-    # assert df_summary["valid_experiment"].all()
+    df_summary = analyze_results(df_results)
+    df_summary = df_summary.merge(
+        df_validity_random_classifier.drop(columns=["is_controlable_exp_single_param"]),
+        on=["risk_name", "target_level", "confidence_level"],
+        how="inner",
+    )
+    assert all(df_summary["empirical_control"] == df_summary["is_controlable_exp"])
 
     # Random classifier : the case of single parameter
     all_results_single_param = []
@@ -424,18 +484,59 @@ def test_random_classifier_theoretical_validity():  # pragma: no cover
         all_results_single_param.append(df_one)
 
     df_results_single_param = pd.concat(all_results_single_param, ignore_index=True)
-    analyze_results(df_results_single_param)
-    # A further statistical analysis is required to compare the obtained results
-    # with the expected ones given the experiment design.
-    # Therefore, we intentionally skip the test assertion for now.
-    # A strict assertion will be added later, e.g.:
-    # df_summary_single_param = analyze_results(df_results_single_param)
-    # assert df_summary_single_param["valid_experiment"].all()
-
-    pytest.skip(
-        "This test reproduces the notebook results. However, a further statistical analysis "
-        "is needed to compare the obtained results with the expected ones regarding the experiment design."
+    df_summary_single_param = analyze_results(df_results_single_param)
+    df_summary_single_param = df_summary_single_param.merge(
+        df_validity_random_classifier.drop(columns=["is_controlable_exp"]),
+        on=["risk_name", "target_level", "confidence_level"],
+        how="inner",
     )
+    assert all(
+        df_summary_single_param["empirical_control"]
+        == df_summary_single_param["is_controlable_exp_single_param"]
+    )
+
+
+# For predict_params = [np.linspace(0, 0.99, 100)]
+can_be_controlled_vectors_predict_params_logistic_classifier = [
+    True,
+    True,
+    True,
+    True,
+    True,
+    True,
+    True,
+    True,
+    True,
+    True,
+    False,
+    False,
+]
+
+# For predict_param_set = np.array([0.7])
+can_be_controlled_single_predict_param_logistic_classifier = [
+    True,
+    True,
+    True,
+    True,
+    True,
+    True,
+    False,
+    False,
+    True,
+    True,
+    False,
+    False,
+]
+
+df_validity_logistic_classifier = pd.DataFrame(
+    {
+        "risk_name": risk_name_list,
+        "target_level": target_level_list,
+        "confidence_level": confidence_level_list,
+        "is_controlable_exp": can_be_controlled_vectors_predict_params_logistic_classifier,
+        "is_controlable_exp_single_param": can_be_controlled_single_predict_param_logistic_classifier,
+    }
+)
 
 
 def test_logistic_classifier_theoretical_validity():  # pragma: no cover
@@ -473,13 +574,15 @@ def test_logistic_classifier_theoretical_validity():  # pragma: no cover
         all_results.append(df_one)
 
     df_results = pd.concat(all_results, ignore_index=True)
-    analyze_results(df_results)
-    # A further statistical analysis is required to compare the obtained results
-    # with the expected ones given the experiment design.
-    # Therefore, we intentionally skip the test assertion for now.
-    # A strict assertion will be added later, e.g.:
-    # df_summary = analyze_results(df_results)
-    # assert df_summary["valid_experiment"].all()
+    df_summary = analyze_results(df_results)
+    df_summary = df_summary.merge(
+        df_validity_logistic_classifier.drop(
+            columns=["is_controlable_exp_single_param"]
+        ),
+        on=["risk_name", "target_level", "confidence_level"],
+        how="inner",
+    )
+    assert all(df_summary["empirical_control"] == df_summary["is_controlable_exp"])
 
     # Logistic classifier : the case of single parameter
     all_results_single_param = []
@@ -503,15 +606,13 @@ def test_logistic_classifier_theoretical_validity():  # pragma: no cover
         all_results_single_param.append(df_one)
 
     df_results_single_param = pd.concat(all_results_single_param, ignore_index=True)
-    analyze_results(df_results_single_param)
-    # A further statistical analysis is required to compare the obtained results
-    # with the expected ones given the experiment design.
-    # Therefore, we intentionally skip the test assertion for now.
-    # A strict assertion will be added later, e.g.:
-    # df_summary_single_param = analyze_results(df_results_single_param)
-    # assert df_summary_single_param["valid_experiment"].all()
-
-    pytest.skip(
-        "This test reproduces the notebook results. However, a further statistical analysis "
-        "is needed to compare the obtained results with the expected ones regarding the experiment design."
+    df_summary_single_param = analyze_results(df_results_single_param)
+    df_summary_single_param = df_summary_single_param.merge(
+        df_validity_logistic_classifier.drop(columns=["is_controlable_exp"]),
+        on=["risk_name", "target_level", "confidence_level"],
+        how="inner",
+    )
+    assert all(
+        df_summary_single_param["empirical_control"]
+        == df_summary_single_param["is_controlable_exp_single_param"]
     )
