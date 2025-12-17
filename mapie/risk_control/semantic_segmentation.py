@@ -21,7 +21,7 @@ class SemanticSegmentationController(MultiLabelClassificationController):
     }
 
     def _transform_pred_proba(
-        self, y_pred_proba: Union[Sequence[NDArray], NDArray], ravel: bool = True
+        self, y_pred_proba: NDArray, ravel: bool = True
     ) -> NDArray:
         """
         Transform predicted probabilities for semantic segmentation tasks.
