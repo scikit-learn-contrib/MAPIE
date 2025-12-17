@@ -7,7 +7,7 @@ from typing import Callable, Iterable, Optional, Sequence, Union, cast
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 from sklearn.utils import check_random_state
-from sklearn.utils.validation import _check_y, _num_samples, indexable
+from sklearn.utils.validation import _num_samples, indexable
 
 from mapie.utils import (
     _check_alpha,
