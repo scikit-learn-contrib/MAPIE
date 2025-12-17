@@ -15,10 +15,11 @@ from __future__ import annotations
 import matplotlib.pyplot as plt
 from sklearn.calibration import CalibrationDisplay
 from sklearn.datasets import make_classification
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import brier_score_loss
-from sklearn.model_selection import train_test_split
 
 from mapie.calibration import VennAbersCalibrator
+from mapie.utils import train_conformalize_test_split
 
 ####################################################################
 # 1. Build a miscalibrated binary classifier
@@ -28,7 +29,6 @@ from mapie.calibration import VennAbersCalibrator
 # probabilities too close to 0 or 1). We use a larger dataset to
 # ensure sufficient data for proper calibration.
 
-from sklearn.ensemble import RandomForestClassifier
 
 X, y = make_classification(
     n_samples=5000,
@@ -40,12 +40,8 @@ X, y = make_classification(
 )
 
 # Split into train, calibration, and test sets
-X_temp, X_test, y_temp, y_test = train_test_split(
-    X, y, test_size=0.3, random_state=42, stratify=y
-)
-
-X_train, X_calib, y_train, y_calib = train_test_split(
-    X_temp, y_temp, test_size=0.3, random_state=42, stratify=y_temp
+(X_train, X_calib, X_test, y_train, y_calib, y_test) = train_conformalize_test_split(
+    X, y, train_size=0.5, conformalize_size=0.2, test_size=0.3, random_state=42
 )
 
 # Use Random Forest which tends to be miscalibrated

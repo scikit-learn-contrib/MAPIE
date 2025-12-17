@@ -15,10 +15,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.calibration import calibration_curve
 from sklearn.datasets import make_classification
-from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import label_binarize
 
 from mapie.calibration import VennAbersCalibrator
+from mapie.utils import train_conformalize_test_split
 
 ####################################################################
 # 1. Build a miscalibrated multi-class classifier
@@ -26,7 +27,6 @@ from mapie.calibration import VennAbersCalibrator
 # We generate a 3-class dataset and fit a random forest model,
 # which is known to be miscalibrated out of the box.
 
-from sklearn.ensemble import RandomForestClassifier
 
 X, y = make_classification(
     n_samples=5000,
@@ -41,12 +41,8 @@ X, y = make_classification(
 
 classes = np.unique(y)
 # Split into train, calibration, and test sets
-X_temp, X_test, y_temp, y_test = train_test_split(
-    X, y, test_size=0.3, random_state=7, stratify=y
-)
-
-X_train, X_calib, y_train, y_calib = train_test_split(
-    X_temp, y_temp, test_size=0.3, random_state=7, stratify=y_temp
+(X_train, X_calib, X_test, y_train, y_calib, y_test) = train_conformalize_test_split(
+    X, y, train_size=0.5, conformalize_size=0.2, test_size=0.3, random_state=42
 )
 
 base_model = RandomForestClassifier(n_estimators=100, max_depth=10, random_state=7)
