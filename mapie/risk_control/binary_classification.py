@@ -261,18 +261,19 @@ class BinaryClassificationController:
         valid_params_index = valid_index[0]
 
         self.valid_predict_params = self._predict_params[valid_params_index]
-        if len(self.valid_predict_params) == 0:
-            self.best_predict_param = None
 
         check_valid_ltt_params_index(
             predict_params=self._predict_params, valid_index=self.valid_predict_params
         )
 
-        self._set_best_predict_param(
-            y_calibrate_,
-            predictions_per_param,
-            valid_params_index,
-        )
+        if len(self.valid_predict_params) == 0:
+            self.best_predict_param = None
+        else:
+            self._set_best_predict_param(
+                y_calibrate_,
+                predictions_per_param,
+                valid_params_index,
+            )
 
         self.p_values = p_values
 
