@@ -368,7 +368,7 @@ def _h1(r_hats: NDArray, alphas: NDArray) -> NDArray:
 
 
 def find_precision_best_predict_param(
-    r_hat: NDArray, valid_index: List[List[int]], lambdas: NDArray
+    r_hat: NDArray, valid_index: List[List[Any]], lambdas: NDArray
 ) -> Tuple[NDArray, ArrayLike]:
     """
     Return the lambda that give the minimum precision along
@@ -419,6 +419,7 @@ def find_precision_best_predict_param(
             l_r_star.append(np.nan)
         else:
             idx_min = np.min(valid_index[i])
+            idx_min = cast(int, idx_min)
             best_lambda = lambdas[idx_min]
             best_risk = r_hat[idx_min]
             l_best_predict_param.append(best_lambda)
