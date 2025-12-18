@@ -484,12 +484,11 @@ class TestBinaryClassificationControllerGetPredictionsPerParam:
         bcc = BinaryClassificationController(
             predict_function=binary_predict, risk=precision, target_level=dummy_target
         )
-        y_pred = bcc._get_predictions_per_param([1, 2], np.array([0.1, 0.2]))
         with pytest.warns(
             UserWarning,
             match=r"All predictions are either 0 or 1 while the parameters are one-dimensional.",
         ):
-            bcc._check_predictions(y_pred)
+            bcc.calibrate([1, 2], [0, 1])
 
 
 class TestBinaryClassificationControllerPredict:
