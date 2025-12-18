@@ -214,6 +214,7 @@ def test_not_seen_calibrator() -> None:
 
 @pytest.mark.parametrize("calibrator", CALIBRATORS)
 @pytest.mark.parametrize("estimator", ESTIMATORS)
+@pytest.mark.filterwarnings("ignore:.*predicted label.*not been seen.*:UserWarning")
 def test_shape_of_output(
     calibrator: Union[str, RegressorMixin], estimator: ClassifierMixin
 ) -> None:
