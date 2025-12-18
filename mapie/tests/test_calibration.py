@@ -1148,6 +1148,7 @@ def test_va_cv_ensemble_cross_binary(cv_ensemble) -> None:
     assert proba.shape == (len(X_binary_test), 2)
     assert np.allclose(proba.sum(axis=1), 1.0)
 
+
 @pytest.mark.filterwarnings("ignore:: RuntimeWarning")
 def test_va_venn_abers_cv_brier_loss() -> None:
     """Test VennAbersCV with Brier loss."""
