@@ -418,8 +418,10 @@ def find_precision_best_predict_param(
             l_best_predict_param.append(np.nan)
             l_r_star.append(np.nan)
         else:
-            idx = np.argmin(valid_index[i])
-            l_best_predict_param.append(lambdas[valid_index[i][idx]])
-            l_r_star.append(r_hat[valid_index[i][idx]])
+            idx_min = int(np.min(valid_index[i]))
+            best_lambda = lambdas[idx_min]
+            best_risk = r_hat[idx_min]
+            l_best_predict_param.append(best_lambda)
+            l_r_star.append(best_risk)
 
     return np.array(l_best_predict_param), l_r_star
