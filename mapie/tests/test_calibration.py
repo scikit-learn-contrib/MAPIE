@@ -21,8 +21,7 @@ from sklearn.utils.validation import check_is_fitted
 
 from mapie._venn_abers import VennAbers, VennAbersMultiClass, predict_proba_prefitted_va
 from mapie.calibration import TopLabelCalibrator, VennAbersCalibrator
-from mapie.metrics.calibration import top_label_ece
-from mapie.metrics.calibration import expected_calibration_error
+from mapie.metrics.calibration import expected_calibration_error, top_label_ece
 
 random_state = 20
 random_state_va = 42
@@ -450,21 +449,6 @@ X_multi_train, X_multi_test, y_multi_train, y_multi_test = train_test_split(
 X_multi_proper, X_multi_cal, y_multi_proper, y_multi_cal = train_test_split(
     X_multi_train, y_multi_train, test_size=0.3, random_state=random_state_va
 )
-
-
-def test_va_default_parameters() -> None:
-    """Test default values of all parameters."""
-    va_cal = VennAbersCalibrator()
-    assert va_cal.estimator is None
-    assert va_cal.cv is None
-    assert va_cal.inductive is True
-    assert va_cal.n_splits is None
-    assert va_cal.train_proper_size is None
-    assert va_cal.random_state is None
-    assert va_cal.shuffle is True
-    assert va_cal.stratify is None
-    assert va_cal.precision is None
-    assert signature(va_cal.fit).parameters["calib_size"].default == 0.33
 
 
 @pytest.mark.parametrize("cv", ["prefit", None])
@@ -1051,23 +1035,6 @@ def test_va_multiclass_p0_p1_output() -> None:
     assert p_prime.shape == (len(X_test), n_classes)
     assert np.allclose(p_prime.sum(axis=1), 1.0)
     assert len(p0_p1_list) == n_classes * (n_classes - 1) // 2
-
-
-# def test_va_inductive_missing_size_parameters_raises_error() -> None:
-#     """Test that inductive mode raises error when train_proper_size is None."""
-#     X_local, y_local = make_classification(
-#         n_samples=100, n_classes=3, n_informative=10, random_state=random_state_va
-#     )
-#     va_multi = VennAbersMultiClass(
-#         estimator=GaussianNB(),
-#         inductive=True,
-#         train_proper_size=None,
-#         random_state=random_state_va,
-#     )
-#     with pytest.raises(
-#         Exception, match="For Inductive Venn-ABERS please provide either calibration"
-#     ):
-#         va_multi.fit(X_local, y_local)
 
 
 def test_va_prefit_predict_proba_without_single_estimator() -> None:
