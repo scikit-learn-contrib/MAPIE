@@ -1551,11 +1551,16 @@ def check_valid_ltt_params_index(
     - For a simple list, if all predict_params are valid, a warning suggests
       choosing more difficult target levels.
     """
+    warning_msg = (
+        "No predict parameters were found to control the risk at the "
+        "given target and confidence levels. Try using a larger calibration set or "
+        "a better model or less strict target and confidence levels."
+    )
     if len(valid_index) > 0 and isinstance(valid_index[0], list):
         for i, idx_list in enumerate(valid_index):
             if idx_list == []:
                 warnings.warn(
-                    "Warning: LTT method has returned an empty sequence."
+                    warning_msg
                     + (
                         f" The corresponding alpha={alpha[i]}"
                         if alpha is not None
@@ -1564,7 +1569,7 @@ def check_valid_ltt_params_index(
                 )
     else:
         if len(valid_index) == 0:
-            warnings.warn("Warning: LTT method has returned an empty sequence.")
+            warnings.warn(warning_msg)
         elif len(valid_index) == len(predict_params):
             warnings.warn(
                 "All provided predict_params control the risk at the given "

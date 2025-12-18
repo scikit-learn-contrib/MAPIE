@@ -236,7 +236,7 @@ class TestCheckValidLTTParamsIndex:
 
         with pytest.warns(
             UserWarning,
-            match=r"LTT method has returned an empty sequence.*alpha=0.1",
+            match=r"No predict parameters were found to control the risk at the.*alpha=0.1",
         ):
             check_valid_ltt_params_index(
                 predict_params=predict_params,
@@ -252,7 +252,7 @@ class TestCheckValidLTTParamsIndex:
 
         with pytest.warns(
             UserWarning,
-            match=r"LTT method has returned an empty sequence\.",
+            match=r"No predict parameters were found to control the risk at the.*",
         ):
             check_valid_ltt_params_index(
                 predict_params=predict_params,
@@ -265,7 +265,7 @@ class TestCheckValidLTTParamsIndex:
 
         with pytest.warns(
             UserWarning,
-            match=r"LTT method has returned an empty sequence",
+            match=r"No predict parameters were found to control the risk at the.*",
         ):
             check_valid_ltt_params_index(
                 predict_params=predict_params,
