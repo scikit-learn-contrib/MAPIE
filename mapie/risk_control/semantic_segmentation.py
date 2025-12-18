@@ -1,5 +1,6 @@
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
+from typing import Sequence, Union, cast
 
 from .multi_label_classification import MultiLabelClassificationController
 from mapie.utils import check_is_fitted
@@ -19,7 +20,7 @@ class SemanticSegmentationController(MultiLabelClassificationController):
     }
 
     def _transform_pred_proba(
-        self, y_pred_proba: NDArray, ravel: bool = True
+        self, y_pred_proba: Union[Sequence[NDArray], NDArray], ravel: bool = True
     ) -> NDArray:
         """
         Transform predicted probabilities for semantic segmentation tasks.
@@ -37,12 +38,16 @@ class SemanticSegmentationController(MultiLabelClassificationController):
         """
         if not isinstance(y_pred_proba, np.ndarray):
             y_pred_proba = np.array(y_pred_proba)
-        if np.min(y_pred_proba) < 0 or np.max(y_pred_proba) > 1:
+        y_pred_proba_array = cast(NDArray, y_pred_proba)  # for mypy
+
+        if np.min(y_pred_proba_array) < 0 or np.max(y_pred_proba_array) > 1:
             # Apply sigmoid to convert logits to probabilities
-            y_pred_proba = 1 / (1 + np.exp(-y_pred_proba))
+            y_pred_proba_array = 1 / (1 + np.exp(-y_pred_proba_array))
         if ravel:
-            return y_pred_proba.ravel()[np.newaxis, :, np.newaxis]
-        return y_pred_proba
+            return y_pred_proba_array.reshape(len(y_pred_proba_array), -1)[
+                ..., np.newaxis
+            ]
+        return y_pred_proba_array
 
     def predict(
         self,
