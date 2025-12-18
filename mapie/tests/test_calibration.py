@@ -545,6 +545,7 @@ def test_va_prefit_missing_last_step_raises_not_fitted_error() -> None:
         ),
     ],
 )
+@pytest.mark.filterwarnings("ignore:: RuntimeWarning")
 def test_va_mode_functionality(
     mode, mode_params, X_train, y_train, X_test, n_classes
 ) -> None:
