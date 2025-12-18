@@ -5,20 +5,22 @@ This file reproduces the notebook logic (random classifier and logistic classifi
 theoretical validity checks) as pytest tests.
 """
 
+import warnings
 from itertools import product
-from decimal import Decimal
 
 import numpy as np
+import pandas as pd
 from sklearn.datasets import make_classification
 from sklearn.utils import check_random_state
-from sklearn.metrics import precision_score, recall_score, accuracy_score
 
 from mapie.risk_control import (
     BinaryClassificationController,
-    precision,
     accuracy,
+    precision,
     recall,
 )
+
+warnings.filterwarnings("ignore")
 
 
 class RandomClassifier:
@@ -42,6 +44,33 @@ class RandomClassifier:
         return (probs >= self.threshold).astype(int)
 
 
+def precision_random_classifier(threshold: float) -> float:
+    """
+    Theoretical precision of RandomClassifier on a balanced dataset.
+    - RandomClassifier assigns labels randomly with a uniform probability, independent of the true label.
+    - Therefore, precision is always 0.5 regardless of the threshold.
+    """
+    return 0.5
+
+
+def accuracy_random_classifier(threshold: float) -> float:
+    """
+    Theoretical accuracy of RandomClassifier on a balanced dataset.
+    - RandomClassifier assigns labels randomly with a uniform probability, independent of the true label.
+    - Therefore, accuracy is always 0.5 regardless of the threshold.
+    """
+    return 0.5
+
+
+def recall_random_classifier(threshold: float) -> float:
+    """
+    Theoretical recall of RandomClassifier on a balanced dataset.
+    - RandomClassifier assigns labels randomly with a uniform probability, independent of the true label.
+    - Therefore, recall = 1 - threshold.
+    """
+    return 1.0 - threshold
+
+
 class LogisticClassifier:
     """Deterministic sigmoid-based binary classifier."""
 
@@ -49,14 +78,21 @@ class LogisticClassifier:
         self.scale = scale
         self.threshold = threshold
 
-    def _get_prob(self, x):
+    def sigmoid(self, x):
+        """Sigmoid function."""
         return 1 / (1 + np.exp(-self.scale * x))
 
+    def _get_prob(self, x):
+        """Probability of class 1 for input x."""
+        return self.sigmoid(x)
+
     def predict_proba(self, X):
+        """Return probabilities [p(y=0), p(y=1)] for each sample in X."""
         probs = np.array([self._get_prob(x) for x in X])
         return np.vstack([1 - probs, probs]).T
 
     def predict(self, X):  # pragma: no cover
+        """Return predicted class labels based on threshold."""
         probs = self.predict_proba(X)[:, 1]
         return (probs >= self.threshold).astype(int)
 
@@ -64,85 +100,443 @@ class LogisticClassifier:
 def make_logistic_data(n_samples=200, scale=2.0, random_state=None):
     rng = check_random_state(random_state)
     X = rng.uniform(-3, 3, size=n_samples)
-    probs = 1 / (1 + np.exp(-scale * X))
+    probs = LogisticClassifier(scale=scale).sigmoid(X)
     y = rng.binomial(1, probs)
     return X, y
+
+
+def precision_logistic_classifier(scale: float, threshold: float) -> float:
+    """
+    Theoretical precision of LogisticClassifier based on the `make_logistic_data` generator.
+    - Data are generated as pairs (X, Y), where
+        - X ~ Uniform(-3, 3)
+        - Y | X=x ~ Bernoulli(p(x))
+        - p(x) = P(Y=1|X=x) = 1 / (1 + exp(-scale * x))
+    - Precision has a closed-form expression depending on `scale` and `threshold`.
+    """
+    decision_threshold = np.log(threshold / (1 - threshold)) / scale
+    TP = (
+        1
+        / (6 * scale)
+        * (
+            np.log(1 + np.exp(3 * scale))
+            - np.log(1 + np.exp(scale * decision_threshold))
+        )
+    )
+    TP_plus_FP = (3 - decision_threshold) / 6
+
+    return TP / TP_plus_FP
+
+
+def accuracy_logistic_classifier(scale: float, threshold: float) -> float:
+    """
+    Theoretical accuracy of LogisticClassifier based on the `make_logistic_data` generator.
+    - Data are generated as pairs (X, Y), where
+        - X ~ Uniform(-3, 3)
+        - Y | X=x ~ Bernoulli(p(x))
+        - p(x) = P(Y=1|X=x) = 1 / (1 + exp(-scale * x))
+    - Accuracy has a closed-form expression depending on `scale` and `threshold`.
+    """
+    decision_threshold = np.log(threshold / (1 - threshold)) / scale
+    TP = (
+        1
+        / (6 * scale)
+        * (
+            np.log(1 + np.exp(3 * scale))
+            - np.log(1 + np.exp(scale * decision_threshold))
+        )
+    )
+    FN = (
+        1
+        / (6 * scale)
+        * (
+            np.log(1 + np.exp(scale * decision_threshold))
+            - np.log(1 + np.exp(-3 * scale))
+        )
+    )
+    FN_plus_TN = (3 + decision_threshold) / 6
+    TN = FN_plus_TN - FN
+    return TP + TN
+
+
+def recall_logistic_classifier(scale: float, threshold: float) -> float:
+    """
+    Theoretical recall of LogisticClassifier based on the `make_logistic_data` generator.
+    - Data are generated as pairs (X, Y), where
+        - X ~ Uniform(-3, 3)
+        - Y | X=x ~ Bernoulli(p(x))
+        - p(x) = P(Y=1|X=x) = 1 / (1 + exp(-scale * x))
+    - Recall has a closed-form expression depending on `scale` and `threshold`.
+    """
+    decision_threshold = np.log(threshold / (1 - threshold)) / scale
+    TP = (
+        1
+        / (6 * scale)
+        * (
+            np.log(1 + np.exp(3 * scale))
+            - np.log(1 + np.exp(scale * decision_threshold))
+        )
+    )
+    FN = (
+        1
+        / (6 * scale)
+        * (
+            np.log(1 + np.exp(scale * decision_threshold))
+            - np.log(1 + np.exp(-3 * scale))
+        )
+    )
+    return TP / (TP + FN)
+
+
+def run_one_experiment_with_random_classifier(
+    clf_class, risk_dict, predict_params, target_level, confidence_level, N, n_repeats
+):
+    """
+    Runs the experiment for one combination of risk, predict_params, target_level, confidence_level.
+    Returns a DataFrame with one row per repeat.
+    """
+    clf = clf_class()
+    records = []
+
+    for repeat_id in range(n_repeats):
+        X_calibrate, y_calibrate = make_classification(
+            n_samples=N,
+            n_features=1,
+            n_informative=1,
+            n_redundant=0,
+            n_repeated=0,
+            n_classes=2,
+            n_clusters_per_class=1,
+            weights=[0.5, 0.5],
+            flip_y=0,
+            random_state=None,
+        )
+        X_calibrate = X_calibrate.squeeze()
+
+        controller = BinaryClassificationController(
+            predict_function=clf.predict_proba,
+            risk=risk_dict["risk"],
+            target_level=target_level,
+            confidence_level=confidence_level,
+            list_predict_params=predict_params,
+        )
+        controller.calibrate(X_calibrate, y_calibrate)
+        valid_parameters = controller.valid_predict_params
+
+        error_indicator = 0
+
+        if len(valid_parameters) == 0:
+            error_indicator = 1
+        else:
+            for lambda_ in valid_parameters:
+                if risk_dict["risk"] == precision:
+                    theoretical_metric = precision_random_classifier(lambda_)
+                elif risk_dict["risk"] == recall:
+                    theoretical_metric = recall_random_classifier(lambda_)
+                elif risk_dict["risk"] == accuracy:
+                    theoretical_metric = accuracy_random_classifier(lambda_)
+
+                if risk_dict["risk"].higher_is_better:
+                    if theoretical_metric <= target_level:
+                        error_indicator = 1
+                        break
+                else:
+                    if theoretical_metric > target_level:
+                        error_indicator = 1
+                        break
+
+        records.append(
+            {
+                "risk_name": risk_dict["name"],
+                "predict_param": predict_params,
+                "target_level": target_level,
+                "confidence_level": confidence_level,
+                "repeat_id": repeat_id,
+                "error_indicator": error_indicator,
+                "valid_param": valid_parameters,
+                "nb_valid_param": len(valid_parameters),
+            }
+        )
+
+    return pd.DataFrame(records)
+
+
+def run_one_experiment_with_logistic_classifier(
+    clf_class,
+    risk_dict,
+    predict_params,
+    target_level,
+    confidence_level,
+    N,
+    n_repeats,
+    scale=2.0,
+):
+    """
+    Runs the experiment for one combination of using a LogisticClassifier.
+    Returns a DataFrame with one row per repeat.
+    """
+    clf = clf_class(scale=scale, threshold=0.5)
+    records = []
+
+    for repeat_id in range(n_repeats):
+        X_calibrate, y_calibrate = make_logistic_data(
+            n_samples=N, scale=scale, random_state=None
+        )
+
+        controller = BinaryClassificationController(
+            predict_function=clf.predict_proba,
+            risk=risk_dict["risk"],
+            target_level=target_level,
+            confidence_level=confidence_level,
+            list_predict_params=predict_params,
+        )
+        controller = controller.calibrate(X_calibrate, y_calibrate)
+        valid_parameters = controller.valid_predict_params
+
+        error_indicator = 0
+
+        if len(valid_parameters) == 0:
+            error_indicator = 1
+        else:
+            for lambda_ in valid_parameters:
+                if risk_dict["risk"] == precision:
+                    empirical_metric = precision_logistic_classifier(scale, lambda_)
+                elif risk_dict["risk"] == recall:
+                    empirical_metric = recall_logistic_classifier(scale, lambda_)
+                elif risk_dict["risk"] == accuracy:
+                    empirical_metric = accuracy_logistic_classifier(scale, lambda_)
+
+                if risk_dict["risk"].higher_is_better:
+                    if empirical_metric <= target_level:
+                        error_indicator = 1
+                        break
+                else:
+                    if empirical_metric > target_level:
+                        error_indicator = 1
+                        break
+
+        records.append(
+            {
+                "risk_name": risk_dict["name"],
+                "predict_param": predict_params,
+                "target_level": target_level,
+                "confidence_level": confidence_level,
+                "repeat_id": repeat_id,
+                "error_indicator": error_indicator,
+                "valid_param": valid_parameters,
+                "nb_valid_param": len(valid_parameters),
+            }
+        )
+
+    return pd.DataFrame(records)
+
+
+def analyze_results(df_results):
+    summary = []
+    grouped = df_results.groupby(["risk_name", "target_level", "confidence_level"])
+
+    for (risk_name, target_level, confidence_level), group in grouped:
+        proportion_not_controlled = group["error_indicator"].mean()
+        nb_predict_parameters = len(group.iloc[0]["predict_param"])
+        mean_nb_valid_thresholds = group["nb_valid_param"].mean()
+
+        delta = 1 - confidence_level
+        valid_experiment = proportion_not_controlled <= delta
+
+        summary.append(
+            {
+                "risk_name": risk_name,
+                "target_level": target_level,
+                "confidence_level": confidence_level,
+                "nb_predict_param": nb_predict_parameters,
+                "prop_not_controlled": proportion_not_controlled,
+                "delta": delta,
+                "mean_nb_valid_thr": mean_nb_valid_thresholds,
+                "empirical_control": valid_experiment,
+            }
+        )
+
+    df_summary = pd.DataFrame(summary)
+
+    return df_summary
+
+
+# Configurations can be controlled or not using RandomClassifier.
+risk_name_list = [
+    "precision",
+    "precision",
+    "precision",
+    "precision",
+    "recall",
+    "recall",
+    "recall",
+    "recall",
+    "accuracy",
+    "accuracy",
+    "accuracy",
+    "accuracy",
+]
+target_level_list = [0.1, 0.1, 0.9, 0.9, 0.1, 0.1, 0.9, 0.9, 0.1, 0.1, 0.9, 0.9]
+confidence_level_list = [0.8, 0.2, 0.8, 0.2, 0.8, 0.2, 0.8, 0.2, 0.8, 0.2, 0.8, 0.2]
+
+# For predict_params = [np.linspace(0, 0.99, 100)]
+can_be_controlled_vectors_predict_params_random_classifier = [
+    True,
+    True,
+    False,
+    False,
+    True,
+    True,
+    True,
+    True,
+    True,
+    True,
+    False,
+    False,
+]
+
+# For predict_param_set = np.array([0.7])
+can_be_controlled_single_predict_param_random_classifier = [
+    True,
+    True,
+    False,
+    False,
+    True,
+    True,
+    False,
+    False,
+    True,
+    True,
+    False,
+    False,
+]
+
+df_validity_random_classifier = pd.DataFrame(
+    {
+        "risk_name": risk_name_list,
+        "target_level": target_level_list,
+        "confidence_level": confidence_level_list,
+        "is_controlable_exp": can_be_controlled_vectors_predict_params_random_classifier,
+        "is_controlable_exp_single_param": can_be_controlled_single_predict_param_random_classifier,
+    }
+)
 
 
 def test_random_classifier_theoretical_validity():  # pragma: no cover
     """Reproduces section 1 of the notebook (random classifier checks)."""
 
-    N = 2000  # size of the calibration set (same as notebook)
+    N = 2000  # size of the calibration set
     risk = [
         {"name": "precision", "risk": precision},
         {"name": "recall", "risk": recall},
         {"name": "accuracy", "risk": accuracy},
     ]
-    predict_params = [np.linspace(0, 0.99, 100), np.empty(1)]
     target_level = [0.1, 0.9]
     confidence_level = [0.8, 0.2]
-
     n_repeats = 100
-    invalid_experiment = False
+
+    # Random classifier : the case of multiple parameters
+    predict_params = [np.linspace(0.01, 0.99, 100)]
+    all_results = []
 
     for combination in product(risk, predict_params, target_level, confidence_level):
-        risk_item, predict_params_item, target_level_item, confidence_level_item = (
-            combination
+        risk_dict, predict_param_set, t_level, c_level = combination
+
+        df_one = run_one_experiment_with_random_classifier(
+            clf_class=RandomClassifier,
+            risk_dict=risk_dict,
+            predict_params=predict_param_set,
+            target_level=t_level,
+            confidence_level=c_level,
+            N=N,
+            n_repeats=n_repeats,
         )
-        if len(predict_params_item) == 1:
-            predict_params_item = np.array([np.random.choice(np.linspace(0, 0.9, 10))])
-        alpha = float(Decimal("1") - Decimal(str(target_level_item)))
-        delta = float(Decimal("1") - Decimal(str(confidence_level_item)))
 
-        clf = RandomClassifier()
-        nb_errors = 0
-        total_nb_valid_params = 0
+        all_results.append(df_one)
 
-        for _ in range(n_repeats):
-            X_calibrate, y_calibrate = make_classification(
-                n_samples=N,
-                n_features=1,
-                n_informative=1,
-                n_redundant=0,
-                n_repeated=0,
-                n_classes=2,
-                n_clusters_per_class=1,
-                weights=[0.5, 0.5],
-                flip_y=0,
-                random_state=None,
-            )
-            X_calibrate = X_calibrate.squeeze()
+    df_results = pd.concat(all_results, ignore_index=True)
+    df_summary = analyze_results(df_results)
+    df_summary = df_summary.merge(
+        df_validity_random_classifier.drop(columns=["is_controlable_exp_single_param"]),
+        on=["risk_name", "target_level", "confidence_level"],
+        how="inner",
+    )
+    assert all(df_summary["empirical_control"] == df_summary["is_controlable_exp"])
 
-            controller = BinaryClassificationController(
-                predict_function=clf.predict_proba,
-                risk=risk_item["risk"],
-                target_level=target_level_item,
-                confidence_level=confidence_level_item,
-            )
-            controller._predict_params = predict_params_item
-            controller.calibrate(X_calibrate, y_calibrate)
-            valid_parameters = controller.valid_predict_params
-            total_nb_valid_params += len(valid_parameters)
+    # Random classifier : the case of single parameter
+    all_results_single_param = []
 
-            # Using theoretical risk knowledge for the random classifier (balanced generator)
-            if risk_item["risk"] == precision or risk_item["risk"] == accuracy:
-                if target_level_item > 0.5 and len(valid_parameters) >= 1:
-                    nb_errors += 1
-            elif risk_item["risk"] == recall:
-                if (
-                    any(x > alpha for x in valid_parameters)
-                    and len(valid_parameters) >= 1
-                ):
-                    nb_errors += 1
+    for combination in product(risk, target_level, confidence_level):
+        risk_dict, t_level, c_level = combination
 
-        # Basic checks mirroring the notebook prints (but use assertions)
-        proportion_not_controlled = nb_errors / n_repeats
-        assert proportion_not_controlled <= delta
-        # Keep track if any experiment was invalid (mirrors notebook behaviour)
-        if proportion_not_controlled > delta:
-            invalid_experiment = True
+        predict_param_set = np.array([0.7])
 
-    assert not invalid_experiment
+        df_one = run_one_experiment_with_random_classifier(
+            clf_class=RandomClassifier,
+            risk_dict=risk_dict,
+            predict_params=predict_param_set,
+            target_level=t_level,
+            confidence_level=c_level,
+            N=N,
+            n_repeats=n_repeats,
+        )
+
+        all_results_single_param.append(df_one)
+
+    df_results_single_param = pd.concat(all_results_single_param, ignore_index=True)
+    df_summary_single_param = analyze_results(df_results_single_param)
+    df_summary_single_param = df_summary_single_param.merge(
+        df_validity_random_classifier.drop(columns=["is_controlable_exp"]),
+        on=["risk_name", "target_level", "confidence_level"],
+        how="inner",
+    )
+    assert all(
+        df_summary_single_param["empirical_control"]
+        == df_summary_single_param["is_controlable_exp_single_param"]
+    )
+
+
+# For predict_params = [np.linspace(0, 0.99, 100)]
+can_be_controlled_vectors_predict_params_logistic_classifier = [
+    True,
+    True,
+    True,
+    True,
+    True,
+    True,
+    True,
+    True,
+    True,
+    True,
+    False,
+    False,
+]
+
+# For predict_param_set = np.array([0.7])
+can_be_controlled_single_predict_param_logistic_classifier = [
+    True,
+    True,
+    True,
+    True,
+    True,
+    True,
+    False,
+    False,
+    True,
+    True,
+    False,
+    False,
+]
+
+df_validity_logistic_classifier = pd.DataFrame(
+    {
+        "risk_name": risk_name_list,
+        "target_level": target_level_list,
+        "confidence_level": confidence_level_list,
+        "is_controlable_exp": can_be_controlled_vectors_predict_params_logistic_classifier,
+        "is_controlable_exp_single_param": can_be_controlled_single_predict_param_logistic_classifier,
+    }
+)
 
 
 def test_logistic_classifier_theoretical_validity():  # pragma: no cover
@@ -154,73 +548,71 @@ def test_logistic_classifier_theoretical_validity():  # pragma: no cover
         {"name": "recall", "risk": recall},
         {"name": "accuracy", "risk": accuracy},
     ]
-    predict_params = [np.linspace(0, 0.99, 100), np.empty(1)]
     target_level = [0.1, 0.9]
     confidence_level = [0.8, 0.2]
-
     n_repeats = 100
-    invalid_experiment = False
+    scale = 2.0
+
+    # Logistic classifier : the case of multiple parameters
+    predict_params = [np.linspace(0.01, 0.99, 100)]
+    all_results = []
 
     for combination in product(risk, predict_params, target_level, confidence_level):
-        risk_item, predict_params_item, target_level_item, confidence_level_item = (
-            combination
+        risk_dict, predict_param_set, t_level, c_level = combination
+
+        df_one = run_one_experiment_with_logistic_classifier(
+            clf_class=LogisticClassifier,
+            risk_dict=risk_dict,
+            predict_params=predict_param_set,
+            target_level=t_level,
+            confidence_level=c_level,
+            N=N,
+            n_repeats=n_repeats,
+            scale=scale,
         )
-        if len(predict_params_item) == 1:
-            predict_params_item = np.array([np.random.choice(np.linspace(0, 0.9, 10))])
-        delta = float(Decimal("1") - Decimal(str(confidence_level_item)))
 
-        clf = LogisticClassifier(scale=2.0, threshold=0.5)
-        nb_errors = 0
-        total_nb_valid_params = 0
+        all_results.append(df_one)
 
-        for _ in range(n_repeats):
-            X_calibrate, y_calibrate = make_logistic_data(
-                n_samples=N, scale=2.0, random_state=None
-            )
+    df_results = pd.concat(all_results, ignore_index=True)
+    df_summary = analyze_results(df_results)
+    df_summary = df_summary.merge(
+        df_validity_logistic_classifier.drop(
+            columns=["is_controlable_exp_single_param"]
+        ),
+        on=["risk_name", "target_level", "confidence_level"],
+        how="inner",
+    )
+    assert all(df_summary["empirical_control"] == df_summary["is_controlable_exp"])
 
-            controller = BinaryClassificationController(
-                predict_function=clf.predict_proba,
-                risk=risk_item["risk"],
-                target_level=target_level_item,
-                confidence_level=confidence_level_item,
-            )
-            controller._predict_params = predict_params_item
-            controller = controller.calibrate(X_calibrate, y_calibrate)
-            valid_parameters = controller.valid_predict_params
-            total_nb_valid_params += len(valid_parameters)
+    # Logistic classifier : the case of single parameter
+    all_results_single_param = []
 
-            # Estimate empirical risk on a fresh test set
-            X_test, y_test = make_logistic_data(
-                n_samples=N, scale=2.0, random_state=None
-            )
-            probs = clf.predict_proba(X_test)[:, 1]
+    for combination in product(risk, target_level, confidence_level):
+        risk_dict, t_level, c_level = combination
 
-            if len(valid_parameters) >= 1:
-                for lambda_ in valid_parameters:
-                    y_pred = (probs >= lambda_).astype(int)
+        predict_param_set = np.array([0.7])
 
-                    if risk_item["risk"] == precision:
-                        empirical_metric = precision_score(
-                            y_test, y_pred, zero_division=0
-                        )
-                    elif risk_item["risk"] == recall:
-                        empirical_metric = recall_score(y_test, y_pred, zero_division=0)
-                    elif risk_item["risk"] == accuracy:
-                        empirical_metric = accuracy_score(y_test, y_pred)
+        df_one = run_one_experiment_with_logistic_classifier(
+            clf_class=LogisticClassifier,
+            risk_dict=risk_dict,
+            predict_params=predict_param_set,
+            target_level=t_level,
+            confidence_level=c_level,
+            N=N,
+            n_repeats=n_repeats,
+            scale=scale,
+        )
 
-                    # Check if the risk control fails according to higher_is_better flag
-                    if risk_item["risk"].higher_is_better:
-                        if empirical_metric <= target_level_item:
-                            nb_errors += 1
-                            break
-                    else:
-                        if empirical_metric > target_level_item:
-                            nb_errors += 1
-                            break
+        all_results_single_param.append(df_one)
 
-        proportion_not_controlled = nb_errors / n_repeats
-        assert proportion_not_controlled <= delta
-        if proportion_not_controlled > delta:
-            invalid_experiment = True
-
-    assert not invalid_experiment
+    df_results_single_param = pd.concat(all_results_single_param, ignore_index=True)
+    df_summary_single_param = analyze_results(df_results_single_param)
+    df_summary_single_param = df_summary_single_param.merge(
+        df_validity_logistic_classifier.drop(columns=["is_controlable_exp"]),
+        on=["risk_name", "target_level", "confidence_level"],
+        how="inner",
+    )
+    assert all(
+        df_summary_single_param["empirical_control"]
+        == df_summary_single_param["is_controlable_exp_single_param"]
+    )
