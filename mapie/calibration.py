@@ -1,19 +1,21 @@
 from __future__ import annotations
 
 import warnings
-from typing import Dict, Optional, Tuple, Union, cast
 from inspect import signature
+from typing import Dict, Optional, Tuple, Union, cast
+
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin, clone
 from sklearn.calibration import _SigmoidCalibration
-from sklearn.isotonic import IsotonicRegression
 from sklearn.exceptions import NotFittedError
+from sklearn.isotonic import IsotonicRegression
 from sklearn.pipeline import Pipeline
 from sklearn.utils import check_random_state
 from sklearn.utils.multiclass import type_of_target
 from sklearn.utils.validation import _check_y, _num_samples, indexable
 
+from ._venn_abers import VennAbers, VennAbersMultiClass, predict_proba_prefitted_va
 from .utils import (
     _check_estimator_classification,
     _check_estimator_fit_predict,
@@ -23,8 +25,6 @@ from .utils import (
     _get_calib_set,
     check_is_fitted,
 )
-
-from ._venn_abers import predict_proba_prefitted_va, VennAbers, VennAbersMultiClass
 
 
 class TopLabelCalibrator(BaseEstimator, ClassifierMixin):
@@ -674,6 +674,8 @@ class VennAbersCalibrator(BaseEstimator, ClassifierMixin):
 
     Examples
     --------
+    >>> import warnings
+    >>> warnings.filterwarnings("ignore")
     >>> import numpy as np
     >>> from sklearn.datasets import make_classification
     >>> from sklearn.model_selection import train_test_split

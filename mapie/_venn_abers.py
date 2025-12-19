@@ -1,8 +1,7 @@
 import numpy as np
+from sklearn.base import clone
 from sklearn.model_selection import StratifiedKFold, train_test_split
 from sklearn.multiclass import OneVsOneClassifier
-from sklearn.base import clone
-
 
 """
 Private module containing core Venn-ABERS implementation classes.
@@ -284,6 +283,8 @@ def predict_proba_prefitted_va(
 
     Examples
     --------
+    >>> import warnings
+    >>> warnings.filterwarnings("ignore")
     >>> import numpy as np
     >>> # Calibration data
     >>> p_cal = np.array([[0.7, 0.2, 0.1], [0.3, 0.6, 0.1], [0.1, 0.1, 0.8]])
@@ -415,6 +416,8 @@ class VennAbers:
 
     Examples
     --------
+    >>> import warnings
+    >>> warnings.filterwarnings("ignore")
     >>> import numpy as np
     >>> from sklearn.datasets import make_classification
     >>> from sklearn.model_selection import train_test_split
