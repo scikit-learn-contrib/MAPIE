@@ -553,6 +553,7 @@ def test_results_with_constant_sample_weights(strategy: str) -> None:
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
+@pytest.mark.filterwarnings("ignore:.*The groups parameter is ignored.*:UserWarning")
 def test_results_with_constant_groups(strategy: str) -> None:
     """
     Test predictions when groups are None

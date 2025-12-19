@@ -214,6 +214,7 @@ def test_not_seen_calibrator() -> None:
 
 @pytest.mark.parametrize("calibrator", CALIBRATORS)
 @pytest.mark.parametrize("estimator", ESTIMATORS)
+@pytest.mark.filterwarnings("ignore:.*predicted label.*not been seen.*:UserWarning")
 def test_shape_of_output(
     calibrator: Union[str, RegressorMixin], estimator: ClassifierMixin
 ) -> None:
@@ -452,6 +453,7 @@ X_multi_proper, X_multi_cal, y_multi_proper, y_multi_cal = train_test_split(
 
 
 @pytest.mark.parametrize("cv", ["prefit", None])
+@pytest.mark.filterwarnings("ignore:: RuntimeWarning")
 def test_va_valid_cv_argument(cv: Optional[str]) -> None:
     """Test valid cv methods."""
     if cv == "prefit":
@@ -545,6 +547,7 @@ def test_va_prefit_missing_last_step_raises_not_fitted_error() -> None:
         ),
     ],
 )
+@pytest.mark.filterwarnings("ignore:: RuntimeWarning")
 def test_va_mode_functionality(
     mode, mode_params, X_train, y_train, X_test, n_classes
 ) -> None:
@@ -579,6 +582,7 @@ def test_va_mode_functionality(
         (X_multi_proper, y_multi_proper, X_multi_cal, y_multi_cal, X_multi_test, 3),
     ],
 )
+@pytest.mark.filterwarnings("ignore:: RuntimeWarning")
 def test_va_prefit_mode(X_proper, y_proper, X_cal, y_cal, X_test, n_classes) -> None:
     """Test prefit mode for binary and multiclass."""
     clf = GaussianNB().fit(X_proper, y_proper)
@@ -601,6 +605,7 @@ def test_va_cross_validation_requires_n_splits() -> None:
 
 
 @pytest.mark.parametrize("estimator", VA_ESTIMATORS)
+@pytest.mark.filterwarnings("ignore:: RuntimeWarning")
 def test_va_different_estimators(estimator) -> None:
     """Test VennAbersCalibrator with different base estimators."""
     va_cal = VennAbersCalibrator(
@@ -619,6 +624,7 @@ def test_va_estimator_none_raises_error() -> None:
         va_cal.fit(X_binary_train, y_binary_train)
 
 
+@pytest.mark.filterwarnings("ignore:: RuntimeWarning")
 def test_va_sample_weights_constant() -> None:
     """Test that constant sample weights give same results as None."""
     sklearn.set_config(enable_metadata_routing=True)
@@ -640,6 +646,7 @@ def test_va_sample_weights_constant() -> None:
     np.testing.assert_allclose(probs_none, probs_ones, rtol=1e-2, atol=1e-2)
 
 
+@pytest.mark.filterwarnings("ignore:: RuntimeWarning")
 def test_va_sample_weights_variable() -> None:
     """Test that variable sample weights affect the results."""
     sklearn.set_config(enable_metadata_routing=True)
@@ -669,6 +676,7 @@ def test_va_sample_weights_variable() -> None:
     assert not np.allclose(probs_uniform, probs_weighted)
 
 
+@pytest.mark.filterwarnings("ignore:: RuntimeWarning")
 def test_va_venn_abers_cv_with_sample_weight() -> None:
     """Test VennAbersCV with sample weights in cross-validation mode."""
     sklearn.set_config(enable_metadata_routing=True)
@@ -689,6 +697,7 @@ def test_va_venn_abers_cv_with_sample_weight() -> None:
     assert np.allclose(probs.sum(axis=1), 1.0)
 
 
+@pytest.mark.filterwarnings("ignore:: RuntimeWarning")
 def test_va_random_state_reproducibility() -> None:
     """Test that random_state ensures reproducible results."""
     va_cal1 = VennAbersCalibrator(
@@ -715,6 +724,7 @@ def test_va_random_state_reproducibility() -> None:
         ("calib_size", 0.4),
     ],
 )
+@pytest.mark.filterwarnings("ignore:: RuntimeWarning")
 def test_va_fit_parameters_override(param_name, override_value) -> None:
     """Test that fit() parameters override constructor parameters."""
     va_cal = VennAbersCalibrator(
@@ -727,6 +737,7 @@ def test_va_fit_parameters_override(param_name, override_value) -> None:
 
 
 @pytest.mark.parametrize("cal_size", [0.2, 0.3, 0.5])
+@pytest.mark.filterwarnings("ignore:: RuntimeWarning")
 def test_va_different_calibration_sizes(cal_size: float) -> None:
     """Test that different calibration sizes work correctly."""
     va_cal = VennAbersCalibrator(
@@ -739,6 +750,7 @@ def test_va_different_calibration_sizes(cal_size: float) -> None:
 
 
 @pytest.mark.parametrize("n_splits", [2, 3, 5])
+@pytest.mark.filterwarnings("ignore:: RuntimeWarning")
 def test_va_different_n_splits(n_splits: int) -> None:
     """Test that different n_splits values work correctly."""
     va_cal = VennAbersCalibrator(
@@ -765,6 +777,7 @@ def test_va_n_splits_too_small_raises_error() -> None:
         va_cal.fit(X_binary_train, y_binary_train)
 
 
+@pytest.mark.filterwarnings("ignore:: RuntimeWarning")
 def test_va_pipeline_compatibility() -> None:
     """Test that VennAbersCalibrator works with sklearn pipelines."""
     X_df = pd.DataFrame(
@@ -805,6 +818,7 @@ def test_va_pipeline_compatibility() -> None:
         (pd.DataFrame, np.ndarray),
     ],
 )
+@pytest.mark.filterwarnings("ignore:: RuntimeWarning")
 def test_va_different_input_types(X_type, y_type) -> None:
     """Test with different input data types."""
     X_train = X_type(X_binary_train) if X_type == pd.DataFrame else X_binary_train
@@ -856,6 +870,7 @@ def test_va_invalid_cal_size_raises_error(calib_size) -> None:
 
 
 @pytest.mark.parametrize("precision", [None, 2, 4])
+@pytest.mark.filterwarnings("ignore:: RuntimeWarning")
 def test_va_precision_parameter(precision: Optional[int]) -> None:
     """Test that precision parameter works correctly."""
     va_cal = VennAbersCalibrator(
@@ -870,6 +885,7 @@ def test_va_precision_parameter(precision: Optional[int]) -> None:
     assert np.allclose(probs.sum(axis=1), 1.0)
 
 
+@pytest.mark.filterwarnings("ignore:: RuntimeWarning")
 def test_va_precision_parameter_multiclass() -> None:
     """Test that precision parameter works correctly for multiclass."""
     va_cal = VennAbersCalibrator(
@@ -884,6 +900,7 @@ def test_va_precision_parameter_multiclass() -> None:
     assert np.allclose(probs.sum(axis=1), 1.0)
 
 
+@pytest.mark.filterwarnings("ignore:: RuntimeWarning")
 def test_va_integration_with_cross_validation() -> None:
     """Test integration with sklearn's cross-validation utilities."""
     from sklearn.model_selection import cross_val_score
@@ -927,6 +944,7 @@ def test_va_check_is_fitted_after_fit() -> None:
     check_is_fitted(va_cal)
 
 
+@pytest.mark.filterwarnings("ignore:: RuntimeWarning")
 def test_va_predict_proba_prefitted_va_one_vs_all() -> None:
     """Test predict_proba_prefitted_va with one_vs_all strategy."""
     X, y = make_classification(
@@ -967,6 +985,7 @@ def test_va_predict_proba_prefitted_va_invalid_type() -> None:
         predict_proba_prefitted_va(p_cal, y_train, p_test, va_tpe="invalid_type")
 
 
+@pytest.mark.filterwarnings("ignore:: RuntimeWarning")
 def test_va_venn_abers_basic() -> None:
     """Test basic VennAbers functionality for binary classification."""
     X, y = make_classification(n_samples=500, n_classes=2, random_state=random_state_va)
@@ -990,6 +1009,7 @@ def test_va_venn_abers_basic() -> None:
     assert np.allclose(p_prime.sum(axis=1), 1.0)
 
 
+@pytest.mark.filterwarnings("ignore:: RuntimeWarning")
 def test_va_venn_abers_cv_p0_p1_output() -> None:
     """Test VennAbersCV predict_proba with p0_p1_output=True."""
     from mapie._venn_abers import VennAbersCV
@@ -1016,6 +1036,7 @@ def test_va_multiclass_cross_validation_requires_n_splits() -> None:
         va_multi.fit(X_multi_train, y_multi_train)
 
 
+@pytest.mark.filterwarnings("ignore:: RuntimeWarning")
 def test_va_multiclass_p0_p1_output() -> None:
     """Test VennAbersMultiClass with p0_p1_output=True."""
     n_samples, n_features, n_classes = 100, 4, 3
@@ -1037,6 +1058,7 @@ def test_va_multiclass_p0_p1_output() -> None:
     assert len(p0_p1_list) == n_classes * (n_classes - 1) // 2
 
 
+@pytest.mark.filterwarnings("ignore:: RuntimeWarning")
 def test_va_prefit_predict_proba_without_single_estimator() -> None:
     """Test that predict_proba raises RuntimeError when single_estimator_ is None in prefit mode."""
     clf = GaussianNB().fit(X_binary_proper, y_binary_proper)
@@ -1050,6 +1072,7 @@ def test_va_prefit_predict_proba_without_single_estimator() -> None:
         va_cal.predict_proba(X_binary_test)
 
 
+@pytest.mark.filterwarnings("ignore:: RuntimeWarning")
 def test_va_prefit_predict_proba_without_n_classes() -> None:
     """Test that predict_proba raises RuntimeError when n_classes_ is None after fitting."""
     clf = GaussianNB().fit(X_binary_proper, y_binary_proper)
@@ -1092,6 +1115,7 @@ def test_va_prefit_classes_none_after_fitting() -> None:
 
 
 @pytest.mark.parametrize("cv_ensemble", [True, False])
+@pytest.mark.filterwarnings("ignore:: RuntimeWarning")
 def test_va_cv_ensemble_cross_binary(cv_ensemble) -> None:
     """Test cv_ensemble parameter with cross-validation mode."""
     va_cal = VennAbersCalibrator(
@@ -1108,6 +1132,7 @@ def test_va_cv_ensemble_cross_binary(cv_ensemble) -> None:
     assert np.allclose(proba.sum(axis=1), 1.0)
 
 
+@pytest.mark.filterwarnings("ignore:: RuntimeWarning")
 def test_va_venn_abers_cv_brier_loss() -> None:
     """Test VennAbersCV with Brier loss."""
     va_cal = VennAbersCalibrator(
@@ -1123,6 +1148,7 @@ def test_va_venn_abers_cv_brier_loss() -> None:
     assert np.allclose(probs_brier.sum(axis=1), 1.0)
 
 
+@pytest.mark.filterwarnings("ignore:: RuntimeWarning")
 def test_va_comprehensive_workflow() -> None:
     """Comprehensive test covering multiple aspects of VennAbersCalibrator."""
     modes: list[tuple[str, dict[str, Any]]] = [
@@ -1171,6 +1197,7 @@ def test_va_comprehensive_workflow() -> None:
     assert np.allclose(probs_prefit.sum(axis=1), 1.0)
 
 
+@pytest.mark.filterwarnings("ignore:: RuntimeWarning")
 def test_va_prefit_binary_va_calibrator_none_raises() -> None:
     clf = GaussianNB().fit(X_binary_proper, y_binary_proper)
     va_cal = VennAbersCalibrator(estimator=clf, cv="prefit")
@@ -1209,6 +1236,7 @@ def test_va_inductive_va_calibrator_wrong_type_raises() -> None:
         va_cal.predict_proba(X_binary_test)
 
 
+@pytest.mark.filterwarnings("ignore:: RuntimeWarning")
 def test_va_inductive_loss_branch_and_else_branch() -> None:
     va_cal = VennAbersCalibrator(
         estimator=GaussianNB(), inductive=True, random_state=random_state_va
