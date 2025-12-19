@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Callable, Tuple, cast
+from typing import Callable, Tuple
 
 import numpy as np
 from numpy.typing import NDArray
@@ -110,8 +110,7 @@ class BinaryClassificationRisk:
         risk_conditions = self._risk_condition(y_true, y_pred)
 
         effective_sample_size = len(y_true) - np.sum(~risk_conditions)
-        # Casting needed for MyPy with Python 3.9
-        effective_sample_size_int = cast(int, effective_sample_size)
+        effective_sample_size_int = effective_sample_size
         if effective_sample_size_int != 0.0:
             risk_sum: int = np.sum(risk_occurrences[risk_conditions])
             risk_value = risk_sum / effective_sample_size_int
