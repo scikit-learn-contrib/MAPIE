@@ -461,6 +461,9 @@ class MultiLabelClassificationController:
         X, y = indexable(X, y)
         _check_y(y, multi_output=True)
 
+        y = cast(NDArray, y)
+        X = cast(NDArray, X)
+
         self._check_all_labelled(y)
         self.n_samples_ = _num_samples(X)
 
