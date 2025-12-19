@@ -1058,23 +1058,6 @@ def test_va_multiclass_p0_p1_output() -> None:
     assert len(p0_p1_list) == n_classes * (n_classes - 1) // 2
 
 
-# def test_va_inductive_missing_size_parameters_raises_error() -> None:
-#     """Test that inductive mode raises error when train_proper_size is None."""
-#     X_local, y_local = make_classification(
-#         n_samples=100, n_classes=3, n_informative=10, random_state=random_state_va
-#     )
-#     va_multi = VennAbersMultiClass(
-#         estimator=GaussianNB(),
-#         inductive=True,
-#         train_proper_size=None,
-#         random_state=random_state_va,
-#     )
-#     with pytest.raises(
-#         Exception, match="For Inductive Venn-ABERS please provide either calibration"
-#     ):
-#         va_multi.fit(X_local, y_local)
-
-
 @pytest.mark.filterwarnings("ignore:: RuntimeWarning")
 def test_va_prefit_predict_proba_without_single_estimator() -> None:
     """Test that predict_proba raises RuntimeError when single_estimator_ is None in prefit mode."""
