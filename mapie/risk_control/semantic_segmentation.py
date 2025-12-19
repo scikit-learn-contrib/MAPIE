@@ -5,19 +5,12 @@ from typing import Sequence, Union, cast
 from .multi_label_classification import MultiLabelClassificationController
 from mapie.utils import check_is_fitted
 
-from .risks import precision_image, recall_image
-
 
 class SemanticSegmentationController(MultiLabelClassificationController):
     """
     Risk controller for semantic segmentation tasks,
     inheriting from MultiLabelClassificationController.
     """
-
-    risk_choice_map = {
-        "precision": precision_image,
-        "recall": recall_image,
-    }
 
     def _transform_pred_proba(
         self, y_pred_proba: Union[Sequence[NDArray], NDArray], ravel: bool = True
