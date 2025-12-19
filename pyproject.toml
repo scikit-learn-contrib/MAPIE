@@ -83,6 +83,7 @@ notebooks = [
     "tensorflow==2.20.0",
     "tensorflow_datasets==4.8.3",
     "xgboost==2.1.4",
+    "plotly==6.5.0",
 ]
 
 [tool.setuptools]
