@@ -126,12 +126,6 @@ class BinaryClassificationRisk:
 
 
 precision = BinaryClassificationRisk(
-    risk_occurrence=lambda y_true, y_pred: y_pred == y_true,
-    risk_condition=lambda y_true, y_pred: y_pred == 1,
-    higher_is_better=True,
-)
-
-precision_image = BinaryClassificationRisk(
     risk_occurrence=lambda y_true, y_pred: y_pred.ravel() == y_true.ravel(),
     risk_condition=lambda y_true, y_pred: y_pred.ravel() == 1,
     higher_is_better=True,
@@ -144,12 +138,6 @@ accuracy = BinaryClassificationRisk(
 )
 
 recall = BinaryClassificationRisk(
-    risk_occurrence=lambda y_true, y_pred: y_pred == y_true,
-    risk_condition=lambda y_true, y_pred: y_true == 1,
-    higher_is_better=True,
-)
-
-recall_image = BinaryClassificationRisk(
     risk_occurrence=lambda y_true, y_pred: y_pred.ravel() == y_true.ravel(),
     risk_condition=lambda y_true, y_pred: y_true.ravel() == 1,
     higher_is_better=True,
