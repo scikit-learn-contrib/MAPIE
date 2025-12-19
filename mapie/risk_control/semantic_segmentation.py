@@ -1,11 +1,9 @@
-import numpy as np
-from numpy.typing import ArrayLike, NDArray
 from typing import Sequence, Union, cast
 
-from mapie.utils import check_is_fitted
+import numpy as np
+from numpy.typing import ArrayLike, NDArray
 
-from .multi_label_classification import MultiLabelClassificationController
-from .risks import precision_image, recall_image
+from mapie.utils import check_is_fitted
 
 
 class SemanticSegmentationController(MultiLabelClassificationController):
@@ -13,11 +11,6 @@ class SemanticSegmentationController(MultiLabelClassificationController):
     Risk controller for semantic segmentation tasks,
     inheriting from MultiLabelClassificationController.
     """
-
-    risk_choice_map = {
-        "precision": precision_image,
-        "recall": recall_image,
-    }
 
     def _transform_pred_proba(
         self, y_pred_proba: Union[Sequence[NDArray], NDArray], ravel: bool = True
@@ -78,4 +71,5 @@ class SemanticSegmentationController(MultiLabelClassificationController):
             y_pred_proba_array
             > self.best_predict_param[np.newaxis, :, np.newaxis, np.newaxis]
         )
+        return y_pred_proba_array
         return y_pred_proba_array
