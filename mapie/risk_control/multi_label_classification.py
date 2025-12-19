@@ -496,7 +496,7 @@ class MultiLabelClassificationController:
         """
         Compute optimal predict_params based on the computed risks.
         """
-        if self._risk_name == "precision":
+        if self._risk == precision:
             self.n_obs = len(self._risks)
             self.r_hat = self._risks.mean(axis=0)
             self.valid_index, _ = ltt_procedure(
@@ -516,7 +516,7 @@ class MultiLabelClassificationController:
             self.best_predict_param, _ = find_precision_best_predict_param(
                 self.r_hat, self.valid_index, self.predict_params
             )
-        elif self._risk_name == "recall":
+        elif self._risk == recall:
             self.r_hat, self.r_hat_plus = get_r_hat_plus(
                 self._risks,
                 self.predict_params,
