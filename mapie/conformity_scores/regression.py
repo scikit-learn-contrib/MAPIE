@@ -208,7 +208,7 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
             "https://github.com/scikit-learn-contrib/MAPIE/issues/588"
         )
 
-        beta_np = np.full(
+        beta_np: NDArray[np.int_] = np.full(
             shape=(len(lower_bounds), len(alpha_np)),
             fill_value=np.nan,
             dtype=float,
