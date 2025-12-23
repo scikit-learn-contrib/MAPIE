@@ -15,6 +15,7 @@ Hugging Face for simplicity and reproducibility.
 """
 
 import importlib.util
+import warnings
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -24,6 +25,8 @@ from huggingface_hub import hf_hub_download, snapshot_download
 from tqdm import tqdm
 
 from mapie.risk_control import SemanticSegmentationController
+
+warnings.filterwarnings("ignore")
 
 ###############################################################################
 # Load utilities from Hugging Face
