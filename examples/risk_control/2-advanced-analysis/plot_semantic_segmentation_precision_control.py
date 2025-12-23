@@ -298,4 +298,3 @@ plt.show()
 # target precision level, illustrating the effectiveness of MAPIE’s
 # risk control for semantic segmentation tasks.
 ###############################################################################
-###############################################################################
