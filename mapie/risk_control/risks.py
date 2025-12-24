@@ -109,7 +109,7 @@ class BinaryClassificationRisk:
         risk_occurrences = self._risk_occurrence(y_true, y_pred)
         risk_conditions = self._risk_condition(y_true, y_pred)
 
-        effective_sample_size = len(y_true) - np.sum(~risk_conditions)
+        effective_sample_size = y_true.size - np.sum(~risk_conditions)
         # Casting needed for MyPy with Python 3.9
         effective_sample_size_int = cast(int, effective_sample_size)
         if effective_sample_size_int != 0.0:
@@ -126,8 +126,8 @@ class BinaryClassificationRisk:
 
 
 precision = BinaryClassificationRisk(
-    risk_occurrence=lambda y_true, y_pred: y_pred == y_true,
-    risk_condition=lambda y_true, y_pred: y_pred == 1,
+    risk_occurrence=lambda y_true, y_pred: y_pred.ravel() == y_true.ravel(),
+    risk_condition=lambda y_true, y_pred: y_pred.ravel() == 1,
     higher_is_better=True,
 )
 
@@ -138,8 +138,8 @@ accuracy = BinaryClassificationRisk(
 )
 
 recall = BinaryClassificationRisk(
-    risk_occurrence=lambda y_true, y_pred: y_pred == y_true,
-    risk_condition=lambda y_true, y_pred: y_true == 1,
+    risk_occurrence=lambda y_true, y_pred: y_pred.ravel() == y_true.ravel(),
+    risk_condition=lambda y_true, y_pred: y_true.ravel() == 1,
     higher_is_better=True,
 )
 

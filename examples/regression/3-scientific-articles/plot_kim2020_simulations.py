@@ -33,7 +33,6 @@ results than [1], and that the targeted coverage level is obtained.
 
 from __future__ import annotations
 
-import requests
 from io import BytesIO
 from typing import Any, Optional, Tuple
 from zipfile import ZipFile
@@ -42,16 +41,17 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
 import numpy as np
 import pandas as pd
+import requests
+from numpy.typing import ArrayLike, NDArray
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.linear_model import Ridge
 from sklearn.model_selection import train_test_split
 
-from numpy.typing import ArrayLike, NDArray
 from mapie.metrics.regression import (
     regression_coverage_score,
     regression_mean_width_score,
 )
-from mapie.regression import JackknifeAfterBootstrapRegressor, CrossConformalRegressor
+from mapie.regression import CrossConformalRegressor, JackknifeAfterBootstrapRegressor
 from mapie.subsample import Subsample
 
 
@@ -259,12 +259,9 @@ def B_random_from_B_fixed(
         where B, train_size and m are parameters.
     """
     np.random.seed(random_state + itrial)
-    return int(
-        np.random.binomial(
-            int(B / (1 - 1.0 / (1 + train_size)) ** m),
-            (1 - 1.0 / (1 + train_size)) ** m,
-            size=1,
-        )
+    return np.random.binomial(
+        int(B / (1 - 1.0 / (1 + train_size)) ** m),
+        (1 - 1.0 / (1 + train_size)) ** m,
     )
 
 
