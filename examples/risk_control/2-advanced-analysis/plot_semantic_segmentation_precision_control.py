@@ -28,12 +28,10 @@ from mapie.risk_control import SemanticSegmentationController
 warnings.filterwarnings("ignore")
 
 ###############################################################################
-# Load utilities from Hugging Face
-#
 # To keep this example self-contained, we load the dataset utilities
 # and the segmentation LightningModule definition directly from a
 # repository hosted on Hugging Face.
-###############################################################################
+#
 
 module_path = hf_hub_download(
     repo_id="mapie-library/rooftop_segmentation",
@@ -71,14 +69,10 @@ model.eval()
 print("Model loaded successfully!")
 
 ###############################################################################
-# Load calibration and test datasets
+# Next, two datasets are loaded from Hugging Face: a calibration set used to estimate
+# risks and select an appropriate decision threshold, and a test set reserved for
+# evaluating controlled predictions on unseen data.
 #
-# We build two dataloaders:
-#
-# - calibration: used to estimate risks and select a threshold,
-# - test: used to evaluate controlled predictions on unseen data.
-###############################################################################
-
 
 CALIB_IMAGES_DIR = data_root / "calib" / "images"
 CALIB_MASKS_DIR = data_root / "calib" / "masks"
@@ -103,12 +97,10 @@ print(f"Calibration set size: {len(calib_dataset)}")
 print(f"Test set size: {len(test_dataset)}")
 
 ###############################################################################
-# Initialize the precision controller
+# A :class:`~mapie.risk_control.SemanticSegmentationController` is instantiated
+# to control the precision risk (1 - precision) and automatically select a threshold
+# that meets the target precision level with high confidence.
 #
-# We instantiate SemanticSegmentationController to control
-# the precision risk (1 - precision). It will find a threshold
-# that achieves the desired precision level with high confidence.
-###############################################################################
 
 TARGET_PRECISION = 0.8
 CONFIDENCE_LEVEL = 0.9
@@ -122,12 +114,10 @@ precision_controller = SemanticSegmentationController(
 print(f"Target precision level: {TARGET_PRECISION}")
 
 ###############################################################################
-# Calibration phase
+# During calibration, the controller evaluates the precision risk over a range
+# of thresholds on the calibration dataset in order to identify an optimal
+# decision threshold.
 #
-# The controller evaluates precision risk (1 - precision) for
-# a range of threshold values on the calibration dataset. This
-# information is used to select an optimal decision threshold.
-###############################################################################
 
 for i, sample in enumerate(calib_loader):
     image, mask = sample["image"], sample["mask"]
@@ -149,15 +139,9 @@ print("Controller calibrated successfully!")
 print(f"Optimal threshold found: {precision_controller.best_predict_param[0]:.4f}")
 
 ###############################################################################
-# Visual inspection of controlled predictions
+# Controlled predictions are visually inspected on a few test images to
+# illustrate the effect of MAPIE thresholding compared to raw model outputs.
 #
-# For a few random test images, we compare:
-#
-# - Original image
-# - Ground truth mask
-# - Raw prediction probabilities
-# - MAPIE-controlled mask with the selected threshold
-###############################################################################
 
 
 def denormalize_image(tensor_image: torch.Tensor) -> np.ndarray:
@@ -227,11 +211,10 @@ plt.show()
 
 
 ###############################################################################
-# Evaluate on the test set
+# The controller is finally evaluated on the test set by computing the achieved
+# precision on each image to verify that the target precision level is satisfied
+# on unseen data.
 #
-# Compute the achieved precision for each test image to assess whether
-# the target precision level is met on unseen data.
-###############################################################################
 
 precisions_list = []
 
@@ -264,11 +247,9 @@ print(f"\tMin precision: {precisions_array.min():.4f}")
 print(f"\tMax precision: {precisions_array.max():.4f}")
 
 ###############################################################################
-# Precision distribution
+# Finally, the distribution of precision values over the test set is plotted
+# to summarize the controlled performance.
 #
-# Visualize the distribution of precision values across all test images.
-# This gives a more complete view of controlled performance.
-###############################################################################
 
 fig, ax = plt.subplots(figsize=(10, 6))
 
