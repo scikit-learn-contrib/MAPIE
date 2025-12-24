@@ -22,7 +22,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from huggingface_hub import hf_hub_download, snapshot_download
-from tqdm import tqdm
 
 from mapie.risk_control import SemanticSegmentationController
 
@@ -52,7 +51,7 @@ get_validation_transforms = hf_module.get_validation_transforms
 
 ###############################################################################
 # Load a pretrained segmentation model checkpoint from Hugging Face.
-###############################################################################
+#
 
 model_ckpt = hf_hub_download(
     repo_id="mapie-library/rooftop_segmentation",
@@ -75,6 +74,7 @@ print("Model loaded successfully!")
 # Load calibration and test datasets
 #
 # We build two dataloaders:
+#
 # - calibration: used to estimate risks and select a threshold,
 # - test: used to evaluate controlled predictions on unseen data.
 ###############################################################################
@@ -128,8 +128,7 @@ print(f"Target recall level: {TARGET_RECALL}")
 # information is used to select an optimal decision threshold.
 ###############################################################################
 
-print("Calibrating the controller...")
-for i, sample in enumerate(tqdm(calib_loader, desc="Calibration")):
+for i, sample in enumerate(calib_loader):
     image, mask = sample["image"], sample["mask"]
     image = image.to(DEVICE)
     mask = mask.cpu().numpy()
@@ -145,12 +144,14 @@ for i, sample in enumerate(tqdm(calib_loader, desc="Calibration")):
 
 # Compute the best threshold
 recall_controller.compute_best_predict_param()
-print(f"\nOptimal threshold found: {recall_controller.best_predict_param[0]:.4f}")
+print("Controller calibrated successfully!")
+print(f"Optimal threshold found: {recall_controller.best_predict_param[0]:.4f}")
 
 ###############################################################################
 # Visual inspection of controlled predictions
 #
 # For a few random test images, we compare:
+#
 # - Original image
 # - Ground truth mask
 # - Raw prediction probabilities
@@ -233,8 +234,7 @@ plt.show()
 
 recalls_list = []
 
-print("Evaluating on test set...")
-for i, sample in enumerate(tqdm(test_loader, desc="Testing")):
+for i, sample in enumerate(test_loader):
     image, mask = sample["image"], sample["mask"]
     image = image.to(DEVICE)
     mask = mask.cpu().numpy()
@@ -256,11 +256,11 @@ for i, sample in enumerate(tqdm(test_loader, desc="Testing")):
                 recalls_list.append(recall)
 
 recalls_array = np.array(recalls_list)
-print("\nTest set results:")
-print(f"Mean recall: {recalls_array.mean():.4f} ± {recalls_array.std():.4f}")
-print(f"Median recall: {np.median(recalls_array):.4f}")
-print(f"Min recall: {recalls_array.min():.4f}")
-print(f"Max recall: {recalls_array.max():.4f}")
+print("Evaluating on test set results:")
+print(f"\tMean recall: {recalls_array.mean():.4f} ± {recalls_array.std():.4f}")
+print(f"\tMedian recall: {np.median(recalls_array):.4f}")
+print(f"\tMin recall: {recalls_array.min():.4f}")
+print(f"\tMax recall: {recalls_array.max():.4f}")
 
 ###############################################################################
 # Recall distribution
@@ -299,4 +299,4 @@ plt.show()
 # The histogram shows that most test images achieve or exceed the
 # target recall level, illustrating the effectiveness of MAPIE’s
 # risk control for semantic segmentation tasks.
-###############################################################################
+#
