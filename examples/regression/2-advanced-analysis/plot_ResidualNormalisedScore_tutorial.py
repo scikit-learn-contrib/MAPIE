@@ -11,6 +11,7 @@ We will explicit the experimental setup below.
 """
 
 # sphinx_gallery_thumbnail_number = 2
+# sphinx_gallery_requires_network = True
 
 import warnings
 
@@ -24,10 +25,8 @@ from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 
 from mapie.conformity_scores import ResidualNormalisedScore
-from mapie.metrics.regression import (
-    regression_coverage_score,
-    regression_ssc_score,
-)
+from mapie.metrics.regression import (regression_coverage_score,
+                                      regression_ssc_score)
 from mapie.regression import SplitConformalRegressor
 from mapie.utils import train_conformalize_test_split
 

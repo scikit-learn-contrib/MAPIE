@@ -18,6 +18,7 @@ We then compare the coverage and the intervals width.
 """
 
 # sphinx_gallery_thumbnail_number = 3
+# sphinx_gallery_requires_network = True
 
 import warnings
 
