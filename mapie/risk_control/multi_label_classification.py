@@ -27,7 +27,6 @@ from .risks import precision, recall
 
 
 class MultiLabelClassificationController:
-class MultiLabelClassificationController:
     """
     Prediction sets for multilabel-classification.
 
@@ -316,7 +315,6 @@ class MultiLabelClassificationController:
             Raise error if at least one observation
             has no label.
         """
-        if not (y.sum(axis=tuple(range(1, y.ndim))) > 0).all():
         if not (y.sum(axis=tuple(range(1, y.ndim))) > 0).all():
             raise ValueError(
                 "Invalid y. All observations should contain at least one label."

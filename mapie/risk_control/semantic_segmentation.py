@@ -3,6 +3,7 @@ from typing import Sequence, Union, cast
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
+from mapie.risk_control import MultiLabelClassificationController
 from mapie.utils import check_is_fitted
 
 
