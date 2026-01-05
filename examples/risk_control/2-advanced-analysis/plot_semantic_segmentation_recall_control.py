@@ -58,7 +58,11 @@ model_ckpt = hf_hub_download(
 )
 
 data_root = Path(
-    snapshot_download(repo_id="mapie-library/rooftop_segmentation", repo_type="dataset")
+    snapshot_download(
+        repo_id="mapie-library/rooftop_segmentation",
+        repo_type="dataset",
+        allow_patterns=["calib/**", "test/**"],
+    )
 )
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"

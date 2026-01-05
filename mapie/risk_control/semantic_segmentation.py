@@ -73,4 +73,3 @@ class SemanticSegmentationController(MultiLabelClassificationController):
             > self.best_predict_param[np.newaxis, :, np.newaxis, np.newaxis]
         )
         return y_pred_proba_array
-        return y_pred_proba_array
