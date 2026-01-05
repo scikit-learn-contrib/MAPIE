@@ -11,7 +11,6 @@ We will explicit the experimental setup below.
 """
 
 # sphinx_gallery_thumbnail_number = 2
-# sphinx_gallery_requires_network = True
 
 import warnings
 

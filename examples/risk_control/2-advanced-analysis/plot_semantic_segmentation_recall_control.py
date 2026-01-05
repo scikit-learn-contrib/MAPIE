@@ -14,8 +14,6 @@ The dataset, model and utility functions are loaded from
 Hugging Face for simplicity and reproducibility.
 """
 
-# sphinx_gallery_requires_network = True
-
 import importlib.util
 import warnings
 from pathlib import Path
