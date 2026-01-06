@@ -52,7 +52,6 @@ Params = TypedDict(
     {
         "conformity_score": BaseClassificationScore,
         "cv": Optional[Union[int, str]],
-        "test_size": Optional[Union[int, float]],
         "random_state": Optional[int],
     },
 )
@@ -66,16 +65,6 @@ STRATEGIES = {
         Params(
             conformity_score=LACConformityScore(),
             cv="prefit",
-            test_size=None,
-            random_state=random_state,
-        ),
-        ParamsPredict(include_last_label=False, agg_scores="mean"),
-    ),
-    "lac_split": (
-        Params(
-            conformity_score=LACConformityScore(),
-            cv="split",
-            test_size=0.5,
             random_state=random_state,
         ),
         ParamsPredict(include_last_label=False, agg_scores="mean"),
@@ -84,7 +73,6 @@ STRATEGIES = {
         Params(
             conformity_score=LACConformityScore(),
             cv=3,
-            test_size=None,
             random_state=random_state,
         ),
         ParamsPredict(include_last_label=False, agg_scores="mean"),
@@ -93,7 +81,6 @@ STRATEGIES = {
         Params(
             conformity_score=LACConformityScore(),
             cv=3,
-            test_size=None,
             random_state=random_state,
         ),
         ParamsPredict(include_last_label=False, agg_scores="crossval"),
@@ -102,7 +89,6 @@ STRATEGIES = {
         Params(
             conformity_score=APSConformityScore(),
             cv="prefit",
-            test_size=None,
             random_state=random_state,
         ),
         ParamsPredict(include_last_label=True, agg_scores="mean"),
@@ -111,7 +97,6 @@ STRATEGIES = {
         Params(
             conformity_score=APSConformityScore(),
             cv="prefit",
-            test_size=None,
             random_state=random_state,
         ),
         ParamsPredict(include_last_label=False, agg_scores="mean"),
@@ -120,34 +105,6 @@ STRATEGIES = {
         Params(
             conformity_score=APSConformityScore(),
             cv="prefit",
-            test_size=None,
-            random_state=random_state,
-        ),
-        ParamsPredict(include_last_label="randomized", agg_scores="mean"),
-    ),
-    "aps_include_split": (
-        Params(
-            conformity_score=APSConformityScore(),
-            cv="split",
-            test_size=0.5,
-            random_state=random_state,
-        ),
-        ParamsPredict(include_last_label=True, agg_scores="mean"),
-    ),
-    "aps_not_include_split": (
-        Params(
-            conformity_score=APSConformityScore(),
-            cv="split",
-            test_size=0.5,
-            random_state=random_state,
-        ),
-        ParamsPredict(include_last_label=False, agg_scores="mean"),
-    ),
-    "aps_randomized_split": (
-        Params(
-            conformity_score=APSConformityScore(),
-            cv="split",
-            test_size=0.5,
             random_state=random_state,
         ),
         ParamsPredict(include_last_label="randomized", agg_scores="mean"),
@@ -156,7 +113,6 @@ STRATEGIES = {
         Params(
             conformity_score=APSConformityScore(),
             cv=3,
-            test_size=None,
             random_state=random_state,
         ),
         ParamsPredict(include_last_label=True, agg_scores="mean"),
@@ -165,7 +121,6 @@ STRATEGIES = {
         Params(
             conformity_score=APSConformityScore(),
             cv=3,
-            test_size=None,
             random_state=random_state,
         ),
         ParamsPredict(include_last_label=False, agg_scores="mean"),
@@ -174,7 +129,6 @@ STRATEGIES = {
         Params(
             conformity_score=APSConformityScore(),
             cv=3,
-            test_size=None,
             random_state=random_state,
         ),
         ParamsPredict(include_last_label="randomized", agg_scores="mean"),
@@ -183,7 +137,6 @@ STRATEGIES = {
         Params(
             conformity_score=APSConformityScore(),
             cv=3,
-            test_size=None,
             random_state=random_state,
         ),
         ParamsPredict(include_last_label=True, agg_scores="crossval"),
@@ -192,7 +145,6 @@ STRATEGIES = {
         Params(
             conformity_score=APSConformityScore(),
             cv=3,
-            test_size=None,
             random_state=random_state,
         ),
         ParamsPredict(include_last_label=False, agg_scores="crossval"),
@@ -201,7 +153,6 @@ STRATEGIES = {
         Params(
             conformity_score=APSConformityScore(),
             cv=3,
-            test_size=None,
             random_state=random_state,
         ),
         ParamsPredict(include_last_label="randomized", agg_scores="crossval"),
@@ -210,16 +161,6 @@ STRATEGIES = {
         Params(
             conformity_score=NaiveConformityScore(),
             cv="prefit",
-            test_size=None,
-            random_state=random_state,
-        ),
-        ParamsPredict(include_last_label=True, agg_scores="mean"),
-    ),
-    "naive_split": (
-        Params(
-            conformity_score=NaiveConformityScore(),
-            cv="split",
-            test_size=0.5,
             random_state=random_state,
         ),
         ParamsPredict(include_last_label=True, agg_scores="mean"),
@@ -228,16 +169,6 @@ STRATEGIES = {
         Params(
             conformity_score=TopKConformityScore(),
             cv="prefit",
-            test_size=None,
-            random_state=random_state,
-        ),
-        ParamsPredict(include_last_label=True, agg_scores="mean"),
-    ),
-    "top_k_split": (
-        Params(
-            conformity_score=TopKConformityScore(),
-            cv="split",
-            test_size=0.5,
             random_state=random_state,
         ),
         ParamsPredict(include_last_label=True, agg_scores="mean"),
@@ -246,16 +177,6 @@ STRATEGIES = {
         Params(
             conformity_score=RAPSConformityScore(),
             cv="prefit",
-            test_size=None,
-            random_state=random_state,
-        ),
-        ParamsPredict(include_last_label=True, agg_scores="mean"),
-    ),
-    "raps_split": (
-        Params(
-            conformity_score=RAPSConformityScore(),
-            cv="split",
-            test_size=None,
             random_state=random_state,
         ),
         ParamsPredict(include_last_label=True, agg_scores="mean"),
@@ -264,16 +185,6 @@ STRATEGIES = {
         Params(
             conformity_score=RAPSConformityScore(),
             cv="prefit",
-            test_size=None,
-            random_state=random_state,
-        ),
-        ParamsPredict(include_last_label="randomized", agg_scores="mean"),
-    ),
-    "raps_randomized_split": (
-        Params(
-            conformity_score=RAPSConformityScore(),
-            cv="split",
-            test_size=0.5,
             random_state=random_state,
         ),
         ParamsPredict(include_last_label="randomized", agg_scores="mean"),
@@ -287,30 +198,16 @@ STRATEGIES_BINARY = {
         Params(
             conformity_score=LACConformityScore(),
             cv="prefit",
-            test_size=None,
-            random_state=42,
-        ),
-        ParamsPredict(include_last_label=False, agg_scores="mean"),
-    ),
-    "lac_split": (
-        Params(
-            conformity_score=LACConformityScore(),
-            cv="split",
-            test_size=0.5,
             random_state=42,
         ),
         ParamsPredict(include_last_label=False, agg_scores="mean"),
     ),
     "lac_cv_mean": (
-        Params(
-            conformity_score=LACConformityScore(), cv=3, test_size=None, random_state=42
-        ),
+        Params(conformity_score=LACConformityScore(), cv=3, random_state=42),
         ParamsPredict(include_last_label=False, agg_scores="mean"),
     ),
     "lac_cv_crossval": (
-        Params(
-            conformity_score=LACConformityScore(), cv=3, test_size=None, random_state=42
-        ),
+        Params(conformity_score=LACConformityScore(), cv=3, random_state=42),
         ParamsPredict(include_last_label=False, agg_scores="crossval"),
     ),
 }
@@ -346,15 +243,11 @@ def early_stopping_monitor(i, est, locals):
 # for multi-class classification.
 COVERAGES = {
     "lac": 6 / 9,
-    "lac_split": 8 / 9,
     "lac_cv_mean": 1.0,
     "lac_cv_crossval": 1.0,
     "aps_include": 1.0,
     "aps_not_include": 5 / 9,
     "aps_randomized": 6 / 9,
-    "aps_include_split": 8 / 9,
-    "aps_not_include_split": 5 / 9,
-    "aps_randomized_split": 7 / 9,
     "aps_include_cv_mean": 1.0,
     "aps_not_include_cv_mean": 5 / 9,
     "aps_randomized_cv_mean": 8 / 9,
@@ -362,16 +255,13 @@ COVERAGES = {
     "aps_not_include_cv_crossval": 1 / 9,
     "aps_randomized_cv_crossval": 7 / 9,
     "naive": 5 / 9,
-    "naive_split": 5 / 9,
     "top_k": 1.0,
-    "top_k_split": 1.0,
 }
 
 # Here, we only list the strategies we want to test on a small data set,
 # for binary classification.
 COVERAGES_BINARY = {
     "lac": 6 / 9,
-    "lac_split": 8 / 9,
     "lac_cv_mean": 6 / 9,
     "lac_cv_crossval": 6 / 9,
 }
@@ -390,17 +280,6 @@ y_toy_mapie = {
         [False, True, False],
         [False, True, False],
         [False, True, True],
-        [False, False, True],
-    ],
-    "lac_split": [
-        [True, True, False],
-        [True, True, False],
-        [True, True, False],
-        [True, True, False],
-        [True, True, False],
-        [False, True, True],
-        [False, False, True],
-        [False, False, True],
         [False, False, True],
     ],
     "lac_cv_mean": [
@@ -456,39 +335,6 @@ y_toy_mapie = {
         [False, True, False],
         [False, True, False],
         [False, True, True],
-        [False, False, True],
-    ],
-    "aps_include_split": [
-        [True, True, False],
-        [True, True, False],
-        [True, True, False],
-        [True, True, False],
-        [True, True, True],
-        [True, True, True],
-        [False, True, True],
-        [False, False, True],
-        [False, False, True],
-    ],
-    "aps_not_include_split": [
-        [False, True, False],
-        [False, True, False],
-        [False, True, False],
-        [False, True, False],
-        [True, True, False],
-        [False, True, True],
-        [False, False, True],
-        [False, False, True],
-        [False, False, True],
-    ],
-    "aps_randomized_split": [
-        [False, True, False],
-        [True, True, False],
-        [True, True, False],
-        [True, True, False],
-        [True, True, False],
-        [False, True, True],
-        [False, False, True],
-        [False, False, True],
         [False, False, True],
     ],
     "aps_include_cv_mean": [
@@ -568,29 +414,7 @@ y_toy_mapie = {
         [False, False, True],
         [False, False, True],
     ],
-    "naive_split": [
-        [False, True, False],
-        [False, True, False],
-        [False, True, False],
-        [False, True, False],
-        [False, True, False],
-        [False, True, True],
-        [False, False, True],
-        [False, False, True],
-        [False, False, True],
-    ],
     "top_k": [
-        [True, True, False],
-        [True, True, False],
-        [True, True, False],
-        [True, True, False],
-        [True, True, False],
-        [False, True, True],
-        [False, True, True],
-        [False, True, True],
-        [False, True, True],
-    ],
-    "top_k_split": [
         [True, True, False],
         [True, True, False],
         [True, True, False],
@@ -617,17 +441,6 @@ y_toy_binary_mapie = {
         [False, True],
         [False, True],
         [False, True],
-    ],
-    "lac_split": [
-        [True, True],
-        [True, True],
-        [True, True],
-        [True, True],
-        [True, True],
-        [True, True],
-        [True, True],
-        [True, True],
-        [True, False],
     ],
     "lac_cv_mean": [
         [True, False],
@@ -684,18 +497,12 @@ X, y = make_classification(
 # particularly for the raps conformity_scores which require larger data sets.
 LARGE_COVERAGES = {
     "lac": 0.802,
-    "lac_split": 0.842,
     "aps_include": 0.928,
-    "aps_include_split": 0.93,
     "aps_randomized": 0.802,
     "naive": 0.936,
-    "naive_split": 0.914,
     "top_k": 0.96,
-    "top_k_split": 0.952,
     "raps": 0.928,
-    "raps_split": 0.942,
     "raps_randomized": 0.806,
-    "raps_randomized_split": 0.848,
 }
 
 
@@ -790,7 +597,7 @@ def test_initialized() -> None:
     _MapieClassifier()
 
 
-@pytest.mark.parametrize("cv", ["prefit", "split"])
+@pytest.mark.parametrize("cv", ["prefit"])
 @pytest.mark.parametrize(
     "conformity_score",
     [APSConformityScore(), RAPSConformityScore()],
@@ -967,7 +774,7 @@ def test_y_is_list_of_string(
 
 
 @pytest.mark.parametrize("strategy", ["naive", "top_k", "lac", "aps_include"])
-def test_same_results_prefit_split(strategy: str) -> None:
+def test_same_results_prefit(strategy: str) -> None:
     """
     Test checking that if split and prefit method have exactly
     the same data split, then we have exactly the same results.
@@ -984,7 +791,7 @@ def test_same_results_prefit_split(strategy: str) -> None:
     X_train_, X_calib_ = X[train_index], X[val_index]
     y_train_, y_calib_ = y[train_index], y[val_index]
 
-    args_init, args_predict = deepcopy(STRATEGIES[strategy + "_split"])
+    args_init, args_predict = deepcopy(STRATEGIES[strategy])
     args_init["cv"] = cv
     mapie_reg = _MapieClassifier(**args_init)
     mapie_reg.fit(X, y)
@@ -1295,10 +1102,7 @@ def test_toy_dataset_predictions(strategy: str) -> None:
     if strategy == "aps_randomized_cv_crossval":
         return
     args_init, args_predict = STRATEGIES[strategy]
-    if "split" not in strategy:
-        clf = LogisticRegression().fit(X_toy, y_toy)
-    else:
-        clf = LogisticRegression()
+    clf = LogisticRegression().fit(X_toy, y_toy)
     mapie_clf = _MapieClassifier(estimator=clf, **args_init)
     mapie_clf.fit(X_toy, y_toy)
     _, y_ps = mapie_clf.predict(
@@ -1318,10 +1122,7 @@ def test_toy_dataset_predictions(strategy: str) -> None:
 def test_large_dataset_predictions(strategy: str) -> None:
     """Test prediction sets estimated by _MapieClassifier on a larger dataset"""
     args_init, args_predict = STRATEGIES[strategy]
-    if "split" not in strategy:
-        clf = LogisticRegression().fit(X, y)
-    else:
-        clf = LogisticRegression()
+    clf = LogisticRegression().fit(X, y)
     if isinstance(args_init["conformity_score"], RAPSConformityScore):
         args_init["conformity_score"] = RAPSConformityScore(size_raps=0.5)
     mapie_clf = _MapieClassifier(estimator=clf, **args_init)
@@ -1343,10 +1144,7 @@ def test_toy_binary_dataset_predictions(strategy: str) -> None:
     Test prediction sets estimated by _MapieClassifier on a toy binary dataset
     """
     args_init, args_predict = STRATEGIES_BINARY[strategy]
-    if "split" not in strategy:
-        clf = LogisticRegression().fit(X_toy_binary, y_toy_binary)
-    else:
-        clf = LogisticRegression()
+    clf = LogisticRegression().fit(X_toy_binary, y_toy_binary)
     mapie_clf = _MapieClassifier(estimator=clf, **args_init)
     mapie_clf.fit(X_toy_binary, y_toy_binary)
     _, y_ps = mapie_clf.predict(
@@ -1571,7 +1369,7 @@ def test_classif_float32(cv) -> None:
 def test_error_raps_cv_not_prefit(cv: Union[int, None]) -> None:
     """
     Test that an error is raised if the method is RAPS
-    and cv is different from prefit and split.
+    and cv is different from prefit.
     """
     mapie = _MapieClassifier(
         conformity_score=RAPSConformityScore(), cv=cv, random_state=random_state
@@ -1761,12 +1559,12 @@ def test_raps_with_predict_params_passing() -> None:
         X, y, test_size=0.2, random_state=random_state
     )
     custom_gbc = CustomGradientBoostingClassifier(random_state=random_state)
+    custom_gbc.fit(X_train, y_train)
     raps_score = RAPSConformityScore(size_raps=0.1)
     mapie_model = _MapieClassifier(
         estimator=custom_gbc,
         conformity_score=raps_score,
-        cv="split",
-        test_size=0.2,
+        cv="prefit",
         random_state=42,
     )
     predict_params = {"check_predict_params": True}
@@ -1888,3 +1686,16 @@ def test_using_one_predict_parameter_into_fit_but_not_in_predict() -> None:
         ),
     ):
         mapie_fitted.predict(X_test)
+
+
+def test_mapieclassifier_cv_string_check():
+    """Test that _MapieClassifier accepts only string 'prefit' for cv parameter."""
+    clf = LogisticRegression()
+    model = _MapieClassifier(estimator=clf, cv="prefit")
+    assert model.cv == "prefit"
+
+    with pytest.raises(ValueError, match=r'.*must be equal to "prefit".*'):
+        _MapieClassifier(estimator=clf, cv="split")
+
+    with pytest.raises(ValueError, match=r'.*must be equal to "prefit".*'):
+        _MapieClassifier(estimator=clf, cv="crossval")

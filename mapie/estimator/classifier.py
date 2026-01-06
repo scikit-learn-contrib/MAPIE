@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import List, Optional, Tuple, Union, cast
+from typing import List, Literal, Optional, Tuple, Union, cast
 
 import numpy as np
 from joblib import Parallel, delayed
@@ -33,7 +33,7 @@ class EnsembleClassifier:
 
         By default ``None``.
 
-    cv: Optional[str]
+    cv: Optional[Union[int, Literal["prefit"], BaseCrossValidator]] = None,
         The cross-validation strategy for computing scores.
         It directly drives the distinction between jackknife and cv variants.
         Choose among:
@@ -46,24 +46,11 @@ class EnsembleClassifier:
             Main variants are:
             - ``sklearn.model_selection.LeaveOneOut`` (jackknife),
             - ``sklearn.model_selection.KFold`` (cross-validation)
-        - ``"split"``, does not involve cross-validation but a division
-            of the data into training and calibration subsets. The splitter
-            used is the following: ``sklearn.model_selection.ShuffleSplit``.
         - ``"prefit"``, assumes that ``estimator`` has been fitted already.
             All data provided in the ``fit`` method is then used
             to calibrate the predictions through the score computation.
             At prediction time, quantiles of these scores are used to estimate
             prediction sets.
-
-        By default ``None``.
-
-    test_size: Optional[Union[int, float]]
-        If ``float``, should be between ``0.0`` and ``1.0`` and represent the
-        proportion of the dataset to include in the test split. If ``int``,
-        represents the absolute number of test samples. If ``None``,
-        it will be set to ``0.1``.
-
-        If cv is not ``"split"``, ``test_size`` is ignored.
 
         By default ``None``.
 
@@ -103,7 +90,7 @@ class EnsembleClassifier:
             Of shape (n_samples_train, cv.get_n_splits(X_train, y_train)).
     """
 
-    no_agg_cv_ = ["prefit", "split"]
+    no_agg_cv_ = ["prefit"]
     fit_attributes = [
         "single_estimator_",
         "estimators_",
@@ -115,16 +102,14 @@ class EnsembleClassifier:
         self,
         estimator: Optional[ClassifierMixin],
         n_classes: int,
-        cv: Optional[Union[int, str, BaseCrossValidator]],
+        cv: Optional[Union[int, Literal["prefit"], BaseCrossValidator]],
         n_jobs: Optional[int],
-        test_size: Optional[Union[int, float]],
         verbose: int,
     ):
         self.estimator = estimator
         self.n_classes = n_classes
         self.cv = cv
         self.n_jobs = n_jobs
-        self.test_size = test_size
         self.verbose = verbose
         self._is_fitted = False
 
