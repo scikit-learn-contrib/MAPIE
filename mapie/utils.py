@@ -407,17 +407,6 @@ def _check_no_agg_cv(
 
         By default ``None``.
 
-    y: Optional[ArrayLike] of shape (n_samples,)
-        Input labels.
-
-        By default ``None``.
-
-    groups: Optional[ArrayLike] of shape (n_samples,)
-        Group labels for the samples used while splitting the dataset into
-        train/test set.
-
-        By default ``None``.
-
     Returns
     -------
     bool
