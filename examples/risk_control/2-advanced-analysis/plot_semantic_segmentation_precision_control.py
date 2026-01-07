@@ -272,6 +272,13 @@ ax.axvline(
     linewidth=2,
     label=f"Mean Precision ({precisions_array.mean():.3f})",
 )
+ax.axvline(
+    np.quantile(precisions_array, 1 - CONFIDENCE_LEVEL),
+    color="orange",
+    linestyle="--",
+    linewidth=2,
+    label=f"1-CONFIDENCE_LEVEL-th Quantile ({np.quantile(precisions_array, 1 - CONFIDENCE_LEVEL):.3f})",
+)
 ax.set_xlabel("Precision", fontsize=12)
 ax.set_ylabel("Frequency", fontsize=12)
 ax.set_title("Distribution of Precision on Test Set", fontsize=14, fontweight="bold")
