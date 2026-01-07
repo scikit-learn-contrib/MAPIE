@@ -1,40 +1,38 @@
 """
-=========================================================================
-Tutorial for recall and precision control for multi-label classification
-=========================================================================
-In this tutorial, we compare the prediction sets estimated by the
-RCPS and CRC methods implemented in MAPIE, for recall control purpose,
-on a two-dimensional toy dataset.
-We will also look at the Learn Then Test (LTT) procedure. It allows to
-create prediction sets for precision control.
+==============================================================
+Use MAPIE to control the precision of a multi-label classifier
+==============================================================
 
-Throughout this tutorial, we will answer the following questions:
+In this example, we explain how to risk control for multi-label classification
+using the Lean Then Test (LTT) procedure with MAPIE.
 
-- How does the threshold vary according to the desired risk?
-
-- Is the chosen conformal method well calibrated (i.e. does the actual risk
-  equal to the desired one) ?
+We focus on precision risk control with leads to non-monotonic risk with respect to
+the prediction threshold. Hence, the LTT procedure which is able to handle
+non-monotonic losses is a suitable choice.
 
 """
-
+# %%
 # sphinx_gallery_thumbnail_number = 4
 
 import matplotlib.pyplot as plt
 import numpy as np
+from sklearn.metrics import precision_score
 from sklearn.model_selection import train_test_split
 from sklearn.multioutput import MultiOutputClassifier
 from sklearn.naive_bayes import GaussianNB
 
 from mapie.risk_control import MultiLabelClassificationController
 
-##############################################################################
-# 1. Construction of the dataset
-# ----------------------------------------------------------------------------
-# We use a two-dimensional toy dataset with three possible labels. The idea
-# is to create a triangle where the observations on the edges have only one
-# label, those on the vertices have two labels (those of the two edges) and the
-# center have all the labels
+RANDOM_STATE = 42
 
+##############################################################################
+# First, we generate a two-dimensional toy dataset with three possible labels.
+# The idea is to create a triangle where the observations on the edges have only one
+# label, those on the vertices have two labels (those of the two edges) and the
+# center have all the labels.
+
+# Generate synthetic dataset
+np.random.seed(RANDOM_STATE)
 
 centers = [(0, 10), (-5, 0), (5, 0), (0, 5), (0, 0), (-4, 5), (5, 5)]
 covs = [
@@ -48,7 +46,7 @@ covs = [
 ]
 
 x_min, x_max, y_min, y_max, step = -15, 15, -5, 15, 0.1
-n_samples = 800
+n_samples = 5000
 X = np.vstack(
     [
         np.random.multivariate_normal(center, cov, n_samples)
@@ -58,15 +56,13 @@ X = np.vstack(
 classes = [[1, 0, 1], [1, 1, 0], [0, 1, 1], [1, 1, 1], [0, 1, 0], [1, 0, 0], [0, 0, 1]]
 y = np.vstack([np.full((n_samples, 3), row) for row in classes])
 
+# Siplit the dataset into training, calibration and test sets.
 X_train_cal, X_test, y_train_cal, y_test = train_test_split(X, y, test_size=0.2)
-X_train, X_cal, y_train, y_cal = train_test_split(
+X_train, X_calib, y_train, y_calib = train_test_split(
     X_train_cal, y_train_cal, test_size=0.25
 )
 
-
-##############################################################################
-# Let’s see our data.
-
+# Plot the three datasets to visualize the distribution of the two classes.
 colors = {
     (0, 0, 1): {"color": "#1f77b4", "lac": "0-0-1"},
     (0, 1, 1): {"color": "#ff7f0e", "lac": "0-1-1"},
@@ -77,182 +73,179 @@ colors = {
     (1, 1, 1): {"color": "#06C2AC", "lac": "1-1-1"},
 }
 
-for i in range(7):
-    plt.scatter(
-        X[n_samples * i : n_samples * (i + 1), 0],
-        X[n_samples * i : n_samples * (i + 1), 1],
-        color=colors[tuple(y[n_samples * i])]["color"],
-        marker="o",
-        s=10,
-        edgecolor="k",
-    )
-plt.legend([c["lac"] for c in colors.values()])
-plt.show()
+fig, axes = plt.subplots(1, 3, figsize=(18, 6))
+titles = ["Training Data", "Calibration Data", "Test Data"]
+datasets = [(X_train, y_train), (X_calib, y_calib), (X_test, y_test)]
 
-##############################################################################
-# 2 Recall control risk with CRC and RCPS
-# ----------------------------------------------------------------------------
-# 2.1 Fitting MultiLabelClassificationController
-# ----------------------------------------------------------------------------
-# MultiLabelClassificationController will be fitted with RCPS and CRC methods. For the
-# RCPS method, we will test all three Upper Confidence Bounds (Hoeffding,
-# Bernstein and Waudby-Smith–Ramdas).
-# The two methods give two different guarantees on the risk:
-#
-# * RCPS: ``𝒫(R(𝒯̂λ̂) ≤ α) ≥ 1 − δ``
-#   where ``R(𝒯̂λ̂)``
-#   is the risk we want to control and α is the desired risk
-#
-# * CRC: ``𝐸[Lₙ₊₁(λ̂)] ≤ α``
-#   where ``Lₙ₊₁(λ̂)`` is the risk of a new observation and
-#   ``α`` is the desired risk
-#
-# In both cases, the objective of the method is to find the optimal value of
-# ``λ`` (threshold above which we consider a label as being present)
-# such that the recall on the test points is at least equal to the required
-# recall.
+for i, (ax, (X_data, y_data), title) in enumerate(zip(axes, datasets, titles)):
+    for label, props in colors.items():
+        label = np.array(label)
+        mask = np.all(y_data == label, axis=1)
 
-method_params = {
-    "RCPS - Hoeffding": ("rcps", "hoeffding"),
-    "RCPS - Bernstein": ("rcps", "bernstein"),
-    "RCPS - WSR": ("rcps", "wsr"),
-    "CRC": ("crc", None),
-}
-
-clf = MultiOutputClassifier(GaussianNB()).fit(X_train, y_train)
-
-alpha = np.arange(0.01, 1, 0.01)
-y_pss, recalls, thresholds, r_hats, r_hat_pluss = {}, {}, {}, {}, {}
-y_test_repeat = np.repeat(y_test[:, :, np.newaxis], len(alpha), 2)
-for i, (name, (method, bound)) in enumerate(method_params.items()):
-    mapie_clf = MultiLabelClassificationController(
-        predict_function=clf.predict_proba,
-        method=method,
-        risk="recall",
-        target_level=1 - alpha,
-        confidence_level=0.9,
-        rcps_bound=bound,
-    )
-    mapie_clf.calibrate(X_cal, y_cal)
-
-    y_pss[name] = mapie_clf.predict(X_test)
-    recalls[name] = (
-        (y_test_repeat * y_pss[name]).sum(axis=1) / y_test_repeat.sum(axis=1)
-    ).mean(axis=0)
-    thresholds[name] = mapie_clf.best_predict_param
-    r_hats[name] = mapie_clf.r_hat
-    r_hat_pluss[name] = mapie_clf.r_hat_plus
-
-
-##############################################################################
-# 2.2. Results
-# ----------------------------------------------------------------------------
-# To check the results of the methods, we propose two types of plots:
-#
-# 1 - Plots where the confidence level varies. Here two metrics are plotted
-# for each method and for each UCB
-# * The actual recall (which should be always near to the required one):
-# we can see that they are close to each other.
-# * The value of the threshold: we see that the threshold is decreasing as
-# ``1 - α`` increases, which is what is expected because a
-# smaller threshold will give larger prediction sets, hence a larger
-# recall.
-#
-
-vars_y = [recalls, thresholds]
-labels_y = ["Average number of kept labels", "Recall", "Threshold"]
-
-fig, axs = plt.subplots(1, len(vars_y), figsize=(8 * len(vars_y), 8))
-for i, var in enumerate(vars_y):
-    for name, (method, bound) in method_params.items():
-        axs[i].plot(1 - alpha, var[name], label=name, linewidth=2)
-        if i == 0:
-            axs[i].plot([0, 1], [0, 1], ls="--", color="k")
-    axs[i].set_xlabel("Desired recall : 1 - alpha", fontsize=20)
-    axs[i].set_ylabel(labels_y[i], fontsize=20)
-    if i == (len(vars_y) - 1):
-        axs[i].legend(fontsize=20, loc=[1, 0])
-plt.show()
-
-##############################################################################
-# 2 - Plots where we choose a specific risk value (0.1 in our case) and look at
-# the average risk, the UCB of the risk (for RCPS methods) and the choice of
-# the threshold ``λ``.
-# * We can see that among the RCPS methods, the Bernstein method
-# gives the best results as for a given value of ``α``
-# as we are above the required recall but with a larger value of
-# ``λ`` than the two others bounds.
-# * The CRC method gives the best results since it guarantees the coverage
-# with a larger threshold.
-
-fig, axs = plt.subplots(1, len(method_params), figsize=(8 * len(method_params), 8))
-for i, (name, (method, bound)) in enumerate(method_params.items()):
-    axs[i].plot(mapie_clf.predict_params, r_hats[name], label=r"$\hat{R}$", linewidth=2)
-    if name != "CRC":
-        axs[i].plot(
-            mapie_clf.predict_params,
-            r_hat_pluss[name],
-            label=r"$\hat{R}^+$",
-            linewidth=2,
+        ax.scatter(
+            X_data[mask, 0],
+            X_data[mask, 1],
+            color=props["color"],
+            edgecolors="k",
+            s=10,
+            alpha=0.5,
+            label=props["lac"] if i == 0 else None,
         )
-    axs[i].plot([0, 1], [alpha[9], alpha[9]], label=r"$\alpha$")
-    axs[i].plot(
-        [thresholds[name][9], thresholds[name][9]],
-        [0, 1],
-        label=r"$\lambda^*" + f" = {thresholds[name][9]}$",
-    )
-    axs[i].legend(fontsize=20)
-    axs[i].set_title(f"{name} - Recall = {round(recalls[name][9], 2)}", fontsize=20)
+
+    ax.set_title(title, fontsize=18)
+    ax.set_xlabel("Feature 1", fontsize=16)
+    ax.tick_params(labelsize=14)
+
+    if i == 0:
+        ax.set_ylabel("Feature 2", fontsize=16)
+    else:
+        ax.set_ylabel("")
+        ax.set_yticks([])
+
+handles, labels = axes[0].get_legend_handles_labels()
+fig.legend(
+    handles,
+    labels,
+    loc="lower center",
+    bbox_to_anchor=(0.5, -0.05),
+    ncol=4,
+    fontsize=14,
+)
+
+plt.suptitle("Visualization of Train, Calibration, and Test Sets", fontsize=22)
+plt.tight_layout(rect=[0, 0.08, 1, 0.95])
 plt.show()
+# %%
 
 ##############################################################################
-# 3. Precision control risk with LTT
-# ----------------------------------------------------------------------------
-# 3.1 Fitting MultiLabelClassificationController
-# ----------------------------------------------------------------------------
-#
-# In this part, we will use LTT to control precision.
-# At the opposite of the 2 previous method, LTT can handle non-monotonous loss.
-# The procedure consist in multiple hypothesis testing. This is why the output
-# of this procedure isn't reduce to one value of ``λ``.
-#
-# More precisely, we look after all the ``λ`` that sastisfy the
-# following:
-# ``𝒫(R(𝒯̂λ̂) ≤ α) ≥ 1 − δ``,
-# where ``R(𝒯̂λ̂)`` is the risk we want to control and
-# each ``λ`` should satisfy FWER control.
-# ``α`` is the desired risk.
-#
-# Notice that the procedure will diligently examine each ``λ``
-# such that the risk remains below level ``α``, meaning not
-# every ``λ`` will be considered.
-# This means that a for a ``λ`` such that risk is below
-# ``α``
-# doesn't necessarly pass the FWER control! This is what we are going to
-# explore.
+# Second, we fit MultiOutputClassifier by fitting a Gaussian Naive Bayes classifier per label.
+# Using MultiOutputClassifier allows to extend classifiers that do not natively support multi-label classification.
 
-alpha = 0.1
+clf = MultiOutputClassifier(GaussianNB())
+clf.fit(X_train, y_train)
 
-mapie_clf = MultiLabelClassificationController(
+##############################################################################
+# Next, we initialize a :class:`~mapie.risk_control.MultiLabelClassificationController`
+# using the probability estimation function from the fitted estimator:
+# ``clf.predict_proba``, the "precision" performance metric,
+# a target risk level, and a confidence level. Then we use the calibration data
+# to compute statistically guaranteed thresholds using a risk control method.
+#
+# Note that "recall" could also be used here instead of "precision".
+# In that case, one has to choose either "RCPS" that stands for Risk-Controlling
+# Prediction Sets or "CRC" that stands for Conformal Risk Control.
+# The former gives guarantee in probability while the latter in expectation.
+# Please refer to the _Getting started with risk control in MAPIE_
+# example for more details.
+#%%
+target_precision = 0.9
+confidence_level = 0.9
+mcc = MultiLabelClassificationController(
     predict_function=clf.predict_proba,
-    method="ltt",
     risk="precision",
-    target_level=1 - alpha,
-    confidence_level=0.9,
+    method="ltt",
+    predict_params=np.arange(0.01, 1, 0.01),
+    target_level=target_precision,
+    confidence_level=confidence_level,
 )
-mapie_clf.calibrate(X_cal, y_cal)
+mcc.calibrate(X_calib, y_calib)
 
-y_ps = mapie_clf.predict(X_test)
+print(
+    f"{len(mcc.valid_predict_params[0])} thresholds found that guarantee a precision of "
+    f"at least {target_precision} with a confidence of {confidence_level}.\n"
+    "The best threshold is: "
+    f"{mcc.best_predict_param[0]}."
+)
 
-valid_index = mapie_clf.valid_index[0]  # valid_index is a list of list
+#%%
+##############################################################################
+# In the plot below, we visualize how the threshold values impact precision, and what
+# thresholds have been computed as statistically guaranteed.
 
-lambdas = mapie_clf.predict_params[valid_index]
+tested_thresholds = mcc.predict_params
+precisions = 1 - mcc.r_hat
 
-mini = lambdas[np.argmin(lambdas)]
-maxi = lambdas[np.argmax(lambdas)]
+naive_threshold_index = np.argmin(
+    np.where(precisions >= target_precision, precisions - target_precision, np.inf)
+)
 
-r_hat = mapie_clf.r_hat
-idx_max = np.argmin(r_hat[valid_index])
+valid_thresholds_indices = mcc.valid_index[0] # valid_index is a list of list
+
+best_threshold_index = np.where(tested_thresholds == mcc.best_predict_param[0])[0][0]
+
+#%%
+# Compute precision on test set with naive theshold
+# precision_score(y_test, mcc.predict(X_test))
+y_test_proba_naive = clf.predict_proba(X_test)
+print(y_test_proba_naive[0])
+y_pred_naive = (
+    y_test_proba_naive[0][:, 1] >= tested_thresholds[naive_threshold_index]
+).astype(int)
+print(y_pred_naive)
+
+
+#%%
+
+plt.figure()
+plt.scatter(
+    tested_thresholds[valid_thresholds_indices],
+    precisions[valid_thresholds_indices],
+    c="tab:green",
+    label="Valid thresholds",
+)
+plt.scatter(
+    tested_thresholds[~valid_thresholds_indices],
+    precisions[~valid_thresholds_indices],
+    c="tab:red",
+    label="Invalid thresholds",
+)
+plt.scatter(
+    tested_thresholds[best_threshold_index],
+    precisions[best_threshold_index],
+    c="tab:green",
+    label="Best threshold",
+    marker="*",
+    edgecolors="k",
+    s=300,
+)
+plt.scatter(
+    tested_thresholds[naive_threshold_index],
+    precisions[naive_threshold_index],
+    c="tab:red",
+    label="Naive threshold",
+    marker="*",
+    edgecolors="k",
+    s=300,
+)
+plt.axhline(target_precision, color="tab:gray", linestyle="--")
+plt.text(
+    0.7,
+    target_precision + 0.02,
+    "Target precision",
+    color="tab:gray",
+    fontstyle="italic",
+)
+plt.xlabel("Threshold")
+plt.ylabel("Precision")
+plt.legend()
+plt.show()
+
+proba_positive_class_test = clf.predict_proba(X_test)[:, 1]
+y_pred_naive = (
+    proba_positive_class_test >= tested_thresholds[naive_threshold_index]
+).astype(int)
+print(
+    "With the naive threshold, the precision is:\n "
+    f"- {precisions[naive_threshold_index]:.3f} on the calibration set\n "
+    f"- {precision_score(y_test, y_pred_naive):.3f} on the test set."
+)
+
+print(
+    "\n\nWith risk control, the precision is:\n "
+    f"- {precisions[best_threshold_index]:.3f} on the calibration set\n "
+    f"- {precision_score(y_test, mcc.predict(X_test)):.3f} on the test set."
+)
+#%%
 
 ##############################################################################
 # 3.2 Valid parameters for precision control
@@ -263,8 +256,8 @@ idx_max = np.argmin(r_hat[valid_index])
 # control precision at the desired level with a high probability.
 
 plt.figure(figsize=(8, 8))
-plt.plot(mapie_clf.predict_params, r_hat, label=r"$\hat{R}_\lambda$")
-plt.plot([0, 1], [alpha, alpha], label=r"$\alpha$")
+plt.plot(mcc.predict_params, r_hat, label=r"$\hat{R}_\lambda$")
+plt.plot([0, 1], [1-target_precision, 1-target_precision], label=r"$\alpha$")
 plt.axvspan(mini, maxi, facecolor="red", alpha=0.3, label=r"LTT-$\lambda$")
 plt.plot(
     [lambdas[idx_max], lambdas[idx_max]],
@@ -276,3 +269,5 @@ plt.ylabel(r"Empirical risk: $\hat{R}_\lambda$")
 plt.title("Precision risk curve", fontsize=20)
 plt.legend()
 plt.show()
+
+# %%
