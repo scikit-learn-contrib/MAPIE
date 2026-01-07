@@ -274,7 +274,7 @@ class EnsembleClassifier:
             )
         else:
             y_pred_proba = np.array([])
-        val_id = np.full(len(X_val), k, dtype=int)
+        val_id = cast(NDArray[np.int_], np.full(len(X_val), k, dtype=int))
 
         return y_pred_proba, val_id, val_index
 

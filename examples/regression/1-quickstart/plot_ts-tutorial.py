@@ -516,5 +516,3 @@ plt.show()
 # One can notice that the uncertainty's explosion happens about one day late.
 # This is because enough new residuals are needed to change the quantiles
 # obtained from the residuals distribution.
-
-# %%

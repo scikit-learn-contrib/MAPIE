@@ -1,14 +1,13 @@
 import logging
 from abc import ABCMeta, abstractmethod
-from typing import Tuple
+from typing import Tuple, cast
 
 import numpy as np
-
-from mapie.conformity_scores.interface import BaseConformityScore
-from mapie.estimator.regressor import EnsembleRegressor
+from numpy.typing import NDArray
 
 from mapie._machine_precision import EPSILON
-from numpy.typing import NDArray
+from mapie.conformity_scores.interface import BaseConformityScore
+from mapie.estimator.regressor import EnsembleRegressor
 
 
 class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
@@ -208,12 +207,14 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
             "https://github.com/scikit-learn-contrib/MAPIE/issues/588"
         )
 
-        beta_np = np.full(
-            shape=(len(lower_bounds), len(alpha_np)),
-            fill_value=np.nan,
-            dtype=float,
+        beta_np = cast(
+            NDArray[np.float64],
+            np.full(
+                shape=(len(lower_bounds), len(alpha_np)),
+                fill_value=np.nan,
+                dtype=float,
+            ),
         )
-
         for ind_alpha, _alpha in enumerate(alpha_np):
             betas = np.linspace(
                 _alpha / (len(lower_bounds) + 1),
