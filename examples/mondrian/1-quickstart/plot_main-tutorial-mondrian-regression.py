@@ -46,8 +46,8 @@ import numpy as np
 from sklearn.ensemble import RandomForestRegressor
 
 from mapie.metrics.regression import regression_coverage_score
-from mapie.utils import train_conformalize_test_split
 from mapie.regression import SplitConformalRegressor
+from mapie.utils import train_conformalize_test_split
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 warnings.filterwarnings("ignore")
@@ -185,7 +185,7 @@ for group in np.unique(partition_test):
 # Plot the coverage by group with the SplitConformalRegressor
 plt.bar(
     np.arange(len(coverages)),
-    [float(coverages[group]["split"]) for group in coverages],
+    [coverages[group]["split"].item() for group in coverages],
     label="Split",
 )
 plt.xticks(
@@ -281,12 +281,12 @@ for group in np.unique(partition_test):
 plt.figure(figsize=(10, 5))
 plt.bar(
     np.arange(len(coverages)) * 2,
-    [float(coverages[group]["split"]) for group in coverages],
+    [coverages[group]["split"].item() for group in coverages],
     label="Split",
 )
 plt.bar(
     np.arange(len(coverages)) * 2 + 1,
-    [float(coverages[group]["mondrian"]) for group in coverages],
+    [coverages[group]["mondrian"].item() for group in coverages],
     label="Mondrian",
 )
 plt.xticks(
