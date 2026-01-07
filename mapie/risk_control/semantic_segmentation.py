@@ -21,14 +21,16 @@ class SemanticSegmentationController(MultiLabelClassificationController):
         Parameters
         ----------
         y_pred_proba: Union[Sequence[NDArray], NDArray]
-            Predicted probabilities or logits for each class.
+            Predicted probabilities or logits for each class and for each pixel.
+            Shape: (n_samples, n_classes, height, width)
         ravel: bool, default=True
             Whether to ravel the output array. Ravel is used when computing risks
             on the calibration dataset.
         Returns
         -------
         NDArray
-            Transformed predicted probabilities of shape (1, n_samples, 1).
+            Transformed predicted probabilities of shape
+            (n_samples, n_classes*height*width, 1) if ravel=True, else unchanged shape.
         """
         if not isinstance(y_pred_proba, np.ndarray):
             y_pred_proba = np.array(y_pred_proba)
