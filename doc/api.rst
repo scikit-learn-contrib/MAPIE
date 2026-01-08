@@ -1,3 +1,6 @@
+
+.. _api:
+
 #########
 MAPIE API
 #########
@@ -93,6 +96,31 @@ Conformity Scores
    mapie.conformity_scores.APSConformityScore
    mapie.conformity_scores.RAPSConformityScore
    mapie.conformity_scores.TopKConformityScore
+
+New Split CP class
+===================
+
+.. autosummary::
+   :toctree: generated/
+   :template: class.rst
+
+   future.split.base.SplitCP
+   future.split.SplitCPRegressor
+   future.split.SplitCPClassifier
+
+Conformalizers
+---------------
+
+.. autosummary::
+   :toctree: generated/
+   :template: class.rst
+
+   future.calibrators.base.BaseCalibrator
+   future.calibrators.StandardCalibrator
+   future.calibrators.ccp.CCPCalibrator
+   future.calibrators.ccp.CustomCCP
+   future.calibrators.ccp.PolynomialCCP
+   future.calibrators.ccp.GaussianCCP
 
 Risk Control
 ==========================

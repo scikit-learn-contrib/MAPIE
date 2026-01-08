@@ -46,6 +46,7 @@ Contributors
 * Carl McBride Ellis <Carl-McBride-Ellis>
 * Baptiste Calot <baptiste.calot@capgemini.com>
 * Hussein Jawad <hussein.jawad@capgemini.com>
+* Damien Bouet <bouet.dam@gmail.com>
 * Leonardo Garma <leonardo.garma@gmail.com>
 * Mohammed Jawhar <mohammedjawhar365@gmail.com>
 * Syed Affan <saffand03@gmail.com>

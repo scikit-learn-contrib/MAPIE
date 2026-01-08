@@ -64,6 +64,8 @@ The figure below illustrates the naive method.
    :width: 200
    :align: center
 
+.. _theoretical_description_regression_standard: 
+
 2. The split method
 ===================
 

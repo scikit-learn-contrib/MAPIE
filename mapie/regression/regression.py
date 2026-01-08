@@ -39,6 +39,7 @@ from mapie.utils import (
     _raise_error_if_method_already_called,
     _raise_error_if_previous_method_not_called,
     _transform_confidence_level_to_alpha_list,
+    check_estimator_regression,
     check_is_fitted,
     check_sklearn_user_model_is_fitted,
 )
@@ -1320,7 +1321,7 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
             "minmax",
         ]:
             self.method = "base"
-        estimator = self._check_estimator(self.estimator)
+        estimator = check_estimator_regression(self.estimator, cv)
         agg_function = self._check_agg_function(self.agg_function)
         cs_estimator = check_regression_conformity_score(
             self.conformity_score, self.default_sym_

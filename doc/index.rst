@@ -31,6 +31,16 @@
 .. toctree::
    :maxdepth: 2
    :hidden:
+   :caption: Conditional Conformal Prediction
+
+   theoretical_description_ccp
+   theoretical_description_calibrators
+   examples_regression/4-tutorials/plot_ccp_tutorial
+   examples_classification/4-tutorials/plot_ccp_class_tutorial
+
+.. toctree::
+   :maxdepth: 2
+   :hidden:
    :caption: Calibrate classifiers
 
    theoretical_description_calibration

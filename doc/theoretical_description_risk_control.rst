@@ -24,7 +24,7 @@ The table below details the available methods for each task:
 .. |br| raw:: html
 
    <br />
-   
+
 .. list-table:: Available risk control methods in MAPIE for each ML task
    :header-rows: 1
 

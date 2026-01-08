@@ -5,7 +5,7 @@
 ### Checks that are run in GitHub CI ###
 lint:
 	ruff check examples mapie notebooks
-	
+
 format:
 	ruff format --check --diff examples mapie notebooks
 

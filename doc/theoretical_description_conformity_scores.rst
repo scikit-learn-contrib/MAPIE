@@ -53,7 +53,7 @@ This score is by default symmetric (*see above for definition*).
 2. The gamma score
 ------------------
 
-The gamma score [2] (:class:`mapie.conformity_scores.GammaConformityScore`) adds a
+The gamma score [2] (:class:`~mapie.conformity_scores.GammaConformityScore`) adds a
 notion of adaptivity with the normalization of the residuals by the predictions.
 
 .. math:: \frac{|Y-\hat{\mu}(X)|}{\hat{\mu}(X)}
@@ -78,7 +78,7 @@ in use cases where we want greater uncertainty when the prediction is high.
 3. The residual normalized score
 --------------------------------
 
-The residual normalized score [1] (:class:`mapie.conformity_scores.ResidualNormalisedScore`)
+The residual normalized score [1] (:class:`~mapie.conformity_scores.ResidualNormalisedScore`)
 is slightly more complex than the previous scores.
 The normalization of the residual is now done by the predictions of an additional model
 :math:`\hat\sigma` which learns to predict the base model residuals from :math:`X`.

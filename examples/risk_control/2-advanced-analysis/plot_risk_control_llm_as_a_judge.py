@@ -54,7 +54,7 @@ df = df.reset_index(drop=True)
 # Create judge input prompts
 df["judge_input"] = df.apply(
     lambda row: f"""
-    You are a judge evaluating whether an answer to a question is faithful to the 
+    You are a judge evaluating whether an answer to a question is faithful to the
     provided knowledge snippet.
 
     Knowledge: {row["knowledge"]}

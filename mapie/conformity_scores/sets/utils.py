@@ -1,7 +1,8 @@
 from typing import Optional, Union
-import numpy as np
 
+import numpy as np
 from numpy.typing import NDArray
+
 from mapie._machine_precision import EPSILON
 
 
@@ -87,12 +88,15 @@ def get_last_index_included(
     y_pred_proba_cumsum: NDArray of shape (n_samples, n_classes)
         Cumsumed probabilities in the original order.
 
-    threshold: NDArray of shape (n_alpha,) or shape (n_samples_train,)
+    threshold: NDArray of shape (n_alpha,), (n_samples, n_alpha)
+    or (n_samples_train,)
         Threshold to compare with y_proba_last_cumsum, can be either:
 
         - the quantiles associated with alpha values when
             ``cv`` == "prefit", ``cv`` == "split"
             or ``agg_scores`` is "mean"
+            (or a quantile value for each sample,
+            with shape (n_samples, n_alpha))
 
         - the conformity score from training samples otherwise
             (i.e., when ``cv`` is a CV splitter and
@@ -107,13 +111,18 @@ def get_last_index_included(
     NDArray of shape (n_samples, n_alpha)
         Index of the last included sorted probability.
     """
+    if len(threshold.shape) == 1:
+        formatted_threshold = threshold[np.newaxis, :]
+    else:
+        formatted_threshold = threshold
+
     if include_last_label or include_last_label == "randomized":
         y_pred_index_last = np.ma.masked_less(
-            y_pred_proba_cumsum - threshold[np.newaxis, :], -EPSILON
+            y_pred_proba_cumsum - formatted_threshold, -EPSILON
         ).argmin(axis=1)
     else:
         max_threshold = np.maximum(
-            threshold[np.newaxis, :], np.min(y_pred_proba_cumsum, axis=1)
+            formatted_threshold, np.min(y_pred_proba_cumsum, axis=1)
         )
         y_pred_index_last = np.argmax(
             np.ma.masked_greater(

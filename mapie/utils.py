@@ -10,7 +10,7 @@ from typing import Any, Iterable, List, Optional, Tuple, Union, cast
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 from sklearn.base import ClassifierMixin, RegressorMixin
-from sklearn.linear_model import LogisticRegression
+from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.model_selection import (
     BaseCrossValidator,
     BaseShuffleSplit,
@@ -798,6 +798,48 @@ def _check_estimator_fit_predict(
             "Invalid estimator. "
             "Please provide a regressor with fit and predict methods."
         )
+
+
+def check_estimator_regression(
+    estimator: Optional[RegressorMixin] = None,
+    cv: Optional[Union[str, BaseCrossValidator, BaseShuffleSplit]] = None,
+) -> RegressorMixin:
+    """
+    Check if estimator is ``None``,
+    and returns a ``LinearRegression`` instance if necessary.
+    If the ``cv`` attribute is ``"prefit"``,
+    check if estimator is indeed already fitted.
+
+    Parameters
+    ----------
+    estimator: Optional[RegressorMixin]
+        Estimator to check, by default ``None``.
+
+    Returns
+    -------
+    RegressorMixin
+        The estimator itself or a default ``LinearRegression`` instance.
+
+    Raises
+    ------
+    ValueError
+        If the estimator is not ``None``
+        and has no ``fit`` nor ``predict`` methods.
+
+    NotFittedError
+        If the estimator is not fitted
+        and ``cv`` attribute is ``"prefit"``.
+    """
+    if estimator is None:
+        estimator = LinearRegression()
+
+    _check_estimator_fit_predict(estimator)
+    if cv == "prefit":
+        if isinstance(estimator, Pipeline):
+            check_is_fitted(estimator[-1])
+        else:
+            check_is_fitted(estimator)
+    return estimator
 
 
 def _check_alpha_and_last_axis(vector: NDArray, alpha_np: NDArray):
