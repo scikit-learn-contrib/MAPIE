@@ -133,6 +133,7 @@ clf.fit(X_train, y_train)
 #
 # Alternatively, ``risk="recall"`` can also be used.
 # In that case, the controller relies on monotonicity and uses either:
+#
 # - RCPS (Risk-Controlling Prediction Sets), which provides a probabilistic guarantee,
 # - CRC (Conformal Risk Control), which provides a guarantee in expectation.
 #
