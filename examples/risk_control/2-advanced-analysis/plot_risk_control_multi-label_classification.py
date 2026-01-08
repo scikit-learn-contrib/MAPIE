@@ -154,8 +154,7 @@ mcc.calibrate(X_calib, y_calib)
 print(
     f"{len(mcc.valid_predict_params[0])} thresholds found that guarantee a precision of "
     f"at least {target_precision} with a confidence of {confidence_level}.\n"
-    "The best threshold is: "
-    f"{mcc.best_predict_param[0]}."
+    f"The best threshold is: {mcc.best_predict_param[0]:.3f}."
 )
 
 ##############################################################################
