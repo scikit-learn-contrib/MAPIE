@@ -69,7 +69,7 @@ colors = {
     (1, 1, 1): {"color": "#06C2AC", "lac": "1-1-1"},
 }
 
-fig, axes = plt.subplots(1, 3, figsize=(18, 6.2))
+fig, axes = plt.subplots(1, 3, figsize=(18, 6))
 titles = ["Training Data", "Calibration Data", "Test Data"]
 datasets = [(X_train, y_train), (X_calib, y_calib), (X_test, y_test)]
 
@@ -104,7 +104,7 @@ fig.legend(
     labels,
     loc="lower center",
     bbox_to_anchor=(0.5, -0.05),
-    ncol=4,
+    ncol=7,
     fontsize=18,
 )
 
