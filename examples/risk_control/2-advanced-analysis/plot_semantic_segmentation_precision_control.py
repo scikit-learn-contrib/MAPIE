@@ -236,7 +236,7 @@ for i, sample in enumerate(test_loader):
         with torch.no_grad():
             pred = precision_controller.predict(image)
 
-            # Compute recall for each image
+            # Compute precision for each image
             for j in range(len(image)):
                 tp = (mask[j] * pred[j]).sum()
                 fp = ((1 - mask[j]) * pred[j]).sum()
@@ -271,13 +271,6 @@ ax.axvline(
     linestyle="--",
     linewidth=2,
     label=f"Mean Precision ({precisions_array.mean():.3f})",
-)
-ax.axvline(
-    np.quantile(precisions_array, 1 - CONFIDENCE_LEVEL),
-    color="orange",
-    linestyle="--",
-    linewidth=2,
-    label=f"1-CONFIDENCE_LEVEL-th Quantile ({np.quantile(precisions_array, 1 - CONFIDENCE_LEVEL):.3f})",
 )
 ax.set_xlabel("Precision", fontsize=12)
 ax.set_ylabel("Frequency", fontsize=12)
