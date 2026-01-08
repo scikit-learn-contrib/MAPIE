@@ -1,14 +1,10 @@
 """
-==============================================================
-Use MAPIE to control the precision of a multi-label classifier
-==============================================================
+=========================================================
+Use MAPIE to control the risk of a multi-label classifier
+=========================================================
 
-In this example, we explain how to risk control for multi-label classification
-using the Lean Then Test (LTT) procedure with MAPIE.
-
-We focus on precision risk control with leads to non-monotonic risk with respect to
-the prediction threshold. Hence, the LTT procedure which is able to handle
-non-monotonic losses is a suitable choice.
+In this example, we explain how to perform risk control for multi-label
+classification using the Learn-Then-Test (LTT) procedure implemented in MAPIE.
 
 """
 # %%
@@ -46,7 +42,7 @@ covs = [
 ]
 
 x_min, x_max, y_min, y_max, step = -15, 15, -5, 15, 0.1
-n_samples = 5000
+n_samples = 800
 X = np.vstack(
     [
         np.random.multivariate_normal(center, cov, n_samples)
@@ -56,13 +52,13 @@ X = np.vstack(
 classes = [[1, 0, 1], [1, 1, 0], [0, 1, 1], [1, 1, 1], [0, 1, 0], [1, 0, 0], [0, 0, 1]]
 y = np.vstack([np.full((n_samples, 3), row) for row in classes])
 
-# Siplit the dataset into training, calibration and test sets.
+# Split the dataset into training, calibration and test sets.
 X_train_cal, X_test, y_train_cal, y_test = train_test_split(X, y, test_size=0.2)
 X_train, X_calib, y_train, y_calib = train_test_split(
     X_train_cal, y_train_cal, test_size=0.25
 )
 
-# Plot the three datasets to visualize the distribution of the two classes.
+# Plot the three datasets to visualize the distribution of the labels.
 colors = {
     (0, 0, 1): {"color": "#1f77b4", "lac": "0-0-1"},
     (0, 1, 1): {"color": "#ff7f0e", "lac": "0-1-1"},
@@ -115,11 +111,12 @@ fig.legend(
 plt.suptitle("Visualization of Train, Calibration, and Test Sets", fontsize=22)
 plt.tight_layout(rect=[0, 0.08, 1, 0.95])
 plt.show()
-# %%
 
 ##############################################################################
-# Second, we fit MultiOutputClassifier by fitting a Gaussian Naive Bayes classifier per label.
-# Using MultiOutputClassifier allows to extend classifiers that do not natively support multi-label classification.
+# Second, we fit a MultiOutputClassifier by training one Gaussian Naive Bayes
+# classifier per label. Using MultiOutputClassifier allows us to extend
+# classifiers that do not natively support multi-label classification.
+#
 
 clf = MultiOutputClassifier(GaussianNB())
 clf.fit(X_train, y_train)
@@ -127,18 +124,22 @@ clf.fit(X_train, y_train)
 ##############################################################################
 # Next, we initialize a :class:`~mapie.risk_control.MultiLabelClassificationController`
 # using the probability estimation function from the fitted estimator:
-# ``clf.predict_proba``, the "precision" performance metric,
+# ``clf.predict_proba``, a chosen risk ("precision" in this example),
 # a target risk level, and a confidence level. Then we use the calibration data
-# to compute statistically guaranteed thresholds using a risk control method.
+# to compute statistically valid thresholds using a risk control procedure.
 #
-# Note that "recall" could also be used here instead of "precision".
-# In that case, one has to choose either "RCPS" that stands for Risk-Controlling
-# Prediction Sets or "CRC" that stands for Conformal Risk Control.
-# The former gives guarantee in probability while the latter in expectation.
-# Please refer to the _Getting started with risk control in MAPIE_
-# example for more details.
-#%%
-target_precision = 0.9
+# When ``risk="precision"``, the controller relies on the LTT procedure,
+# which is designed to handle non-monotonic risks.
+#
+# Alternatively, ``risk="recall"`` can also be used.
+# In that case, the controller relies on monotonicity and uses either:
+# - RCPS (Risk-Controlling Prediction Sets), which provides a probabilistic guarantee,
+# - CRC (Conformal Risk Control), which provides a guarantee in expectation.
+#
+# Please refer to the theoretical description of risk control in the MAPIE
+# documentation for more details.
+
+target_precision = 0.8
 confidence_level = 0.9
 mcc = MultiLabelClassificationController(
     predict_function=clf.predict_proba,
@@ -157,34 +158,37 @@ print(
     f"{mcc.best_predict_param[0]}."
 )
 
-#%%
 ##############################################################################
 # In the plot below, we visualize how the threshold values impact precision, and what
 # thresholds have been computed as statistically guaranteed.
 
 tested_thresholds = mcc.predict_params
-precisions = 1 - mcc.r_hat
+precisions = 1 - mcc.r_hat  # risk is defined as 1 - precision
 
 naive_threshold_index = np.argmin(
     np.where(precisions >= target_precision, precisions - target_precision, np.inf)
 )
 
-valid_thresholds_indices = mcc.valid_index[0] # valid_index is a list of list
+valid_thresholds_indices = mcc.valid_index[0]  # valid_index is a list of lists
+mask_invalid_threshold = np.ones(len(tested_thresholds), dtype=bool)
+mask_invalid_threshold[valid_thresholds_indices] = False
 
 best_threshold_index = np.where(tested_thresholds == mcc.best_predict_param[0])[0][0]
 
-#%%
-# Compute precision on test set with naive theshold
-# precision_score(y_test, mcc.predict(X_test))
-y_test_proba_naive = clf.predict_proba(X_test)
-print(y_test_proba_naive[0])
-y_pred_naive = (
-    y_test_proba_naive[0][:, 1] >= tested_thresholds[naive_threshold_index]
+probas_test = clf.predict_proba(X_test)
+proba_positive = np.column_stack([p[:, 1] for p in probas_test])
+
+y_pred_naive = (proba_positive >= tested_thresholds[naive_threshold_index]).astype(int)
+precision_naive_threshold = precision_score(
+    y_test, y_pred_naive, average=None, zero_division=0
+).mean()
+
+y_pred_ltt_best_threshold = (
+    proba_positive >= tested_thresholds[best_threshold_index]
 ).astype(int)
-print(y_pred_naive)
-
-
-#%%
+precision_best_ltt_threshold = precision_score(
+    y_test, y_pred_ltt_best_threshold, average=None, zero_division=0
+).mean()
 
 plt.figure()
 plt.scatter(
@@ -194,8 +198,8 @@ plt.scatter(
     label="Valid thresholds",
 )
 plt.scatter(
-    tested_thresholds[~valid_thresholds_indices],
-    precisions[~valid_thresholds_indices],
+    tested_thresholds[mask_invalid_threshold],
+    precisions[mask_invalid_threshold],
     c="tab:red",
     label="Invalid thresholds",
 )
@@ -230,44 +234,29 @@ plt.ylabel("Precision")
 plt.legend()
 plt.show()
 
-proba_positive_class_test = clf.predict_proba(X_test)[:, 1]
-y_pred_naive = (
-    proba_positive_class_test >= tested_thresholds[naive_threshold_index]
-).astype(int)
+
 print(
     "With the naive threshold, the precision is:\n "
     f"- {precisions[naive_threshold_index]:.3f} on the calibration set\n "
-    f"- {precision_score(y_test, y_pred_naive):.3f} on the test set."
+    f"- {precision_naive_threshold:.3f} on the test set."
 )
 
 print(
     "\n\nWith risk control, the precision is:\n "
     f"- {precisions[best_threshold_index]:.3f} on the calibration set\n "
-    f"- {precision_score(y_test, mcc.predict(X_test)):.3f} on the test set."
+    f"- {precision_best_ltt_threshold:.3f} on the test set."
 )
-#%%
 
 ##############################################################################
-# 3.2 Valid parameters for precision control
-# ----------------------------------------------------------------------------
-# We can see that not all ``λ`` such that risk is below the orange
-# line are choosen by the procedure. Otherwise, all the lambdas that are
-# in the red rectangle verify family wise error rate control and allow to
-# control precision at the desired level with a high probability.
-
-plt.figure(figsize=(8, 8))
-plt.plot(mcc.predict_params, r_hat, label=r"$\hat{R}_\lambda$")
-plt.plot([0, 1], [1-target_precision, 1-target_precision], label=r"$\alpha$")
-plt.axvspan(mini, maxi, facecolor="red", alpha=0.3, label=r"LTT-$\lambda$")
-plt.plot(
-    [lambdas[idx_max], lambdas[idx_max]],
-    [0, 1],
-    label=r"$\lambda^* =" + f"{lambdas[idx_max]}$",
-)
-plt.xlabel(r"Threshold $\lambda$")
-plt.ylabel(r"Empirical risk: $\hat{R}_\lambda$")
-plt.title("Precision risk curve", fontsize=20)
-plt.legend()
-plt.show()
-
+# The naive threshold is selected on the calibration set to match the target
+# precision, but it does not provide any statistical guarantee on unseen data.
+#
+# In contrast, the threshold selected by risk control takes into account the
+# uncertainty due to the finite calibration sample size and guarantees that
+# the target precision is met on unseen data with high probability.
+#
+# As illustrated above, not all thresholds achieving a precision higher than
+# the target are statistically valid. This highlights the importance of risk
+# control when deploying multi-label classifiers in practice.
+#
 # %%
