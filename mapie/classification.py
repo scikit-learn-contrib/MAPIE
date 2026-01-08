@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import warnings
-from typing import Any, Iterable, Optional, Tuple, Union, cast
+from typing import Any, Iterable, Literal, Optional, Tuple, Union, cast
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -579,7 +579,7 @@ class _MapieClassifier(ClassifierMixin, BaseEstimator):
         (i.e. with fit, predict, and predict_proba methods), by default None.
         If ``None``, estimator defaults to a ``LogisticRegression`` instance.
 
-    cv: Optional[Union[int, str, BaseCrossValidator]]
+    cv: Optional[Union[int, Literal["prefit"], BaseCrossValidator]]
         The cross-validation strategy for computing scores.
         It directly drives the distinction between jackknife and cv variants.
         Choose among:
@@ -592,23 +592,11 @@ class _MapieClassifier(ClassifierMixin, BaseEstimator):
           Main variants are:
           - ``sklearn.model_selection.LeaveOneOut`` (jackknife),
           - ``sklearn.model_selection.KFold`` (cross-validation)
-        - ``"split"``, does not involve cross-validation but a division
-          of the data into training and calibration subsets. The splitter
-          used is the following: ``sklearn.model_selection.ShuffleSplit``.
         - ``"prefit"``, assumes that ``estimator`` has been fitted already.
           All data provided in the ``fit`` method is then used
           to calibrate the predictions through the score computation.
           At prediction time, quantiles of these scores are used to estimate
           prediction sets.
-
-        By default ``None``.
-
-    test_size: Optional[Union[int, float]]
-        If float, should be between 0.0 and 1.0 and represent the proportion
-        of the dataset to include in the test split. If int, represents the
-        absolute number of test samples. If None, it will be set to 0.1.
-
-        If cv is not ``"split"``, ``test_size`` is ignored.
 
         By default ``None``.
 
@@ -715,8 +703,7 @@ class _MapieClassifier(ClassifierMixin, BaseEstimator):
     def __init__(
         self,
         estimator: Optional[ClassifierMixin] = None,
-        cv: Optional[Union[int, str, BaseCrossValidator]] = None,
-        test_size: Optional[Union[int, float]] = None,
+        cv: Optional[Union[int, Literal["prefit"], BaseCrossValidator]] = None,
         n_jobs: Optional[int] = None,
         conformity_score: Optional[BaseClassificationScore] = None,
         random_state: Optional[Union[int, np.random.RandomState]] = None,
@@ -724,7 +711,8 @@ class _MapieClassifier(ClassifierMixin, BaseEstimator):
     ) -> None:
         self.estimator = estimator
         self.cv = cv
-        self.test_size = test_size
+        if isinstance(self.cv, str) and self.cv != "prefit":
+            raise ValueError('If cv is a string, it must be equal to "prefit".')
         self.n_jobs = n_jobs
         self.conformity_score = conformity_score
         self.random_state = random_state
@@ -825,9 +813,7 @@ class _MapieClassifier(ClassifierMixin, BaseEstimator):
         Perform several checks on class parameters.
         """
         self._check_parameters()
-        cv = _check_cv(
-            self.cv, test_size=self.test_size, random_state=self.random_state
-        )
+        cv = _check_cv(self.cv, random_state=self.random_state)
         X, y = indexable(X, y)
         y = _check_y(y)
 
@@ -851,7 +837,7 @@ class _MapieClassifier(ClassifierMixin, BaseEstimator):
             random_state=self.random_state,
         )
         if isinstance(cs_estimator, RAPSConformityScore) and not (
-            self.cv in ["split", "prefit"] or isinstance(self.cv, BaseShuffleSplit)
+            self.cv == "prefit" or isinstance(self.cv, BaseShuffleSplit)
         ):
             raise ValueError(
                 "RAPS conformity score can only be used with SplitConformalClassifier."
@@ -944,7 +930,6 @@ class _MapieClassifier(ClassifierMixin, BaseEstimator):
             self.n_classes_,
             cv,
             self.n_jobs,
-            self.test_size,
             self.verbose,
         )
         # Fit the prediction function

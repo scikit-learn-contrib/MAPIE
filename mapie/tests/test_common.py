@@ -342,9 +342,13 @@ def test_valid_prefit_estimator(pack: Tuple[BaseEstimator, BaseEstimator]) -> No
 @pytest.mark.parametrize("cv", [-3.14, -2, 0, 1, "cv", LinearRegression(), [1, 2]])
 def test_invalid_cv(MapieEstimator: BaseEstimator, cv: Any) -> None:
     """Test that invalid cv raise errors."""
-    mapie_estimator = MapieEstimator(cv=cv)
-    with pytest.raises(ValueError, match=r".*Invalid cv.*"):
-        mapie_estimator.fit(X_toy, y_toy)
+    if MapieEstimator is _MapieClassifier and isinstance(cv, str):
+        with pytest.raises(ValueError, match=r'.*it must be equal to "prefit".*'):
+            MapieEstimator(cv=cv)
+    else:
+        mapie_estimator = MapieEstimator(cv=cv)
+        with pytest.raises(ValueError, match=r".*Invalid cv.*"):
+            mapie_estimator.fit(X_toy, y_toy)
 
 
 @pytest.mark.parametrize("pack", MapieDefaultEstimators())
