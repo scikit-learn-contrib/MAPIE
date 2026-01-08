@@ -2,11 +2,10 @@ from abc import ABCMeta, abstractmethod
 from typing import Optional, Union
 
 import numpy as np
+from numpy.typing import ArrayLike, NDArray
+from sklearn.model_selection import BaseCrossValidator
 
 from mapie.conformity_scores.interface import BaseConformityScore
-from mapie.estimator.classifier import EnsembleClassifier
-
-from mapie._typing import ArrayLike, NDArray
 
 
 class BaseClassificationScore(BaseConformityScore, metaclass=ABCMeta):
@@ -17,6 +16,12 @@ class BaseClassificationScore(BaseConformityScore, metaclass=ABCMeta):
 
     Attributes
     ----------
+    classes: Optional[ArrayLike]
+        Names of the classes.
+
+    random_state: Optional[Union[int, np.random.RandomState]]
+        Pseudo random number generator state.
+
     quantiles_: ArrayLike of shape (n_alpha)
         The quantiles estimated from ``get_sets`` method.
     """
@@ -29,7 +34,7 @@ class BaseClassificationScore(BaseConformityScore, metaclass=ABCMeta):
         *,
         classes: Optional[ArrayLike] = None,
         random_state: Optional[Union[int, np.random.RandomState]] = None,
-        **kwargs
+        **kwargs,
     ) -> None:
         """
         Set attributes that are not provided by the user.
@@ -41,7 +46,7 @@ class BaseClassificationScore(BaseConformityScore, metaclass=ABCMeta):
 
             By default ``None``.
 
-        random_state: Optional[Union[int, RandomState]]
+        random_state: Optional[Union[int, np.random.RandomState]]
             Pseudo random number generator state.
         """
         super().set_external_attributes(**kwargs)
@@ -53,8 +58,9 @@ class BaseClassificationScore(BaseConformityScore, metaclass=ABCMeta):
         self,
         X: NDArray,
         alpha_np: NDArray,
-        estimator: EnsembleClassifier,
-        **kwargs
+        y_pred_proba: NDArray,
+        cv: Optional[Union[int, str, BaseCrossValidator]],
+        **kwargs,
     ) -> NDArray:
         """
         Abstract method to get predictions from an EnsembleClassifier.
@@ -70,8 +76,11 @@ class BaseClassificationScore(BaseConformityScore, metaclass=ABCMeta):
             NDArray of floats between ``0`` and ``1``, represents the
             uncertainty of the confidence set.
 
-        estimator: EnsembleClassifier
-            Estimator that is fitted to predict y from X.
+        y_pred_proba: NDArray
+            Predicted probabilities from the estimator.
+
+        cv: Optional[Union[int, str, BaseCrossValidator]]
+            Cross-validation strategy used by the estimator.
 
         Returns
         --------
@@ -84,8 +93,8 @@ class BaseClassificationScore(BaseConformityScore, metaclass=ABCMeta):
         self,
         conformity_scores: NDArray,
         alpha_np: NDArray,
-        estimator: EnsembleClassifier,
-        **kwargs
+        cv: Optional[Union[int, str, BaseCrossValidator]],
+        **kwargs,
     ) -> NDArray:
         """
         Abstract method to get quantiles of the conformity scores.
@@ -101,8 +110,8 @@ class BaseClassificationScore(BaseConformityScore, metaclass=ABCMeta):
             NDArray of floats between 0 and 1, representing the uncertainty
             of the confidence set.
 
-        estimator: EnsembleClassifier
-            Estimator that is fitted to predict y from X.
+        cv: Optional[Union[int, str, BaseCrossValidator]]
+            Cross-validation strategy used by the estimator.
 
         Returns
         --------
@@ -116,8 +125,8 @@ class BaseClassificationScore(BaseConformityScore, metaclass=ABCMeta):
         y_pred_proba: NDArray,
         conformity_scores: NDArray,
         alpha_np: NDArray,
-        estimator: EnsembleClassifier,
-        **kwargs
+        cv: Optional[Union[int, str, BaseCrossValidator]],
+        **kwargs,
     ) -> NDArray:
         """
         Abstract method to generate prediction sets based on the probability
@@ -137,8 +146,8 @@ class BaseClassificationScore(BaseConformityScore, metaclass=ABCMeta):
             NDArray of floats between 0 and 1, representing the uncertainty
             of the confidence set.
 
-        estimator: EnsembleClassifier
-            Estimator that is fitted to predict y from X.
+        cv: Optional[Union[int, str, BaseCrossValidator]]
+            Cross-validation strategy used by the estimator.
 
         Returns
         --------
@@ -150,13 +159,14 @@ class BaseClassificationScore(BaseConformityScore, metaclass=ABCMeta):
         self,
         X: NDArray,
         alpha_np: NDArray,
-        estimator: EnsembleClassifier,
+        y_pred_proba: NDArray,
+        cv: Optional[Union[int, str, BaseCrossValidator]],
         conformity_scores: NDArray,
-        **kwargs
+        **kwargs,
     ) -> NDArray:
         """
         Compute classes of the prediction sets from the observed values,
-        the estimator of type ``EnsembleClassifier`` and the conformity scores.
+        the predicted probabilities and the conformity scores.
 
         Parameters
         ----------
@@ -167,8 +177,11 @@ class BaseClassificationScore(BaseConformityScore, metaclass=ABCMeta):
             NDArray of floats between 0 and 1, representing the uncertainty
             of the confidence set.
 
-        estimator: EnsembleClassifier
-            Estimator that is fitted to predict y from X.
+        y_pred_proba: NDArray
+            Predicted probabilities from the estimator.
+
+        cv: Optional[Union[int, str, BaseCrossValidator]]
+            Cross-validation strategy used by the estimator.
 
         conformity_scores: NDArray of shape (n_samples,)
             Conformity scores.
@@ -178,29 +191,22 @@ class BaseClassificationScore(BaseConformityScore, metaclass=ABCMeta):
         NDArray of shape (n_samples, n_classes, n_alpha)
             Prediction sets (Booleans indicate whether classes are included).
         """
-        # Predict probabilities
-        y_pred_proba = self.get_predictions(
-            X, alpha_np, estimator, **kwargs
-        )
-
         # Choice of the quantile
+        # Predict probabilities
+        y_pred_proba = self.get_predictions(X, alpha_np, y_pred_proba, cv, **kwargs)
+
         self.quantiles_ = self.get_conformity_score_quantiles(
-            conformity_scores, alpha_np, estimator, **kwargs
+            conformity_scores, alpha_np, cv, **kwargs
         )
 
         # Build prediction sets
         prediction_sets = self.get_prediction_sets(
-            y_pred_proba, conformity_scores, alpha_np, estimator, **kwargs
+            y_pred_proba, conformity_scores, alpha_np, cv, **kwargs
         )
 
         return prediction_sets
 
-    def predict_set(
-        self,
-        X: NDArray,
-        alpha_np: NDArray,
-        **kwargs
-    ):
+    def predict_set(self, X: NDArray, alpha_np: NDArray, **kwargs):
         """
         Compute the prediction sets on new samples based on the uncertainty of
         the target confidence set.

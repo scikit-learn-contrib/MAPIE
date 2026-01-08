@@ -1,19 +1,17 @@
 from typing import Optional, Tuple, Union, cast
 
 import numpy as np
-from sklearn.calibration import LabelEncoder
-from sklearn.model_selection import StratifiedShuffleSplit
+from numpy.typing import NDArray
+from sklearn.model_selection import BaseCrossValidator, StratifiedShuffleSplit
+from sklearn.preprocessing import LabelEncoder
 from sklearn.utils import _safe_indexing
 from sklearn.utils.validation import _num_samples
 
+from mapie._machine_precision import EPSILON
 from mapie.conformity_scores.sets.aps import APSConformityScore
 from mapie.conformity_scores.sets.utils import get_true_label_position
-from mapie.estimator.classifier import EnsembleClassifier
-
-from mapie._machine_precision import EPSILON
-from mapie._typing import NDArray
-from mapie.metrics import classification_mean_width_score
-from mapie.utils import check_alpha_and_n_samples, compute_quantiles
+from mapie.metrics.classification import classification_mean_width_score
+from mapie.utils import _check_alpha_and_n_samples, _compute_quantiles
 
 
 class RAPSConformityScore(APSConformityScore):
@@ -42,7 +40,7 @@ class RAPSConformityScore(APSConformityScore):
     classes: ArrayLike
         Names of the classes.
 
-    random_state: Union[int, RandomState]
+    random_state: Union[int, np.random.RandomState]
         Pseudo random number generator state.
 
     quantiles_: ArrayLike of shape (n_alpha)
@@ -56,10 +54,7 @@ class RAPSConformityScore(APSConformityScore):
         k_star for the RAPS method.
     """
 
-    def __init__(
-        self,
-        size_raps: Optional[float] = 0.2
-    ) -> None:
+    def __init__(self, size_raps: Optional[float] = 0.2) -> None:
         super().__init__()
         self.size_raps = size_raps
 
@@ -68,7 +63,7 @@ class RAPSConformityScore(APSConformityScore):
         *,
         label_encoder: Optional[LabelEncoder] = None,
         size_raps: Optional[float] = None,
-        **kwargs
+        **kwargs,
     ) -> None:
         """
         Set attributes that are not provided by the user.
@@ -104,19 +99,19 @@ class RAPSConformityScore(APSConformityScore):
 
         Parameters
         ----------
-        X: ArrayLike
+        X: NDArray
             Observed values.
 
-        y: ArrayLike
+        y: NDArray
             Target values.
 
-        y_enc: ArrayLike
+        y_enc: NDArray
             Target values as normalized encodings.
 
-        sample_weight: Optional[ArrayLike] of shape (n_samples,)
+        sample_weight: Optional[NDArray] of shape (n_samples,)
             Non-null sample weights.
 
-        groups: Optional[ArrayLike] of shape (n_samples,)
+        groups: Optional[NDArray] of shape (n_samples,)
             Group labels for the samples used while splitting the dataset into
             train/test set.
             By default ``None``.
@@ -133,8 +128,7 @@ class RAPSConformityScore(APSConformityScore):
         """
         # Split data for raps method
         raps_split = StratifiedShuffleSplit(
-            n_splits=1,
-            test_size=self.size_raps, random_state=self.random_state
+            n_splits=1, test_size=self.size_raps, random_state=self.random_state
         )
         train_raps_index, val_raps_index = next(raps_split.split(X, y_enc))
         X, self.X_raps, y_enc, self.y_raps = (
@@ -163,11 +157,7 @@ class RAPSConformityScore(APSConformityScore):
         return X, y, y_enc, sample_weight, groups
 
     def get_conformity_scores(
-        self,
-        y: NDArray,
-        y_pred: NDArray,
-        y_enc: Optional[NDArray] = None,
-        **kwargs
+        self, y: NDArray, y_pred: NDArray, y_enc: Optional[NDArray] = None, **kwargs
     ) -> NDArray:
         """
         Get the conformity score.
@@ -180,7 +170,7 @@ class RAPSConformityScore(APSConformityScore):
         y_pred: NDArray of shape (n_samples,)
             Predicted target values.
 
-        y_enc: NDArray of shape (n_samples,)
+        y_enc: Optional[NDArray] of shape (n_samples,)
             Target values as normalized encodings.
 
         Returns
@@ -189,23 +179,22 @@ class RAPSConformityScore(APSConformityScore):
             Conformity scores.
         """
         # Compute y_pred and position on the RAPS validation dataset
-        self.y_pred_proba_raps = (
-            self.predictor.single_estimator_.predict_proba(self.X_raps)
+        predict_params = kwargs.pop("predict_params", {})
+        self.y_pred_proba_raps = self.predictor.single_estimator_.predict_proba(
+            self.X_raps, **predict_params
         )
         self.position_raps = get_true_label_position(
             self.y_pred_proba_raps, self.y_raps
         )
 
-        return super().get_conformity_scores(
-            y, y_pred, y_enc=y_enc, **kwargs
-        )
+        return super().get_conformity_scores(y, y_pred, y_enc=y_enc, **kwargs)
 
     @staticmethod
     def _regularize_conformity_score(
         k_star: NDArray,
         lambda_: Union[NDArray, float],
         conf_score: NDArray,
-        cutoff: NDArray
+        cutoff: NDArray,
     ) -> NDArray:
         """
         Regularize the conformity scores with the ``"raps"``
@@ -232,15 +221,9 @@ class RAPSConformityScore(APSConformityScore):
             Regularized conformity scores. The regularization
             depends on the value of alpha.
         """
-        conf_score = np.repeat(
-            conf_score[:, :, np.newaxis], len(k_star), axis=2
-        )
-        cutoff = np.repeat(
-            cutoff[:, np.newaxis], len(k_star), axis=1
-        )
-        conf_score += np.maximum(
-            np.expand_dims(lambda_ * (cutoff - k_star), axis=1), 0
-        )
+        conf_score = np.repeat(conf_score[:, :, np.newaxis], len(k_star), axis=2)
+        cutoff = np.repeat(cutoff[:, np.newaxis], len(k_star), axis=1)
+        conf_score += np.maximum(np.expand_dims(lambda_ * (cutoff - k_star), axis=1), 0)
         return conf_score
 
     def _update_size_and_lambda(
@@ -249,7 +232,7 @@ class RAPSConformityScore(APSConformityScore):
         alpha_np: NDArray,
         y_ps: NDArray,
         lambda_: Union[NDArray, float],
-        lambda_star: NDArray
+        lambda_star: NDArray,
     ) -> Tuple[NDArray, NDArray]:
         """
         Update the values of the optimal lambda if the average size of the
@@ -281,15 +264,10 @@ class RAPSConformityScore(APSConformityScore):
             respectively represent the updated values of lambda_star
             and the new best sizes.
         """
-        sizes = [
-            classification_mean_width_score(y_ps[:, :, i])
-            for i in range(len(alpha_np))
-        ]
+        sizes = classification_mean_width_score(y_ps)
 
-        sizes_improve = (sizes < best_sizes - EPSILON)
-        lambda_star = (
-            sizes_improve * lambda_ + (1 - sizes_improve) * lambda_star
-        )
+        sizes_improve = sizes < best_sizes - EPSILON
+        lambda_star = sizes_improve * lambda_ + (1 - sizes_improve) * lambda_star
         best_sizes = sizes_improve * sizes + (1 - sizes_improve) * best_sizes
 
         return lambda_star, best_sizes
@@ -300,7 +278,7 @@ class RAPSConformityScore(APSConformityScore):
         y_pred_proba_raps: NDArray,
         alpha_np: NDArray,
         include_last_label: Union[bool, str, None],
-        k_star: NDArray
+        k_star: NDArray,
     ) -> Union[NDArray, float]:
         """
         Find the optimal value of lambda for each alpha.
@@ -334,38 +312,26 @@ class RAPSConformityScore(APSConformityScore):
         lambda_star = np.zeros(len(alpha_np))
         best_sizes = np.full(len(alpha_np), np.finfo(np.float64).max)
 
-        for lambda_ in [.001, .01, .1, .2, .5]:  # values given in paper[1]
-            true_label_cumsum_proba, cutoff = (
-                self.get_true_label_cumsum_proba(
-                    y_raps_no_enc,
-                    y_pred_proba_raps[:, :, 0],
-                    classes
-                )
+        for lambda_ in [0.001, 0.01, 0.1, 0.2, 0.5]:  # values given in paper[1]
+            true_label_cumsum_proba, cutoff = self.get_true_label_cumsum_proba(
+                y_raps_no_enc, y_pred_proba_raps[:, :, 0], classes
             )
 
             true_label_cumsum_proba_reg = self._regularize_conformity_score(
-                k_star,
-                lambda_,
-                true_label_cumsum_proba,
-                cutoff
+                k_star, lambda_, true_label_cumsum_proba, cutoff
             )
 
-            quantiles_ = compute_quantiles(
-                true_label_cumsum_proba_reg,
-                alpha_np
-            )
+            quantiles_ = _compute_quantiles(true_label_cumsum_proba_reg, alpha_np)
 
             _, _, y_pred_proba_last = self._get_last_included_proba(
                 y_pred_proba_raps,
                 quantiles_,
                 include_last_label,
                 lambda_=lambda_,
-                k_star=k_star
+                k_star=k_star,
             )
 
-            y_ps = np.greater_equal(
-                y_pred_proba_raps - y_pred_proba_last, -EPSILON
-            )
+            y_ps = np.greater_equal(y_pred_proba_raps - y_pred_proba_last, -EPSILON)
 
             lambda_star, best_sizes = self._update_size_and_lambda(
                 best_sizes, alpha_np, y_ps, lambda_, lambda_star
@@ -380,10 +346,10 @@ class RAPSConformityScore(APSConformityScore):
         self,
         conformity_scores: NDArray,
         alpha_np: NDArray,
-        estimator: EnsembleClassifier,
+        cv: Optional[Union[int, str, BaseCrossValidator]],
         agg_scores: Optional[str] = "mean",
         include_last_label: Optional[Union[bool, str]] = True,
-        **kwargs
+        **kwargs,
     ) -> NDArray:
         """
         Get the quantiles of the conformity scores for each uncertainty level.
@@ -397,13 +363,13 @@ class RAPSConformityScore(APSConformityScore):
             NDArray of floats between 0 and 1, representing the uncertainty
             of the confidence interval.
 
-        estimator: EnsembleClassifier
-            Estimator that is fitted to predict y from X.
+        cv: Optional[Union[int, str, BaseCrossValidator]]
+            Cross-validation strategy used by the estimator (not used here).
 
         agg_scores: Optional[str]
             Method to aggregate the scores from the base estimators.
             If "mean", the scores are averaged. If "crossval", the scores are
-            obtained from cross-validation.
+            obtained from cross-validation (not used here).
 
             By default, ``"mean"``.
 
@@ -413,27 +379,9 @@ class RAPSConformityScore(APSConformityScore):
 
             By default, ``True``.
 
-        X_raps: NDArray of shape (n_samples, n_features)
-            Observed feature values for the RAPS method (split data).
-
-            By default, "None" but must be set to work.
-
-        y_raps_no_enc: NDArray of shape (n_samples,)
-            Observed labels for the RAPS method (split data).
-
-            By default, "None" but must be set to work.
-
-        y_pred_proba_raps: NDArray of shape (n_samples, n_classes)
-            Predicted probabilities for the RAPS method (split data).
-
-            By default, "None" but must be set to work.
-
-        position_raps: NDArray of shape (n_samples,)
-            Position of the points in the split set for the RAPS method
-            (split data). These positions are returned by the function
-            ``get_true_label_position``.
-
-            By default, "None" but must be set to work.
+            See the docstring of
+            :meth:`conformity_scores.sets.aps.APSConformityScore.get_prediction_sets`
+            for more details.
 
         Returns
         --------
@@ -446,35 +394,22 @@ class RAPSConformityScore(APSConformityScore):
         # y_pred_proba_raps = cast(NDArray, y_pred_proba_raps)
         # position_raps = cast(NDArray, position_raps)
 
-        check_alpha_and_n_samples(alpha_np, self.X_raps.shape[0])
-        self.k_star = compute_quantiles(
-            self.position_raps,
-            alpha_np
-        ) + 1
+        _check_alpha_and_n_samples(alpha_np, self.X_raps.shape[0])
+        self.k_star = _compute_quantiles(self.position_raps, alpha_np) + 1
         y_pred_proba_raps = np.repeat(
-            self.y_pred_proba_raps[:, :, np.newaxis],
-            len(alpha_np),
-            axis=2
+            self.y_pred_proba_raps[:, :, np.newaxis], len(alpha_np), axis=2
         )
         self.lambda_star = self._find_lambda_star(
             self.y_raps_no_enc,
             y_pred_proba_raps,
             alpha_np,
             include_last_label,
-            self.k_star
+            self.k_star,
         )
-        conformity_scores_regularized = (
-            self._regularize_conformity_score(
-                self.k_star,
-                self.lambda_star,
-                conformity_scores,
-                self.cutoff
-            )
+        conformity_scores_regularized = self._regularize_conformity_score(
+            self.k_star, self.lambda_star, conformity_scores, self.cutoff
         )
-        quantiles_ = compute_quantiles(
-            conformity_scores_regularized,
-            alpha_np
-        )
+        quantiles_ = _compute_quantiles(conformity_scores_regularized, alpha_np)
 
         return quantiles_
 
@@ -484,7 +419,7 @@ class RAPSConformityScore(APSConformityScore):
         lambda_: Optional[float] = None,
         k_star: Optional[int] = None,
         prediction_phase: bool = False,
-        **kwargs
+        **kwargs,
     ) -> NDArray:
         """
         Add regularization to the sorted cumulative sum of predicted
@@ -495,17 +430,17 @@ class RAPSConformityScore(APSConformityScore):
         y_pred_proba_sorted_cumsum: NDArray of shape (n_samples, n_classes)
             The sorted cumulative sum of predicted probabilities.
 
-        lambda_: float
+        lambda_: Optional[float]
             The lambda value used in the paper [1].
 
             By default, "None" but must be set to work.
 
-        k_star: int
+        k_star: Optional[int]
             The optimal value of k (called k_reg in the paper [1]).
 
             By default, "None" but must be set to work.
 
-        prediction_phase: bool, optional
+        prediction_phase: bool
             Whether the function is called during the prediction phase.
             If ``True``, the function will use the values of ``lambda_star``
             and ``k_star`` of the object.
@@ -530,10 +465,7 @@ class RAPSConformityScore(APSConformityScore):
             k_star = cast(int, lambda_)
 
         y_pred_proba_sorted_cumsum += lambda_ * np.maximum(
-            0,
-            np.cumsum(
-                np.ones(y_pred_proba_sorted_cumsum.shape), axis=1
-            ) - k_star
+            0, np.cumsum(np.ones(y_pred_proba_sorted_cumsum.shape), axis=1) - k_star
         )
 
         return y_pred_proba_sorted_cumsum
@@ -544,7 +476,7 @@ class RAPSConformityScore(APSConformityScore):
         threshold: NDArray,
         y_pred_proba_last: NDArray,
         prediction_sets: NDArray,
-        **kwargs
+        **kwargs,
     ) -> NDArray:
         """
         Compute the V parameters from Angelopoulos+(2020).
@@ -560,7 +492,7 @@ class RAPSConformityScore(APSConformityScore):
         y_pred_proba_last: NDArray of shape (n_samples, 1, n_alpha)
             Last included probability.
 
-        predicition_sets: NDArray of shape (n_samples, n_alpha)
+        prediction_sets: NDArray of shape (n_samples, n_alpha)
             Prediction sets.
 
         Returns
@@ -570,12 +502,9 @@ class RAPSConformityScore(APSConformityScore):
         """
         # compute V parameter from Angelopoulos+(2020)
         L = np.sum(prediction_sets, axis=1)
-        v_param = (
-            (y_proba_last_cumsumed - threshold.reshape(1, -1)) /
-            (
-                y_pred_proba_last[:, 0, :] -
-                self.lambda_star * np.maximum(0, L - self.k_star) +
-                self.lambda_star * (L > self.k_star)
-            )
+        v_param = (y_proba_last_cumsumed - threshold.reshape(1, -1)) / (
+            y_pred_proba_last[:, 0, :]
+            - self.lambda_star * np.maximum(0, L - self.k_star)
+            + self.lambda_star * (L > self.k_star)
         )
         return v_param

@@ -1,48 +1,112 @@
 """
-======================================================
-Plotting MAPIE prediction intervals with a toy dataset
-======================================================
-An example plot of :class:`~mapie.regression.MapieRegressor` used
+=====================================================================================
+Use MAPIE to plot prediction intervals
+=====================================================================================
+An example plot of :class:`~mapie.regression.SplitConformalRegressor` used
 in the Quickstart.
 """
+
+##################################################################################
+# We will use MAPIE to estimate prediction intervals on a one-dimensional,
+# non-linear regression problem.
+
 import numpy as np
 from matplotlib import pyplot as plt
-from sklearn.datasets import make_regression
-from sklearn.linear_model import LinearRegression
+from numpy.typing import NDArray
+from sklearn.neural_network import MLPRegressor
+from mapie.metrics.regression import regression_coverage_score
+from mapie.regression import SplitConformalRegressor
+from mapie.utils import train_conformalize_test_split
 
-from mapie.metrics import regression_coverage_score
-from mapie.regression import MapieRegressor
+RANDOM_STATE = 1
 
-regressor = LinearRegression()
-X, y = make_regression(n_samples=500, n_features=1, noise=20, random_state=59)
+##############################################################################
+# Firstly, let us create our dataset:
 
-alpha = [0.05, 0.32]
-mapie = MapieRegressor(regressor, method="plus")
-mapie.fit(X, y)
-y_pred, y_pis = mapie.predict(X, alpha=alpha)
 
-coverage_scores = [
-    regression_coverage_score(y, y_pis[:, 0, i], y_pis[:, 1, i])
-    for i, _ in enumerate(alpha)
-]
+def f(x: NDArray) -> NDArray:
+    """Polynomial function used to generate one-dimensional data."""
+    return np.array(5 * x + 5 * x**4 - 9 * x**2)
+
+
+rng = np.random.default_rng(1)
+sigma = 0.1
+n_samples = 10000
+X = np.linspace(0, 1, n_samples)
+y = f(X) + rng.normal(0, sigma, n_samples)
+X = X.reshape(-1, 1)
+(X_train, X_conformalize, X_test, y_train, y_conformalize, y_test) = (
+    train_conformalize_test_split(
+        X,
+        y,
+        train_size=0.8,
+        conformalize_size=0.1,
+        test_size=0.1,
+        random_state=RANDOM_STATE,
+    )
+)
+
+##############################################################################
+# We fit our training data with a MLPRegressor.
+# Then, we initialize a :class:`~mapie.regression.SplitConformalRegressor`
+# using our estimator, indicating that it has already been fitted with
+# `prefit=True`.
+# Lastly, we compute the prediction intervals with the desired confidence level using
+# the ``conformalize`` and ``predict_interval`` methods.
+
+regressor = MLPRegressor(activation="relu", random_state=RANDOM_STATE)
+regressor.fit(X_train, y_train)
+
+confidence_level = 0.95
+mapie_regressor = SplitConformalRegressor(
+    estimator=regressor, confidence_level=confidence_level, prefit=True
+)
+mapie_regressor.conformalize(X_conformalize, y_conformalize)
+y_pred, y_pred_interval = mapie_regressor.predict_interval(X_test)
+
+##############################################################################
+# ``y_pred`` represents the point predictions as a ``np.ndarray`` of shape
+# ``(n_samples)``.
+# ``y_pred_interval`` corresponds to the prediction intervals as a ``np.ndarray`` of
+# shape ``(n_samples, 2, 1)``, giving the lower and upper bounds of the intervals.
+
+##############################################################################
+# Finally, we can easily compute the coverage score (i.e., the proportion of times the
+# true labels fall within the predicted intervals).
+
+coverage_score = regression_coverage_score(y_test, y_pred_interval)
+print(
+    f"For a confidence level of {confidence_level:.2f}, "
+    f"the target coverage is {confidence_level:.3f}, "
+    f"and the effective coverage is {coverage_score[0]:.3f}."
+)
+
+##############################################################################
+# In this example, the effective coverage is slightly above the target coverage
+# (i.e., 0.95), indicating that the confidence level we set has been reached.
+# Therefore, we can confirm that the prediction intervals effectively contain the
+# true label more than 95% of the time.
+
+##############################################################################
+# Now, let us plot the estimated prediction intervals.
 
 plt.xlabel("x")
 plt.ylabel("y")
-plt.scatter(X, y, alpha=0.3)
-plt.plot(X, y_pred, color="C1")
-order = np.argsort(X[:, 0])
-plt.plot(X[order], y_pis[order][:, 0, 1], color="C1", ls="--")
-plt.plot(X[order], y_pis[order][:, 1, 1], color="C1", ls="--")
+plt.scatter(X_test, y_test, alpha=0.3)
+X_test = X_test.ravel()
+order = np.argsort(X_test)
+plt.plot(X_test[order], y_pred[order], color="C1")
+plt.plot(X_test[order], y_pred_interval[order][:, 0, 0], color="C1", ls="--")
+plt.plot(X_test[order], y_pred_interval[order][:, 1, 0], color="C1", ls="--")
 plt.fill_between(
-    X[order].ravel(),
-    y_pis[order][:, 0, 0].ravel(),
-    y_pis[order][:, 1, 0].ravel(),
+    X_test[order],
+    y_pred_interval[:, 0, 0][order].ravel(),
+    y_pred_interval[:, 1, 0][order].ravel(),
     alpha=0.2,
 )
-plt.title(
-    f"Target and effective coverages for "
-    f"alpha={alpha[0]:.2f}: ({1-alpha[0]:.3f}, {coverage_scores[0]:.3f})\n"
-    f"Target and effective coverages for "
-    f"alpha={alpha[1]:.2f}: ({1-alpha[1]:.3f}, {coverage_scores[1]:.3f})"
-)
+plt.title("Estimated prediction intervals with MLPRegressor")
 plt.show()
+
+##############################################################################
+# On the plot above, the dots represent the samples from our dataset, while the
+# orange area corresponds to the estimated prediction intervals for each ``x`` value.

@@ -1,10 +1,17 @@
-.. title:: Theoretical Description Metrics : contents
+.. title:: How to measure conformal prediction performance?
 
 .. _theoretical_description_metrics:
 
 #######################
 Theoretical Description
 #######################
+
+Note: in theoretical parts of the documentation, we use the following terms employed in the scientific literature:
+
+- `alpha` is equivalent to `1 - confidence_level`. It can be seen as a *risk level*
+- *calibrate* and *calibration*, are equivalent to *conformalize* and *conformalization*.
+
+—
 
 This document provides detailed descriptions of various metrics used to evaluate the performance of predictive models, particularly focusing on their ability to estimate uncertainties and calibrate predictions accurately.
 

@@ -1,10 +1,17 @@
 """
 ==================================================================
-Estimating prediction intervals of time series forecast with EnbPI
+Time series: example of the EnbPI technique
 ==================================================================
 
+Note: in this example, we use the following terms employed in the scientific literature:
+
+- `alpha` is equivalent to `1 - confidence_level`. It can be seen as a *risk level*
+- *calibrate* and *calibration* are equivalent to *conformalize* and *conformalization*.
+
+—
+
 This example uses
-:class:`~mapie.time_series_regression.MapieTimeSeriesRegressor` to estimate
+:class:`~mapie.time_series_regression.TimeSeriesRegressor` to estimate
 prediction intervals associated with time series forecast. It follows [6].
 
 We use here the Victoria electricity demand dataset used in the book
@@ -17,11 +24,10 @@ optimized with a :class:`~sklearn.model_selection.RandomizedSearchCV` using a
 sequential :class:`~sklearn.model_selection.TimeSeriesSplit` cross validation,
 in which the training set is prior to the validation set.
 The best model is then feeded into
-:class:`~mapie.time_series_regression.MapieTimeSeriesRegressor` to estimate the
-associated prediction intervals. We compare two approaches: with or without
-``partial_fit`` called at every step following [6]. It appears that
-``partial_fit`` offer a coverage closer to the targeted coverage, and with
-narrower PIs.
+:class:`~mapie.time_series_regression.TimeSeriesRegressor` to estimate the
+associated prediction intervals. We compare two approaches: with or without calling
+``update`` at every step, following [6]. The results show coverage closer
+to the target, along with narrower PIs.
 """
 
 import warnings
@@ -34,10 +40,12 @@ from scipy.stats import randint
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import RandomizedSearchCV, TimeSeriesSplit
 
-from mapie._typing import NDArray
-from mapie.metrics import (regression_coverage_score,
-                           regression_mean_width_score)
-from mapie.regression import MapieTimeSeriesRegressor
+from numpy.typing import NDArray
+from mapie.metrics.regression import (
+    regression_coverage_score,
+    regression_mean_width_score,
+)
+from mapie.regression import TimeSeriesRegressor
 from mapie.subsample import BlockBootstrap
 
 warnings.simplefilter("ignore")
@@ -66,9 +74,7 @@ features = ["Weekofyear", "Weekday", "Hour", "Temperature"] + [
     f"Lag_{hour}" for hour in range(1, n_lags)
 ]
 
-X_train = demand_train.loc[
-    ~np.any(demand_train[features].isnull(), axis=1), features
-]
+X_train = demand_train.loc[~np.any(demand_train[features].isnull(), axis=1), features]
 y_train = demand_train.loc[X_train.index, "Demand"]
 X_test = demand_test.loc[:, features]
 y_test = demand_test["Demand"]
@@ -96,9 +102,7 @@ if perform_hyperparameters_search:
     model = cv_obj.best_estimator_
 else:
     # Model: Random Forest previously optimized with a cross-validation
-    model = RandomForestRegressor(
-        max_depth=10, n_estimators=50, random_state=59
-    )
+    model = RandomForestRegressor(max_depth=10, n_estimators=50, random_state=59)
 
 # Estimate prediction intervals on test set with best estimator
 alpha = 0.05
@@ -106,7 +110,7 @@ cv_mapietimeseries = BlockBootstrap(
     n_resamplings=10, n_blocks=10, overlapping=False, random_state=59
 )
 
-mapie_enpbi = MapieTimeSeriesRegressor(
+mapie_enpbi = TimeSeriesRegressor(
     model,
     method="enbpi",
     cv=cv_mapietimeseries,
@@ -114,88 +118,80 @@ mapie_enpbi = MapieTimeSeriesRegressor(
     n_jobs=-1,
 )
 
-print("EnbPI, with no partial_fit, width optimization")
+print("EnbPI, with no update, width optimization")
 mapie_enpbi = mapie_enpbi.fit(X_train, y_train)
-y_pred_npfit_enbpi, y_pis_npfit_enbpi = mapie_enpbi.predict(
-    X_test, alpha=alpha, ensemble=True, optimize_beta=True
+y_pred_n_update_enbpi, y_pis_n_update_enbpi = mapie_enpbi.predict(
+    X_test, confidence_level=1 - alpha, ensemble=True, optimize_beta=True
 )
-coverage_npfit_enbpi = regression_coverage_score(
-    y_test, y_pis_npfit_enbpi[:, 0, 0], y_pis_npfit_enbpi[:, 1, 0]
-)
+coverage_n_update_enbpi = regression_coverage_score(y_test, y_pis_n_update_enbpi)[0]
 
-width_npfit_enbpi = regression_mean_width_score(
-    y_pis_npfit_enbpi[:, 1, 0], y_pis_npfit_enbpi[:, 0, 0]
-)
+width_n_update_enbpi = regression_mean_width_score(y_pis_n_update_enbpi)[0]
 
-print("EnbPI with partial_fit, width optimization")
+print("EnbPI with update, width optimization")
 mapie_enpbi = mapie_enpbi.fit(X_train, y_train)
-y_pred_pfit_enbpi = np.zeros(y_pred_npfit_enbpi.shape)
-y_pis_pfit_enbpi = np.zeros(y_pis_npfit_enbpi.shape)
+y_pred_update_enbpi = np.zeros(y_pred_n_update_enbpi.shape)
+y_pis_update_enbpi = np.zeros(y_pis_n_update_enbpi.shape)
 
 step_size = 1
 (
-    y_pred_pfit_enbpi[:step_size],
-    y_pis_pfit_enbpi[:step_size, :, :],
+    y_pred_update_enbpi[:step_size],
+    y_pis_update_enbpi[:step_size, :, :],
 ) = mapie_enpbi.predict(
-    X_test.iloc[:step_size, :], alpha=alpha, ensemble=True, optimize_beta=True
+    X_test.iloc[:step_size, :],
+    confidence_level=1 - alpha,
+    ensemble=True,
+    optimize_beta=True,
 )
 
 for step in range(step_size, len(X_test), step_size):
-    mapie_enpbi.partial_fit(
-        X_test.iloc[(step - step_size):step, :],
-        y_test.iloc[(step - step_size):step],
+    mapie_enpbi.update(
+        X_test.iloc[(step - step_size) : step, :],
+        y_test.iloc[(step - step_size) : step],
     )
     (
-        y_pred_pfit_enbpi[step:step + step_size],
-        y_pis_pfit_enbpi[step:step + step_size, :, :],
+        y_pred_update_enbpi[step : step + step_size],
+        y_pis_update_enbpi[step : step + step_size, :, :],
     ) = mapie_enpbi.predict(
-        X_test.iloc[step:(step + step_size), :],
-        alpha=alpha,
+        X_test.iloc[step : (step + step_size), :],
+        confidence_level=1 - alpha,
         ensemble=True,
-        optimize_beta=True,
     )
-coverage_pfit_enbpi = regression_coverage_score(
-    y_test, y_pis_pfit_enbpi[:, 0, 0], y_pis_pfit_enbpi[:, 1, 0]
-)
-width_pfit_enbpi = regression_mean_width_score(
-    y_pis_pfit_enbpi[:, 1, 0], y_pis_pfit_enbpi[:, 0, 0]
-)
+coverage_update_enbpi = regression_coverage_score(y_test, y_pis_update_enbpi)[0]
+width_update_enbpi = regression_mean_width_score(y_pis_update_enbpi)[0]
 
 # Print results
 print(
-    "Coverage / prediction interval width mean for MapieTimeSeriesRegressor: "
-    "\nEnbPI without any partial_fit:"
-    f"{coverage_npfit_enbpi:.3f}, {width_npfit_enbpi:.3f}"
+    "Coverage / prediction interval width mean for TimeSeriesRegressor: "
+    "\nEnbPI without any update:"
+    f"{coverage_n_update_enbpi:.3f}, {width_n_update_enbpi:.3f}"
 )
 print(
-    "Coverage / prediction interval width mean for MapieTimeSeriesRegressor: "
-    "\nEnbPI with partial_fit:"
-    f"{coverage_pfit_enbpi:.3f}, {width_pfit_enbpi:.3f}"
+    "Coverage / prediction interval width mean for TimeSeriesRegressor: "
+    "\nEnbPI with update:"
+    f"{coverage_update_enbpi:.3f}, {width_update_enbpi:.3f}"
 )
 
-enbpi_no_pfit = {
-    "y_pred": y_pred_npfit_enbpi,
-    "y_pis": y_pis_npfit_enbpi,
-    "coverage": coverage_npfit_enbpi,
-    "width": width_npfit_enbpi,
+enbpi_no_update = {
+    "y_pred": y_pred_n_update_enbpi,
+    "y_pis": y_pis_n_update_enbpi,
+    "coverage": coverage_n_update_enbpi,
+    "width": width_n_update_enbpi,
 }
 
-enbpi_pfit = {
-    "y_pred": y_pred_pfit_enbpi,
-    "y_pis": y_pis_pfit_enbpi,
-    "coverage": coverage_pfit_enbpi,
-    "width": width_pfit_enbpi,
+enbpi_update = {
+    "y_pred": y_pred_update_enbpi,
+    "y_pis": y_pis_update_enbpi,
+    "coverage": coverage_update_enbpi,
+    "width": width_update_enbpi,
 }
 
-results = [enbpi_no_pfit, enbpi_pfit]
+results = [enbpi_no_update, enbpi_update]
 
 # Plot estimated prediction intervals on test set
-fig, axs = plt.subplots(
-    nrows=2, ncols=1, figsize=(15, 12), sharex="col"
-)
+fig, axs = plt.subplots(nrows=2, ncols=1, figsize=(15, 12), sharex="col")
 
 for i, (ax, w, result) in enumerate(
-    zip(axs, ["EnbPI, without partial_fit", "EnbPI with partial_fit"], results)
+    zip(axs, ["EnbPI, without update", "EnbPI with update"], results)
 ):
     ax.set_ylabel("Hourly demand (GW)", fontsize=20)
     ax.plot(demand_test.Demand, lw=2, label="Test data", c="C1")
@@ -216,17 +212,16 @@ for i, (ax, w, result) in enumerate(
         y_pis[:, 1, 0],
         color="C2",
         alpha=0.2,
-        label="MapieTimeSeriesRegressor PIs",
+        label="TimeSeriesRegressor PIs",
     )
 
     ax.set_title(
-        w + "\n"
-        f"Coverage:{result['coverage']:.3f}  Width:{result['width']:.3f}",
+        w + f"\nCoverage:{result['coverage']:.3f}  Width:{result['width']:.3f}",
         fontweight="bold",
-        size=20
+        size=20,
     )
     plt.xticks(size=15, rotation=45)
     plt.yticks(size=15)
 
-axs[0].legend(prop={'size': 22})
+axs[0].legend(prop={"size": 22})
 plt.show()

@@ -1,15 +1,12 @@
-from typing import Tuple, Union
+from typing import Optional, Tuple, Union
 
 import numpy as np
-
-from mapie.conformity_scores.classification import BaseClassificationScore
-from mapie.conformity_scores.sets.utils import (
-    check_proba_normalized, get_last_index_included
-)
-from mapie.estimator.classifier import EnsembleClassifier
+from numpy.typing import NDArray
+from sklearn.model_selection import BaseCrossValidator
 
 from mapie._machine_precision import EPSILON
-from mapie._typing import NDArray
+from mapie.conformity_scores.classification import BaseClassificationScore
+from mapie.conformity_scores.sets.utils import get_last_index_included
 
 
 class NaiveConformityScore(BaseClassificationScore):
@@ -22,29 +19,24 @@ class NaiveConformityScore(BaseClassificationScore):
     classes: Optional[ArrayLike]
         Names of the classes.
 
-    random_state: Optional[Union[int, RandomState]]
+    random_state: Optional[Union[int, np.random.RandomState]]
         Pseudo random number generator state.
 
-    quantiles_: ArrayLike of shape (n_alpha)
+    quantiles_: ArrayLike of shape (n_alpha,)
         The quantiles estimated from ``get_sets`` method.
     """
 
     def __init__(self) -> None:
         super().__init__()
 
-    def get_conformity_scores(
-        self,
-        y: NDArray,
-        y_pred: NDArray,
-        **kwargs
-    ) -> NDArray:
+    def get_conformity_scores(self, y: NDArray, y_pred: NDArray, **kwargs) -> NDArray:
         """
         Get the conformity score.
 
         Parameters
         ----------
         y: NDArray of shape (n_samples,)
-            Observed target values.
+            Observed target values (not used here).
 
         y_pred: NDArray of shape (n_samples,)
             Predicted target values.
@@ -61,42 +53,42 @@ class NaiveConformityScore(BaseClassificationScore):
         self,
         X: NDArray,
         alpha_np: NDArray,
-        estimator: EnsembleClassifier,
-        **kwargs
+        y_pred_proba: NDArray,
+        cv: Optional[Union[int, str, BaseCrossValidator]],
+        **kwargs,
     ) -> NDArray:
         """
-        Get predictions from an EnsembleClassifier.
+        Just processes the passed y_pred_proba.
 
         Parameters
         -----------
         X: NDArray of shape (n_samples, n_features)
-            Observed feature values.
+            Observed feature values (not used since predictions are passed).
 
         alpha_np: NDArray of shape (n_alpha,)
             NDArray of floats between ``0`` and ``1``, represents the
             uncertainty of the confidence interval.
 
-        estimator: EnsembleClassifier
-            Estimator that is fitted to predict y from X.
+        y_pred_proba: NDArray
+            Predicted probabilities from the estimator.
+
+        cv: Optional[Union[int, str, BaseCrossValidator]]
+            Cross-validation strategy used by the estimator (not used here).
 
         Returns
         --------
         NDArray
             Array of predictions.
         """
-        y_pred_proba = estimator.predict(X, agg_scores='mean')
-        y_pred_proba = check_proba_normalized(y_pred_proba, axis=1)
-        y_pred_proba = np.repeat(
-            y_pred_proba[:, :, np.newaxis], len(alpha_np), axis=2
-        )
+        y_pred_proba = np.repeat(y_pred_proba[:, :, np.newaxis], len(alpha_np), axis=2)
         return y_pred_proba
 
     def get_conformity_score_quantiles(
         self,
         conformity_scores: NDArray,
         alpha_np: NDArray,
-        estimator: EnsembleClassifier,
-        **kwargs
+        cv: Optional[Union[int, str, BaseCrossValidator]],
+        **kwargs,
     ) -> NDArray:
         """
         Get the quantiles of the conformity scores for each uncertainty level.
@@ -104,14 +96,14 @@ class NaiveConformityScore(BaseClassificationScore):
         Parameters
         -----------
         conformity_scores: NDArray of shape (n_samples,)
-            Conformity scores for each sample.
+            Conformity scores for each sample (not used here).
 
         alpha_np: NDArray of shape (n_alpha,)
             NDArray of floats between 0 and 1, representing the uncertainty
-            of the confidence interval.
+            of the confidence interval (not used here).
 
-        estimator: EnsembleClassifier
-            Estimator that is fitted to predict y from X.
+        cv: Optional[Union[int, str, BaseCrossValidator]]
+            Cross-validation strategy used by the estimator (not used here).
 
         Returns
         --------
@@ -121,11 +113,7 @@ class NaiveConformityScore(BaseClassificationScore):
         quantiles_ = 1 - alpha_np
         return quantiles_
 
-    def _add_regularization(
-        self,
-        y_pred_proba_sorted_cumsum: NDArray,
-        **kwargs
-    ):
+    def _add_regularization(self, y_pred_proba_sorted_cumsum: NDArray, **kwargs):
         """
         Add regularization to the sorted cumulative sum of predicted
         probabilities.
@@ -152,7 +140,7 @@ class NaiveConformityScore(BaseClassificationScore):
         y_pred_proba: NDArray,
         thresholds: NDArray,
         include_last_label: Union[bool, str, None],
-        **kwargs
+        **kwargs,
     ) -> Tuple[NDArray, NDArray, NDArray]:
         """
         Function that returns the smallest score
@@ -179,13 +167,9 @@ class NaiveConformityScore(BaseClassificationScore):
             with the RAPS method, the index of the last included score
             and the value of the last included score.
         """
-        index_sorted = np.flip(
-            np.argsort(y_pred_proba, axis=1), axis=1
-        )
+        index_sorted = np.flip(np.argsort(y_pred_proba, axis=1), axis=1)
         # sort probabilities by decreasing order
-        y_pred_proba_sorted = np.take_along_axis(
-            y_pred_proba, index_sorted, axis=1
-        )
+        y_pred_proba_sorted = np.take_along_axis(y_pred_proba, index_sorted, axis=1)
         # get sorted cumulated score
         y_pred_proba_sorted_cumsum = np.cumsum(y_pred_proba_sorted, axis=1)
         y_pred_proba_sorted_cumsum = self._add_regularization(
@@ -194,24 +178,16 @@ class NaiveConformityScore(BaseClassificationScore):
 
         # get cumulated score at their original position
         y_pred_proba_cumsum = np.take_along_axis(
-            y_pred_proba_sorted_cumsum,
-            np.argsort(index_sorted, axis=1),
-            axis=1
+            y_pred_proba_sorted_cumsum, np.argsort(index_sorted, axis=1), axis=1
         )
         # get index of the last included label
         y_pred_index_last = get_last_index_included(
-            y_pred_proba_cumsum,
-            thresholds,
-            include_last_label
+            y_pred_proba_cumsum, thresholds, include_last_label
         )
         # get the probability of the last included label
-        y_pred_proba_last = np.take_along_axis(
-            y_pred_proba,
-            y_pred_index_last,
-            axis=1
-        )
+        y_pred_proba_last = np.take_along_axis(y_pred_proba, y_pred_index_last, axis=1)
 
-        zeros_scores_proba_last = (y_pred_proba_last <= EPSILON)
+        zeros_scores_proba_last = y_pred_proba_last <= EPSILON
 
         # If the last included proba is zero, change it to the
         # smallest non-zero value to avoid inluding them in the
@@ -219,12 +195,10 @@ class NaiveConformityScore(BaseClassificationScore):
         if np.sum(zeros_scores_proba_last) > 0:
             y_pred_proba_last[zeros_scores_proba_last] = np.expand_dims(
                 np.min(
-                    np.ma.masked_less(
-                        y_pred_proba,
-                        EPSILON
-                    ).filled(fill_value=np.inf),
-                    axis=1
-                ), axis=1
+                    np.ma.masked_less(y_pred_proba, EPSILON).filled(fill_value=np.inf),
+                    axis=1,
+                ),
+                axis=1,
             )[zeros_scores_proba_last]
 
         return y_pred_proba_cumsum, y_pred_index_last, y_pred_proba_last
@@ -234,8 +208,8 @@ class NaiveConformityScore(BaseClassificationScore):
         y_pred_proba: NDArray,
         conformity_scores: NDArray,
         alpha_np: NDArray,
-        estimator: EnsembleClassifier,
-        **kwargs
+        cv: Optional[Union[int, str, BaseCrossValidator]],
+        **kwargs,
     ) -> NDArray:
         """
         Generate prediction sets based on the probability predictions,
@@ -247,14 +221,14 @@ class NaiveConformityScore(BaseClassificationScore):
             Target prediction.
 
         conformity_scores: NDArray of shape (n_samples,)
-            Conformity scores for each sample.
+            Conformity scores for each sample (not used here).
 
         alpha_np: NDArray of shape (n_alpha,)
             NDArray of floats between 0 and 1, representing the uncertainty
-            of the confidence interval.
+            of the confidence interval (not used here).
 
-        estimator: EnsembleClassifier
-            Estimator that is fitted to predict y from X.
+        cv: Optional[Union[int, str, BaseCrossValidator]]
+            Cross-validation strategy used by the estimator (not used here).
 
         Returns
         --------
@@ -262,16 +236,10 @@ class NaiveConformityScore(BaseClassificationScore):
             Array of quantiles with respect to alpha_np.
         """
         # sort labels by decreasing probability
-        _, _, y_pred_proba_last = (
-            self._get_last_included_proba(
-                y_pred_proba,
-                thresholds=self.quantiles_,
-                include_last_label=True
-            )
+        _, _, y_pred_proba_last = self._get_last_included_proba(
+            y_pred_proba, thresholds=self.quantiles_, include_last_label=True
         )
         # get the prediction set by taking all probabilities above the last one
-        prediction_sets = np.greater_equal(
-            y_pred_proba - y_pred_proba_last, -EPSILON
-        )
+        prediction_sets = np.greater_equal(y_pred_proba - y_pred_proba_last, -EPSILON)
 
         return prediction_sets

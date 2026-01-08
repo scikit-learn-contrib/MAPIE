@@ -6,7 +6,14 @@
 Theoretical Description
 #######################
 
-The :class:`~mapie.regression.MapieRegressor` class uses various
+Note: in theoretical parts of the documentation, we use the following terms employed in the scientific literature:
+
+- `alpha` is equivalent to `1 - confidence_level`. It can be seen as a *risk level*
+- *calibrate* and *calibration*, are equivalent to *conformalize* and *conformalization*.
+
+—
+
+The methods in `mapie.regression` use various
 resampling methods based on the jackknife strategy
 recently introduced by Foygel-Barber et al. (2020) [1]. 
 They allow the user to estimate robust prediction intervals with any kind of
@@ -79,8 +86,7 @@ where :math:`\hat{q}_{n, \alpha}^+` is the :math:`(1-\alpha)` quantile of the di
 Since this method estimates the conformity scores only on a calibration set, one must have enough
 observations to split its original dataset into train and calibration as mentioned in [5]. We can
 notice that this method is very similar to the naive one, the only difference being that the conformity
-scores are not computed on the calibration set. Moreover, this method will always give prediction intervals
-with a constant width.
+scores are not computed on the training set but on the calibration set instead.
   
 
 3. The jackknife method
@@ -102,7 +108,7 @@ Estimating the prediction intervals is carried out in three main steps:
   
 .. math:: \hat{\mu}(X_{n+1}) \pm ((1-\alpha) \textrm{ quantile of } |Y_1-\hat{\mu}_{-1}(X_1)|, ..., |Y_n-\hat{\mu}_{-n}(X_n)|)
 
-The resulting confidence interval can therefore be summarized as follows
+The resulting prediction interval can therefore be summarized as follows
 
 .. math:: \hat{C}_{n, \alpha}^{\rm jackknife}(X_{n+1}) = [ \hat{q}_{n, \alpha}^-\{\hat{\mu}(X_{n+1}) - R_i^{\rm LOO} \}, \hat{q}_{n, \alpha}^+\{\hat{\mu}(X_{n+1}) + R_i^{\rm LOO} \}] 
 
@@ -125,7 +131,7 @@ Unlike the standard jackknife method which estimates a prediction interval cente
 around the prediction of the model trained on the entire dataset, the so-called jackknife+ 
 method uses each leave-one-out prediction on the new test point to take the variability of the 
 regression function into account.
-The resulting confidence interval can therefore be summarized as follows
+The resulting prediction interval can therefore be summarized as follows
 
 .. math:: \hat{C}_{n, \alpha}^{\rm jackknife+}(X_{n+1}) = [ \hat{q}_{n, \alpha}^-\{\hat{\mu}_{-i}(X_{n+1}) - R_i^{\rm LOO} \}, \hat{q}_{n, \alpha}^+\{\hat{\mu}_{-i}(X_{n+1}) + R_i^{\rm LOO} \}] 
 
@@ -255,6 +261,11 @@ heteroscedastic data. It uses quantile regressors with different quantile values
 the prediction bounds. The residuals of these methods are used to create the guaranteed
 coverage value.
 
+The figure below illustrates the conformalized quantile regression method.
+
+.. image:: images/cqr.png
+   :width: 800
+
 Notations and Definitions
 -------------------------
 - :math:`\mathcal{I}_1` is the set of indices of the data in the training set.
@@ -295,7 +306,7 @@ hypothesis". It means that the probability law of data should not change up to
 reordering.
 This hypothesis is not relevant in many cases, notably for dynamical times series.
 That is why a specific class is needed, namely
-:class:`~mapie.time_series_regression.MapieTimeSeriesRegressor`.
+:class:`mapie.time_series_regression.TimeSeriesRegressor`.
 
 Its implementation looks like the jackknife+-after-bootstrap method. The
 leave-one-out (LOO) estimators are approximated thanks to a few boostraps.

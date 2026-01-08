@@ -1,8 +1,11 @@
 """
-=================================================
-Make Conformal Predictive Distribution with MAPIE
-=================================================
+================================================================================
+Conformal Predictive Distribution with MAPIE
+================================================================================
+
 """
+
+# sphinx_gallery_thumbnail_number = 3
 
 ##############################################################################
 # In this advanced analysis, we propose to use MAPIE for Conformal Predictive
@@ -22,15 +25,14 @@ import numpy as np
 from matplotlib import pyplot as plt
 from sklearn.datasets import make_regression
 from sklearn.linear_model import LinearRegression
-from sklearn.model_selection import train_test_split
 
-from mapie.conformity_scores import (AbsoluteConformityScore,
-                                     ResidualNormalisedScore)
-from mapie.regression import MapieRegressor
+from mapie.conformity_scores import AbsoluteConformityScore, ResidualNormalisedScore
+from mapie.regression import SplitConformalRegressor
+from mapie.utils import train_conformalize_test_split
 
-warnings.filterwarnings('ignore')
+warnings.filterwarnings("ignore")
 
-random_state = 15
+RANDOM_STATE = 15
 
 
 ##############################################################################
@@ -40,11 +42,20 @@ random_state = 15
 # Here, we propose just to generate data for regression task, then split it.
 
 X, y = make_regression(
-    n_samples=1000, n_features=1, noise=20, random_state=random_state
+    n_samples=1000, n_features=1, noise=20, random_state=RANDOM_STATE
 )
-X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.5, random_state=random_state
+
+(X_train, X_conformalize, X_test, y_train, y_conformalize, y_test) = (
+    train_conformalize_test_split(
+        X,
+        y,
+        train_size=0.6,
+        conformalize_size=0.2,
+        test_size=0.2,
+        random_state=RANDOM_STATE,
+    )
 )
+
 
 plt.xlabel("x")
 plt.ylabel("y")
@@ -58,19 +69,20 @@ plt.show()
 #
 # To be able to obtain the cumulative distribution function of
 # a prediction with MAPIE, we propose here to wrap the
-# :class:`~mapie.regression.MapieRegressor` to add a new method named
+# :class:`~mapie.regression.SplitConformalRegressor` to add a new method named
 # `get_cumulative_distribution_function`.
 
-class MapieConformalPredictiveDistribution(MapieRegressor):
 
+class MapieConformalPredictiveDistribution(SplitConformalRegressor):
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
-        self.conformity_score.sym = False
 
     def get_cumulative_distribution_function(self, X):
-        y_pred = self.predict(X)
-        cs = self.conformity_scores_[~np.isnan(self.conformity_scores_)]
-        res = self.conformity_score_function_.get_estimation_distribution(
+        y_pred, _ = self.predict_interval(X)
+        cs = self._mapie_regressor.conformity_scores_[
+            ~np.isnan(self._mapie_regressor.conformity_scores_)
+        ]
+        res = self._conformity_score.get_estimation_distribution(
             y_pred.reshape((-1, 1)), cs, X=X
         )
         return res
@@ -78,30 +90,30 @@ class MapieConformalPredictiveDistribution(MapieRegressor):
 
 ##############################################################################
 # Now, we propose to use it with two different conformity scores -
-# :class:`~mapie.conformity_score.AbsoluteConformityScore` and
-# :class:`~mapie.conformity_score.ResidualNormalisedScore` - in split-conformal
-# inference.
+# :class:`~mapie.conformity_scores.AbsoluteConformityScore` and
+# :class:`~mapie.conformity_scores.ResidualNormalisedScore` -
+# in split-conformal inference.
 
 mapie_regressor_1 = MapieConformalPredictiveDistribution(
     estimator=LinearRegression(),
-    conformity_score=AbsoluteConformityScore(),
-    cv='split',
-    random_state=random_state
+    conformity_score=AbsoluteConformityScore(sym=False),
+    prefit=False,
 )
 
 mapie_regressor_1.fit(X_train, y_train)
-y_pred_1 = mapie_regressor_1.predict(X_test)
+mapie_regressor_1.conformalize(X_conformalize, y_conformalize)
+y_pred_1, _ = mapie_regressor_1.predict_interval(X_test)
 y_cdf_1 = mapie_regressor_1.get_cumulative_distribution_function(X_test)
 
 mapie_regressor_2 = MapieConformalPredictiveDistribution(
     estimator=LinearRegression(),
-    conformity_score=ResidualNormalisedScore(),
-    cv='split',
-    random_state=random_state
+    conformity_score=ResidualNormalisedScore(sym=False, random_state=RANDOM_STATE),
+    prefit=False,
 )
 
 mapie_regressor_2.fit(X_train, y_train)
-y_pred_2 = mapie_regressor_2.predict(X_test)
+mapie_regressor_2.conformalize(X_conformalize, y_conformalize)
+y_pred_2, _ = mapie_regressor_2.predict_interval(X_test)
 y_cdf_2 = mapie_regressor_2.get_cumulative_distribution_function(X_test)
 
 plt.xlabel("x")
@@ -124,23 +136,17 @@ nb_bins = 100
 
 def plot_cdf(data, bins, **kwargs):
     counts, bins = np.histogram(data, bins=bins)
-    cdf = np.cumsum(counts)/np.sum(counts)
+    cdf = np.cumsum(counts) / np.sum(counts)
 
     plt.plot(
         np.vstack((bins, np.roll(bins, -1))).T.flatten()[:-2],
         np.vstack((cdf, cdf)).T.flatten(),
-        **kwargs
+        **kwargs,
     )
 
 
-plot_cdf(
-    y_cdf_1[0], bins=nb_bins, label='Absolute Residual Score', alpha=0.8
-)
-plot_cdf(
-    y_cdf_2[0], bins=nb_bins, label='Normalized Residual Score', alpha=0.8
-)
-plt.vlines(
-    y_pred_1[0], 0, 1, label='Prediction', color="C2", linestyles='dashed'
-)
+plot_cdf(y_cdf_1[0], bins=nb_bins, label="Absolute Residual Score", alpha=0.8)
+plot_cdf(y_cdf_2[0], bins=nb_bins, label="Normalized Residual Score", alpha=0.8)
+plt.vlines(y_pred_1[0], 0, 1, label="Prediction", color="C2", linestyles="dashed")
 plt.legend(loc=2)
 plt.show()

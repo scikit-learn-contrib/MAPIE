@@ -1,14 +1,12 @@
 from typing import Optional, Union
-import numpy as np
 
-from mapie._typing import NDArray
+import numpy as np
+from numpy.typing import NDArray
+
 from mapie._machine_precision import EPSILON
 
 
-def get_true_label_position(
-    y_pred_proba: NDArray,
-    y: NDArray
-) -> NDArray:
+def get_true_label_position(y_pred_proba: NDArray, y: NDArray) -> NDArray:
     """
     Return the sorted position of the true label in the prediction
 
@@ -32,7 +30,7 @@ def get_true_label_position(
 
 
 def check_include_last_label(
-    include_last_label: Optional[Union[bool, str]]
+    include_last_label: Optional[Union[bool, str]],
 ) -> Optional[Union[bool, str]]:
     """
     Check if ``include_last_label`` is a boolean or a string.
@@ -65,54 +63,20 @@ def check_include_last_label(
         "Invalid include_last_label argument. "
         "Should be a boolean or 'randomized'."
     """
-    if (
-        (not isinstance(include_last_label, bool)) and
-        (not include_last_label == "randomized")
+    if (not isinstance(include_last_label, bool)) and (
+        not include_last_label == "randomized"
     ):
         raise ValueError(
-            "Invalid include_last_label argument. "
-            "Should be a boolean or 'randomized'."
+            "Invalid include_last_label argument. Should be a boolean or 'randomized'."
         )
     else:
         return include_last_label
 
 
-def check_proba_normalized(
-    y_pred_proba: NDArray,
-    axis: int = 1
-) -> NDArray:
-    """
-    Check if for all the samples the sum of the probabilities is equal to one.
-
-    Parameters
-    ----------
-    y_pred_proba: NDArray of shape (n_samples, n_classes) or
-    (n_samples, n_train_samples, n_classes)
-        Softmax output of a model.
-
-    Returns
-    -------
-    ArrayLike of shape (n_samples, n_classes)
-        Softmax output of a model if the scores all sum to one.
-
-    Raises
-    ------
-    ValueError
-        If the sum of the scores is not equal to one.
-    """
-    np.testing.assert_allclose(
-        np.sum(y_pred_proba, axis=axis),
-        1,
-        err_msg="The sum of the scores is not equal to one.",
-        rtol=1e-5
-    )
-    return y_pred_proba.astype(np.float64)
-
-
 def get_last_index_included(
     y_pred_proba_cumsum: NDArray,
     threshold: NDArray,
-    include_last_label: Optional[Union[bool, str]]
+    include_last_label: Optional[Union[bool, str]],
 ) -> NDArray:
     """
     Return the index of the last included sorted probability
@@ -152,23 +116,18 @@ def get_last_index_included(
     else:
         formatted_threshold = threshold
 
-    if include_last_label or include_last_label == 'randomized':
-        y_pred_index_last = (
-            np.ma.masked_less(
-                y_pred_proba_cumsum
-                - formatted_threshold,
-                -EPSILON
-            ).argmin(axis=1)
-        )
+    if include_last_label or include_last_label == "randomized":
+        y_pred_index_last = np.ma.masked_less(
+            y_pred_proba_cumsum - formatted_threshold, -EPSILON
+        ).argmin(axis=1)
     else:
         max_threshold = np.maximum(
-            formatted_threshold,
-            np.min(y_pred_proba_cumsum, axis=1)
+            formatted_threshold, np.min(y_pred_proba_cumsum, axis=1)
         )
         y_pred_index_last = np.argmax(
             np.ma.masked_greater(
-                y_pred_proba_cumsum - max_threshold[:, np.newaxis, :],
-                EPSILON
-            ), axis=1
+                y_pred_proba_cumsum - max_threshold[:, np.newaxis, :], EPSILON
+            ),
+            axis=1,
         )
     return y_pred_index_last[:, np.newaxis, :]

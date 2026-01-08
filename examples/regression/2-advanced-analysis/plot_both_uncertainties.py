@@ -1,12 +1,16 @@
 """
-================================================
+===============================================================================
 Estimating aleatoric and epistemic uncertainties
-================================================
-This example uses :class:`~mapie.regression.MapieRegressor` and
-:class:`~mapie.quantile_regression.MapieQuantileRegressor` to estimate
+===============================================================================
+
+
+This example uses :class:`~mapie.regression.CrossConformalRegressor`,
+:class:`~mapie.regression.ConformalizedQuantileRegressor` and
+:class:`~mapie.regression.JackknifeAfterBootstrapRegressor` to estimate
 prediction intervals capturing both aleatoric and epistemic uncertainties
 on a one-dimensional dataset with homoscedastic noise and normal sampling.
 """
+
 from typing import Any, Callable, Tuple, TypeVar
 
 import matplotlib.pyplot as plt
@@ -14,13 +18,17 @@ import numpy as np
 from sklearn.linear_model import LinearRegression, QuantileRegressor
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import PolynomialFeatures
+from sklearn.model_selection import train_test_split
 
-from mapie._typing import NDArray
-from mapie.regression import MapieQuantileRegressor, MapieRegressor
-from mapie.subsample import Subsample
+from numpy.typing import NDArray
+from mapie.regression import (
+    CrossConformalRegressor,
+    ConformalizedQuantileRegressor,
+    JackknifeAfterBootstrapRegressor,
+)
 
 F = TypeVar("F", bound=Callable[..., Any])
-random_state = 42
+RANDOM_STATE = 42
 
 
 # Functions for generating our dataset
@@ -59,12 +67,12 @@ def get_1d_data_with_normal_distrib(
         [3]: y_test
         [4]: y_mesh
     """
-    np.random.seed(random_state)
-    X_train = np.random.normal(mu, sigma, n_samples)
+    rng = np.random.default_rng(RANDOM_STATE)
+    X_train = rng.normal(mu, sigma, n_samples)
     X_test = np.arange(mu - 4 * sigma, mu + 4 * sigma, sigma / 20.0)
     y_train, y_mesh, y_test = funct(X_train), funct(X_test), funct(X_test)
-    y_train += np.random.normal(0, noise, y_train.shape[0])
-    y_test += np.random.normal(0, noise, y_test.shape[0])
+    y_train += rng.normal(0, noise, y_train.shape[0])
+    y_test += rng.normal(0, noise, y_test.shape[0])
     return (
         X_train.reshape(-1, 1),
         y_train,
@@ -76,8 +84,8 @@ def get_1d_data_with_normal_distrib(
 
 # Data generation
 mu, sigma, n_samples, noise = 0, 2.5, 300, 0.5
-X_train, y_train, X_test, y_test, y_mesh = get_1d_data_with_normal_distrib(
-    x_sinx, mu, sigma, n_samples, noise
+X_train_conformalize, y_train_conformalize, X_test, y_test, y_mesh = (
+    get_1d_data_with_normal_distrib(x_sinx, mu, sigma, n_samples, noise)
 )
 
 # Definition of our base model
@@ -91,34 +99,57 @@ polyn_model = Pipeline(
 polyn_model_quant = Pipeline(
     [
         ("poly", PolynomialFeatures(degree=degree_polyn)),
-        ("linear", QuantileRegressor(
-            alpha=0,
-            solver="highs",  # highs-ds does not give good results
-            )),
+        (
+            "linear",
+            QuantileRegressor(
+                alpha=0,
+                solver="highs",  # highs-ds does not give good results
+            ),
+        ),
     ]
 )
 
 
 # Estimating prediction intervals
 STRATEGIES = {
-    "jackknife_plus": {"method": "plus", "cv": -1},
-    "cv_plus": {"method": "plus", "cv": 10},
-    "jackknife_plus_ab": {"method": "plus", "cv": Subsample(n_resamplings=50)},
-    "conformalized_quantile_regression": {"method": "quantile", "cv": "split"},
+    "jackknife_plus": {
+        "class": CrossConformalRegressor,
+        "init_params": dict(method="plus", cv=-1),
+    },
+    "cv_plus": {
+        "class": CrossConformalRegressor,
+        "init_params": dict(method="plus", cv=10),
+    },
+    "jackknife_plus_ab": {
+        "class": JackknifeAfterBootstrapRegressor,
+        "init_params": dict(method="plus", resampling=50),
+    },
+    "conformalized_quantile_regression": {
+        "class": ConformalizedQuantileRegressor,
+        "init_params": dict(),
+    },
 }
 y_pred, y_pis = {}, {}
-for strategy, params in STRATEGIES.items():
-    if strategy == "conformalized_quantile_regression":
-        mapie = MapieQuantileRegressor(  # type: ignore
-            polyn_model_quant,
-            **params
+for strategy_name, strategy_params in STRATEGIES.items():
+    init_params = strategy_params["init_params"]
+    class_ = strategy_params["class"]
+    if strategy_name == "conformalized_quantile_regression":
+        X_train, X_conformalize, y_train, y_conformalize = train_test_split(
+            X_train_conformalize,
+            y_train_conformalize,
+            test_size=0.3,
+            random_state=RANDOM_STATE,
         )
-        mapie.fit(X_train, y_train, random_state=random_state)
-        y_pred[strategy], y_pis[strategy] = mapie.predict(X_test)
-    else:
-        mapie = MapieRegressor(polyn_model, **params)  # type: ignore
+        mapie = class_(polyn_model_quant, confidence_level=0.95, **init_params)
         mapie.fit(X_train, y_train)
-        y_pred[strategy], y_pis[strategy] = mapie.predict(X_test, alpha=0.05)
+        mapie.conformalize(X_conformalize, y_conformalize)
+        y_pred[strategy_name], y_pis[strategy_name] = mapie.predict_interval(X_test)
+    else:
+        mapie = class_(
+            polyn_model, confidence_level=0.95, random_state=RANDOM_STATE, **init_params
+        )
+        mapie.fit_conformalize(X_train_conformalize, y_train_conformalize)
+        y_pred[strategy_name], y_pis[strategy_name] = mapie.predict_interval(X_test)
 
 
 # Visualization

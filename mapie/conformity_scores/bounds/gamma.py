@@ -1,6 +1,6 @@
 import numpy as np
 
-from mapie._typing import ArrayLike, NDArray
+from numpy.typing import ArrayLike, NDArray
 from mapie.conformity_scores import BaseRegressionScore
 
 
@@ -14,6 +14,13 @@ class GammaConformityScore(BaseRegressionScore):
     This is appropriate when the confidence interval is not symmetrical and
     its range depends on the predicted values. Like the Gamma distribution,
     its support is limited to strictly positive reals.
+
+    References
+    ----------
+    [1] Cordier, T., Blot, V., Lacombe, L., Morzadec, T., Capitaine, A. & Brunel, N..
+    "Flexible and Systematic Uncertainty Estimation with Conformal Prediction via the
+    MAPIE library."
+    Proceedings of Machine Learning Research 2023.
     """
 
     def __init__(
@@ -53,10 +60,7 @@ class GammaConformityScore(BaseRegressionScore):
         return not np.any(np.less_equal(y, 0))
 
     def get_signed_conformity_scores(
-        self,
-        y: ArrayLike,
-        y_pred: ArrayLike,
-        **kwargs
+        self, y: ArrayLike, y_pred: ArrayLike, **kwargs
     ) -> NDArray:
         """
         Compute the signed conformity scores from the observed values
@@ -68,10 +72,7 @@ class GammaConformityScore(BaseRegressionScore):
         return np.divide(np.subtract(y, y_pred), y_pred)
 
     def get_estimation_distribution(
-        self,
-        y_pred: ArrayLike,
-        conformity_scores: ArrayLike,
-        **kwargs
+        self, y_pred: ArrayLike, conformity_scores: ArrayLike, **kwargs
     ) -> NDArray:
         """
         Compute samples of the estimation distribution from the predicted

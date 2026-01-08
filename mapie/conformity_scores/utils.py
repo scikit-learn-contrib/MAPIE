@@ -1,29 +1,50 @@
-from typing import Optional
-import warnings
+from typing import Optional, no_type_check
 
-from sklearn.utils.multiclass import (check_classification_targets,
-                                      type_of_target)
+from sklearn.utils.multiclass import (
+    check_classification_targets,
+    type_of_target,
+)
 
 from .regression import BaseRegressionScore
 from .classification import BaseClassificationScore
-from .bounds import AbsoluteConformityScore
+from .bounds import (
+    AbsoluteConformityScore,
+    GammaConformityScore,
+    ResidualNormalisedScore,
+)
 from .sets import (
-    APSConformityScore, LACConformityScore, NaiveConformityScore,
-    RAPSConformityScore, TopKConformityScore
+    LACConformityScore,
+    TopKConformityScore,
+    APSConformityScore,
+    RAPSConformityScore,
 )
 
-from mapie._typing import ArrayLike
+from numpy.typing import ArrayLike
 
 
-METHOD_SCORE_MAP = {
-    'score': lambda: LACConformityScore(),
-    'lac': lambda: LACConformityScore(),
-    'cumulated_score': lambda: APSConformityScore(),
-    'aps': lambda: APSConformityScore(),
-    'naive': lambda: NaiveConformityScore(),
-    'raps': lambda: RAPSConformityScore(),
-    'top_k': lambda: TopKConformityScore()
+CONFORMITY_SCORES_STRING_MAP = {
+    BaseRegressionScore: {
+        "absolute": AbsoluteConformityScore,
+        "gamma": GammaConformityScore,
+        "residual_normalized": ResidualNormalisedScore,
+    },
+    BaseClassificationScore: {
+        "lac": LACConformityScore,
+        "top_k": TopKConformityScore,
+        "aps": APSConformityScore,
+        "raps": RAPSConformityScore,
+    },
 }
+
+
+@no_type_check  # Cumbersome to type
+def check_and_select_conformity_score(conformity_score, conformity_score_type):
+    if isinstance(conformity_score, conformity_score_type):
+        return conformity_score
+    elif conformity_score in CONFORMITY_SCORES_STRING_MAP[conformity_score_type]:
+        return CONFORMITY_SCORES_STRING_MAP[conformity_score_type][conformity_score]()
+    else:
+        raise ValueError("Invalid conformity_score parameter")
 
 
 def check_regression_conformity_score(
@@ -75,63 +96,7 @@ def check_regression_conformity_score(
         )
 
 
-def check_depreciated_score(
-    method: str
-) -> None:
-    """
-    Check if the chosen method is outdated.
-
-    Raises
-    ------
-    Warning
-        If method is ``"score"`` (not ``"lac"``) or
-        if method is ``"cumulated_score"`` (not ``"aps"``).
-    """
-    if method == "score":
-        warnings.warn(
-            "WARNING: Deprecated method. "
-            "The method \"score\" is outdated. "
-            "Prefer to use \"lac\" instead to keep "
-            "the same behavior in the next release.",
-            DeprecationWarning
-        )
-    if method == "cumulated_score":
-        warnings.warn(
-            "WARNING: Deprecated method. "
-            "The method \"cumulated_score\" is outdated. "
-            "Prefer to use \"aps\" instead to keep "
-            "the same behavior in the next release.",
-            DeprecationWarning
-        )
-
-
-def check_depreciated_size_raps(
-    size_raps: Optional[float]
-) -> None:
-    """
-    Check if the parameter ``size_raps`` is used. If so, raise a warning.
-
-    Raises
-    ------
-    Warning
-        If ``size_raps`` is not ``None``.
-    """
-    if not (size_raps is None):
-        warnings.warn(
-            "WARNING: Deprecated parameter. "
-            "The parameter `size_raps` is deprecated. "
-            "In the next release, `RAPSConformityScore` takes precedence over "
-            "`MapieClassifier` for setting the size used. "
-            "Prefer to define `size_raps` in `RAPSConformityScore` rather "
-            "than in the `fit` method of `MapieClassifier`.",
-            DeprecationWarning
-        )
-
-
-def check_target(
-    conformity_score: BaseClassificationScore,
-    y: ArrayLike
-) -> None:
+def check_target(conformity_score: BaseClassificationScore, y: ArrayLike) -> None:
     """
     Check that if the type of target is binary,
     (then the method have to be ``"lac"``), or multi-class.
@@ -151,21 +116,16 @@ def check_target(
         or ``"score"`` or if type of target is not multi-class.
     """
     check_classification_targets(y)
-    if (
-        type_of_target(y) == "binary" and
-        not isinstance(conformity_score, LACConformityScore)
+    if type_of_target(y) == "binary" and not isinstance(
+        conformity_score, LACConformityScore
     ):
         raise ValueError(
-            "Invalid method for binary target. "
-            "Your target is not of type multiclass and "
-            "allowed values for binary type are "
-            f"{['score', 'lac']}."
+            "Invalid conformity score for binary target. The only valid score is 'lac'."
         )
 
 
 def check_classification_conformity_score(
     conformity_score: Optional[BaseClassificationScore] = None,
-    method: Optional[str] = None,
 ) -> BaseClassificationScore:
     """
     Check parameter ``conformity_score`` for classification task.
@@ -178,51 +138,18 @@ def check_classification_conformity_score(
 
         By default, `None`.
 
-    method: str
-        Method to compute the conformity score.
-
-        By default, `None`.
-
     Raises
     ------
     ValueError
-        If parameters are not valid.
-
-    Examples
-    --------
-    >>> from mapie.conformity_scores.utils import (
-    ...     check_classification_conformity_score
-    ... )
-    >>> try:
-    ...     check_classification_conformity_score(1)
-    ... except Exception as exception:
-    ...     print(exception)
-    ...
-    Invalid conformity_score argument.
-    Must be None or a BaseClassificationScore instance.
+        If conformity_score is not valid.
     """
     if conformity_score is not None:
-        if method is not None:
-            warnings.warn(
-                "WARNING: the `conformity_score` parameter takes precedence "
-                "over the `method` parameter to define the method used.",
-                UserWarning
-            )
         if isinstance(conformity_score, BaseClassificationScore):
             return conformity_score
         else:
             raise ValueError(
                 "Invalid conformity_score argument.\n"
                 "Must be None or a BaseClassificationScore instance."
-            )
-    elif method is not None:
-        if isinstance(method, str) and method in METHOD_SCORE_MAP:
-            check_depreciated_score(method)
-            return METHOD_SCORE_MAP[method]()
-        else:
-            raise ValueError(
-                "Invalid method. "
-                f"Allowed values are {list(METHOD_SCORE_MAP.keys())}."
             )
     else:
         return LACConformityScore()

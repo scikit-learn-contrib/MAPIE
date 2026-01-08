@@ -2,15 +2,16 @@ import warnings
 from typing import Optional, Tuple, Union, cast
 
 import numpy as np
+from numpy.typing import ArrayLike, NDArray
 from sklearn.base import RegressorMixin, clone
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
-from sklearn.utils.validation import (check_is_fitted, check_random_state,
-                                      indexable)
+from sklearn.utils import _safe_indexing
+from sklearn.utils.validation import check_random_state, indexable
 
-from mapie._typing import ArrayLike, NDArray
 from mapie.conformity_scores import BaseRegressionScore
+from mapie.utils import check_sklearn_user_model_is_fitted
 
 
 class ResidualNormalisedScore(BaseRegressionScore):
@@ -30,6 +31,12 @@ class ResidualNormalisedScore(BaseRegressionScore):
     Warning : if the estimator provided is not fitted a subset of the
     calibration data will be used to fit the model (20% by default).
 
+    References
+    ----------
+    [1] Lei, J., G'Sell, M., Rinaldo, A., Tibshirani, R. J. & Wasserman, L..
+    "Distribution-Free Predictive Inference for Regression."
+    Journal of the American Statistical Association 2018.
+
     Parameters
     ----------
     residual_estimator: Optional[RegressorMixin]
@@ -45,7 +52,7 @@ class ResidualNormalisedScore(BaseRegressionScore):
     split_size: Optional[Union[int, float]]
         The proportion of data that is used to fit the ``residual_estimator``.
         By default it is the default value of
-        ``sklearn.model_selection.train_test_split`` ie 0.2.
+        ``sklearn.model_selection.train_test_split`` ie 0.25.
 
     random_state: Optional[Union[int, np.random.RandomState]]
         Pseudo random number used for random sampling.
@@ -60,7 +67,7 @@ class ResidualNormalisedScore(BaseRegressionScore):
         split_size: Optional[Union[int, float]] = None,
         random_state: Optional[Union[int, np.random.RandomState]] = None,
         sym: bool = True,
-        consistency_check: bool = False
+        consistency_check: bool = False,
     ) -> None:
         super().__init__(sym=sym, consistency_check=consistency_check)
         self.prefit = prefit
@@ -69,8 +76,7 @@ class ResidualNormalisedScore(BaseRegressionScore):
         self.random_state = random_state
 
     def _check_estimator(
-        self,
-        estimator: Optional[RegressorMixin] = None
+        self, estimator: Optional[RegressorMixin] = None
     ) -> RegressorMixin:
         """
         Check if estimator is ``None``,
@@ -101,26 +107,23 @@ class ResidualNormalisedScore(BaseRegressionScore):
         if estimator is None:
             return LinearRegression()
         else:
-            if not (hasattr(estimator, "fit") and
-                    hasattr(estimator, "predict")):
+            if not (hasattr(estimator, "fit") and hasattr(estimator, "predict")):
                 raise ValueError(
                     "Invalid estimator. "
                     "Please provide a regressor with fit and predict methods."
                 )
             if self.prefit:
                 if isinstance(estimator, Pipeline):
-                    check_is_fitted(estimator[-1])
+                    check_sklearn_user_model_is_fitted(estimator[-1])
                 else:
-                    check_is_fitted(estimator)
+                    check_sklearn_user_model_is_fitted(estimator)
             return estimator
 
     def _check_parameters(
-        self,
-        X: ArrayLike,
-        y: ArrayLike,
-        y_pred: ArrayLike
-    ) -> Tuple[NDArray, NDArray, NDArray, RegressorMixin,
-               Union[int, np.random.RandomState]]:
+        self, X: ArrayLike, y: ArrayLike, y_pred: ArrayLike
+    ) -> Tuple[
+        NDArray, NDArray, NDArray, RegressorMixin, Union[int, np.random.RandomState]
+    ]:
         """
         Checks all the parameters of the class. Raises an error if the
         parameter are not well defined.
@@ -146,15 +149,16 @@ class ResidualNormalisedScore(BaseRegressionScore):
             - residual_estimator
             - random_state
         """
-        residual_estimator = self._check_estimator(
-            self.residual_estimator
-        )
+        residual_estimator = self._check_estimator(self.residual_estimator)
         random_state = check_random_state(self.random_state)
-        X, y, y_pred = indexable(X, y, y_pred)
-        X = np.array(X)
-        y = np.array(y)
-        y_pred = np.array(y_pred)
-        return X, y, y_pred, residual_estimator, random_state
+        X_, y_, y_pred_ = indexable(X, y, y_pred)
+        return (
+            cast(NDArray, X_),
+            cast(NDArray, y_),
+            cast(NDArray, y_pred_),
+            residual_estimator,
+            random_state,
+        )
 
     def _fit_residual_estimator(
         self,
@@ -165,7 +169,7 @@ class ResidualNormalisedScore(BaseRegressionScore):
     ) -> Tuple[NDArray, NDArray]:
         """
         Fit the residual estimator and returns the indexes used for the
-        training of the base estimator and those needed for the calibration.
+        training of the base estimator and those needed for the conformalization.
 
         Parameters
         ----------
@@ -184,19 +188,13 @@ class ResidualNormalisedScore(BaseRegressionScore):
             Fitted residual estimator
         """
         residuals = np.abs(np.subtract(y, y_pred))
-        targets = np.log(np.maximum(
-            residuals,
-            np.full(residuals.shape, self.eps)
-        ))
+        targets = np.log(np.maximum(residuals, np.full(residuals.shape, self.eps)))
 
         residual_estimator_ = residual_estimator_.fit(X, targets)
 
         return residual_estimator_
 
-    def _predict_residual_estimator(
-        self,
-        X: ArrayLike
-    ) -> NDArray:
+    def _predict_residual_estimator(self, X: ArrayLike) -> NDArray:
         """
         Returns the predictions of the residual estimator. Raises a warning if
         the model predicts neagtive values.
@@ -230,15 +228,11 @@ class ResidualNormalisedScore(BaseRegressionScore):
         return pred
 
     def get_signed_conformity_scores(
-        self,
-        y: ArrayLike,
-        y_pred: ArrayLike,
-        X: Optional[ArrayLike] = None,
-        **kwargs
+        self, y: ArrayLike, y_pred: ArrayLike, X: Optional[ArrayLike] = None, **kwargs
     ) -> NDArray:
         """
         Computes the signed conformity score = (y - y_pred) / r_pred.
-        r_pred being the predicted residual (y - y_pred) of the estimator.
+        r_pred being the predicted residual abs(y - y_pred) of the estimator.
         It is calculated by a model (``residual_estimator_``) that learns
         to predict this residual.
 
@@ -252,13 +246,11 @@ class ResidualNormalisedScore(BaseRegressionScore):
             )
         X = cast(ArrayLike, X)
 
-        (X, y, y_pred,
-         self.residual_estimator_,
-         random_state) = self._check_parameters(X, y, y_pred)
+        (X, y, y_pred, self.residual_estimator_, random_state) = self._check_parameters(
+            X, y, y_pred
+        )
 
-        full_indexes = np.argwhere(
-            np.logical_not(np.isnan(y_pred))
-        ).reshape((-1,))
+        full_indexes = np.argwhere(np.logical_not(np.isnan(y_pred))).reshape((-1,))
 
         if not self.prefit:
             cal_indexes, res_indexes = train_test_split(
@@ -268,28 +260,32 @@ class ResidualNormalisedScore(BaseRegressionScore):
             )
             self.residual_estimator_ = self._fit_residual_estimator(
                 clone(self.residual_estimator_),
-                X[res_indexes], y[res_indexes], y_pred[res_indexes]
+                _safe_indexing(X, res_indexes),
+                _safe_indexing(y, res_indexes),
+                _safe_indexing(y_pred, res_indexes),
             )
             residuals_pred = np.maximum(
-                np.exp(self._predict_residual_estimator(X[cal_indexes])),
-                self.eps
+                np.exp(
+                    self._predict_residual_estimator(_safe_indexing(X, cal_indexes))
+                ),
+                self.eps,
             )
         else:
             cal_indexes = full_indexes
             residuals_pred = np.maximum(
-                self._predict_residual_estimator(X[cal_indexes]),
-                self.eps
+                self._predict_residual_estimator(_safe_indexing(X, cal_indexes)),
+                self.eps,
             )
 
         signed_conformity_scores = np.divide(
-            np.subtract(y[cal_indexes], y_pred[cal_indexes]),
-            residuals_pred
+            np.subtract(
+                _safe_indexing(y, cal_indexes), _safe_indexing(y_pred, cal_indexes)
+            ),
+            residuals_pred,
         )
 
         # reconstruct array with nan and conformity scores
-        complete_signed_cs = np.full(
-            y_pred.shape, fill_value=np.nan, dtype=float
-        )
+        complete_signed_cs = np.full(y_pred.shape, fill_value=np.nan, dtype=float)
         complete_signed_cs[cal_indexes] = signed_conformity_scores
 
         return complete_signed_cs
@@ -299,7 +295,7 @@ class ResidualNormalisedScore(BaseRegressionScore):
         y_pred: ArrayLike,
         conformity_scores: ArrayLike,
         X: Optional[ArrayLike] = None,
-        **kwargs
+        **kwargs,
     ) -> NDArray:
         """
         Compute samples of the estimation distribution from the predicted
@@ -321,9 +317,6 @@ class ResidualNormalisedScore(BaseRegressionScore):
 
         r_pred = self._predict_residual_estimator(X).reshape((-1, 1))
         if not self.prefit:
-            return np.add(
-                y_pred,
-                np.multiply(conformity_scores, np.exp(r_pred))
-            )
+            return np.add(y_pred, np.multiply(conformity_scores, np.exp(r_pred)))
         else:
             return np.add(y_pred, np.multiply(conformity_scores, r_pred))

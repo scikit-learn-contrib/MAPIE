@@ -5,112 +5,97 @@
 MAPIE API
 #########
 
-.. currentmodule:: mapie
-
 Regression
-==========
+=============================
+
+Conformalizers
+---------------
 
 .. autosummary::
    :toctree: generated/
    :template: class.rst
 
-   regression.MapieRegressor
-   regression.MapieQuantileRegressor
-   regression.MapieTimeSeriesRegressor
-
-Classification
-==============
-
-.. autosummary::
-   :toctree: generated/
-   :template: class.rst
-
-   classification.MapieClassifier
-
-Multi-Label Classification
-==========================
-
-.. autosummary::
-   :toctree: generated/
-   :template: class.rst
-
-   multi_label_classification.MapieMultiLabelClassifier
-
-Calibration
-===========
-
-.. autosummary::
-   :toctree: generated/
-   :template: class.rst
-
-   calibration.MapieCalibrator
+   mapie.regression.SplitConformalRegressor
+   mapie.regression.CrossConformalRegressor
+   mapie.regression.JackknifeAfterBootstrapRegressor
+   mapie.regression.ConformalizedQuantileRegressor
+   mapie.regression.TimeSeriesRegressor
 
 Metrics
-=======
+--------
 
 .. autosummary::
    :toctree: generated/
    :template: function.rst
-   
-   metrics.classification_coverage_score
-   metrics.classification_coverage_score_v2
-   metrics.classification_mean_width_score
-   metrics.classification_ssc
-   metrics.classification_ssc_score
-   metrics.cumulative_differences
-   metrics.expected_calibration_error
-   metrics.hsic
-   metrics.kolmogorov_smirnov_cdf
-   metrics.kolmogorov_smirnov_p_value
-   metrics.kolmogorov_smirnov_statistic
-   metrics.kuiper_cdf
-   metrics.kuiper_p_value
-   metrics.kuiper_statistic
-   metrics.length_scale
-   metrics.regression_coverage_score
-   metrics.regression_coverage_score_v2
-   metrics.regression_mean_width_score
-   metrics.regression_ssc
-   metrics.regression_ssc_score
-   metrics.spiegelhalter_p_value
-   metrics.spiegelhalter_statistic
-   metrics.top_label_ece
 
-Conformity scores (regression)
-==============================
+   mapie.metrics.regression.regression_coverage_score
+   mapie.metrics.regression.regression_mean_width_score
+   mapie.metrics.regression.regression_ssc
+   mapie.metrics.regression.regression_ssc_score
+   mapie.metrics.regression.hsic
+   mapie.metrics.regression.coverage_width_based
+   mapie.metrics.regression.regression_mwi_score
+
+Conformity Scores
+-------------------
 
 .. autosummary::
    :toctree: generated/
    :template: class.rst
 
-   conformity_scores.BaseRegressionScore
-   conformity_scores.AbsoluteConformityScore
-   conformity_scores.GammaConformityScore
-   conformity_scores.ResidualNormalisedScore
-
-Conformity scores (classification)
-==================================
-
-.. autosummary::
-   :toctree: generated/
-   :template: class.rst
-
-   conformity_scores.BaseClassificationScore
-   conformity_scores.NaiveConformityScore
-   conformity_scores.LACConformityScore
-   conformity_scores.APSConformityScore
-   conformity_scores.RAPSConformityScore
-   conformity_scores.TopKConformityScore
+   mapie.conformity_scores.BaseRegressionScore
+   mapie.conformity_scores.AbsoluteConformityScore
+   mapie.conformity_scores.GammaConformityScore
+   mapie.conformity_scores.ResidualNormalisedScore
 
 Resampling
-==========
+-----------
 
 .. autosummary::
    :toctree: generated/
    :template: class.rst
 
-   subsample.BlockBootstrap
-   subsample.Subsample
+   mapie.subsample.BlockBootstrap
+   mapie.subsample.Subsample
+
+Classification
+==============
+
+Conformalizers
+---------------
+
+.. autosummary::
+   :toctree: generated/
+   :template: class.rst
+
+   mapie.classification.SplitConformalClassifier
+   mapie.classification.CrossConformalClassifier
+
+Metrics
+--------
+
+.. autosummary::
+   :toctree: generated/
+   :template: function.rst
+
+   mapie.metrics.classification.classification_coverage_score
+   mapie.metrics.classification.classification_mean_width_score
+   mapie.metrics.classification.classification_ssc
+   mapie.metrics.classification.classification_ssc_score
+
+Conformity Scores
+------------------
+
+.. autosummary::
+   :toctree: generated/
+   :template: class.rst
+
+   mapie.conformity_scores.BaseClassificationScore
+   mapie.conformity_scores.NaiveConformityScore
+   mapie.conformity_scores.LACConformityScore
+   mapie.conformity_scores.APSConformityScore
+   mapie.conformity_scores.RAPSConformityScore
+   mapie.conformity_scores.TopKConformityScore
 
 New Split CP class
 ===================
@@ -123,8 +108,8 @@ New Split CP class
    future.split.SplitCPRegressor
    future.split.SplitCPClassifier
 
-Calibrators
-===========
+Conformalizers
+---------------
 
 .. autosummary::
    :toctree: generated/
@@ -137,11 +122,54 @@ Calibrators
    future.calibrators.ccp.PolynomialCCP
    future.calibrators.ccp.GaussianCCP
 
-Mondrian
-========
+Risk Control
+==========================
 
 .. autosummary::
    :toctree: generated/
    :template: class.rst
 
-   mondrian.MondrianCP
+   mapie.risk_control.MultiLabelClassificationController
+   mapie.risk_control.BinaryClassificationController
+   mapie.risk_control.BinaryClassificationRisk
+
+Calibration
+===========
+
+Conformalizer
+--------------
+
+.. autosummary::
+   :toctree: generated/
+   :template: class.rst
+
+   mapie.calibration.TopLabelCalibrator
+
+Metrics
+--------
+
+.. autosummary::
+   :toctree: generated/
+   :template: function.rst
+
+   mapie.metrics.calibration.expected_calibration_error
+   mapie.metrics.calibration.top_label_ece
+   mapie.metrics.calibration.cumulative_differences
+   mapie.metrics.calibration.kolmogorov_smirnov_cdf
+   mapie.metrics.calibration.kolmogorov_smirnov_p_value
+   mapie.metrics.calibration.kolmogorov_smirnov_statistic
+   mapie.metrics.calibration.kuiper_cdf
+   mapie.metrics.calibration.kuiper_p_value
+   mapie.metrics.calibration.kuiper_statistic
+   mapie.metrics.calibration.length_scale
+   mapie.metrics.calibration.spiegelhalter_p_value
+   mapie.metrics.calibration.spiegelhalter_statistic
+
+Utils
+==============================
+
+.. autosummary::
+   :toctree: generated/
+   :template: function.rst
+
+   mapie.utils.train_conformalize_test_split

@@ -1,14 +1,13 @@
+import logging
 from abc import ABCMeta, abstractmethod
-from typing import Tuple
+from typing import Tuple, cast
 
 import numpy as np
+from numpy.typing import NDArray
 
+from mapie._machine_precision import EPSILON
 from mapie.conformity_scores.interface import BaseConformityScore
 from mapie.estimator.regressor import EnsembleRegressor
-
-from mapie._compatibility import np_nanquantile
-from mapie._machine_precision import EPSILON
-from mapie._typing import NDArray
 
 
 class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
@@ -55,10 +54,7 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
 
     @abstractmethod
     def get_signed_conformity_scores(
-        self,
-        y: NDArray,
-        y_pred: NDArray,
-        **kwargs
+        self, y: NDArray, y_pred: NDArray, **kwargs
     ) -> NDArray:
         """
         Placeholder for ``get_conformity_scores``.
@@ -81,12 +77,7 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
             Signed conformity scores.
         """
 
-    def get_conformity_scores(
-        self,
-        y: NDArray,
-        y_pred: NDArray,
-        **kwargs
-    ) -> NDArray:
+    def get_conformity_scores(self, y: NDArray, y_pred: NDArray, **kwargs) -> NDArray:
         """
         Get the conformity score considering the symmetrical property if so.
 
@@ -103,8 +94,7 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
         NDArray of shape (n_samples,)
             Conformity scores.
         """
-        conformity_scores = \
-            self.get_signed_conformity_scores(y, y_pred, **kwargs)
+        conformity_scores = self.get_signed_conformity_scores(y, y_pred, **kwargs)
         if self.consistency_check:
             self.check_consistency(y, y_pred, conformity_scores, **kwargs)
         if self.sym:
@@ -112,11 +102,7 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
         return conformity_scores
 
     def check_consistency(
-        self,
-        y: NDArray,
-        y_pred: NDArray,
-        conformity_scores: NDArray,
-        **kwargs
+        self, y: NDArray, y_pred: NDArray, conformity_scores: NDArray, **kwargs
     ) -> None:
         """
         Check consistency between the following methods:
@@ -149,7 +135,7 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
             y_pred, conformity_scores, **kwargs
         )
         abs_conformity_scores = np.abs(np.subtract(score_distribution, y))
-        max_conf_score = np.max(abs_conformity_scores)
+        max_conf_score: float = np.max(abs_conformity_scores)
         if max_conf_score > self.eps:
             raise ValueError(
                 "The two functions get_conformity_scores and "
@@ -165,10 +151,7 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
 
     @abstractmethod
     def get_estimation_distribution(
-        self,
-        y_pred: NDArray,
-        conformity_scores: NDArray,
-        **kwargs
+        self, y_pred: NDArray, conformity_scores: NDArray, **kwargs
     ) -> NDArray:
         """
         Placeholder for ``get_estimation_distribution``.
@@ -217,12 +200,21 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
             Array of betas minimizing the differences
             ``(1-alpha+beta)-quantile - beta-quantile``.
         """
-        beta_np = np.full(
-            shape=(len(lower_bounds), len(alpha_np)),
-            fill_value=np.nan,
-            dtype=float,
+        # Using logging.warning instead of warnings.warn to avoid warnings during tests
+        logging.warning(
+            "The option to optimize beta (minimize interval width) is not working and "
+            "needs to be fixed. See more details in "
+            "https://github.com/scikit-learn-contrib/MAPIE/issues/588"
         )
 
+        beta_np = cast(
+            NDArray[np.float64],
+            np.full(
+                shape=(len(lower_bounds), len(alpha_np)),
+                fill_value=np.nan,
+                dtype=float,
+            ),
+        )
         for ind_alpha, _alpha in enumerate(alpha_np):
             betas = np.linspace(
                 _alpha / (len(lower_bounds) + 1),
@@ -230,21 +222,19 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
                 num=len(lower_bounds),
                 endpoint=True,
             )
-            one_alpha_beta = np_nanquantile(
+            one_alpha_beta = np.nanquantile(
                 upper_bounds.astype(float),
                 1 - _alpha + betas,
                 axis=1,
                 method="higher",
             )
-            beta = np_nanquantile(
+            beta = np.nanquantile(
                 lower_bounds.astype(float),
                 betas,
                 axis=1,
                 method="lower",
             )
-            beta_np[:, ind_alpha] = betas[
-                np.argmin(one_alpha_beta - beta, axis=0)
-            ]
+            beta_np[:, ind_alpha] = betas[np.argmin(one_alpha_beta - beta, axis=0)]
 
         return beta_np
 
@@ -255,9 +245,9 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
         estimator: EnsembleRegressor,
         conformity_scores: NDArray,
         ensemble: bool = False,
-        method: str = 'base',
+        method: str = "base",
         optimize_beta: bool = False,
-        allow_infinite_bounds: bool = False
+        allow_infinite_bounds: bool = False,
     ) -> Tuple[NDArray, NDArray, NDArray]:
         """
         Compute bounds of the prediction intervals from the observed values,
@@ -318,7 +308,7 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
         """
         if self.sym and optimize_beta:
             raise ValueError(
-                "Beta optimisation cannot be used with "
+                "Interval width minimization cannot be used with a "
                 + "symmetrical conformity score function."
             )
 
@@ -345,17 +335,19 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
                 y_pred_up, conformity_scores, X=X
             )
             bound_low = self.get_quantile(
-                conformity_scores_low, alpha_low, axis=1, reversed=True,
-                unbounded=allow_infinite_bounds
+                conformity_scores_low,
+                alpha_low,
+                axis=1,
+                reversed=True,
+                unbounded=allow_infinite_bounds,
             )
             bound_up = self.get_quantile(
-                conformity_scores_up, alpha_up, axis=1,
-                unbounded=allow_infinite_bounds
+                conformity_scores_up, alpha_up, axis=1, unbounded=allow_infinite_bounds
             )
 
         else:
             if self.sym:
-                alpha_ref = 1-alpha_np
+                alpha_ref = 1 - alpha_np
                 quantile_ref = self.get_quantile(
                     conformity_scores[..., np.newaxis], alpha_ref, axis=0
                 )
@@ -366,30 +358,24 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
 
                 quantile_low = self.get_quantile(
                     conformity_scores[..., np.newaxis],
-                    alpha_low, axis=0, reversed=True,
-                    unbounded=allow_infinite_bounds
+                    alpha_low,
+                    axis=0,
+                    reversed=True,
+                    unbounded=allow_infinite_bounds,
                 )
                 quantile_up = self.get_quantile(
                     conformity_scores[..., np.newaxis],
-                    alpha_up, axis=0,
-                    unbounded=allow_infinite_bounds
+                    alpha_up,
+                    axis=0,
+                    unbounded=allow_infinite_bounds,
                 )
 
-            bound_low = self.get_estimation_distribution(
-                y_pred_low, quantile_low, X=X
-            )
-            bound_up = self.get_estimation_distribution(
-                y_pred_up, quantile_up, X=X
-            )
+            bound_low = self.get_estimation_distribution(y_pred_low, quantile_low, X=X)
+            bound_up = self.get_estimation_distribution(y_pred_up, quantile_up, X=X)
 
         return y_pred, bound_low, bound_up
 
-    def predict_set(
-        self,
-        X: NDArray,
-        alpha_np: NDArray,
-        **kwargs
-    ):
+    def predict_set(self, X: NDArray, alpha_np: NDArray, **kwargs):
         """
         Compute the prediction sets on new samples based on the uncertainty of
         the target confidence set.

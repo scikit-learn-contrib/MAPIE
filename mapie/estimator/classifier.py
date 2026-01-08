@@ -1,16 +1,21 @@
 from __future__ import annotations
 
-from typing import List, Optional, Tuple, Union, cast
+from typing import List, Literal, Optional, Tuple, Union, cast
 
 import numpy as np
 from joblib import Parallel, delayed
+from numpy.typing import ArrayLike, NDArray
 from sklearn.base import ClassifierMixin, clone
-from sklearn.model_selection import (BaseCrossValidator, BaseShuffleSplit)
+from sklearn.model_selection import BaseCrossValidator, BaseShuffleSplit
 from sklearn.utils import _safe_indexing
-from sklearn.utils.validation import _num_samples, check_is_fitted
+from sklearn.utils.validation import _num_samples
 
-from mapie._typing import ArrayLike, NDArray
-from mapie.utils import check_no_agg_cv, fit_estimator, fix_number_of_classes
+from mapie.utils import (
+    _check_no_agg_cv,
+    _fit_estimator,
+    _fix_number_of_classes,
+    check_is_fitted,
+)
 
 
 class EnsembleClassifier:
@@ -28,7 +33,7 @@ class EnsembleClassifier:
 
         By default ``None``.
 
-    cv: Optional[str]
+    cv: Optional[Union[int, Literal["prefit"], BaseCrossValidator]] = None,
         The cross-validation strategy for computing scores.
         It directly drives the distinction between jackknife and cv variants.
         Choose among:
@@ -41,24 +46,11 @@ class EnsembleClassifier:
             Main variants are:
             - ``sklearn.model_selection.LeaveOneOut`` (jackknife),
             - ``sklearn.model_selection.KFold`` (cross-validation)
-        - ``"split"``, does not involve cross-validation but a division
-            of the data into training and calibration subsets. The splitter
-            used is the following: ``sklearn.model_selection.ShuffleSplit``.
         - ``"prefit"``, assumes that ``estimator`` has been fitted already.
             All data provided in the ``fit`` method is then used
             to calibrate the predictions through the score computation.
             At prediction time, quantiles of these scores are used to estimate
             prediction sets.
-
-        By default ``None``.
-
-    test_size: Optional[Union[int, float]]
-        If ``float``, should be between ``0.0`` and ``1.0`` and represent the
-        proportion of the dataset to include in the test split. If ``int``,
-        represents the absolute number of test samples. If ``None``,
-        it will be set to ``0.1``.
-
-        If cv is not ``"split"``, ``test_size`` is ignored.
 
         By default ``None``.
 
@@ -71,13 +63,6 @@ class EnsembleClassifier:
         For ``n_jobs`` below ``-1``, ``(n_cpus + 1 - n_jobs)`` are used.
         ``None`` is a marker for `unset` that will be interpreted as
         ``n_jobs=1`` (sequential execution).
-
-        By default ``None``.
-
-    random_state: Optional[Union[int, RandomState]]
-        Pseudo random number generator state used for random uniform sampling
-        for evaluation quantiles and prediction sets.
-        Pass an int for reproducible output across multiple function calls.
 
         By default ``None``.
 
@@ -105,7 +90,7 @@ class EnsembleClassifier:
             Of shape (n_samples_train, cv.get_n_splits(X_train, y_train)).
     """
 
-    no_agg_cv_ = ["prefit", "split"]
+    no_agg_cv_ = ["prefit"]
     fit_attributes = [
         "single_estimator_",
         "estimators_",
@@ -117,19 +102,21 @@ class EnsembleClassifier:
         self,
         estimator: Optional[ClassifierMixin],
         n_classes: int,
-        cv: Optional[Union[int, str, BaseCrossValidator]],
+        cv: Optional[Union[int, Literal["prefit"], BaseCrossValidator]],
         n_jobs: Optional[int],
-        random_state: Optional[Union[int, np.random.RandomState]],
-        test_size: Optional[Union[int, float]],
         verbose: int,
     ):
         self.estimator = estimator
         self.n_classes = n_classes
         self.cv = cv
         self.n_jobs = n_jobs
-        self.random_state = random_state
-        self.test_size = test_size
         self.verbose = verbose
+        self._is_fitted = False
+
+    @property
+    def is_fitted(self):
+        """Returns True if the estimator is fitted"""
+        return self._is_fitted
 
     @staticmethod
     def _fit_oof_estimator(
@@ -171,24 +158,17 @@ class EnsembleClassifier:
         """
         X_train = _safe_indexing(X, train_index)
         y_train = _safe_indexing(y, train_index)
-        if not (sample_weight is None):
+        if sample_weight is not None:
             sample_weight = _safe_indexing(sample_weight, train_index)
             sample_weight = cast(NDArray, sample_weight)
 
-        estimator = fit_estimator(
-            estimator,
-            X_train,
-            y_train,
-            sample_weight=sample_weight,
-            **fit_params
+        estimator = _fit_estimator(
+            estimator, X_train, y_train, sample_weight=sample_weight, **fit_params
         )
         return estimator
 
     @staticmethod
-    def _check_proba_normalized(
-        y_pred_proba: ArrayLike,
-        axis: int = 1
-    ) -> ArrayLike:
+    def _check_proba_normalized(y_pred_proba: ArrayLike, axis: int = 1) -> ArrayLike:
         """
         Check if, for all the observations, the sum of
         the probabilities is equal to one.
@@ -213,15 +193,12 @@ class EnsembleClassifier:
             np.sum(y_pred_proba, axis=axis),
             1,
             err_msg="The sum of the scores is not equal to one.",
-            rtol=1e-5
+            rtol=1e-5,
         )
         return y_pred_proba
 
     def _predict_proba_oof_estimator(
-        self,
-        estimator: ClassifierMixin,
-        X: ArrayLike,
-        **predict_params
+        self, estimator: ClassifierMixin, X: ArrayLike, **predict_params
     ) -> NDArray:
         """
         Predict probabilities of a test set from a fitted estimator.
@@ -242,7 +219,7 @@ class EnsembleClassifier:
         y_pred_proba = estimator.predict_proba(X, **predict_params)
         # we enforce y_pred_proba to contain all labels included in y
         if len(estimator.classes_) != self.n_classes:
-            y_pred_proba = fix_number_of_classes(
+            y_pred_proba = _fix_number_of_classes(
                 self.n_classes, estimator.classes_, y_pred_proba
             )
         return y_pred_proba
@@ -253,7 +230,7 @@ class EnsembleClassifier:
         X: ArrayLike,
         val_index: ArrayLike,
         k: int,
-        **predict_params
+        **predict_params,
     ) -> Tuple[NDArray, ArrayLike, ArrayLike]:
         """
         Perform predictions on a single out-of-fold model on a validation set.
@@ -277,11 +254,12 @@ class EnsembleClassifier:
 
         X_val = _safe_indexing(X, val_index)
         if _num_samples(X_val) > 0:
-            y_pred_proba = self._predict_proba_oof_estimator(estimator, X_val,
-                                                             **predict_params)
+            y_pred_proba = self._predict_proba_oof_estimator(
+                estimator, X_val, **predict_params
+            )
         else:
             y_pred_proba = np.array([])
-        val_id = np.full(len(X_val), k, dtype=int)
+        val_id = cast(NDArray[np.int_], np.full(len(X_val), k, dtype=int))
 
         return y_pred_proba, val_id, val_index
 
@@ -333,36 +311,24 @@ class EnsembleClassifier:
         estimators_: List[ClassifierMixin] = []
         full_indexes = np.arange(_num_samples(X))
         cv = self.cv
-        self.use_split_method_ = check_no_agg_cv(X, self.cv, self.no_agg_cv_)
+        self.use_split_method_ = _check_no_agg_cv(X, self.cv, self.no_agg_cv_)
         estimator = self.estimator
         n_samples = _num_samples(y)
 
         # Computation
         if cv == "prefit":
             single_estimator_ = estimator
-            k_ = (
-                np.full(shape=(n_samples, 1), fill_value=np.nan, dtype=float)
-            )
+            k_ = np.full(shape=(n_samples, 1), fill_value=np.nan, dtype=float)
         else:
             single_estimator_ = self._fit_oof_estimator(
-                clone(estimator),
-                X,
-                y,
-                full_indexes,
-                sample_weight,
-                **fit_params
+                clone(estimator), X, y, full_indexes, sample_weight, **fit_params
             )
             cv = cast(BaseCrossValidator, cv)
             k_ = np.empty_like(y, dtype=int)
 
             estimators_ = Parallel(self.n_jobs, verbose=self.verbose)(
                 delayed(self._fit_oof_estimator)(
-                    clone(estimator),
-                    X,
-                    y_enc,
-                    train_index,
-                    sample_weight,
-                    **fit_params
+                    clone(estimator), X, y_enc, train_index, sample_weight, **fit_params
                 )
                 for train_index, _ in cv.split(X, y, groups)
             )
@@ -374,6 +340,8 @@ class EnsembleClassifier:
         self.estimators_ = estimators_
         self.k_ = k_
 
+        self._is_fitted = True
+
         return self
 
     def predict_proba_calib(
@@ -382,7 +350,7 @@ class EnsembleClassifier:
         y: NDArray,
         y_enc: NDArray,
         groups: Optional[NDArray] = None,
-        **predict_params
+        **predict_params,
     ) -> Tuple[NDArray, NDArray, NDArray]:
         """
         Perform predictions on X, the calibration set.
@@ -411,10 +379,10 @@ class EnsembleClassifier:
         NDArray of shape (n_samples_test, 1)
             The predictions.
         """
-        check_is_fitted(self, self.fit_attributes)
+        check_is_fitted(self)
 
         if self.cv == "prefit":
-            y_pred_proba = self.single_estimator_.predict_proba(X)
+            y_pred_proba = self.single_estimator_.predict_proba(X, **predict_params)
             y_pred_proba = self._check_proba_normalized(y_pred_proba)
         else:
             X = cast(NDArray, X)
@@ -448,15 +416,14 @@ class EnsembleClassifier:
 
         return y_pred_proba, y, y_enc
 
-    def predict(
+    def predict_agg_proba(
         self,
         X: ArrayLike,
         agg_scores: Optional[str] = None,
         **predict_params,
     ) -> NDArray:
         """
-        Predict target from X. It also computes the prediction per train sample
-        for each test sample according to ``agg_scores``.
+        Computes aggregated probabilities from the estimators.
 
         Parameters
         ----------
@@ -476,25 +443,21 @@ class EnsembleClassifier:
             Predictions of shape
             (n_samples, n_classes)
         """
-        check_is_fitted(self, self.fit_attributes)
+        check_is_fitted(self)
 
-        if self.cv == "prefit":
-            y_pred_proba = self.single_estimator_.predict_proba(
-                X, **predict_params
-            )
-        else:
-            y_pred_proba_k = np.asarray(
-                Parallel(n_jobs=self.n_jobs, verbose=self.verbose)(
-                    delayed(self._predict_proba_oof_estimator)(
-                        estimator, X, **predict_params
-                    ) for estimator in self.estimators_
+        y_pred_proba_k = np.asarray(
+            Parallel(n_jobs=self.n_jobs, verbose=self.verbose)(
+                delayed(self._predict_proba_oof_estimator)(
+                    estimator, X, **predict_params
                 )
+                for estimator in self.estimators_
             )
-            if agg_scores == "crossval":
-                y_pred_proba = np.moveaxis(y_pred_proba_k[self.k_], 0, 2)
-            elif agg_scores == "mean":
-                y_pred_proba = np.mean(y_pred_proba_k, axis=0)
-            else:
-                raise ValueError("Invalid 'agg_scores' argument.")
+        )
+        if agg_scores == "crossval":
+            y_pred_proba = np.moveaxis(y_pred_proba_k[self.k_], 0, 2)
+        elif agg_scores == "mean":
+            y_pred_proba = np.mean(y_pred_proba_k, axis=0)
+        else:
+            raise ValueError("Invalid 'agg_scores' argument.")
 
         return y_pred_proba

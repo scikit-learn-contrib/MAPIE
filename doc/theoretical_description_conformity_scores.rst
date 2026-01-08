@@ -6,7 +6,14 @@
 Theoretical Description for Conformity Scores
 #############################################
 
-The :class:`~mapie.conformity_scores.ConformityScore` class implements various
+Note: in theoretical parts of the documentation, we use the following terms employed in the scientific literature:
+
+- `alpha` is equivalent to `1 - confidence_level`. It can be seen as a *risk level*
+- *calibrate* and *calibration*, are equivalent to *conformalize* and *conformalization*.
+
+—
+
+The :class:`mapie.conformity_scores.BaseRegressionScore` class implements various
 methods to compute conformity scores for regression.
 We give here a brief theoretical description of the scores included in the module.
 Note that it is possible for the user to create any conformal scores that are not 
@@ -27,7 +34,7 @@ and the other on the left side.
 1. The absolute residual score
 ------------------------------
 
-The absolute residual score (:class:`~mapie.conformity_scores.AbsoluteConformityScore`)
+The absolute residual score [1] (:class:`mapie.conformity_scores.AbsoluteConformityScore`)
 is the simplest and most commonly used conformal score, it translates the error
 of the model : in regression, it is called the residual.
 
@@ -99,7 +106,8 @@ it is not proportional to the uncertainty.
 Key takeaways
 -------------
 
-- The absolute residual score is the basic conformity score and gives constant intervals. It is the one used by default by :class:`~mapie.regression.MapieRegressor`.
+- The absolute residual score is the basic conformity score and gives constant intervals. It is the one used by default by regression methods
+  such as :class:`mapie.regression.SplitConformalRegressor`.
 - The gamma conformity score adds a notion of adaptivity by giving intervals of different sizes
   and is proportional to the uncertainty.
 - The residual normalized score is a conformity score that requires an additional model
@@ -109,10 +117,10 @@ Key takeaways
 References
 ----------
 
-[1] Lei, J., G'Sell, M., Rinaldo, A., Tibshirani, R. J., & Wasserman, L. (2018). Distribution-Free 
+[1] Lei, J., G'Sell, M., Rinaldo, A., Tibshirani, R. J. & Wasserman, L. (2018). Distribution-Free
 Predictive Inference for Regression. Journal of the American Statistical Association, 113(523), 1094–1111. 
 Available from https://doi.org/10.1080/01621459.2017.1307116
 
-[2] Cordier, T., Blot, V., Lacombe, L., Morzadec, T., Capitaine, A. &amp; Brunel, N.. (2023).
+[2] Cordier, T., Blot, V., Lacombe, L., Morzadec, T., Capitaine, A. & Brunel, N. (2023).
 Flexible and Systematic Uncertainty Estimation with Conformal Prediction via the MAPIE library.
 Available from https://proceedings.mlr.press/v204/cordier23a.html.

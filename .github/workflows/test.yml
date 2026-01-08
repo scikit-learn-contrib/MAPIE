@@ -3,10 +3,9 @@ name: Unit tests
 on:
   push:
     branches:
-      -dev
-      -main
-      -master
+      - master
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
 
 jobs:
   build:
@@ -14,48 +13,49 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: ubuntu-latest
-            python-version: "3.7"
-            numpy-version: 1.21.4
-          - os: ubuntu-latest
-            python-version: "3.8"
-            numpy-version: 1.21.4
-          - os: ubuntu-latest
+          # minimum supported dependencies
+          - os: self-hosted-ubuntu
             python-version: "3.9"
-            numpy-version: 1.21.4
+            use-pinned-deps: true
+            numpy-version: "==1.24.1"
+            sklearn-version: "==1.4.*"
+            scipy-version: "==1.10.*"
+          # latest stable dependencies
           - os: ubuntu-latest
-            python-version: "3.10"
-            numpy-version: 1.22.4
-          - os: ubuntu-latest
-            python-version: "3.11"
-            numpy-version: 1.25.2
+            python-version: "3.x"
+            use-pinned-deps: false
           - os: windows-latest
-            python-version: "3.11"
-            numpy-version: 1.25.2
+            python-version: "3.x"
+            use-pinned-deps: false
           - os: macos-latest
-            python-version: "3.10"
-            numpy-version: 1.25.2
+            python-version: "3.x"
+            use-pinned-deps: false
     defaults:
       run:
-        shell: bash -l {0}
+        shell: bash
 
     steps:
       - name: Git clone
-        uses: actions/checkout@v2
-      - name: Set up virtual environment
-        uses: conda-incubator/setup-miniconda@v2
+        uses: actions/checkout@v4.3.0
+      - name: Set up Python
+        uses: actions/setup-python@v5.6.0
         with:
           python-version: ${{ matrix.python-version }}
-          environment-file: environment.ci.yml
-          channels: defaults, conda-forge
-          miniconda-version: "latest"
-      - name: Install numpy
-        run: conda install numpy=${{ matrix.numpy-version }}
+          check-latest: true
+      - name: Install minimum dependency constraints
+        if: ${{ matrix.use-pinned-deps }}
+        run: |
+          python -m pip install "numpy${{ matrix.numpy-version }}" "scikit-learn${{ matrix.sklearn-version }}" "scipy${{ matrix.scipy-version }}"
+      - name: Install project with development extras
+        run: python -m pip install -e '.[dev]'
       - name: Check linting
         run: make lint
+      - name: Check format
+        run: make format
       - name: Check static typing
         run: make type-check
-      - name: Test with pytest
+      - name: Test and coverage with pytest
         run: make coverage
-      - name: Code coverage
-        run: codecov
+      - name: Long tests with pytest
+        if: github.event_name == 'push' || !github.event.pull_request.draft
+        run: make long-tests

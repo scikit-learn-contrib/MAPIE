@@ -2,7 +2,7 @@ from typing import Callable, Optional
 
 import numpy as np
 
-from ._typing import NDArray
+from numpy.typing import NDArray
 
 
 def phi1D(

@@ -1,9 +1,9 @@
 """
-================================================
-Reproducing Example 7 from Sadinle et al. (2019)
-================================================
+=======================================================================================
+Least Ambiguous Set-Valued Classifiers with Bounded Error Levels, Sadinle et al. (2019)
+=======================================================================================
 
-We use :class:`~mapie.classification.MapieClassifier` to reproduce
+We use :class:`~mapie_v1.classification.SplitConformalClassifier` to reproduce
 Example 7 from Sadinle et al. (2019).
 
 We consider a two-dimensional dataset with three labels. The distribution
@@ -12,20 +12,22 @@ each label.
 We model the data with Gaussian Naive Bayes classifier
 :class:`~sklearn.naive_bayes.GaussianNB` as a base model.
 
-Prediction sets are estimated by :class:`~mapie.classification.MapieClassifier`
-from the distribution of the softmax scores of the true labels for three
-alpha values (0.2, 0.1, and 0.05) giving different class coverage levels.
+Prediction sets are estimated by
+:class:`~mapie_v1.classification.SplitConformalClassifier` from the distribution of the
+softmax scores of the true labels for three confidence level values (0.8, 0.9, and 0.95)
+giving different class coverage levels.
 
 When the class coverage level is not large enough, the prediction sets can be
 empty.
 This happens because the model is uncertain at the border between two labels.
 These so-called null regions disappear for larger coverage levels.
 """
+
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.naive_bayes import GaussianNB
 
-from mapie.classification import MapieClassifier
+from mapie.classification import SplitConformalClassifier
 
 # Create training set from multivariate normal distribution
 centers = [(0, 3.5), (-2, 0), (2, 0)]
@@ -34,7 +36,7 @@ covs = [np.eye(2), np.eye(2) * 2, np.diag([5, 1])]
 x_min, x_max, y_min, y_max, step = -6, 8, -6, 8, 0.1
 n_samples = 500
 n_classes = 3
-alpha = [0.2, 0.1, 0.05]
+confidence_level = [0.8, 0.9, 0.95]
 np.random.seed(42)
 X_train = np.vstack(
     [
@@ -46,19 +48,23 @@ y_train = np.hstack([np.full(n_samples, i) for i in range(n_classes)])
 
 
 # Create test from (x, y) coordinates
-xx, yy = np.meshgrid(
-    np.arange(x_min, x_max, step), np.arange(x_min, x_max, step)
-)
+xx, yy = np.meshgrid(np.arange(x_min, x_max, step), np.arange(x_min, x_max, step))
 X_test = np.stack([xx.ravel(), yy.ravel()], axis=1)
 
-# Apply MapieClassifier on the dataset to get prediction sets
-clf = GaussianNB().fit(X_train, y_train)
+# Apply SplitConformalClassifier on the dataset to get prediction sets
+clf = GaussianNB()
+clf.fit(X_train, y_train)
 y_pred = clf.predict(X_test)
 y_pred_proba = clf.predict_proba(X_test)
 y_pred_proba_max = np.max(y_pred_proba, axis=1)
-mapie = MapieClassifier(estimator=clf, cv="prefit", method="lac")
-mapie.fit(X_train, y_train)
-y_pred_mapie, y_ps_mapie = mapie.predict(X_test, alpha=alpha)
+mapie = SplitConformalClassifier(
+    estimator=clf,
+    confidence_level=confidence_level,
+    prefit=True,
+    conformity_score="lac",
+)
+mapie.conformalize(X_train, y_train)
+y_pred_mapie, y_ps_mapie = mapie.predict_set(X_test)
 
 # Plot the results
 tab10 = plt.cm.get_cmap("Purples", 4)
@@ -79,7 +85,7 @@ axs[0].scatter(
     edgecolor="k",
 )
 axs[0].set_title("Predicted labels")
-for i, alpha_ in enumerate(alpha):
+for i, confidence_level_ in enumerate(confidence_level):
     y_ps_sums = y_ps_mapie[:, :, i].sum(axis=1)
     num_labels = axs[i + 1].scatter(
         X_test[:, 0],
@@ -93,5 +99,5 @@ for i, alpha_ in enumerate(alpha):
         vmax=3,
     )
     cbar = plt.colorbar(num_labels, ax=axs[i + 1])
-    axs[i + 1].set_title(f"Number of labels for alpha={alpha_}")
+    axs[i + 1].set_title(f"Number of labels for confidence_level={confidence_level_}")
 plt.show()

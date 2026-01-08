@@ -1,13 +1,18 @@
 """
-==========================================================
-Estimate the prediction intervals of 1D homoscedastic data
-==========================================================
+=========================================================================================
+Use MAPIE on data with constant uncertainty
+=========================================================================================
 
-:class:`~mapie.regression.MapieRegressor` and
-:class:`~mapie.quantile_regression.MapieQuantileRegressor`
-is used to estimate the prediction intervals of 1D homoscedastic
+
+We show here how to use various MAPIE methods on data with homoscedastic data.
+
+:class:`~mapie.regression.CrossConformalRegressor`,
+:class:`~mapie.regression.JackknifeAfterBootstrapRegressor`,
+:class:`~mapie.regression.ConformalizedQuantileRegressor`,
+are used to estimate the prediction intervals of 1D homoscedastic
 data using different strategies.
 """
+
 from typing import Tuple
 
 import numpy as np
@@ -16,17 +21,22 @@ from matplotlib import pyplot as plt
 from sklearn.linear_model import LinearRegression, QuantileRegressor
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import PolynomialFeatures
+from sklearn.model_selection import train_test_split
 
-from mapie._typing import NDArray
-from mapie.regression import MapieQuantileRegressor, MapieRegressor
-from mapie.subsample import Subsample
 
-random_state = 42
+from numpy.typing import NDArray
+from mapie.regression import (
+    CrossConformalRegressor,
+    JackknifeAfterBootstrapRegressor,
+    ConformalizedQuantileRegressor,
+)
+
+RANDOM_STATE = 42
 
 
 def f(x: NDArray) -> NDArray:
     """Polynomial function used to generate one-dimensional data"""
-    return np.array(5 * x + 5 * x ** 4 - 9 * x ** 2)
+    return np.array(5 * x + 5 * x**4 - 9 * x**2)
 
 
 def get_homoscedastic_data(
@@ -57,14 +67,20 @@ def get_homoscedastic_data(
         [3]: y_true
         [4]: y_true_sigma
     """
-    np.random.seed(random_state)
+    rng = np.random.default_rng(RANDOM_STATE)
     q95 = scipy.stats.norm.ppf(0.95)
     X_train = np.linspace(0, 1, n_train)
     X_true = np.linspace(0, 1, n_true)
-    y_train = f(X_train) + np.random.normal(0, sigma, n_train)
+    y_train = f(X_train) + rng.normal(0, sigma, n_train)
     y_true = f(X_true)
     y_true_sigma = np.full(len(y_true), q95 * sigma)
-    return X_train, y_train, X_true, y_true, y_true_sigma
+    return (
+        X_train.reshape(-1, 1),
+        y_train,
+        X_true.reshape(-1, 1),
+        y_true,
+        y_true_sigma,
+    )
 
 
 def plot_1d_data(
@@ -120,7 +136,10 @@ def plot_1d_data(
     ax.legend()
 
 
-X_train, y_train, X_test, y_test, y_test_sigma = get_homoscedastic_data()
+X_train_conformalize, y_train_conformalize, X_test, y_test, y_test_sigma = (
+    get_homoscedastic_data()
+)
+
 
 polyn_model = Pipeline(
     [
@@ -131,55 +150,75 @@ polyn_model = Pipeline(
 polyn_model_quant = Pipeline(
     [
         ("poly", PolynomialFeatures(degree=4)),
-        ("linear", QuantileRegressor(
-            solver="highs-ds",
-            alpha=0,
-        )),
+        (
+            "linear",
+            QuantileRegressor(
+                solver="highs-ds",
+                alpha=0,
+            ),
+        ),
     ]
 )
 
 STRATEGIES = {
-    "jackknife": {"method": "base", "cv": -1},
-    "jackknife_plus": {"method": "plus", "cv": -1},
-    "jackknife_minmax": {"method": "minmax", "cv": -1},
-    "cv_plus": {"method": "plus", "cv": 10},
-    "jackknife_plus_ab": {"method": "plus", "cv": Subsample(n_resamplings=50)},
-    "conformalized_quantile_regression": {"method": "quantile", "cv": "split"},
+    "cv_plus": {
+        "class": CrossConformalRegressor,
+        "init_params": dict(method="plus", cv=10),
+    },
+    "jackknife": {
+        "class": CrossConformalRegressor,
+        "init_params": dict(method="base", cv=-1),
+    },
+    "jackknife_plus": {
+        "class": CrossConformalRegressor,
+        "init_params": dict(method="plus", cv=-1),
+    },
+    "jackknife_minmax": {
+        "class": CrossConformalRegressor,
+        "init_params": dict(method="minmax", cv=-1),
+    },
+    "jackknife_plus_ab": {
+        "class": JackknifeAfterBootstrapRegressor,
+        "init_params": dict(method="plus", resampling=50),
+    },
+    "conformalized_quantile_regression": {
+        "class": ConformalizedQuantileRegressor,
+        "init_params": dict(),
+    },
 }
-fig, ((ax1, ax2, ax3), (ax4, ax5, ax6)) = plt.subplots(
-    2, 3, figsize=(3 * 6, 12)
-)
+
+fig, ((ax1, ax2, ax3), (ax4, ax5, ax6)) = plt.subplots(2, 3, figsize=(3 * 6, 12))
 axs = [ax1, ax2, ax3, ax4, ax5, ax6]
-for i, (strategy, params) in enumerate(STRATEGIES.items()):
-    if strategy == "conformalized_quantile_regression":
-        mapie = MapieQuantileRegressor(  # type: ignore
-            polyn_model_quant,
-            **params
+for i, (strategy_name, strategy_params) in enumerate(STRATEGIES.items()):
+    init_params = strategy_params["init_params"]
+    class_ = strategy_params["class"]
+    if strategy_name == "conformalized_quantile_regression":
+        X_train, X_conformalize, y_train, y_conformalize = train_test_split(
+            X_train_conformalize,
+            y_train_conformalize,
+            test_size=0.3,
+            random_state=RANDOM_STATE,
         )
-        mapie.fit(X_train.reshape(-1, 1), y_train, random_state=random_state)
-        y_pred, y_pis = mapie.predict(X_test.reshape(-1, 1))
+        mapie = class_(polyn_model_quant, confidence_level=0.95, **init_params)
+        mapie.fit(X_train, y_train)
+        mapie.conformalize(X_conformalize, y_conformalize)
+        y_pred, y_pis = mapie.predict_interval(X_test)
     else:
-        mapie = MapieRegressor(  # type: ignore
-            polyn_model,
-            agg_function="median",
-            n_jobs=-1,
-            **params
+        mapie = class_(
+            polyn_model, confidence_level=0.95, random_state=RANDOM_STATE, **init_params
         )
-        mapie.fit(X_train.reshape(-1, 1), y_train)
-        y_pred, y_pis = mapie.predict(
-            X_test.reshape(-1, 1),
-            alpha=0.05,
-        )
+        mapie.fit_conformalize(X_train_conformalize, y_train_conformalize)
+        y_pred, y_pis = mapie.predict_interval(X_test)
     plot_1d_data(
-        X_train,
-        y_train,
-        X_test,
+        X_train_conformalize.ravel(),
+        y_train_conformalize,
+        X_test.ravel(),
         y_test,
         y_test_sigma,
         y_pred,
         y_pis[:, 0, 0],
         y_pis[:, 1, 0],
         axs[i],
-        strategy,
+        strategy_name,
     )
 plt.show()

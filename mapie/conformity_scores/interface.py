@@ -4,8 +4,7 @@ from typing import Optional
 import numpy as np
 from sklearn.base import BaseEstimator
 
-from mapie._compatibility import np_nanquantile
-from mapie._typing import NDArray
+from numpy.typing import NDArray
 
 
 class BaseConformityScore(metaclass=ABCMeta):
@@ -18,10 +17,7 @@ class BaseConformityScore(metaclass=ABCMeta):
     def __init__(self) -> None:
         pass
 
-    def set_external_attributes(
-        self,
-        **kwargs
-    ) -> None:
+    def set_external_attributes(self, **kwargs) -> None:
         """
         Set attributes that are not provided by the user.
 
@@ -30,10 +26,7 @@ class BaseConformityScore(metaclass=ABCMeta):
         instantiated.
         """
 
-    def set_ref_predictor(
-        self,
-        predictor: BaseEstimator
-    ):
+    def set_ref_predictor(self, predictor: BaseEstimator):
         """
         Set the reference predictor.
 
@@ -69,12 +62,7 @@ class BaseConformityScore(metaclass=ABCMeta):
         return X, y, y_enc, sample_weight, groups
 
     @abstractmethod
-    def get_conformity_scores(
-        self,
-        y: NDArray,
-        y_pred: NDArray,
-        **kwargs
-    ) -> NDArray:
+    def get_conformity_scores(self, y: NDArray, y_pred: NDArray, **kwargs) -> NDArray:
         """
         Placeholder for ``get_conformity_scores``.
         Subclasses should implement this method!
@@ -102,7 +90,7 @@ class BaseConformityScore(metaclass=ABCMeta):
         alpha_np: NDArray,
         axis: int = 0,
         reversed: bool = False,
-        unbounded: bool = False
+        unbounded: bool = False,
     ) -> NDArray:
         """
         Compute the alpha quantile of the conformity scores.
@@ -138,15 +126,15 @@ class BaseConformityScore(metaclass=ABCMeta):
         NDArray of shape (1, n_alpha) or (n_samples, n_alpha)
             The quantiles of the conformity scores.
         """
-        n_ref = conformity_scores.shape[1-axis]
-        n_calib = np.min(np.sum(~np.isnan(conformity_scores), axis=axis))
-        signed = 1-2*reversed
+        n_ref = conformity_scores.shape[1 - axis]
+        n_calib: int = np.min(np.sum(~np.isnan(conformity_scores), axis=axis))
+        signed = 1 - 2 * reversed
 
         # Adapt alpha w.r.t upper/lower : alpha vs. 1-alpha
-        alpha_ref = (1-2*alpha_np)*reversed + alpha_np
+        alpha_ref = (1 - 2 * alpha_np) * reversed + alpha_np
 
         # Adjust alpha w.r.t quantile correction
-        alpha_cor = np.ceil(alpha_ref*(n_calib+1))/n_calib
+        alpha_cor = np.ceil(alpha_ref * (n_calib + 1)) / n_calib
         alpha_cor = np.clip(alpha_cor, a_min=0, a_max=1)
 
         # Compute the target quantiles:
@@ -154,22 +142,20 @@ class BaseConformityScore(metaclass=ABCMeta):
         # the quantile is set to infinity.
         # Otherwise, the quantile is calculated as the corrected lower quantile
         # of the signed conformity scores.
-        quantile = signed * np.column_stack([
-            np_nanquantile(
-                signed * conformity_scores, _alpha_cor,
-                axis=axis, method="lower"
-            ) if not (unbounded and _alpha >= 1) else np.inf * np.ones(n_ref)
-            for _alpha, _alpha_cor in zip(alpha_ref, alpha_cor)
-        ])
+        quantile = signed * np.column_stack(
+            [
+                np.nanquantile(
+                    signed * conformity_scores, _alpha_cor, axis=axis, method="lower"
+                )
+                if not (unbounded and _alpha >= 1)
+                else np.inf * np.ones(n_ref)
+                for _alpha, _alpha_cor in zip(alpha_ref, alpha_cor)
+            ]
+        )
         return quantile
 
     @abstractmethod
-    def predict_set(
-        self,
-        X: NDArray,
-        alpha_np: NDArray,
-        **kwargs
-    ):
+    def predict_set(self, X: NDArray, alpha_np: NDArray, **kwargs):
         """
         Compute the prediction sets on new samples based on the uncertainty of
         the target confidence set.

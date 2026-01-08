@@ -2,7 +2,59 @@
 History
 =======
 
-0.9.x (2024-xx-xx)
+1.x.x (2025-xx-xx)
+------------------
+* Introduce VennAbers calibrator both for binary and multiclass classification
+
+* Remove dependency of internal classes on sklearn's check_is_fitted
+* Add an example of risk control with LLM as a judge
+* Add comparison with naive threshold in risk control quick start example
+* Configure self hosted runner for minimal requirements tests
+* Choose better thumbnails in the lists of examples in the documentation
+* Add a new binary classification risk called `predicted_positive_fraction` and update the examples accordingly.
+* Add a disclosure about LLM usage to the pull request template.
+
+1.2.0 (2025-11-17)
+------------------
+* Implement extension of binary risk control to multi-risk
+* Implement extension of binary risk control to multi-dimensional parameters
+* Reorganise code structure for risk control
+* BinaryClassificationController allows BinaryClassificationRisk and string representations of risks
+* Improve quick start documentation for risk control
+* Add new tutorial for risk control with multiple risks
+* Add new tutorial for risk control with multi-dimensional parameters
+* Fix issue 614 to pass Predict Params to RAPS for conformity score calculation and EnsembleClassifier
+* Fix issue 790 to make `BlockBootstrap` include all non-training indices in the test set
+* Update Python environment: dependancies are now in pyproject.toml
+* Update CI and add long_tests folder for tests requiring more time
+
+1.1.0 (2025-09-22)
+------------------
+
+* Implement new binary risk control feature, see BinaryClassificationController and BinaryClassificationRisk
+* See also the reworked risk control documentation
+* Revert incorrect renaming of calibration to conformalization in PrecisionRecallController
+* Fix warnings when running tests
+* Add scientific references for regression conformity scores
+* Fix double inference when using `predict_set` function in split conformal classification
+* MAPIE now supports Python versions up to the latest release (currently 3.13)
+* Change `prefit` default value to `True` in split methods' docstrings to remain consistent with the implementation
+* Fix issue 699 to replace `TimeSeriesRegressor.partial_fit` with `TimeSeriesRegressor.update`
+
+1.0.1 (2025-05-22)
+------------------
+
+* Patch following v1.0.0 release: removing dependence to typing_extensions, making MAPIE unusable if this package is not installed
+
+1.0.0 (2025-05-22)
+------------------
+
+* Major update, including a complete classification and regression public API rework, and a documentation revamp
+* Other parts of the public API have been improved as well
+* See the v1_release_notes.rst documentation file for extensive and user-focused release notes
+* This update also includes bugfixes and developer experience improvements
+
+0.9.2 (2025-01-15)
 ------------------
 
 * Add `SplitCPRegressor`, based on new `SplitCP` abstract class, to support the new CCP method
@@ -10,15 +62,20 @@ History
 * Add the `StandardCalibrator`, to reproduce standard CP and make sure that the `SplitCPRegressor` is implemented correctly.
 * Add the CCP documentation, tutorial and demo notebooks
 * Fix issue 525 in contribution guidelines with syntax errors in hyperlinks and other formatting issues.
-* Bump wheel version to avoid known security vulnerabilities
 * Fix issue 495 to center correctly the prediction intervals
-* Fix documentation build warnings
 * Fix issue 528 to correct broken ENS image in the documentation
 * Fix issue 548 to correct labels generated in tutorial
 * Fix issue 547 to fix wrong warning
 * Fix issue 480 (correct display of mathematical equations in generated notebooks)
+* Temporary solution waiting for issue 588 to be fixed (optimize_beta not working)
+* Remove several irrelevant user warnings
+* Limit max sklearn version allowed at MAPIE installation
 * Refactor MapieRegressor, EnsembleRegressor, and MapieQuantileRegressor, to prepare for the release of v1.0.0
-* Remove optimize_beta usage warning when using for methods other than EnbPI
+* Documentation build: fix warnings, fix image generation, update sklearn version requirement
+* Documentation test: add a doc testing step (in MAKEFILE and CI)
+* Increase max line length from 79 to 88 characters
+* Bump wheel version
+* Other minor evolutions
 
 0.9.1 (2024-09-13)
 ------------------

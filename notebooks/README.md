@@ -2,12 +2,12 @@ This folder contains a series of notebooks used for generating the tutorials for
 
 # Create virtual environment
 
-To run and convert the notebooks contained in this folder, one needs first to create a separate conda environment containing additional packages from the
-`environment.notebooks.yml`:
+To run and convert the notebooks contained in this folder, create a dedicated virtual environment and install the notebook dependencies via the ``notebooks`` extra:
 
 * `cd ../`
-* `conda env create -f environment.notebooks.yml`
-* `conda activate mapie_notebooks`
+* `python -m venv .venv-mapie-notebooks`
+* `source .venv-mapie-notebooks/bin/activate`
+* `pip install -e '.[notebooks]'`
 * `python -m ipykernel install --user --name=mapie_notebooks`
 
 # Create notebooks

@@ -50,7 +50,7 @@ clean:
 	-rm -rf $(BUILDDIR)/*
 	-rm -rf examples_regression/
 	-rm -rf examples_classification/
-	-rm -rf examples_multilabel_classification/
+	-rm -rf examples_risk_control/
 	-rm -rf examples_calibration/
 	-rm -rf examples_mondrian/
 	-rm -rf generated/*
@@ -64,7 +64,6 @@ html:
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
-	cp _build/html/_images/sphx_glr_plot_toy_model_001.png images/quickstart_1.png
 
 dirhtml:
 	$(SPHINXBUILD) -b dirhtml $(ALLSPHINXOPTS) $(BUILDDIR)/dirhtml

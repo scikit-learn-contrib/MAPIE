@@ -1,6 +1,6 @@
 import numpy as np
 
-from mapie._typing import ArrayLike, NDArray
+from numpy.typing import ArrayLike, NDArray
 from mapie.conformity_scores import BaseRegressionScore
 
 
@@ -13,6 +13,12 @@ class AbsoluteConformityScore(BaseRegressionScore):
 
     This is appropriate when the confidence interval is symmetrical and
     its range is approximatively the same over the range of predicted values.
+
+    References
+    ----------
+    [1] Lei, J., G'Sell, M., Rinaldo, A., Tibshirani, R. J. & Wasserman, L..
+    "Distribution-Free Predictive Inference for Regression."
+    Journal of the American Statistical Association 2018.
     """
 
     def __init__(
@@ -22,10 +28,7 @@ class AbsoluteConformityScore(BaseRegressionScore):
         super().__init__(sym=sym, consistency_check=True)
 
     def get_signed_conformity_scores(
-        self,
-        y: ArrayLike,
-        y_pred: ArrayLike,
-        **kwargs
+        self, y: ArrayLike, y_pred: ArrayLike, **kwargs
     ) -> NDArray:
         """
         Compute the signed conformity scores from the predicted values
@@ -35,10 +38,7 @@ class AbsoluteConformityScore(BaseRegressionScore):
         return np.subtract(y, y_pred)
 
     def get_estimation_distribution(
-        self,
-        y_pred: ArrayLike,
-        conformity_scores: ArrayLike,
-        **kwargs
+        self, y_pred: ArrayLike, conformity_scores: ArrayLike, **kwargs
     ) -> NDArray:
         """
         Compute samples of the estimation distribution from the predicted

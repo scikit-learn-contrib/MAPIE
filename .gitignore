@@ -13,7 +13,7 @@ doc/_build/
 doc/examples_classification/
 doc/examples_regression/
 doc/examples_calibration/
-doc/examples_multilabel_classification/
+doc/examples_risk_control/
 doc/examples_mondrian/
 doc/auto_examples/
 doc/modules/generated/
@@ -49,7 +49,7 @@ var/
 pip-log.txt
 pip-delete-this-directory.txt
 
-# Unit test / coverage reports
+# Tests / coverage reports
 htmlcov/
 .tox/
 .coverage
@@ -89,3 +89,6 @@ target/
 
 # Pyenv
 .python-version
+
+# uv
+uv.lock

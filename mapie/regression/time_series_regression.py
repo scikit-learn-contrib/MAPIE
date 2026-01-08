@@ -1,20 +1,23 @@
 from __future__ import annotations
 
-import warnings
 from typing import Iterable, Optional, Tuple, Union, cast
 
 import numpy as np
+from numpy.typing import ArrayLike, NDArray
 from sklearn.base import RegressorMixin
 from sklearn.model_selection import BaseCrossValidator
-from sklearn.utils.validation import check_is_fitted
 
-from mapie._typing import ArrayLike, NDArray
 from mapie.conformity_scores import BaseRegressionScore
-from mapie.regression import MapieRegressor
-from mapie.utils import check_alpha, check_gamma
+from mapie.regression.regression import _MapieRegressor
+from mapie.utils import (
+    _check_alpha,
+    _check_gamma,
+    _transform_confidence_level_to_alpha_list,
+    check_is_fitted,
+)
 
 
-class MapieTimeSeriesRegressor(MapieRegressor):
+class TimeSeriesRegressor(_MapieRegressor):
     """
     Prediction intervals with out-of-fold residuals for time series.
     This class only has two valid ``method`` : ``"enbpi"`` or ``"aci"``
@@ -23,11 +26,11 @@ class MapieTimeSeriesRegressor(MapieRegressor):
     Both strategies are estimating prediction intervals
     on single-output time series.
 
-    EnbPI allows you to update conformal scores using the ``partial_fit``
+    EnbPI allows you to update conformal scores using the ``update``
     function. It will replace the oldest one with the newest scores.
     It will keep the same amount of total scores
 
-    Actually, EnbPI only corresponds to ``MapieTimeSeriesRegressor`` if the
+    Actually, EnbPI only corresponds to ``TimeSeriesRegressor`` if the
     ``cv`` argument is of type ``BlockBootstrap``.
 
     The ACI strategy allows you to adapt the conformal inference
@@ -53,8 +56,7 @@ class MapieTimeSeriesRegressor(MapieRegressor):
     https://arxiv.org/pdf/2202.07282.pdf
     """
 
-    cv_need_agg_function_ = MapieRegressor.cv_need_agg_function_ \
-        + ["BlockBootstrap"]
+    cv_need_agg_function_ = _MapieRegressor.cv_need_agg_function_ + ["BlockBootstrap"]
     valid_methods_ = ["enbpi", "aci"]
     default_sym_ = False
 
@@ -114,22 +116,20 @@ class MapieTimeSeriesRegressor(MapieRegressor):
         """
         y_pred = super().predict(X, ensemble=ensemble)
         scores = np.array(
-            self.conformity_score_function_.get_conformity_scores(
-                y, y_pred, X=X
-            )
+            self.conformity_score_function_.get_conformity_scores(y, y_pred, X=X)
         )
         return scores
 
-    def partial_fit(
+    def _update_conformity_scores_with_ensemble(
         self,
         X: ArrayLike,
         y: ArrayLike,
         ensemble: bool = False,
-    ) -> MapieTimeSeriesRegressor:
+    ) -> TimeSeriesRegressor:
         """
         Update the ``conformity_scores_`` attribute when new data with known
         labels are available.
-        Note: Don't use ``partial_fit`` with samples of the training set.
+        Note: Don't use ``_update_conformity_scores_with_ensemble`` with samples of the training set.
 
         Parameters
         ----------
@@ -152,7 +152,7 @@ class MapieTimeSeriesRegressor(MapieRegressor):
 
         Returns
         -------
-        MapieTimeSeriesRegressor
+        TimeSeriesRegressor
             The model itself.
 
         Raises
@@ -161,14 +161,7 @@ class MapieTimeSeriesRegressor(MapieRegressor):
             If the length of ``y`` is greater than
             the length of the training set.
         """
-        warnings.warn(
-            "WARNING: Deprecated method. "
-            + "The method \"partial_fit\" is outdated. "
-            + "Prefer to use \"update\" instead to keep "
-            + "the same behavior in the future.",
-            DeprecationWarning
-        )
-        check_is_fitted(self, self.fit_attributes)
+        check_is_fitted(self)
         X, y = cast(NDArray, X), cast(NDArray, y)
         m, n = len(X), len(self.conformity_scores_)
         if m > n:
@@ -182,19 +175,15 @@ class MapieTimeSeriesRegressor(MapieRegressor):
         self.conformity_scores_ = np.roll(
             self.conformity_scores_, -len(new_conformity_scores_)
         )
-        self.conformity_scores_[
-            -len(new_conformity_scores_):
-        ] = new_conformity_scores_
+        self.conformity_scores_[-len(new_conformity_scores_) :] = new_conformity_scores_
         return self
 
     def _get_alpha(
-        self,
-        alpha: Optional[Union[float, Iterable[float]]] = None,
-        reset: bool = False
-    ) -> Optional[Union[float, Iterable[float]]]:
+        self, alpha: Optional[Union[float, Iterable[float]]] = None, reset: bool = False
+    ) -> Optional[NDArray]:
         """
-        Get and set the current alpha value(s) given the initial alpha value(s)
-        for ACI method.
+        Get and set the current alpha (or confidence_level) value(s) given the
+        initial alpha (or confidence_level) value(s) for ACI method.
 
         This method retrieves the alpha value(s) used for confidence intervals.
         If the alpha value(s) is provided, it returns the current alpha
@@ -203,7 +192,7 @@ class MapieTimeSeriesRegressor(MapieRegressor):
 
         Parameters
         ----------
-        alpha: Optional[Union[float, Iterable[float]]]
+        alpha: Optional[NDArray]
             Between ``0`` and ``1``, represents the uncertainty of the
             confidence interval.
 
@@ -217,11 +206,11 @@ class MapieTimeSeriesRegressor(MapieRegressor):
         Optional[Union[float, Iterable[float]]]
             The current alpha value(s) for confidence intervals.
         """
-        if 'current_alpha' not in self.__dict__ or reset:
+        if "current_alpha" not in self.__dict__ or reset:
             self.current_alpha: dict[float, float] = {}
 
         if alpha is not None:
-            alpha_np = cast(NDArray, check_alpha(alpha))
+            alpha_np = cast(NDArray, _check_alpha(alpha))
             alpha_np = np.round(alpha_np, 2)
             for ix, alpha_checked in enumerate(alpha_np):
                 alpha_np[ix] = self.current_alpha.setdefault(
@@ -235,10 +224,10 @@ class MapieTimeSeriesRegressor(MapieRegressor):
         X: ArrayLike,
         y: ArrayLike,
         gamma: float,
-        alpha: Optional[Union[float, Iterable[float]]] = None,
+        confidence_level: Optional[Union[float, Iterable[float]]] = None,
         ensemble: bool = False,
         optimize_beta: bool = False,
-    ) -> MapieTimeSeriesRegressor:
+    ) -> TimeSeriesRegressor:
         """
         Adapt the ``alpha_t`` attribute when new data with known
         labels are available.
@@ -266,9 +255,8 @@ class MapieTimeSeriesRegressor(MapieRegressor):
             Coefficient that decides the correction of the conformal inference.
             If it equals 0, there are no corrections.
 
-        alpha: Optional[Union[float, Iterable[float]]]
-            Between ``0`` and ``1``, represents the uncertainty of the
-            confidence interval.
+        confidence_level: Optional[Union[float, Iterable[float]]]
+            Between ``0`` and ``1``, represents the confidence level of the interval.
 
             By default ``None``.
 
@@ -279,7 +267,7 @@ class MapieTimeSeriesRegressor(MapieRegressor):
 
         Returns
         -------
-        MapieTimeSeriesRegressor
+        TimeSeriesRegressor
             The model itself.
 
         Raises
@@ -294,12 +282,12 @@ class MapieTimeSeriesRegressor(MapieRegressor):
                 f"not with '{self.method}'."
             )
 
-        check_is_fitted(self, self.fit_attributes)
-        check_gamma(gamma)
+        check_is_fitted(self)
+        _check_gamma(gamma)
         X, y = cast(NDArray, X), cast(NDArray, y)
 
         self._get_alpha()
-        alpha = cast(Optional[NDArray], check_alpha(alpha))
+        alpha = self._transform_confidence_level_to_alpha_array(confidence_level)
         if alpha is None:
             alpha = np.array(list(self.current_alpha.keys()))
         alpha_np = cast(NDArray, alpha)
@@ -309,9 +297,9 @@ class MapieTimeSeriesRegressor(MapieRegressor):
             _, y_pred_bounds = self.predict(
                 x,
                 ensemble=ensemble,
-                alpha=alpha_np,
+                confidence_level=1 - alpha_np,
                 optimize_beta=optimize_beta,
-                allow_infinite_bounds=True
+                allow_infinite_bounds=True,
             )
 
             for alpha_ix, alpha_0 in enumerate(alpha_np):
@@ -331,14 +319,14 @@ class MapieTimeSeriesRegressor(MapieRegressor):
         X: ArrayLike,
         y: ArrayLike,
         ensemble: bool = False,
-        alpha: Optional[Union[float, Iterable[float]]] = None,
-        gamma: float = 0.,
+        confidence_level: Optional[Union[float, Iterable[float]]] = None,
+        gamma: float = 0.0,
         optimize_beta: bool = False,
-    ) -> MapieTimeSeriesRegressor:
+    ) -> TimeSeriesRegressor:
         """
         Update with respect to the used ``method``.
-        ``method="enbpi"`` will call ``partial_fit`` method and
-        ``method="aci"`` will call ``adapt_conformal_inference`` method.
+        ``method="enbpi"`` updates conformity scores via EnbPI,
+        ``method="aci"`` calls ``adapt_conformal_inference``.
 
         Parameters
         ----------
@@ -359,9 +347,8 @@ class MapieTimeSeriesRegressor(MapieRegressor):
 
             By default ``False``.
 
-        alpha: Optional[Union[float, Iterable[float]]]
-            Between ``0`` and ``1``, represents the uncertainty of the
-            confidence interval.
+        confidence_level: Optional[Union[float, Iterable[float]]]
+            Between ``0`` and ``1``, represents the confidence level of the interval.
 
             By default ``None``.
 
@@ -378,7 +365,7 @@ class MapieTimeSeriesRegressor(MapieRegressor):
 
         Returns
         -------
-        MapieTimeSeriesRegressor
+        TimeSeriesRegressor
             The model itself.
 
         Raises
@@ -388,26 +375,32 @@ class MapieTimeSeriesRegressor(MapieRegressor):
             the length of the training set.
         """
         self._check_method(self.method)
-        if self.method == 'enbpi':
-            return self.partial_fit(X, y, ensemble=ensemble)
-        elif self.method == 'aci':
+        if self.method == "enbpi":
+            return self._update_conformity_scores_with_ensemble(X, y, ensemble=ensemble)
+        elif self.method == "aci":
             return self.adapt_conformal_inference(
-                X, y, ensemble=ensemble, alpha=alpha,
-                gamma=gamma, optimize_beta=optimize_beta
+                X,
+                y,
+                ensemble=ensemble,
+                confidence_level=confidence_level,
+                gamma=gamma,
+                optimize_beta=optimize_beta,
             )
         else:
             raise ValueError(
                 f"Invalid method. Allowed values are {self.valid_methods_}."
             )
 
-    def predict(
+    # Overriding _MapieRegressor .predict method here. Bad practise, but this
+    # inheritance is questionable and will probably be reconsidered anyway.
+    def predict(  # type: ignore[override]
         self,
         X: ArrayLike,
         ensemble: bool = False,
-        alpha: Optional[Union[float, Iterable[float]]] = None,
+        confidence_level: Optional[Union[float, Iterable[float]]] = None,
         optimize_beta: bool = False,
         allow_infinite_bounds: bool = False,
-        **predict_params
+        **predict_params,
     ) -> Union[NDArray, Tuple[NDArray, NDArray]]:
         """
         Predict target on new samples with confidence intervals.
@@ -428,9 +421,8 @@ class MapieTimeSeriesRegressor(MapieRegressor):
 
             By default ``False``.
 
-        alpha: Optional[Union[float, Iterable[float]]]
-            Between ``0`` and ``1``, represents the uncertainty of the
-            confidence interval.
+        confidence_level: Optional[Union[float, Iterable[float]]]
+            Between ``0`` and ``1``, represents the confidence level of the interval.
 
             By default ``None``.
 
@@ -454,24 +446,38 @@ class MapieTimeSeriesRegressor(MapieRegressor):
               - [:, 0, :]: Lower bound of the prediction interval.
               - [:, 1, :]: Upper bound of the prediction interval.
         """
+        alpha = self._transform_confidence_level_to_alpha_array(confidence_level)
         if alpha is None:
             super().predict(
-                X, ensemble=ensemble, alpha=alpha, optimize_beta=optimize_beta,
-                **predict_params
+                X,
+                ensemble=ensemble,
+                alpha=alpha,
+                optimize_beta=optimize_beta,
+                **predict_params,
             )
-
         if self.method == "aci":
             alpha = self._get_alpha(alpha)
 
         return super().predict(
-            X, ensemble=ensemble, alpha=alpha, optimize_beta=optimize_beta,
-            allow_infinite_bounds=allow_infinite_bounds, **predict_params
+            X,
+            ensemble=ensemble,
+            alpha=alpha,
+            optimize_beta=optimize_beta,
+            allow_infinite_bounds=allow_infinite_bounds,
+            **predict_params,
         )
 
-    def _more_tags(self):
-        return {
-            "_xfail_checks": {
-                "check_estimators_partial_fit_n_features":
-                "partial_fit can only be called on fitted models"
-            }
-        }
+    # The public API changed from alpha to confidence_level.
+    # TODO: refactor this class to use confidence_level everywhere
+    @staticmethod
+    def _transform_confidence_level_to_alpha_array(
+        confidence_level: Optional[Union[float, Iterable[float]]] = None,
+    ) -> Optional[NDArray]:
+        confidence_level = cast(Optional[NDArray], _check_alpha(confidence_level))
+        if confidence_level is None:
+            alpha = None
+        else:
+            alpha = np.array(
+                _transform_confidence_level_to_alpha_list(confidence_level)
+            )
+        return alpha

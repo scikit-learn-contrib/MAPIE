@@ -6,14 +6,22 @@
 Theoretical Description
 #######################
 
+Note: in theoretical parts of the documentation, we use the following terms employed in the scientific literature:
+
+- `alpha` is equivalent to `1 - confidence_level`. It can be seen as a *risk level*
+- *calibrate* and *calibration*, are equivalent to *conformalize* and *conformalization*.
+
+—
+
 There are mainly three different ways to handle uncertainty quantification in binary classification:
 calibration (see :doc:`theoretical_description_calibration`), confidence interval (CI) for the probability
 :math:`P(Y \vert \hat{\mu}(X))` and prediction sets (see :doc:`theoretical_description_classification`).
 These 3 notions are tightly related for score-based classifier, as it is shown in [1]. 
 
 Prediction sets can be computed in the same way for multiclass and binary classification with
-:class:`~mapie.classification.MapieClassifier`, and there are the same theoretical guarantees.
-Nevertheless, prediction sets are often much less informative in the binary case than in the multiclass case.
+:class:`~mapie.classification.SplitConformalClassifier` or :class:`~mapie.classification.CrossConformalClassifier`,
+and there are the same theoretical guarantees. Nevertheless, prediction sets are often much less informative in the
+binary case than in the multiclass case.
 
 From Gupta et al [1]:
 
@@ -46,7 +54,8 @@ Definition 1 (Prediction Set (PS) w.r.t :math:`f`) [1].
 PSs are typically studied for larger output sets, such as :math:`\mathcal{Y}_{regression}=\mathbb{R}` or
 :math:`\mathcal{Y}_{multiclass}=\{1, 2, ..., L > 2\}`.
 
-See :class:`~mapie.classification.MapieClassifier` to use a set predictor.
+See :class:`~mapie.classification.SplitConformalClassifier` and :class:`~mapie.classification.CrossConformalClassifier`
+to use a set predictor.
 
 
 2. Probabilistic Prediction
@@ -75,7 +84,7 @@ Definition 3 (Approximate calibration) [1].
 .. math:: 
     |\mathbb{E}[Y|\hat{\mu}(X)] - \hat{\mu}(X)| \leq \epsilon
 
-See :class:`~sklearn.calibration.CalibratedClassifierCV` or :class:`~mapie.calibration.MapieCalibrator`
+See :class:`~sklearn.calibration.CalibratedClassifierCV` or :class:`~mapie.calibration.TopLabelCalibrator`
 to use a calibrator.
 
 In the CP framework, it is worth noting that Venn predictors produce probability-type predictions

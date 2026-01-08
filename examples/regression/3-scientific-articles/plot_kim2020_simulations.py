@@ -1,11 +1,13 @@
 """
-==================================================
-Reproducing the simulations from Kim et al. (2020)
-==================================================
+=====================================================================================================
+Predictive inference is free with the Jackknife+-after-Bootstrap, Kim et al. (2020)
+=====================================================================================================
 
-:class:`~mapie.regression.MapieRegressor` is used to reproduce the simulations
-by Kim et al. (2020) [1] in their article which introduces the
-jackknife+-after-bootstrap method.
+
+:class:`~mapie.regression.JackknifeAfterBootstrapRegressor` and
+:class:`~mapie.regression.CrossConformalRegressor` are used to
+reproduce the simulations by Kim et al. (2020) [1] in their article
+which introduces the jackknife+-after-bootstrap method.
 
 For a given model, the simulation fits MAPIE regressors with jackknife+ and
 jackknife+-after-bootstrap methods, on different resamplings of a data set
@@ -28,9 +30,9 @@ results than [1], and that the targeted coverage level is obtained.
 "Predictive Inference Is Free with the Jackknife+-after-Bootstrap."
 34th Conference on Neural Information Processing Systems (NeurIPS 2020).
 """
+
 from __future__ import annotations
 
-import requests
 from io import BytesIO
 from typing import Any, Optional, Tuple
 from zipfile import ZipFile
@@ -39,14 +41,17 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
 import numpy as np
 import pandas as pd
+import requests
+from numpy.typing import ArrayLike, NDArray
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.linear_model import Ridge
 from sklearn.model_selection import train_test_split
 
-from mapie._typing import ArrayLike, NDArray
-from mapie.metrics import (regression_coverage_score,
-                           regression_mean_width_score)
-from mapie.regression import MapieRegressor
+from mapie.metrics.regression import (
+    regression_coverage_score,
+    regression_mean_width_score,
+)
+from mapie.regression import CrossConformalRegressor, JackknifeAfterBootstrapRegressor
 from mapie.subsample import Subsample
 
 
@@ -138,8 +143,9 @@ def compute_PIs(
     X_test: NDArray,
     method: str,
     cv: Any,
-    alpha: float,
+    confidence_level: float,
     agg_function: Optional[str] = None,
+    random_state: int = 1,
 ) -> pd.DataFrame:
     """
     Train and test a model with a MAPIE method,
@@ -160,27 +166,40 @@ def compute_PIs(
         Method for estimating prediction intervals.
     cv : Any
         Strategy for computing conformity scores.
-    alpha : float
-        1 - (target coverage level).
+    confidence_level : float
+        target coverage level.
     agg_function: str
         'mean' or 'median'.
         Function to aggregate the predictions of the B estimators.
+    random_state: int
+        The random state
 
     Returns
     -------
     pd.DataFrame
         DataFrame of upper and lower predictions.
     """
-    mapie_estimator = MapieRegressor(
-        estimator=estimator,
-        method=method,
-        cv=cv,
-        n_jobs=-1,
-        agg_function=agg_function,
-    )
-
-    mapie_estimator = mapie_estimator.fit(X=X_train, y=y_train)
-    _, y_pis = mapie_estimator.predict(X=X_test, alpha=alpha)
+    if cv == -1:
+        mapie_estimator = CrossConformalRegressor(
+            estimator=estimator,
+            confidence_level=confidence_level,
+            method=method,
+            cv=cv,
+            n_jobs=-1,
+            random_state=random_state,
+        )
+    else:
+        mapie_estimator = JackknifeAfterBootstrapRegressor(
+            estimator=estimator,
+            confidence_level=confidence_level,
+            method=method,
+            resampling=cv,
+            n_jobs=-1,
+            aggregation_method=agg_function,
+            random_state=random_state,
+        )
+    mapie_estimator = mapie_estimator.fit_conformalize(X=X_train, y=y_train)
+    _, y_pis = mapie_estimator.predict_interval(X=X_test)
     PI = np.c_[y_pis[:, 0, 0], y_pis[:, 1, 0]]
     return pd.DataFrame(PI, columns=["lower", "upper"])
 
@@ -205,20 +224,16 @@ def get_coverage_width(PIs: pd.DataFrame, y: NDArray) -> Tuple[float, float]:
         The mean coverage and width of the PIs.
     """
     coverage = regression_coverage_score(
-        y_true=y, y_pred_low=PIs["lower"], y_pred_up=PIs["upper"]
-    )
+        y_true=y, y_intervals=np.stack((PIs["lower"], PIs["upper"]), axis=-1)
+    )[0]
     width = regression_mean_width_score(
-        y_pred_low=PIs["lower"], y_pred_up=PIs["upper"]
-    )
+        y_intervals=np.stack((PIs["lower"], PIs["upper"]), axis=-1)[:, :, np.newaxis]
+    )[0]
     return (coverage, width)
 
 
 def B_random_from_B_fixed(
-    B: int,
-    train_size: int,
-    m: int,
-    itrial: int = 0,
-    random_state: int = 98765
+    B: int, train_size: int, m: int, itrial: int = 0, random_state: int = 98765
 ) -> int:
     """
     Generates a random number from a binomial distribution.
@@ -244,19 +259,16 @@ def B_random_from_B_fixed(
         where B, train_size and m are parameters.
     """
     np.random.seed(random_state + itrial)
-    return int(
-        np.random.binomial(
-            int(B / (1 - 1.0 / (1 + train_size)) ** m),
-            (1 - 1.0 / (1 + train_size)) ** m,
-            size=1,
-        )
+    return np.random.binomial(
+        int(B / (1 - 1.0 / (1 + train_size)) ** m),
+        (1 - 1.0 / (1 + train_size)) ** m,
     )
 
 
 def comparison_JAB(
     model: BaseEstimator = Ridge2(),
     agg_function: str = "mean",
-    alpha: float = 0.1,
+    confidence_level: float = 0.9,
     trials: int = 10,
     train_size: int = 200,
     boostrap_size: int = 10,
@@ -274,8 +286,8 @@ def comparison_JAB(
         Base model. By default, Ridge2.
     agg_function: str
         Aggregation function to test.
-    alpha : float
-        1 - (target coverage level).
+    confidence_level : float
+        target coverage level.
     trials: int
         Number of trials launch for a given boostrap set size.
     train_size : int
@@ -310,9 +322,7 @@ def comparison_JAB(
     )
 
     (X, y) = get_X_y()
-    m_vals = np.round(
-        train_size * np.linspace(0.1, 1, num=boostrap_size)
-    ).astype(int)
+    m_vals = np.round(train_size * np.linspace(0.1, 1, num=boostrap_size)).astype(int)
 
     result_index = 0
     for itrial in range(trials):
@@ -326,7 +336,7 @@ def comparison_JAB(
             X_test=X_test,
             method="plus",
             cv=-1,
-            alpha=alpha,
+            confidence_level=confidence_level,
             agg_function=agg_function,
         )
         (coverage, width) = get_coverage_width(PIs, y_test)
@@ -342,9 +352,7 @@ def comparison_JAB(
 
         for i_m, m in enumerate(m_vals):
             # J+aB, random B
-            B_random = B_random_from_B_fixed(
-                B_fixed, train_size, m, itrial=i_m
-            )
+            B_random = B_random_from_B_fixed(B_fixed, train_size, m, itrial=i_m)
             subsample_B_random = Subsample(
                 n_resamplings=B_random,
                 n_samples=m,
@@ -358,7 +366,7 @@ def comparison_JAB(
                 X_test=X_test,
                 method="plus",
                 cv=subsample_B_random,
-                alpha=alpha,
+                confidence_level=confidence_level,
                 agg_function=agg_function,
             )
             (coverage, width) = get_coverage_width(PIs, y_test)
@@ -386,7 +394,7 @@ def comparison_JAB(
                 X_test=X_test,
                 method="plus",
                 cv=subsample_B_fixed,
-                alpha=alpha,
+                confidence_level=confidence_level,
                 agg_function=agg_function,
             )
             (coverage, width) = get_coverage_width(PIs, y_test)
@@ -400,7 +408,7 @@ def comparison_JAB(
             ]
             result_index += 1
     results["agg_function"] = agg_function
-    results["alpha"] = alpha
+    results["confidence_level"] = confidence_level
     results = results.astype(
         {
             "itrial": int,
@@ -439,7 +447,7 @@ def plot_results(results: pd.DataFrame, score: str) -> None:
     data_fix = res.loc[res.fixed_random == "Fixed", ["ratio", score]]
     data_random = res.loc[res.fixed_random == "Random", ["ratio", score]]
 
-    alpha = pd.unique(results["alpha"])[0]
+    confidence_level = pd.unique(results["confidence_level"])[0]
 
     # plot the comparison between J+ vs J+AB
     fig, axes = plt.subplots(1, 2, figsize=(8, 6), sharey=True)
@@ -447,8 +455,8 @@ def plot_results(results: pd.DataFrame, score: str) -> None:
     data_JaB.boxplot(by="ratio", ax=axes[1])
 
     if score == "coverage":
-        axes[0].axhline(y=1 - alpha, color="red")
-        axes[1].axhline(y=1 - alpha, color="red")
+        axes[0].axhline(y=confidence_level, color="red")
+        axes[1].axhline(y=confidence_level, color="red")
         xticks = mtick.PercentFormatter(1, decimals=0)
         axes[0].yaxis.set_major_formatter(xticks)
     axes[0].set_title("J+")
@@ -471,8 +479,8 @@ def plot_results(results: pd.DataFrame, score: str) -> None:
     axes[0].set_title("Fixed B", fontsize=14)
     axes[1].set_title("Random B", fontsize=14)
     if score == "coverage":
-        axes[0].axhline(y=1 - alpha, color="red")
-        axes[1].axhline(y=1 - alpha, color="red")
+        axes[0].axhline(y=confidence_level, color="red")
+        axes[1].axhline(y=confidence_level, color="red")
         axes[0].yaxis.set_major_formatter(xticks)
     axes[0].set_ylabel(score)
     axes[1].set_ylabel("")
@@ -487,10 +495,9 @@ def plot_results(results: pd.DataFrame, score: str) -> None:
 
 
 if __name__ == "__main__":
-
     results_coverages_widths = comparison_JAB(
         model=Ridge2(),
-        alpha=0.1,
+        confidence_level=0.9,
         trials=2,
         train_size=40,
         boostrap_size=5,

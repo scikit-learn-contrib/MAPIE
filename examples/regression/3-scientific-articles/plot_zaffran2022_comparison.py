@@ -1,9 +1,16 @@
 """
-======================================================================
-Reproduction of part of the paper experiments of Zaffran et al. (2022)
-======================================================================
+=====================================================================================================
+Adaptive conformal predictions for time series, Zaffran et al. (2022)
+=====================================================================================================
 
-:class:`~mapie.regression.MapieTimeSeriesRegressor` is used to reproduce a
+Note: in this example, we use the following terms employed in the scientific literature:
+
+- `alpha` is equivalent to `1 - confidence_level`. It can be seen as a *risk level*
+- *calibrate* and *calibration* are equivalent to *conformalize* and *conformalization*.
+
+—
+
+:class:`~mapie.regression.TimeSeriesRegressor` is used to reproduce a
 part of the paper experiments of Zaffran et al. (2022) in their article [1]
 which we argue that Adaptive Conformal Inference (ACI, Gibbs & Candès, 2021)
 [2], developed for distribution-shift time series, is a good procedure for
@@ -31,6 +38,9 @@ In International Conference on Machine Learning (pp. 25834-25866). PMLR.
 distribution shift.
 Advances in Neural Information Processing Systems, 34, 1660-1672.
 """
+
+# sphinx_gallery_thumbnail_number = 2
+
 import datetime
 import pickle
 import ssl
@@ -41,12 +51,12 @@ from urllib.request import urlopen
 import numpy as np
 import pandas as pd
 from matplotlib import pylab as plt
+from numpy.typing import NDArray
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import PredefinedSplit
 
-from mapie._typing import NDArray
 from mapie.conformity_scores import AbsoluteConformityScore
-from mapie.time_series_regression import MapieTimeSeriesRegressor
+from mapie.regression import TimeSeriesRegressor
 
 warnings.simplefilter("ignore")
 
@@ -115,10 +125,10 @@ plt.plot(date_data, data.Spot, color="black", linewidth=0.6)
 
 locs, labels = plt.xticks()
 new_labels = ["2016", "2017", "2018", "2019", "2020"]
-plt.xticks(locs[0:len(locs):2], labels=new_labels)
+plt.xticks(locs[0 : len(locs) : 2], labels=new_labels)
 
 plt.xlabel("Date")
-plt.ylabel("Spot price (\u20AC/MWh)")
+plt.ylabel("Spot price (\u20ac/MWh)")
 
 plt.show()
 
@@ -128,26 +138,30 @@ plt.show()
 #########################################################
 
 limit = datetime.datetime(2019, 1, 1, tzinfo=datetime.timezone.utc)
-id_train = data.index[pd.to_datetime(data['Date'], utc=True) < limit].tolist()
+id_train = data.index[pd.to_datetime(data["Date"], utc=True) < limit].tolist()
 
 data_train = data.iloc[id_train, :]
-sub_data_train = data_train.loc[:, [
-    'hour', 'dow_0', 'dow_1', 'dow_2', 'dow_3', 'dow_4', 'dow_5', 'dow_6'
-    ] + ['lag_24_%d' % i for i in range(24)] +
-    ['lag_168_%d' % i for i in range(24)] + ['conso']
+sub_data_train = data_train.loc[
+    :,
+    ["hour", "dow_0", "dow_1", "dow_2", "dow_3", "dow_4", "dow_5", "dow_6"]
+    + ["lag_24_%d" % i for i in range(24)]
+    + ["lag_168_%d" % i for i in range(24)]
+    + ["conso"],
 ]
 all_x_train = [
     np.array(sub_data_train.loc[sub_data_train.hour == h]) for h in range(24)
 ]
 
-sub_data = data.loc[:, [
-    'hour', 'dow_0', 'dow_1', 'dow_2', 'dow_3', 'dow_4', 'dow_5', 'dow_6'
-    ] + ['lag_24_%d' % i for i in range(24)] +
-    ['lag_168_%d' % i for i in range(24)] + ['conso']
+sub_data = data.loc[
+    :,
+    ["hour", "dow_0", "dow_1", "dow_2", "dow_3", "dow_4", "dow_5", "dow_6"]
+    + ["lag_24_%d" % i for i in range(24)]
+    + ["lag_168_%d" % i for i in range(24)]
+    + ["conso"],
 ]
 
 all_x = [np.array(sub_data.loc[sub_data.hour == h]) for h in range(24)]
-all_y = [np.array(data.loc[data.hour == h, 'Spot']) for h in range(24)]
+all_y = [np.array(data.loc[data.hour == h, "Spot"]) for h in range(24)]
 
 
 #########################################################
@@ -165,7 +179,7 @@ test_size = n - train_size
 
 idx = np.array(range(train_size))
 n_half = int(np.floor(train_size / 2))
-idx_train, idx_cal = idx[:n_half], idx[n_half:2*n_half]
+idx_train, idx_cal = idx[:n_half], idx[n_half : 2 * n_half]
 
 
 #########################################################
@@ -178,7 +192,7 @@ gamma = 0.04
 
 model = init_model()
 
-mapie_aci = MapieTimeSeriesRegressor(
+mapie_aci = TimeSeriesRegressor(
     model,
     method="aci",
     agg_function="mean",
@@ -191,27 +205,25 @@ mapie_aci = MapieTimeSeriesRegressor(
 # Reproduce experiment and results
 #########################################################
 
-y_pred_aci_pfit = np.zeros(((365, )))
+y_pred_aci_pfit = np.zeros(((365,)))
 y_pis_aci_pfit = np.zeros(((365, 2, 1)))
 
 for i in range(min(test_size, iteration_max + 1)):
-    x_train = np.array(X[i:(train_size+i), ])
-    x_test = np.array(X[(train_size+i), ]).reshape(1, -1)
-    y_train = np.array(Y[i:(train_size+i)])
-    y_test = np.array(Y[(train_size+i)]).reshape(1, -1)
+    x_train = np.array(X[i : (train_size + i),])
+    x_test = np.array(X[(train_size + i),]).reshape(1, -1)
+    y_train = np.array(Y[i : (train_size + i)])
+    y_test = np.array(Y[(train_size + i)]).reshape(1, -1)
 
     # Fit the model with new tran/calib dataset
     mapie_aci = mapie_aci.fit(x_train, y_train)
 
     # Predict on test dataset
-    y_pred_aci_pfit[i:i+1], y_pis_aci_pfit[i:i+1] = mapie_aci.predict(
-        x_test, alpha=alpha, ensemble=False, optimize_beta=False
+    y_pred_aci_pfit[i : i + 1], y_pis_aci_pfit[i : i + 1] = mapie_aci.predict(
+        x_test, confidence_level=1 - alpha, ensemble=False, optimize_beta=False
     )
 
     # Update the current_alpha_t (hidden for the user)
-    mapie_aci.update(
-        x_test, y_test, gamma=gamma, ensemble=False, optimize_beta=False
-    )
+    mapie_aci.update(x_test, y_test, gamma=gamma, ensemble=False, optimize_beta=False)
 
 results = y_pis_aci_pfit.copy()
 
@@ -265,34 +277,33 @@ comparison_result_Y_sup = np.allclose(
     results[:iteration_max, 1], results_ref[:iteration_max, 1], rtol=1e-2
 )
 comparison_result_Y_pred = np.allclose(
-    y_pred_aci_pfit[:iteration_max], np.sum(results_ref, -1)[:iteration_max]/2,
-    rtol=1e-2
+    y_pred_aci_pfit[:iteration_max],
+    np.sum(results_ref, -1)[:iteration_max] / 2,
+    rtol=1e-2,
 )
 
 # Print the comparison results
 # The results are very closed but not exactly the same because of the quantile
 # calculation. In MAPIE, we use method="higher" when in the code of Zaffran,
 # it use method="midpoint".
-final_results = pd.DataFrame({
-    "y_inf": results[:iteration_max, 0],
-    "y_inf (ref)": results_ref[:iteration_max, 0],
-    "y_sup": results[:iteration_max, 1],
-    "y_sup (ref)": results_ref[:iteration_max, 1],
-    "y_pred": y_pred_aci_pfit[:iteration_max],
-    "y_pred (ref)": np.sum(results_ref, -1)[:iteration_max]/2,
-}).round(2)
+final_results = pd.DataFrame(
+    {
+        "y_inf": results[:iteration_max, 0],
+        "y_inf (ref)": results_ref[:iteration_max, 0],
+        "y_sup": results[:iteration_max, 1],
+        "y_sup (ref)": results_ref[:iteration_max, 1],
+        "y_pred": y_pred_aci_pfit[:iteration_max],
+        "y_pred (ref)": np.sum(results_ref, -1)[:iteration_max] / 2,
+    }
+).round(2)
 
 idx = np.arange(iteration_max)
 fig, axs = plt.subplots(1, 2)
-axs[0].fill_between(
-    idx, final_results["y_inf"], final_results["y_sup"],
-    alpha=0.2
-)
+axs[0].fill_between(idx, final_results["y_inf"], final_results["y_sup"], alpha=0.2)
 axs[0].plot(final_results["y_pred"])
 axs[0].set_title("MAPIE results")
 axs[1].fill_between(
-    idx, final_results["y_inf (ref)"], final_results["y_sup (ref)"],
-    alpha=0.2
+    idx, final_results["y_inf (ref)"], final_results["y_sup (ref)"], alpha=0.2
 )
 axs[1].plot(final_results["y_pred (ref)"])
 axs[1].set_title("Reference results")

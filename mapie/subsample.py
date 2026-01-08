@@ -9,15 +9,15 @@ from sklearn.model_selection import BaseCrossValidator
 from sklearn.utils import check_random_state, resample
 from sklearn.utils.validation import _num_samples
 
-from ._typing import NDArray
-from .utils import check_n_samples
+from numpy.typing import NDArray
+from .utils import _check_n_samples
 
 
 class Subsample(BaseCrossValidator):
     """
     Generate a sampling method, that resamples the training set with
-    possible bootstraps. It can replace KFold or  LeaveOneOut as cv argument
-    in the MAPIE class.
+    possible bootstraps. It can be used as cv argument in
+    :class:`~mapie.regression.JackknifeAfterBootstrapRegressor`.
 
     Parameters
     ----------
@@ -76,7 +76,7 @@ class Subsample(BaseCrossValidator):
             The testing set indices for that split.
         """
         indices = np.arange(_num_samples(X))
-        n_samples = check_n_samples(X, self.n_samples, indices)
+        n_samples = _check_n_samples(X, self.n_samples, indices)
         random_state = check_random_state(self.random_state)
         for k in range(self.n_resamplings):
             train_index = resample(
@@ -105,7 +105,7 @@ class BlockBootstrap(BaseCrossValidator):  # type: ignore
     """
     Generate a sampling method, that block bootstraps the training set.
     It can replace KFold, LeaveOneOut or SubSample as cv argument in the
-    MapieRegressor class.
+    TimeSeriesRegressor class.
 
     Parameters
     ----------
@@ -135,8 +135,8 @@ class BlockBootstrap(BaseCrossValidator):  # type: ignore
     >>> X = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
     >>> for train_index, test_index in cv.split(X):
     ...    print(f"train index is {train_index}, test index is {test_index}")
-    train index is [1 2 3 4 5 6 1 2 3 4 5 6], test index is [8 9 7]
-    train index is [4 5 6 7 8 9 1 2 3 7 8 9], test index is []
+    train index is [0 1 2 3 4 5 0 1 2 3 4 5], test index is [8 9 6 7]
+    train index is [3 4 5 6 7 8 0 1 2 6 7 8], test index is [9]
     """
 
     def __init__(
@@ -185,9 +185,7 @@ class BlockBootstrap(BaseCrossValidator):  # type: ignore
         n = len(X)
 
         if self.n_blocks is not None:
-            length = (
-                self.length if self.length is not None else n // self.n_blocks
-            )
+            length = self.length if self.length is not None else n // self.n_blocks
             n_blocks = self.n_blocks
         else:
             length = cast(int, self.length)
@@ -203,10 +201,13 @@ class BlockBootstrap(BaseCrossValidator):  # type: ignore
         if self.overlapping:
             blocks = sliding_window_view(indices, window_shape=length)
         else:
-            indices = indices[(n % length):]
+            if n % length == 0:
+                indices_used_for_blocks = indices
+            else:
+                indices_used_for_blocks = indices[: -(n % length)]
             blocks_number = n // length
             blocks = np.asarray(
-                np.array_split(indices, indices_or_sections=blocks_number)
+                np.split(indices_used_for_blocks, indices_or_sections=blocks_number)
             )
 
         random_state = check_random_state(self.random_state)
@@ -219,12 +220,8 @@ class BlockBootstrap(BaseCrossValidator):  # type: ignore
                 random_state=random_state,
                 stratify=None,
             )
-            train_index = np.concatenate(
-                [blocks[k] for k in block_indices], axis=0
-            )
-            test_index = np.array(
-                list(set(indices) - set(train_index)), dtype=np.int64
-            )
+            train_index = np.concatenate([blocks[k] for k in block_indices], axis=0)
+            test_index = np.array(list(set(indices) - set(train_index)), dtype=np.int64)
             yield train_index, test_index
 
     def get_n_splits(self, *args: Any, **kargs: Any) -> int:

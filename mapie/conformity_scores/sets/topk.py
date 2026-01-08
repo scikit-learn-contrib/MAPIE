@@ -1,16 +1,13 @@
-from typing import Optional, cast
+from typing import Optional, Union, cast
 
 import numpy as np
-
-from mapie.conformity_scores.classification import BaseClassificationScore
-from mapie.conformity_scores.sets.utils import (
-    check_proba_normalized, get_true_label_position
-)
-from mapie.estimator.classifier import EnsembleClassifier
+from numpy.typing import NDArray
+from sklearn.model_selection import BaseCrossValidator
 
 from mapie._machine_precision import EPSILON
-from mapie._typing import NDArray
-from mapie.utils import compute_quantiles
+from mapie.conformity_scores.classification import BaseClassificationScore
+from mapie.conformity_scores.sets.utils import get_true_label_position
+from mapie.utils import _compute_quantiles
 
 
 class TopKConformityScore(BaseClassificationScore):
@@ -18,7 +15,7 @@ class TopKConformityScore(BaseClassificationScore):
     Top-K method-based non-conformity score.
 
     It is based on the sorted index of the probability of the true label in the
-    softmax outputs, on the calibration set. In case two probabilities are
+    softmax outputs, on the conformalization set. In case two probabilities are
     equal, both are taken, thus, the size of some prediction sets may be
     different from the others.
 
@@ -34,7 +31,7 @@ class TopKConformityScore(BaseClassificationScore):
     classes: Optional[ArrayLike]
         Names of the classes.
 
-    random_state: Optional[Union[int, RandomState]]
+    random_state: Optional[Union[int, np.random.RandomState]]
         Pseudo random number generator state.
 
     quantiles_: ArrayLike of shape (n_alpha)
@@ -45,11 +42,7 @@ class TopKConformityScore(BaseClassificationScore):
         super().__init__()
 
     def get_conformity_scores(
-        self,
-        y: NDArray,
-        y_pred: NDArray,
-        y_enc: Optional[NDArray] = None,
-        **kwargs
+        self, y: NDArray, y_pred: NDArray, y_enc: Optional[NDArray] = None, **kwargs
     ) -> NDArray:
         """
         Get the conformity score.
@@ -84,44 +77,42 @@ class TopKConformityScore(BaseClassificationScore):
         self,
         X: NDArray,
         alpha_np: NDArray,
-        estimator: EnsembleClassifier,
-        **kwargs
+        y_pred_proba: NDArray,
+        cv: Optional[Union[int, str, BaseCrossValidator]],
+        **kwargs,
     ) -> NDArray:
         """
-        Get predictions from an EnsembleClassifier.
-
-        This method should be implemented by any subclass of the current class.
+        Just processes the passed y_pred_proba.
 
         Parameters
         -----------
         X: NDArray of shape (n_samples, n_features)
-            Observed feature values.
+            Observed feature values (not used since predictions are passed).
 
         alpha_np: NDArray of shape (n_alpha,)
             NDArray of floats between ``0`` and ``1``, represents the
             uncertainty of the confidence interval.
 
-        estimator: EnsembleClassifier
-            Estimator that is fitted to predict y from X.
+        y_pred_proba: NDArray
+            Predicted probabilities from the estimator.
+
+        cv: Optional[Union[int, str, BaseCrossValidator]]
+            Cross-validation strategy used by the estimator (not used here).
 
         Returns
         --------
         NDArray
             Array of predictions.
         """
-        y_pred_proba = estimator.predict(X, agg_scores="mean")
-        y_pred_proba = check_proba_normalized(y_pred_proba, axis=1)
-        y_pred_proba = np.repeat(
-            y_pred_proba[:, :, np.newaxis], len(alpha_np), axis=2
-        )
+        y_pred_proba = np.repeat(y_pred_proba[:, :, np.newaxis], len(alpha_np), axis=2)
         return y_pred_proba
 
     def get_conformity_score_quantiles(
         self,
         conformity_scores: NDArray,
         alpha_np: NDArray,
-        estimator: EnsembleClassifier,
-        **kwargs
+        cv: Optional[Union[int, str, BaseCrossValidator]],
+        **kwargs,
     ) -> NDArray:
         """
         Get the quantiles of the conformity scores for each uncertainty level.
@@ -135,23 +126,23 @@ class TopKConformityScore(BaseClassificationScore):
             NDArray of floats between 0 and 1, representing the uncertainty
             of the confidence interval.
 
-        estimator: EnsembleClassifier
-            Estimator that is fitted to predict y from X.
+        cv: Optional[Union[int, str, BaseCrossValidator]]
+            Cross-validation strategy used by the estimator (not used here).
 
         Returns
         --------
         NDArray
             Array of quantiles with respect to alpha_np.
         """
-        return compute_quantiles(conformity_scores, alpha_np)
+        return _compute_quantiles(conformity_scores, alpha_np)
 
     def get_prediction_sets(
         self,
         y_pred_proba: NDArray,
         conformity_scores: NDArray,
         alpha_np: NDArray,
-        estimator: EnsembleClassifier,
-        **kwargs
+        cv: Optional[Union[int, str, BaseCrossValidator]],
+        **kwargs,
     ) -> NDArray:
         """
         Generate prediction sets based on the probability predictions,
@@ -163,14 +154,14 @@ class TopKConformityScore(BaseClassificationScore):
             Target prediction.
 
         conformity_scores: NDArray of shape (n_samples,)
-            Conformity scores for each sample.
+            Conformity scores for each sample (not used here).
 
         alpha_np: NDArray of shape (n_alpha,)
             NDArray of floats between 0 and 1, representing the uncertainty
-            of the confidence interval.
+            of the confidence interval (not used here).
 
-        estimator: EnsembleClassifier
-            Estimator that is fitted to predict y from X.
+        cv: Optional[Union[int, str, BaseCrossValidator]]
+            Cross-validation strategy used by the estimator (not used here).
 
         Returns
         --------
@@ -180,25 +171,19 @@ class TopKConformityScore(BaseClassificationScore):
         y_pred_proba = y_pred_proba[:, :, 0]
         index_sorted = np.fliplr(np.argsort(y_pred_proba, axis=1))
         y_pred_index_last = np.stack(
-            [
-                index_sorted[:, quantile]
-                for quantile in self.quantiles_
-            ], axis=1
+            [index_sorted[:, quantile] for quantile in self.quantiles_], axis=1
         )
         y_pred_proba_last = np.stack(
             [
                 np.take_along_axis(
-                    y_pred_proba,
-                    y_pred_index_last[:, iq].reshape(-1, 1),
-                    axis=1
+                    y_pred_proba, y_pred_index_last[:, iq].reshape(-1, 1), axis=1
                 )
                 for iq, _ in enumerate(self.quantiles_)
-            ], axis=2
+            ],
+            axis=2,
         )
         prediction_sets = np.greater_equal(
-            y_pred_proba[:, :, np.newaxis]
-            - y_pred_proba_last,
-            -EPSILON
+            y_pred_proba[:, :, np.newaxis] - y_pred_proba_last, -EPSILON
         )
 
         return prediction_sets

@@ -1,9 +1,15 @@
-from .quantile_regression import MapieQuantileRegressor
-from .regression import MapieRegressor
-from .time_series_regression import MapieTimeSeriesRegressor
+from .quantile_regression import ConformalizedQuantileRegressor
+from .regression import (
+    SplitConformalRegressor,
+    CrossConformalRegressor,
+    JackknifeAfterBootstrapRegressor,
+)
+from .time_series_regression import TimeSeriesRegressor
 
 __all__ = [
-    "MapieRegressor",
-    "MapieQuantileRegressor",
-    "MapieTimeSeriesRegressor"
+    "TimeSeriesRegressor",
+    "SplitConformalRegressor",
+    "CrossConformalRegressor",
+    "JackknifeAfterBootstrapRegressor",
+    "ConformalizedQuantileRegressor",
 ]
