@@ -267,7 +267,7 @@ ax.axvline(
 )
 ax.axvline(
     precisions_array.mean(),
-    color="green",
+    color="orange",
     linestyle="--",
     linewidth=2,
     label=f"Mean Precision ({precisions_array.mean():.3f})",

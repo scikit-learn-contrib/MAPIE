@@ -265,7 +265,7 @@ ax.axvline(
 )
 ax.axvline(
     recalls_array.mean(),
-    color="green",
+    color="orange",
     linestyle="--",
     linewidth=2,
     label=f"Mean Recall ({recalls_array.mean():.3f})",
