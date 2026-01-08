@@ -103,7 +103,7 @@ fig.legend(
     handles,
     labels,
     loc="lower center",
-    bbox_to_anchor=(0.5, -0.05),
+    bbox_to_anchor=(0.5, 0),
     ncol=7,
     fontsize=18,
 )
