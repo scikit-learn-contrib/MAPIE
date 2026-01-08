@@ -69,7 +69,7 @@ colors = {
     (1, 1, 1): {"color": "#06C2AC", "lac": "1-1-1"},
 }
 
-fig, axes = plt.subplots(1, 3, figsize=(18, 6))
+fig, axes = plt.subplots(1, 3, figsize=(18, 6.2))
 titles = ["Training Data", "Calibration Data", "Test Data"]
 datasets = [(X_train, y_train), (X_calib, y_calib), (X_test, y_test)]
 
@@ -83,8 +83,8 @@ for i, (ax, (X_data, y_data), title) in enumerate(zip(axes, datasets, titles)):
             X_data[mask, 1],
             color=props["color"],
             edgecolors="k",
-            s=10,
-            alpha=0.5,
+            s=60,
+            alpha=1,
             label=props["lac"] if i == 0 else None,
         )
 
@@ -105,7 +105,7 @@ fig.legend(
     loc="lower center",
     bbox_to_anchor=(0.5, -0.05),
     ncol=4,
-    fontsize=14,
+    fontsize=18,
 )
 
 plt.suptitle("Visualization of Train, Calibration, and Test Sets", fontsize=22)
