@@ -7,7 +7,7 @@ from typing import Callable, Iterable, Optional, Sequence, Union, cast
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 from sklearn.utils import check_random_state
-from sklearn.utils.validation import _check_y, _num_samples, indexable
+from sklearn.utils.validation import _num_samples, indexable
 
 from mapie.utils import (
     _check_alpha,
@@ -315,7 +315,7 @@ class MultiLabelClassificationController:
             Raise error if at least one observation
             has no label.
         """
-        if not (y.sum(axis=1) > 0).all():
+        if not (y.sum(axis=tuple(range(1, y.ndim))) > 0).all():
             raise ValueError(
                 "Invalid y. All observations should contain at least one label."
             )
@@ -459,7 +459,6 @@ class MultiLabelClassificationController:
         first_call = self._check_compute_risks_first_call()
 
         X, y = indexable(X, y)
-        _check_y(y, multi_output=True)
 
         y = cast(NDArray, y)
         X = cast(NDArray, X)
