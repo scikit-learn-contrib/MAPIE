@@ -223,7 +223,7 @@ plt.scatter(
 )
 plt.axhline(target_precision, color="tab:gray", linestyle="--")
 plt.text(
-    0.7,
+    0.65,
     target_precision + 0.02,
     "Target precision",
     color="tab:gray",
