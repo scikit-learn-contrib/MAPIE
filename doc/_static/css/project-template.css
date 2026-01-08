@@ -15,8 +15,8 @@
     font-weight: bold;
 }
 
-/* --- Wrap long lines in code blocks --- */
-pre, code {
-    white-space: pre-wrap !important; /* Preserves whitespace and wraps text */
-    word-break: break-all;            /* Forces line breaks in long, unbreakable strings */
+/* --- Wrap long lines ONLY in sphinx-gallery "Out:" blocks --- */
+.sphx-glr-script-out pre {
+    white-space: pre-wrap; /* Preserves whitespace and wraps text */
+    word-break: break-word; /* Forces line breaks in long, unbreakable strings */
 }
