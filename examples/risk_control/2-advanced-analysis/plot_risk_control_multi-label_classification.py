@@ -7,7 +7,7 @@ In this example, we explain how to perform risk control for multi-label
 classification using the Learn-Then-Test (LTT) procedure implemented in MAPIE.
 
 """
-# %%
+
 # sphinx_gallery_thumbnail_number = 4
 
 import matplotlib.pyplot as plt
@@ -259,4 +259,3 @@ print(
 # the target are statistically valid. This highlights the importance of risk
 # control when deploying multi-label classifiers in practice.
 #
-# %%
