@@ -161,7 +161,7 @@ if model_params_fit_not_done:
         verbose=0,
         n_jobs=-1,
     )
-    cv_obj.fit(X_train, y_train)
+    cv_obj.fit(X_train, y_train)  # DATA LEAKAGE
     model = cv_obj.best_estimator_
 else:
     # Model: Random Forest previously optimized with a cross-validation
