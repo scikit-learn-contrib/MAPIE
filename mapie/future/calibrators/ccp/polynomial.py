@@ -153,6 +153,7 @@ class PolynomialCCP(CCPCalibrator):
     ... ).fit(X_train, y_train)
     >>> y_pred, y_pi = mapie.predict(X_train)
     """
+
     def __init__(
         self,
         degree: Optional[Union[int, List[int]]] = None,
@@ -218,15 +219,13 @@ class PolynomialCCP(CCPCalibrator):
         if degree is None:
             exponents = [0, 1]
         elif isinstance(degree, int):
-            exponents = list(range(degree+1))
+            exponents = list(range(degree + 1))
         else:
             exponents = degree
 
         return exponents, (0 in exponents) or bias
 
-    def _create_functions(
-        self, exponents: List[int], variable: str
-    ) -> List[Callable]:
+    def _create_functions(self, exponents: List[int], variable: str) -> List[Callable]:
         """
         Create the list of lambda functions, based on the list ``exponents``
         and the ``variable`` value.
@@ -274,7 +273,6 @@ class PolynomialCCP(CCPCalibrator):
 
             By default ``None``
         """
-        self.exponents, self.bias = self._convert_degree(
-            self.degree, self.bias)
+        self.exponents, self.bias = self._convert_degree(self.degree, self.bias)
         functions = self._create_functions(self.exponents, self.variable)
         self.functions_ = format_functions(functions, self.bias)

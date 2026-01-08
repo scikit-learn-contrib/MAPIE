@@ -30,6 +30,7 @@ class StandardCalibrator(BaseCalibrator):
     q_low_: float
         Same as q_up_, but for the lower bound
     """
+
     fit_attributes: List[str] = ["q_up_", "q_low_"]
 
     def __init__(self) -> None:
@@ -61,25 +62,27 @@ class StandardCalibrator(BaseCalibrator):
 
         # TODO: Partial copy paste of the BaseConformityScore.get_bounds method
         if self.sym:
-            alpha_ref = 1-self.alpha
+            alpha_ref = 1 - self.alpha
             quantile_ref = BaseConformityScore.get_quantile(
-                conformity_scores_calib[..., np.newaxis],
-                np.array([alpha_ref]), axis=0
+                conformity_scores_calib[..., np.newaxis], np.array([alpha_ref]), axis=0
             )[0, 0]
             self.q_low_, self.q_up_ = -quantile_ref, quantile_ref
 
         else:
-            alpha_low, alpha_up = self.alpha/2, 1 - self.alpha/2
+            alpha_low, alpha_up = self.alpha / 2, 1 - self.alpha / 2
 
             self.q_low_ = BaseConformityScore.get_quantile(
                 conformity_scores_calib[..., np.newaxis],
-                np.array([alpha_low]), axis=0, reversed=True,
-                unbounded=allow_infinite_bounds
+                np.array([alpha_low]),
+                axis=0,
+                reversed=True,
+                unbounded=allow_infinite_bounds,
             )[0, 0]
             self.q_up_ = BaseConformityScore.get_quantile(
                 conformity_scores_calib[..., np.newaxis],
-                np.array([alpha_up]), axis=0,
-                unbounded=allow_infinite_bounds
+                np.array([alpha_up]),
+                axis=0,
+                unbounded=allow_infinite_bounds,
             )[0, 0]
 
         return self
@@ -102,6 +105,4 @@ class StandardCalibrator(BaseCalibrator):
         NDArray
             prediction
         """
-        return np.ones((_num_samples(X), 2)) * np.array([
-            self.q_low_, self.q_up_
-        ])
+        return np.ones((_num_samples(X), 2)) * np.array([self.q_low_, self.q_up_])

@@ -7,8 +7,7 @@ from sklearn.utils import _safe_indexing
 from mapie._typing import ArrayLike
 
 from .base import CCPCalibrator
-from .utils import (check_multiplier, check_custom_calibrator_functions,
-                    format_functions)
+from .utils import check_multiplier, check_custom_calibrator_functions, format_functions
 
 
 class CustomCCP(CCPCalibrator):
@@ -157,6 +156,7 @@ class CustomCCP(CCPCalibrator):
     ... ).fit(X_train, y_train)
     >>> y_pred, y_pi = mapie.predict(X_train)
     """
+
     transform_attributes: List[str] = ["functions_", "is_transform_fitted_"]
 
     def __init__(

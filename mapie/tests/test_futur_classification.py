@@ -11,15 +11,25 @@ from sklearn.dummy import DummyClassifier
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.exceptions import NotFittedError
 from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import (KFold, LeaveOneOut, LeavePOut,
-                                     PredefinedSplit, RepeatedKFold,
-                                     ShuffleSplit, TimeSeriesSplit,
-                                     train_test_split)
+from sklearn.model_selection import (
+    KFold,
+    LeaveOneOut,
+    LeavePOut,
+    PredefinedSplit,
+    RepeatedKFold,
+    ShuffleSplit,
+    TimeSeriesSplit,
+    train_test_split,
+)
 from sklearn.pipeline import make_pipeline
 
 from mapie._typing import NDArray
-from mapie.future.calibrators.ccp import (CCPCalibrator, CustomCCP,
-                                          GaussianCCP, PolynomialCCP)
+from mapie.future.calibrators.ccp import (
+    CCPCalibrator,
+    CustomCCP,
+    GaussianCCP,
+    PolynomialCCP,
+)
 from mapie.conformity_scores import LACConformityScore, APSConformityScore
 from mapie.conformity_scores import BaseClassificationScore
 from mapie.metrics import classification_coverage_score
@@ -30,9 +40,11 @@ np.random.seed(random_state)
 
 N_CLASSES = 4
 X, y = make_classification(
-    n_samples=200, n_features=10,
-    n_informative=N_CLASSES, n_classes=N_CLASSES,
-    random_state=random_state
+    n_samples=200,
+    n_features=10,
+    n_informative=N_CLASSES,
+    n_classes=N_CLASSES,
+    random_state=random_state,
 )
 z = X[:, -2:]
 
@@ -101,8 +113,7 @@ def test_fit_predict(z: Any) -> None:
 @pytest.mark.parametrize("z", [None, z])
 def test_fit_predict_reg(z: Any) -> None:
     """Test that fit-predict raises no errors."""
-    mapie = SplitCPClassifier(calibrator=GaussianCCP(reg_param=0.1),
-                              alpha=0.1)
+    mapie = SplitCPClassifier(calibrator=GaussianCCP(reg_param=0.1), alpha=0.1)
     mapie.fit(X, y, calib_kwargs={"z": z})
     mapie.predict(X, z=z)
 
@@ -119,8 +130,7 @@ def test_calib_not_complete_phi() -> None:
     with pytest.warns(UserWarning, match="WARNING: At least one row of the"):
         mapie = SplitCPClassifier(
             alpha=0.1,
-            calibrator=CustomCCP([lambda X: (X[:, 0] > 0).astype(int)],
-                                 bias=False)
+            calibrator=CustomCCP([lambda X: (X[:, 0] > 0).astype(int)], bias=False),
         )
         mapie.fit(X, y)
 
@@ -130,8 +140,7 @@ def test_predict_not_complete_phi() -> None:
     with pytest.warns(UserWarning, match="WARNING: At least one row of the"):
         mapie = SplitCPClassifier(
             alpha=0.1,
-            calibrator=CustomCCP([lambda X: (X[:, 0] > 0).astype(int)],
-                                 bias=False)
+            calibrator=CustomCCP([lambda X: (X[:, 0] > 0).astype(int)], bias=False),
         )
         mapie.fit(X[X[:, 0] < 0], y[X[:, 0] < 0])
         mapie.predict(X)
@@ -155,49 +164,48 @@ def test_no_calibrate_predict() -> None:
 def test_default_sample_weight() -> None:
     """Test default sample weights."""
     mapie = SplitCPClassifier(alpha=0.1)
-    assert (
-        signature(mapie.fit_predictor).parameters["sample_weight"].default
-        is None
-    )
+    assert signature(mapie.fit_predictor).parameters["sample_weight"].default is None
 
 
 @pytest.mark.parametrize("predictor", [0, "a", KFold(), ["a", "b"]])
-def test_invalid_predictor(
-    predictor: Any
-) -> None:
+def test_invalid_predictor(predictor: Any) -> None:
     """Test that invalid predictors raise errors."""
     with pytest.raises(ValueError, match=r".*Invalid estimator.*"):
         mapie = SplitCPClassifier(predictor=predictor, alpha=0.1)
         mapie.fit_predictor(X, y)
 
 
-@pytest.mark.parametrize("predictor", [
-    LogisticRegression(),
-    make_pipeline(LogisticRegression()),
-])
+@pytest.mark.parametrize(
+    "predictor",
+    [
+        LogisticRegression(),
+        make_pipeline(LogisticRegression()),
+    ],
+)
 def test_invalid_prefit_predictor_calibrate(
     predictor: ClassifierMixin,
 ) -> None:
     """Test that non-fitted predictor with prefit cv raise errors when
     calibrate is called"""
     with pytest.raises(NotFittedError):
-        mapie = SplitCPClassifier(predictor=predictor, cv="prefit",
-                                  alpha=0.1)
+        mapie = SplitCPClassifier(predictor=predictor, cv="prefit", alpha=0.1)
         mapie.fit_calibrator(X, y)
 
 
-@pytest.mark.parametrize("predictor", [
-    LogisticRegression(),
-    make_pipeline(LogisticRegression()),
-])
+@pytest.mark.parametrize(
+    "predictor",
+    [
+        LogisticRegression(),
+        make_pipeline(LogisticRegression()),
+    ],
+)
 def test_invalid_prefit_predictor_fit(
     predictor: ClassifierMixin,
 ) -> None:
     """Test that non-fitted predictor with prefit cv raise errors when fit
     is called."""
     with pytest.raises(NotFittedError):
-        mapie = SplitCPClassifier(predictor=predictor, cv="prefit",
-                                  alpha=0.1)
+        mapie = SplitCPClassifier(predictor=predictor, cv="prefit", alpha=0.1)
         mapie.fit_predictor(X, y)
 
 
@@ -213,18 +221,14 @@ def test_default_parameters() -> None:
     assert isinstance(mapie.random_state, int)
 
 
-@pytest.mark.parametrize(
-    "alpha", ["a", 0, 2, 1.5, -0.3]
-)
+@pytest.mark.parametrize("alpha", ["a", 0, 2, 1.5, -0.3])
 def test_invalid_alpha(alpha: Any) -> None:
     with pytest.raises(ValueError):
         mapie = SplitCPClassifier(alpha=alpha)
         mapie.fit(X, y)
 
 
-@pytest.mark.parametrize(
-    "calibrator", [1, "some_string"]
-)
+@pytest.mark.parametrize("calibrator", [1, "some_string"])
 def test_invalid_phi(calibrator: Any) -> None:
     with pytest.raises(ValueError):
         mapie = SplitCPClassifier(calibrator=calibrator)
@@ -243,48 +247,68 @@ def test_valid_predictor() -> None:
 
 
 @pytest.mark.parametrize(
-    "cv", [None, ShuffleSplit(n_splits=1),
-           PredefinedSplit(
-                test_fold=[1]*(len(X)//2) + [-1]*(len(X)-len(X)//2)
-           ), "prefit", "split"]
+    "cv",
+    [
+        None,
+        ShuffleSplit(n_splits=1),
+        PredefinedSplit(test_fold=[1] * (len(X) // 2) + [-1] * (len(X) - len(X) // 2)),
+        "prefit",
+        "split",
+    ],
 )
-@pytest.mark.parametrize("predictor", [
-    LogisticRegression(),
-    make_pipeline(LogisticRegression()),
-])
+@pytest.mark.parametrize(
+    "predictor",
+    [
+        LogisticRegression(),
+        make_pipeline(LogisticRegression()),
+    ],
+)
 def test_valid_cv(cv: Any, predictor: ClassifierMixin) -> None:
     """Test that valid cv raise no errors."""
     predictor.fit(X, y)
-    mapie = SplitCPClassifier(predictor, CustomCCP(bias=True), cv=cv,
-                              alpha=0.1, random_state=random_state)
+    mapie = SplitCPClassifier(
+        predictor, CustomCCP(bias=True), cv=cv, alpha=0.1, random_state=random_state
+    )
     mapie.fit(X, y)
     mapie.predict(X)
 
 
 @pytest.mark.parametrize(
-    "cv", ["dummy", 0, 1, 1.5] + [  # Cross val splitters
-            3, -1, KFold(n_splits=5), LeaveOneOut(),
-            RepeatedKFold(n_splits=5, n_repeats=2), ShuffleSplit(n_splits=5),
-            TimeSeriesSplit(), LeavePOut(p=2),
-            PredefinedSplit(test_fold=[0]*(len(X)//4) + [1]*(len(X)//4)
-                            + [-1]*(len(X)-len(X)//2)),
-           ]
+    "cv",
+    ["dummy", 0, 1, 1.5]
+    + [  # Cross val splitters
+        3,
+        -1,
+        KFold(n_splits=5),
+        LeaveOneOut(),
+        RepeatedKFold(n_splits=5, n_repeats=2),
+        ShuffleSplit(n_splits=5),
+        TimeSeriesSplit(),
+        LeavePOut(p=2),
+        PredefinedSplit(
+            test_fold=[0] * (len(X) // 4)
+            + [1] * (len(X) // 4)
+            + [-1] * (len(X) - len(X) // 2)
+        ),
+    ],
 )
 def test_invalid_cv(cv: Any) -> None:
     """Test that invalid agg_functions raise errors."""
     with pytest.raises(ValueError, match="Invalid cv argument."):
-        mapie = SplitCPClassifier(cv=cv, alpha=0.1,
-                                  random_state=random_state)
+        mapie = SplitCPClassifier(cv=cv, alpha=0.1, random_state=random_state)
         mapie.fit_predictor(X, y)
 
 
 @pytest.mark.parametrize("alpha", [0.2])
 @pytest.mark.parametrize("calibrator", PHI)
 @pytest.mark.parametrize("cv", CV)
-@pytest.mark.parametrize("predictor", [
-    LogisticRegression(),
-    make_pipeline(LogisticRegression()),
-])
+@pytest.mark.parametrize(
+    "predictor",
+    [
+        LogisticRegression(),
+        make_pipeline(LogisticRegression()),
+    ],
+)
 def test_fit_calibrate_combined_equivalence(
     alpha: Any, cv: Any, calibrator: CCPCalibrator, predictor: ClassifierMixin
 ) -> None:
@@ -297,13 +321,19 @@ def test_fit_calibrate_combined_equivalence(
 
     np.random.seed(random_state)
     mapie_1 = SplitCPClassifier(
-        predictor=predictor_1, calibrator=calibrator,
-        cv=cv, alpha=alpha, random_state=random_state
+        predictor=predictor_1,
+        calibrator=calibrator,
+        cv=cv,
+        alpha=alpha,
+        random_state=random_state,
     )
     np.random.seed(random_state)
     mapie_2 = SplitCPClassifier(
-        predictor=predictor_2, calibrator=calibrator,
-        cv=cv, alpha=alpha, random_state=random_state
+        predictor=predictor_2,
+        calibrator=calibrator,
+        cv=cv,
+        alpha=alpha,
+        random_state=random_state,
     )
     mapie_1.fit(X, y, calib_kwargs={"z": z})
     mapie_2.fit_predictor(X, y)
@@ -317,10 +347,13 @@ def test_fit_calibrate_combined_equivalence(
 
 @pytest.mark.parametrize("calibrator", PHI)
 @pytest.mark.parametrize("cv", CV)
-@pytest.mark.parametrize("predictor", [
-    LogisticRegression(),
-    make_pipeline(LogisticRegression()),
-])
+@pytest.mark.parametrize(
+    "predictor",
+    [
+        LogisticRegression(),
+        make_pipeline(LogisticRegression()),
+    ],
+)
 def test_predict_output_shape_alpha(
     cv: Any, calibrator: CCPCalibrator, predictor: ClassifierMixin
 ) -> None:
@@ -329,8 +362,11 @@ def test_predict_output_shape_alpha(
         predictor.fit(X, y)
 
     mapie = SplitCPClassifier(
-        predictor=predictor, calibrator=calibrator,
-        cv=cv, alpha=0.1, random_state=random_state
+        predictor=predictor,
+        calibrator=calibrator,
+        cv=cv,
+        alpha=0.1,
+        random_state=random_state,
     )
     mapie.fit(X, y, calib_kwargs={"z": z})
     y_pred, y_pis = mapie.predict(X, z=z)
@@ -340,10 +376,13 @@ def test_predict_output_shape_alpha(
 
 @pytest.mark.parametrize("calibrator", PHI)
 @pytest.mark.parametrize("cv", CV)
-@pytest.mark.parametrize("predictor", [
-    LogisticRegression(),
-    make_pipeline(LogisticRegression()),
-])
+@pytest.mark.parametrize(
+    "predictor",
+    [
+        LogisticRegression(),
+        make_pipeline(LogisticRegression()),
+    ],
+)
 def test_predict_output_shape_no_alpha(
     cv: Any, calibrator: CCPCalibrator, predictor: ClassifierMixin
 ) -> None:
@@ -352,8 +391,11 @@ def test_predict_output_shape_no_alpha(
         predictor.fit(X, y)
 
     mapie = SplitCPClassifier(
-        predictor=predictor, calibrator=calibrator, cv=cv,
-        alpha=None, random_state=random_state
+        predictor=predictor,
+        calibrator=calibrator,
+        cv=cv,
+        alpha=None,
+        random_state=random_state,
     )
     mapie.fit(X, y, calib_kwargs={"z": z})
     y_pred = mapie.predict(X, z=z)
@@ -361,10 +403,13 @@ def test_predict_output_shape_no_alpha(
 
 
 @pytest.mark.parametrize("template", PHI)
-@pytest.mark.parametrize("predictor", [
-    LogisticRegression(),
-    make_pipeline(LogisticRegression()),
-])
+@pytest.mark.parametrize(
+    "predictor",
+    [
+        LogisticRegression(),
+        make_pipeline(LogisticRegression()),
+    ],
+)
 def test_same_results_prefit_split(
     template: CCPCalibrator,
     predictor: ClassifierMixin,
@@ -391,13 +436,19 @@ def test_same_results_prefit_split(
         calibrator.points = (calibrator.points_, calibrator.sigmas_)
 
     mapie_1 = SplitCPClassifier(
-        clone(predictor), clone(calibrator), pred_cv, alpha=0.1,
+        clone(predictor),
+        clone(calibrator),
+        pred_cv,
+        alpha=0.1,
         random_state=random_state,
     )
 
     fitted_predictor = clone(predictor).fit(X_train, y_train)
     mapie_2 = SplitCPClassifier(
-        fitted_predictor, clone(calibrator), cv="prefit", alpha=0.1,
+        fitted_predictor,
+        clone(calibrator),
+        cv="prefit",
+        alpha=0.1,
         random_state=random_state,
     )
 
@@ -414,10 +465,13 @@ def test_same_results_prefit_split(
 
 @pytest.mark.parametrize("calibrator", PHI)
 @pytest.mark.parametrize("cv", CV)
-@pytest.mark.parametrize("predictor", [
-    LogisticRegression(),
-    make_pipeline(LogisticRegression()),
-])
+@pytest.mark.parametrize(
+    "predictor",
+    [
+        LogisticRegression(),
+        make_pipeline(LogisticRegression()),
+    ],
+)
 def test_results_for_ordered_alpha(
     cv: Any, calibrator: CCPCalibrator, predictor: ClassifierMixin
 ) -> None:
@@ -430,10 +484,12 @@ def test_results_for_ordered_alpha(
 
     calibrator._transform_params(X)
 
-    mapie_reg_1 = SplitCPClassifier(predictor, clone(calibrator), cv=cv,
-                                    alpha=0.05, random_state=random_state)
-    mapie_reg_2 = SplitCPClassifier(predictor, clone(calibrator), cv=cv,
-                                    alpha=0.1, random_state=random_state)
+    mapie_reg_1 = SplitCPClassifier(
+        predictor, clone(calibrator), cv=cv, alpha=0.05, random_state=random_state
+    )
+    mapie_reg_2 = SplitCPClassifier(
+        predictor, clone(calibrator), cv=cv, alpha=0.1, random_state=random_state
+    )
 
     mapie_reg_1.fit(X, y, calib_kwargs={"z": z})
     _, y_pis_1 = mapie_reg_1.predict(X, z=z)
@@ -449,8 +505,11 @@ def test_results_split() -> None:
     cv = ShuffleSplit(1, test_size=0.5, random_state=random_state)
     predictor = LogisticRegression()
     mapie = SplitCPClassifier(
-        predictor=predictor, calibrator=clone(PHI[0]), cv=cv, alpha=0.2,
-        random_state=random_state
+        predictor=predictor,
+        calibrator=clone(PHI[0]),
+        cv=cv,
+        alpha=0.2,
+        random_state=random_state,
     )
     mapie.fit(X, y)
     _, y_ps = mapie.predict(X)
@@ -467,8 +526,11 @@ def test_results_prefit() -> None:
     )
     predictor = LogisticRegression().fit(X_train, y_train)
     mapie = SplitCPClassifier(
-        predictor=predictor, calibrator=clone(PHI[0]), cv="prefit", alpha=0.2,
-        random_state=random_state
+        predictor=predictor,
+        calibrator=clone(PHI[0]),
+        cv="prefit",
+        alpha=0.2,
+        random_state=random_state,
     )
     mapie.fit(X_calib, y_calib)
     _, y_ps = mapie.predict(X)
@@ -480,10 +542,13 @@ def test_results_prefit() -> None:
 
 @pytest.mark.parametrize("calibrator", PHI)
 @pytest.mark.parametrize("cv", CV)
-@pytest.mark.parametrize("predictor", [
-    LogisticRegression(),
-    make_pipeline(LogisticRegression()),
-])
+@pytest.mark.parametrize(
+    "predictor",
+    [
+        LogisticRegression(),
+        make_pipeline(LogisticRegression()),
+    ],
+)
 @pytest.mark.parametrize(
     "conformity_score", [LACConformityScore(), APSConformityScore()]
 )
@@ -518,8 +583,7 @@ def test_fit_parameters_passing() -> None:
     """
     gb = GradientBoostingClassifier(random_state=random_state)
 
-    mapie = SplitCPClassifier(predictor=gb, alpha=0.1,
-                              random_state=random_state)
+    mapie = SplitCPClassifier(predictor=gb, alpha=0.1, random_state=random_state)
 
     def early_stopping_monitor(i, est, locals):
         """Returns True on the 3rd iteration."""
@@ -533,29 +597,34 @@ def test_fit_parameters_passing() -> None:
     assert cast(ClassifierMixin, mapie.predictor).estimators_.shape[0] == 3
 
 
-@pytest.mark.parametrize("custom_method", [
-    lambda local_arg: local_arg,
-    lambda self_arg: self_arg,
-    lambda kwarg_arg: kwarg_arg,
-    lambda local_arg, *args, **kwargs: local_arg,
-    lambda self_arg, *args, **kwargs: self_arg,
-    lambda kwarg_arg, *args, **kwargs: kwarg_arg,
-])
+@pytest.mark.parametrize(
+    "custom_method",
+    [
+        lambda local_arg: local_arg,
+        lambda self_arg: self_arg,
+        lambda kwarg_arg: kwarg_arg,
+        lambda local_arg, *args, **kwargs: local_arg,
+        lambda self_arg, *args, **kwargs: self_arg,
+        lambda kwarg_arg, *args, **kwargs: kwarg_arg,
+    ],
+)
 def test_get_method_arguments(custom_method: Callable) -> None:
     mapie = SplitCPClassifier(alpha=0.1)
     mapie.self_arg = 1
     local_vars = {"local_arg": 1}
     kwarg_args = {"kwarg_arg": 1}
 
-    arguments = mapie._get_method_arguments(custom_method, local_vars,
-                                            kwarg_args)
+    arguments = mapie._get_method_arguments(custom_method, local_vars, kwarg_args)
     custom_method(**arguments)
 
 
-@pytest.mark.parametrize("conformity_scores", [
-    np.random.rand(200, 1),
-    np.random.rand(200),
-])
+@pytest.mark.parametrize(
+    "conformity_scores",
+    [
+        np.random.rand(200, 1),
+        np.random.rand(200),
+    ],
+)
 def test_check_conformity_scores(conformity_scores: NDArray) -> None:
     mapie = SplitCPClassifier()
     assert mapie._check_conformity_scores(conformity_scores).shape == (200,)
@@ -571,6 +640,7 @@ def test_invalid_classifier():
     """
     Fitted classifier must contain the ``classes_`` attribute
     """
+
     class Custom(ClassifierMixin):
         def __init__(self) -> None:
             self.fitted_ = True
@@ -591,6 +661,7 @@ def test_invalid_classifier():
     invalid_cls.predict_proba()
 
     mapie = SplitCPClassifier(invalid_cls, cv="prefit", alpha=0.1)
-    with pytest.raises(AttributeError,
-                       match="Fitted classifier must contain 'classes_' attr"):
+    with pytest.raises(
+        AttributeError, match="Fitted classifier must contain 'classes_' attr"
+    ):
         mapie.fit(X, y)

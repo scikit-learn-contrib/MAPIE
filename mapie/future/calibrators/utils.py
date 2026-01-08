@@ -35,5 +35,7 @@ def check_calibrator(
     elif isinstance(calibrator, BaseCalibrator):
         return calibrator
     else:
-        raise ValueError("Invalid `calibrator` argument. It must be `None` "
-                         "or a `BaseCalibrator` instance.")
+        raise ValueError(
+            "Invalid `calibrator` argument. It must be `None` "
+            "or a `BaseCalibrator` instance."
+        )

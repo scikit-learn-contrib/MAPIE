@@ -107,7 +107,7 @@ UNSAFE_APPROXIMATION = True
 
 def x_sinx(x):
     """One-dimensional x*sin(x) function."""
-    return x*np.sin(x)
+    return x * np.sin(x)
 
 
 def get_1d_data_with_heteroscedastic_noise(
@@ -120,30 +120,38 @@ def get_1d_data_with_heteroscedastic_noise(
     X = np.linspace(min_x, max_x, n_samples)
     np.random.shuffle(X)
     y = (
-        funct(X) +
-        (np.random.normal(0, noise, len(X)) * ((X)/max_x)**power*max_x) +
-        (np.random.uniform(-noise*3, noise*3, len(X))) * (X < 0)
+        funct(X)
+        + (np.random.normal(0, noise, len(X)) * ((X) / max_x) ** power * max_x)
+        + (np.random.uniform(-noise * 3, noise * 3, len(X))) * (X < 0)
     )
-    true_pi = np.hstack([x_sinx(X).reshape(-1, 1)]*2)
-    true_pi[X < 0, 0] += noise*3*(1-ALPHA)
-    true_pi[X < 0, 1] -= noise*3*(1-ALPHA)
-    true_pi[X >= 0, 0] += norm.ppf(1 - ALPHA/2) * noise * (
-        ((X[X >= 0])/max_x)**power*max_x)
-    true_pi[X >= 0, 1] -= norm.ppf(1 - ALPHA/2) * noise * (
-        ((X[X >= 0])/max_x)**power*max_x)
+    true_pi = np.hstack([x_sinx(X).reshape(-1, 1)] * 2)
+    true_pi[X < 0, 0] += noise * 3 * (1 - ALPHA)
+    true_pi[X < 0, 1] -= noise * 3 * (1 - ALPHA)
+    true_pi[X >= 0, 0] += (
+        norm.ppf(1 - ALPHA / 2) * noise * (((X[X >= 0]) / max_x) ** power * max_x)
+    )
+    true_pi[X >= 0, 1] -= (
+        norm.ppf(1 - ALPHA / 2) * noise * (((X[X >= 0]) / max_x) ** power * max_x)
+    )
     return X.reshape(-1, 1), y, true_pi
 
 
 def generate_data(n_train=10000, n_test=5000, noise=0.8, power=2):
     X, y, true_pi = get_1d_data_with_heteroscedastic_noise(
-        x_sinx, -1, 5, n_train + n_test, noise, power)
+        x_sinx, -1, 5, n_train + n_test, noise, power
+    )
     indexes = list(range(len(X)))
     train_indexes = np.random.choice(indexes, n_train)
     indexes = list(set(indexes) - set(train_indexes))
     test_indexes = np.random.choice(indexes, n_test)
-    return (X[train_indexes, :], y[train_indexes],
-            X[test_indexes, :], y[test_indexes],
-            true_pi[train_indexes, :], true_pi[test_indexes, :])
+    return (
+        X[train_indexes, :],
+        y[train_indexes],
+        X[test_indexes, :],
+        y[test_indexes],
+        true_pi[train_indexes, :],
+        true_pi[test_indexes, :],
+    )
 
 
 X_train, y_train, X_test, y_test, train_pi, test_pi = generate_data()
@@ -152,13 +160,13 @@ X_train, y_train, X_test, y_test, train_pi, test_pi = generate_data()
 ##############################################################################
 # Let's visualize the data and its distribution
 
-plt.scatter(X_train, y_train, color="C0", alpha=0.5, s=3,
-            label="Training data")
+plt.scatter(X_train, y_train, color="C0", alpha=0.5, s=3, label="Training data")
 sort_order = np.argsort(X_train[:, 0])
 x_sorted = X_train[sort_order, :]
-plt.plot(x_sorted, train_pi[sort_order, 0], "k--",
-         label=f"True interval (alpha={ALPHA})")
-plt.plot(x_sorted, train_pi[sort_order, 1], "k--", linestyle='--')
+plt.plot(
+    x_sorted, train_pi[sort_order, 0], "k--", label=f"True interval (alpha={ALPHA})"
+)
+plt.plot(x_sorted, train_pi[sort_order, 1], "k--", linestyle="--")
 plt.plot(x_sorted, x_sinx(x_sorted), "k-", label="baseline")
 plt.xlabel("x")
 plt.ylabel("y")
@@ -172,22 +180,37 @@ plt.show()
 # --------------------------------------------------------------------------
 
 polynomial_degree = 4
-quantile_estimator = Pipeline([
-    ("poly", PolynomialFeatures(degree=polynomial_degree)),
-    ("linear", QuantileRegressor(solver="highs", alpha=0))
-])
-estimator = Pipeline([
-    ("poly", PolynomialFeatures(degree=polynomial_degree)),
-    ("linear", LinearRegression())
-])
+quantile_estimator = Pipeline(
+    [
+        ("poly", PolynomialFeatures(degree=polynomial_degree)),
+        ("linear", QuantileRegressor(solver="highs", alpha=0)),
+    ]
+)
+estimator = Pipeline(
+    [
+        ("poly", PolynomialFeatures(degree=polynomial_degree)),
+        ("linear", LinearRegression()),
+    ]
+)
 
 
 ##############################################################################
 # 3. Plotting and adaptativity comparison functions
 # --------------------------------------------------------------------------
 
-def plot_subplot(ax, X, y, mapie, y_pred, upper_pi, lower_pi, color_rgb,
-                 show_transform=False, ax_transform=None):
+
+def plot_subplot(
+    ax,
+    X,
+    y,
+    mapie,
+    y_pred,
+    upper_pi,
+    lower_pi,
+    color_rgb,
+    show_transform=False,
+    ax_transform=None,
+):
     """
     Plot the prediction interval and calibrator's features of a mapie instance
     """
@@ -201,43 +224,58 @@ def plot_subplot(ax, X, y, mapie, y_pred, upper_pi, lower_pi, color_rgb,
     lower_pi_sorted = lower_pi[sort_order]
     sample = np.random.choice(list(range(len(X))), min(4000, len(X)))
     # Plot test data
-    ax.scatter(x_test_sorted[sample, 0], y_test_sorted[sample], s=1, alpha=0.3,
-               color='darkblue', label="Test Data")
+    ax.scatter(
+        x_test_sorted[sample, 0],
+        y_test_sorted[sample],
+        s=1,
+        alpha=0.3,
+        color="darkblue",
+        label="Test Data",
+    )
     # Plot prediction
-    ax.plot(x_test_sorted[:, 0], y_pred_sorted, lw=lw,
-            color='black', label="Prediction")
+    ax.plot(
+        x_test_sorted[:, 0], y_pred_sorted, lw=lw, color="black", label="Prediction"
+    )
     # Plot prediction interval
-    ax.fill_between(x_test_sorted[:, 0], upper_pi_sorted, lower_pi_sorted,
-                    color=color, alpha=0.3, label="Prediction interval")
+    ax.fill_between(
+        x_test_sorted[:, 0],
+        upper_pi_sorted,
+        lower_pi_sorted,
+        color=color,
+        alpha=0.3,
+        label="Prediction interval",
+    )
     # Plot upper and lower prediction intervals
     ax.plot(x_test_sorted[:, 0], upper_pi_sorted, lw=lw, color=color)
     ax.plot(x_test_sorted[:, 0], lower_pi_sorted, lw=lw, color=color)
     # Plot true prediction interval
-    ax.plot(x_test_sorted[:, 0], test_pi[sort_order, 0], "--k",
-            lw=lw*1.5, label='True Interval')
-    ax.plot(x_test_sorted[:, 0], test_pi[sort_order, 1], "--k", lw=lw*1.5)
+    ax.plot(
+        x_test_sorted[:, 0],
+        test_pi[sort_order, 0],
+        "--k",
+        lw=lw * 1.5,
+        label="True Interval",
+    )
+    ax.plot(x_test_sorted[:, 0], test_pi[sort_order, 1], "--k", lw=lw * 1.5)
 
     if (
-        show_transform and isinstance(mapie, SplitCPRegressor)
+        show_transform
+        and isinstance(mapie, SplitCPRegressor)
         and isinstance(mapie.calibrator_, CCPCalibrator)
     ):
-        transform = mapie.calibrator_.transform(x_test_sorted)\
-            * mapie.calibrator_.beta_up_[0]
+        transform = (
+            mapie.calibrator_.transform(x_test_sorted) * mapie.calibrator_.beta_up_[0]
+        )
         for i in range(transform.shape[1]):
-            ax_transform.plot(
-                x_test_sorted[:, 0],
-                transform[:, i],
-                lw=lw, color=color
-            )
+            ax_transform.plot(x_test_sorted[:, 0], transform[:, i], lw=lw, color=color)
 
 
 def has_ccp_calibrator(mapie):
     """
     Whether or not, the ``mapie`` instance has a ``CCPCalibrator`` calibrator
     """
-    if (
-        not isinstance(mapie, SplitCPRegressor)
-        or not isinstance(mapie.calibrator_, CCPCalibrator)
+    if not isinstance(mapie, SplitCPRegressor) or not isinstance(
+        mapie.calibrator_, CCPCalibrator
     ):
         return False
     for calibrator in list(mapie.calibrator_.functions_) + [mapie.calibrator_]:
@@ -251,22 +289,22 @@ def plot_figure(mapies, y_preds, y_pis, titles, show_components=False):
     Plot the prediction interval of mapie instances.
     Also plot the features of the calibrator, if ``show_transform=True``
     """
-    cp = plt.get_cmap('tab10').colors
+    cp = plt.get_cmap("tab10").colors
     ncols = min(3, len(titles))
     nrows = int(np.ceil(len(titles) / ncols))
     ax_need_transform = np.zeros((nrows, ncols))
     if show_components:
         for i, mapie in enumerate(mapies):
-            ax_need_transform[i//ncols, i % ncols] = has_ccp_calibrator(mapie)
+            ax_need_transform[i // ncols, i % ncols] = has_ccp_calibrator(mapie)
             row_need_transform = np.max(ax_need_transform, axis=1)
-        height_ratio = np.array([
-            item for x in row_need_transform
-            for item in ([3] if x == 0 else [3, 1])
-        ])
+        height_ratio = np.array(
+            [item for x in row_need_transform for item in ([3] if x == 0 else [3, 1])]
+        )
         fig, axes = plt.subplots(
-            nrows=nrows + int(sum(row_need_transform)), ncols=ncols,
-            figsize=(ncols*3.6, nrows*3.6 + int(sum(row_need_transform))*1.8),
-            height_ratios=height_ratio
+            nrows=nrows + int(sum(row_need_transform)),
+            ncols=ncols,
+            figsize=(ncols * 3.6, nrows * 3.6 + int(sum(row_need_transform)) * 1.8),
+            height_ratios=height_ratio,
         )
 
         transform_axes = np.full((nrows, ncols), None)
@@ -274,8 +312,9 @@ def plot_figure(mapies, y_preds, y_pis, titles, show_components=False):
         transform_axes = transform_axes.flatten()
         main_axes = axes[height_ratio == 3, :].flatten()
     else:
-        fig, axes = plt.subplots(nrows=nrows, ncols=ncols,
-                                 figsize=(ncols*4, nrows*4))
+        fig, axes = plt.subplots(
+            nrows=nrows, ncols=ncols, figsize=(ncols * 4, nrows * 4)
+        )
         main_axes = axes.flatten()
         transform_axes = np.full(main_axes.shape, None)
 
@@ -291,20 +330,27 @@ def plot_figure(mapies, y_preds, y_pis, titles, show_components=False):
         upper_bound = y_pi[:, 1, 0]
 
         plot_subplot(
-            m_ax, X_test, y_test, mapie, y_pred, upper_bound, lower_bound,
-            cp[i], show_transform=ax_need_transform.flatten()[i],
-            ax_transform=t_ax
+            m_ax,
+            X_test,
+            y_test,
+            mapie,
+            y_pred,
+            upper_bound,
+            lower_bound,
+            cp[i],
+            show_transform=ax_need_transform.flatten()[i],
+            ax_transform=t_ax,
         )
         m_ax.set_title(title)
         if i % 3 == 0:
-            m_ax.set_ylabel('Y')
+            m_ax.set_ylabel("Y")
         if t_ax is not None:
             t_ax.set_title("Components of the PI")
             if i >= len(titles) - ncols:
-                t_ax.set_xlabel('X')
+                t_ax.set_xlabel("X")
             if i % 3 == 0:
-                t_ax.set_ylabel('component value')
-        m_ax.set_xlabel('X')
+                t_ax.set_ylabel("component value")
+        m_ax.set_xlabel("X")
         m_ax.legend()
 
     fig.tight_layout()
@@ -315,17 +361,19 @@ def compute_conditional_coverage(X_test, y_test, y_pis, bins_width=0.25):
     """
     Compute the conditional coverage on ``X_test``, using discret bins
     """
-    bin_edges = np.arange(np.min(X_test), np.max(X_test) + bins_width,
-                          bins_width)
+    bin_edges = np.arange(np.min(X_test), np.max(X_test) + bins_width, bins_width)
     coverage = np.zeros(len(bin_edges) - 1)
 
     for i in range(len(bin_edges) - 1):
-        in_bin = np.logical_and(X_test[:, 0] >= bin_edges[i],
-                                X_test[:, 0] < bin_edges[i + 1])
-        coverage[i] = np.mean(np.logical_and(
-            y_test[in_bin] >= y_pis[in_bin, 0, 0],
-            y_test[in_bin] <= y_pis[in_bin, 1, 0]
-        ))
+        in_bin = np.logical_and(
+            X_test[:, 0] >= bin_edges[i], X_test[:, 0] < bin_edges[i + 1]
+        )
+        coverage[i] = np.mean(
+            np.logical_and(
+                y_test[in_bin] >= y_pis[in_bin, 0, 0],
+                y_test[in_bin] <= y_pis[in_bin, 1, 0],
+            )
+        )
 
     bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
     return bin_centers, coverage
@@ -336,13 +384,12 @@ def plot_evaluation(titles, y_pis, X_test, y_test):
     Plot the conditional coverages
     """
     sort_order = np.argsort(X_test[:, 0])
-    cp = plt.get_cmap('tab10').colors
+    cp = plt.get_cmap("tab10").colors
 
     num_plots = len(titles)
     num_rows = (num_plots + 2) // 3
 
-    fig, axs = plt.subplots(nrows=num_rows, ncols=2,
-                            figsize=(10, 3.7*num_rows))
+    fig, axs = plt.subplots(nrows=num_rows, ncols=2, figsize=(10, 3.7 * num_rows))
     if len(axs.shape) == 1:
         axs = axs.reshape(1, -1)
     axs = axs.flatten()  # Flatten to make indexing easier
@@ -350,32 +397,33 @@ def plot_evaluation(titles, y_pis, X_test, y_test):
     cov_lim = [1, 0]
     width_lim = [np.inf, 0]
     for i in range(num_rows):
-        for j, pi in enumerate(y_pis[3*i: 3*(i+1)]):
-            c = mcolors.rgb2hex(cp[i*3+j])
+        for j, pi in enumerate(y_pis[3 * i : 3 * (i + 1)]):
+            c = mcolors.rgb2hex(cp[i * 3 + j])
             # Conditionnal coverage
-            bin_centers, coverage = compute_conditional_coverage(
-                X_test, y_test, pi
-            )
+            bin_centers, coverage = compute_conditional_coverage(X_test, y_test, pi)
             axs[i * 2].plot(bin_centers, coverage, lw=2, color=c)
             axs[i * 2].axhline(
-                y=np.mean(coverage), color=c, linestyle="--",
-                label=f"Coverage={round(np.mean(coverage)*100, 1)}%"
+                y=np.mean(coverage),
+                color=c,
+                linestyle="--",
+                label=f"Coverage={round(np.mean(coverage) * 100, 1)}%",
             )
             axs[i * 2].axhline(
-                y=1-ALPHA, color='black', linestyle="--",
+                y=1 - ALPHA,
+                color="black",
+                linestyle="--",
                 label=(
-                    f"alpha={ALPHA}" if j == len(y_pis[3*i: 3*(i+1)]) - 1
+                    f"alpha={ALPHA}"
+                    if j == len(y_pis[3 * i : 3 * (i + 1)]) - 1
                     else None
-                )
+                ),
             )
             cov_lim[0] = min(cov_lim[0], min(coverage))
             cov_lim[1] = max(cov_lim[1], max(coverage))
             # Interval width
             width = pi[sort_order, 1, 0] - pi[sort_order, 0, 0]
             axs[i * 2 + 1].plot(
-                X_test[sort_order, 0],
-                width,
-                lw=2, color=c, label=titles[i*3+j]
+                X_test[sort_order, 0], width, lw=2, color=c, label=titles[i * 3 + j]
             )
 
             width_lim[0] = min(width_lim[0], min(width))
@@ -384,7 +432,10 @@ def plot_evaluation(titles, y_pis, X_test, y_test):
         axs[i * 2 + 1].plot(
             X_test[sort_order, 0],
             perfect_width,
-            lw=2, color='black', linestyle="--", label="Perfect Width"
+            lw=2,
+            color="black",
+            linestyle="--",
+            label="Perfect Width",
         )
         width_lim[0] = min(width_lim[0], min(perfect_width))
         width_lim[1] = max(width_lim[1], max(perfect_width))
@@ -403,8 +454,8 @@ def plot_evaluation(titles, y_pis, X_test, y_test):
         fig.delaxes(axs[j])
 
     for ax_cov, ax_width in zip(axs[::2], axs[1::2]):
-        ax_cov.set_ylim([cov_lim[0]*0.95, cov_lim[1]*1.05])
-        ax_width.set_ylim([width_lim[0]*0.95, width_lim[1]*1.05])
+        ax_cov.set_ylim([cov_lim[0] * 0.95, cov_lim[1] * 1.05])
+        ax_width.set_ylim([width_lim[0] * 0.95, width_lim[1] * 1.05])
 
     plt.tight_layout()
     plt.show()
@@ -436,8 +487,7 @@ y_pred_cqr, y_pi_cqr = mapie_cqr.predict(X_test)
 
 # ================== CCP  ==================
 # `SplitCPRegressor` defaults to `calibrator=GaussianCCP()``
-mapie_ccp = SplitCPRegressor(estimator, calibrator=GaussianCCP(),
-                             alpha=ALPHA, cv=cv)
+mapie_ccp = SplitCPRegressor(estimator, calibrator=GaussianCCP(), alpha=ALPHA, cv=cv)
 mapie_ccp.fit(X_train, y_train)
 y_pred_ccp, y_pi_ccp = mapie_ccp.predict(
     X_test, unsafe_approximation=UNSAFE_APPROXIMATION
@@ -543,40 +593,51 @@ calibrator_gauss2 = GaussianCCP(30, 0.05)
 calibrator_gauss3 = GaussianCCP(30, 0.25, random_sigma=True)
 
 # # ================== CCP 1  ==================
-mapie_ccp_1 = SplitCPRegressor(estimator, calibrator=calibrator_gauss1,
-                               cv=cv, alpha=ALPHA)
+mapie_ccp_1 = SplitCPRegressor(
+    estimator, calibrator=calibrator_gauss1, cv=cv, alpha=ALPHA
+)
 mapie_ccp_1.fit(X_train, y_train)
 y_pred_ccp_1, y_pi_ccp_1 = mapie_ccp_1.predict(
     X_test, unsafe_approximation=UNSAFE_APPROXIMATION
 )
 
 # # ================== CCP 2 ==================
-mapie_ccp_2 = SplitCPRegressor(estimator, calibrator=calibrator_gauss2,
-                               cv=cv, alpha=ALPHA)
+mapie_ccp_2 = SplitCPRegressor(
+    estimator, calibrator=calibrator_gauss2, cv=cv, alpha=ALPHA
+)
 mapie_ccp_2.fit(X_train, y_train)
 y_pred_ccp_2, y_pi_ccp_2 = mapie_ccp_2.predict(
     X_test, unsafe_approximation=UNSAFE_APPROXIMATION
 )
 
 # # ================== CCP 3  ==================
-mapie_ccp_3 = SplitCPRegressor(estimator, calibrator=calibrator_gauss3,
-                               cv=cv, alpha=ALPHA)
+mapie_ccp_3 = SplitCPRegressor(
+    estimator, calibrator=calibrator_gauss3, cv=cv, alpha=ALPHA
+)
 mapie_ccp_3.fit(X_train, y_train)
 y_pred_ccp_3, y_pi_ccp_3 = mapie_ccp_3.predict(
     X_test, unsafe_approximation=UNSAFE_APPROXIMATION
 )
 
 
-mapies = [mapie_split, mapie_cv, mapie_cqr,
-          mapie_ccp_1, mapie_ccp_2, mapie_ccp_3]
-y_preds = [y_pred_split, y_pred_cv, y_pred_cqr,
-           y_pred_ccp_1, y_pred_ccp_2, y_pred_ccp_3]
-y_pis = [y_pi_split, y_pi_cv, y_pi_cqr,
-         y_pi_ccp_1, y_pi_ccp_2, y_pi_ccp_3]
-titles = ["Basic Split", "CV+", "CQR",
-          "CCP 1: 6 points, s=1 (under-fit)",
-          "CCP 2: 30 points, s=0.05 (over-fit)",
-          "CCP 3: 30 points, s=0.25 (good calibrator)"]
+mapies = [mapie_split, mapie_cv, mapie_cqr, mapie_ccp_1, mapie_ccp_2, mapie_ccp_3]
+y_preds = [
+    y_pred_split,
+    y_pred_cv,
+    y_pred_cqr,
+    y_pred_ccp_1,
+    y_pred_ccp_2,
+    y_pred_ccp_3,
+]
+y_pis = [y_pi_split, y_pi_cv, y_pi_cqr, y_pi_ccp_1, y_pi_ccp_2, y_pi_ccp_3]
+titles = [
+    "Basic Split",
+    "CV+",
+    "CQR",
+    "CCP 1: 6 points, s=1 (under-fit)",
+    "CCP 2: 30 points, s=0.05 (over-fit)",
+    "CCP 3: 30 points, s=0.25 (good calibrator)",
+]
 
 plot_figure(mapies, y_preds, y_pis, titles, show_components=True)
 plot_evaluation(titles, y_pis, X_test, y_test)
@@ -603,57 +664,54 @@ plot_evaluation(titles, y_pis, X_test, y_test)
 # (or :class:`~mapie.future.calibrators.ccp.PolynomialCCP`,
 # as it seems adapted in this example)
 
-calibrator1 = CustomCCP(
-    [lambda X: X < 0, (lambda X: X >= 0)*PolynomialCCP(3)]
-)
+calibrator1 = CustomCCP([lambda X: X < 0, (lambda X: X >= 0) * PolynomialCCP(3)])
 calibrator2 = CustomCCP(
-    [
-        (lambda X: X < 0)*PolynomialCCP(3),
-        (lambda X: X >= 0)*PolynomialCCP(3)
-    ]
+    [(lambda X: X < 0) * PolynomialCCP(3), (lambda X: X >= 0) * PolynomialCCP(3)]
 )
 calibrator3 = CustomCCP(
-    [
-        (lambda X: X < 0)*GaussianCCP(5),
-        (lambda X: X >= 0)*GaussianCCP(30)
-    ],
+    [(lambda X: X < 0) * GaussianCCP(5), (lambda X: X >= 0) * GaussianCCP(30)],
     normalized=True,
 )
 
 # ================== CCP 1  ==================
-mapie_ccp_1 = SplitCPRegressor(estimator, calibrator=calibrator1,
-                               cv=cv,  alpha=ALPHA)
+mapie_ccp_1 = SplitCPRegressor(estimator, calibrator=calibrator1, cv=cv, alpha=ALPHA)
 mapie_ccp_1.fit(X_train, y_train)
 y_pred_ccp_1, y_pi_ccp_1 = mapie_ccp_1.predict(
     X_test, unsafe_approximation=UNSAFE_APPROXIMATION
 )
 
 # ================== CCP 2  ==================
-mapie_ccp_2 = SplitCPRegressor(estimator, calibrator=calibrator2,
-                               cv=cv, alpha=ALPHA)
+mapie_ccp_2 = SplitCPRegressor(estimator, calibrator=calibrator2, cv=cv, alpha=ALPHA)
 mapie_ccp_2.fit(X_train, y_train)
 y_pred_ccp_2, y_pi_ccp_2 = mapie_ccp_2.predict(
     X_test, unsafe_approximation=UNSAFE_APPROXIMATION
 )
 
 # ================== CCP 3  ==================
-mapie_ccp_3 = SplitCPRegressor(estimator, calibrator=calibrator3,
-                               cv=cv, alpha=ALPHA)
+mapie_ccp_3 = SplitCPRegressor(estimator, calibrator=calibrator3, cv=cv, alpha=ALPHA)
 mapie_ccp_3.fit(X_train, y_train)
 y_pred_ccp_3, y_pi_ccp_3 = mapie_ccp_3.predict(
     X_test, unsafe_approximation=UNSAFE_APPROXIMATION
 )
 
-mapies = [mapie_split, mapie_cv, mapie_cqr,
-          mapie_ccp_1, mapie_ccp_2, mapie_ccp_3]
-y_preds = [y_pred_split, y_pred_cv, y_pred_cqr,
-           y_pred_ccp_1, y_pred_ccp_2, y_pred_ccp_3]
-y_pis = [y_pi_split, y_pi_cv, y_pi_cqr,
-         y_pi_ccp_1, y_pi_ccp_2, y_pi_ccp_3]
-titles = ["Basic Split", "CV+", "CQR",
-          "CCP 1: const (X<0) / poly (X>0)",
-          "CCP 2: poly (X<0) / poly (X>0)",
-          "CCP: gauss (X<0) / gauss (X>0)"]
+mapies = [mapie_split, mapie_cv, mapie_cqr, mapie_ccp_1, mapie_ccp_2, mapie_ccp_3]
+y_preds = [
+    y_pred_split,
+    y_pred_cv,
+    y_pred_cqr,
+    y_pred_ccp_1,
+    y_pred_ccp_2,
+    y_pred_ccp_3,
+]
+y_pis = [y_pi_split, y_pi_cv, y_pi_cqr, y_pi_ccp_1, y_pi_ccp_2, y_pi_ccp_3]
+titles = [
+    "Basic Split",
+    "CV+",
+    "CQR",
+    "CCP 1: const (X<0) / poly (X>0)",
+    "CCP 2: poly (X<0) / poly (X>0)",
+    "CCP: gauss (X<0) / gauss (X>0)",
+]
 
 
 plot_figure(mapies, y_preds, y_pis, titles, show_components=True)

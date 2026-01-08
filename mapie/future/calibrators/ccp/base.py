@@ -13,9 +13,12 @@ from sklearn.utils.validation import _num_samples, check_is_fitted
 from mapie._typing import ArrayLike, NDArray
 from mapie.future.calibrators.base import BaseCalibrator
 from mapie.future.calibrators.ccp.utils import (
-    calibrator_optim_objective, check_multiplier,
-    check_custom_calibrator_functions, concatenate_functions,
-    check_required_arguments, dynamic_arguments_call
+    calibrator_optim_objective,
+    check_multiplier,
+    check_custom_calibrator_functions,
+    concatenate_functions,
+    check_required_arguments,
+    dynamic_arguments_call,
 )
 
 
@@ -134,6 +137,7 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
     Isaac Gibbs and John J. Cherian and Emmanuel J. Candès.
     "Conformal Prediction With Conditional Guarantees", 2023
     """
+
     transform_attributes: List[str] = ["functions_"]
     fit_attributes: List[str] = ["beta_up_", "beta_low_"]
 
@@ -340,38 +344,47 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
 
         self.optim_kwargs = optim_kwargs
 
-        optimal_beta_up = cast(OptimizeResult, minimize(
-            calibrator_optim_objective, self.init_value_,
-            args=(
-                cs_features[not_nan_index, :],
-                conformity_scores_calib[not_nan_index],
-                q,
-                self.reg_param,
-                ),
-            **optim_kwargs,
-        ))
-
-        if not self.sym:
-            optimal_beta_low = cast(OptimizeResult, minimize(
-                calibrator_optim_objective, self.init_value_,
+        optimal_beta_up = cast(
+            OptimizeResult,
+            minimize(
+                calibrator_optim_objective,
+                self.init_value_,
                 args=(
                     cs_features[not_nan_index, :],
-                    -conformity_scores_calib[not_nan_index],
+                    conformity_scores_calib[not_nan_index],
                     q,
                     self.reg_param,
                 ),
                 **optim_kwargs,
-            ))
+            ),
+        )
+
+        if not self.sym:
+            optimal_beta_low = cast(
+                OptimizeResult,
+                minimize(
+                    calibrator_optim_objective,
+                    self.init_value_,
+                    args=(
+                        cs_features[not_nan_index, :],
+                        -conformity_scores_calib[not_nan_index],
+                        q,
+                        self.reg_param,
+                    ),
+                    **optim_kwargs,
+                ),
+            )
         else:
             optimal_beta_low = optimal_beta_up
 
         self._check_optimization_success(optimal_beta_up, optimal_beta_low)
 
-        self.beta_up_ = cast(Tuple[NDArray, bool],
-                             (optimal_beta_up.x, optimal_beta_up.success))
-        self.beta_low_ = cast(Tuple[NDArray, bool],
-                              (optimal_beta_low.x,
-                               optimal_beta_low.success))
+        self.beta_up_ = cast(
+            Tuple[NDArray, bool], (optimal_beta_up.x, optimal_beta_up.success)
+        )
+        self.beta_low_ = cast(
+            Tuple[NDArray, bool], (optimal_beta_low.x, optimal_beta_low.success)
+        )
 
         return self
 
@@ -380,12 +393,14 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
         Check if the ``cs_features`` array has rows full of zeros.
         """
         if np.any(np.all(cs_features == 0, axis=1)):
-            warnings.warn("WARNING: At least one row of the transformation "
-                          "calibrator.transform(X, y_pred, z) is full of "
-                          "zeros. It will result in a prediction interval of "
-                          "zero width. Consider changing the `CCPCalibrator` "
-                          "definintion.\nFix: Use `bias=True` "
-                          "in the `CCPCalibrator` definition.")
+            warnings.warn(
+                "WARNING: At least one row of the transformation "
+                "calibrator.transform(X, y_pred, z) is full of "
+                "zeros. It will result in a prediction interval of "
+                "zero width. Consider changing the `CCPCalibrator` "
+                "definintion.\nFix: Use `bias=True` "
+                "in the `CCPCalibrator` definition."
+            )
 
     def transform(
         self,
@@ -420,11 +435,9 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
         cs_features = concatenate_functions(self.functions_, params_mapping)
 
         if self.normalized:
-            norm = cast(NDArray,
-                        np.linalg.norm(cs_features, axis=1)).reshape(-1, 1)
+            norm = cast(NDArray, np.linalg.norm(cs_features, axis=1)).reshape(-1, 1)
             # the rows full of zeros are replace by rows of ones
-            cs_features[(abs(norm) == 0)[:, 0], :] = np.ones(
-                cs_features.shape[1])
+            cs_features[(abs(norm) == 0)[:, 0], :] = np.ones(cs_features.shape[1])
             norm[abs(norm) == 0] = 1
             cs_features /= norm
 
@@ -554,50 +567,50 @@ class CCPCalibrator(BaseCalibrator, metaclass=ABCMeta):
             y_pred_low = -cs_features.dot(self.beta_low_[0][:, np.newaxis])
             y_pred_up = cs_features.dot(self.beta_up_[0][:, np.newaxis])
         else:
-            cs_bound_up, cs_bound_low = self._get_cs_bound(
-                self.conformity_scores_calib
-            )
+            cs_bound_up, cs_bound_low = self._get_cs_bound(self.conformity_scores_calib)
 
             y_pred_up = np.zeros((_num_samples(X), 1))
             y_pred_low = np.zeros((_num_samples(X), 1))
             for i in range(len(y_pred_up)):
-                corrected_beta_up = cast(OptimizeResult, minimize(
-                    calibrator_optim_objective, self.beta_up_[0],
-                    args=(
-                        np.vstack(
-                            [self.calib_cs_features, cs_features[[i], :]]
-                        ),
-                        np.hstack(
-                            [self.conformity_scores_calib, [cs_bound_up]]
-                        ),
-                        self.q,
-                        self.reg_param,
-                    ),
-                    **self.optim_kwargs,
-                ))
-
-                if not self.sym:
-                    corrected_beta_low = cast(OptimizeResult, minimize(
-                        calibrator_optim_objective, self.beta_low_[0],
+                corrected_beta_up = cast(
+                    OptimizeResult,
+                    minimize(
+                        calibrator_optim_objective,
+                        self.beta_up_[0],
                         args=(
-                            np.vstack(
-                                [self.calib_cs_features, cs_features[[i], :]]
-                            ),
-                            -np.hstack(
-                                [self.conformity_scores_calib, [cs_bound_low]]
-                            ),
+                            np.vstack([self.calib_cs_features, cs_features[[i], :]]),
+                            np.hstack([self.conformity_scores_calib, [cs_bound_up]]),
                             self.q,
                             self.reg_param,
                         ),
                         **self.optim_kwargs,
-                    ))
+                    ),
+                )
+
+                if not self.sym:
+                    corrected_beta_low = cast(
+                        OptimizeResult,
+                        minimize(
+                            calibrator_optim_objective,
+                            self.beta_low_[0],
+                            args=(
+                                np.vstack(
+                                    [self.calib_cs_features, cs_features[[i], :]]
+                                ),
+                                -np.hstack(
+                                    [self.conformity_scores_calib, [cs_bound_low]]
+                                ),
+                                self.q,
+                                self.reg_param,
+                            ),
+                            **self.optim_kwargs,
+                        ),
+                    )
 
                 else:
                     corrected_beta_low = corrected_beta_up
 
-                self._check_optimization_success(
-                    corrected_beta_up, corrected_beta_low
-                )
+                self._check_optimization_success(corrected_beta_up, corrected_beta_low)
 
                 y_pred_up[[i]] = cs_features[[i], :].dot(
                     corrected_beta_up.x[:, np.newaxis]

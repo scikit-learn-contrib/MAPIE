@@ -7,13 +7,13 @@ from sklearn.base import RegressorMixin
 from sklearn.model_selection import PredefinedSplit, ShuffleSplit
 
 from mapie._typing import ArrayLike, NDArray
-from mapie.future.calibrators.base import BaseCalibrator
-from mapie.future.calibrators.utils import check_calibrator
 from mapie.conformity_scores import BaseRegressionScore
 from mapie.conformity_scores.interface import BaseConformityScore
 from mapie.conformity_scores.utils import check_regression_conformity_score
+from mapie.future.calibrators.base import BaseCalibrator
+from mapie.future.calibrators.utils import check_calibrator
 from mapie.future.split.base import SplitCP
-from mapie.utils import check_estimator_regression, check_lower_upper_bounds
+from mapie.utils import _check_lower_upper_bounds, check_estimator_regression
 
 
 class SplitCPRegressor(SplitCP):
@@ -109,6 +109,7 @@ class SplitCPRegressor(SplitCP):
     >>> mapie_reg = mapie_reg.fit(X_train, y_train)
     >>> y_pred, y_pis = mapie_reg.predict(X_train)
     """
+
     def __init__(
         self,
         predictor: Optional[RegressorMixin] = None,
@@ -134,9 +135,7 @@ class SplitCPRegressor(SplitCP):
         predictor = check_estimator_regression(self.predictor, self.cv)
         return predictor
 
-    def _check_calibrate_parameters(self) -> Tuple[
-        BaseRegressionScore, BaseCalibrator
-    ]:
+    def _check_calibrate_parameters(self) -> Tuple[BaseRegressionScore, BaseCalibrator]:
         """
         Check and replace default ``conformity_score``, ``alpha`` and
         ``calibrator`` arguments.
@@ -198,12 +197,12 @@ class SplitCPRegressor(SplitCP):
         """
 
         return conformity_score.get_conformity_scores(
-            y, y_pred, X=X,
+            y,
+            y_pred,
+            X=X,
         )
 
-    def predict_score(
-        self, X: ArrayLike
-    ) -> NDArray:
+    def predict_score(self, X: ArrayLike) -> NDArray:
         """
         Compute the predictor prediction, used to compute the
         conformity scores.
@@ -250,17 +249,19 @@ class SplitCPRegressor(SplitCP):
         )
         conformity_score_pred = self.calibrator_.predict(**predict_kwargs)
 
-        self.conformity_score_ = cast(
-            BaseRegressionScore, self.conformity_score_
-        )
+        self.conformity_score_ = cast(BaseRegressionScore, self.conformity_score_)
         y_pred_low = self.conformity_score_.get_estimation_distribution(
-            y_pred[:, np.newaxis], conformity_score_pred[:, [0]], X=X,
+            y_pred[:, np.newaxis],
+            conformity_score_pred[:, [0]],
+            X=X,
         )
         y_pred_up = self.conformity_score_.get_estimation_distribution(
-            y_pred[:, np.newaxis], conformity_score_pred[:, [1]], X=X,
+            y_pred[:, np.newaxis],
+            conformity_score_pred[:, [1]],
+            X=X,
         )
 
-        check_lower_upper_bounds(y_pred_low, y_pred_up, y_pred)
+        _check_lower_upper_bounds(y_pred_low, y_pred_up, y_pred)
 
         return np.stack([y_pred_low, y_pred_up], axis=1)
 

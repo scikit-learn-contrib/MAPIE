@@ -68,30 +68,40 @@ N_CLASSES = 5
 def create_toy_dataset(n_samples=1000):
     centers = [(0, 3.5), (-3, 0), (0, -2), (4, -1), (3, 1)]
     covs = [
-        np.diag([1, 1]), np.diag([2, 2]), np.diag([3, 2]),
-        np.diag([3, 3]), np.diag([2, 2]),
+        np.diag([1, 1]),
+        np.diag([2, 2]),
+        np.diag([3, 2]),
+        np.diag([3, 3]),
+        np.diag([2, 2]),
     ]
     n_per_class = (
         np.linspace(0, n_samples, N_CLASSES + 1)[1:]
-        - np.linspace(0, n_samples, N_CLASSES + 1)[: -1].astype(int)
+        - np.linspace(0, n_samples, N_CLASSES + 1)[:-1].astype(int)
     ).astype(int)
-    X = np.vstack([
-        np.random.multivariate_normal(center, cov, n)
-        for center, cov, n in zip(centers, covs, n_per_class)
-
-    ])
+    X = np.vstack(
+        [
+            np.random.multivariate_normal(center, cov, n)
+            for center, cov, n in zip(centers, covs, n_per_class)
+        ]
+    )
     y = np.hstack([np.full(n_per_class[i], i) for i in range(N_CLASSES)])
 
     return X, y
 
 
-def generate_data(seed=1, n_train=2000, n_calib=2000, n_test=2000, ):
+def generate_data(
+    seed=1,
+    n_train=2000,
+    n_calib=2000,
+    n_test=2000,
+):
     np.random.seed(seed)
     x_train, y_train = create_toy_dataset(n_train)
     x_calib, y_calib = create_toy_dataset(n_calib)
     x_test, y_test = create_toy_dataset(n_test)
 
     return x_train, y_train, x_calib, y_calib, x_test, y_test
+
 
 ##############################################################################
 # Let's visualize the data and its distribution
@@ -100,8 +110,13 @@ def generate_data(seed=1, n_train=2000, n_calib=2000, n_test=2000, ):
 x_train, y_train, *_ = generate_data(seed=None, n_train=1000)
 
 for c in range(N_CLASSES):
-    plt.scatter(x_train[y_train == c, 0], x_train[y_train == c, 1],
-                c=f"C{c}", s=1.5, label=f'Class {c}')
+    plt.scatter(
+        x_train[y_train == c, 0],
+        x_train[y_train == c, 1],
+        c=f"C{c}",
+        s=1.5,
+        label=f"Class {c}",
+    )
 plt.legend()
 plt.show()
 
@@ -112,13 +127,18 @@ plt.show()
 
 
 def run_exp(
-    mapies, names, alpha,
-    n_train=1000, n_calib=1000, n_test=1000,
-    grid_step=100, plot=True, seed=1, max_display=2000
+    mapies,
+    names,
+    alpha,
+    n_train=1000,
+    n_calib=1000,
+    n_test=1000,
+    grid_step=100,
+    plot=True,
+    seed=1,
+    max_display=2000,
 ):
-    (
-        x_train, y_train, x_calib, y_calib, x_test, y_test
-    ) = generate_data(
+    (x_train, y_train, x_calib, y_calib, x_test, y_test) = generate_data(
         seed=seed, n_train=n_train, n_calib=n_calib, n_test=n_test
     )
 
@@ -143,21 +163,15 @@ def run_exp(
         )
         X_test_mesh = np.stack([xx.ravel(), yy.ravel()], axis=1)
 
-    scores = np.zeros((len(mapies), N_CLASSES+1))
+    scores = np.zeros((len(mapies), N_CLASSES + 1))
     for i, (mapie, name) in enumerate(zip(mapies, names)):
         if isinstance(mapie, MapieClassifier):
-            mapie.fit(
-                np.vstack([x_train, x_calib]), np.hstack([y_train, y_calib])
-            )
+            mapie.fit(np.vstack([x_train, x_calib]), np.hstack([y_train, y_calib]))
             _, y_ps_test = mapie.predict(x_test, alpha=alpha)
             if plot:
-                y_pred_mesh, y_ps_mesh = mapie.predict(
-                    X_test_mesh, alpha=alpha
-                )
+                y_pred_mesh, y_ps_mesh = mapie.predict(X_test_mesh, alpha=alpha)
         elif isinstance(mapie, SplitCPClassifier):
-            mapie.fit(
-                np.vstack([x_train, x_calib]), np.hstack([y_train, y_calib])
-            )
+            mapie.fit(np.vstack([x_train, x_calib]), np.hstack([y_train, y_calib]))
             _, y_ps_test = mapie.predict(
                 x_test, unsafe_approximation=UNSAFE_APPROXIMATION
             )
@@ -171,21 +185,31 @@ def run_exp(
                 ax1 = fig.add_subplot(grid[0, 0])
 
                 ax1.scatter(
-                    X_test_mesh[:, 0], X_test_mesh[:, 1],
-                    c=[f"C{x}" for x in y_pred_mesh], alpha=1, marker="s",
-                    edgecolor="none", s=220 * step
+                    X_test_mesh[:, 0],
+                    X_test_mesh[:, 1],
+                    c=[f"C{x}" for x in y_pred_mesh],
+                    alpha=1,
+                    marker="s",
+                    edgecolor="none",
+                    s=220 * step,
                 )
                 ax1.fill_between(
-                    x=[min(X_test_mesh[:, 0]) - step] + list(X_test_mesh[:, 0])
+                    x=[min(X_test_mesh[:, 0]) - step]
+                    + list(X_test_mesh[:, 0])
                     + [max(X_test_mesh[:, 0]) + step],
                     y1=min(X_test_mesh[:, 1]) - step,
                     y2=max(X_test_mesh[:, 1]) + step,
-                    color="white", alpha=0.6
+                    color="white",
+                    alpha=0.6,
                 )
                 ax1.scatter(
-                    x_test[display_ind, 0], x_test[display_ind, 1],
+                    x_test[display_ind, 0],
+                    x_test[display_ind, 1],
                     c=[f"C{x}" for x in y_test[display_ind]],
-                    alpha=1, marker=".", edgecolor="black", s=80
+                    alpha=1,
+                    marker=".",
+                    edgecolor="black",
+                    s=80,
                 )
 
                 ax1.set_title("Predictions", fontsize=22, pad=12)
@@ -193,12 +217,23 @@ def run_exp(
                 ax1.set_ylim([-6, 8])
                 legend_labels = [f"Class {i}" for i in range(N_CLASSES)]
                 handles = [
-                    plt.Line2D([0], [0], marker='.', color='w',
-                               markerfacecolor=f"C{i}", markersize=10)
+                    plt.Line2D(
+                        [0],
+                        [0],
+                        marker=".",
+                        color="w",
+                        markerfacecolor=f"C{i}",
+                        markersize=10,
+                    )
                     for i in range(N_CLASSES)
                 ]
-                ax1.legend(handles, legend_labels, title="Classes",
-                           fontsize=18, title_fontsize=20)
+                ax1.legend(
+                    handles,
+                    legend_labels,
+                    title="Classes",
+                    fontsize=18,
+                    title_fontsize=20,
+                )
 
             y_ps_sums = y_ps_mesh[:, :, 0].sum(axis=1)
 
@@ -208,7 +243,7 @@ def run_exp(
                 X_test_mesh[:, 0],
                 X_test_mesh[:, 1],
                 c=y_ps_sums,
-                marker='s',
+                marker="s",
                 edgecolor="none",
                 s=220 * step,
                 alpha=1,
@@ -216,9 +251,15 @@ def run_exp(
                 vmin=0,
                 vmax=N_CLASSES,
             )
-            ax.scatter(x_test[display_ind, 0], x_test[display_ind, 1],
-                       c=[f"C{x}" for x in y_test[display_ind]],
-                       alpha=0.6, marker=".", edgecolor="gray", s=50)
+            ax.scatter(
+                x_test[display_ind, 0],
+                x_test[display_ind, 1],
+                c=[f"C{x}" for x in y_test[display_ind]],
+                alpha=0.6,
+                marker=".",
+                edgecolor="gray",
+                s=50,
+            )
 
             colorbar = plt.colorbar(scatter, ax=ax)
             colorbar.ax.set_ylabel("Set size", fontsize=20)
@@ -238,8 +279,14 @@ def run_exp(
                     centers = None
 
                 if centers is not None:
-                    ax.scatter(centers[:, 0], centers[:, 1], c="gold",
-                               alpha=1, edgecolors="black", s=50)
+                    ax.scatter(
+                        centers[:, 0],
+                        centers[:, 1],
+                        c="gold",
+                        alpha=1,
+                        edgecolors="black",
+                        s=50,
+                    )
 
         scores[i, 1:] = [
             y_ps_test[(y_test == c), c, 0].astype(int).sum(axis=0)
@@ -264,21 +311,27 @@ def plot_cond_coverage(scores, names):
     fig, ax = plt.subplots(figsize=(10, 6))
     for i in range(len(mapies)):
         ax.boxplot(
-            scores[:, i, :], positions=x + width * (i-1), widths=width,
-            patch_artist=True, boxprops=dict(facecolor=f"C{i}"),
-            medianprops=dict(color="black"), labels=labels
+            scores[:, i, :],
+            positions=x + width * (i - 1),
+            widths=width,
+            patch_artist=True,
+            boxprops=dict(facecolor=f"C{i}"),
+            medianprops=dict(color="black"),
+            labels=labels,
         )
-    ax.axhline(y=1-ALPHA, color='red', linestyle='--', label=f'alpha={ALPHA}')
-    ax.axvline(x=0.5, color='black', linestyle='--')
+    ax.axhline(y=1 - ALPHA, color="red", linestyle="--", label=f"alpha={ALPHA}")
+    ax.axvline(x=0.5, color="black", linestyle="--")
 
-    ax.set_ylabel('Coverage')
-    ax.set_title('Coverage on each class')
+    ax.set_ylabel("Coverage")
+    ax.set_title("Coverage on each class")
     ax.set_xticks(x)
     ax.set_xticklabels(labels)
     ax.set_ylim([0.6, 1])
 
-    custom_handles = [Patch(facecolor=f"C{i}", edgecolor='black',
-                            label=names[i]) for i in range(len(mapies))]
+    custom_handles = [
+        Patch(facecolor=f"C{i}", edgecolor="black", label=names[i])
+        for i in range(len(mapies))
+    ]
     handles, labels = ax.get_legend_handles_labels()
 
     # Update the legend with the combined handles and labels
@@ -303,8 +356,9 @@ n_train = 5000
 n_calib = 3000
 n_test = 10000
 
-cv = ShuffleSplit(n_splits=1, test_size=n_calib/(n_train + n_calib),
-                  random_state=random_state)
+cv = ShuffleSplit(
+    n_splits=1, test_size=n_calib / (n_train + n_calib), random_state=random_state
+)
 
 # =========================== Standard LAC ===========================
 mapie_lac = MapieClassifier(LogisticRegression(), method="lac", cv=cv)
@@ -314,14 +368,18 @@ mapie_lac = MapieClassifier(LogisticRegression(), method="lac", cv=cv)
 mapie_ccp_y_pred = SplitCPClassifier(
     LogisticRegression(),
     calibrator=CustomCCP(lambda y_pred: y_pred),
-    alpha=ALPHA, cv=cv, conformity_score=LACConformityScore()
+    alpha=ALPHA,
+    cv=cv,
+    conformity_score=LACConformityScore(),
 )
 
 # ======================== CCP Gaussian kernels ========================
 mapie_ccp_gauss = SplitCPClassifier(
     LogisticRegression(),
     calibrator=GaussianCCP(40, 1, bias=True),
-    alpha=ALPHA, cv=cv, conformity_score=LACConformityScore()
+    alpha=ALPHA,
+    cv=cv,
+    conformity_score=LACConformityScore(),
 )
 
 mapies = [mapie_lac, mapie_ccp_y_pred, mapie_ccp_gauss]
@@ -365,11 +423,17 @@ run_exp(mapies, names, ALPHA, n_train=n_train, n_calib=n_calib, n_test=n_test)
 
 
 N_TRIALS = 6
-scores = np.zeros((N_TRIALS, len(mapies), N_CLASSES+1))
+scores = np.zeros((N_TRIALS, len(mapies), N_CLASSES + 1))
 for i in range(N_TRIALS):
     scores[i, :, :] = run_exp(
-        mapies, names, ALPHA, n_train=n_train, n_calib=n_calib, n_test=n_test,
-        plot=False, seed=i
+        mapies,
+        names,
+        ALPHA,
+        n_train=n_train,
+        n_calib=n_calib,
+        n_test=n_test,
+        plot=False,
+        seed=i,
     )
 
 plot_cond_coverage(scores, names)

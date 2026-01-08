@@ -33,6 +33,7 @@ Conformal Prediction With Conditional Guarantees
 Conformalized Quantile Regression.
 33rd Conference on Neural Information Processing Systems (NeurIPS 2019).
 """
+
 import warnings
 
 import matplotlib.pyplot as plt
@@ -58,17 +59,16 @@ np.random.seed(random_state)
 # 1. Global model parameters
 # -----------------------------------------------------------------------------
 
+
 def init_model():
     # the degree of the polynomial regression
     degree = 4
 
     model = Pipeline(
-        [
-            ("poly", PolynomialFeatures(degree=degree)),
-            ("linear", LinearRegression())
-        ]
+        [("poly", PolynomialFeatures(degree=degree)), ("linear", LinearRegression())]
     )
     return model
+
 
 ###############################################################################
 # 2. Generate and present data
@@ -77,11 +77,12 @@ def init_model():
 
 def generate_data(n_train=2000, n_calib=2000, n_test=500):
     def f(x):
-        ax = 0*x
+        ax = 0 * x
         for i in range(len(x)):
-            ax[i] = (np.random.poisson(np.sin(x[i])**2 + 0.1)
-                     + 0.03*x[i]*np.random.randn(1))
-            ax[i] += 25*(np.random.uniform(0, 1, 1) < 0.01)*np.random.randn(1)
+            ax[i] = np.random.poisson(np.sin(x[i]) ** 2 + 0.1) + 0.03 * x[
+                i
+            ] * np.random.randn(1)
+            ax[i] += 25 * (np.random.uniform(0, 1, 1) < 0.01) * np.random.randn(1)
         return ax.astype(np.float32)
 
     # training features
@@ -172,29 +173,31 @@ def estimate_coverage(mapie_split, mapie_ccp, group_functs=[]):
     mapie_ccp.fit_calibrator(X_calib, y_calib)
     _, y_pi_ccp = mapie_ccp.predict(X_test)
 
-    cover_split = np.logical_or(y_test < y_pi_split[:, 0, 0],
-                                y_test > y_pi_split[:, 1, 0])
-    cover_ccp = np.logical_or(y_test < y_pi_ccp[:, 0, 0],
-                              y_test > y_pi_ccp[:, 1, 0])
+    cover_split = np.logical_or(
+        y_test < y_pi_split[:, 0, 0], y_test > y_pi_split[:, 1, 0]
+    )
+    cover_ccp = np.logical_or(y_test < y_pi_ccp[:, 0, 0], y_test > y_pi_ccp[:, 1, 0])
     group_covers = []
     marginal_cover = np.asarray((cover_split.mean(), cover_ccp.mean()))
     for funct in group_functs:
         group_cover = np.zeros((2,))
-        group_cover[0] = (funct(X_test).flatten()
-                          * cover_split).sum() / funct(X_test).sum()
-        group_cover[1] = (funct(X_test).flatten()
-                          * cover_ccp).sum() / funct(X_test).sum()
+        group_cover[0] = (funct(X_test).flatten() * cover_split).sum() / funct(
+            X_test
+        ).sum()
+        group_cover[1] = (funct(X_test).flatten() * cover_ccp).sum() / funct(
+            X_test
+        ).sum()
         group_covers.append(group_cover)
     return marginal_cover, np.array(group_covers)
 
 
-def plot_results(X_test, y_test, n_trials=10,
-                 experiment="Groups", split_sym=True):
-
+def plot_results(X_test, y_test, n_trials=10, experiment="Groups", split_sym=True):
     # Split CP
     mapie_split = MapieRegressor(
-        model, method="base", cv="prefit",
-        conformity_score=AbsoluteConformityScore(sym=split_sym)
+        model,
+        method="base",
+        cv="prefit",
+        conformity_score=AbsoluteConformityScore(sym=split_sym),
     )
     mapie_split.conformity_score.eps = 1e-5
     mapie_split.fit(X_calib, y_calib)
@@ -202,14 +205,19 @@ def plot_results(X_test, y_test, n_trials=10,
 
     if experiment == "Groups":
         # CCP Groups
-        calibrator_groups = CustomCCP([
-            lambda X, t=t: np.logical_and(X >= t, X < t + 0.5).astype(int)
-            for t in np.arange(0, 5.5, 0.5)
-        ])
+        calibrator_groups = CustomCCP(
+            [
+                lambda X, t=t: np.logical_and(X >= t, X < t + 0.5).astype(int)
+                for t in np.arange(0, 5.5, 0.5)
+            ]
+        )
         mapie_ccp = SplitCPRegressor(
-            model, calibrator=calibrator_groups, alpha=ALPHA, cv="prefit",
+            model,
+            calibrator=calibrator_groups,
+            alpha=ALPHA,
+            cv="prefit",
             conformity_score=AbsoluteConformityScore(sym=False),
-            random_state=None
+            random_state=None,
         )
         mapie_ccp.conformity_score.eps = 1e-5
         mapie_ccp.fit(X_calib, y_calib)
@@ -223,16 +231,19 @@ def plot_results(X_test, y_test, n_trials=10,
 
         calibrator_shifts = GaussianCCP(
             points=(
-                np.array(eval_locs+other_locs).reshape(-1, 1),
-                [eval_scale]*len(eval_locs) + [other_scale]*len(other_locs),
+                np.array(eval_locs + other_locs).reshape(-1, 1),
+                [eval_scale] * len(eval_locs) + [other_scale] * len(other_locs),
             ),
             bias=True,
             normalized=False,
         )
         mapie_ccp = SplitCPRegressor(
-            model, calibrator=calibrator_shifts, alpha=ALPHA, cv="prefit",
+            model,
+            calibrator=calibrator_shifts,
+            alpha=ALPHA,
+            cv="prefit",
             conformity_score=AbsoluteConformityScore(sym=False),
-            random_state=None
+            random_state=None,
         )
         mapie_ccp.conformity_score.eps = 1e-5
         mapie_ccp.fit(X_calib, y_calib)
@@ -248,7 +259,7 @@ def plot_results(X_test, y_test, n_trials=10,
     else:
         eval_functions = [
             lambda x: norm.pdf(x, loc=1.5, scale=0.2).reshape(-1, 1),
-            lambda x: norm.pdf(x, loc=3.5, scale=0.2).reshape(-1, 1)
+            lambda x: norm.pdf(x, loc=3.5, scale=0.2).reshape(-1, 1),
         ]
         eval_names = ["f1", "f2"]
 
@@ -261,23 +272,28 @@ def plot_results(X_test, y_test, n_trials=10,
 
     coverageData = pd.DataFrame()
 
-    for group, cov in zip(["Marginal"]+eval_names,
-                          [marginal_cov] + list(group_cov)):
+    for group, cov in zip(["Marginal"] + eval_names, [marginal_cov] + list(group_cov)):
         for i, name in enumerate(["Split", "CCP"]):
             coverageData = pd.concat(
-                [coverageData,
-                 pd.DataFrame({'Method': [name] * len(cov),
-                               'Range': [group] * len(cov),
-                               'Miscoverage': np.asarray(cov)[:, i]})],
-                axis=0
+                [
+                    coverageData,
+                    pd.DataFrame(
+                        {
+                            "Method": [name] * len(cov),
+                            "Range": [group] * len(cov),
+                            "Miscoverage": np.asarray(cov)[:, i],
+                        }
+                    ),
+                ],
+                axis=0,
             )
 
     # ================== results plotting ==================
-    cp = plt.get_cmap('tab10').colors
+    cp = plt.get_cmap("tab10").colors
 
     # Set font and style
-    plt.rcParams['font.family'] = 'DejaVu Sans'
-    plt.rcParams['axes.grid'] = False
+    plt.rcParams["font.family"] = "DejaVu Sans"
+    plt.rcParams["axes.grid"] = False
 
     fig = plt.figure()
     fig.set_size_inches(17, 6)
@@ -288,68 +304,93 @@ def plot_results(X_test, y_test, n_trials=10,
     y_pred_s = model.predict(x_test_s)
 
     ax1 = fig.add_subplot(1, 3, 1)
-    ax1.plot(x_test_s, y_test_s, '.', alpha=0.2)
-    ax1.plot(x_test_s, y_pred_s, lw=1, color='k')
+    ax1.plot(x_test_s, y_test_s, ".", alpha=0.2)
+    ax1.plot(x_test_s, y_pred_s, lw=1, color="k")
     ax1.plot(x_test_s, y_pi_split[sort_order, 0, 0], color=cp[0], lw=2)
     ax1.plot(x_test_s, y_pi_split[sort_order, 1, 0], color=cp[0], lw=2)
-    ax1.fill_between(x_test_s.flatten(), y_pi_split[sort_order, 0, 0],
-                     y_pi_split[sort_order, 1, 0],
-                     color=cp[0], alpha=0.4, label='split prediction interval')
+    ax1.fill_between(
+        x_test_s.flatten(),
+        y_pi_split[sort_order, 0, 0],
+        y_pi_split[sort_order, 1, 0],
+        color=cp[0],
+        alpha=0.4,
+        label="split prediction interval",
+    )
     ax1.set_ylim(-2, 6.5)
-    ax1.tick_params(axis='both', which='major', labelsize=14)
+    ax1.tick_params(axis="both", which="major", labelsize=14)
     ax1.set_xlabel("$X$", fontsize=16, labelpad=10)
     ax1.set_ylabel("$Y$", fontsize=16, labelpad=10)
     ax1.set_title("Split calibration", fontsize=18, pad=12)
 
-    if experiment == 'Groups':
-        ax1.axvspan(1, 2, facecolor='grey', alpha=0.25)
-        ax1.axvspan(3, 4, facecolor='grey', alpha=0.25)
+    if experiment == "Groups":
+        ax1.axvspan(1, 2, facecolor="grey", alpha=0.25)
+        ax1.axvspan(3, 4, facecolor="grey", alpha=0.25)
     else:
         for loc in eval_locs:
-            ax1.plot(x_test_s, norm.pdf(x_test_s, loc=loc, scale=eval_scale),
-                     color='grey', ls='--', lw=3)
+            ax1.plot(
+                x_test_s,
+                norm.pdf(x_test_s, loc=loc, scale=eval_scale),
+                color="grey",
+                ls="--",
+                lw=3,
+            )
 
     ax2 = fig.add_subplot(1, 3, 2, sharex=ax1, sharey=ax1)
-    ax2.plot(x_test_s, y_test_s, '.', alpha=0.2)
-    ax2.plot(x_test_s, y_pred_s, color='k', lw=1)
+    ax2.plot(x_test_s, y_test_s, ".", alpha=0.2)
+    ax2.plot(x_test_s, y_pred_s, color="k", lw=1)
     ax2.plot(x_test_s, y_pi_ccp[sort_order, 0, 0], color=cp[1], lw=2)
     ax2.plot(x_test_s, y_pi_ccp[sort_order, 1, 0], color=cp[1], lw=2)
-    ax2.fill_between(x_test_s.flatten(), y_pi_ccp[sort_order, 0, 0],
-                     y_pi_ccp[sort_order, 1, 0], color=cp[1], alpha=0.4,
-                     label='conditional calibration')
-    ax2.tick_params(axis='both', which='major', direction='out', labelsize=14)
+    ax2.fill_between(
+        x_test_s.flatten(),
+        y_pi_ccp[sort_order, 0, 0],
+        y_pi_ccp[sort_order, 1, 0],
+        color=cp[1],
+        alpha=0.4,
+        label="conditional calibration",
+    )
+    ax2.tick_params(axis="both", which="major", direction="out", labelsize=14)
     ax2.set_xlabel("$X$", fontsize=16, labelpad=10)
     ax2.set_ylabel("$Y$", fontsize=16, labelpad=10)
     ax2.set_title("Conditional calibration", fontsize=18, pad=12)
 
-    if experiment == 'Groups':
-        ax2.axvspan(1, 2, facecolor='grey', alpha=0.25)
-        ax2.axvspan(3, 4, facecolor='grey', alpha=0.25)
+    if experiment == "Groups":
+        ax2.axvspan(1, 2, facecolor="grey", alpha=0.25)
+        ax2.axvspan(3, 4, facecolor="grey", alpha=0.25)
     else:
         for loc in eval_locs:
-            ax2.plot(x_test_s, norm.pdf(x_test_s, loc=loc, scale=eval_scale),
-                     color='grey', ls='--', lw=3)
+            ax2.plot(
+                x_test_s,
+                norm.pdf(x_test_s, loc=loc, scale=eval_scale),
+                color="grey",
+                ls="--",
+                lw=3,
+            )
 
     ax3 = fig.add_subplot(1, 3, 3)
 
-    ranges = coverageData['Range'].unique()
-    methods = coverageData['Method'].unique()
+    ranges = coverageData["Range"].unique()
+    methods = coverageData["Method"].unique()
     bar_width = 0.8 / len(methods)
     for i, method in enumerate(methods):
-        method_data = coverageData[coverageData['Method'] == method]
+        method_data = coverageData[coverageData["Method"] == method]
         x = np.arange(len(ranges)) + i * bar_width
-        ax3.bar(x, method_data.groupby("Range")['Miscoverage'].mean(),
-                width=bar_width, label=method, color=cp[i])
+        ax3.bar(
+            x,
+            method_data.groupby("Range")["Miscoverage"].mean(),
+            width=bar_width,
+            label=method,
+            color=cp[i],
+        )
 
     ax3.set_xticks(np.arange(len(ranges)) + bar_width * (len(methods) - 1) / 2)
     ax3.set_xticklabels(ranges)
 
-    ax3.axhline(0.1, color='red')
+    ax3.axhline(0.1, color="red")
     ax3.legend()
     ax3.set_ylabel("Miscoverage", fontsize=18, labelpad=10)
     ax3.set_xlabel(experiment, fontsize=18, labelpad=10)
-    ax3.set_ylim(0., 0.2)
-    ax3.tick_params(axis='both', which='major', labelsize=14)
+    ax3.set_ylim(0.0, 0.2)
+    ax3.tick_params(axis="both", which="major", labelsize=14)
 
     plt.tight_layout(pad=2)
     plt.show()

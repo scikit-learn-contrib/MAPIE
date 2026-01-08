@@ -212,6 +212,7 @@ class GaussianCCP(CCPCalibrator):
     ... ).fit(X_train, y_train)
     >>> y_pred, y_pi = mapie.predict(X_train)
     """
+
     transform_attributes: List[str] = ["points_", "sigmas_", "functions_"]
 
     def __init__(
@@ -234,9 +235,7 @@ class GaussianCCP(CCPCalibrator):
 
         self._multipliers: Optional[List[Callable]] = None
 
-    def _check_points_sigma(
-        self, points: ArrayLike, sigmas: ArrayLike
-    ) -> None:
+    def _check_points_sigma(self, points: ArrayLike, sigmas: ArrayLike) -> None:
         """
         Take 2D arrays of points and standard deviations and check
         compatibility
@@ -255,16 +254,17 @@ class GaussianCCP(CCPCalibrator):
             - If ``sigmas``is not of shape (n_points, 1) or (n_points, n_in)
         """
         if _num_samples(points) != _num_samples(sigmas):
-            raise ValueError("There should have as many points as "
-                             "standard deviation values")
+            raise ValueError(
+                "There should have as many points as standard deviation values"
+            )
 
-        if len(_safe_indexing(sigmas, 0)) not in [
-            1, len(_safe_indexing(points, 0))
-        ]:
-            raise ValueError("The standard deviation 2D array should be of "
-                             "shape (n_points, 1) or (n_points, n_in).\n"
-                             f"Got sigma of shape: ({_num_samples(sigmas)}, "
-                             f"{len(_safe_indexing(points, 0))}).")
+        if len(_safe_indexing(sigmas, 0)) not in [1, len(_safe_indexing(points, 0))]:
+            raise ValueError(
+                "The standard deviation 2D array should be of "
+                "shape (n_points, 1) or (n_points, n_in).\n"
+                f"Got sigma of shape: ({_num_samples(sigmas)}, "
+                f"{len(_safe_indexing(points, 0))})."
+            )
 
     def _check_transform_parameters(
         self,
@@ -296,15 +296,21 @@ class GaussianCCP(CCPCalibrator):
         """
         self.points_ = sample_points(X, self.points, self._multipliers)
         self.sigmas_ = compute_sigma(
-            X, self.points, self.points_, self.sigma,
-            self.random_sigma, self._multipliers
+            X,
+            self.points,
+            self.points_,
+            self.sigma,
+            self.random_sigma,
+            self._multipliers,
         )
         self._check_points_sigma(self.points_, self.sigmas_)
 
         functions = [
-            lambda X, mu=_safe_indexing(self.points_, i),
-            sigma=_safe_indexing(self.sigmas_, i):
-            np.exp(-0.5 * np.sum(((X - mu) / sigma) ** 2, axis=1))
+            lambda X,
+            mu=_safe_indexing(self.points_, i),
+            sigma=_safe_indexing(self.sigmas_, i): np.exp(
+                -0.5 * np.sum(((X - mu) / sigma) ** 2, axis=1)
+            )
             for i in range(_num_samples(self.points_))
         ]
         self.functions_ = format_functions(functions, self.bias)

@@ -24,8 +24,11 @@ z = X[:, -2:]
 @pytest.mark.parametrize("sym", [True, False])
 def test_calibrator_fit(sym: bool) -> None:
     """Test that calibrator has correct sym parameter"""
-    mapie = SplitCPRegressor(calibrator=StandardCalibrator(), alpha=0.1,
-                             conformity_score=AbsoluteConformityScore(sym=sym))
+    mapie = SplitCPRegressor(
+        calibrator=StandardCalibrator(),
+        alpha=0.1,
+        conformity_score=AbsoluteConformityScore(sym=sym),
+    )
     mapie.fit(X, y, calib_kwargs={"z": z})
     assert mapie.calibrator_.sym == sym
 
@@ -33,8 +36,11 @@ def test_calibrator_fit(sym: bool) -> None:
 @pytest.mark.parametrize("sym", [True, False])
 def test_calibrator_fit_predict(sym: bool) -> None:
     """Test that initialization does not crash."""
-    mapie = SplitCPRegressor(calibrator=StandardCalibrator(), alpha=0.1,
-                             conformity_score=AbsoluteConformityScore(sym=sym))
+    mapie = SplitCPRegressor(
+        calibrator=StandardCalibrator(),
+        alpha=0.1,
+        conformity_score=AbsoluteConformityScore(sym=sym),
+    )
     mapie.fit(X, y, calib_kwargs={"z": z})
     mapie.predict(X, z=z)
 
@@ -48,8 +54,9 @@ def test_standard_equivalence() -> None:
         X, y, test_size=0.5, random_state=1
     )
     predictor = LinearRegression().fit(X_train, y_train)
-    mapie_ccp = SplitCPRegressor(predictor, calibrator=StandardCalibrator(),
-                                 cv="prefit", alpha=0.1)
+    mapie_ccp = SplitCPRegressor(
+        predictor, calibrator=StandardCalibrator(), cv="prefit", alpha=0.1
+    )
     mapie_ccp.fit(X_calib, y_calib)
     y_pred_ccp, y_pi_ccp = mapie_ccp.predict(X)
 

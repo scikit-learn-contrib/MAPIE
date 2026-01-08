@@ -56,16 +56,16 @@ def format_functions(
 
     if bias:
         functions.append(lambda X: np.ones((_num_samples(X), 1)))
-    if (len(functions) == 0):
-        raise ValueError("You need to define the `functions` argument "
-                         "with a function or a list of functions, "
-                         "or keep bias argument to True.")
+    if len(functions) == 0:
+        raise ValueError(
+            "You need to define the `functions` argument "
+            "with a function or a list of functions, "
+            "or keep bias argument to True."
+        )
     return functions
 
 
-def check_custom_calibrator_functions(
-    functions: List[Callable]
-) -> None:
+def check_custom_calibrator_functions(functions: List[Callable]) -> None:
     """
     Raise errors if the elements in ``functions`` have
     unexpected arguments.
@@ -167,7 +167,7 @@ def sample_points(
     if isinstance(points, int):
         if multipliers is None:
             not_null_index = list(range(_num_samples(X)))
-        else:   # Only sample points which have a not null multiplier value
+        else:  # Only sample points which have a not null multiplier value
             test = np.ones((_num_samples(X), 1)).astype(bool)
             for f in multipliers:
                 multi = f(X)
@@ -177,24 +177,28 @@ def sample_points(
             not_null_index = [i for i in range(_num_samples(X)) if test[i, 0]]
         if len(not_null_index) < points:
             if _num_samples(X) > points:
-                raise ValueError("There are not enough samples with a "
-                                 "multiplier value different from zero "
-                                 f"to sample the {points} points.")
+                raise ValueError(
+                    "There are not enough samples with a "
+                    "multiplier value different from zero "
+                    f"to sample the {points} points."
+                )
             else:
-                raise ValueError("There is not enough valid samples from "
-                                 f"which to sample the {points} points.")
-        points_index = np.random.choice(
-            not_null_index, size=points, replace=False
-        )
+                raise ValueError(
+                    "There is not enough valid samples from "
+                    f"which to sample the {points} points."
+                )
+        points_index = np.random.choice(not_null_index, size=points, replace=False)
         points_ = _safe_indexing(X, points_index)
     elif isinstance(points, tuple):
         points_ = np.array(points[0])
     elif len(np.array(points).shape) == 2:
         points_ = np.array(points)
     else:
-        raise ValueError("Invalid `points` argument. The points argument"
-                         "should be an integer, "
-                         "a 2D array or a tuple of two 2D arrays.")
+        raise ValueError(
+            "Invalid `points` argument. The points argument"
+            "should be an integer, "
+            "a 2D array or a tuple of two 2D arrays."
+        )
     return points_
 
 
@@ -205,7 +209,6 @@ def compute_sigma(
     sigma: Optional[Union[float, ArrayLike]],
     random_sigma: bool,
     multipliers: Optional[List[Callable]] = None,
-
 ) -> NDArray:
     """
     Generate the ``sigmas_`` attribute from the ``points``, ``sigma``, ``X``
@@ -282,11 +285,13 @@ def compute_sigma(
                 test = test & (multi != 0)
             not_null_index = [i for i in range(_num_samples(X)) if test[i, 0]]
 
-        points_std = np.std(_safe_indexing(X, not_null_index), axis=0)\
-            / (_num_samples(points_)**0.5)\
+        points_std = (
+            np.std(_safe_indexing(X, not_null_index), axis=0)
+            / (_num_samples(points_) ** 0.5)
             * _num_samples(_safe_indexing(X, 0))
+        )
 
-        sigmas_ = np.ones((_num_samples(points_), 1))*points_std
+        sigmas_ = np.ones((_num_samples(points_), 1)) * points_std
     # If sigma is defined
     elif isinstance(points, int):
         sigmas_ = _init_sigmas(sigma, points)
@@ -295,9 +300,8 @@ def compute_sigma(
 
     if random_sigma:
         n = _num_samples(points_)
-        sigmas_ *= (
-            2**np.random.normal(0, 1*2**(-2+np.log10(n)), n)
-            .reshape(-1, 1)
+        sigmas_ *= 2 ** np.random.normal(0, 1 * 2 ** (-2 + np.log10(n)), n).reshape(
+            -1, 1
         )
     return cast(NDArray, sigmas_)
 
@@ -326,12 +330,13 @@ def _init_sigmas(
         If ``sigma`` is not None, a float or a 1D array
     """
     if isinstance(sigma, (float, int)):
-        return np.ones((n_points, 1))*sigma
+        return np.ones((n_points, 1)) * sigma
     else:
         if len(np.array(sigma).shape) != 1:
-            raise ValueError("sigma argument should be a float "
-                             "or a 1D array of floats.")
-        return np.ones((n_points, 1))*np.array(sigma)
+            raise ValueError(
+                "sigma argument should be a float or a 1D array of floats."
+            )
+        return np.ones((n_points, 1)) * np.array(sigma)
 
 
 def dynamic_arguments_call(f: Callable, params_mapping: Dict) -> NDArray:
@@ -354,7 +359,8 @@ def dynamic_arguments_call(f: Callable, params_mapping: Dict) -> NDArray:
 
     params = inspect.signature(f).parameters
     used_params = {
-        p: params_mapping[p] for p in params
+        p: params_mapping[p]
+        for p in params
         if p in params_mapping and params_mapping[p] is not None
     }
     res = np.array(f(**used_params), dtype=float)
@@ -365,7 +371,8 @@ def dynamic_arguments_call(f: Callable, params_mapping: Dict) -> NDArray:
 
 
 def concatenate_functions(
-    functions: List[Callable], params_mapping: Dict,
+    functions: List[Callable],
+    params_mapping: Dict,
 ) -> NDArray:
     """
     Call the function of ``functions``, with the
@@ -386,9 +393,7 @@ def concatenate_functions(
         Concatenated result
     """
     # Compute phi(X, y_pred, z)
-    result = np.hstack([
-        dynamic_arguments_call(f, params_mapping) for f in functions
-    ])
+    result = np.hstack([dynamic_arguments_call(f, params_mapping) for f in functions])
     return result
 
 
@@ -423,9 +428,11 @@ def check_multiplier(
     for f in multipliers:
         res = dynamic_arguments_call(f, params_mapping)
         if res.shape != (_num_samples(X), 1):
-            raise ValueError("The function used as multiplier should return an"
-                             "array of shape n_samples, 1) or (n_samples, ).\n"
-                             f"Got shape = {res.shape}.")
+            raise ValueError(
+                "The function used as multiplier should return an"
+                "array of shape n_samples, 1) or (n_samples, ).\n"
+                f"Got shape = {res.shape}."
+            )
 
 
 def fast_mean_pinball_loss(
@@ -433,7 +440,7 @@ def fast_mean_pinball_loss(
     y_pred: NDArray,
     *,
     sample_weight: Optional[NDArray] = None,
-    alpha: float = 0.5
+    alpha: float = 0.5,
 ) -> float:
     """
     Pinball loss for quantile regression.
@@ -471,8 +478,11 @@ def fast_mean_pinball_loss(
 
 
 def calibrator_optim_objective(
-    beta: NDArray, calibrator_preds: NDArray, conformity_scores: NDArray,
-    q: float, reg_param: Optional[float],
+    beta: NDArray,
+    calibrator_preds: NDArray,
+    conformity_scores: NDArray,
+    q: float,
+    reg_param: Optional[float],
 ) -> float:
     """
     Objective funtcion to minimize to get the estimation of
@@ -517,10 +527,14 @@ def calibrator_optim_objective(
         reg_val = float(reg_param * np.linalg.norm(beta, ord=1))
     else:
         reg_val = 0
-    return fast_mean_pinball_loss(
-        y_true=conformity_scores, y_pred=calibrator_preds.dot(beta),
-        alpha=q,
-    ) + reg_val
+    return (
+        fast_mean_pinball_loss(
+            y_true=conformity_scores,
+            y_pred=calibrator_preds.dot(beta),
+            alpha=q,
+        )
+        + reg_val
+    )
 
 
 def check_required_arguments(*args) -> None:
@@ -539,5 +553,7 @@ def check_required_arguments(*args) -> None:
         If one of the passed argument is ``None``.
     """
     if any(arg is None for arg in args):
-        raise ValueError("One of the required arguments is None."
-                         "Fix the calibrator method definition.")
+        raise ValueError(
+            "One of the required arguments is None."
+            "Fix the calibrator method definition."
+        )

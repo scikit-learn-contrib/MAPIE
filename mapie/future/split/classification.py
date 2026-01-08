@@ -107,14 +107,11 @@ class SplitCPClassifier(SplitCP):
     >>> mapie_reg = mapie_reg.fit(X_train, y_train)
     >>> y_pred, y_pis = mapie_reg.predict(X_train)
     """
+
     def __init__(
         self,
         predictor: Optional[
-            Union[
-                ClassifierMixin,
-                Pipeline,
-                List[Union[ClassifierMixin, Pipeline]]
-            ]
+            Union[ClassifierMixin, Pipeline, List[Union[ClassifierMixin, Pipeline]]]
         ] = None,
         calibrator: Optional[BaseCalibrator] = None,
         cv: Optional[Union[str, PredefinedSplit, ShuffleSplit]] = None,
@@ -146,8 +143,11 @@ class SplitCPClassifier(SplitCP):
             If the estimator does not have a fit or predict or predict_proba
             attribute.
         """
-        if not (hasattr(estimator, "fit") and hasattr(estimator, "predict")
-                and hasattr(estimator, "predict_proba")):
+        if not (
+            hasattr(estimator, "fit")
+            and hasattr(estimator, "predict")
+            and hasattr(estimator, "predict_proba")
+        ):
             raise ValueError(
                 "Invalid estimator. "
                 "Please provide a classifier with fit,"
@@ -208,13 +208,12 @@ class SplitCPClassifier(SplitCP):
         Copy the ``predictor`` in ``predictor_`` attribute if ``cv="prefit"``.
         """
         self.cv = self._check_cv(self.cv)
-        predictor = self._check_estimator_classification(self.predictor,
-                                                         self.cv)
+        predictor = self._check_estimator_classification(self.predictor, self.cv)
         return predictor
 
-    def _check_calibrate_parameters(self) -> Tuple[
-        BaseClassificationScore, BaseCalibrator
-    ]:
+    def _check_calibrate_parameters(
+        self,
+    ) -> Tuple[BaseClassificationScore, BaseCalibrator]:
         """
         Check and replace default ``conformity_score``, ``alpha`` and
         ``calibrator`` arguments.
@@ -283,13 +282,10 @@ class SplitCPClassifier(SplitCP):
         )
 
         return conformity_score.get_conformity_scores(
-            y, y_pred, y_enc=y_enc, X=X,
-            sample_weight=sample_weight, groups=groups
+            y, y_pred, y_enc=y_enc, X=X, sample_weight=sample_weight, groups=groups
         )
 
-    def predict_score(
-        self, X: ArrayLike
-    ) -> NDArray:
+    def predict_score(self, X: ArrayLike) -> NDArray:
         """
         Compute the predicted probas, used to compute the
         conformity scores.
@@ -342,9 +338,7 @@ class SplitCPClassifier(SplitCP):
         )
         conformity_score_pred = self.calibrator_.predict(**predict_kwargs)
 
-        self.conformity_score_ = cast(
-            BaseClassificationScore, self.conformity_score_
-        )
+        self.conformity_score_ = cast(BaseClassificationScore, self.conformity_score_)
 
         self.conformity_score_.quantiles_ = conformity_score_pred[:, [1]][
             :, :, np.newaxis
@@ -354,7 +348,7 @@ class SplitCPClassifier(SplitCP):
             y_pred_proba=y_pred[:, :, np.newaxis],
             conformity_scores=np.array([None]),  # never used in split
             alpha_np=np.array([self.alpha]),
-            estimator=EnsembleClassifier(   # For compatibility. Only need cv
+            estimator=EnsembleClassifier(  # For compatibility. Only need cv
                 self.predictor_,
                 n_classes=len(np.unique(self.predictor_.classes_)),
                 cv="prefit",
@@ -362,7 +356,7 @@ class SplitCPClassifier(SplitCP):
                 random_state=self.random_state,
                 test_size=0.1,
                 verbose=0,
-            )
+            ),
         )
 
         return y_pred_set

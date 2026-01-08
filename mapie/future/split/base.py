@@ -7,13 +7,12 @@ from typing import Any, Callable, Dict, Optional, Tuple, Union, cast
 
 import numpy as np
 from sklearn.base import BaseEstimator
-from sklearn.model_selection import (BaseCrossValidator,
-                                     PredefinedSplit, ShuffleSplit)
+from sklearn.model_selection import BaseCrossValidator, PredefinedSplit, ShuffleSplit
 from sklearn.utils.validation import _num_samples, check_is_fitted
 
 from mapie._typing import ArrayLike, NDArray
-from mapie.future.calibrators.base import BaseCalibrator
 from mapie.conformity_scores.interface import BaseConformityScore
+from mapie.future.calibrators.base import BaseCalibrator
 from mapie.utils import _sample_non_null_weight, fit_estimator
 
 
@@ -117,9 +116,7 @@ class SplitCP(BaseEstimator, metaclass=ABCMeta):
         """
 
     @abstractmethod
-    def _check_calibrate_parameters(self) -> Tuple[
-        BaseConformityScore, BaseCalibrator
-    ]:
+    def _check_calibrate_parameters(self) -> Tuple[BaseConformityScore, BaseCalibrator]:
         """
         Check and replace default ``conformity_score``, ``alpha`` and
         ``calibrator`` arguments.
@@ -165,8 +162,7 @@ class SplitCP(BaseEstimator, metaclass=ABCMeta):
             return ShuffleSplit(
                 n_splits=1, test_size=test_size, random_state=self.random_state
             )
-        elif (isinstance(cv, (PredefinedSplit, ShuffleSplit))
-              and cv.get_n_splits() == 1):
+        elif isinstance(cv, (PredefinedSplit, ShuffleSplit)) and cv.get_n_splits() == 1:
             return cv
         elif cv == "prefit":
             return cv
@@ -199,16 +195,15 @@ class SplitCP(BaseEstimator, metaclass=ABCMeta):
         if isinstance(alpha, float):
             alpha = alpha
         else:
-            raise ValueError(
-                "Invalid alpha. Allowed values are float."
-            )
+            raise ValueError("Invalid alpha. Allowed values are float.")
 
         if alpha < 0 or alpha > 1:
-            raise ValueError("Invalid alpha. "
-                             "Allowed values are between 0 and 1.")
+            raise ValueError("Invalid alpha. Allowed values are between 0 and 1.")
 
     def _get_method_arguments(
-        self, method: Callable, local_vars: Dict[str, Any],
+        self,
+        method: Callable,
+        local_vars: Dict[str, Any],
         kwargs: Optional[Dict],
     ) -> Dict:
         """
@@ -242,8 +237,10 @@ class SplitCP(BaseEstimator, metaclass=ABCMeta):
         method_kwargs: Dict[str, Any] = {}
         for param in sig.parameters.values():
             # We ignore the arguments like *args and **kwargs of the method
-            if param.kind in (inspect.Parameter.POSITIONAL_OR_KEYWORD,
-                              inspect.Parameter.KEYWORD_ONLY):
+            if param.kind in (
+                inspect.Parameter.POSITIONAL_OR_KEYWORD,
+                inspect.Parameter.KEYWORD_ONLY,
+            ):
                 param_name = param.name
                 if kwargs is not None and param_name in kwargs:
                     method_kwargs[param_name] = kwargs[param_name]
@@ -325,18 +322,21 @@ class SplitCP(BaseEstimator, metaclass=ABCMeta):
         """
         predictor = self._check_fit_parameters()
 
-        if self.cv != 'prefit':
+        if self.cv != "prefit":
             self.cv = cast(BaseCrossValidator, self.cv)
 
             train_index, _ = list(self.cv.split(X, y, groups))[0]
 
-            (
-                X_train, y_train, _, sample_weight_train, _
-            ) = _sample_non_null_weight(X, y, sample_weight, train_index)
+            (X_train, y_train, _, sample_weight_train, _) = _sample_non_null_weight(
+                X, y, sample_weight, train_index
+            )
 
             self.predictor_ = fit_estimator(
-                predictor, X_train, y_train,
-                sample_weight=sample_weight_train, **fit_kwargs
+                predictor,
+                X_train,
+                y_train,
+                sample_weight=sample_weight_train,
+                **fit_kwargs,
             )
         else:
             self.predictor_ = predictor
@@ -403,21 +403,23 @@ class SplitCP(BaseEstimator, metaclass=ABCMeta):
             return self
 
         # Get training and calibration sets
-        if self.cv != 'prefit':
+        if self.cv != "prefit":
             self.cv = cast(BaseCrossValidator, self.cv)
 
             train_index, calib_index = list(self.cv.split(X, y, groups))[0]
         else:
-            train_index, calib_index = (np.array([], dtype=int),
-                                        np.arange(_num_samples(X)))
+            train_index, calib_index = (
+                np.array([], dtype=int),
+                np.arange(_num_samples(X)),
+            )
 
         z = cast(Optional[ArrayLike], calib_kwargs.get("z", None))
-        (
-            X_train, y_train, z_train, sample_weight_train, train_index
-        ) = _sample_non_null_weight(X, y, sample_weight, train_index, z)
-        (
-            X_calib, y_calib, z_calib, sample_weight_calib, calib_index
-        ) = _sample_non_null_weight(X, y, sample_weight, calib_index, z)
+        (X_train, y_train, z_train, sample_weight_train, train_index) = (
+            _sample_non_null_weight(X, y, sample_weight, train_index, z)
+        )
+        (X_calib, y_calib, z_calib, sample_weight_calib, calib_index) = (
+            _sample_non_null_weight(X, y, sample_weight, calib_index, z)
+        )
 
         # Compute conformity scores
         y_pred_calib = self.predict_score(X_calib)
@@ -426,45 +428,74 @@ class SplitCP(BaseEstimator, metaclass=ABCMeta):
         X_calib = cast(NDArray, X_calib)
 
         conformity_scores_calib = self.get_conformity_scores(
-            self.conformity_score_, X_calib, y_calib,
-            y_pred_calib, sample_weight_calib, groups
+            self.conformity_score_,
+            X_calib,
+            y_calib,
+            y_pred_calib,
+            sample_weight_calib,
+            groups,
         )
 
-        conformity_scores_calib = self._check_conformity_scores(
-            conformity_scores_calib
-        )
+        conformity_scores_calib = self._check_conformity_scores(conformity_scores_calib)
 
         # Get the calibrator arguments
-        dict_arguments = dict(zip([
-            "X", "y", "z", "sample_weight", "groups",
-            "y_pred_calib", "conformity_scores_calib",
-            "X_train", "y_train", "z_train",
-            "sample_weight_train", "train_index",
-            "X_calib", "y_calib", "z_calib",
-            "sample_weight_calib", "calib_index",
-            ],
-            [
-            X, y, z, sample_weight, groups,
-            y_pred_calib, conformity_scores_calib,
-            X_train, y_train, z_train, sample_weight_train, train_index,
-            X_calib, y_calib, z_calib, sample_weight_calib, calib_index,
-        ]))
+        dict_arguments = dict(
+            zip(
+                [
+                    "X",
+                    "y",
+                    "z",
+                    "sample_weight",
+                    "groups",
+                    "y_pred_calib",
+                    "conformity_scores_calib",
+                    "X_train",
+                    "y_train",
+                    "z_train",
+                    "sample_weight_train",
+                    "train_index",
+                    "X_calib",
+                    "y_calib",
+                    "z_calib",
+                    "sample_weight_calib",
+                    "calib_index",
+                ],
+                [
+                    X,
+                    y,
+                    z,
+                    sample_weight,
+                    groups,
+                    y_pred_calib,
+                    conformity_scores_calib,
+                    X_train,
+                    y_train,
+                    z_train,
+                    sample_weight_train,
+                    train_index,
+                    X_calib,
+                    y_calib,
+                    z_calib,
+                    sample_weight_calib,
+                    calib_index,
+                ],
+            )
+        )
         calib_arguments = self._get_method_arguments(
-            calibrator.fit,
-            dict_arguments,
-            calib_kwargs
+            calibrator.fit, dict_arguments, calib_kwargs
         )
 
         self.calibrator_ = calibrator.fit(
             **calib_arguments,
             **(
                 {
-                    key: calib_kwargs[key] for key in calib_kwargs
+                    key: calib_kwargs[key]
+                    for key in calib_kwargs
                     if key not in dict_arguments
                 }
                 if calib_kwargs is not None
                 else {}
-            )
+            ),
         )
 
         return self
@@ -476,7 +507,7 @@ class SplitCP(BaseEstimator, metaclass=ABCMeta):
         sample_weight: Optional[ArrayLike] = None,
         groups: Optional[ArrayLike] = None,
         fit_kwargs: Optional[Dict] = None,
-        calib_kwargs: Optional[Dict] = None
+        calib_kwargs: Optional[Dict] = None,
     ) -> SplitCP:
         """
         Fit the predictor (if ``cv`` is not ``"prefit"``)
@@ -523,11 +554,20 @@ class SplitCP(BaseEstimator, metaclass=ABCMeta):
         SplitCP
             self
         """
-        self.fit_predictor(X, y, sample_weight, groups,
-                           **(fit_kwargs if fit_kwargs is not None else {}))
-        self.fit_calibrator(X, y, sample_weight, groups,
-                            **(calib_kwargs
-                               if calib_kwargs is not None else {}))
+        self.fit_predictor(
+            X,
+            y,
+            sample_weight,
+            groups,
+            **(fit_kwargs if fit_kwargs is not None else {}),
+        )
+        self.fit_calibrator(
+            X,
+            y,
+            sample_weight,
+            groups,
+            **(calib_kwargs if calib_kwargs is not None else {}),
+        )
         return self
 
     def predict(
@@ -566,7 +606,9 @@ class SplitCP(BaseEstimator, metaclass=ABCMeta):
 
         # Fit the calibrator
         bounds_arguments = self._get_method_arguments(
-            self.calibrator_.predict, {}, kwargs,
+            self.calibrator_.predict,
+            {},
+            kwargs,
         )
 
         y_bounds = self.predict_bounds(X, y_pred, **bounds_arguments)
@@ -621,9 +663,7 @@ class SplitCP(BaseEstimator, metaclass=ABCMeta):
         """
 
     @abstractmethod
-    def predict_score(
-        self, X: ArrayLike
-    ) -> NDArray:
+    def predict_score(self, X: ArrayLike) -> NDArray:
         """
         Compute the predictor prediction, used to compute the
         conformity scores.
