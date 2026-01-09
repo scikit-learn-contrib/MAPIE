@@ -14,9 +14,3 @@
 .deprecated p span.versionmodified {
     font-weight: bold;
 }
-
-/* --- Wrap long lines ONLY in sphinx-gallery "Out:" blocks --- */
-.sphx-glr-script-out pre {
-    white-space: pre-wrap; /* Preserves whitespace and wraps text */
-    overflow-wrap: anywhere; /* Forces line breaks in long, unbreakable strings */
-}
