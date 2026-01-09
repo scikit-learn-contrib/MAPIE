@@ -62,6 +62,7 @@ templates_path = ["_templates"]
 
 # generate autosummary even if no references
 autosummary_generate = True
+autosummary_short_names = True
 
 
 autosectionlabel_prefix_document = True
