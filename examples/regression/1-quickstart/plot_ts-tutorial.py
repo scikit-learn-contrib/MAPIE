@@ -23,8 +23,8 @@ by the temperature, considered here as a exogeneous variable.
 Before estimating prediction intervals with MAPIE, we optimize the base model,
 here a Random Forest model. The hyper-parameters are
 optimized with a :class:`~sklearn.model_selection.RandomizedSearchCV` using a
-sequential :class:`~sklearn.model_selection.TimeSeriesSplit` cross validation,
-in which the training set is prior to the validation set.
+fixed validation set, which is only used for hyper-parameter search to avoid
+data leakage.
 
 Once the base model is optimized, we can use
 :class:`~TimeSeriesRegressor` to estimate

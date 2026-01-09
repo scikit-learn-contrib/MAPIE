@@ -21,9 +21,9 @@ by the temperature, considered here as a exogeneous variable.
 
 A Random Forest model is already fitted on data. The hyper-parameters are
 optimized with a :class:`~sklearn.model_selection.RandomizedSearchCV` using a
-sequential :class:`~sklearn.model_selection.TimeSeriesSplit` cross validation,
-in which the training set is prior to the validation set.
-The best model is then feeded into
+fixed validation set, which is only used for hyper-parameter search to avoid
+data leakage.
+The best model is then fed into
 :class:`~mapie.time_series_regression.TimeSeriesRegressor` to estimate the
 associated prediction intervals. We compare two approaches: with or without calling
 ``update`` at every step, following [6]. The results show coverage closer
