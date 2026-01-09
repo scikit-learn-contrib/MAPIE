@@ -63,7 +63,7 @@ import pandas as pd
 from matplotlib import pylab as plt
 from scipy.stats import randint
 from sklearn.ensemble import RandomForestRegressor
-from sklearn.model_selection import RandomizedSearchCV, TimeSeriesSplit
+from sklearn.model_selection import PredefinedSplit, RandomizedSearchCV
 
 from mapie.metrics.regression import (
     coverage_width_based,
@@ -85,6 +85,7 @@ warnings.simplefilter("ignore")
 # of the Victoria state in Australia together with the temperature
 # (in Celsius degrees). We extract temporal features out of the date and hour.
 
+num_val_steps = 24 * 7
 num_test_steps = 24 * 7
 
 url_file = (
@@ -112,13 +113,16 @@ demand_df.Demand.iloc[-int(num_test_steps / 2) :] -= 2
 # The last week of the dataset is considered as test set, the remaining data
 # is used as training set.
 
-demand_train = demand_df.iloc[:-num_test_steps, :].copy()
+demand_train = demand_df.iloc[: -num_val_steps - num_test_steps, :].copy()
+demand_val = demand_df.iloc[-num_val_steps - num_test_steps : -num_test_steps, :].copy()
 demand_test = demand_df.iloc[-num_test_steps:, :].copy()
 features = ["Weekofyear", "Weekday", "Hour", "Temperature"]
 features += [f"Lag_{hour}" for hour in range(1, n_lags)]
 
 X_train = demand_train.loc[~np.any(demand_train[features].isnull(), axis=1), features]
 y_train = demand_train.loc[X_train.index, "Demand"]
+X_val = demand_val.loc[:, features]
+y_val = demand_val["Demand"]
 X_test = demand_test.loc[:, features]
 y_test = demand_test["Demand"]
 
@@ -127,9 +131,10 @@ y_test = demand_test["Demand"]
 
 plt.figure(figsize=(16, 5))
 plt.plot(y_train)
+plt.plot(y_val, ls="--", c="C0")
 plt.plot(y_test)
 plt.ylabel("Hourly demand (GW)")
-plt.legend(["Training data", "Test data"])
+plt.legend(["Training data", "Validation data", "Test data"])
 plt.show()
 
 
@@ -139,15 +144,17 @@ plt.show()
 #
 # Before estimating the prediction intervals with MAPIE, let's optimize the
 # base model, here a :class:`~RandomForestRegressor` through a
-# :class:`~RandomizedSearchCV` with a temporal cross-validation strategy.
+# :class:`~RandomizedSearchCV` with a fixed validation set.
 # For the sake of computational time, the best parameters are already tuned.
 
 model_params_fit_not_done = False
 if model_params_fit_not_done:
     # CV parameter search
+    X_param_search = pd.concat([X_train, X_val], axis=0)
+    y_param_search = pd.concat([y_train, y_val], axis=0)
+    test_fold = np.concatenate([-1 * np.ones(len(X_train)), 0 * np.ones(len(X_val))])
+    ps = PredefinedSplit(test_fold)
     n_iter = 100
-    n_splits = 5
-    tscv = TimeSeriesSplit(n_splits=n_splits)
     random_state = 59
     rf_model = RandomForestRegressor(random_state=random_state)
     rf_params = {"max_depth": randint(2, 30), "n_estimators": randint(10, 100)}
@@ -155,17 +162,17 @@ if model_params_fit_not_done:
         rf_model,
         param_distributions=rf_params,
         n_iter=n_iter,
-        cv=tscv,
+        cv=ps,
         scoring="neg_root_mean_squared_error",
         random_state=random_state,
         verbose=0,
         n_jobs=-1,
     )
-    cv_obj.fit(X_train, y_train)  # DATA LEAKAGE
+    cv_obj.fit(X_param_search, y_param_search)
     model = cv_obj.best_estimator_
 else:
-    # Model: Random Forest previously optimized with a cross-validation
-    model = RandomForestRegressor(max_depth=10, n_estimators=50, random_state=59)
+    # Model: Random Forest previously optimized
+    model = RandomForestRegressor(max_depth=25, n_estimators=31, random_state=59)
 
 ##############################################################################
 # 3. Estimate prediction intervals on the test set
@@ -390,7 +397,7 @@ widths_aci = [width_aci_npfit, width_aci_pfit]
 fig, axs = plt.subplots(nrows=2, ncols=1, figsize=(14, 8), sharey="row", sharex="col")
 for i, (ax, w) in enumerate(zip(axs, ["without", "with"])):
     ax.set_ylabel("Hourly demand (GW)")
-    ax.plot(y_train[int(-len(y_test) / 2) :], lw=2, label="Training data", c="C0")
+    ax.plot(y_val[int(-len(y_test) / 2) :], "--", lw=2, label="Validation data", c="C0")
     ax.plot(y_test, lw=2, label="Test data", c="C1")
 
     ax.plot(y_test.index, y_enbpi_preds[i], lw=2, c="C2", label="Predictions")
@@ -412,7 +419,7 @@ plt.show()
 fig, axs = plt.subplots(nrows=2, ncols=1, figsize=(14, 8), sharey="row", sharex="col")
 for i, (ax, w) in enumerate(zip(axs, ["without", "with"])):
     ax.set_ylabel("Hourly demand (GW)")
-    ax.plot(y_train[int(-len(y_test) / 2) :], lw=2, label="Training data", c="C0")
+    ax.plot(y_val[int(-len(y_test) / 2) :], "--", lw=2, label="Validation data", c="C0")
     ax.plot(y_test, lw=2, label="Test data", c="C1")
 
     ax.plot(y_test.index, y_aci_preds[i], lw=2, c="C2", label="Predictions")
