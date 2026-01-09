@@ -18,5 +18,5 @@
 /* --- Wrap long lines ONLY in sphinx-gallery "Out:" blocks --- */
 .sphx-glr-script-out pre {
     white-space: pre-wrap; /* Preserves whitespace and wraps text */
-    word-break: break-word; /* Forces line breaks in long, unbreakable strings */
+    overflow-wrap: anywhere; /* Forces line breaks in long, unbreakable strings */
 }
