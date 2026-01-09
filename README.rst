@@ -39,6 +39,7 @@ MAPIE - Model Agnostic Prediction Interval Estimator
 ====================================================
 
  🎉 MAPIE v1 is live!  🎉 You're seeing the documentation of this new version, which introduces major changes to the API. Extensive release notes are available `here <https://mapie.readthedocs.io/en/stable/v1_release_notes.html>`_. You can switch to the documentation of previous versions using the button on the bottom right of ReadTheDoc pages.
+ 🚀 MAPIE Roadmap 2026 🚀 New features are coming, starting with the application of **risk control** to emerging use cases such as **LLM-as-Judge** and **image segmentation**. In addition, **exchangeability tests** will be introduced to help users verify when MAPIE can be legitimately applied. Finally, **conformal prediction methods** will be revisited with a stronger focus on **adaptability**. More details are available `here <https://github.com/scikit-learn-contrib/MAPIE/discussions/822>`_.
 
 **MAPIE** is an open-source Python library for quantifying uncertainties and controlling the risks of machine learning models.
 
