@@ -17,7 +17,7 @@ from mapie.conformity_scores.utils import (
     check_and_select_conformity_score,
     check_regression_conformity_score,
 )
-from mapie.estimator.regressor import EnsembleRegressor
+from mapie.estimator.regressor import EnsembleRegressor, EnsembleStdRegressor
 from mapie.subsample import Subsample
 from mapie.utils import (
     _cast_point_predictions_to_ndarray,
@@ -30,6 +30,7 @@ from mapie.utils import (
     _check_deprecated_sample_weight_kwarg,
     _check_estimator_fit_predict,
     _check_if_param_in_allowed_values,
+    _check_model_has_std_argument,
     _check_n_features_in,
     _check_n_jobs,
     _check_null_weight,
@@ -420,6 +421,7 @@ class CrossConformalRegressor:
         estimator: RegressorMixin = LinearRegression(),
         confidence_level: Union[float, Iterable[float]] = 0.9,
         conformity_score: Union[str, BaseRegressionScore] = "absolute",
+        model_has_std: Optional[bool] = False,
         method: str = "plus",
         cv: Union[int, BaseCrossValidator] = 5,
         n_jobs: Optional[int] = None,
@@ -442,6 +444,7 @@ class CrossConformalRegressor:
                 conformity_score,
                 BaseRegressionScore,
             ),
+            model_has_std=model_has_std,
             random_state=random_state,
         )
 
@@ -1198,6 +1201,14 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
 
         By default `None`.
 
+    model_has_std: Optional[bool]
+        Wether or not the regression model can also output an estimator of the
+        standard deviation of the prediction (Gaussian Processes for example).
+        If `True`, then this value will be used to normalize the conformity
+        score to have more adaptive predicion intervals.
+
+        By default `False`.
+
     random_state: Optional[Union[int, RandomState]]
         Pseudo random number generator state used for random sampling.
         Pass an int for reproducible output across multiple function calls.
@@ -1278,6 +1289,7 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
         agg_function: Optional[str] = "mean",
         verbose: int = 0,
         conformity_score: Optional[BaseRegressionScore] = None,
+        model_has_std: Optional[bool] = False,
         random_state: Optional[Union[int, np.random.RandomState]] = None,
     ) -> None:
         self.estimator = estimator
@@ -1289,6 +1301,7 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
         self.verbose = verbose
         self.conformity_score = conformity_score
         self.random_state = random_state
+        self.model_has_std = model_has_std
         self._is_fitted = False
 
     @property
@@ -1309,6 +1322,7 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
         _check_n_jobs(self.n_jobs)
         _check_verbose(self.verbose)
         check_random_state(self.random_state)
+        _check_model_has_std_argument(self.model_has_std)
 
     def _check_method(self, method: str) -> str:
         """
@@ -1581,15 +1595,23 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
             groups,
         ) = self._check_fit_parameters(X, y, groups)
 
-        self.estimator_ = EnsembleRegressor(
-            estimator,
-            self.method,
-            cv,
-            agg_function,
-            self.n_jobs,
-            self.test_size,
-            self.verbose,
-        )
+        if not isinstance(estimator, EnsembleRegressor):
+            my_regressor = (
+                EnsembleRegressor if not self.model_has_std
+                else EnsembleStdRegressor
+            )
+
+            self.estimator_ = my_regressor(
+                estimator,
+                self.method,
+                cv,
+                agg_function,
+                self.n_jobs,
+                self.test_size,
+                self.verbose,
+            )
+        else:
+            self.estimator_ = estimator
 
         return (X, y, groups)
 
@@ -1613,15 +1635,21 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
         predict_params = kwargs.pop("predict_params", {})
         self._predict_params = len(predict_params) > 0
 
-        self.estimator_.fit_multi_estimators(X, y, groups=groups, **self._fit_params)
-
-        # Predict on calibration data
-        y_pred = self.estimator_.predict_calib(X, y=y, groups=groups, **predict_params)
-
-        # Compute the conformity scores (manage jk-ab case)
-        self.conformity_scores_ = self.conformity_score_function_.get_conformity_scores(
-            y, y_pred, X=X
+        self.estimator_.fit_multi_estimators(
+            X, y, sample_weight, groups, **self._fit_params
         )
+        
+        # Predict on calibration data and compute the conformity scores (manage jk-ab case )
+        if self.model_has_std:
+            y_pred, y_std = self.estimator_.predict_calib(X, y=y, groups=groups, **predict_params)
+            self.conformity_scores_ = self.conformity_score_function_.get_conformity_scores(
+                 X, y, y_pred, y_std
+            )
+        else:
+            y_pred = self.estimator_.predict_calib(X, y=y, groups=groups, **predict_params)
+            self.conformity_scores_ = self.conformity_score_function_.get_conformity_scores(
+                y, y_pred, X=X
+            )
 
         return self
 
