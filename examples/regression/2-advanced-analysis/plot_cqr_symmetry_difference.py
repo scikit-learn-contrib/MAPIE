@@ -1,7 +1,7 @@
 """
-==========================================================================================================
-The symmetric_correction parameter of ConformalizedQuantileRegressor
-==========================================================================================================
+=======================================================================
+The symmetric_correction parameter in conformalized quantile regression
+=======================================================================
 
 
 An example plot of :class:`~mapie.regression.ConformalizedQuantileRegressor`
