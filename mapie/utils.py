@@ -1496,6 +1496,29 @@ def _raise_error_if_fit_called_in_prefit_mode(
             "Use the conformalize method directly after instanciation."
         )
 
+def _check_model_has_std_argument(model_has_std: bool) -> None:
+    """Check if the argument `model_has_std` is a boolean or not
+
+    Parameters
+    ----------
+        model_has_std: bool
+        Wether or not the regression model can also output an estimator of the
+        standard deviation of the prediction (Gaussian Processes for example).
+        If `True`, then this value will be used to normalize the conformity
+        score to have more adaptive predicion intervals.
+
+    Raises
+    ------
+    ValueError
+        If the model_has_std is not a boolean
+    """
+
+    if not isinstance(model_has_std, bool):
+        raise ValueError(
+            "Invalid value for `model_has_std`. "
+            "Please enter a boolean value."
+        )
+
 
 class NotFittedError(ValueError):
     pass
