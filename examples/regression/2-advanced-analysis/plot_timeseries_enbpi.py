@@ -21,9 +21,9 @@ by the temperature, considered here as a exogeneous variable.
 
 A Random Forest model is already fitted on data. The hyper-parameters are
 optimized with a :class:`~sklearn.model_selection.RandomizedSearchCV` using a
-sequential :class:`~sklearn.model_selection.TimeSeriesSplit` cross validation,
-in which the training set is prior to the validation set.
-The best model is then feeded into
+fixed validation set, which is only used for hyper-parameter search to avoid
+data leakage.
+The best model is then fed into
 :class:`~mapie.time_series_regression.TimeSeriesRegressor` to estimate the
 associated prediction intervals. We compare two approaches: with or without calling
 ``update`` at every step, following [6]. The results show coverage closer
@@ -36,11 +36,11 @@ from typing import cast
 import numpy as np
 import pandas as pd
 from matplotlib import pylab as plt
+from numpy.typing import NDArray
 from scipy.stats import randint
 from sklearn.ensemble import RandomForestRegressor
-from sklearn.model_selection import RandomizedSearchCV, TimeSeriesSplit
+from sklearn.model_selection import PredefinedSplit, RandomizedSearchCV
 
-from numpy.typing import NDArray
 from mapie.metrics.regression import (
     regression_coverage_score,
     regression_mean_width_score,
@@ -67,8 +67,10 @@ for hour in range(1, n_lags):
     demand_df[f"Lag_{hour}"] = demand_df["Demand"].shift(hour)
 
 # Train/validation/test split
+num_val_steps = 24 * 7
 num_test_steps = 24 * 7
-demand_train = demand_df.iloc[:-num_test_steps, :].copy()
+demand_train = demand_df.iloc[: -num_val_steps - num_test_steps, :].copy()
+demand_val = demand_df.iloc[-num_val_steps - num_test_steps : -num_test_steps, :].copy()
 demand_test = demand_df.iloc[-num_test_steps:, :].copy()
 features = ["Weekofyear", "Weekday", "Hour", "Temperature"] + [
     f"Lag_{hour}" for hour in range(1, n_lags)
@@ -76,15 +78,19 @@ features = ["Weekofyear", "Weekday", "Hour", "Temperature"] + [
 
 X_train = demand_train.loc[~np.any(demand_train[features].isnull(), axis=1), features]
 y_train = demand_train.loc[X_train.index, "Demand"]
+X_val = demand_val.loc[:, features]
+y_val = demand_val["Demand"]
 X_test = demand_test.loc[:, features]
 y_test = demand_test["Demand"]
 
 perform_hyperparameters_search = False
 if perform_hyperparameters_search:
     # CV parameter search
+    X_param_search = pd.concat([X_train, X_val], axis=0)
+    y_param_search = pd.concat([y_train, y_val], axis=0)
+    test_fold = np.concatenate([-1 * np.ones(len(X_train)), 0 * np.ones(len(X_val))])
+    ps = PredefinedSplit(test_fold)
     n_iter = 100
-    n_splits = 5
-    tscv = TimeSeriesSplit(n_splits=n_splits)
     random_state = 59
     rf_model = RandomForestRegressor(random_state=random_state)
     rf_params = {"max_depth": randint(2, 30), "n_estimators": randint(10, 100)}
@@ -92,17 +98,17 @@ if perform_hyperparameters_search:
         rf_model,
         param_distributions=rf_params,
         n_iter=n_iter,
-        cv=tscv,
+        cv=ps,
         scoring="neg_root_mean_squared_error",
         random_state=random_state,
         verbose=0,
         n_jobs=-1,
     )
-    cv_obj.fit(X_train, y_train)
+    cv_obj.fit(X_param_search, y_param_search)
     model = cv_obj.best_estimator_
 else:
     # Model: Random Forest previously optimized with a cross-validation
-    model = RandomForestRegressor(max_depth=10, n_estimators=50, random_state=59)
+    model = RandomForestRegressor(max_depth=25, n_estimators=31, random_state=59)
 
 # Estimate prediction intervals on test set with best estimator
 alpha = 0.05
