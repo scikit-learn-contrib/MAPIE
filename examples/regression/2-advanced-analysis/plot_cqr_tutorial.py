@@ -1,7 +1,7 @@
 """
-==========================================================================================================
-ConformalizedQuantileRegressor on gamma distributed data
-==========================================================================================================
+===========================================================
+Conformalized quantile regression on gamma distributed data
+===========================================================
 
 
 We will use the sklearn california housing dataset as the base for the
