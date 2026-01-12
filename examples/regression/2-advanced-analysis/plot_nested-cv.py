@@ -1,7 +1,7 @@
 """
-==========================================================================================
-Hyperparameters tuning with CrossConformalRegressor
-==========================================================================================
+======================================================
+Hyperparameters tuning with cross-conformal regression
+======================================================
 
 
 This example compares non-nested and nested cross-validation strategies
@@ -41,14 +41,13 @@ coverages of both nested and non-nested methods are the same.
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.stats import randint
+from sklearn.datasets import make_sparse_uncorrelated
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import root_mean_squared_error
 from sklearn.model_selection import RandomizedSearchCV, train_test_split
-from sklearn.datasets import make_sparse_uncorrelated
 
 from mapie.metrics.regression import regression_coverage_score
 from mapie.regression import CrossConformalRegressor
-
 
 RANDOM_STATE = 42
 
