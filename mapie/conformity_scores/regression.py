@@ -95,6 +95,7 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
             Conformity scores.
         """
         conformity_scores = self.get_signed_conformity_scores(y, y_pred, **kwargs)
+
         if self.consistency_check:
             self.check_consistency(y, y_pred, conformity_scores, **kwargs)
         if self.sym:
@@ -397,3 +398,22 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
             The prediction sets for each sample and each alpha level.
         """
         return self.get_bounds(X=X, alpha_np=alpha_np, **kwargs)
+
+    def get_effective_calibration_samples(self, scores: NDArray):
+        """
+        Calculates the effective number of calibration samples.
+
+        Parameters
+        ----------
+        scores: NDArray
+            An array of scores.
+
+        Returns
+        -------
+        n: int
+            The effective number of calibration samples.
+        """
+        n: int = np.sum(~np.isnan(scores))
+        if not self.sym:
+            n //= 2
+        return n
