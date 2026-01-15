@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Iterable, List, Optional, Tuple, Union, cast
 
+import warnings
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 from sklearn.base import RegressorMixin, clone
@@ -14,7 +15,6 @@ from sklearn.utils.validation import _check_y, _num_samples, indexable
 from mapie.utils import (
     _cast_predictions_to_ndarray_tuple,
     _check_alpha_and_n_samples,
-    _check_defined_variables_predict_cqr,
     _check_estimator_fit_predict,
     _check_lower_upper_bounds,
     _check_null_weight,
@@ -922,6 +922,57 @@ class _MapieQuantileRegressor(_MapieRegressor):
         )
         return self
 
+    @staticmethod
+    def _check_defined_variables_predict(
+        ensemble: bool,
+        alpha: Union[float, Iterable[float], None],
+    ) -> None:
+        """
+        Check that the parameters defined for the predict method
+        of ``_MapieQuantileRegressor`` are correct.
+
+        Parameters
+        ----------
+        ensemble: bool
+            Ensemble has not been defined in predict and therefore should
+            will not have any effects in this method.
+        alpha: Optional[Union[float, Iterable[float]]]
+            For ``MapieQuantileRegresor`` the alpha has to be defined
+            directly in initial arguments of the class.
+
+        Raises
+        ------
+        Warning
+            If the ensemble value is defined in the predict function
+            of ``_MapieQuantileRegressor``.
+        Warning
+            If the alpha value is defined in the predict function
+            of ``_MapieQuantileRegressor``.
+
+        Examples
+        --------
+        >>> import warnings
+        >>> warnings.filterwarnings("error")
+        >>> CQR = _MapieQuantileRegressor()
+        >>> try:
+        ...     CQR._check_defined_variables_predict(True, None)
+        ... except Exception as exception:
+        ...     print(exception)
+        ...
+        WARNING: ensemble is not utilized in ``_MapieQuantileRegressor``.
+        """
+
+        if ensemble is True:
+            warnings.warn(
+                "WARNING: ensemble is not utilized in ``_MapieQuantileRegressor``."
+            )
+        if alpha is not None:
+            warnings.warn(
+                "WARNING: Alpha should not be specified"
+                + "in the prediction method\n"
+                + "with conformalized quantile regression."
+            )
+
     def predict(
         self,
         X: ArrayLike,
@@ -971,7 +1022,7 @@ class _MapieQuantileRegressor(_MapieRegressor):
               - [:, 1, :]: Upper bound of the prediction interval.
         """
         check_is_fitted(self)
-        _check_defined_variables_predict_cqr(ensemble, alpha)
+        self._check_defined_variables_predict(ensemble, alpha)
         alpha = self.alpha if symmetry else self.alpha / 2
         _check_alpha_and_n_samples(alpha, self.n_calib_samples)
 

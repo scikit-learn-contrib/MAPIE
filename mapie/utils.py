@@ -559,29 +559,6 @@ def _check_gamma(gamma: float) -> None:
         raise ValueError("Invalid gamma. Allowed values are between 0 and 1.")
 
 
-def _get_effective_calibration_samples(scores: NDArray, sym: bool):
-    """
-    Calculates the effective number of calibration samples.
-
-    Parameters
-    ----------
-    scores: NDArray
-        An array of scores.
-
-    sym: bool
-        A boolean indicating whether the scores are symmetric.
-
-    Returns
-    -------
-    n: int
-        The effective number of calibration samples.
-    """
-    n: int = np.sum(~np.isnan(scores))
-    if not sym:
-        n //= 2
-    return n
-
-
 def _check_alpha_and_n_samples(
     alphas: Union[Iterable[float], float],
     n: int,
@@ -726,55 +703,6 @@ def _check_lower_upper_bounds(
         logging.basicConfig(level=logging.INFO)
         logging.info("The predictions are ill-sorted.")
         logging.basicConfig(level=initial_logger_level)
-
-
-def _check_defined_variables_predict_cqr(
-    ensemble: bool,
-    alpha: Union[float, Iterable[float], None],
-) -> None:
-    """
-    Check that the parameters defined for the predict method
-    of ``_MapieQuantileRegressor`` are correct.
-
-    Parameters
-    ----------
-    ensemble: bool
-        Ensemble has not been defined in predict and therefore should
-        will not have any effects in this method.
-    alpha: Optional[Union[float, Iterable[float]]]
-        For ``MapieQuantileRegresor`` the alpha has to be defined
-        directly in initial arguments of the class.
-
-    Raises
-    ------
-    Warning
-        If the ensemble value is defined in the predict function
-        of ``_MapieQuantileRegressor``.
-    Warning
-        If the alpha value is defined in the predict function
-        of ``_MapieQuantileRegressor``.
-
-    Examples
-    --------
-    >>> import warnings
-    >>> warnings.filterwarnings("error")
-    >>> from mapie.utils import _check_defined_variables_predict_cqr
-    >>> try:
-    ...     _check_defined_variables_predict_cqr(True, None)
-    ... except Exception as exception:
-    ...     print(exception)
-    ...
-    WARNING: ensemble is not utilized in ``_MapieQuantileRegressor``.
-    """
-    if ensemble is True:
-        warnings.warn(
-            "WARNING: ensemble is not utilized in ``_MapieQuantileRegressor``."
-        )
-    if alpha is not None:
-        warnings.warn(
-            "WARNING: Alpha should not be specified in the prediction method\n"
-            + "with conformalized quantile regression."
-        )
 
 
 def _check_estimator_fit_predict(
