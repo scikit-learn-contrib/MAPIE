@@ -78,7 +78,7 @@ master_doc = "index"
 
 # General information about the project.
 project = "MAPIE"
-copyright = "2022, Quantmetry"
+copyright = "2026, Capgemini Invent"
 
 # The version info for the project you"re documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -231,7 +231,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    ("index", "mapie.tex", "MAPIE Documentation", "Quantmetry", "manual"),
+    ("index", "mapie.tex", "MAPIE Documentation", "Capgemini Invent", "manual"),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -259,7 +259,7 @@ latex_documents = [
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [("index", "mapie", "MAPIE Documentation", ["Quantmetry"], 1)]
+man_pages = [("index", "mapie", "MAPIE Documentation", ["Capgemini Invent"], 1)]
 
 # If true, show URL addresses after external links.
 # man_show_urls = False
@@ -275,7 +275,7 @@ texinfo_documents = [
         "index",
         "mapie",
         "MAPIE Documentation",
-        "Quantmetry",
+        "Capgemini Invent",
         "MAPIE",
         "One line description of project.",
         "Miscellaneous",
