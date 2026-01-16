@@ -2,11 +2,13 @@
 MAPIE API
 #########
 
+----
+
 Regression
-=============================
+==========
 
 Conformalizers
----------------
+--------------
 
 .. autosummary::
    :toctree: generated/
@@ -19,7 +21,7 @@ Conformalizers
    mapie.regression.TimeSeriesRegressor
 
 Metrics
---------
+-------
 
 .. autosummary::
    :toctree: generated/
@@ -34,7 +36,7 @@ Metrics
    mapie.metrics.regression.regression_mwi_score
 
 Conformity Scores
--------------------
+-----------------
 
 .. autosummary::
    :toctree: generated/
@@ -46,7 +48,7 @@ Conformity Scores
    mapie.conformity_scores.ResidualNormalisedScore
 
 Resampling
------------
+----------
 
 .. autosummary::
    :toctree: generated/
@@ -55,11 +57,13 @@ Resampling
    mapie.subsample.BlockBootstrap
    mapie.subsample.Subsample
 
+----
+
 Classification
 ==============
 
 Conformalizers
----------------
+--------------
 
 .. autosummary::
    :toctree: generated/
@@ -69,7 +73,7 @@ Conformalizers
    mapie.classification.CrossConformalClassifier
 
 Metrics
---------
+-------
 
 .. autosummary::
    :toctree: generated/
@@ -81,7 +85,7 @@ Metrics
    mapie.metrics.classification.classification_ssc_score
 
 Conformity Scores
-------------------
+-----------------
 
 .. autosummary::
    :toctree: generated/
@@ -94,8 +98,10 @@ Conformity Scores
    mapie.conformity_scores.RAPSConformityScore
    mapie.conformity_scores.TopKConformityScore
 
+----
+
 Risk Control
-==========================
+============
 
 .. autosummary::
    :toctree: generated/
@@ -106,11 +112,13 @@ Risk Control
    mapie.risk_control.SemanticSegmentationController
    mapie.risk_control.BinaryClassificationRisk
 
+----
+
 Calibration
 ===========
 
 Conformalizer
---------------
+-------------
 
 .. autosummary::
    :toctree: generated/
@@ -119,7 +127,7 @@ Conformalizer
    mapie.calibration.TopLabelCalibrator
 
 Metrics
---------
+-------
 
 .. autosummary::
    :toctree: generated/
@@ -138,8 +146,10 @@ Metrics
    mapie.metrics.calibration.spiegelhalter_p_value
    mapie.metrics.calibration.spiegelhalter_statistic
 
+----
+
 Utils
-==============================
+=====
 
 .. autosummary::
    :toctree: generated/

@@ -14,7 +14,7 @@ History
 * Add a new binary classification risk called `predicted_positive_fraction` and update the examples accordingly.
 * Add a disclosure about LLM usage to the pull request template.
 * Fix data leakage for time series tutorials
-*
+* Improve documentation display (increase width and improve API table)
 
 1.2.0 (2025-11-17)
 ------------------
