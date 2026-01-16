@@ -103,6 +103,7 @@ Risk Control
 
    mapie.risk_control.MultiLabelClassificationController
    mapie.risk_control.BinaryClassificationController
+   mapie.risk_control.SemanticSegmentationController
    mapie.risk_control.BinaryClassificationRisk
 
 Calibration
