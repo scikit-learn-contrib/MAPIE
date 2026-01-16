@@ -7,7 +7,6 @@ from unittest.mock import patch
 
 import numpy as np
 import pytest
-from numpy.random import RandomState
 from numpy.typing import ArrayLike, NDArray
 from sklearn.datasets import make_regression
 from sklearn.linear_model import LinearRegression, LogisticRegression

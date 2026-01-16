@@ -22,7 +22,11 @@ from sklearn.utils.validation import check_is_fitted
 
 from mapie._venn_abers import VennAbers, VennAbersMultiClass, predict_proba_prefitted_va
 from mapie.calibration import TopLabelCalibrator, VennAbersCalibrator
-from mapie.metrics.calibration import expected_calibration_error, top_label_ece, _get_binning_groups
+from mapie.metrics.calibration import (
+    expected_calibration_error,
+    top_label_ece,
+    _get_binning_groups,
+)
 
 random_state = 20
 random_state_va = 42
