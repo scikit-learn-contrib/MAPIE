@@ -242,12 +242,6 @@ for i, sample in enumerate(test_loader):
                 recalls_list.append(recall)
 
 recalls_array = np.array(recalls_list)
-print("Evaluating on test set results:")
-print(f"\tMin recall: {recalls_array.min():.4f}")
-print(f"\tMean recall: {recalls_array.mean():.4f}")
-print(f"\tMedian recall: {np.median(recalls_array):.4f}")
-print(f"\tStd of recall: {recalls_array.std():.4f}")
-print(f"\tMax recall: {recalls_array.max():.4f}")
 
 ###############################################################################
 # Finally, the distribution of recall values over the test set is plotted

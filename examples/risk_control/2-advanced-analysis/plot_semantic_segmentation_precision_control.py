@@ -244,12 +244,6 @@ for i, sample in enumerate(test_loader):
                 precisions_list.append(precision)
 
 precisions_array = np.array(precisions_list)
-print("Evaluating on test set results:")
-print(f"\tMin precision: {precisions_array.min():.4f}")
-print(f"\tMean precision: {precisions_array.mean():.4f}")
-print(f"\tMedian precision: {np.median(precisions_array):.4f}")
-print(f"\tStd of precision: {precisions_array.std():.4f}")
-print(f"\tMax precision: {precisions_array.max():.4f}")
 
 ###############################################################################
 # Finally, the distribution of precision values over the test set is plotted
