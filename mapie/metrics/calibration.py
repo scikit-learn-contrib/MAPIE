@@ -1,9 +1,8 @@
 import scipy
 import numpy as np
-from numpy.typing import ArrayLike
+from numpy.typing import ArrayLike, NDArray
 from sklearn.utils import check_random_state
 from mapie._machine_precision import EPSILON
-from numpy.typing import NDArray
 from mapie.utils import (
     _check_array_inf,
     _check_array_nan,
@@ -14,7 +13,6 @@ from mapie.utils import (
 )
 
 
-import numpy as np
 from sklearn.utils.validation import column_or_1d
 
 
