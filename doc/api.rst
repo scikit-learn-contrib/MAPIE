@@ -2,8 +2,6 @@
 MAPIE API
 #########
 
-----
-
 Regression
 ==========
 
