@@ -1,5 +1,10 @@
 @import url("theme.css");
 
+/* Increase page width */
+.wy-nav-content {
+    max-width: 1200px !important;
+}
+
 .highlight a {
     text-decoration: underline;
 }
