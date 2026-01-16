@@ -796,7 +796,6 @@ def _compute_quantiles(vector: NDArray, alpha: NDArray) -> NDArray:
     return quantiles_
 
 
-
 def _check_estimator_classification(
     X: ArrayLike,
     y: ArrayLike,
