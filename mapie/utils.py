@@ -796,82 +796,6 @@ def _compute_quantiles(vector: NDArray, alpha: NDArray) -> NDArray:
     return quantiles_
 
 
-def _get_calib_set(
-    X: ArrayLike,
-    y: ArrayLike,
-    sample_weight: Optional[NDArray] = None,
-    calib_size: Optional[float] = 0.3,
-    random_state: Optional[Union[int, np.random.RandomState]] = None,
-    shuffle: Optional[bool] = True,
-    stratify: Optional[ArrayLike] = None,
-) -> Tuple[
-    ArrayLike, ArrayLike, ArrayLike, ArrayLike, Optional[NDArray], Optional[NDArray]
-]:
-    """
-    Split the dataset into training and calibration sets.
-
-    Parameters
-    ----------
-    Same definition of parameters as for the ``fit`` method.
-
-    Returns
-    -------
-    Tuple[
-        ArrayLike, ArrayLike, ArrayLike, ArrayLike,
-        Optional[NDArray], Optional[NDArray]
-    ]
-    - [0]: ArrayLike of shape (n_samples_*(1-calib_size), n_features)
-        X_train
-    - [1]: ArrayLike of shape (n_samples_*(1-calib_size),)
-        y_train
-    - [2]: ArrayLike of shape (n_samples_*calib_size, n_features)
-        X_calib
-    - [3]: ArrayLike of shape (n_samples_*calib_size,)
-        y_calib
-    - [4]: Optional[NDArray] of shape (n_samples_*(1-calib_size),)
-        sample_weight_train
-    - [5]: Optional[NDArray] of shape (n_samples_*calib_size,)
-        sample_weight_calib
-    """
-    if sample_weight is None:
-        (X_train, X_calib, y_train, y_calib) = train_test_split(
-            X,
-            y,
-            test_size=calib_size,
-            random_state=random_state,
-            shuffle=shuffle,
-            stratify=stratify,
-        )
-        sample_weight_train = sample_weight
-        sample_weight_calib = None
-    else:
-        (
-            X_train,
-            X_calib,
-            y_train,
-            y_calib,
-            sample_weight_train,
-            sample_weight_calib,
-        ) = train_test_split(
-            X,
-            y,
-            sample_weight,
-            test_size=calib_size,
-            random_state=random_state,
-            shuffle=shuffle,
-            stratify=stratify,
-        )
-    X_train, X_calib = cast(ArrayLike, X_train), cast(ArrayLike, X_calib)
-    y_train, y_calib = cast(ArrayLike, y_train), cast(ArrayLike, y_calib)
-    return (
-        X_train,
-        y_train,
-        X_calib,
-        y_calib,
-        sample_weight_train,
-        sample_weight_calib,
-    )
-
 
 def _check_estimator_classification(
     X: ArrayLike,
@@ -1133,32 +1057,6 @@ def _check_binary_zero_one(y_true: ArrayLike) -> NDArray:
             return y_true
     else:
         raise ValueError("Please provide y_true as a binary array.")
-
-
-def _fix_number_of_classes(
-    n_classes_: int, n_classes_training: NDArray, y_proba: NDArray
-) -> NDArray:
-    """
-    Fix shape of y_proba of validation set if number of classes
-    of the training set used for cross-validation is different than
-    number of classes of the original dataset y.
-
-    Parameters
-    ----------
-    n_classes_training: NDArray
-        Classes of the training set.
-    y_proba: NDArray
-        Probabilities of the validation set.
-
-    Returns
-    -------
-    NDArray
-        Probabilities with the right number of classes.
-    """
-    y_pred_full = np.zeros(shape=(len(y_proba), n_classes_))
-    y_index = np.tile(n_classes_training, (len(y_proba), 1))
-    np.put_along_axis(y_pred_full, y_index, y_proba, axis=1)
-    return y_pred_full
 
 
 def _check_array_shape_classification(y_true: NDArray, y_pred_set: NDArray) -> NDArray:
