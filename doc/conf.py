@@ -142,7 +142,6 @@ html_theme = "sphinx_rtd_theme"
 # documentation.
 html_theme_options = {
     "collapse_navigation": False,
-    "titles_only": True,
 }
 
 # The name for this set of Sphinx documents.  If None, it defaults to
