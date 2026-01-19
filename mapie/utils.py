@@ -559,29 +559,6 @@ def _check_gamma(gamma: float) -> None:
         raise ValueError("Invalid gamma. Allowed values are between 0 and 1.")
 
 
-def _get_effective_calibration_samples(scores: NDArray, sym: bool):
-    """
-    Calculates the effective number of calibration samples.
-
-    Parameters
-    ----------
-    scores: NDArray
-        An array of scores.
-
-    sym: bool
-        A boolean indicating whether the scores are symmetric.
-
-    Returns
-    -------
-    n: int
-        The effective number of calibration samples.
-    """
-    n: int = np.sum(~np.isnan(scores))
-    if not sym:
-        n //= 2
-    return n
-
-
 def _check_alpha_and_n_samples(
     alphas: Union[Iterable[float], float],
     n: int,
@@ -728,55 +705,6 @@ def _check_lower_upper_bounds(
         logging.basicConfig(level=initial_logger_level)
 
 
-def _check_defined_variables_predict_cqr(
-    ensemble: bool,
-    alpha: Union[float, Iterable[float], None],
-) -> None:
-    """
-    Check that the parameters defined for the predict method
-    of ``_MapieQuantileRegressor`` are correct.
-
-    Parameters
-    ----------
-    ensemble: bool
-        Ensemble has not been defined in predict and therefore should
-        will not have any effects in this method.
-    alpha: Optional[Union[float, Iterable[float]]]
-        For ``MapieQuantileRegresor`` the alpha has to be defined
-        directly in initial arguments of the class.
-
-    Raises
-    ------
-    Warning
-        If the ensemble value is defined in the predict function
-        of ``_MapieQuantileRegressor``.
-    Warning
-        If the alpha value is defined in the predict function
-        of ``_MapieQuantileRegressor``.
-
-    Examples
-    --------
-    >>> import warnings
-    >>> warnings.filterwarnings("error")
-    >>> from mapie.utils import _check_defined_variables_predict_cqr
-    >>> try:
-    ...     _check_defined_variables_predict_cqr(True, None)
-    ... except Exception as exception:
-    ...     print(exception)
-    ...
-    WARNING: ensemble is not utilized in ``_MapieQuantileRegressor``.
-    """
-    if ensemble is True:
-        warnings.warn(
-            "WARNING: ensemble is not utilized in ``_MapieQuantileRegressor``."
-        )
-    if alpha is not None:
-        warnings.warn(
-            "WARNING: Alpha should not be specified in the prediction method\n"
-            + "with conformalized quantile regression."
-        )
-
-
 def _check_estimator_fit_predict(
     estimator: Union[RegressorMixin, ClassifierMixin],
 ) -> None:
@@ -868,83 +796,6 @@ def _compute_quantiles(vector: NDArray, alpha: NDArray) -> NDArray:
     return quantiles_
 
 
-def _get_calib_set(
-    X: ArrayLike,
-    y: ArrayLike,
-    sample_weight: Optional[NDArray] = None,
-    calib_size: Optional[float] = 0.3,
-    random_state: Optional[Union[int, np.random.RandomState]] = None,
-    shuffle: Optional[bool] = True,
-    stratify: Optional[ArrayLike] = None,
-) -> Tuple[
-    ArrayLike, ArrayLike, ArrayLike, ArrayLike, Optional[NDArray], Optional[NDArray]
-]:
-    """
-    Split the dataset into training and calibration sets.
-
-    Parameters
-    ----------
-    Same definition of parameters as for the ``fit`` method.
-
-    Returns
-    -------
-    Tuple[
-        ArrayLike, ArrayLike, ArrayLike, ArrayLike,
-        Optional[NDArray], Optional[NDArray]
-    ]
-    - [0]: ArrayLike of shape (n_samples_*(1-calib_size), n_features)
-        X_train
-    - [1]: ArrayLike of shape (n_samples_*(1-calib_size),)
-        y_train
-    - [2]: ArrayLike of shape (n_samples_*calib_size, n_features)
-        X_calib
-    - [3]: ArrayLike of shape (n_samples_*calib_size,)
-        y_calib
-    - [4]: Optional[NDArray] of shape (n_samples_*(1-calib_size),)
-        sample_weight_train
-    - [5]: Optional[NDArray] of shape (n_samples_*calib_size,)
-        sample_weight_calib
-    """
-    if sample_weight is None:
-        (X_train, X_calib, y_train, y_calib) = train_test_split(
-            X,
-            y,
-            test_size=calib_size,
-            random_state=random_state,
-            shuffle=shuffle,
-            stratify=stratify,
-        )
-        sample_weight_train = sample_weight
-        sample_weight_calib = None
-    else:
-        (
-            X_train,
-            X_calib,
-            y_train,
-            y_calib,
-            sample_weight_train,
-            sample_weight_calib,
-        ) = train_test_split(
-            X,
-            y,
-            sample_weight,
-            test_size=calib_size,
-            random_state=random_state,
-            shuffle=shuffle,
-            stratify=stratify,
-        )
-    X_train, X_calib = cast(ArrayLike, X_train), cast(ArrayLike, X_calib)
-    y_train, y_calib = cast(ArrayLike, y_train), cast(ArrayLike, y_calib)
-    return (
-        X_train,
-        y_train,
-        X_calib,
-        y_calib,
-        sample_weight_train,
-        sample_weight_calib,
-    )
-
-
 def _check_estimator_classification(
     X: ArrayLike,
     y: ArrayLike,
@@ -1028,89 +879,6 @@ def check_proba_normalized(y_pred_proba: NDArray, axis: int = -1) -> NDArray:
         rtol=1e-5,
     )
     return y_pred_proba.astype(np.float64)
-
-
-def _get_binning_groups(
-    y_score: NDArray,
-    num_bins: int,
-    strategy: str,
-) -> NDArray:
-    """
-    Parameters
-    ----------
-    y_score : NDArray of shape (n_samples,)
-        The scores given from the calibrator.
-    num_bins : int
-        Number of bins to make the split in the y_score.
-    strategy : string
-        The splitting strategy to split y_scores into different bins.
-    Returns
-    -------
-    NDArray of shape (num_bins,)
-        An array of all the splitting points for a new bin.
-    """
-    bins = None
-    if strategy == "quantile":
-        quantiles = np.linspace(0, 1, num_bins)
-        bins = np.percentile(y_score, quantiles * 100)
-    elif strategy == "uniform":
-        bins = np.linspace(0.0, 1.0, num_bins)
-    else:
-        bin_groups = np.array_split(y_score, num_bins)
-        bins = np.sort(
-            np.array([bin_group.max() for bin_group in bin_groups[:-1]] + [np.inf])
-        )
-    return bins
-
-
-def _calc_bins(
-    y_true: NDArray,
-    y_score: NDArray,
-    num_bins: int,
-    strategy: str,
-) -> Union[NDArray, NDArray, NDArray, NDArray]:
-    """
-    For each bins, calculate the accuracy, average confidence and size.
-    Parameters
-    ----------
-    y_true: NDArray of shape (n_samples,)
-        The "true" values, target for the calibrator.
-    y_score: NDArray of shape (n_samples,)
-        The scores given from the calibrator.
-    num_bins: int
-        Number of bins to make the split in the y_score.
-    strategy: str
-        The way of splitting the predictions into different bins.
-    Returns
-    -------
-    Union[NDArray, NDArray, NDArray, NDArray]
-    - [0]: NDArray of shape (num_bins,)
-    An array of all the splitting points for a new bin.
-    - [1]: NDArray of shape (num_bins,)
-    An array of the average accuracy in each of the bins.
-    - [2]: NDArray of shape (num_bins,)
-    An array of the average confidence in each of the bins.
-    - [3]: NDArray of shape (num_bins,)
-    An array of the number of observations in each of the bins.
-    """
-    bins = _get_binning_groups(y_score, num_bins, strategy)
-    binned = np.digitize(y_score, bins, right=True)
-    bin_accs = np.zeros(num_bins)
-    bin_confs = np.zeros(num_bins)
-    bin_sizes = np.zeros(num_bins)
-
-    for bin in range(num_bins):
-        bin_sizes[bin] = len(y_score[binned == bin])
-        if bin_sizes[bin] > 0:
-            bin_accs[bin] = np.divide(
-                np.sum(y_true[binned == bin]),
-                bin_sizes[bin],
-            )
-            bin_confs[bin] = np.divide(
-                np.sum(y_score[binned == bin]),
-                bin_sizes[bin],
-            )
-    return bins, bin_accs, bin_confs, bin_sizes  # type: ignore
 
 
 def _check_split_strategy(strategy: Optional[str]) -> str:
@@ -1205,32 +973,6 @@ def _check_binary_zero_one(y_true: ArrayLike) -> NDArray:
             return y_true
     else:
         raise ValueError("Please provide y_true as a binary array.")
-
-
-def _fix_number_of_classes(
-    n_classes_: int, n_classes_training: NDArray, y_proba: NDArray
-) -> NDArray:
-    """
-    Fix shape of y_proba of validation set if number of classes
-    of the training set used for cross-validation is different than
-    number of classes of the original dataset y.
-
-    Parameters
-    ----------
-    n_classes_training: NDArray
-        Classes of the training set.
-    y_proba: NDArray
-        Probabilities of the validation set.
-
-    Returns
-    -------
-    NDArray
-        Probabilities with the right number of classes.
-    """
-    y_pred_full = np.zeros(shape=(len(y_proba), n_classes_))
-    y_index = np.tile(n_classes_training, (len(y_proba), 1))
-    np.put_along_axis(y_pred_full, y_index, y_proba, axis=1)
-    return y_pred_full
 
 
 def _check_array_shape_classification(y_true: NDArray, y_pred_set: NDArray) -> NDArray:

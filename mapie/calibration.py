@@ -14,6 +14,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.utils import check_random_state
 from sklearn.utils.multiclass import type_of_target
 from sklearn.utils.validation import _check_y, _num_samples, indexable
+from sklearn.model_selection import train_test_split
 
 from ._venn_abers import VennAbers, VennAbersMultiClass, predict_proba_prefitted_va
 from .utils import (
@@ -22,7 +23,6 @@ from .utils import (
     _check_n_features_in,
     _check_null_weight,
     _fit_estimator,
-    _get_calib_set,
     check_is_fitted,
 )
 
@@ -396,6 +396,83 @@ class TopLabelCalibrator(BaseEstimator, ClassifierMixin):
             preds_ = calibrator_.predict(max_prob[idx_labels])
             calibrated_values[idx_labels, idx] = preds_
 
+    @staticmethod
+    def _get_calib_set(
+        X: ArrayLike,
+        y: ArrayLike,
+        sample_weight: Optional[NDArray] = None,
+        calib_size: Optional[float] = 0.3,
+        random_state: Optional[Union[int, np.random.RandomState]] = None,
+        shuffle: Optional[bool] = True,
+        stratify: Optional[ArrayLike] = None,
+    ) -> Tuple[
+        ArrayLike, ArrayLike, ArrayLike, ArrayLike, Optional[NDArray], Optional[NDArray]
+    ]:
+        """
+        Split the dataset into training and calibration sets.
+
+        Parameters
+        ----------
+        Same definition of parameters as for the ``fit`` method.
+
+        Returns
+        -------
+        Tuple[
+            ArrayLike, ArrayLike, ArrayLike, ArrayLike,
+            Optional[NDArray], Optional[NDArray]
+        ]
+        - [0]: ArrayLike of shape (n_samples_*(1-calib_size), n_features)
+        X_train
+        - [1]: ArrayLike of shape (n_samples_*(1-calib_size),)
+        y_train
+        - [2]: ArrayLike of shape (n_samples_*calib_size, n_features)
+        X_calib
+        - [3]: ArrayLike of shape (n_samples_*calib_size,)
+        y_calib
+        - [4]: Optional[NDArray] of shape (n_samples_*(1-calib_size),)
+            sample_weight_train
+        - [5]: Optional[NDArray] of shape (n_samples_*calib_size,)
+            sample_weight_calib
+        """
+        if sample_weight is None:
+            (X_train, X_calib, y_train, y_calib) = train_test_split(
+                X,
+                y,
+                test_size=calib_size,
+                random_state=random_state,
+                shuffle=shuffle,
+                stratify=stratify,
+            )
+            sample_weight_train = sample_weight
+            sample_weight_calib = None
+        else:
+            (
+                X_train,
+                X_calib,
+                y_train,
+                y_calib,
+                sample_weight_train,
+                sample_weight_calib,
+            ) = train_test_split(
+                X,
+                y,
+                sample_weight,
+                test_size=calib_size,
+                random_state=random_state,
+                shuffle=shuffle,
+                stratify=stratify,
+            )
+        X_train, X_calib = cast(ArrayLike, X_train), cast(ArrayLike, X_calib)
+        y_train, y_calib = cast(ArrayLike, y_train), cast(ArrayLike, y_calib)
+        return (
+            X_train,
+            y_train,
+            X_calib,
+            y_calib,
+            sample_weight_train,
+            sample_weight_calib,
+        )
+
     def fit(
         self,
         X: ArrayLike,
@@ -465,7 +542,7 @@ class TopLabelCalibrator(BaseEstimator, ClassifierMixin):
             self.n_classes_ = len(self.classes_)
             self.calibrators = self._fit_calibrators(X, y, sample_weight, calibrator)
         if cv == "split":
-            results = _get_calib_set(
+            results = self._get_calib_set(
                 X,
                 y,
                 sample_weight=sample_weight,

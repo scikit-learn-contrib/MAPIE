@@ -13,7 +13,6 @@ from sklearn.utils.validation import _num_samples
 from mapie.utils import (
     _check_no_agg_cv,
     _fit_estimator,
-    _fix_number_of_classes,
     check_is_fitted,
 )
 
@@ -197,6 +196,31 @@ class EnsembleClassifier:
         )
         return y_pred_proba
 
+    def _fix_number_of_classes(
+        self, n_classes_training: NDArray, y_proba: NDArray
+    ) -> NDArray:
+        """
+        Fix shape of y_proba of validation set if number of classes
+        of the training set used for cross-validation is different than
+        number of classes of the original dataset y.
+
+        Parameters
+        ----------
+        n_classes_training: NDArray
+            Classes of the training set.
+        y_proba: NDArray
+            Probabilities of the validation set.
+
+        Returns
+        -------
+        NDArray
+            Probabilities with the right number of classes.
+        """
+        y_pred_full = np.zeros(shape=(len(y_proba), self.n_classes))
+        y_index = np.tile(n_classes_training, (len(y_proba), 1))
+        np.put_along_axis(y_pred_full, y_index, y_proba, axis=1)
+        return y_pred_full
+
     def _predict_proba_oof_estimator(
         self, estimator: ClassifierMixin, X: ArrayLike, **predict_params
     ) -> NDArray:
@@ -219,9 +243,7 @@ class EnsembleClassifier:
         y_pred_proba = estimator.predict_proba(X, **predict_params)
         # we enforce y_pred_proba to contain all labels included in y
         if len(estimator.classes_) != self.n_classes:
-            y_pred_proba = _fix_number_of_classes(
-                self.n_classes, estimator.classes_, y_pred_proba
-            )
+            y_pred_proba = self._fix_number_of_classes(estimator.classes_, y_pred_proba)
         return y_pred_proba
 
     def _predict_proba_calib_oof_estimator(

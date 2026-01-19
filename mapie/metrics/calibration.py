@@ -1,10 +1,9 @@
 import scipy
-from numpy.typing import ArrayLike
+import numpy as np
+from numpy.typing import ArrayLike, NDArray
 from sklearn.utils import check_random_state
 from mapie._machine_precision import EPSILON
-from numpy.typing import NDArray
 from mapie.utils import (
-    _calc_bins,
     _check_array_inf,
     _check_array_nan,
     _check_arrays_length,
@@ -14,11 +13,93 @@ from mapie.utils import (
 )
 
 
-import numpy as np
 from sklearn.utils.validation import column_or_1d
 
 
 from typing import Tuple, cast, Optional, Union
+
+
+def _get_binning_groups(
+    y_score: NDArray,
+    num_bins: int,
+    strategy: str,
+) -> NDArray:
+    """
+    Parameters
+    ----------
+    y_score : NDArray of shape (n_samples,)
+        The scores given from the calibrator.
+    num_bins : int
+        Number of bins to make the split in the y_score.
+    strategy : string
+        The splitting strategy to split y_scores into different bins.
+    Returns
+    -------
+    NDArray of shape (num_bins,)
+        An array of all the splitting points for a new bin.
+    """
+    bins = None
+    if strategy == "quantile":
+        quantiles = np.linspace(0, 1, num_bins)
+        bins = np.percentile(y_score, quantiles * 100)
+    elif strategy == "uniform":
+        bins = np.linspace(0.0, 1.0, num_bins)
+    else:
+        bin_groups = np.array_split(y_score, num_bins)
+        bins = np.sort(
+            np.array([bin_group.max() for bin_group in bin_groups[:-1]] + [np.inf])
+        )
+    return bins
+
+
+def _calc_bins(
+    y_true: NDArray,
+    y_score: NDArray,
+    num_bins: int,
+    strategy: str,
+) -> Union[NDArray, NDArray, NDArray, NDArray]:
+    """
+    For each bins, calculate the accuracy, average confidence and size.
+    Parameters
+    ----------
+    y_true: NDArray of shape (n_samples,)
+        The "true" values, target for the calibrator.
+    y_score: NDArray of shape (n_samples,)
+        The scores given from the calibrator.
+    num_bins: int
+        Number of bins to make the split in the y_score.
+    strategy: str
+        The way of splitting the predictions into different bins.
+    Returns
+    -------
+    Union[NDArray, NDArray, NDArray, NDArray]
+    - [0]: NDArray of shape (num_bins,)
+    An array of all the splitting points for a new bin.
+    - [1]: NDArray of shape (num_bins,)
+    An array of the average accuracy in each of the bins.
+    - [2]: NDArray of shape (num_bins,)
+    An array of the average confidence in each of the bins.
+    - [3]: NDArray of shape (num_bins,)
+    An array of the number of observations in each of the bins.
+    """
+    bins = _get_binning_groups(y_score, num_bins, strategy)
+    binned = np.digitize(y_score, bins, right=True)
+    bin_accs = np.zeros(num_bins)
+    bin_confs = np.zeros(num_bins)
+    bin_sizes = np.zeros(num_bins)
+
+    for bin in range(num_bins):
+        bin_sizes[bin] = len(y_score[binned == bin])
+        if bin_sizes[bin] > 0:
+            bin_accs[bin] = np.divide(
+                np.sum(y_true[binned == bin]),
+                bin_sizes[bin],
+            )
+            bin_confs[bin] = np.divide(
+                np.sum(y_score[binned == bin]),
+                bin_sizes[bin],
+            )
+    return bins, bin_accs, bin_confs, bin_sizes  # type: ignore
 
 
 def expected_calibration_error(

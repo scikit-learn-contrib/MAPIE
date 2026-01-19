@@ -7,7 +7,6 @@ from unittest.mock import patch
 
 import numpy as np
 import pytest
-from numpy.random import RandomState
 from numpy.typing import ArrayLike, NDArray
 from sklearn.datasets import make_regression
 from sklearn.linear_model import LinearRegression, LogisticRegression
@@ -40,7 +39,6 @@ from mapie.utils import (
     _check_verbose,
     _compute_quantiles,
     _fit_estimator,
-    _get_binning_groups,
     _prepare_fit_params_and_sample_weight,
     _prepare_params,
     _raise_error_if_fit_called_in_prefit_mode,
@@ -456,49 +454,6 @@ ALPHAS = [
 ]
 
 random_state = 1234567890
-prng = RandomState(random_state)
-y_score = prng.random(51)
-y_scores = prng.random((51, 5))
-y_true = prng.randint(0, 2, 51)
-
-results_binning = {
-    "quantile": [
-        0.03075388,
-        0.17261836,
-        0.33281326,
-        0.43939618,
-        0.54867626,
-        0.64881987,
-        0.73440899,
-        0.77793816,
-        0.89000413,
-        0.99610621,
-    ],
-    "uniform": [
-        0,
-        0.11111111,
-        0.22222222,
-        0.33333333,
-        0.44444444,
-        0.55555556,
-        0.66666667,
-        0.77777778,
-        0.88888889,
-        1,
-    ],
-    "array split": [
-        0.62689056,
-        0.74743526,
-        0.87642114,
-        0.88321124,
-        0.8916548,
-        0.94083846,
-        0.94999075,
-        0.98759822,
-        0.99610621,
-        np.inf,
-    ],
-}
 
 
 class DumbEstimator:
@@ -775,13 +730,6 @@ def test_quantile_prefit_non_iterable(estimator: Any) -> None:
     ):
         mapie_reg = _MapieQuantileRegressor(estimator=estimator, cv="prefit")
         mapie_reg.fit([1, 2, 3], [4, 5, 6])
-
-
-@pytest.mark.parametrize("strategy", ["quantile", "uniform", "array split"])
-def test_binning_group_strategies(strategy: str) -> None:
-    """Test that different strategies have the correct outputs."""
-    bins_ = _get_binning_groups(y_score, num_bins=10, strategy=strategy)
-    np.testing.assert_allclose(results_binning[strategy], bins_, rtol=1e-05)
 
 
 def test_wrong_split_strategy() -> None:

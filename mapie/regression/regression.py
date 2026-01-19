@@ -32,7 +32,6 @@ from mapie.utils import (
     _check_null_weight,
     _check_predict_params,
     _check_verbose,
-    _get_effective_calibration_samples,
     _prepare_fit_params_and_sample_weight,
     _prepare_params,
     _raise_error_if_fit_called_in_prefit_mode,
@@ -1569,8 +1568,8 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
             # Check alpha and the number of effective calibration samples
             alpha_np = cast(NDArray, alpha)
             if not allow_infinite_bounds:
-                n = _get_effective_calibration_samples(
-                    self.conformity_scores_, self.conformity_score_function_.sym
+                n = self.conformity_score_function_.get_effective_calibration_samples(
+                    self.conformity_scores_
                 )
                 _check_alpha_and_n_samples(alpha_np, n)
 
