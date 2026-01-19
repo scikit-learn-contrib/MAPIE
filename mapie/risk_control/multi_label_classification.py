@@ -42,17 +42,17 @@ class MultiLabelClassificationController:
         predict_proba method of a fitted multi-label classifier.
         It can return either:
         - a list of arrays of length n_classes where each array is of shape
-          (n_samples, 2) with probabilities of the negative and positive class
-          (as output by ``MultiOutputClassifier``), or
+        (n_samples, 2) with probabilities of the negative and positive class
+        (as output by ``MultiOutputClassifier``), or
         - an ndarray of shape (n_samples, n_classes) or (n_samples, n_classes, 2)
-          containing positive probabilities, or positive and negative probabilities
-          (assuming last dimension is [neg, pos]).
+        containing positive probabilities, or positive and negative probabilities
+        (assuming last dimension is [neg, pos]).
 
     risk : str
         The risk metric to control ("precision" or "recall").
         The selected risk determines which conformal prediction methods are valid:
-            - "precision" implies that method must be "ltt"
-            - "recall" implies that method can be "crc" (default) or "rcps"
+        - "precision" implies that method must be "ltt"
+        - "recall" implies that method can be "crc" (default) or "rcps"
 
     method : Optional[str]
         Method to use for the prediction . If `risk` is

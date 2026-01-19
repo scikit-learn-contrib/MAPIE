@@ -14,3 +14,40 @@
 .deprecated p span.versionmodified {
     font-weight: bold;
 }
+
+/* Increase page width */
+.wy-nav-content {
+    max-width: 1200px !important;
+}
+
+/* Make all autosummary tables same width (for the API table) */
+table.autosummary {
+    width: 100% !important;
+    table-layout: fixed !important;
+}
+
+/* Set first column width (for the API table) */
+table.autosummary td:first-child {
+    width: 40%;
+}
+
+/* Set description column width (for the API table) */
+table.autosummary td:last-child {
+    width: 60%;
+}
+
+/* Force wrapping in first column  (for the API table) */
+table.autosummary td:first-child a {
+    white-space: normal !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    word-break: break-word !important;
+}
+
+/* Force wrapping in description column  (for the API table) */
+table.autosummary td:last-child p {
+    white-space: normal !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    word-break: break-word !important;
+}

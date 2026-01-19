@@ -1,3 +1,5 @@
+.. :titlesonly: is necessary to avoid issues in the documentation (except for Getting Started and API sections)
+
 .. include:: ../README.rst 
 
 .. toctree::
@@ -12,6 +14,7 @@
 
 .. toctree::
    :maxdepth: 2
+   :titlesonly:
    :hidden:
    :caption: Measure predictions uncertainty
 
@@ -20,6 +23,7 @@
 
 .. toctree::
    :maxdepth: 2
+   :titlesonly:
    :hidden:
    :caption: Control prediction errors
 
@@ -30,6 +34,7 @@
 
 .. toctree::
    :maxdepth: 2
+   :titlesonly:
    :hidden:
    :caption: Calibrate classifiers
 

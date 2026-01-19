@@ -57,7 +57,7 @@ class BinaryClassificationController:
         Its output signature must be of shape (len(X), 2).
 
         Or, in the general case of multi-dimensional parameters (thresholds),
-        a function that takes (X, *params) and outputs 0 or 1. This can be useful to e.g.,
+        a function that takes (X, \*params) and outputs 0 or 1. This can be useful to e.g.,
         ensemble multiple binary classifiers with different thresholds for each classifier.
         In that case, `predict_params` must be provided.
 
@@ -66,8 +66,8 @@ class BinaryClassificationController:
         Valid options:
 
         - An existing risk defined in `mapie.risk_control` accessible through
-        its string equivalent: "precision", "recall", "accuracy",
-        "fpr" for false positive rate, or "predicted_positive_fraction".
+          its string equivalent: "precision", "recall", "accuracy",
+          "fpr" for false positive rate, or "predicted_positive_fraction".
         - A custom instance of BinaryClassificationRisk object
 
         Can be a list of risks in the case of multi risk control.
@@ -89,10 +89,11 @@ class BinaryClassificationController:
         Valid options:
 
         - "auto" (default). For mono risk defined in mapie.risk_control, an automatic choice is made.
-        For multi risk, we use the first risk in the list.
+          For multi risk, we use the first risk in the list.
         - An existing risk defined in `mapie.risk_control` accessible through
-        its string equivalent: "precision", "recall", "accuracy",
-        "fpr" for false positive rate, or "predicted_positive_fraction".
+
+          its string equivalent: "precision", "recall", "accuracy",
+          "fpr" for false positive rate, or "predicted_positive_fraction".
         - A custom instance of BinaryClassificationRisk object
 
     list_predict_params : NDArray, default=np.linspace(0, 0.99, 100)
