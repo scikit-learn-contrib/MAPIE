@@ -310,11 +310,11 @@ ax.hist(
     edgecolor="black",
 )
 ax.axvline(
-    precisions_array.mean(),
+    TARGET_PRECISION,
     color="orange",
     linestyle="--",
     linewidth=2,
-    label=f"Test mean ({precisions_array.mean():.3f})",
+    label=f"Target precision ({TARGET_PRECISION:.2f})",
 )
 ax.axvline(
     quantile_confidence,
