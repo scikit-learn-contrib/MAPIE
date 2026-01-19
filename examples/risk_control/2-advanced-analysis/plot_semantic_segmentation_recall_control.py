@@ -279,3 +279,52 @@ plt.show()
 # target recall level, illustrating the effectiveness of MAPIE’s
 # risk control for semantic segmentation tasks.
 #
+
+###############################################################################
+# Bootstrap the mean recall over different samplings of the test set
+# (resampling images with replacement).
+#
+
+N_BOOTSTRAP = 2000
+BOOTSTRAP_SEED = 123
+rng = np.random.default_rng(BOOTSTRAP_SEED)
+
+bootstrap_means = np.empty(N_BOOTSTRAP, dtype=float)
+n = recalls_array.size
+for b in range(N_BOOTSTRAP):
+    bootstrap_sample = rng.choice(recalls_array, size=n, replace=True)
+    bootstrap_means[b] = bootstrap_sample.mean()
+
+fig, ax = plt.subplots(figsize=(10, 6))
+ax.hist(
+    bootstrap_means,
+    bins=40,
+    alpha=0.7,
+    color="slateblue",
+    edgecolor="black",
+)
+ax.axvline(
+    bootstrap_means.mean(),
+    color="green",
+    linestyle="--",
+    linewidth=2,
+    label=f"Bootstrap mean ({bootstrap_means.mean():.3f})",
+)
+ax.axvline(
+    TARGET_RECALL,
+    color="orange",
+    linestyle="--",
+    linewidth=2,
+    label=f"Target recall ({TARGET_RECALL:.2f})",
+)
+ax.set_xlabel("Bootstrap mean recall", fontsize=12)
+ax.set_ylabel("Frequency", fontsize=12)
+ax.set_title(
+    "Bootstrap distribution of mean recall (test set resampling)",
+    fontsize=14,
+    fontweight="bold",
+)
+ax.legend(fontsize=10)
+ax.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.show()
