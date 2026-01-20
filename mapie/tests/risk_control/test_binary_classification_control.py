@@ -209,6 +209,21 @@ class TestBinaryClassificationControllerBestPredictParamChoice:
         result = controller._best_predict_param_choice
         assert result is first_risk
 
+    @pytest.mark.parametrize("invalid_risk_choice", [0.5, 5, [0.5, 0.7]])
+    def test_invalid_type(self, invalid_risk_choice):
+        """Test _set_best_predict_param_choice with an invalid type."""
+        invalid_risk_choice = 0.5
+
+        with pytest.raises(
+            TypeError, match=r".*best_predict_param_choice must be either.*"
+        ):
+            BinaryClassificationController(
+                predict_function=dummy_predict,
+                risk=precision,
+                target_level=dummy_target,
+                best_predict_param_choice=invalid_risk_choice,
+            )
+
 
 @pytest.mark.parametrize(
     "risk_instance,target_level,expected_alpha",

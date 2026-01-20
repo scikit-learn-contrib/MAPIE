@@ -330,12 +330,20 @@ class BinaryClassificationController:
                         "risk must be one of the risks defined in mapie.risk_control"
                         "(e.g. precision, accuracy, false_positive_rate)."
                     )
-        else:
-            if isinstance(best_predict_param_choice, str):
-                return BinaryClassificationController.risk_choice_map[
-                    best_predict_param_choice
-                ]
+        if isinstance(best_predict_param_choice, str):
+            return BinaryClassificationController.risk_choice_map[
+                best_predict_param_choice
+            ]
+        if isinstance(best_predict_param_choice, BinaryClassificationRisk):
             return best_predict_param_choice
+
+        raise TypeError(
+            f"Got object of type {type(best_predict_param_choice)}. "
+            "best_predict_param_choice must be either 'auto', "
+            "a BinaryClassificationRisk instance, "
+            "or a risk name (str) among those defined in mapie.risk_control "
+            "(e.g. 'precision', 'accuracy', 'false_positive_rate')."
+        )
 
     def _set_best_predict_param(
         self,
