@@ -108,13 +108,12 @@ and with the financial support from Région Ile de France and Confiance.ai.
 
 .. |Inria| image:: https://www.inria.fr/themes/custom/inria/logo/logo.svg
     :height: 35px
-    :width: 180px
+    :width: 140px
     :target: https://www.inria.fr/
 
 .. |Projet P16| image:: https://p16.inria.fr/img/logo_P16_bis.png
     :height: 35px
     :width: 140px
-    :alt: Projet P16
     :target: https://p16.inria.fr/fr/
 
 .. |Michelin| image:: https://agngnconpm.cloudimg.io/v7/https://dgaddcosprod.blob.core.windows.net/corporate-production/attachments/cls05tqdd9e0o0tkdghwi9m7n-clooe1x0c3k3x0tlu4cxi6dpn-bibendum-salut.full.png
