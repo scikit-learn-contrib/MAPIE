@@ -169,6 +169,6 @@ precision_negative = BinaryClassificationRisk(
 
 abstention_rate = BinaryClassificationRisk(
     risk_occurrence=lambda y_true, y_pred: np.isnan(y_pred),
-    risk_condition=lambda y_true, y_pred: True,
+    risk_condition=lambda y_true, y_pred: np.repeat(True, len(y_true)),
     higher_is_better=False,
 )
