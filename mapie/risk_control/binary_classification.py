@@ -397,12 +397,11 @@ class BinaryClassificationController:
         n_params = len(params)
         n_samples = len(np.asarray(X))
         if self.is_multi_dimensional_param:
-            y_pred = np.empty((n_params, n_samples))
+            y_pred = np.empty((n_params, n_samples), dtype=float)
             for i in range(n_params):
                 y_pred[i] = self._predict_function(X, *params[i])
             if is_calibration_step:
                 self._check_predictions(y_pred)
-            y_pred = y_pred.astype(int)
         else:
             try:
                 predictions_proba = self._predict_function(X)[:, 1]
@@ -508,11 +507,15 @@ class BinaryClassificationController:
 
         if (
             self.is_multi_dimensional_param
-            and not np.logical_or(
-                predictions_per_param == 0, predictions_per_param == 1
+            and not np.logical_or.reduce(
+                (
+                    predictions_per_param == 0,
+                    predictions_per_param == 1,
+                    np.isnan(predictions_per_param),
+                )
             ).all()
         ):
             raise ValueError(
                 "The provided predict_function with multi-dimensional "
-                "parameters must return binary predictions (0 or 1)."
+                "parameters must return binary predictions (0, 1, np.nan)."
             )
