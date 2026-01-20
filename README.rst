@@ -99,7 +99,7 @@ For more information on the contribution process, read our `contribution guideli
 MAPIE has been developed through a collaboration between Capgemini Invent, Quantmetry, Michelin, ENS Paris-Saclay,
 and with the financial support from Région Ile de France and Confiance.ai.
 
-|Capgemini Invent| |Inria| |P16| |Michelin| |ENS| |Confiance.ai| |IledeFrance|
+|Capgemini Invent| |Inria| |Projet P16| |Michelin| |ENS| |Confiance.ai| |IledeFrance|
 
 .. |Capgemini Invent| image:: https://www.capgemini.com/wp-content/themes/capgemini2020/assets/images/capgemini-invent.svg
     :height: 35px
@@ -111,7 +111,7 @@ and with the financial support from Région Ile de France and Confiance.ai.
     :width: 140px
     :target: https://www.inria.fr/
 
-.. |P16| image:: https://p16.inria.fr/img/logo_P16_bis.png
+.. |Projet P16| image:: https://p16.inria.fr/img/logo_P16_bis.png
     :height: 35px
     :width: 140px
     :target: https://p16.inria.fr/fr/
