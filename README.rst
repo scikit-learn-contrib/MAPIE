@@ -108,12 +108,12 @@ and with the financial support from Région Ile de France and Confiance.ai.
 
 .. |Inria| image:: https://www.inria.fr/themes/custom/inria/logo/logo.svg
     :height: 35px
-    :width: 140px
+    :width: 180px
     :target: https://www.inria.fr/
 
 .. |Projet P16| image:: https://p16.inria.fr/img/logo_P16_bis.png
-    :height: 70px
-    :width: 280px
+    :height: 35px
+    :width: 140px
     :alt: Projet P16
     :target: https://p16.inria.fr/fr/
 
