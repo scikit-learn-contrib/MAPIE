@@ -355,7 +355,7 @@ class TestBinaryClassificationControllerGetPredictionsPerParam:
 
         expected = np.array([len(X) * [True]])
         assert result.shape == (len(dummy_single_param_multi_dim), len(X))
-        assert result.dtype == int
+        assert result.dtype == float
         np.testing.assert_array_equal(result, expected)
 
     def test_multiple_parameters(self, bcc_deterministic):
@@ -380,7 +380,7 @@ class TestBinaryClassificationControllerGetPredictionsPerParam:
 
         expected = np.array(len(dummy_grid_param_multi_dim) * [len(X) * [True]])
         assert result.shape == (len(dummy_grid_param_multi_dim), len(X))
-        assert result.dtype == int
+        assert result.dtype == float
         np.testing.assert_array_equal(result, expected)
 
     def test_output_shape_consistency(self):
