@@ -11,15 +11,25 @@ from mapie.utils import check_valid_ltt_params_index
 from .methods import ltt_procedure
 from .risks import (
     BinaryClassificationRisk,
+    abstention_rate,
     accuracy,
     false_positive_rate,
     precision,
+    precision_negative,
+    precision_positive,
     predicted_positive_fraction,
     recall,
 )
 
 Risk_str = Literal[
-    "precision", "recall", "accuracy", "fpr", "predicted_positive_fraction"
+    "precision",
+    "recall",
+    "accuracy",
+    "fpr",
+    "predicted_positive_fraction",
+    "precision_positive",
+    "precision_negative",
+    "abstention_rate",
 ]
 Risk = Union[
     BinaryClassificationRisk,
@@ -172,6 +182,9 @@ class BinaryClassificationController:
         "accuracy": accuracy,
         "fpr": false_positive_rate,
         "predicted_positive_fraction": predicted_positive_fraction,
+        "precision_positive": precision_positive,
+        "precision_negative": precision_negative,
+        "abstention_rate": abstention_rate,
     }
 
     def __init__(
