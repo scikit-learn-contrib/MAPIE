@@ -1,6 +1,6 @@
 """
-Risk Control for LLM as a Judge
-===============================
+Risk Control for LLM as a Judge with Abstention
+===============================================
 
 This example demonstrates how to use risk control methods for Large Language Models (LLMs) acting as judges.
 We simulate a scenario where an LLM evaluates answers, and we want to control the risk of hallucination detection.
