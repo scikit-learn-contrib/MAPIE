@@ -4,19 +4,22 @@ Risk Control for LLM as a Judge
 
 This example demonstrates how to use risk control methods for Large Language Models (LLMs) acting as judges.
 We simulate a scenario where an LLM evaluates answers, and we want to control the risk of hallucination detection.
-Moreover, we want the judge to abstain from making a decision when uncertain.
-That is, we want the the precision of deciding that an answer is hallucinated or not to be heigh, while controlling the rate of abstention.
+Moreover, we want the judge to abstain from making a decision when it is uncertain.
 
-In binary classification, this corresponds of finding two thresholds to apply on the model predicted probability scores, such that
+More precisely, we want the precision of deciding whether an answer is hallucinated or not to be high,
+while controlling the rate of abstention.
+
+In binary classification terms, this corresponds to finding two thresholds to apply to the model’s predicted
+probability scores, such that:
 
 - if the score is below the lower threshold, the answer is classified as "not hallucinated",
 - if the score is above the upper threshold, the answer is classified as "hallucinated",
 - if the score is between the two thresholds, the judge abstains from making a decision.
 
-Hence, we want to control the precision of the non-abstained predictions, while minimizing the abstention rate.
-The procedure falls into the scope of mutli-parameter (here two parameters: lower and upper thresholds)
-and multi-risk (here three risks: precision on "hallucinated" class, precision on "not hallucinated" class, and abstention rate)
-risk control for binary classification.
+Hence, we want to control the precision of the non-abstained predictions while minimizing the abstention rate.
+This procedure falls into the scope of multi-parameter (here two parameters: lower and upper thresholds)
+and multi-risk (here three risks: precision on the "hallucinated" class, precision on the "not hallucinated" class,
+and the abstention rate) risk control for binary classification.
 """
 
 # sphinx_gallery_thumbnail_number = 2
@@ -160,11 +163,14 @@ X_calib, X_test, y_calib, y_test = train_test_split(
 )
 
 #############################################################################
-# Next, we define a multi-parameter prediction function. For an answer to be classified
-# as not hallucinated, we want the predicted score of the positive class to below a
-# lower threshold `lambda_1`. For an answer to be classified as hallucinated, we want
-# the predicted score of the positive class to be above an upper threshold `lambda_2`.
-# For answers with intermediate scores, the judge abstains from making a decision.
+# Next, we define a multi-parameter prediction function.
+#
+# - If the predicted score of the positive class is below a lower threshold `lambda_1`,
+#   the answer is classified as not hallucinated.
+# - If the predicted score is above an upper threshold `lambda_2`,
+#   the answer is classified as hallucinated.
+# - If the score lies between `lambda_1` and `lambda_2`,
+#   the judge abstains from making a decision.
 
 
 def abstain_to_answer(X, lambda_1, lambda_2) -> NDArray[np.int_]:
@@ -181,10 +187,10 @@ def abstain_to_answer(X, lambda_1, lambda_2) -> NDArray[np.int_]:
 
 
 #############################################################################
-# Given the abstention task and the definition of `abstain_to_answer`, we have
-# the constraint that `lambda_1` <= `lambda_2`. Therefore, can avoid exploring
-# the area of the bi-variate parameter set such that `lambda_1` > `lambda_2`.
-# We can consider a set of a grid values that respects the former constraint.
+# Given the abstention task and the definition of ``abstain_to_answer``, we must
+# enforce the constraint `lambda_1 <= lambda_2`. Therefore, we avoid exploring
+# regions of the bi-variate parameter space where `lambda_1 > lambda_2`.
+# We construct a grid of parameter pairs that respects this constraint.
 
 to_explore = []
 for i in range(9):
@@ -198,16 +204,17 @@ to_explore = np.array(to_explore)
 
 ##############################################################################
 # Finally, we initialize a :class:`~mapie.risk_control.BinaryClassificationController`
-# using the `abstain_to_answer` prediction function and three specific risks that are
-# instances of :class:`BinaryClassificationRisk`:
+# using the `abstain_to_answer` prediction function and three specific risks, each
+# represented as an instance of :class:`BinaryClassificationRisk`:
 #
-# - `precision_negative` : the precision of the class 0, "negative class"
-# - `precision_positive` : the precision of the class 1, "positive class"
-# - `abstention_rate` : the rate of abstention of the judge, "proportion of np.nan predictions"
+# - ``precision_negative``: precision on class 0 ("not hallucinated"),
+# - ``precision_positive``: precision on class 1 ("hallucinated"),
+# - ``abstention_rate``: proportion of abstentions (i.e., np.nan predictions).
 #
-# We set target levels for each risk and use the calibration data to compute
-# statistically guaranteed thresholds. Among the valid thresholds, we select the one that minimizes
-# the abstention rate thus minimizing of human manual review.
+# We set a target level for each risk and use the calibration data to compute
+# statistically guaranteed thresholds. Among the valid thresholds, we select
+# the one that minimizes the abstention rate, thereby reducing the need for
+# human manual review.
 
 target_precision_negative = 0.7
 target_precision_positive = 0.7
@@ -241,7 +248,7 @@ print(
 
 ##############################################################################
 # Finally, we visualize the p-values associated with each explored parameter pair.
-# The valid parameter zone is highlighted, as well as the best parameter pair.
+# The valid parameter region is highlighted, along with the best parameter pair.
 
 grid_size = 10
 matrix = np.full((grid_size, grid_size), np.nan)
