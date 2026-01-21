@@ -351,7 +351,7 @@ ax.legend(
 )
 plt.tight_layout()
 plt.show()
-ax.set_ylabel(r"lambda_1")
+ax.set_ylabel(r"$\lambda_1$", fontsize=16)
 ax.set_title("Valid parameters")
 fig.tight_layout()
 plt.show()
