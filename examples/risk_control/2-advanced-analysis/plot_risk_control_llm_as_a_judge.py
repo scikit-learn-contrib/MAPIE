@@ -22,7 +22,7 @@ and multi-risk (here three risks: precision on the "hallucinated" class, precisi
 and the abstention rate) risk control for binary classification.
 """
 
-# sphinx_gallery_thumbnail_number = 2
+# sphinx_gallery_thumbnail_number = 1
 
 import matplotlib.patches as patches
 import numpy as np
