@@ -203,7 +203,7 @@ for i in range(9):
 to_explore = np.array(to_explore)
 
 ##############################################################################
-# Finally, we initialize a :class:`~mapie.risk_control.BinaryClassificationController`
+# We now initialize a :class:`~mapie.risk_control.BinaryClassificationController`
 # using the `abstain_to_answer` prediction function and three specific risks, each
 # represented as an instance of :class:`BinaryClassificationRisk`:
 #
@@ -247,8 +247,8 @@ print(
 )
 
 ##############################################################################
-# Finally, we visualize the p-values associated with each explored parameter pair.
-# The valid parameter region is highlighted, along with the best parameter pair.
+# Below, we visualize the p-values associated with each explored parameter pair.
+# The valid parameter region and the optimal parameter pair are highlighted.
 
 grid_size = 10
 matrix = np.full((grid_size, grid_size), np.nan)
