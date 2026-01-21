@@ -34,7 +34,12 @@ from matplotlib.patches import Patch
 from numpy.typing import NDArray
 from sklearn.model_selection import train_test_split
 
-from mapie.risk_control import BinaryClassificationController
+from mapie.risk_control import (
+    BinaryClassificationController,
+    abstention_rate,
+    precision_negative,
+    precision_positive,
+)
 
 RANDOM_STATE = 0
 np.random.seed(RANDOM_STATE)
@@ -355,3 +360,107 @@ ax.set_ylabel(r"$\lambda_1$", fontsize=16)
 ax.set_title("Valid parameters")
 fig.tight_layout()
 plt.show()
+
+##############################################################################
+# Finally, we compare the performance of the risk-controlled thresholds
+# with a naive approach that selects thresholds based solely on empirical
+# performance on the calibration set.
+#
+# Similarly to the risk-controlled approach, the naive method explores all
+# parameter pairs in the defined grid, computes the empirical risks on the
+# calibration set, and selects the best feasible parameter pair that meets
+# the target risk levels while minimizing the abstention rate.
+#
+# That comes down to selecting the parameter pair that minimizes the abstention rate
+# on the calibration set among those that satisfy the following empirical constraints:
+#
+# - empirical precision on class 0 >= target_precision_negative,
+# - empirical precision on class 1 >= target_precision_positive,
+# - empirical abstention rate <= target_abstention_rate.
+#
+# We then evaluate both approaches on the test set and display the results.
+
+
+def perf(risk, y_true, y_pred):
+    val, _ = risk.get_value_and_effective_sample_size(y_true, y_pred)
+    return 1 - val if risk.higher_is_better else val
+
+
+def compute_risks(y_true, y_pred):
+    return {
+        "precision_positive": perf(precision_positive, y_true, y_pred),
+        "precision_negative": perf(precision_negative, y_true, y_pred),
+        "abstention_rate": perf(abstention_rate, y_true, y_pred),
+    }
+
+
+# Compute performance for all thresholds on the calibration set
+y_calib = y_calib.to_numpy()
+y_test = y_test.to_numpy()
+y_preds = np.array([abstain_to_answer(X_calib, l1, l2) for l1, l2 in to_explore])
+
+emp_risks = np.array([compute_risks(y_calib, y_pred) for y_pred in y_preds])
+emp_precision_positive = np.array([r["precision_positive"] for r in emp_risks])
+emp_precision_negative = np.array([r["precision_negative"] for r in emp_risks])
+abstention_rate_calib = np.array([r["abstention_rate"] for r in emp_risks])
+
+# Identify feasible parameter pairs for the naive approach
+feasible_mask = (
+    (emp_precision_positive >= target_precision_positive)
+    & (emp_precision_negative >= target_precision_negative)
+    & (abstention_rate_calib <= target_abstention_rate)
+)
+
+# Select the naive threshold pair that minimizes abstention rate
+feasible_indices = np.where(feasible_mask)[0]
+best_feasible_idx = feasible_indices[np.argmin(abstention_rate_calib[feasible_indices])]
+naive_lambda_1, naive_lambda_2 = to_explore[best_feasible_idx]
+
+# Compute predictions using both naive and risk-controlled thresholds
+y_calib_pred_naive = abstain_to_answer(X_calib, naive_lambda_1, naive_lambda_2)
+y_test_pred_naive = abstain_to_answer(X_test, naive_lambda_1, naive_lambda_2)
+
+y_calib_pred_controlled = bcc.predict(X_calib)
+y_test_pred_controlled = bcc.predict(X_test)
+
+# Compute risk values for all cases
+naive_calib = compute_risks(y_calib, y_calib_pred_naive)
+naive_test = compute_risks(y_test, y_test_pred_naive)
+
+ctrl_calib = compute_risks(y_calib, y_calib_pred_controlled)
+ctrl_test = compute_risks(y_test, y_test_pred_controlled)
+
+# Summarize results in a table format
+ctrl_summary = pd.DataFrame(
+    {
+        "Calibration": ctrl_calib,
+        "Test": ctrl_test,
+    }
+)
+
+naive_summary = pd.DataFrame(
+    {
+        "Calibration": naive_calib,
+        "Test": naive_test,
+    }
+)
+
+# Print thresholds and tables
+print(f"\nNaive thresholds (lambda_1, lambda_2) = ({naive_lambda_1}, {naive_lambda_2})")
+print(f"Risk-controlled thresholds (lambda_1, lambda_2) = {bcc.best_predict_param}\n")
+
+print("Risk-controlled thresholds performance")
+print(ctrl_summary.round(3))
+
+print("\nNaive thresholds performance")
+print(naive_summary.round(3))
+
+##############################################################################
+# In this example, the naive thresholds coincidentally match the risk-controlled ones,
+# resulting in identical performance on both calibration and test sets.
+#
+# Note, however, that this is not generally the case:
+# - The naive approach may select thresholds that fail to meet the desired risk levels on unseen data.
+# - The risk-controlled approach provides formal statistical guarantees on precision and abstention,
+#   making it more reliable in practice.
+#
