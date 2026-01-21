@@ -460,6 +460,7 @@ print(naive_summary.round(3))
 # resulting in identical performance on both calibration and test sets.
 #
 # Note, however, that this is not generally the case:
+#
 # - The naive approach may select thresholds that fail to meet the desired risk levels on unseen data.
 # - The risk-controlled approach provides formal statistical guarantees on precision and abstention,
 #   making it more reliable in practice.
