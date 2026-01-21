@@ -4,14 +4,31 @@ Risk Control for LLM as a Judge
 
 This example demonstrates how to use risk control methods for Large Language Models (LLMs) acting as judges.
 We simulate a scenario where an LLM evaluates answers, and we want to control the risk of hallucination detection.
+Moreover, we want the judge to abstain from making a decision when uncertain.
+That is, we want the the precision of deciding that an answer is hallucinated or not to be heigh, while controlling the rate of abstention.
+
+In binary classification, this corresponds of finding two thresholds to apply on the model predicted probability scores, such that
+
+- if the score is below the lower threshold, the answer is classified as "not hallucinated",
+- if the score is above the upper threshold, the answer is classified as "hallucinated",
+- if the score is between the two thresholds, the judge abstains from making a decision.
+
+Hence, we want to control the precision of the non-abstained predictions, while minimizing the abstention rate.
+The procedure falls into the scope of mutli-parameter (here two parameters: lower and upper thresholds)
+and multi-risk (here three risks: precision on "hallucinated" class, precision on "not hallucinated" class, and abstention rate)
+risk control for binary classification.
 """
 
 # sphinx_gallery_thumbnail_number = 2
 
+import matplotlib.patches as patches
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
-from sklearn.metrics import precision_score
+from matplotlib.colors import LinearSegmentedColormap
+from matplotlib.lines import Line2D
+from matplotlib.patches import Patch
+from numpy.typing import NDArray
 from sklearn.model_selection import train_test_split
 
 from mapie.risk_control import BinaryClassificationController
@@ -133,10 +150,7 @@ plt.legend()
 plt.show()
 
 ##############################################################################
-# Next, we split the data into calibration and test sets. We then initialize a
-# :class:`~mapie.risk_control.BinaryClassificationController` using the LLM judge's
-# probability estimation function, a risk metric (here, "precision"), a target risk level,
-# and a confidence level. We use the calibration data to compute statistically guaranteed thresholds.
+# We now split the data into calibration and test sets.
 
 X = df.index.to_numpy()  # index is the judge_input
 y = df["hallucinated"].astype(int)
@@ -144,110 +158,193 @@ y = df["hallucinated"].astype(int)
 X_calib, X_test, y_calib, y_test = train_test_split(
     X, y, test_size=0.95, random_state=RANDOM_STATE
 )
-target_precision = 0.8
-confidence_level = 0.9
+
+#############################################################################
+# Next, we define a multi-parameter prediction function. For an answer to be classified
+# as not hallucinated, we want the predicted score of the positive class to below a
+# lower threshold `lambda_1`. For an answer to be classified as hallucinated, we want
+# the predicted score of the positive class to be above an upper threshold `lambda_2`.
+# For answers with intermediate scores, the judge abstains from making a decision.
+
+
+def abstain_to_answer(X, lambda_1, lambda_2) -> NDArray[np.int_]:
+    """Predict function with abstention based on two thresholds.
+    - if the score is below `lambda_1`, predict 0 (not hallucinated)
+    - if the score is above `lambda_2`, predict 1 (hallucinated)
+    - if the score is between `lambda_1` and `lambda_2`, abstain (np.nan)
+    """
+    y_score = llm_judge.predict_proba(X)[:, 1]
+    y_pred = np.full_like(y_score, np.nan)
+    y_pred = np.where(y_score <= lambda_1, 0, y_pred)
+    y_pred = np.where(y_score >= lambda_2, 1, y_pred)
+    return y_pred
+
+
+#############################################################################
+# Given the abstention task and the definition of `abstain_to_answer`, we have
+# the constraint that `lambda_1` <= `lambda_2`. Therefore, can avoid exploring
+# the area of the bi-variate parameter set such that `lambda_1` > `lambda_2`.
+# We can consider a set of a grid values that respects the former constraint.
+
+to_explore = []
+for i in range(9):
+    lambda_1 = i / 10
+    for j in range(i + 1, 10):
+        lambda_2 = j / 10
+        if lambda_2 > 0.99:
+            break
+        to_explore.append((lambda_1, lambda_2))
+to_explore = np.array(to_explore)
+
+##############################################################################
+# Finally, we initialize a :class:`~mapie.risk_control.BinaryClassificationController`
+# using the `abstain_to_answer` prediction function and three specific risks that are
+# instances of :class:`BinaryClassificationRisk`:
+#
+# - `precision_negative` : the precision of the class 0, "negative class"
+# - `precision_positive` : the precision of the class 1, "positive class"
+# - `abstention_rate` : the rate of abstention of the judge, "proportion of np.nan predictions"
+#
+# We set target levels for each risk and use the calibration data to compute
+# statistically guaranteed thresholds. Among the valid thresholds, we select the one that minimizes
+# the abstention rate thus minimizing of human manual review.
+
+target_precision_negative = 0.7
+target_precision_positive = 0.7
+target_abstention_rate = 0.2
+confidence_level = 0.8
 
 bcc = BinaryClassificationController(
-    predict_function=llm_judge.predict_proba,
-    risk="precision",
-    target_level=target_precision,
+    predict_function=abstain_to_answer,
+    risk=["precision_negative", "precision_positive", "abstention_rate"],
+    target_level=[
+        target_precision_negative,
+        target_precision_positive,
+        target_abstention_rate,
+    ],
     confidence_level=confidence_level,
-    best_predict_param_choice="recall",
+    best_predict_param_choice="abstention_rate",
+    list_predict_params=to_explore,
 )
 bcc.calibrate(X_calib, y_calib)
 
-print(f"The best threshold is: {bcc.best_predict_param}")
-
-y_calib_pred_controlled = bcc.predict(X_calib)
-precision_calib = precision_score(y_calib, y_calib_pred_controlled)
-
-y_test_pred_controlled = bcc.predict(X_test)
-precision_test = precision_score(y_test, y_test_pred_controlled)
-
+print(
+    f"{len(bcc.valid_predict_params)} two-dimensional parameters found that guarantee with a confidence of {confidence_level}:\n"
+    f"- precision of at least {target_precision_negative} for predicting not hallucinated,\n"
+    f"- precision of at least {target_precision_positive} for predicting hallucinated, and\n"
+    f"- an abstention rate of at most {target_abstention_rate}.\n\n"
+    f"Among these, the best parameter that minimizes the abstention rate is {bcc.best_predict_param}.\n"
+    "That is, using thresholds:\n"
+    f"- lambda_1 = {bcc.best_predict_param[0]},\n"
+    f"- lambda_2 = {bcc.best_predict_param[1]}"
+)
 
 ##############################################################################
-# Finally, let us visualize the precision achieved on the calibration set for
-# the tested thresholds, highlighting the valid thresholds and the best one
-# (which maximizes recall).
+# Finally, we visualize the p-values associated with each explored parameter pair.
+# The valid parameter zone is highlighted, as well as the best parameter pair.
 
-proba_positive_class = llm_judge.predict_proba(X_calib)[:, 1]
+grid_size = 10
+matrix = np.full((grid_size, grid_size), np.nan)
 
-tested_thresholds = bcc._predict_params
-precisions = np.full(len(tested_thresholds), np.inf)
-for i, threshold in enumerate(tested_thresholds):
-    y_pred = (proba_positive_class >= threshold).astype(int)
-    precisions[i] = precision_score(y_calib, y_pred)
+# Build p-values matrix
+for i, (l1, l2) in enumerate(to_explore):
+    row = int(l1 * grid_size)
+    col = int(l2 * grid_size)
+    matrix[row, col] = bcc.p_values[i, 0]
 
-naive_threshold_index = np.argmin(
-    np.where(precisions >= target_precision, precisions - target_precision, np.inf)
-)
-naive_threshold = tested_thresholds[naive_threshold_index]
+# Build valid thresholds mask
+valid_matrix = np.zeros((grid_size, grid_size), dtype=int)
+for l1, l2 in bcc.valid_predict_params:
+    row = int(l1 * grid_size)
+    col = int(l2 * grid_size)
+    valid_matrix[row, col] = 1
 
-valid_thresholds_indices = np.array(
-    [t in bcc.valid_predict_params for t in tested_thresholds]
-)
-best_threshold_index = np.where(tested_thresholds == bcc.best_predict_param)[0][0]
+# Plot p-value matrix
+fig, ax = plt.subplots(figsize=(7.5, 7.5))
 
-plt.figure()
-plt.scatter(
-    tested_thresholds[valid_thresholds_indices],
-    precisions[valid_thresholds_indices],
-    c="tab:green",
-    label="Valid thresholds",
-)
-plt.scatter(
-    tested_thresholds[~valid_thresholds_indices],
-    precisions[~valid_thresholds_indices],
-    c="tab:red",
-    label="Invalid thresholds",
-)
-plt.scatter(
-    tested_thresholds[best_threshold_index],
-    precisions[best_threshold_index],
-    c="tab:green",
-    label="Best threshold",
+colors = ["#cde2f9", "#96bfd7", "#3765a9"]
+cmap = LinearSegmentedColormap.from_list("custom_blue", colors, gamma=0.5)
+masked_matrix = np.ma.masked_invalid(matrix)
+im = ax.imshow(masked_matrix, cmap=cmap, interpolation="nearest")
+
+for i in range(grid_size):
+    for j in range(grid_size):
+        if np.isnan(matrix[i, j]):
+            rect = patches.Rectangle(
+                (j - 0.5, i - 0.5),
+                1,
+                1,
+                hatch="///",
+                facecolor="none",
+                edgecolor="grey",
+                linewidth=0,
+            )
+            ax.add_patch(rect)
+
+# Add valid parameters area shape
+for i in range(grid_size):
+    for j in range(grid_size):
+        if valid_matrix[i, j] == 1:
+            neighbors = [(i - 1, j), (i + 1, j), (i, j - 1), (i, j + 1)]
+            if i - 1 < 0 or valid_matrix[i - 1, j] == 0:
+                ax.plot([j - 0.5, j + 0.5], [i - 0.5, i - 0.5], color="#2ecc71", lw=3)
+            if i + 1 >= grid_size or valid_matrix[i + 1, j] == 0:
+                ax.plot([j - 0.5, j + 0.5], [i + 0.5, i + 0.5], color="#2ecc71", lw=3)
+            if j - 1 < 0 or valid_matrix[i, j - 1] == 0:
+                ax.plot([j - 0.5, j - 0.5], [i - 0.5, i + 0.5], color="#2ecc71", lw=3)
+            if j + 1 >= grid_size or valid_matrix[i, j + 1] == 0:
+                ax.plot([j + 0.5, j + 0.5], [i - 0.5, i + 0.5], color="#2ecc71", lw=3)
+
+# Add best predict param as a star
+best_l1, best_l2 = bcc.best_predict_param
+ax.scatter(
+    best_l2 * grid_size,
+    best_l1 * grid_size,
+    c="#2ecc71",
     marker="*",
     edgecolors="k",
     s=300,
+    label="Best threshold pair",
 )
-plt.scatter(
-    tested_thresholds[naive_threshold_index],
-    precisions[naive_threshold_index],
-    c="tab:red",
-    label="Naive threshold",
-    marker="*",
-    edgecolors="k",
-    s=300,
+
+# Set up axes, theme and legend
+ax.set_xlabel(r"$\lambda_2$", fontsize=16)
+ax.set_ylabel(r"$\lambda_1$", fontsize=16)
+ax.set_title(
+    "P-values per parameter pair\nwith valid parameter zone highlighted", fontsize=16
 )
-plt.axhline(target_precision, color="tab:gray", linestyle="--")
-plt.text(
-    0.7,
-    target_precision + 0.02,
-    "Target precision",
-    color="tab:gray",
-    fontstyle="italic",
+ax.set_xticks(range(grid_size))
+ax.set_xticklabels(np.round(np.arange(grid_size) / grid_size, 2), fontsize=14)
+ax.set_yticks(range(grid_size))
+ax.set_yticklabels(np.round(np.arange(grid_size) / grid_size, 2), fontsize=14)
+
+cbar = plt.colorbar(im, ax=ax, orientation="horizontal", pad=0.2, fraction=0.035)
+cbar.set_label("P-value", fontsize=12)
+legend_elements = [
+    Patch(facecolor="none", edgecolor="grey", hatch="///", label="Non-explored zone"),
+    Patch(facecolor="none", edgecolor="#2ecc71", label="Valid parameter zone", lw=2),
+    Line2D(
+        [0],
+        [0],
+        marker="*",
+        color="w",
+        label="Best threshold pair",
+        markerfacecolor="#2ecc71",
+        markeredgecolor="k",
+        markersize=15,
+    ),
+]
+ax.legend(
+    handles=legend_elements,
+    loc="lower center",
+    bbox_to_anchor=(0.5, -0.25),
+    ncol=2,
+    fontsize=12,
+    frameon=False,
 )
-plt.xlabel("Threshold")
-plt.ylabel("Precision")
-plt.legend()
+plt.tight_layout()
 plt.show()
-
-proba_positive_class_test = llm_judge.predict_proba(X_test)[:, 1]
-y_pred_naive = (proba_positive_class_test >= naive_threshold).astype(int)
-
-print(
-    "With the naive threshold, the precision is:\n"
-    f"- {precisions[naive_threshold_index]:.3f} on the calibration set\n"
-    f"- {precision_score(y_test, y_pred_naive):.3f} on the test set."
-)
-
-print(
-    "\n\nWith risk control, the precision is:\n"
-    f"- {precision_calib:.3f} on the calibration set \n"
-    f"- {precision_test:.3f} on the test set."
-)
-
-##############################################################################
-# While the naive threshold achieves the target precision on the calibration set,
-# it fails to do so on the test set. This highlights the importance of using
-# risk control methods to ensure that performance guarantees hold on unseen data.
+ax.set_ylabel(r"lambda_1")
+ax.set_title("Valid parameters")
+fig.tight_layout()
+plt.show()
