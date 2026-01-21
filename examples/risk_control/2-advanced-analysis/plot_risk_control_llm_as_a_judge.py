@@ -219,7 +219,7 @@ to_explore = np.array(to_explore)
 target_precision_negative = 0.7
 target_precision_positive = 0.7
 target_abstention_rate = 0.2
-confidence_level = 0.8
+confidence_level = 0.9
 
 bcc = BinaryClassificationController(
     predict_function=abstain_to_answer,
