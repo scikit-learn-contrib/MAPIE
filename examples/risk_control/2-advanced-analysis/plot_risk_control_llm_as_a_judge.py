@@ -197,14 +197,24 @@ def abstain_to_answer(X, lambda_1, lambda_2) -> NDArray[np.int_]:
 # regions of the bi-variate parameter space where `lambda_1 > lambda_2`.
 # We construct a grid of parameter pairs that respects this constraint.
 
+# to_explore = []
+# for i in range(9):
+#     lambda_1 = i / 10
+#     for j in range(i + 1, 10):
+#         lambda_2 = j / 10
+#         if lambda_2 > 0.99:
+#             break
+#         to_explore.append((lambda_1, lambda_2))
+# to_explore = np.array(to_explore)
+
+n_lambdas = 5
+lambda_1_values = np.linspace(0.3, 0.7, n_lambdas)
+lambda_2_values = np.linspace(0.4, 0.8, n_lambdas)
 to_explore = []
-for i in range(9):
-    lambda_1 = i / 10
-    for j in range(i + 1, 10):
-        lambda_2 = j / 10
-        if lambda_2 > 0.99:
-            break
-        to_explore.append((lambda_1, lambda_2))
+for lambda_1 in lambda_1_values:
+    for lambda_2 in lambda_2_values:
+        if lambda_2 >= lambda_1:
+            to_explore.append((lambda_1, lambda_2))
 to_explore = np.array(to_explore)
 
 ##############################################################################
@@ -221,8 +231,8 @@ to_explore = np.array(to_explore)
 # the one that minimizes the abstention rate, thereby reducing the need for
 # human manual review.
 
-target_precision_negative = 0.7
-target_precision_positive = 0.7
+target_precision_negative = 0.85
+target_precision_positive = 0.8
 target_abstention_rate = 0.2
 confidence_level = 0.9
 
@@ -245,30 +255,27 @@ print(
     f"- precision of at least {target_precision_negative} for predicting not hallucinated,\n"
     f"- precision of at least {target_precision_positive} for predicting hallucinated, and\n"
     f"- an abstention rate of at most {target_abstention_rate}.\n\n"
-    f"Among these, the best parameter that minimizes the abstention rate is {bcc.best_predict_param}.\n"
-    "That is, using thresholds:\n"
-    f"- lambda_1 = {bcc.best_predict_param[0]},\n"
-    f"- lambda_2 = {bcc.best_predict_param[1]}"
+    f"Among these, the best thresholds that minimizes the abstention rate are:\n"
+    f"- lambda_1 = {bcc.best_predict_param[0]:.2f},\n"
+    f"- lambda_2 = {bcc.best_predict_param[1]:.2f}"
 )
 
 ##############################################################################
 # Below, we visualize the p-values associated with each explored parameter pair.
 # The valid parameter region and the optimal parameter pair are highlighted.
 
-grid_size = 10
-matrix = np.full((grid_size, grid_size), np.nan)
-
 # Build p-values matrix
-for i, (l1, l2) in enumerate(to_explore):
-    row = int(l1 * grid_size)
-    col = int(l2 * grid_size)
-    matrix[row, col] = bcc.p_values[i, 0]
+matrix = np.full((n_lambdas, n_lambdas), np.nan)
+for idx, (l1, l2) in enumerate(to_explore):
+    row = np.argmin(np.abs(lambda_1_values - l1))
+    col = np.argmin(np.abs(lambda_2_values - l2))
+    matrix[row, col] = bcc.p_values[idx, 0]
 
 # Build valid thresholds mask
-valid_matrix = np.zeros((grid_size, grid_size), dtype=int)
+valid_matrix = np.zeros((n_lambdas, n_lambdas), dtype=int)
 for l1, l2 in bcc.valid_predict_params:
-    row = int(l1 * grid_size)
-    col = int(l2 * grid_size)
+    row = np.argmin(np.abs(lambda_1_values - l1))
+    col = np.argmin(np.abs(lambda_2_values - l2))
     valid_matrix[row, col] = 1
 
 # Plot p-value matrix
@@ -279,8 +286,8 @@ cmap = LinearSegmentedColormap.from_list("custom_blue", colors, gamma=0.5)
 masked_matrix = np.ma.masked_invalid(matrix)
 im = ax.imshow(masked_matrix, cmap=cmap, interpolation="nearest")
 
-for i in range(grid_size):
-    for j in range(grid_size):
+for i in range(n_lambdas):
+    for j in range(n_lambdas):
         if np.isnan(matrix[i, j]):
             rect = patches.Rectangle(
                 (j - 0.5, i - 0.5),
@@ -294,24 +301,26 @@ for i in range(grid_size):
             ax.add_patch(rect)
 
 # Add valid parameters area shape
-for i in range(grid_size):
-    for j in range(grid_size):
+for i in range(n_lambdas):
+    for j in range(n_lambdas):
         if valid_matrix[i, j] == 1:
             neighbors = [(i - 1, j), (i + 1, j), (i, j - 1), (i, j + 1)]
             if i - 1 < 0 or valid_matrix[i - 1, j] == 0:
                 ax.plot([j - 0.5, j + 0.5], [i - 0.5, i - 0.5], color="#2ecc71", lw=3)
-            if i + 1 >= grid_size or valid_matrix[i + 1, j] == 0:
+            if i + 1 >= n_lambdas or valid_matrix[i + 1, j] == 0:
                 ax.plot([j - 0.5, j + 0.5], [i + 0.5, i + 0.5], color="#2ecc71", lw=3)
             if j - 1 < 0 or valid_matrix[i, j - 1] == 0:
                 ax.plot([j - 0.5, j - 0.5], [i - 0.5, i + 0.5], color="#2ecc71", lw=3)
-            if j + 1 >= grid_size or valid_matrix[i, j + 1] == 0:
+            if j + 1 >= n_lambdas or valid_matrix[i, j + 1] == 0:
                 ax.plot([j + 0.5, j + 0.5], [i - 0.5, i + 0.5], color="#2ecc71", lw=3)
 
 # Add best predict param as a star
 best_l1, best_l2 = bcc.best_predict_param
+row_idx = np.argmin(np.abs(lambda_1_values - best_l1))
+col_idx = np.argmin(np.abs(lambda_2_values - best_l2))
 ax.scatter(
-    best_l2 * grid_size,
-    best_l1 * grid_size,
+    col_idx,
+    row_idx,
     c="#2ecc71",
     marker="*",
     edgecolors="k",
@@ -325,10 +334,10 @@ ax.set_ylabel(r"$\lambda_1$", fontsize=16)
 ax.set_title(
     "P-values per parameter pair\nwith valid parameter zone highlighted", fontsize=16
 )
-ax.set_xticks(range(grid_size))
-ax.set_xticklabels(np.round(np.arange(grid_size) / grid_size, 2), fontsize=14)
-ax.set_yticks(range(grid_size))
-ax.set_yticklabels(np.round(np.arange(grid_size) / grid_size, 2), fontsize=14)
+ax.set_xticks(range(n_lambdas))
+ax.set_xticklabels([f"{val:.2f}" for val in lambda_2_values], fontsize=14)
+ax.set_yticks(range(n_lambdas))
+ax.set_yticklabels([f"{val:.2f}" for val in lambda_1_values], fontsize=14)
 
 cbar = plt.colorbar(im, ax=ax, orientation="horizontal", pad=0.2, fraction=0.035)
 cbar.set_label("P-value", fontsize=12)
@@ -446,8 +455,12 @@ naive_summary = pd.DataFrame(
 )
 
 # Print thresholds and tables
-print(f"\nNaive thresholds (lambda_1, lambda_2) = ({naive_lambda_1}, {naive_lambda_2})")
-print(f"Risk-controlled thresholds (lambda_1, lambda_2) = {bcc.best_predict_param}\n")
+print(
+    f"\nNaive thresholds (lambda_1, lambda_2) = ({naive_lambda_1:.2f}, {naive_lambda_2:.2f})"
+)
+print(
+    f"Risk-controlled thresholds (lambda_1, lambda_2) = ({bcc.best_predict_param[0]:.2f}, {bcc.best_predict_param[1]:.2f})\n"
+)
 
 print("Risk-controlled thresholds performance")
 print(ctrl_summary.round(3))
@@ -456,12 +469,9 @@ print("\nNaive thresholds performance")
 print(naive_summary.round(3))
 
 ##############################################################################
-# In this example, the naive thresholds coincidentally match the risk-controlled ones,
-# resulting in identical performance on both calibration and test sets.
+# In this example, the naive thresholds choose an abstention rate of 0% at the cost of a low margin on precision_positive.
 #
-# Note, however, that this is not generally the case:
-#
-# - The naive approach may select thresholds that fail to meet the desired risk levels on unseen data.
-# - The risk-controlled approach provides formal statistical guarantees on precision and abstention,
+# Indeed, the naive approach may select thresholds that fail to meet the desired risk levels on unseen data.
+# In contrast, the risk-controlled approach takes a margin which provides formal statistical guarantees on precision and abstention,
 #   making it more reliable in practice.
 #
