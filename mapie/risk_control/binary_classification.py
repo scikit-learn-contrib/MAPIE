@@ -15,8 +15,8 @@ from .risks import (
     accuracy,
     false_positive_rate,
     precision,
-    precision_negative,
-    precision_positive,
+    negative_predictive_value,
+    positive_predictive_value,
     predicted_positive_fraction,
     recall,
 )
@@ -27,8 +27,8 @@ Risk_str = Literal[
     "accuracy",
     "fpr",
     "predicted_positive_fraction",
-    "precision_positive",
-    "precision_negative",
+    "positive_predictive_value",
+    "negative_predictive_value",
     "abstention_rate",
 ]
 Risk = Union[
@@ -182,8 +182,8 @@ class BinaryClassificationController:
         "accuracy": accuracy,
         "fpr": false_positive_rate,
         "predicted_positive_fraction": predicted_positive_fraction,
-        "precision_positive": precision_positive,
-        "precision_negative": precision_negative,
+        "positive_predictive_value": positive_predictive_value,
+        "negative_predictive_value": negative_predictive_value,
         "abstention_rate": abstention_rate,
     }
 

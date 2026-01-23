@@ -5,9 +5,9 @@ from .risks import (
     abstention_rate,
     accuracy,
     false_positive_rate,
+    negative_predictive_value,
+    positive_predictive_value,
     precision,
-    precision_negative,
-    precision_positive,
     predicted_positive_fraction,
     recall,
 )
@@ -23,7 +23,7 @@ __all__ = [
     "precision",
     "recall",
     "predicted_positive_fraction",
-    "precision_positive",
-    "precision_negative",
+    "positive_predictive_value",
+    "negative_predictive_value",
     "abstention_rate",
 ]

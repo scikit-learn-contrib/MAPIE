@@ -37,8 +37,8 @@ from sklearn.model_selection import train_test_split
 from mapie.risk_control import (
     BinaryClassificationController,
     abstention_rate,
-    precision_negative,
-    precision_positive,
+    negative_predictive_value,
+    positive_predictive_value,
 )
 
 RANDOM_STATE = 0
@@ -222,8 +222,8 @@ to_explore = np.array(to_explore)
 # using the `abstain_to_answer` prediction function and three specific risks, each
 # represented as an instance of :class:`BinaryClassificationRisk`:
 #
-# - ``precision_negative``: precision on class 0 ("not hallucinated"),
-# - ``precision_positive``: precision on class 1 ("hallucinated"),
+# - ``negative_predictive_value``: precision (NPV) on class 0 ("not hallucinated"),
+# - ``positive_predictive_value``: precision (PPV) on class 1 ("hallucinated"),
 # - ``abstention_rate``: proportion of abstentions (i.e., np.nan predictions).
 #
 # We set a target level for each risk and use the calibration data to compute
@@ -231,17 +231,17 @@ to_explore = np.array(to_explore)
 # the one that minimizes the abstention rate, thereby reducing the need for
 # human manual review.
 
-target_precision_negative = 0.85
-target_precision_positive = 0.8
+target_negative_predictive_value = 0.85
+target_positive_predictive_value = 0.8
 target_abstention_rate = 0.2
 confidence_level = 0.9
 
 bcc = BinaryClassificationController(
     predict_function=abstain_to_answer,
-    risk=["precision_negative", "precision_positive", "abstention_rate"],
+    risk=["negative_predictive_value", "positive_predictive_value", "abstention_rate"],
     target_level=[
-        target_precision_negative,
-        target_precision_positive,
+        target_negative_predictive_value,
+        target_positive_predictive_value,
         target_abstention_rate,
     ],
     confidence_level=confidence_level,
@@ -252,8 +252,8 @@ bcc.calibrate(X_calib, y_calib)
 
 print(
     f"{len(bcc.valid_predict_params)} two-dimensional parameters found that guarantee with a confidence of {confidence_level}:\n"
-    f"- precision of at least {target_precision_negative} for predicting not hallucinated,\n"
-    f"- precision of at least {target_precision_positive} for predicting hallucinated, and\n"
+    f"- precision of at least {target_negative_predictive_value} for predicting not hallucinated,\n"
+    f"- precision of at least {target_positive_predictive_value} for predicting hallucinated, and\n"
     f"- an abstention rate of at most {target_abstention_rate}.\n\n"
     f"Among these, the best thresholds that minimizes the abstention rate are:\n"
     f"- lambda_1 = {bcc.best_predict_param[0]:.2f},\n"
@@ -383,8 +383,8 @@ plt.show()
 # That comes down to selecting the parameter pair that minimizes the abstention rate
 # on the calibration set among those that satisfy the following empirical constraints:
 #
-# - empirical precision on class 0 >= target_precision_negative,
-# - empirical precision on class 1 >= target_precision_positive,
+# - empirical precision on class 0 >= target_negative_predictive_value,
+# - empirical precision on class 1 >= target_positive_predictive_value,
 # - empirical abstention rate <= target_abstention_rate.
 #
 # We then evaluate both approaches on the test set and display the results.
@@ -397,8 +397,8 @@ def perf(risk, y_true, y_pred):
 
 def compute_risks(y_true, y_pred):
     return {
-        "precision_positive": perf(precision_positive, y_true, y_pred),
-        "precision_negative": perf(precision_negative, y_true, y_pred),
+        "positive_predictive_value": perf(positive_predictive_value, y_true, y_pred),
+        "negative_predictive_value": perf(negative_predictive_value, y_true, y_pred),
         "abstention_rate": perf(abstention_rate, y_true, y_pred),
     }
 
@@ -409,14 +409,14 @@ y_test = y_test.to_numpy()
 y_preds = np.array([abstain_to_answer(X_calib, l1, l2) for l1, l2 in to_explore])
 
 emp_risks = np.array([compute_risks(y_calib, y_pred) for y_pred in y_preds])
-emp_precision_positive = np.array([r["precision_positive"] for r in emp_risks])
-emp_precision_negative = np.array([r["precision_negative"] for r in emp_risks])
+emp_positive_predictive_value = np.array([r["positive_predictive_value"] for r in emp_risks])
+emp_negative_predictive_value = np.array([r["negative_predictive_value"] for r in emp_risks])
 abstention_rate_calib = np.array([r["abstention_rate"] for r in emp_risks])
 
 # Identify feasible parameter pairs for the naive approach
 feasible_mask = (
-    (emp_precision_positive >= target_precision_positive)
-    & (emp_precision_negative >= target_precision_negative)
+    (emp_positive_predictive_value >= target_positive_predictive_value)
+    & (emp_negative_predictive_value >= target_negative_predictive_value)
     & (abstention_rate_calib <= target_abstention_rate)
 )
 
@@ -469,7 +469,7 @@ print("\nNaive thresholds performance")
 print(naive_summary.round(3))
 
 ##############################################################################
-# In this example, the naive thresholds choose an abstention rate of 0% at the cost of a low margin on precision_positive.
+# In this example, the naive thresholds choose an abstention rate of 0% at the cost of a low margin on positive_predictive_value.
 #
 # Indeed, the naive approach may select thresholds that fail to meet the desired risk levels on unseen data.
 # In contrast, the risk-controlled approach takes a margin which provides formal statistical guarantees on precision and abstention,
