@@ -14,6 +14,7 @@ from sklearn.preprocessing import OneHotEncoder
 from typing_extensions import TypedDict
 
 from mapie.risk_control import MultiLabelClassificationController
+from mapie.risk_control.methods import find_best_predict_param
 from mapie.utils import check_is_fitted
 
 Params = TypedDict(
@@ -752,6 +753,24 @@ def test_toy_dataset_predictions(strategy: str) -> None:
     mapie_clf.calibrate(X_toy, y_toy)
     y_ps = mapie_clf.predict(X_toy)
     np.testing.assert_allclose(y_ps[:, :, 0], y_toy_mapie[strategy], rtol=1e-6)
+
+
+def test_find_best_predict_param_decreasing_risk() -> None:
+    lambdas = np.array([0.1, 0.3, 0.5, 0.7, 0.9, 1.0])
+    risks = np.array([0.6, 0.4, 0.3, 0.2, 0.1, 0.05])
+    alpha = np.array([0.15])
+
+    best_lambda = find_best_predict_param(lambdas, risks, alpha)
+    assert best_lambda == 0.9
+
+
+def test_find_best_predict_param_increasing_risk() -> None:
+    lambdas = np.array([0.1, 0.3, 0.5, 0.7, 0.9, 1.0])
+    risks = np.array([0.05, 0.1, 0.2, 0.3, 0.4, 0.6])
+    alpha = np.array([0.15])
+
+    best_lambda = find_best_predict_param(lambdas, risks, alpha)
+    assert best_lambda == 0.3
 
 
 def test_transform_pred_proba_ndarray_2d() -> None:
