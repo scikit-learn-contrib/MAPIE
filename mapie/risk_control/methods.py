@@ -170,7 +170,7 @@ def find_best_predict_param(
     bound_rep[:, np.argmax(bound_rep, axis=1)] = np.maximum(
         alphas_np, bound_rep[:, np.argmax(bound_rep, axis=1)]
     )  # to avoid an error if the risk is always higher than alpha
-    if r_hat_plus[0] < r_hat_plus[-1]:
+    if r_hat_plus[0] <= r_hat_plus[-1]:
         increasing_risk = True
     else:
         increasing_risk = False
