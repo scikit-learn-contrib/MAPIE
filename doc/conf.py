@@ -54,6 +54,9 @@ imgmath_latex = "latex"
 
 autodoc_default_flags = ["members", "inherited-members"]
 
+# Preserve default argument values in signatures (don't evaluate them)
+autodoc_preserve_defaults = True
+
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
 
