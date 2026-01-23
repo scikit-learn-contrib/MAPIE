@@ -409,8 +409,12 @@ y_test = y_test.to_numpy()
 y_preds = np.array([abstain_to_answer(X_calib, l1, l2) for l1, l2 in to_explore])
 
 emp_risks = np.array([compute_risks(y_calib, y_pred) for y_pred in y_preds])
-emp_positive_predictive_value = np.array([r["positive_predictive_value"] for r in emp_risks])
-emp_negative_predictive_value = np.array([r["negative_predictive_value"] for r in emp_risks])
+emp_positive_predictive_value = np.array(
+    [r["positive_predictive_value"] for r in emp_risks]
+)
+emp_negative_predictive_value = np.array(
+    [r["negative_predictive_value"] for r in emp_risks]
+)
 abstention_rate_calib = np.array([r["abstention_rate"] for r in emp_risks])
 
 # Identify feasible parameter pairs for the naive approach

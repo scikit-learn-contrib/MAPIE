@@ -8,7 +8,7 @@ from numpy.typing import NDArray
 from sklearn.datasets import make_classification
 from sklearn.dummy import DummyClassifier
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import precision_score, recall_score
+from sklearn.metrics import accuracy_score, precision_score, recall_score
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 
@@ -17,6 +17,7 @@ from mapie.risk_control import (
     BinaryClassificationRisk,
     accuracy,
     false_positive_rate,
+    positive_predictive_value,
     precision,
     recall,
 )
@@ -100,8 +101,18 @@ def bcc_deterministic():
     "risk_instance, metric_func, effective_sample_func",
     [
         (precision, precision_score, lambda y_true, y_pred: np.sum(y_pred == 1)),
+        (
+            accuracy,
+            accuracy_score,
+            lambda y_true, y_pred: len(y_true),
+        ),
         (recall, recall_score, lambda y_true, y_pred: np.sum(y_true == 1)),
         (false_positive_rate, fpr_func, lambda y_true, y_pred: np.sum(y_true == 0)),
+        (
+            positive_predictive_value,
+            precision_score,
+            lambda y_true, y_pred: np.sum(y_pred == 1),
+        ),
     ],
 )
 @pytest.mark.parametrize(
