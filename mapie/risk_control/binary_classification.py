@@ -57,7 +57,7 @@ class BinaryClassificationController:
         Its output signature must be of shape (len(X), 2).
 
         Or, in the general case of multi-dimensional parameters (thresholds),
-        a function that takes (X, \*params) and outputs 0 or 1. This can be useful to e.g.,
+        a function that takes (X, \\*params) and outputs 0 or 1. This can be useful to e.g.,
         ensemble multiple binary classifiers with different thresholds for each classifier.
         In that case, `predict_params` must be provided.
 
