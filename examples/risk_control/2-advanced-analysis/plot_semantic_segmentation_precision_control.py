@@ -244,11 +244,6 @@ for i, sample in enumerate(test_loader):
                 precisions_list.append(precision)
 
 precisions_array = np.array(precisions_list)
-print("Evaluating on test set results:")
-print(f"\tMean precision: {precisions_array.mean():.4f} ± {precisions_array.std():.4f}")
-print(f"\tMedian precision: {np.median(precisions_array):.4f}")
-print(f"\tMin precision: {precisions_array.min():.4f}")
-print(f"\tMax precision: {precisions_array.max():.4f}")
 
 ###############################################################################
 # Finally, the distribution of precision values over the test set is plotted
@@ -286,3 +281,56 @@ plt.show()
 # target precision level, illustrating the effectiveness of MAPIE’s
 # risk control for semantic segmentation tasks.
 #
+
+###############################################################################
+# Bootstrap the mean precision over different samplings of the test set
+# (resampling images with replacement).
+#
+
+N_BOOTSTRAP = 2000
+BOOTSTRAP_SEED = 123
+rng = np.random.default_rng(BOOTSTRAP_SEED)
+
+bootstrap_means = np.empty(N_BOOTSTRAP, dtype=float)
+n = precisions_array.size
+for b in range(N_BOOTSTRAP):
+    bootstrap_sample = rng.choice(precisions_array, size=n, replace=True)
+    bootstrap_means[b] = bootstrap_sample.mean()
+
+delta = round(1 - CONFIDENCE_LEVEL, 2)
+quantile_confidence = np.quantile(bootstrap_means, delta)
+print(f"Bootstrap {delta}-th quantile: {quantile_confidence:.4f}")
+
+fig, ax = plt.subplots(figsize=(10, 6))
+ax.hist(
+    bootstrap_means,
+    bins=40,
+    alpha=0.7,
+    color="slateblue",
+    edgecolor="black",
+)
+ax.axvline(
+    TARGET_PRECISION,
+    color="orange",
+    linestyle="--",
+    linewidth=2,
+    label=f"Target precision ({TARGET_PRECISION:.2f})",
+)
+ax.axvline(
+    quantile_confidence,
+    color="green",
+    linestyle="--",
+    linewidth=2,
+    label=f"Bootstrap {delta}-th quantile ({quantile_confidence:.3f})",
+)
+ax.set_xlabel("Bootstrap mean precision", fontsize=12)
+ax.set_ylabel("Frequency", fontsize=12)
+ax.set_title(
+    "Bootstrap distribution of mean precision (test set resampling)",
+    fontsize=14,
+    fontweight="bold",
+)
+ax.legend(fontsize=10)
+ax.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.show()
