@@ -170,9 +170,18 @@ def find_best_predict_param(
     bound_rep[:, np.argmax(bound_rep, axis=1)] = np.maximum(
         alphas_np, bound_rep[:, np.argmax(bound_rep, axis=1)]
     )  # to avoid an error if the risk is always higher than alpha
-    arr = np.greater_equal(bound_rep, alphas_np).astype(int).cumsum(axis=1)
+    if r_hat_plus[0] < r_hat_plus[-1]:
+        increasing_risk = True
+    else:
+        increasing_risk = False
 
+    arr = np.greater_equal(bound_rep, alphas_np).astype(int)
+    if not increasing_risk:
+        arr = np.fliplr(arr)
+    arr = arr.cumsum(axis=1)
     idx_last_zero = np.where(arr == 0, np.arange(arr.shape[1]), -1).max(axis=1)
+    if not increasing_risk:
+        idx_last_zero = len(lambdas) - 1 - idx_last_zero
     best_predict_param = lambdas[idx_last_zero]
     return best_predict_param
 
