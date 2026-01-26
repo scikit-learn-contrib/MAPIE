@@ -140,7 +140,7 @@ def _is_increasing_risk(r_hat_plus: NDArray) -> bool:
     bool
         True if array is increasing, False otherwise
     """
-   return (r_hat_plus[0] < r_hat_plus[-1])
+    return (r_hat_plus[0] < r_hat_plus[-1])
 
     
 def find_best_predict_param(
