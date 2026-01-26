@@ -15,6 +15,7 @@ History
 * Add a disclosure about LLM usage to the pull request template.
 * Fix data leakage for time series tutorials
 * Improve documentation display (increase width and improve API table)
+* fix bug with CRC and RCPS where the computed lambda was not the best
 
 1.2.0 (2025-11-17)
 ------------------
