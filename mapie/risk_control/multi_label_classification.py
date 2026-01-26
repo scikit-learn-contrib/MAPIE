@@ -186,7 +186,7 @@ class MultiLabelClassificationController:
     >>> print(y_pi_mapie[:, :, 0])
     [[ True False  True]
      [ True False  True]
-     [False  True False]
+     [False  True  True]
      [False  True False]]
     """
 
