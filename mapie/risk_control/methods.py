@@ -133,6 +133,14 @@ def find_best_predict_param(
     all smaller lambda, the risk is smaller, for each value
     of alpha.
 
+    Note on extreme cases:
+    When all lambda values are valid:
+    - if r_hat_plus is increasing, then return the last lambda
+    - else return the first lambda.
+    When no lambda values are valid:
+    - if r_hat_plus is increasing, then return the first lambda
+    - else return the last lambda.
+
     Parameters
     ----------
     lambdas: NDArray
@@ -167,19 +175,20 @@ def find_best_predict_param(
         alphas_np = alpha_np
 
     bound_rep = np.repeat(np.expand_dims(r_hat_plus, axis=0), len(alphas_np), axis=0)
-    bound_rep[:, np.argmax(bound_rep, axis=1)] = np.maximum(
-        alphas_np, bound_rep[:, np.argmax(bound_rep, axis=1)]
-    )  # to avoid an error if the risk is always higher than alpha
-    if r_hat_plus[0] <= r_hat_plus[-1]:
+    if r_hat_plus[0] < r_hat_plus[-1]:
         increasing_risk = True
     else:
         increasing_risk = False
 
     arr = np.greater_equal(bound_rep, alphas_np).astype(int)
+    if arr.min() == 1:
+        warnings.warn(
+            "The risk cannot be controlled. Returning the extreme value according to risk direction."
+        )
     if not increasing_risk:
         arr = np.fliplr(arr)
     arr = arr.cumsum(axis=1)
-    idx_last_zero = np.where(arr == 0, np.arange(arr.shape[1]), -1).max(axis=1)
+    idx_last_zero = np.where(arr == 0, np.arange(arr.shape[1]), 0).max(axis=1)
     if not increasing_risk:
         idx_last_zero = len(lambdas) - 1 - idx_last_zero
     best_predict_param = lambdas[idx_last_zero]

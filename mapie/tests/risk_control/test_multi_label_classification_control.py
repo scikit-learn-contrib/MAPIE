@@ -92,37 +92,37 @@ y_toy_mapie = {
         [True, True, True],
     ],
     "rcps_bernstein": [
-        [False, False, False],
-        [False, False, False],
-        [False, False, False],
-        [False, False, False],
-        [False, False, False],
-        [False, False, False],
-        [False, False, False],
-        [False, False, False],
-        [False, False, False],
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
     ],
     "rcps_wsr": [
-        [False, False, False],
-        [False, False, False],
-        [False, False, False],
-        [False, False, False],
-        [False, False, False],
-        [False, False, False],
-        [False, False, False],
-        [False, False, False],
-        [False, False, False],
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
     ],
     "rcps_hoeffding": [
-        [False, False, False],
-        [False, False, False],
-        [False, False, False],
-        [False, False, False],
-        [False, False, False],
-        [False, False, False],
-        [False, False, False],
-        [False, False, False],
-        [False, False, False],
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
+        [True, True, True],
     ],
     "ltt": [
         [False, False, False],
@@ -752,6 +752,7 @@ def test_toy_dataset_predictions(strategy: str) -> None:
     )
     mapie_clf.calibrate(X_toy, y_toy)
     y_ps = mapie_clf.predict(X_toy)
+    print(mapie_clf.best_predict_param, mapie_clf.r_hat_plus)
     np.testing.assert_allclose(y_ps[:, :, 0], y_toy_mapie[strategy], rtol=1e-6)
 
 
@@ -771,6 +772,60 @@ def test_find_best_predict_param_increasing_risk() -> None:
 
     best_lambda = find_best_predict_param(lambdas, risks, alpha)
     assert best_lambda == 0.3
+
+
+def test_warning_no_valid_param() -> None:
+    lambdas = np.array([0.1, 0.3, 0.5, 0.7, 0.9, 1.0])
+    risks = np.array([1.0, 1.0, 1.0, 1.0, 1.0, 1.0])
+    alpha = np.array([0.15])
+    with pytest.warns(UserWarning, match=r"The risk cannot be controlled.*"):
+        find_best_predict_param(lambdas, risks, alpha)
+
+
+@pytest.mark.filterwarnings("ignore::UserWarning")
+def test_no_valid_param() -> None:
+    lambdas = np.array([0.1, 0.3, 0.5, 0.7, 0.9, 1.0])
+    risks = np.array([1.0, 1.0, 1.0, 1.0, 1.0, 1.0])
+    alpha = np.array([0.15])
+    best_lambda = find_best_predict_param(lambdas, risks, alpha)
+    assert best_lambda == 1.0
+
+
+@pytest.mark.filterwarnings("ignore::UserWarning")
+def test_no_valid_param_increasing_risk() -> None:
+    lambdas = np.array([0.1, 0.3, 0.5, 0.7, 0.9, 1.0])
+    risks = np.array([0.05, 0.1, 0.2, 0.3, 0.4, 0.6])
+    alpha = np.array([0.01])
+    best_lambda = find_best_predict_param(lambdas, risks, alpha)
+    assert best_lambda == 0.1
+
+
+@pytest.mark.filterwarnings("ignore::UserWarning")
+def test_no_valid_param_decreasing_risk() -> None:
+    lambdas = np.array([0.1, 0.3, 0.5, 0.7, 0.9, 1.0])
+    risks = np.array([0.6, 0.4, 0.3, 0.2, 0.1, 0.05])
+    alpha = np.array([0.01])
+
+    best_lambda = find_best_predict_param(lambdas, risks, alpha)
+    assert best_lambda == 1.0
+
+
+def test_all_valid_param_increasing_risk() -> None:
+    lambdas = np.array([0.1, 0.3, 0.5, 0.7, 0.9, 1.0])
+    risks = np.array([0.05, 0.1, 0.2, 0.3, 0.4, 0.6])
+    alpha = np.array([1.0])
+
+    best_lambda = find_best_predict_param(lambdas, risks, alpha)
+    assert best_lambda == 1.0
+
+
+def test_all_valid_param_decreasing_risk() -> None:
+    lambdas = np.array([0.1, 0.3, 0.5, 0.7, 0.9, 1.0])
+    risks = np.array([0.6, 0.4, 0.3, 0.2, 0.1, 0.05])
+    alpha = np.array([1.0])
+
+    best_lambda = find_best_predict_param(lambdas, risks, alpha)
+    assert best_lambda == 0.1
 
 
 def test_transform_pred_proba_ndarray_2d() -> None:
