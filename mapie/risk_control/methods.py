@@ -126,6 +126,23 @@ def get_r_hat_plus(
     return r_hat, r_hat_plus
 
 
+def _is_increasing_risk(r_hat_plus: NDArray) -> bool:
+    """
+    Internal function checking if a risk is increasing or not.
+
+    Parameters
+    ----------
+    r_hat_plus: NDArray of shape (n_lambdas, )
+        Upper bounds computed in the `get_r_hat_plus` method.
+
+    Returns
+    -------
+    bool
+        True if array is increasing, False otherwise
+    """
+   return (r_hat_plus[0] < r_hat_plus[-1])
+
+    
 def find_best_predict_param(
     lambdas: NDArray, r_hat_plus: NDArray, alpha_np: NDArray
 ) -> NDArray:
@@ -175,10 +192,7 @@ def find_best_predict_param(
         alphas_np = alpha_np
 
     bound_rep = np.repeat(np.expand_dims(r_hat_plus, axis=0), len(alphas_np), axis=0)
-    if r_hat_plus[0] < r_hat_plus[-1]:
-        increasing_risk = True
-    else:
-        increasing_risk = False
+    increasing_risk = _is_increasing_risk(r_hat_plus)
 
     arr = np.greater_equal(bound_rep, alphas_np).astype(int)
     if arr.min() == 1:
