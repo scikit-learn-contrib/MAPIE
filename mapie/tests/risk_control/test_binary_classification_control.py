@@ -8,7 +8,7 @@ from numpy.typing import NDArray
 from sklearn.datasets import make_classification
 from sklearn.dummy import DummyClassifier
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import precision_score, recall_score
+from sklearn.metrics import accuracy_score, precision_score, recall_score
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 
@@ -17,6 +17,7 @@ from mapie.risk_control import (
     BinaryClassificationRisk,
     accuracy,
     false_positive_rate,
+    positive_predictive_value,
     precision,
     recall,
 )
@@ -100,8 +101,18 @@ def bcc_deterministic():
     "risk_instance, metric_func, effective_sample_func",
     [
         (precision, precision_score, lambda y_true, y_pred: np.sum(y_pred == 1)),
+        (
+            accuracy,
+            accuracy_score,
+            lambda y_true, y_pred: len(y_true),
+        ),
         (recall, recall_score, lambda y_true, y_pred: np.sum(y_true == 1)),
         (false_positive_rate, fpr_func, lambda y_true, y_pred: np.sum(y_true == 0)),
+        (
+            positive_predictive_value,
+            precision_score,
+            lambda y_true, y_pred: np.sum(y_pred == 1),
+        ),
     ],
 )
 @pytest.mark.parametrize(
@@ -208,6 +219,21 @@ class TestBinaryClassificationControllerBestPredictParamChoice:
 
         result = controller._best_predict_param_choice
         assert result is first_risk
+
+    @pytest.mark.parametrize("invalid_risk_choice", [0.5, 5, [0.5, 0.7]])
+    def test_invalid_type(self, invalid_risk_choice):
+        """Test _set_best_predict_param_choice with an invalid type."""
+        invalid_risk_choice = 0.5
+
+        with pytest.raises(
+            TypeError, match=r".*best_predict_param_choice must be either.*"
+        ):
+            BinaryClassificationController(
+                predict_function=dummy_predict,
+                risk=precision,
+                target_level=dummy_target,
+                best_predict_param_choice=invalid_risk_choice,
+            )
 
 
 @pytest.mark.parametrize(
@@ -340,7 +366,7 @@ class TestBinaryClassificationControllerGetPredictionsPerParam:
 
         expected = np.array([len(X) * [True]])
         assert result.shape == (len(dummy_single_param_multi_dim), len(X))
-        assert result.dtype == int
+        assert result.dtype == float
         np.testing.assert_array_equal(result, expected)
 
     def test_multiple_parameters(self, bcc_deterministic):
@@ -365,7 +391,7 @@ class TestBinaryClassificationControllerGetPredictionsPerParam:
 
         expected = np.array(len(dummy_grid_param_multi_dim) * [len(X) * [True]])
         assert result.shape == (len(dummy_grid_param_multi_dim), len(X))
-        assert result.dtype == int
+        assert result.dtype == float
         np.testing.assert_array_equal(result, expected)
 
     def test_output_shape_consistency(self):

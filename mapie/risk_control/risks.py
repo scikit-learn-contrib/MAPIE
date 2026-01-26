@@ -154,3 +154,20 @@ predicted_positive_fraction = BinaryClassificationRisk(
     risk_condition=lambda y_true, y_pred: np.repeat(True, len(y_true)),
     higher_is_better=False,
 )
+
+positive_predictive_value = precision
+ppv = positive_predictive_value
+
+negative_predictive_value = BinaryClassificationRisk(
+    risk_occurrence=lambda y_true, y_pred: y_pred == y_true,
+    risk_condition=lambda y_true, y_pred: y_pred == 0,
+    higher_is_better=True,
+)
+
+npv = negative_predictive_value
+
+abstention_rate = BinaryClassificationRisk(
+    risk_occurrence=lambda y_true, y_pred: np.isnan(y_pred),
+    risk_condition=lambda y_true, y_pred: np.repeat(True, len(y_true)),
+    higher_is_better=False,
+)

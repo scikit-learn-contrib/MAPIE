@@ -15,6 +15,7 @@ History
 * Add a disclosure about LLM usage to the pull request template.
 * Fix data leakage for time series tutorials
 * Improve documentation display (increase width and improve API table)
+* add example of LLM as a judge with abstention
 
 1.2.0 (2025-11-17)
 ------------------
