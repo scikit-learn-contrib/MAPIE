@@ -11,15 +11,25 @@ from mapie.utils import check_valid_ltt_params_index
 from .methods import ltt_procedure
 from .risks import (
     BinaryClassificationRisk,
+    abstention_rate,
     accuracy,
     false_positive_rate,
     precision,
+    negative_predictive_value,
+    positive_predictive_value,
     predicted_positive_fraction,
     recall,
 )
 
 Risk_str = Literal[
-    "precision", "recall", "accuracy", "fpr", "predicted_positive_fraction"
+    "precision",
+    "recall",
+    "accuracy",
+    "fpr",
+    "predicted_positive_fraction",
+    "positive_predictive_value",
+    "negative_predictive_value",
+    "abstention_rate",
 ]
 Risk = Union[
     BinaryClassificationRisk,
@@ -172,6 +182,9 @@ class BinaryClassificationController:
         "accuracy": accuracy,
         "fpr": false_positive_rate,
         "predicted_positive_fraction": predicted_positive_fraction,
+        "positive_predictive_value": positive_predictive_value,
+        "negative_predictive_value": negative_predictive_value,
+        "abstention_rate": abstention_rate,
     }
 
     def __init__(
@@ -330,12 +343,20 @@ class BinaryClassificationController:
                         "risk must be one of the risks defined in mapie.risk_control"
                         "(e.g. precision, accuracy, false_positive_rate)."
                     )
-        else:
-            if isinstance(best_predict_param_choice, str):
-                return BinaryClassificationController.risk_choice_map[
-                    best_predict_param_choice
-                ]
+        if isinstance(best_predict_param_choice, str):
+            return BinaryClassificationController.risk_choice_map[
+                best_predict_param_choice
+            ]
+        if isinstance(best_predict_param_choice, BinaryClassificationRisk):
             return best_predict_param_choice
+
+        raise TypeError(
+            f"Got object of type {type(best_predict_param_choice)}. "
+            "best_predict_param_choice must be either 'auto', "
+            "a BinaryClassificationRisk instance, "
+            "or a risk name (str) among those defined in mapie.risk_control "
+            "(e.g. 'precision', 'accuracy', 'false_positive_rate')."
+        )
 
     def _set_best_predict_param(
         self,
@@ -389,12 +410,11 @@ class BinaryClassificationController:
         n_params = len(params)
         n_samples = len(np.asarray(X))
         if self.is_multi_dimensional_param:
-            y_pred = np.empty((n_params, n_samples))
+            y_pred: NDArray[np.float_] = np.empty((n_params, n_samples), dtype=float)
             for i in range(n_params):
                 y_pred[i] = self._predict_function(X, *params[i])
             if is_calibration_step:
                 self._check_predictions(y_pred)
-            y_pred = y_pred.astype(int)
         else:
             try:
                 predictions_proba = self._predict_function(X)[:, 1]
@@ -500,11 +520,15 @@ class BinaryClassificationController:
 
         if (
             self.is_multi_dimensional_param
-            and not np.logical_or(
-                predictions_per_param == 0, predictions_per_param == 1
+            and not np.logical_or.reduce(
+                (
+                    predictions_per_param == 0,
+                    predictions_per_param == 1,
+                    np.isnan(predictions_per_param),
+                )
             ).all()
         ):
             raise ValueError(
                 "The provided predict_function with multi-dimensional "
-                "parameters must return binary predictions (0 or 1)."
+                "parameters must return binary predictions (0, 1, np.nan)."
             )
