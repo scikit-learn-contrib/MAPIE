@@ -477,5 +477,5 @@ print(naive_summary.round(3))
 #
 # Indeed, the naive approach may select thresholds that fail to meet the desired risk levels on unseen data.
 # In contrast, the risk-controlled approach takes a margin which provides formal statistical guarantees on precision and abstention,
-#   making it more reliable in practice.
+# making it more reliable in practice.
 #
