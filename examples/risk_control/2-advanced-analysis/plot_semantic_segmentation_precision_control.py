@@ -161,7 +161,7 @@ def denormalize_image(tensor_image: torch.Tensor) -> np.ndarray:
 
 
 # Select random test images
-NUM_EXAMPLES = 2
+NUM_EXAMPLES = 4
 np.random.seed(42)
 
 # Get indices of images with masks
@@ -173,9 +173,9 @@ for idx in range(len(test_dataset)):
 
 random_indices = np.random.choice(indices_with_masks, NUM_EXAMPLES, replace=False)
 
-fig, axes = plt.subplots(NUM_EXAMPLES, 2, figsize=(10, 5 * NUM_EXAMPLES))
+fig, axes = plt.subplots(2, NUM_EXAMPLES, figsize=(4 * NUM_EXAMPLES, 10))
 
-for row, idx in enumerate(random_indices):
+for col, idx in enumerate(random_indices):
     sample = test_dataset[idx]
     image = sample["image"].unsqueeze(0).to(DEVICE)
     mask = sample["mask"].cpu().numpy()
@@ -187,29 +187,24 @@ for row, idx in enumerate(random_indices):
     # Denormalize image
     img_display = denormalize_image(sample["image"])
 
-    # Plot original image
-    axes[row, 0].imshow(img_display)
-    axes[row, 0].set_title("Original Image")
-    axes[row, 0].axis("off")
+    # Plot original image (top row)
+    axes[0, col].imshow(img_display)
+    axes[0, col].set_title("Original Image")
+    axes[0, col].axis("off")
 
-    # Plot prediction with correct pixels in white and false positives in red
-    # Create RGB image for visualization
+    # Plot MAPIE prediction with correct pixels in white and false positives in red (bottom row)
     pred_visualization = np.zeros((*mapie_pred[0].shape, 3))
-
-    # True positives (correct predictions) in white
     true_positives = mask * mapie_pred[0]
     pred_visualization[true_positives > 0] = [1, 1, 1]
-
-    # False positives in red
     false_positives = (1 - mask) * mapie_pred[0]
     pred_visualization[false_positives > 0] = [1, 0, 0]
 
-    axes[row, 1].imshow(pred_visualization)
-    axes[row, 1].set_title(
+    axes[1, col].imshow(pred_visualization)
+    axes[1, col].set_title(
         f"MAPIE Prediction (threshold={precision_controller.best_predict_param[0]:.2f})\n"
         "White: Correct | Red: False Positives"
     )
-    axes[row, 1].axis("off")
+    axes[1, col].axis("off")
 
 plt.tight_layout()
 plt.show()
