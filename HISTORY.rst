@@ -17,6 +17,7 @@ History
 * Improve documentation display (increase width and improve API table)
 * fix bug with CRC and RCPS where the computed lambda was not the best
 * add example of LLM as a judge with abstention
+* docs: improve decision tree for choosing the right algorithm
 
 1.2.0 (2025-11-17)
 ------------------
