@@ -319,9 +319,6 @@ class TimeSeriesRegressor(_MapieRegressor):
         X: ArrayLike,
         y: ArrayLike,
         ensemble: bool = False,
-        confidence_level: Optional[Union[float, Iterable[float]]] = None,
-        gamma: float = 0.0,
-        optimize_beta: bool = False,
     ) -> TimeSeriesRegressor:
         """
         Update with respect to the used ``method``.
@@ -347,22 +344,6 @@ class TimeSeriesRegressor(_MapieRegressor):
 
             By default ``False``.
 
-        confidence_level: Optional[Union[float, Iterable[float]]]
-            Between ``0`` and ``1``, represents the confidence level of the interval.
-
-            By default ``None``.
-
-        gamma: float
-            Coefficient that decides the correction of the conformal inference.
-            If it equals 0, there are no corrections.
-
-            By default ``0.``.
-
-        optimize_beta: bool
-            Whether to optimize the PIs' width or not.
-
-            By default ``False``.
-
         Returns
         -------
         TimeSeriesRegressor
@@ -375,21 +356,13 @@ class TimeSeriesRegressor(_MapieRegressor):
             the length of the training set.
         """
         self._check_method(self.method)
-        if self.method == "enbpi":
-            return self._update_conformity_scores_with_ensemble(X, y, ensemble=ensemble)
-        elif self.method == "aci":
-            return self.adapt_conformal_inference(
-                X,
-                y,
-                ensemble=ensemble,
-                confidence_level=confidence_level,
-                gamma=gamma,
-                optimize_beta=optimize_beta,
-            )
-        else:
+        if self.method not in  ["enbpi", "aci"]:
             raise ValueError(
                 f"Invalid method. Allowed values are {self.valid_methods_}."
             )
+
+        return self._update_conformity_scores_with_ensemble(X, y, ensemble=ensemble)
+
 
     # Overriding _MapieRegressor .predict method here. Bad practise, but this
     # inheritance is questionable and will probably be reconsidered anyway.
