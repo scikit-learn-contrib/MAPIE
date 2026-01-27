@@ -1,9 +1,9 @@
-.. title:: Getting started with risk control in MAPIE : contents
+.. title:: Getting started with risk control : contents
 
 .. _theoretical_description_risk_control:
 
 ############################################
-Getting started with risk control in MAPIE
+Getting started with risk control
 ############################################
 
 .. contents:: Table of contents

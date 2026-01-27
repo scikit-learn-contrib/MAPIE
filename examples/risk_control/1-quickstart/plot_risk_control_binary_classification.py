@@ -1,6 +1,6 @@
 """
 =========================================================
-Use MAPIE to control the precision of a binary classifier
+Control the precision of a binary classifier
 =========================================================
 
 In this example, we explain how to do risk control for binary classification with MAPIE.

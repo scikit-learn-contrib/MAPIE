@@ -1,6 +1,6 @@
 """
 =========================================================
-Use MAPIE to control the risk of a multi-label classifier
+Control the risk of a multi-label classifier
 =========================================================
 
 In this example, we explain how to perform risk control for multi-label
