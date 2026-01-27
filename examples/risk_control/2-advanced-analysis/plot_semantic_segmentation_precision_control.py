@@ -161,7 +161,7 @@ def denormalize_image(tensor_image: torch.Tensor) -> np.ndarray:
 
 
 # Select random test images
-NUM_EXAMPLES = 4
+NUM_EXAMPLES = 2
 np.random.seed(42)
 
 # Get indices of images with masks
@@ -173,7 +173,7 @@ for idx in range(len(test_dataset)):
 
 random_indices = np.random.choice(indices_with_masks, NUM_EXAMPLES, replace=False)
 
-fig, axes = plt.subplots(NUM_EXAMPLES, 4, figsize=(16, 4 * NUM_EXAMPLES))
+fig, axes = plt.subplots(NUM_EXAMPLES, 2, figsize=(10, 5 * NUM_EXAMPLES))
 
 for row, idx in enumerate(random_indices):
     sample = test_dataset[idx]
@@ -181,34 +181,35 @@ for row, idx in enumerate(random_indices):
     mask = sample["mask"].cpu().numpy()
 
     with torch.no_grad():
-        # Get unthresholded prediction
-        logits = model(image)
-        prob = torch.sigmoid(logits).cpu().numpy()[0, 0]
-
         # Get MAPIE prediction
         mapie_pred = precision_controller.predict(image)[0]
 
     # Denormalize image
     img_display = denormalize_image(sample["image"])
 
-    # Plot
+    # Plot original image
     axes[row, 0].imshow(img_display)
     axes[row, 0].set_title("Original Image")
     axes[row, 0].axis("off")
 
-    axes[row, 1].imshow(mask, cmap="gray")
-    axes[row, 1].set_title("Ground Truth")
-    axes[row, 1].axis("off")
+    # Plot prediction with correct pixels in white and false positives in red
+    # Create RGB image for visualization
+    pred_visualization = np.zeros((*mapie_pred[0].shape, 3))
 
-    axes[row, 2].imshow(prob, cmap="viridis", vmin=0, vmax=1)
-    axes[row, 2].set_title("Prediction Probability")
-    axes[row, 2].axis("off")
+    # True positives (correct predictions) in white
+    true_positives = mask * mapie_pred[0]
+    pred_visualization[true_positives > 0] = [1, 1, 1]
 
-    axes[row, 3].imshow(mapie_pred[0], cmap="gray")
-    axes[row, 3].set_title(
-        f"MAPIE Prediction\n(threshold={precision_controller.best_predict_param[0]:.3f})"
+    # False positives in red
+    false_positives = (1 - mask) * mapie_pred[0]
+    pred_visualization[false_positives > 0] = [1, 0, 0]
+
+    axes[row, 1].imshow(pred_visualization)
+    axes[row, 1].set_title(
+        f"MAPIE Prediction (threshold={precision_controller.best_predict_param[0]:.2f})\n"
+        "White: Correct | Red: False Positives"
     )
-    axes[row, 3].axis("off")
+    axes[row, 1].axis("off")
 
 plt.tight_layout()
 plt.show()
