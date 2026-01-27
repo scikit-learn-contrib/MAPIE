@@ -111,7 +111,7 @@ and with the financial support from Région Ile de France and Confiance.ai.
     :width: 140px
     :target: https://www.inria.fr/
 
-.. |Projet P16| image:: doc/_static/img/logo_P16.png
+.. |Projet P16| image:: _static/img/logo_P16.png
     :height: 45px
     :width: 60px
     :target: https://p16.inria.fr/fr/
