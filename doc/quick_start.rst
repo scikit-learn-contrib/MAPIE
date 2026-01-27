@@ -34,16 +34,16 @@ To install directly from the github repository :
 =====================
 
 Let us start with a basic regression problem.
-Here, we generate one-dimensional noisy data that we fit with a MLPRegressor: `Use MAPIE to plot prediction intervals <https://mapie.readthedocs.io/en/stable/examples_regression/1-quickstart/plot_toy_model.html>`_
+Here, we generate one-dimensional noisy data that we fit with a MLPRegressor: :ref:`sphx_glr_examples_regression_1-quickstart_plot_toy_model.py`
 
 
 3. Classification
 =======================
 
-Similarly, it's possible to do the same for a basic classification problem: `Use MAPIE to plot prediction sets <https://mapie.readthedocs.io/en/stable/examples_classification/1-quickstart/plot_quickstart_classification.html>`_
+Similarly, it's possible to do the same for a basic classification problem: :ref:`sphx_glr_examples_classification_1-quickstart_plot_quickstart_classification.py`
 
 
 4. Risk Control
 =======================
 
-MAPIE implements risk control methods for multilabel classification (in particular, image segmentation) and binary classification: `Use MAPIE to control risk for a binary classifier <https://mapie.readthedocs.io/en/stable/examples_risk_control/1-quickstart/plot_risk_control_binary_classification.html>`_
+MAPIE implements risk control methods for multilabel classification (in particular, image segmentation) and binary classification: :ref:`sphx_glr_examples_risk_control_1-quickstart_plot_risk_control_binary_classification.py`
