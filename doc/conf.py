@@ -46,11 +46,10 @@ mathjax_path = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"
 # see https://github.com/numpy/numpydoc/issues/69
 numpydoc_show_class_members = False
 
-# Use the modern `imgmath` extension (we require a recent Sphinx).
-extensions.append("sphinx.ext.imgmath")
-
-# Ensure imgmath_latex is correctly set
-imgmath_latex = "latex"
+# Note: sphinx.ext.imgmath requires LaTeX to be installed.
+# We use mathjax for HTML documentation instead.
+# extensions.append("sphinx.ext.imgmath")
+# imgmath_latex = "latex"
 
 autodoc_default_flags = ["members", "inherited-members"]
 
