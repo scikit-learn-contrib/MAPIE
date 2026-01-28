@@ -14,10 +14,9 @@ History
 * Add a new binary classification risk called `predicted_positive_fraction` and update the examples accordingly.
 * Add a disclosure about LLM usage to the pull request template.
 * Fix data leakage for time series tutorials
-* Improve documentation display (increase width and improve API table)
+* Improve documentation display (increase width, simplify examples titles, improve API table, improve decision tree for choosing the right algorithm)
 * fix bug with CRC and RCPS where the computed lambda was not the best
 * add example of LLM as a judge with abstention
-* docs: improve decision tree for choosing the right algorithm
 
 1.2.0 (2025-11-17)
 ------------------
