@@ -1,6 +1,6 @@
 """
 ==========================================================================================
-Use MAPIE on data with gamma distribution
+Data with gamma distribution
 ==========================================================================================
 
 
@@ -34,12 +34,13 @@ for which the confidence intervals are higher but visually more relevant.
 The empirical coverage is similar between the two conformity scores.
 """
 
+import io
+import zipfile
+
 import matplotlib.pyplot as plt
 import numpy as np
-import requests
-import zipfile
-import io
 import pandas as pd
+import requests
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import train_test_split
 

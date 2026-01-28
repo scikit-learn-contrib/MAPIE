@@ -1,7 +1,7 @@
 """
-======================================================
+=============================
 LAC and APS methods explained
-======================================================
+=============================
 
 In this tutorial, we compare the prediction sets estimated by
 :class:`~mapie_v1.classification.SplitConformalClassifier` with the "lac"

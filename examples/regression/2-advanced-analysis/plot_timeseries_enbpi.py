@@ -1,6 +1,6 @@
 """
 ==================================================================
-Time series: example of the EnbPI technique
+EnbPI technique for time series
 ==================================================================
 
 Note: in this example, we use the following terms employed in the scientific literature:

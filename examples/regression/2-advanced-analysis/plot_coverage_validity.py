@@ -1,6 +1,6 @@
 """
 ===============================================================================
-Coverage validity of MAPIE for regression tasks
+Coverage validity for regression tasks
 ===============================================================================
 
 
@@ -21,20 +21,18 @@ For more details on theoretical guarantees:
 in Machine Learning 16.4 (2023): 494-591.
 """
 
-import numpy as np
-import matplotlib.pyplot as plt
+import warnings
 
-from sklearn.tree import DecisionTreeRegressor
+import matplotlib.pyplot as plt
+import numpy as np
+from joblib import Parallel, delayed
 from sklearn.datasets import make_regression
 from sklearn.model_selection import train_test_split
+from sklearn.tree import DecisionTreeRegressor
 
-from mapie.regression import SplitConformalRegressor
 from mapie.conformity_scores import AbsoluteConformityScore
 from mapie.metrics.regression import regression_coverage_score
-
-from joblib import Parallel, delayed
-
-import warnings
+from mapie.regression import SplitConformalRegressor
 
 warnings.filterwarnings("ignore")
 warnings.simplefilter("ignore", RuntimeWarning)
