@@ -172,42 +172,39 @@ for idx in range(len(test_dataset)):
 
 random_indices = np.random.choice(indices_with_masks, NUM_EXAMPLES, replace=False)
 
-fig, axes = plt.subplots(NUM_EXAMPLES, 4, figsize=(16, 4 * NUM_EXAMPLES))
+fig, axes = plt.subplots(2, NUM_EXAMPLES, figsize=(4 * NUM_EXAMPLES, 10))
 
-for row, idx in enumerate(random_indices):
+for col, idx in enumerate(random_indices):
     sample = test_dataset[idx]
     image = sample["image"].unsqueeze(0).to(DEVICE)
     mask = sample["mask"].cpu().numpy()
 
     with torch.no_grad():
-        # Get unthresholded prediction
-        logits = model(image)
-        prob = torch.sigmoid(logits).cpu().numpy()[0, 0]
-
         # Get MAPIE prediction
         mapie_pred = recall_controller.predict(image)[0]
 
     # Denormalize image
     img_display = denormalize_image(sample["image"])
 
-    # Plot
-    axes[row, 0].imshow(img_display)
-    axes[row, 0].set_title("Original Image")
-    axes[row, 0].axis("off")
+    # Plot original image (top row)
+    axes[0, col].imshow(img_display)
+    axes[0, col].set_title("Original Image")
+    axes[0, col].axis("off")
 
-    axes[row, 1].imshow(mask, cmap="gray")
-    axes[row, 1].set_title("Ground Truth")
-    axes[row, 1].axis("off")
+    # Plot MAPIE prediction with correct pixels in white and false negatives in red (bottom row)
+    pred_visualization = np.zeros((*mapie_pred[0].shape, 3))
+    true_positives = mask * mapie_pred[0]
+    pred_visualization[true_positives > 0] = [1, 1, 1]
+    false_negatives = mask * (1 - mapie_pred[0])
+    pred_visualization[false_negatives > 0] = [1, 0, 0]
 
-    axes[row, 2].imshow(prob, cmap="viridis", vmin=0, vmax=1)
-    axes[row, 2].set_title("Prediction Probability")
-    axes[row, 2].axis("off")
-
-    axes[row, 3].imshow(mapie_pred[0], cmap="gray")
-    axes[row, 3].set_title(
-        f"MAPIE Prediction\n(threshold={recall_controller.best_predict_param[0]:.3f})"
+    axes[1, col].imshow(pred_visualization)
+    axes[1, col].set_title(
+        f"MAPIE Prediction (threshold={recall_controller.best_predict_param[0]:.2f})\n"
+        "White: Correct | Red: False Negatives"
     )
-    axes[row, 3].axis("off")
+    axes[1, col].axis("off")
+
 
 plt.tight_layout()
 plt.show()
