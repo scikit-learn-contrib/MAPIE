@@ -324,9 +324,7 @@ class TimeSeriesRegressor(_MapieRegressor):
         optimize_beta: bool = False,
     ) -> TimeSeriesRegressor:
         """
-        Update with respect to the used ``method``.
-        ``method="enbpi"`` updates conformity scores via EnbPI,
-        ``method="aci"`` calls ``adapt_conformal_inference``.
+        Update conformity scores
 
         Parameters
         ----------
@@ -348,11 +346,13 @@ class TimeSeriesRegressor(_MapieRegressor):
             By default ``False``.
 
         confidence_level: Optional[Union[float, Iterable[float]]]
+            (deprecated)
             Between ``0`` and ``1``, represents the confidence level of the interval.
 
             By default ``None``.
 
         optimize_beta: bool
+            (deprecated)
             Whether to optimize the PIs' width or not.
 
             By default ``False``.
@@ -370,8 +370,8 @@ class TimeSeriesRegressor(_MapieRegressor):
         """
         warn("""
         This function behavior as been changed to allow for update of scores even when using ACI.
-        Currently the parameters confidence_level and optimisz_beta have no effect. They are kept
-        for API stability and will be removed in a release 1.5.
+        Currently the parameters confidence_level and optimize_beta have no effect. They are kept
+        for API stability and will be removed in a future release.
         If you wanted to adapt confidence level, use adapt_conformal_inference instead.
         """)
         self._check_method(self.method)
