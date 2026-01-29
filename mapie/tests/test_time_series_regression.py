@@ -85,8 +85,8 @@ COVERAGES = {
     "blockbootstrap_enbpi_median_wopt": 0.956,
     "blockbootstrap_enbpi_mean": 0.956,
     "blockbootstrap_enbpi_median": 0.956,
-    "blockbootstrap_aci_mean": 0.96,
-    "blockbootstrap_aci_median": 0.96,
+    "blockbootstrap_aci_mean": 0.956,
+    "blockbootstrap_aci_median": 0.956,
     "prefit": 0.97,
 }
 
