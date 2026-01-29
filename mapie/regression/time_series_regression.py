@@ -15,6 +15,7 @@ from mapie.utils import (
     _transform_confidence_level_to_alpha_list,
     check_is_fitted,
 )
+from warnings import warn
 
 
 class TimeSeriesRegressor(_MapieRegressor):
@@ -319,6 +320,8 @@ class TimeSeriesRegressor(_MapieRegressor):
         X: ArrayLike,
         y: ArrayLike,
         ensemble: bool = False,
+        confidence_level: Optional[Union[float, Iterable[float]]] = None,
+        optimize_beta: bool = False,
     ) -> TimeSeriesRegressor:
         """
         Update with respect to the used ``method``.
@@ -344,6 +347,16 @@ class TimeSeriesRegressor(_MapieRegressor):
 
             By default ``False``.
 
+        confidence_level: Optional[Union[float, Iterable[float]]]
+            Between ``0`` and ``1``, represents the confidence level of the interval.
+
+            By default ``None``.
+
+        optimize_beta: bool
+            Whether to optimize the PIs' width or not.
+
+            By default ``False``.
+
         Returns
         -------
         TimeSeriesRegressor
@@ -355,14 +368,19 @@ class TimeSeriesRegressor(_MapieRegressor):
             If the length of ``y`` is greater than
             the length of the training set.
         """
+        warn("""
+        This function behavior as been changed to allow for update of scores even when using ACI.
+        Currently the parameters confidence_level and optimisz_beta have no effect. They are kept
+        for API stability and will be removed in a release 1.5.
+        If you wanted to adapt confidence level, use adapt_conformal_inference instead.
+        """)
         self._check_method(self.method)
-        if self.method not in  ["enbpi", "aci"]:
+        if self.method not in ["enbpi", "aci"]:
             raise ValueError(
                 f"Invalid method. Allowed values are {self.valid_methods_}."
             )
 
         return self._update_conformity_scores_with_ensemble(X, y, ensemble=ensemble)
-
 
     # Overriding _MapieRegressor .predict method here. Bad practise, but this
     # inheritance is questionable and will probably be reconsidered anyway.
