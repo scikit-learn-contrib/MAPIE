@@ -223,7 +223,9 @@ for i in range(min(test_size, iteration_max + 1)):
     )
 
     # Update the current_alpha_t (hidden for the user)
-    mapie_aci.update(x_test, y_test, gamma=gamma, ensemble=False, optimize_beta=False)
+    mapie_aci.adapt_conformal_inference(
+        x_test, y_test, gamma=gamma, ensemble=False, optimize_beta=False
+    )
 
 results = y_pis_aci_pfit.copy()
 
