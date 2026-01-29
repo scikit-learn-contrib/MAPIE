@@ -6,6 +6,10 @@
 Theoretical Description for Conformity Scores
 #############################################
 
+.. contents:: Table of contents
+   :depth: 2
+   :local:
+
 Note: in theoretical parts of the documentation, we use the following terms employed in the scientific literature:
 
 - `alpha` is equivalent to `1 - confidence_level`. It can be seen as a *risk level*
