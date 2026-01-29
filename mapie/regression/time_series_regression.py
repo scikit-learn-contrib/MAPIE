@@ -321,6 +321,7 @@ class TimeSeriesRegressor(_MapieRegressor):
         y: ArrayLike,
         ensemble: bool = False,
         confidence_level: Optional[Union[float, Iterable[float]]] = None,
+        gamma: float = 0.0,
         optimize_beta: bool = False,
     ) -> TimeSeriesRegressor:
         """
@@ -350,6 +351,13 @@ class TimeSeriesRegressor(_MapieRegressor):
             Between ``0`` and ``1``, represents the confidence level of the interval.
 
             By default ``None``.
+
+        gamma: float
+            (deprecated)
+            Coefficient that decides the correction of the conformal inference.
+            If it equals 0, there are no corrections.
+
+            By default ``0.``.
 
         optimize_beta: bool
             (deprecated)
