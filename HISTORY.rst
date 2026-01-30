@@ -2,7 +2,7 @@
 History
 =======
 
-1.x.x (2025-xx-xx)
+1.x.x (2026-xx-xx)
 ------------------
 * Introduce VennAbers calibrator both for binary and multiclass classification
 
