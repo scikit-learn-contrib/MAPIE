@@ -15,9 +15,6 @@
 import os
 import sys
 
-import sphinx
-import sphinx_gallery
-import sphinx_rtd_theme
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -53,7 +50,7 @@ numpydoc_show_class_members = False
 extensions.append("sphinx.ext.imgmath")
 
 # Ensure imgmath_latex is correctly set
-imgmath_latex = 'latex'
+imgmath_latex = "latex"
 
 autodoc_default_flags = ["members", "inherited-members"]
 
@@ -80,15 +77,15 @@ plot_gallery = "True"
 master_doc = "index"
 
 # General information about the project.
-project = u"MAPIE"
-copyright = u"2022, Quantmetry"
+project = "MAPIE"
+copyright = "2022, Quantmetry"
 
 # The version info for the project you"re documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 #
 # The short X.Y version.
-version = "1.2.0"
+version = "1.2.1"
 # The full version, including alpha/beta/rc tags.
 release = version
 
@@ -144,7 +141,7 @@ html_theme = "sphinx_rtd_theme"
 # further.  For a list of options available for each theme, see the
 # documentation.
 html_theme_options = {
-    'collapse_navigation': False,
+    "collapse_navigation": False,
 }
 
 # The name for this set of Sphinx documents.  If None, it defaults to
@@ -233,7 +230,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    ("index", "mapie.tex", u"MAPIE Documentation", u"Quantmetry", "manual"),
+    ("index", "mapie.tex", "MAPIE Documentation", "Quantmetry", "manual"),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -261,7 +258,7 @@ latex_documents = [
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [("index", "mapie", u"MAPIE Documentation", [u"Quantmetry"], 1)]
+man_pages = [("index", "mapie", "MAPIE Documentation", ["Quantmetry"], 1)]
 
 # If true, show URL addresses after external links.
 # man_show_urls = False
@@ -276,8 +273,8 @@ texinfo_documents = [
     (
         "index",
         "mapie",
-        u"MAPIE Documentation",
-        u"Quantmetry",
+        "MAPIE Documentation",
+        "Quantmetry",
         "MAPIE",
         "One line description of project.",
         "Miscellaneous",
