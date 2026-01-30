@@ -26,5 +26,5 @@
         - `pip install mapie`
         - import mapie and verify version: `python -c "import mapie; print(mapie.__version__)"`
 - [ ] Create new release on GitHub for this tag, using information from HISTORY.rst.
-- [ ] Check that the new stable version of the documentation is built and published.
+- [ ] Check that the new stable version of the documentation is built and published and that the new version appears in the version selector (should be automatically made by a Read The Docs automation).
 - [ ] Merge the automatically created pull request on https://github.com/conda-forge/mapie-feedstock (PR creation might take some time). You need to be added as a maintainer on this repo first. To create the pull request manually to avoid waiting for automation, create an issue with the name `@conda-forge-admin, please update version`
