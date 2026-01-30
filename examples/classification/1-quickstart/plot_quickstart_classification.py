@@ -1,7 +1,7 @@
 """
-======================================================
-Use MAPIE to plot prediction sets
-======================================================
+====================
+Plot prediction sets
+====================
 
 In this example, we explain how to use MAPIE on a basic classification setting.
 """
@@ -11,13 +11,14 @@ In this example, we explain how to use MAPIE on a basic classification setting.
 # three labels.
 
 import numpy as np
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.datasets import make_blobs
 from matplotlib import pyplot as plt
 from matplotlib.colors import ListedColormap
-from mapie.utils import train_conformalize_test_split
+from sklearn.datasets import make_blobs
+from sklearn.neighbors import KNeighborsClassifier
+
 from mapie.classification import SplitConformalClassifier
 from mapie.metrics.classification import classification_coverage_score
+from mapie.utils import train_conformalize_test_split
 
 np.random.seed(42)
 

@@ -38,7 +38,7 @@
 MAPIE - Model Agnostic Prediction Interval Estimator
 ====================================================
 
- 🎉 MAPIE v1 is live!  🎉 You're seeing the documentation of this new version, which introduces major changes to the API. Extensive release notes are available `here <https://mapie.readthedocs.io/en/stable/v1_release_notes.html>`_. You can switch to the documentation of previous versions using the button on the bottom right of ReadTheDoc pages.
+ 🎉 MAPIE v1 is live!  🎉 You're seeing the documentation of this new version, which introduces major changes to the API. Extensive release notes are available in the `documentation <https://mapie.readthedocs.io/en/stable/v1_release_notes.html>`_. You can switch to the documentation of previous versions using the button on the bottom right of ReadTheDoc pages.
 
  🚀 MAPIE Roadmap 2026 🚀 New features are coming, starting with the application of **risk control** to emerging use cases such as **LLM-as-Judge** and **image segmentation**. In addition, **exchangeability tests** will be introduced to help users verify when MAPIE can be legitimately applied. Finally, **conformal prediction methods** will be revisited with a stronger focus on **adaptability**. More details are available `here <https://github.com/scikit-learn-contrib/MAPIE/discussions/822>`_.
 
@@ -111,7 +111,7 @@ and with the financial support from Région Ile de France and Confiance.ai.
     :width: 140px
     :target: https://www.inria.fr/
 
-.. |Projet P16| image:: doc/_static/img/logo_P16.png
+.. |Projet P16| image:: _static/img/logo_P16.png
     :height: 45px
     :width: 60px
     :target: https://p16.inria.fr/fr/

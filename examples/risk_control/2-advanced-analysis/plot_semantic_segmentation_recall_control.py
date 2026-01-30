@@ -1,7 +1,7 @@
 """
-===========================================================
-Recall control for semantic segmentation with MAPIE
-===========================================================
+========================================
+Recall control for semantic segmentation
+========================================
 
 This example illustrates how to control the recall of a
 semantic segmentation model using MAPIE.

@@ -30,7 +30,6 @@
    theoretical_description_risk_control
    examples_risk_control/1-quickstart/plot_risk_control_binary_classification
    examples_risk_control/index
-   external_risk_control_package
 
 .. toctree::
    :maxdepth: 2

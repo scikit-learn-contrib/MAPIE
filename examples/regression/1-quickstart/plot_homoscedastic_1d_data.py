@@ -1,6 +1,6 @@
 """
 =========================================================================================
-Use MAPIE on data with constant uncertainty
+Data with constant uncertainty
 =========================================================================================
 
 
@@ -18,17 +18,16 @@ from typing import Tuple
 import numpy as np
 import scipy
 from matplotlib import pyplot as plt
+from numpy.typing import NDArray
 from sklearn.linear_model import LinearRegression, QuantileRegressor
+from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import PolynomialFeatures
-from sklearn.model_selection import train_test_split
 
-
-from numpy.typing import NDArray
 from mapie.regression import (
+    ConformalizedQuantileRegressor,
     CrossConformalRegressor,
     JackknifeAfterBootstrapRegressor,
-    ConformalizedQuantileRegressor,
 )
 
 RANDOM_STATE = 42

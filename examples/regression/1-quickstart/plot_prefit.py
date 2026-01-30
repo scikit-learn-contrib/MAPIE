@@ -1,6 +1,6 @@
 """
 ==========================================================================================================
-Use MAPIE with a pre-trained model
+Use a pre-trained model
 ==========================================================================================================
 
 
@@ -23,11 +23,11 @@ import numpy as np
 import scipy
 from lightgbm import LGBMRegressor
 from matplotlib import pyplot as plt
+from numpy.typing import NDArray
 from sklearn.neural_network import MLPRegressor
 
-from numpy.typing import NDArray
 from mapie.metrics.regression import regression_coverage_score
-from mapie.regression import SplitConformalRegressor, ConformalizedQuantileRegressor
+from mapie.regression import ConformalizedQuantileRegressor, SplitConformalRegressor
 from mapie.utils import train_conformalize_test_split
 
 warnings.filterwarnings("ignore")

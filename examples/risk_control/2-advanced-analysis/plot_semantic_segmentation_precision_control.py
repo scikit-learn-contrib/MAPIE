@@ -1,7 +1,7 @@
 """
-===========================================================
-Precision control for semantic segmentation with MAPIE
-===========================================================
+===========================================
+Precision control for semantic segmentation
+===========================================
 
 This example illustrates how to control the precision of a
 semantic segmentation model using MAPIE.

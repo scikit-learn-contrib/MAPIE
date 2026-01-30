@@ -1,5 +1,5 @@
 ################################################################
-The conformalization (or "calibration") set
+The conformalization ("calibration") set
 ################################################################
 
 **MAPIE** is based on two types of techniques for measuring uncertainty in regression and classification:
