@@ -12,17 +12,11 @@
 * Created HuggingFace repository for MAPIE https://huggingface.co/datasets/mapie-library
 * Add comparison with naive threshold in risk control quick start example
 * Choose better thumbnails in the lists of examples in the documentation
-* Add a new binary classification risk called `predicted_positive_fraction` and update the examples accordingly.
-* Add a disclosure about LLM usage to the pull request template.
 * Fixed issue of duplicated titles in the doc tree
-* Improve documentation display (increase width and improve API table)
 * Added previous versions in the documentation version selector
 * Added risk control in the decision tree in the "choosing the right algorithm" section of the documentation
 * Fix data leakage for time series tutorials
 * Improve documentation display (increase width, simplify examples titles, improve API table, improve decision tree for choosing the right algorithm)
-* Fixed issue of duplicated titles in the doc tree
-* Added previous versions in the documentation version selector
-
 * fix bug with CRC and RCPS where the computed lambda was not the best
 * Fix bug for the update method of ACI (time series)
 * Configure self hosted runner for minimal requirements tests
