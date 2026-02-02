@@ -1,9 +1,6 @@
-=======
-Credits
-=======
+# Credits
 
-Development Lead
-----------------
+## Development Lead
 
 * Vincent Blot <vincent.blot@capgemini.com>
 * Valentin Laurent <valentin.laurent@capgemini.com>
@@ -11,16 +8,14 @@ Development Lead
 * Hassan Maissoro <hassan.maissoro@capgemini.com>
 * Geoffray Brelurut <geoffray.brelurut@capgemini.com>
 
-Emeritus Core Developers
-------------------------
+## Emeritus Core Developers
 
 * Grégoire Martinon <gregoire.martinon@capgemini.com>
 * Vianney Taquet <vianney.taquet@gmail.com>
 * Thibault Cordier <thibault.a.cordier@capgemini.com>
 * Louis Lacombe <louis.lacombe@capgemini.com>
 
-Contributors
-------------
+## Contributors
 
 * Nicolas Brunel <nicolas.brunel@capgemini.com>
 * Issam Ibnouhsein <iibnouhsein@quantmetry.com>
@@ -57,4 +52,5 @@ Contributors
 * Omid Gheibi <omidgheibi@gmail.com>
 * Aman Vishnoi <amanvishnoi777@gmail.com>
 * Hannes Körner <HannesMK>
+
 To be continued ...

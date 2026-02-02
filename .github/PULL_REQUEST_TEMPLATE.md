@@ -23,7 +23,7 @@ Please describe the tests that you ran to verify your changes. Provide instructi
 # Checklist
 
 ## Guidelines
-- [ ] I have read the [contributing guidelines](https://github.com/scikit-learn-contrib/MAPIE/blob/master/CONTRIBUTING.rst)
+- [ ] I have read the [contributing guidelines](https://github.com/scikit-learn-contrib/MAPIE/blob/master/CONTRIBUTING.md)
 - [ ] I have read and followed the [testing guidelines](https://github.com/scikit-learn-contrib/MAPIE/blob/master/mapie/tests/README.md)
 
 ## Quality Checks
@@ -35,7 +35,7 @@ Please describe the tests that you ran to verify your changes. Provide instructi
 - [ ] When updating documentation: code examples in doc run successfully: `make doctest`
 
 ## Contribution Documentation
-- [ ] I have updated the [HISTORY.rst](https://github.com/scikit-learn-contrib/MAPIE/blob/master/HISTORY.rst) and [AUTHORS.rst](https://github.com/scikit-learn-contrib/MAPIE/blob/master/AUTHORS.rst) files
+- [ ] I have updated the [HISTORY.md](https://github.com/scikit-learn-contrib/MAPIE/blob/master/HISTORY.md) and [AUTHORS.md](https://github.com/scikit-learn-contrib/MAPIE/blob/master/AUTHORS.md) files
 
 ## LLM Usage
 - [ ] I used a Large Language Model (LLM) for this contribution.
