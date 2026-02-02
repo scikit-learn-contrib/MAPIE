@@ -28,6 +28,7 @@
 * Configure self hosted runner for minimal requirements tests
 * Add a disclosure about LLM usage to the pull request template.
 * Improved contribution guide: simplified python setup and added instructions for new contributors
+* HISTORY, CONTRIBUTING, AUTHORS  are now markdown files instead of rst
 
 ## 1.2.0 (2025-11-17)
 * Implement extension of binary risk control to multi-risk
