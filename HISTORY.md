@@ -1,18 +1,32 @@
 # History
 
 ## 1.x.x (2026-xx-xx)
+
+## 1.3.0 (2026-02-02)
 * Introduce VennAbers calibrator both for binary and multiclass classification
 * Remove dependency of internal classes on sklearn's check_is_fitted
-* Add an example of risk control with LLM as a judge
+* Add an example of risk control with LLM as a judge with abstention
+* Add a new binary classification risk called `predicted_positive_fraction` and update the examples accordingly
+* Risk control for Semantic Segmentation with new object SemanticSegmentationController and modified MultiLabelClassificationController
+* Two examples of Semantic Segmentation: precision and recall control on satellite images of roofs
+* Created HuggingFace repository for MAPIE https://huggingface.co/datasets/mapie-library
+
+
 * Add comparison with naive threshold in risk control quick start example
-* Configure self hosted runner for minimal requirements tests
 * Choose better thumbnails in the lists of examples in the documentation
 * Add a new binary classification risk called `predicted_positive_fraction` and update the examples accordingly.
 * Add a disclosure about LLM usage to the pull request template.
 * Fix data leakage for time series tutorials
 * Improve documentation display (increase width, simplify examples titles, improve API table, improve decision tree for choosing the right algorithm)
+* Fixed issue of duplicated titles in the doc tree
+* Added previous versions in the documentation version selector
+
 * fix bug with CRC and RCPS where the computed lambda was not the best
-* add example of LLM as a judge with abstention
+* Fix bug for the update method of ACI (time series)
+
+* Configure self hosted runner for minimal requirements tests
+* Add a disclosure about LLM usage to the pull request template.
+* Improved contribution guide: simplified python setup and added instructions for new contributors
 
 ## 1.2.0 (2025-11-17)
 * Implement extension of binary risk control to multi-risk
