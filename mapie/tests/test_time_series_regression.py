@@ -75,8 +75,8 @@ WIDTHS = {
     "blockbootstrap_enbpi_median_wopt": 3.85,
     "blockbootstrap_enbpi_mean": 3.89,
     "blockbootstrap_enbpi_median": 3.85,
-    "blockbootstrap_aci_mean": 3.96,
-    "blockbootstrap_aci_median": 3.95,
+    "blockbootstrap_aci_mean": 3.89,  # same as enbpi
+    "blockbootstrap_aci_median": 3.85,  # same as enbpi
     "prefit": 4.86,
 }
 
@@ -85,8 +85,8 @@ COVERAGES = {
     "blockbootstrap_enbpi_median_wopt": 0.956,
     "blockbootstrap_enbpi_mean": 0.956,
     "blockbootstrap_enbpi_median": 0.956,
-    "blockbootstrap_aci_mean": 0.96,
-    "blockbootstrap_aci_median": 0.96,
+    "blockbootstrap_aci_mean": 0.956,
+    "blockbootstrap_aci_median": 0.956,
     "prefit": 0.97,
 }
 
@@ -269,10 +269,7 @@ def test_linear_regression_results(strategy: str) -> None:
     """
     mapie_ts = TimeSeriesRegressor(**STRATEGIES[strategy])
     mapie_ts.fit(X, y)
-    if "enbpi" in strategy:
-        mapie_ts.update(X, y, ensemble=True)
-    if "aci" in strategy:
-        mapie_ts.update(X, y, confidence_level=0.95, ensemble=True)
+    mapie_ts.update(X, y, ensemble=True)
     optimize_beta = "opt" in strategy
     _, y_pis = mapie_ts.predict(
         X, confidence_level=0.95, optimize_beta=optimize_beta, ensemble=True
@@ -483,5 +480,5 @@ def test_methods_preservation_in_fit(method: str, cv: str) -> None:
     estimator = LinearRegression().fit(X_train, y_train)
     mapie_ts_reg = TimeSeriesRegressor(estimator=estimator, cv=cv, method=method)
     mapie_ts_reg.fit(X_val, y_val)
-    mapie_ts_reg.update(X_test, y_test, gamma=0.1, confidence_level=0.9)
+    mapie_ts_reg.update(X_test, y_test)
     assert mapie_ts_reg.method == method

@@ -15,6 +15,7 @@ from mapie.utils import (
     _transform_confidence_level_to_alpha_list,
     check_is_fitted,
 )
+from warnings import warn
 
 
 class TimeSeriesRegressor(_MapieRegressor):
@@ -324,9 +325,7 @@ class TimeSeriesRegressor(_MapieRegressor):
         optimize_beta: bool = False,
     ) -> TimeSeriesRegressor:
         """
-        Update with respect to the used ``method``.
-        ``method="enbpi"`` updates conformity scores via EnbPI,
-        ``method="aci"`` calls ``adapt_conformal_inference``.
+        Update conformity scores
 
         Parameters
         ----------
@@ -348,17 +347,20 @@ class TimeSeriesRegressor(_MapieRegressor):
             By default ``False``.
 
         confidence_level: Optional[Union[float, Iterable[float]]]
+            (deprecated)
             Between ``0`` and ``1``, represents the confidence level of the interval.
 
             By default ``None``.
 
         gamma: float
+            (deprecated)
             Coefficient that decides the correction of the conformal inference.
             If it equals 0, there are no corrections.
 
             By default ``0.``.
 
         optimize_beta: bool
+            (deprecated)
             Whether to optimize the PIs' width or not.
 
             By default ``False``.
@@ -374,22 +376,19 @@ class TimeSeriesRegressor(_MapieRegressor):
             If the length of ``y`` is greater than
             the length of the training set.
         """
+        warn("""
+        This function behavior has been changed to allow updating the scores even when using ACI.
+        Currently the parameters confidence_level and optimize_beta have no effect. They are kept
+        for API stability and will be removed in a future release.
+        If you want to adapt confidence level, use adapt_conformal_inference instead.
+        """)
         self._check_method(self.method)
-        if self.method == "enbpi":
-            return self._update_conformity_scores_with_ensemble(X, y, ensemble=ensemble)
-        elif self.method == "aci":
-            return self.adapt_conformal_inference(
-                X,
-                y,
-                ensemble=ensemble,
-                confidence_level=confidence_level,
-                gamma=gamma,
-                optimize_beta=optimize_beta,
-            )
-        else:
+        if self.method not in ["enbpi", "aci"]:
             raise ValueError(
                 f"Invalid method. Allowed values are {self.valid_methods_}."
             )
+
+        return self._update_conformity_scores_with_ensemble(X, y, ensemble=ensemble)
 
     # Overriding _MapieRegressor .predict method here. Bad practise, but this
     # inheritance is questionable and will probably be reconsidered anyway.
