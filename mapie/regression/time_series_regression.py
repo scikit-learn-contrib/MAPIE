@@ -377,7 +377,7 @@ class TimeSeriesRegressor(_MapieRegressor):
             the length of the training set.
         """
         warn("""
-        This function behavior as been changed to allow for update of scores even when using ACI.
+        This function behavior has been changed to allow updating the scores even when using ACI.
         Currently the parameters confidence_level and optimize_beta have no effect. They are kept
         for API stability and will be removed in a future release.
         If you want to adapt confidence level, use adapt_conformal_inference instead.
