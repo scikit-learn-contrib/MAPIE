@@ -90,7 +90,7 @@ Below are two simple examples from `our documentation <https://mapie.readthedocs
 You are welcome to propose and contribute new ideas.
 We encourage you to `open an issue <https://github.com/scikit-learn-contrib/MAPIE/issues>`_ so that we can align on the work to be done.
 It is generally a good idea to have a quick discussion before opening a pull request that is potentially out-of-scope.
-For more information on the contribution process, read our `contribution guidelines <https://github.com/scikit-learn-contrib/MAPIE/blob/master/CONTRIBUTING.rst>`_.
+For more information on the contribution process, read our `contribution guidelines <https://github.com/scikit-learn-contrib/MAPIE/blob/master/CONTRIBUTING.md>`_.
 
 
 🤝  Affiliations

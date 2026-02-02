@@ -23,7 +23,7 @@ Please describe the tests that you ran to verify your changes. Provide instructi
 # Checklist
 
 ## Guidelines
-- [ ] I have read the [contributing guidelines](https://github.com/scikit-learn-contrib/MAPIE/blob/master/CONTRIBUTING.rst)
+- [ ] I have read the [contributing guidelines](https://github.com/scikit-learn-contrib/MAPIE/blob/master/CONTRIBUTING.md)
 - [ ] I have read and followed the [testing guidelines](https://github.com/scikit-learn-contrib/MAPIE/blob/master/mapie/tests/README.md)
 
 ## Quality Checks
