@@ -380,7 +380,7 @@ class TimeSeriesRegressor(_MapieRegressor):
         This function behavior as been changed to allow for update of scores even when using ACI.
         Currently the parameters confidence_level and optimize_beta have no effect. They are kept
         for API stability and will be removed in a future release.
-        If you wanted to adapt confidence level, use adapt_conformal_inference instead.
+        If you want to adapt confidence level, use adapt_conformal_inference instead.
         """)
         self._check_method(self.method)
         if self.method not in ["enbpi", "aci"]:
