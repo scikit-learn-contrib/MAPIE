@@ -35,7 +35,7 @@ Please describe the tests that you ran to verify your changes. Provide instructi
 - [ ] When updating documentation: code examples in doc run successfully: `make doctest`
 
 ## Contribution Documentation
-- [ ] I have updated the [HISTORY.md](https://github.com/scikit-learn-contrib/MAPIE/blob/master/HISTORY.md) and [AUTHORS.rst](https://github.com/scikit-learn-contrib/MAPIE/blob/master/AUTHORS.rst) files
+- [ ] I have updated the [HISTORY.md](https://github.com/scikit-learn-contrib/MAPIE/blob/master/HISTORY.md) and [AUTHORS.md](https://github.com/scikit-learn-contrib/MAPIE/blob/master/AUTHORS.md) files
 
 ## LLM Usage
 - [ ] I used a Large Language Model (LLM) for this contribution.

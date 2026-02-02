@@ -4,8 +4,8 @@
 - [ ] Make sure CI tests pass on GitHub Actions for the latest commit on master. Otherwise fix issues in a Pull Request and merge it.
 - [ ] Look at the latest documentation version and check if it was compiled without issue or warning (https://app.readthedocs.org/projects/mapie/builds/). Otherwise fix issues in a Pull Request and merge it.
 - [ ] Checkout `master` and pull latest changes: `git checkout master && git pull origin master`.
-- [ ] Edit HISTORY.md and AUTHORS.rst to make sure it’s up-to-date.
-- [ ] Do a pre-release commit including every change from the steps above: `git add HISTORY.md AUTHORS.rst && git commit -m "vX.Y.Z pre-release changes"`.
+- [ ] Edit HISTORY.md and AUTHORS.md to make sure it’s up-to-date.
+- [ ] Do a pre-release commit including every change from the steps above: `git add HISTORY.md AUTHORS.md && git commit -m "vX.Y.Z pre-release changes"`.
 - [ ] Update the version number with `bump2version major|minor|patch` (only one option between the three, a commit and tag are automatically made)
 - [ ] Check that bump to version is the tagged commit `git log --decorate`
 - [ ] Push the commit created by bump2version: `git push origin master`

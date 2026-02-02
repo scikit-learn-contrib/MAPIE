@@ -101,5 +101,5 @@ uv run jupyter lab # if virtual environment is not activated
 
 You can make your contribution visible by:
 
-1. Adding your name to the Contributors section of [AUTHORS.rst](https://github.com/scikit-learn-contrib/MAPIE/blob/master/AUTHORS.rst)
+1. Adding your name to the Contributors section of [AUTHORS.md](https://github.com/scikit-learn-contrib/MAPIE/blob/master/AUTHORS.md)
 2. If your change is user-facing (bug fix, feature, ...), adding a line to describe it in [HISTORY.md](https://github.com/scikit-learn-contrib/MAPIE/blob/master/HISTORY.md)
