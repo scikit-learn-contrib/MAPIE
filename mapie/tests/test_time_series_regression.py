@@ -432,6 +432,21 @@ def test_aci_method() -> None:
         mapie_regressor_enbpi.adapt_conformal_inference(X, y, gamma=0.01)
 
 
+@pytest.mark.parametrize("gamma", [0.1, 0.5, 0.9])
+def test_valid_gamma(gamma: float) -> None:
+    """Test a valid gamma parameter."""
+    TimeSeriesRegressor._check_gamma(gamma)
+
+
+@pytest.mark.parametrize("gamma", [1.5, -0.1])
+def test_invalid_large_gamma(gamma: float) -> None:
+    """Test a non-valid gamma parameter."""
+    with pytest.raises(
+        ValueError, match="Invalid gamma. Allowed values are between 0 and 1."
+    ):
+        TimeSeriesRegressor._check_gamma(gamma)
+
+
 def test_aci_init_and_reset_alpha_dict() -> None:
     """Test that `_get_alpha` resets all the values in the dictionary."""
     mapie_ts_reg = TimeSeriesRegressor(method="aci")

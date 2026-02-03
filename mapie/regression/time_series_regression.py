@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Iterable, Optional, Tuple, Union, cast
+from warnings import warn
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -11,11 +12,9 @@ from mapie.conformity_scores import BaseRegressionScore
 from mapie.regression.regression import _MapieRegressor
 from mapie.utils import (
     _check_alpha,
-    _check_gamma,
     _transform_confidence_level_to_alpha_list,
     check_is_fitted,
 )
-from warnings import warn
 
 
 class TimeSeriesRegressor(_MapieRegressor):
@@ -179,6 +178,23 @@ class TimeSeriesRegressor(_MapieRegressor):
         self.conformity_scores_[-len(new_conformity_scores_) :] = new_conformity_scores_
         return self
 
+    @staticmethod
+    def _check_gamma(gamma: float) -> None:
+        """
+        Check if gamma is between 0 and 1.
+
+        Parameters
+        ----------
+        gamma: float
+
+        Raises
+        ------
+        ValueError
+            If gamma is lower than 0 or higher than 1.
+        """
+        if (gamma < 0) or (gamma > 1):
+            raise ValueError("Invalid gamma. Allowed values are between 0 and 1.")
+
     def _get_alpha(
         self, alpha: Optional[Union[float, Iterable[float]]] = None, reset: bool = False
     ) -> Optional[NDArray]:
@@ -284,7 +300,7 @@ class TimeSeriesRegressor(_MapieRegressor):
             )
 
         check_is_fitted(self)
-        _check_gamma(gamma)
+        self._check_gamma(gamma)
         X, y = cast(NDArray, X), cast(NDArray, y)
 
         self._get_alpha()

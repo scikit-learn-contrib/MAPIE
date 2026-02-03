@@ -26,7 +26,6 @@ from mapie.utils import (
     _check_binary_zero_one,
     _check_cv,
     _check_cv_not_string,
-    _check_gamma,
     _check_if_param_in_allowed_values,
     _check_lower_upper_bounds,
     _check_n_features_in,
@@ -793,21 +792,6 @@ def test_change_values_zero_one() -> None:
     """Test that binary output are changed to zero one outputs."""
     array_ = _check_binary_zero_one(np.array([0, 4, 4]))
     assert (np.unique(array_) == np.array([0, 1])).all()
-
-
-@pytest.mark.parametrize("gamma", [0.1, 0.5, 0.9])
-def test_valid_gamma(gamma: float) -> None:
-    """Test a valid gamma parameter."""
-    _check_gamma(gamma)
-
-
-@pytest.mark.parametrize("gamma", [1.5, -0.1])
-def test_invalid_large_gamma(gamma: float) -> None:
-    """Test a non-valid gamma parameter."""
-    with pytest.raises(
-        ValueError, match="Invalid gamma. Allowed values are between 0 and 1."
-    ):
-        _check_gamma(gamma)
 
 
 @pytest.mark.parametrize("cv", [5, "split"])
