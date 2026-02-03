@@ -9,21 +9,22 @@
 - [ ] Update the version number with `bump2version major|minor|patch` (only one option between the three, a commit and tag are automatically made)
 - [ ] Check that bump to version is the tagged commit `git log --decorate`
 - [ ] Push the commit created by bump2version: `git push origin master`
-- [ ] Manually trigger the TestPyPI publish job on GitHub Actions:
-    * Verify that the build and TestPyPI publish succeeded
+- [ ] Publish to TestPyPI to verify the build:
+    * Manually trigger the TestPyPI publish job on GitHub Actions
+    * Verify that the build and TestPyPI publish succeeded (https://test.pypi.org/project/MAPIE/)
     * Test installation from TestPyPI:
         - create a new empty virtual environment
-        - `pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ mapie`
+        - `pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ mapie` or if using `uv`: `uv pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ --index-strategy unsafe-best-match mapie` (you might need to specify `mapie==X.Y.Z` to avoid installing an older version from PyPI).
         - import mapie and verify version: `python -c "import mapie; print(mapie.__version__)"`
 - [ ] Push the tag created by bump2version: `git push --tags`
 - [ ] Monitor the PyPI publish job on GitHub Actions:
-    * The workflow automatically triggers on tag pushes
+    * The workflow automatically triggers on tag pushes (might take a few minutes to start)
     * The `pypi` environment requires manual approval (configured in repo settings)
     * Approve the deployment in the GitHub Actions UI when prompted
-    * Verify the package appears on PyPI after approval
+    * Verify the package appears on PyPI after approval (https://pypi.org/project/MAPIE/)
     * Test installation:
         - create a new empty virtual environment
-        - `pip install mapie`
+        - `pip install mapie` or if using `uv`: `uv pip install mapie` (you might need to run `uv cache clean` first).
         - import mapie and verify version: `python -c "import mapie; print(mapie.__version__)"`
 - [ ] Create new release on GitHub for this tag, using information from HISTORY.md.
 - [ ] Check that the new stable version of the documentation is built and published and that the new version appears in the version selector (should be automatically made by a Read The Docs automation).
