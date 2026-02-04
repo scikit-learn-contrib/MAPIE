@@ -24,9 +24,11 @@ You are also welcome to propose and contribute to new ideas, such as improving a
 We encourage you to open a new issue so that we can align on the work to be done.
 It is generally a good idea to have a quick discussion before opening a pull request that is potentially out-of-scope.
 
+When implementing a new method, it should be supported by a journal or conference publication. If this is not the case, the contribution will be marked as 'experimental' until further validation from the community is available.
+
 ## Development environment
 
-### - using uv
+### using uv
 We recommended to use [uv](https://docs.astral.sh/uv/), an extremely fast Python package and project manager, to create an environment for `mapie`.
 You'll want to activate it every time you want to work on `mapie`.
 Here is how to install all dependencies at once.
@@ -58,7 +60,7 @@ jupyter lab # if virtual environment is activated
 uv run jupyter lab # if virtual environment is not activated
 ```
 
-### - using pip
+### using pip
 
 Alternatively, using `pip`, you can install development dependencies with the following command:
 
@@ -115,15 +117,18 @@ make tests
 
 ### Documenting your change
 
-If you're adding a public class or function, then you'll need to add a docstring with a doctest. We follow the [numpy docstring convention](https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html), so please do too.
+If you're adding a public class or function, then you'll need to add a docstring with a doctest. We follow the [numpy docstring convention](https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html), so please do too. You can look at e.g., `BinaryClassificationController` for an example of a well-documented class.
+
 Any estimator should follow the [scikit-learn API](https://scikit-learn.org/stable/developers/develop.html), so please follow these guidelines.
+
+
 
 ### Adding examples
 
-We highly recommand adding an example to illustrate your contribution if applicable. This gives users a quick way to discover and understand how to use your new feature. The `mapie` documentation already contains many examples that you can look at for inspiration in the `examples/` folder. Python scripts located in this folder are automatically included in the documentation.
+We highly recommand adding an example to illustrate your contribution if applicable. This gives users a quick way to discover and understand how to use your new feature. The `mapie` documentation already contains many examples that you can look at for inspiration. Python scripts located in the `examples/` folder are automatically included in the documentation.
 
 In order to build the documentation locally, you need you need the `docs` dependencies installed in your environment (see local setup above).
-Finally, once dependencies are installed, you can build the documentation locally by running:
+You can then build the documentation locally by running:
 
 ```sh
 make clean-doc
