@@ -84,7 +84,11 @@ python -m ensurepip --upgrade
 
 Many aspects of your contribution will be automatically checked by Continuous Integration (CI) tools, and the result will be displayed in the pull request. To debug your contribution, you can run the following checks locally.
 
-### Code quality (linting, formatting, and typing)
+### Code compatibility
+
+For public classes or functions, the API must be compatible with `mapie`. For instance, when implementing a new conformity score for regression, the new class must inherit from `BaseRegressionScore` and implement the `get_signed_conformity_scores` `get_estimation_distribution` methods.
+
+### Code quality
 
 The linter must pass:
 
@@ -121,7 +125,7 @@ make tests
 
 ### Documenting your change
 
-If you're adding a public class or function, then you'll need to add a docstring with a doctest. We follow the [numpy docstring convention](https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html), so please do too. You can look at e.g., `BinaryClassificationController` for an example of a well-documented class.
+If you're adding a public class or function, then you'll need to add a docstring with a doctest to describe the API for the users. We follow the [numpy docstring convention](https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html), so please do too. You can look at e.g., `BinaryClassificationController` for an example of a well-documented class.
 
 Any estimator should follow the [scikit-learn API](https://scikit-learn.org/stable/developers/develop.html), so please follow these guidelines.
 
