@@ -85,12 +85,17 @@ python -m ensurepip --upgrade
 
 Many aspects of your contribution will be automatically checked by Continuous Integration (CI) tools, and the result will be displayed in the pull request. To debug your contribution, you can run the following checks locally.
 
-### Code quality (linting and typing)
+### Code quality (linting, formatting, and typing)
 
 The linter must pass:
 
 ```sh
 make lint
+```
+The formatting must pass (if you are not already using `ruff`, you can run `make format-fix` to auto-format your code):
+
+```sh
+make format
 ```
 
 The typing must pass.

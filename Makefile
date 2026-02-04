@@ -27,6 +27,10 @@ long-tests:
 	pytest -vsx \
 		mapie/tests/long_tests
 
+### Auto-formatting for local use ###
+format-fix:
+    ruff format examples mapie notebooks
+
 ### Checks that are run in ReadTheDocs CI ###
 doc:
 	$(MAKE) html -C doc
