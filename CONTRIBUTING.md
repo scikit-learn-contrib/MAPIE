@@ -6,76 +6,27 @@ If you are new to open source, you might want to start with this guide: [Contrib
 
 The typical workflow for contributing to `mapie` is:
 
-1. [Choose what to work on](#choose-what-to-work-on)
+1. Choose [what to work on](#what-to-work-on)
 2. Fork the `master` branch from the [GitHub repository](https://github.com/scikit-learn-contrib/MAPIE).
 3. Clone your fork locally.
-4. [Configure your development environment](#configure-your-development-environment).
+4. Configure your [development environment](#development-environment).
 5. Commit changes.
 6. Push the changes to your fork.
-7. Send a pull request from your fork back to the original `master` branch.
-8. Ensure that all tests pass and documentation builds successfully (automatically checked by continuous integration).
-9. `mapie` maintainers will review your contribution and provide feedback.
+7. Send a pull request from your fork back to the original `master` branch. Do not forget to [make your contribution visible](#updating-changelog).
+8. Iteration phase: `mapie` maintainers will review your contribution and provide feedback. If needed, make changes and update your pull request.
+9.  Once your contribution is validated (see the [validation process](#validation-process)), it will be merged into the `master` branch.
 
-### Choose what to work on
+## What to work on
 
-Issues tagged "Good first issue" are perfect for open-source beginners.
-
-For the more experienced, issues tagged "Contributors welcome" are recommended if you want to help.
+You can start by checking the list of [open issues](https://github.com/scikit-learn-contrib/MAPIE/issues). Issues tagged "Good first issue" are perfect for open-source beginners. For the more experienced, issues tagged "Contributors welcome" are recommended if you want to help.
 
 You are also welcome to propose and contribute to new ideas, such as improving an existing implementation, adding new methods from the literature, or expanding the documentation.
-We encourage you to [open an issue](https://github.com/scikit-learn-contrib/MAPIE/issues) so that we can align on the work to be done.
+We encourage you to open a new issue so that we can align on the work to be done.
 It is generally a good idea to have a quick discussion before opening a pull request that is potentially out-of-scope.
 
+## Development environment
 
-## Validation process
-
-### Code quality (linting and typing)
-
-The linter must pass:
-
-```sh
-make lint
-```
-
-The typing must pass.
-
-```sh
-make type-check
-```
-- docstring and doctests for any new public class or function
-
-### Testing your change
-
-See [the tests README.md](https://github.com/scikit-learn-contrib/MAPIE/blob/master/mapie/tests/README.md) for guidance.
-
-The coverage should absolutely be 100%.
-
-```sh
-make coverage
-```
-
-The tests absolutely have to pass. You can run the test suite directly (optional) with:
-
-```sh
-make tests
-```
-
-### Documenting your change
-
-If you're adding a public class or function, then you'll need to add a docstring with a doctest. We follow the [numpy docstring convention](https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html), so please do too.
-Any estimator should follow the [scikit-learn API](https://scikit-learn.org/stable/developers/develop.html), so please follow these guidelines.
-
-In order to build the documentation locally, you need you need the `docs` dependencies installed in your environment (see local setup above).
-Finally, once dependencies are installed, you can build the documentation locally by running:
-
-```sh
-make clean-doc
-make doc
-```
-
-## Configure your development environment
-
-### uv
+### - using uv
 We recommended to use [uv](https://docs.astral.sh/uv/), an extremely fast Python package and project manager, to create an environment for `mapie`.
 You'll want to activate it every time you want to work on `mapie`.
 Here is how to install all dependencies at once.
@@ -106,7 +57,8 @@ You can then use Jupyter lab.
 jupyter lab # if virtual environment is activated
 uv run jupyter lab # if virtual environment is not activated
 ```
-### pip
+
+### - using pip
 
 Alternatively, using `pip`, you can install development dependencies with the following command:
 
@@ -121,14 +73,70 @@ python -m ensurepip --upgrade
 ```
 
 
+## Make your contribution visible
+
+1. If your change is user-facing (bug fix, feature, ...), add a line to describe it in [HISTORY.md](https://github.com/scikit-learn-contrib/MAPIE/blob/master/HISTORY.md)
+2. If you want to be acknowledged for your contribution, add your name to the Contributors section of [AUTHORS.md](https://github.com/scikit-learn-contrib/MAPIE/blob/master/AUTHORS.md)
+
+
+## Validation process
+
+Many aspects of your contribution will be automatically checked by Continuous Integration (CI) tools, and the result will be displayed in the pull request. To debug your contribution, you can run the following checks locally.
+
+### Code quality (linting and typing)
+
+The linter must pass:
+
+```sh
+make lint
+```
+
+The typing must pass.
+
+```sh
+make type-check
+```
+
+### Testing your change
+
+A good development practice is to add tests for your change if applicable. You can look at existing tests for inspiration in `mapie/tests` and please read [the tests README.md](https://github.com/scikit-learn-contrib/MAPIE/blob/master/mapie/tests/README.md) for guidance.
+
+The coverage should absolutely be 100%, meaning that all lines of code are covered by tests. You can check the coverage locally with:
+
+```sh
+make coverage
+```
+
+The tests absolutely have to pass. You can run the test suite directly (optional) with:
+
+```sh
+make tests
+```
+
+### Documenting your change
+
+If you're adding a public class or function, then you'll need to add a docstring with a doctest. We follow the [numpy docstring convention](https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html), so please do too.
+Any estimator should follow the [scikit-learn API](https://scikit-learn.org/stable/developers/develop.html), so please follow these guidelines.
+
+### Adding examples
+
+We highly recommand adding an example to illustrate your contribution if applicable. This gives users a quick way to discover and understand how to use your new feature. The `mapie` documentation already contains many examples that you can look at for inspiration in the `examples/` folder. Python scripts located in this folder are automatically included in the documentation.
+
+In order to build the documentation locally, you need you need the `docs` dependencies installed in your environment (see local setup above).
+Finally, once dependencies are installed, you can build the documentation locally by running:
+
+```sh
+make clean-doc
+make doc
+```
+
+For each commit pushed to a pull request, the documentation is automatically built and deployed to a temporary URL that you can access from the Continuous Integration (CI) results. This allows you to verify that your changes are correctly documented and you can also look at the diff with the previous version.
 
 
 
 
 
-## Updating changelog
 
-You can make your contribution visible by:
 
-1. Adding your name to the Contributors section of [AUTHORS.md](https://github.com/scikit-learn-contrib/MAPIE/blob/master/AUTHORS.md)
-2. If your change is user-facing (bug fix, feature, ...), adding a line to describe it in [HISTORY.md](https://github.com/scikit-learn-contrib/MAPIE/blob/master/HISTORY.md)
+
+
