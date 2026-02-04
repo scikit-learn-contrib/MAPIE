@@ -29,7 +29,7 @@ long-tests:
 
 ### Auto-formatting for local use ###
 format-fix:
-    ruff format examples mapie notebooks
+	ruff format examples mapie notebooks
 
 ### Checks that are run in ReadTheDocs CI ###
 doc:
