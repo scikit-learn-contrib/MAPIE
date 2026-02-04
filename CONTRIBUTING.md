@@ -92,7 +92,7 @@ The linter must pass:
 ```sh
 make lint
 ```
-The formatting must pass (if you are not already using `ruff`, you can run `make format-fix` to auto-format your code):
+The formatting must pass (if you are not already using `ruff`, you can run `make format-fix` to auto-format your code before committing):
 
 ```sh
 make format
