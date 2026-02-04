@@ -10,11 +10,10 @@ The typical workflow for contributing to `mapie` is:
 2. Fork the `master` branch from the [GitHub repository](https://github.com/scikit-learn-contrib/MAPIE).
 3. Clone your fork locally.
 4. Configure your [development environment](#development-environment).
-5. Commit changes.
-6. Push the changes to your fork.
-7. Send a pull request from your fork back to the original `master` branch. Do not forget to [make your contribution visible](#updating-changelog).
-8. Iteration phase: `mapie` maintainers will review your contribution and provide feedback. If needed, make changes and update your pull request.
-9.  Once your contribution is validated (see the [validation process](#validation-process)), it will be merged into the `master` branch.
+5. Commit and push the changes to your fork. Do not forget to [make your contribution visible](#updating-changelog).
+6. Send a pull request from your fork back to the original `master` branch. We encourage you to open a draft pull request early in the development process to get feedback on your idea and assistance from the `mapie` maintainers if needed.
+7. Iteration phase: `mapie` maintainers will review your contribution and provide feedback. If needed, make changes and update your pull request, marking it as ready for review when you are done.
+8.  Once your contribution is validated (see the [validation process](#validation-process)), it will be merged into the `master` branch.
 
 ## What to work on
 
