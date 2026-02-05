@@ -135,7 +135,7 @@ Any estimator should follow the [scikit-learn API](https://scikit-learn.org/stab
 
 We highly recommend adding an example to illustrate your contribution if applicable. This gives users a quick way to discover and understand how to use your new feature. The `mapie` documentation already contains many examples that you can look at for inspiration. Python scripts located in the `examples/` folder are automatically included in the documentation.
 
-In order to build the documentation locally, you need you need the `docs` dependencies installed in your environment (see local setup above).
+In order to build the documentation locally, you need the `docs` dependencies installed in your environment (see local setup above).
 You can then build the documentation locally by running:
 
 ```sh
