@@ -86,7 +86,7 @@ Many aspects of your contribution will be automatically checked by Continuous In
 
 ### Code compatibility
 
-For public classes or functions, the API must be compatible with `mapie`. For instance, when implementing a new conformity score for regression, the new class must inherit from `BaseRegressionScore` and implement the `get_signed_conformity_scores` `get_estimation_distribution` methods.
+For public classes or functions, the API must be compatible with `mapie`. For instance, when implementing a new conformity score for regression, the new class must inherit from `BaseRegressionScore` and implement the `get_signed_conformity_scores` and `get_estimation_distribution` methods.
 
 ### Code quality
 
