@@ -110,7 +110,7 @@ print(f"Test set size: {len(test_dataset)}")
 # that meets the target precision level with high confidence.
 #
 
-TARGET_PRECISION = 0.8
+TARGET_PRECISION = 0.7
 CONFIDENCE_LEVEL = 0.9
 precision_controller = SemanticSegmentationController(
     predict_function=model,
