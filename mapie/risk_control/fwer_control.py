@@ -47,7 +47,6 @@ def fwer_control(
 
     if isinstance(fwer_graph, str):
         if fwer_graph == "bonferroni":
-            # Standard Bonferroni correction
             threshold = delta / n_lambdas
             valid_index = np.nonzero(p_values <= threshold)[0]
             return valid_index
