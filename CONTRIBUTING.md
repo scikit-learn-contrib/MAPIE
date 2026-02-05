@@ -28,7 +28,7 @@ When implementing a new method, it should be supported by a journal or conferenc
 ## Development environment
 
 ### using uv
-We recommended to use [uv](https://docs.astral.sh/uv/), an extremely fast Python package and project manager, to create an environment for `mapie`.
+We recommend using [uv](https://docs.astral.sh/uv/), an extremely fast Python package and project manager, to create an environment for `mapie`.
 You'll want to activate it every time you want to work on `mapie`.
 Here is how to install all dependencies at once.
 
