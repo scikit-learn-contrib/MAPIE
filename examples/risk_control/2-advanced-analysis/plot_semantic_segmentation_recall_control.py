@@ -86,14 +86,18 @@ TEST_MASKS_DIR = data_root / "test" / "masks"
 calib_dataset = RoofSegmentationDataset(
     images_dir=CALIB_IMAGES_DIR,
     masks_dir=CALIB_MASKS_DIR,
-    transform=get_validation_transforms(),
+    transform=get_validation_transforms(
+        image_size=(256, 256)
+    ),  # reshape images to reduce memory usage
 )
 calib_loader = torch.utils.data.DataLoader(calib_dataset, batch_size=8)
 
 test_dataset = RoofSegmentationDataset(
     images_dir=TEST_IMAGES_DIR,
     masks_dir=TEST_MASKS_DIR,
-    transform=get_validation_transforms(),
+    transform=get_validation_transforms(
+        image_size=(256, 256)
+    ),  # reshape images to reduce memory usage
 )
 test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=8)
 
