@@ -88,14 +88,14 @@ calib_dataset = RoofSegmentationDataset(
     masks_dir=CALIB_MASKS_DIR,
     transform=get_validation_transforms(),
 )
-calib_loader = torch.utils.data.DataLoader(calib_dataset, batch_size=4)
+calib_loader = torch.utils.data.DataLoader(calib_dataset, batch_size=8)
 
 test_dataset = RoofSegmentationDataset(
     images_dir=TEST_IMAGES_DIR,
     masks_dir=TEST_MASKS_DIR,
     transform=get_validation_transforms(),
 )
-test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=4)
+test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=8)
 
 print(f"Calibration set size: {len(calib_dataset)}")
 print(f"Test set size: {len(test_dataset)}")
