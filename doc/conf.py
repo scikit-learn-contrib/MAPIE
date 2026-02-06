@@ -327,6 +327,7 @@ sphinx_gallery_conf = {
     "doc_module": "mapie",
     "backreferences_dir": os.path.join("generated"),
     "reference_url": {"mapie": None},
+    "parallel": -1,  # for parallel execution of examples
 }
 
 
