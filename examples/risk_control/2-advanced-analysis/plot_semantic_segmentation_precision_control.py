@@ -166,7 +166,7 @@ def denormalize_image(tensor_image: torch.Tensor) -> np.ndarray:
 
 # Select random test images
 NUM_EXAMPLES = 4
-np.random.seed(42)
+np.random.seed(0)
 
 # Get indices of images with masks
 indices_with_masks = []
