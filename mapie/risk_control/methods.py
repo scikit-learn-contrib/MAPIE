@@ -285,9 +285,10 @@ def ltt_procedure(
         ]
     )
     p_values = p_values.max(axis=0)  # take max over risks (no effect if mono risk)
-
-    valid_index = control_fwer(p_values, delta, fwer_graph="bonferroni")
-    valid_index = valid_index.tolist()
+    valid_index = []
+    for i in range(alpha_np.shape[1]):
+        l_index = control_fwer(p_values, delta, fwer_graph="bonferroni").tolist()
+        valid_index.append(l_index)
     return valid_index, p_values
 
 
