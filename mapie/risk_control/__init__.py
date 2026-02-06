@@ -1,4 +1,5 @@
 from .binary_classification import BinaryClassificationController
+from .fwer_control import control_fwer, fst_ascending_multistart
 from .multi_label_classification import MultiLabelClassificationController
 from .risks import (
     BinaryClassificationRisk,
@@ -26,4 +27,6 @@ __all__ = [
     "positive_predictive_value",
     "negative_predictive_value",
     "abstention_rate",
+    "control_fwer",
+    "fst_ascending_multistart",
 ]
