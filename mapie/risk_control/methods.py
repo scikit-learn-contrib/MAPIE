@@ -5,7 +5,7 @@ import numpy as np
 from numpy.typing import ArrayLike, NDArray
 from scipy.stats import binom
 
-from mapie.risk_control import fwer_control
+from mapie.risk_control import control_fwer
 from mapie.utils import _check_alpha
 
 
@@ -286,7 +286,7 @@ def ltt_procedure(
     )
     p_values = p_values.max(axis=0)  # take max over risks (no effect if mono risk)
 
-    valid_index = fwer_control(p_values, delta, fwer_graph="bonferroni")
+    valid_index = control_fwer(p_values, delta, fwer_graph="bonferroni")
     valid_index = valid_index.tolist()
     return valid_index, p_values
 

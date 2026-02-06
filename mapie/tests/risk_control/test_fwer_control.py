@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from mapie.risk_control import fwer_control
+from mapie.risk_control import control_fwer
 from mapie.risk_control.fwer_control import FWERGraph
 
 
@@ -9,7 +9,7 @@ def test_fwer_control_bonferroni():
     p_values = np.array([0.001, 0.02, 0.2, 0.8])
     delta = 0.05
 
-    valid_index = fwer_control(
+    valid_index = control_fwer(
         p_values=p_values,
         delta=delta,
         fwer_graph="bonferroni",
@@ -21,7 +21,7 @@ def test_fwer_control_wrong_graph():
     p_values = np.array([0.001, 0.02, 0.2, 0.8])
     delta = 0.05
     with pytest.raises(ValueError, match="Unknown FWER control strategy:"):
-        fwer_control(p_values, delta, fwer_graph="invalid_strategy")
+        control_fwer(p_values, delta, fwer_graph="invalid_strategy")
 
 
 def test_fwer_control_wrong_graph_type():
@@ -31,7 +31,7 @@ def test_fwer_control_wrong_graph_type():
         ValueError,
         match="fwer_graph must be either a string or an instance of FWERGraph.",
     ):
-        fwer_control(p_values, delta, fwer_graph=123)
+        control_fwer(p_values, delta, fwer_graph=123)
 
 
 def test_graph_correct_init():
