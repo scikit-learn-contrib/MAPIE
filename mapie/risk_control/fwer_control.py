@@ -51,15 +51,15 @@ def fwer_control(
             valid_index = np.nonzero(p_values <= threshold)[0]
             return valid_index
 
-    #     elif fwer_graph == "fst_ascending":
-    #         # Placeholder for Fixed Sequence Testing (ascending)
-    #         raise NotImplementedError(
-    #             "Fixed Sequence Testing (ascending) is not implemented yet."
-    #         )
+        #     elif fwer_graph == "fst_ascending":
+        #         # Placeholder for Fixed Sequence Testing (ascending)
+        #         raise NotImplementedError(
+        #             "Fixed Sequence Testing (ascending) is not implemented yet."
+        #         )
 
-    #     else:
-    #         raise ValueError(f"Unknown FWER control strategy: {fwer_graph}")
-
+        else:
+            raise ValueError(f"Unknown FWER control strategy: {fwer_graph}")
+    # elif isinstance(fwer_graph, FWERGraph):
     # # Generic graphical FWER control
     # graph = fwer_graph
     # graph.reset()
@@ -85,6 +85,10 @@ def fwer_control(
     #     remaining_p_values[idx] = np.inf
 
     # return np.array(rejected, dtype=int)
+    else:
+        raise ValueError(
+            "fwer_graph must be either a string or an instance of FWERGraph."
+        )
 
 
 class FWERGraph(ABC):
