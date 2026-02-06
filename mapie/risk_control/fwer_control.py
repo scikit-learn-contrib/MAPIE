@@ -1,5 +1,5 @@
-from abc import ABC, abstractmethod
-from typing import List, Literal, Optional, Union
+from abc import ABC
+from typing import Literal, Optional, Union
 
 import numpy as np
 from numpy.typing import NDArray
@@ -51,40 +51,40 @@ def fwer_control(
             valid_index = np.nonzero(p_values <= threshold)[0]
             return valid_index
 
-        elif fwer_graph == "fst_ascending":
-            # Placeholder for Fixed Sequence Testing (ascending)
-            raise NotImplementedError(
-                "Fixed Sequence Testing (ascending) is not implemented yet."
-            )
+    #     elif fwer_graph == "fst_ascending":
+    #         # Placeholder for Fixed Sequence Testing (ascending)
+    #         raise NotImplementedError(
+    #             "Fixed Sequence Testing (ascending) is not implemented yet."
+    #         )
 
-        else:
-            raise ValueError(f"Unknown FWER control strategy: {fwer_graph}")
+    #     else:
+    #         raise ValueError(f"Unknown FWER control strategy: {fwer_graph}")
 
-    # Generic graphical FWER control
-    graph = fwer_graph
-    graph.reset()
+    # # Generic graphical FWER control
+    # graph = fwer_graph
+    # graph.reset()
 
-    rejected: List[int] = []
-    remaining_p_values = p_values.copy()
+    # rejected: List[int] = []
+    # remaining_p_values = p_values.copy()
 
-    while True:
-        # Local significance levels for each hypothesis
-        local_alpha = delta * graph.delta_np
+    # while True:
+    #     # Local significance levels for each hypothesis
+    #     local_alpha = delta * graph.delta_np
 
-        # Identify rejectable hypotheses
-        candidates = np.where(remaining_p_values <= local_alpha)[0]
-        if len(candidates) == 0:
-            break
+    #     # Identify rejectable hypotheses
+    #     candidates = np.where(remaining_p_values <= local_alpha)[0]
+    #     if len(candidates) == 0:
+    #         break
 
-        # Reject the hypothesis with the smallest p-value
-        idx = candidates[np.argmin(remaining_p_values[candidates])]
-        rejected.append(idx)
+    #     # Reject the hypothesis with the smallest p-value
+    #     idx = candidates[np.argmin(remaining_p_values[candidates])]
+    #     rejected.append(idx)
 
-        # Update the graph and remove the rejected hypothesis
-        graph.step(idx)
-        remaining_p_values[idx] = np.inf
+    #     # Update the graph and remove the rejected hypothesis
+    #     graph.step(idx)
+    #     remaining_p_values[idx] = np.inf
 
-    return np.array(rejected, dtype=int)
+    # return np.array(rejected, dtype=int)
 
 
 class FWERGraph(ABC):
@@ -142,58 +142,58 @@ class FWERGraph(ABC):
         if np.any(self.W.sum(axis=1) > 1):
             raise ValueError("Row sums of transition matrix must be <= 1.")
 
-    @abstractmethod
-    def reset(self) -> None:
-        """
-        Reset the graph to its initial state.
+    # @abstractmethod
+    # def reset(self) -> None:
+    #     """
+    #     Reset the graph to its initial state.
 
-        This method is called before starting a new FWER control
-        procedure.
-        """
+    #     This method is called before starting a new FWER control
+    #     procedure.
+    #     """
 
-    @abstractmethod
-    def step(self, rejected_index: int) -> None:
-        """
-        Update the graph after rejection of a hypothesis.
+    # @abstractmethod
+    # def step(self, rejected_index: int) -> None:
+    #     """
+    #     Update the graph after rejection of a hypothesis.
 
-        Parameters
-        ----------
-        rejected_index : int
-            Index of the rejected hypothesis.
-        """
-
-
-class FixedSequenceGraph(FWERGraph):
-    """
-    Graphical representation of a Fixed Sequence Testing procedure.
-    """
-
-    def reset(self) -> None:
-        raise NotImplementedError
-
-    def step(self, rejected_index: int) -> None:
-        raise NotImplementedError
+    #     Parameters
+    #     ----------
+    #     rejected_index : int
+    #         Index of the rejected hypothesis.
+    #     """
 
 
-class FallbackGraph(FWERGraph):
-    """
-    Graphical representation of a Fallback FWER control procedure.
-    """
+# class FixedSequenceGraph(FWERGraph):
+#     """
+#     Graphical representation of a Fixed Sequence Testing procedure.
+#     """
 
-    def reset(self) -> None:
-        raise NotImplementedError
+#     def reset(self) -> None:
+#         raise NotImplementedError
 
-    def step(self, rejected_index: int) -> None:
-        raise NotImplementedError
+#     def step(self, rejected_index: int) -> None:
+#         raise NotImplementedError
 
 
-class HolmGraph(FWERGraph):
-    """
-    Graphical representation of the Holm step-down procedure.
-    """
+# class FallbackGraph(FWERGraph):
+#     """
+#     Graphical representation of a Fallback FWER control procedure.
+#     """
 
-    def reset(self) -> None:
-        raise NotImplementedError
+#     def reset(self) -> None:
+#         raise NotImplementedError
 
-    def step(self, rejected_index: int) -> None:
-        raise NotImplementedError
+#     def step(self, rejected_index: int) -> None:
+#         raise NotImplementedError
+
+
+# class HolmGraph(FWERGraph):
+#     """
+#     Graphical representation of the Holm step-down procedure.
+#     """
+
+#     def reset(self) -> None:
+#         raise NotImplementedError
+
+#     def step(self, rejected_index: int) -> None:
+#         raise NotImplementedError
