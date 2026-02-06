@@ -5,7 +5,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 
-def fwer_control(
+def control_fwer(
     p_values: NDArray,
     delta: float,
     fwer_graph: Union["FWERGraph", Literal["bonferroni"], Literal["fst_ascending"]],
