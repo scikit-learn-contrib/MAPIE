@@ -5,7 +5,7 @@ import numpy as np
 from numpy.typing import ArrayLike, NDArray
 from scipy.stats import binom
 
-from mapie.risk_control import control_fwer
+from mapie.risk_control.fwer_control import control_fwer
 from mapie.utils import _check_alpha
 
 
