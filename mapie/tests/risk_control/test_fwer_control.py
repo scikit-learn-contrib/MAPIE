@@ -1,6 +1,8 @@
 import numpy as np
+import pytest
 
 from mapie.risk_control import fwer_control
+from mapie.risk_control.fwer_control import FWERGraph
 
 
 def test_fwer_control_bonferroni():
@@ -13,3 +15,32 @@ def test_fwer_control_bonferroni():
         fwer_graph="bonferroni",
     )
     assert np.array_equal(valid_index, np.array([0]))
+
+
+def test_graph_correct_init():
+    delta = np.array([0.5, 0.5])
+    transition_matrix = np.array([[0, 1], [0, 0]])
+    graph = FWERGraph(delta, transition_matrix)
+    assert np.array_equal(graph.delta_np, delta)
+    assert np.array_equal(graph.W, transition_matrix)
+
+
+def test_graph_init_wrong_delta():
+    delta = np.array([0.5, 0.1])
+    transition_matrix = np.array([[0, 1], [0, 0]])
+    with pytest.raises(ValueError, match="Initial risk budgets must sum to 1."):
+        FWERGraph(delta, transition_matrix)
+
+
+def test_graph_init_negative_transition():
+    delta = np.array([0.5, 0.5])
+    transition_matrix = np.array([[0, -1], [0, 0]])
+    with pytest.raises(ValueError, match="Transition matrix must be non-negative."):
+        FWERGraph(delta, transition_matrix)
+
+
+def test_graph_init_row_sum_exceeds_one():
+    delta = np.array([0.5, 0.5])
+    transition_matrix = np.array([[0, 1.5], [0, 0]])
+    with pytest.raises(ValueError, match="Row sums of transition matrix must be <= 1."):
+        FWERGraph(delta, transition_matrix)
