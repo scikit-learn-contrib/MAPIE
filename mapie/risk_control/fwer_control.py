@@ -91,6 +91,71 @@ def control_fwer(
         )
 
 
+def fst_ascending_multistart(
+    p_values: NDArray,
+    delta: float,
+    n_starts: int = 20,
+) -> NDArray:
+    """
+    Apply Fixed Sequential Testing (FST) with multi-start to control
+    the Family-Wise Error Rate (FWER).
+
+    This procedure tests hypotheses sequentially starting from multiple
+    equally spaced entry points along the ordered p_values according to
+    the hypothesis order grid. For each starting point, hypotheses are
+    tested in ascending order until a p-value exceeds the locally
+    adjusted significance level.
+
+    The final rejection set is defined as the union of all hypotheses
+    rejected across the different starting points.
+
+    Parameters
+    ----------
+    p_values : NDArray of shape (n_lambdas,)
+        P-values associated with the hypotheses, ordered according to
+        the lambda grid (from most conservative to least conservative).
+    delta : float
+        Target family-wise error rate.
+    n_starts : int, default=20
+        Number of equally spaced starting points used in the multi-start procedure.
+
+    Returns
+    -------
+    valid_index : NDArray
+        Sorted indices of hypotheses rejected under FWER control.
+        It contains the indices of valid lambdas for which the null hypothesis is rejected.
+
+    Notes
+    -----
+    This procedure assumes that the hypotheses are ordered according to a
+    parameter grid such that the associated risk is monotonic along this
+    ordering. In particular, the null hypotheses are assumed to become
+    progressively easier to reject when moving forward along the grid,
+    which justifies the sequential testing strategy.
+    """
+    p_values = np.asarray(p_values, dtype=float)
+    n_tests = len(p_values)
+
+    if n_tests == 0:
+        raise ValueError("p_values must be non-empty.")
+    if n_starts <= 0 or n_starts > n_tests:
+        raise ValueError(
+            "n_starts must be a positive integer such that 1 <= n_starts <= n_lambdas."
+        )
+
+    start_indices = np.linspace(0, n_tests - 1, n_starts, dtype=int)
+    rejected = set()
+
+    for j in start_indices:
+        if j in rejected:
+            continue
+        while j < n_tests and p_values[j] <= delta / n_starts:
+            rejected.add(j)
+            j += 1
+
+    return np.array(sorted(rejected), dtype=int)
+
+
 class FWERGraph(ABC):
     """
     Abstract base class for graphical Family-Wise Error Rate (FWER)

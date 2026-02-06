@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from mapie.risk_control import control_fwer
+from mapie.risk_control import control_fwer, fst_ascending_multistart
 from mapie.risk_control.fwer_control import FWERGraph
 
 
@@ -15,6 +15,25 @@ def test_fwer_control_bonferroni():
         fwer_graph="bonferroni",
     )
     assert np.array_equal(valid_index, np.array([0]))
+
+
+def test_fst_multistart_multiple_starts():
+    p_values = np.array([0.001, 0.003, 0.01, 0.02, 0.2, 0.6])
+    delta = 0.1
+    n_starts = 2
+    rejected = fst_ascending_multistart(p_values, delta, n_starts)
+    assert rejected.tolist() == [0, 1, 2, 3]
+
+
+def test_fst_multistart_empty_pvalues():
+    with pytest.raises(ValueError, match=r"p_values must be non-empty."):
+        fst_ascending_multistart(np.array([]), delta=0.1)
+
+
+def test_fst_multistart_invalid_n_starts():
+    p_values = np.array([0.01, 0.02])
+    with pytest.raises(ValueError, match=r".*n_starts must be a positive integer.*"):
+        fst_ascending_multistart(p_values, delta=0.1, n_starts=0)
 
 
 def test_fwer_control_wrong_graph():
