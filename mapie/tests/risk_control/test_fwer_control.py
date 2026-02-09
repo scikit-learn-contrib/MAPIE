@@ -25,19 +25,19 @@ def test_fst_multistart_multiple_starts():
     assert rejected.tolist() == [0, 1, 2, 3]
 
 
-def test_fst_multistart_empty_pvalues():
-    with pytest.raises(ValueError, match=r"p_values must be non-empty."):
+def test_fst_multistart_invalid_inputs():
+    with pytest.raises(ValueError, match=r".*p_values must be non-empty.*"):
         fst_ascending_multistart(np.array([]), delta=0.1)
 
+    with pytest.raises(ValueError, match=r".*delta must be in \(0, 1].*"):
+        fst_ascending_multistart(np.array([0.1, 0.2]), delta=0.0)
 
-def test_fst_multistart_invalid_n_starts():
-    p_values = np.array([0.01, 0.02])
+    with pytest.raises(ValueError, match=r".*delta must be in \(0, 1].*"):
+        fst_ascending_multistart(np.array([0.1, 0.2]), delta=1.5)
+
     with pytest.raises(ValueError, match=r".*n_starts must be a positive integer.*"):
-        fst_ascending_multistart(p_values, delta=0.1, n_starts=0)
+        fst_ascending_multistart(np.array([0.1, 0.2]), delta=0.1, n_starts=0)
 
-
-def test_fst_multistart_too_large_n_starts():
-    p_values = np.array([0.01, 0.02])
     with pytest.warns(
         UserWarning, match=r".*n_starts is greater than the number of tests.*"
     ):
