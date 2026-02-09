@@ -20,7 +20,7 @@ def test_fwer_control_bonferroni():
 def test_fst_multistart_multiple_starts():
     p_values = np.array([0.001, 0.003, 0.01, 0.02, 0.2, 0.6])
     delta = 0.1
-    n_starts = 2
+    n_starts = 3
     rejected = fst_ascending_multistart(p_values, delta, n_starts)
     assert rejected.tolist() == [0, 1, 2, 3]
 
