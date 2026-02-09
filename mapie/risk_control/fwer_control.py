@@ -214,7 +214,7 @@ def sgt_bonferroni_holm(
     if not (0 < delta <= 1):
         raise ValueError("delta must be in (0, 1].")
 
-    active_hypotheses = np.ones(n_tests, dtype=bool)
+    active_hypotheses: NDArray[np.bool_] = np.ones(n_tests, dtype=bool)
     local_delta = np.full(n_tests, delta / n_tests)
 
     rejected_indices = set()
