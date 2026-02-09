@@ -7,6 +7,9 @@ from sklearn.utils import _safe_indexing
 from sklearn.base import RegressorMixin, ClassifierMixin, clone
 from warnings import warn
 
+import numpy as np
+
+
 # TODO: add checkings
 from mapie.utils import (
     _raise_error_if_fit_called_in_prefit_mode,
@@ -156,7 +159,7 @@ class _CrossConformalizer(ABC):
         **fit_params,
     ) -> Self:
         self.k_ = np.full(
-            shape=(n_samples, cv.get_n_splits(X, y, groups)),
+            shape=(n_samples, self.cv.get_n_splits(X, y, groups)),
             fill_value=np.nan,
             dtype=float,
         )
@@ -168,7 +171,7 @@ class _CrossConformalizer(ABC):
                 sample_weight,
                 **fit_params,
             )
-            for train_index, _ in cv.split(X, y, groups)
+            for train_index, _ in self.cv.split(X, y, groups)
         )
         self._is_fitted = True
         return self

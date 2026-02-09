@@ -17,7 +17,6 @@ from mapie.utils import (
 )
 
 
-
 class TimeSeriesRegressor(_MapieRegressor):
     """
     Prediction intervals with out-of-fold residuals for time series.
