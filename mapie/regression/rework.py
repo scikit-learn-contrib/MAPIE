@@ -1,7 +1,18 @@
 from abs import ABC, abstractmethod
+from joblib import Parallel, delayed
 from sklearn.utils import _safe_indexing
 from sklearn.base import RegressorMixin, ClassifierMixin
 from warnings import warn
+
+#TODO: add checkings
+from mapie.utils import (
+    _raise_error_if_fit_called_in_prefit_mode,
+    _raise_error_if_method_already_called,
+    _raise_error_if_previous_method_not_called,
+    check_is_fitted
+)
+
+Estimator = [RegressorMixin, ClassifierMixin]
 
 
 # Base Mixin for fitting behavior
@@ -12,7 +23,7 @@ class _FitterMixin:
         y: ArrayLike,
         sample_weight: Optional[NDArray] = None,
         **fit_params,
-    ) -> Union[RegressorMixin, ClassifierMixin]:
+    ) -> Estimator:
         """
         Fit an estimator on training data by distinguishing two cases:
         - the estimator supports sample weights and sample weights are provided.
@@ -21,8 +32,6 @@ class _FitterMixin:
 
         Parameters
         ----------
-        estimator: Union[RegressorMixin, ClassifierMixin]
-            Estimator to train.
 
         X: ArrayLike of shape (n_samples, n_features)
             Input data.
@@ -54,16 +63,17 @@ class _FitterMixin:
         >>> check_sklearn_user_model_is_fitted(estimator)
         True
         """
-        fit_parameters = signature(self.estimator.fit).parameters
+        estimator = clone(self.__base_estimator)
+        fit_parameters = signature(estimator.fit).parameters
         supports_sw = "sample_weight" in fit_parameters
         if supports_sw and sample_weight is not None:
-            self.estimator.fit(X, y, sample_weight=sample_weight, **fit_params)
+            estimator.fit(X, y, sample_weight=sample_weight, **fit_params)
         elif sample_weight is not None:
             warn("Sample weight couldn't be passed to model for fitting.")
         else:
-            self.estimator.fit(X, y, **fit_params)
-        self._is_fitted = True
-        return self
+            estimator.fit(X, y, **fit_params)
+        return estimator
+
 
     @property
     def is_fitted(self):
@@ -74,6 +84,13 @@ class _FitterMixin:
 class _RegressorFitterMixin(_FitterMixin):
     estimator_type = RegressorMixin
 
+    def _estimator_predict(
+        self,
+
+    ):
+    pass
+
+
 
 class _SplitConformalizer(ABC):
     @abstractmethod
@@ -83,7 +100,7 @@ class _SplitConformalizer(ABC):
         y: ArrayLike,
         sample_weight: Optional[NDArray] = None,
         **fit_params,
-    ) -> Union[RegressorMixin, ClassifierMixin]:
+    ) -> Estimator:
         pass
 
     def fit(
@@ -94,19 +111,60 @@ class _SplitConformalizer(ABC):
         groups: Optional[ArrayLike] = None,
         **fit_params,
     ) -> _SplitConformalizer:
+        _raise_error_if_fit_called_in_prefit_mode(self._prefit)
+        _raise_error_if_method_already_called("fit", self._is_fitted)
         if not self.prefit:
             # TODO back-end: avoid using private utilities from sklearn like
             # _safe_indexing (may break anytime without notice)
             train_index, _ = self.cv.split(X, y, groups)
-            X_train = _safe_indexing(X, tran_index)
+            X_train = _safe_indexing(X, train_index)
             y_train = _safe_indexing(y, train_index)
             if sample_weight is not None:
                 sample_weight = _safe_indexing(sample_weight, train_index)
                 sample_weight = cast(NDArray, sample_weight)
-            self._fit_estimator(
+            self.estimator = self._fit_estimator(
                 X_train, y_train, sample_weight=sample_weight, **fit_params
             )
+        self._is_fitted = True
+        return self
 
 
-class _CrossConformalizerMixin(ABC):
-    pass
+class _CrossConformalizer(ABC):
+    @abstractmethod
+    def _fit_estimator(
+        self,
+        X: ArrayLike,
+        y: ArrayLike,
+        sample_weight: Optional[NDArray] = None,
+        **fit_params,
+    ) -> Estimator:
+        pass
+
+
+    def fit(
+        self,
+        X: ArrayLike,
+        y: ArrayLike,
+        sample_weight: Optional[ArrayLike] = None,
+        groups: Optional[ArrayLike] = None,
+        **fit_params,
+    ) -> _CrossConformalizer:
+
+        self.k_ = np.full(
+            shape=(n_samples, cv.get_n_splits(X, y, groups)),
+            fill_value=np.nan,
+            dtype=float,
+        )
+
+        self.estimators_  = Parallel(
+            self.n_jobs, verbose=self.verbose)(
+                delayed(self._fit_estimator)(
+                    _safe_indexing(X, train_index),
+                    _safe_indexing(y, train_index),
+                    sample_weight,
+                    **fit_params,
+                )
+                for train_index, _ in cv.split(X, y, groups)
+            )
+        self._is_fitted = True
+        return self
