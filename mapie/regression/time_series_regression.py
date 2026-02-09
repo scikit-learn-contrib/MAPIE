@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Iterable, Optional, Tuple, Union, cast
 from warnings import warn
-
+from abs import ABC, abstractmethod
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 from sklearn.base import RegressorMixin
@@ -74,7 +74,7 @@ class _FitterMixin:
         else:
             self.estimator.fit(X, y, **fit_params)
         self._is_fitted = True
-
+        return self
 
     @property
     def is_fitted(self):
@@ -84,6 +84,35 @@ class _FitterMixin:
 
 class _RegressorFitterMixin(_FitterMixin):
     estimator_type = RegressorMixin
+
+
+class _SplitConformalizer(ABC):
+    @abstractmethod
+    def _fit_estimator(
+        self,
+        X: ArrayLike,
+        y: ArrayLike,
+        sample_weight: Optional[NDArray] = None,
+        **fit_params,
+    ) -> Union[RegressorMixin, ClassifierMixin]:
+        pass
+
+    def fit(
+        self,
+        X: ArrayLike,
+        y: ArrayLike,
+        sample_weight: Optional[ArrayLike] = None,
+        groups: Optional[ArrayLike] = None,
+        **fit_params,
+    ) -> _SplitConformalizer:
+        if not self.prefit:
+            train_index, _ = self.cv.split(X, y, groups)
+
+            self._fit_estimator(X[train_index])
+
+
+class _CrossConformalizerMixin(ABC):
+    pass
 
 
 class TimeSeriesRegressor(_MapieRegressor):
