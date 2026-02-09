@@ -139,6 +139,8 @@ def fst_ascending_multistart(
 
     if n_tests == 0:
         raise ValueError("p_values must be non-empty.")
+    if not (0 < delta <= 1):
+        raise ValueError("delta must be in (0, 1].")
     if n_starts <= 0:
         raise ValueError("n_starts must be a positive integer.")
     if n_starts > n_tests:
