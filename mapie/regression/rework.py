@@ -4,6 +4,7 @@ from typing import cast, Union, Optional, Self
 from joblib import Parallel, delayed
 from numpy.typing import ArrayLike, NDArray
 from sklearn.utils import _safe_indexing
+from sklearn.utils.validation import _num_samples
 from sklearn.base import RegressorMixin, ClassifierMixin, clone
 from warnings import warn
 
@@ -159,7 +160,7 @@ class _CrossConformalizer(ABC):
         **fit_params,
     ) -> Self:
         self.k_ = np.full(
-            shape=(n_samples, self.cv.get_n_splits(X, y, groups)),
+            shape=(_num_samples(X), self.cv.get_n_splits(X, y, groups)),
             fill_value=np.nan,
             dtype=float,
         )
