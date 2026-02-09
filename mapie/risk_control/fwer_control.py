@@ -135,14 +135,17 @@ def fst_ascending_multistart(
     """
     p_values = np.asarray(p_values, dtype=float)
     n_tests = len(p_values)
-    n_starts = np.min(n_starts, n_tests)
 
     if n_tests == 0:
         raise ValueError("p_values must be non-empty.")
-    if n_starts <= 0 or n_starts > n_tests:
-        raise ValueError(
-            "n_starts must be a positive integer such that 1 <= n_starts <= n_lambdas."
+    if n_starts <= 0:
+        raise ValueError("n_starts must be a positive integer.")
+    if n_starts > n_tests:
+        raise UserWarning(
+            "n_starts is greater than the number of tests (n_lambdas)."
+            "Hence, it will be set to n_lambdas."
         )
+    n_starts = np.min(n_starts, n_tests)
 
     start_indices = np.linspace(0, n_tests - 1, n_starts, dtype=int)
     rejected = set()
