@@ -5,7 +5,6 @@ from joblib import Parallel, delayed
 from numpy.typing import ArrayLike, NDArray
 from sklearn.utils import _safe_indexing
 from sklearn.base import RegressorMixin, ClassifierMixin, clone
-from sklearn.model_selection import BaseCrossValidator
 from warnings import warn
 
 # TODO: add checkings
@@ -92,7 +91,6 @@ class _RegressorFitterMixin(_FitterMixin):
 
 
 class _ClassifierFitterMixin(_FitterMixin):
-
     estimator_type = ClassifierMixin
 
     def _estimator_predict(
