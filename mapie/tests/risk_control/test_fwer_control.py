@@ -1,7 +1,11 @@
 import numpy as np
 import pytest
 
-from mapie.risk_control import control_fwer, fst_ascending_multistart
+from mapie.risk_control import (
+    control_fwer,
+    fst_ascending_multistart,
+    sgt_bonferroni_holm,
+)
 from mapie.risk_control.fwer_control import FWERGraph
 
 
@@ -41,7 +45,57 @@ def test_fst_multistart_invalid_inputs():
     with pytest.warns(
         UserWarning, match=r".*n_starts is greater than the number of tests.*"
     ):
-        fst_ascending_multistart(p_values, delta=0.1, n_starts=5)
+        fst_ascending_multistart(np.array([0.1, 0.2]), delta=0.1, n_starts=5)
+
+
+def test_sgt_bonferroni_holm_invalid_inputs():
+    with pytest.raises(ValueError, match=r".*p_values must be non-empty.*"):
+        sgt_bonferroni_holm(np.array([]), delta=0.1)
+
+    with pytest.raises(ValueError, match=r".*delta must be in \(0, 1].*"):
+        sgt_bonferroni_holm(np.array([0.1, 0.2]), delta=0.0)
+
+    with pytest.raises(ValueError, match=r".*delta must be in \(0, 1].*"):
+        sgt_bonferroni_holm(np.array([0.1, 0.2]), delta=1.5)
+
+
+def test_sgt_bonferroni_holm_no_rejection():
+    p_values = np.array([0.5, 0.6, 0.7])
+    delta = 0.1
+
+    valid_index = sgt_bonferroni_holm(p_values, delta)
+
+    assert len(valid_index) == 0
+
+
+def test_sgt_bonferroni_holm_single_rejection():
+    p_values = np.array([0.001, 0.4, 0.6])
+    delta = 0.05
+
+    valid_index = sgt_bonferroni_holm(p_values, delta)
+
+    assert np.array_equal(valid_index, np.array([0]))
+
+
+def test_sgt_bonferroni_holm_multiple_rejections():
+    p_values = np.array([0.001, 0.01, 0.2])
+    delta = 0.05
+
+    valid_index = sgt_bonferroni_holm(p_values, delta)
+
+    # Test behavior:
+    # - first rejection at index 0
+    # - redistribution allows rejection at index 1
+    assert np.array_equal(valid_index, np.array([0, 1]))
+
+
+def test_sgt_bonferroni_holm_all_rejected():
+    p_values = np.array([0.001, 0.002, 0.003])
+    delta = 0.05
+
+    valid_index = sgt_bonferroni_holm(p_values, delta)
+
+    assert np.array_equal(valid_index, np.array([0, 1, 2]))
 
 
 def test_fwer_control_wrong_graph():
