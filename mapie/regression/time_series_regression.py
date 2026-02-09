@@ -77,7 +77,7 @@ class _FitterMixin:
         self._is_fitted = True
 
 @property
-def is_fitted(self)
+def is_fitted(self):
     """Returns True if the estimator is fitted"""
     return self._is_fitted
 
