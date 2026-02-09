@@ -88,7 +88,7 @@ class _RegressorFitterMixin(_FitterMixin):
         self,
 
     ):
-    pass
+        pass
 
 
 
