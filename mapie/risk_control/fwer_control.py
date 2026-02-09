@@ -135,6 +135,7 @@ def fst_ascending_multistart(
     """
     p_values = np.asarray(p_values, dtype=float)
     n_tests = len(p_values)
+    n_starts = np.min(n_starts, n_tests)
 
     if n_tests == 0:
         raise ValueError("p_values must be non-empty.")
