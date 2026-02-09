@@ -17,6 +17,75 @@ from mapie.utils import (
 )
 
 
+# Base Mixin for fitting behavior
+class _FitterMixin:
+
+    def _fit_estimator(
+        self,
+        X: ArrayLike,
+        y: ArrayLike,
+        sample_weight: Optional[NDArray] = None,
+        **fit_params,
+    ) -> Union[RegressorMixin, ClassifierMixin]:
+        """
+        Fit an estimator on training data by distinguishing two cases:
+        - the estimator supports sample weights and sample weights are provided.
+        - the estimator does not support samples weights or
+          samples weights are not provided.
+
+        Parameters
+        ----------
+        estimator: Union[RegressorMixin, ClassifierMixin]
+            Estimator to train.
+
+        X: ArrayLike of shape (n_samples, n_features)
+            Input data.
+
+        y: ArrayLike of shape (n_samples,)
+            Input labels.
+
+        sample_weight : Optional[ArrayLike] of shape (n_samples,)
+            Sample weights. If None, then samples are equally weighted.
+            By default None.
+
+        **fit_params : dict
+            Additional fit parameters.
+
+        Returns
+        -------
+        RegressorMixin
+            Fitted estimator.
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> from sklearn.linear_model import LinearRegression
+        >>> from mapie.utils import check_sklearn_user_model_is_fitted
+        >>> X = np.array([[0], [1], [2], [3], [4], [5]])
+        >>> y = np.array([5, 7, 9, 11, 13, 15])
+        >>> estimator = LinearRegression()
+        >>> estimator = _fit_estimator(estimator, X, y)
+        >>> check_sklearn_user_model_is_fitted(estimator)
+        True
+        """
+        fit_parameters = signature(self.estimator.fit).parameters
+        supports_sw = "sample_weight" in fit_parameters
+        if supports_sw and sample_weight is not None:
+            self.estimator.fit(X, y, sample_weight=sample_weight, **fit_params)
+        else:
+            self.estimator.fit(X, y, **fit_params)
+        self._is_fitted = True
+
+@property
+def is_fitted(self)
+    """Returns True if the estimator is fitted"""
+    return self._is_fitted
+
+
+
+class _RegressorFitterMixin(_FitterMixin) :
+
+    estimator_type = RegressorMixin
 class TimeSeriesRegressor(_MapieRegressor):
     """
     Prediction intervals with out-of-fold residuals for time series.
