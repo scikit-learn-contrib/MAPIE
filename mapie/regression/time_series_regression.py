@@ -19,7 +19,6 @@ from mapie.utils import (
 
 # Base Mixin for fitting behavior
 class _FitterMixin:
-
     def _fit_estimator(
         self,
         X: ArrayLike,
@@ -76,16 +75,17 @@ class _FitterMixin:
             self.estimator.fit(X, y, **fit_params)
         self._is_fitted = True
 
-@property
-def is_fitted(self):
-    """Returns True if the estimator is fitted"""
-    return self._is_fitted
+
+    @property
+    def is_fitted(self):
+        """Returns True if the estimator is fitted"""
+        return self._is_fitted
 
 
-
-class _RegressorFitterMixin(_FitterMixin) :
-
+class _RegressorFitterMixin(_FitterMixin):
     estimator_type = RegressorMixin
+
+
 class TimeSeriesRegressor(_MapieRegressor):
     """
     Prediction intervals with out-of-fold residuals for time series.
