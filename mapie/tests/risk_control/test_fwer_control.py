@@ -36,6 +36,14 @@ def test_fst_multistart_invalid_n_starts():
         fst_ascending_multistart(p_values, delta=0.1, n_starts=0)
 
 
+def test_fst_multistart_too_large_n_starts():
+    p_values = np.array([0.01, 0.02])
+    with pytest.warns(
+        UserWarning, match=r".*n_starts is greater than the number of tests.*"
+    ):
+        fst_ascending_multistart(p_values, delta=0.1, n_starts=5)
+
+
 def test_fwer_control_wrong_graph():
     p_values = np.array([0.001, 0.02, 0.2, 0.8])
     delta = 0.05

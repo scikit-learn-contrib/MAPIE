@@ -1,3 +1,4 @@
+import warnings
 from abc import ABC
 from typing import Literal, Optional, Union
 
@@ -141,11 +142,12 @@ def fst_ascending_multistart(
     if n_starts <= 0:
         raise ValueError("n_starts must be a positive integer.")
     if n_starts > n_tests:
-        raise UserWarning(
-            "n_starts is greater than the number of tests (n_lambdas)."
-            "Hence, it will be set to n_lambdas."
+        warnings.warn(
+            "n_starts is greater than the number of tests (n_lambdas). "
+            "Hence, it will be set to n_lambdas.",
+            UserWarning,
         )
-    n_starts = np.min(n_starts, n_tests)
+        n_starts = n_tests
 
     start_indices = np.linspace(0, n_tests - 1, n_starts, dtype=int)
     rejected = set()
