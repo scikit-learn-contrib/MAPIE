@@ -162,6 +162,82 @@ def fst_ascending_multistart(
     return np.array(sorted(rejected), dtype=int)
 
 
+def sgt_bonferroni_holm(
+    p_values: NDArray,
+    delta: float,
+) -> NDArray:
+    """
+    Apply Sequential Graphical Testing (SGT) with Bonferroni-Holm
+    correction to control the Family-Wise Error Rate (FWER).
+
+    This procedure implements the Bonferroni-Holm method as a special
+    case of Sequential Graphical Testing. Each hypothesis is associated
+    with an initial local significance level equal to delta / n_lambdas, where
+    n_lambdas is the number of hypotheses. Hypotheses are tested sequentially,
+    and whenever a hypothesis is rejected, its local significance level
+    is redistributed uniformly among the remaining hypotheses.
+
+    At each step, the hypothesis with the smallest p-value among the
+    remaining ones is tested against its current local significance
+    level. The procedure stops when no further rejection is possible.
+
+    Parameters
+    ----------
+    p_values : NDArray of shape (n_lambdas,)
+        P-values associated with the hypotheses.
+    delta : float
+        Target family-wise error rate.
+
+    Returns
+    -------
+    valid_index : NDArray
+        Sorted indices of hypotheses rejected under FWER control.
+        It contains the indices of valid lambdas for which the null hypothesis is rejected.
+
+    Notes
+    -----
+    This procedure is equivalent to the classical Bonferroni-Holm
+    correction, but expressed in the Sequential Graphical Testing
+    framework. It dynamically redistributes the error budget after
+    each rejection, while preserving the overall FWER guarantee.
+
+    The total allocated significance level is conserved at each step,
+    i.e., the sum of the local significance levels always equals delta.
+    """
+    p_values = np.asarray(p_values, dtype=float)
+    n_tests = len(p_values)
+
+    if n_tests == 0:
+        raise ValueError("p_values must be non-empty.")
+    if not (0 < delta <= 1):
+        raise ValueError("delta must be in (0, 1].")
+
+    active_hypotheses = np.ones(n_tests, dtype=bool)
+    local_delta = np.full(n_tests, delta / n_tests)
+
+    rejected_indices = set()
+
+    while True:
+        remaining_indices = np.where(active_hypotheses)[0]
+        if len(remaining_indices) == 0:
+            break
+
+        i = remaining_indices[np.argmin(p_values[remaining_indices])]
+        if p_values[i] > local_delta[i]:
+            break
+
+        rejected_indices.add(i)
+
+        released_delta = local_delta[i]
+        local_delta[i] = 0.0
+        active_hypotheses[i] = False
+
+        remaining_indices = np.where(active_hypotheses)[0]
+        if len(remaining_indices) > 0:
+            local_delta[remaining_indices] += released_delta / len(remaining_indices)
+    return np.array(sorted(rejected_indices), dtype=int)
+
+
 class FWERGraph(ABC):
     """
     Abstract base class for graphical Family-Wise Error Rate (FWER)
