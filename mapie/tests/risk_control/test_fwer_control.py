@@ -1,52 +1,34 @@
 import numpy as np
 import pytest
 
-from mapie.risk_control import (
-    control_fwer,
-    fst_ascending_multistart,
-    sgt_bonferroni_holm,
-)
-from mapie.risk_control.fwer_control import FWERGraph
-
-
-def test_fwer_control_bonferroni():
-    p_values = np.array([0.001, 0.02, 0.2, 0.8])
-    delta = 0.05
-
-    valid_index = control_fwer(
-        p_values=p_values,
-        delta=delta,
-        fwer_method="bonferroni",
-    )
-    assert np.array_equal(valid_index, np.array([0]))
+from mapie.risk_control import control_fwer, fst_ascending, sgt_bonferroni_holm
 
 
 def test_fst_multistart_multiple_starts():
     p_values = np.array([0.001, 0.003, 0.01, 0.02, 0.2, 0.6])
     delta = 0.1
     n_starts = 3
-    rejected = fst_ascending_multistart(p_values, delta, n_starts)
+    rejected = fst_ascending(p_values, delta, n_starts=n_starts)
     assert rejected.tolist() == [0, 1, 2, 3]
 
 
-def test_fst_multistart_invalid_inputs():
+def test_fst_ascending_invalid_inputs():
     with pytest.raises(ValueError, match=r".*p_values must be non-empty.*"):
-        fst_ascending_multistart(np.array([]), delta=0.1)
+        fst_ascending(np.array([]), delta=0.1)
 
     with pytest.raises(ValueError, match=r".*delta must be in \(0, 1].*"):
-        fst_ascending_multistart(np.array([0.1, 0.2]), delta=0.0)
+        fst_ascending(np.array([0.1, 0.2]), delta=0.0)
 
     with pytest.raises(ValueError, match=r".*delta must be in \(0, 1].*"):
-        fst_ascending_multistart(np.array([0.1, 0.2]), delta=1.5)
+        fst_ascending(np.array([0.1, 0.2]), delta=1.5)
 
     with pytest.raises(ValueError, match=r".*n_starts must be a positive integer.*"):
-        fst_ascending_multistart(np.array([0.1, 0.2]), delta=0.1, n_starts=0)
+        fst_ascending(np.array([0.1, 0.2]), delta=0.1, n_starts=0)
 
     with pytest.warns(
         UserWarning, match=r".*n_starts is greater than the number of tests.*"
     ):
-        fst_ascending_multistart(np.array([0.1, 0.2]), delta=0.1, n_starts=5)
-
+        fst_ascending(np.array([0.1, 0.2]), delta=0.1, n_starts=5)
 
 def test_sgt_bonferroni_holm_invalid_inputs():
     with pytest.raises(ValueError, match=r".*p_values must be non-empty.*"):
@@ -98,47 +80,59 @@ def test_sgt_bonferroni_holm_all_rejected():
     assert np.array_equal(valid_index, np.array([0, 1, 2]))
 
 
-def test_fwer_control_wrong_graph():
+def test_control_fwer_bonferroni():
     p_values = np.array([0.001, 0.02, 0.2, 0.8])
     delta = 0.05
-    with pytest.raises(ValueError, match="Unknown FWER control strategy:"):
-        control_fwer(p_values, delta, fwer_method="invalid_strategy")
+
+    valid_index = control_fwer(
+        p_values=p_values,
+        delta=delta,
+        fwer_method="bonferroni",
+    )
+    assert np.array_equal(valid_index, np.array([0]))
 
 
-def test_fwer_control_wrong_graph_type():
-    p_values = np.array([0.001, 0.02, 0.2, 0.8])
+def test_control_fwer_fst():
+    p_values = np.array([0.001, 0.003, 0.01, 0.02, 0.2])
+    delta = 0.1
+
+    valid_index = control_fwer(
+        p_values,
+        delta,
+        fwer_method="fst_ascending",
+        n_starts=3,
+    )
+
+    assert np.array_equal(valid_index, np.array([0, 1, 2, 3]))
+
+
+def test_control_fwer_sgt():
+    p_values = np.array([0.001, 0.01, 0.2])
     delta = 0.05
-    with pytest.raises(
-        ValueError,
-        match="fwer_method must be either a string or an instance of FWERGraph.",
-    ):
-        control_fwer(p_values, delta, fwer_method=123)
+
+    valid_index = control_fwer(
+        p_values,
+        delta,
+        fwer_method="sgt_bonferroni_holm",
+    )
+
+    assert np.array_equal(valid_index, np.array([0, 1]))
 
 
-def test_graph_correct_init():
-    delta = np.array([0.5, 0.5])
-    transition_matrix = np.array([[0, 1], [0, 0]])
-    graph = FWERGraph(delta, transition_matrix)
-    assert np.array_equal(graph.delta_np, delta)
-    assert np.array_equal(graph.W, transition_matrix)
+def test_control_fwer_invalid_inputs():
+    with pytest.raises(ValueError, match=r".*p_values must be non-empty.*"):
+        control_fwer(np.array([]), delta=0.1)
+
+    with pytest.raises(ValueError, match=r".*delta must be in \(0, 1].*"):
+        control_fwer(np.array([0.1, 0.2]), delta=0.0)
+
+    with pytest.raises(ValueError, match=r".*delta must be in \(0, 1].*"):
+        control_fwer(np.array([0.1, 0.2]), delta=1.5)
 
 
-def test_graph_init_wrong_delta():
-    delta = np.array([0.5, 0.1])
-    transition_matrix = np.array([[0, 1], [0, 0]])
-    with pytest.raises(ValueError, match="Initial risk budgets must sum to 1."):
-        FWERGraph(delta, transition_matrix)
+def test_control_fwer_unknown_method():
+    p_values = np.array([0.001, 0.02])
+    delta = 0.05
 
-
-def test_graph_init_negative_transition():
-    delta = np.array([0.5, 0.5])
-    transition_matrix = np.array([[0, -1], [0, 0]])
-    with pytest.raises(ValueError, match="Transition matrix must be non-negative."):
-        FWERGraph(delta, transition_matrix)
-
-
-def test_graph_init_row_sum_exceeds_one():
-    delta = np.array([0.5, 0.5])
-    transition_matrix = np.array([[0, 1.5], [0, 0]])
-    with pytest.raises(ValueError, match="Row sums of transition matrix must be <= 1."):
-        FWERGraph(delta, transition_matrix)
+    with pytest.raises(ValueError, match=r".*Unknown FWER control method.*"):
+        control_fwer(p_values, delta, fwer_method="invalid")
