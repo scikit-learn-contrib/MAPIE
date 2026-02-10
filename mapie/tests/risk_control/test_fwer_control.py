@@ -16,7 +16,7 @@ def test_fwer_control_bonferroni():
     valid_index = control_fwer(
         p_values=p_values,
         delta=delta,
-        fwer_graph="bonferroni",
+        fwer_method="bonferroni",
     )
     assert np.array_equal(valid_index, np.array([0]))
 
@@ -102,7 +102,7 @@ def test_fwer_control_wrong_graph():
     p_values = np.array([0.001, 0.02, 0.2, 0.8])
     delta = 0.05
     with pytest.raises(ValueError, match="Unknown FWER control strategy:"):
-        control_fwer(p_values, delta, fwer_graph="invalid_strategy")
+        control_fwer(p_values, delta, fwer_method="invalid_strategy")
 
 
 def test_fwer_control_wrong_graph_type():
@@ -110,9 +110,9 @@ def test_fwer_control_wrong_graph_type():
     delta = 0.05
     with pytest.raises(
         ValueError,
-        match="fwer_graph must be either a string or an instance of FWERGraph.",
+        match="fwer_method must be either a string or an instance of FWERGraph.",
     ):
-        control_fwer(p_values, delta, fwer_graph=123)
+        control_fwer(p_values, delta, fwer_method=123)
 
 
 def test_graph_correct_init():

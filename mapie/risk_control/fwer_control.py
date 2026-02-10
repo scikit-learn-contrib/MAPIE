@@ -9,7 +9,7 @@ from numpy.typing import NDArray
 def control_fwer(
     p_values: NDArray,
     delta: float,
-    fwer_graph: Union["FWERGraph", Literal["bonferroni"], Literal["fst_ascending"]],
+    fwer_method: Union["FWERGraph", Literal["bonferroni"], Literal["fst_ascending"]],
     lambdas: Optional[NDArray] = None,
 ) -> NDArray:
     """
@@ -19,7 +19,7 @@ def control_fwer(
     of p-values in order to control the family-wise error rate (FWER)
     at level ``delta``.
 
-    Depending on the value of ``fwer_graph``, the correction can be:
+    Depending on the value of ``fwer_method``, the correction can be:
     - a standard Bonferroni correction,
     - a fixed-sequence testing (ascending) procedure,
     - or a general graphical FWER control procedure.
@@ -30,7 +30,7 @@ def control_fwer(
         P-values associated with each tested hypothesis (lambda).
     delta : float
         Target family-wise error rate.
-    fwer_graph : Union[FWERGraph, {"bonferroni", "fst_ascending"}]
+    fwer_method : Union[FWERGraph, {"bonferroni", "fst_ascending"}]
         FWER control strategy. Either a predefined string strategy
         ("bonferroni", "fst_ascending") or a custom graphical procedure.
     lambdas : Optional[NDArray], default=None
@@ -46,23 +46,23 @@ def control_fwer(
     p_values = np.asarray(p_values, dtype=float)
     n_lambdas = len(p_values)
 
-    if isinstance(fwer_graph, str):
-        if fwer_graph == "bonferroni":
+    if isinstance(fwer_method, str):
+        if fwer_method == "bonferroni":
             threshold = delta / n_lambdas
             valid_index = np.nonzero(p_values <= threshold)[0]
             return valid_index
 
-        #     elif fwer_graph == "fst_ascending":
+        #     elif fwer_method == "fst_ascending":
         #         # Placeholder for Fixed Sequence Testing (ascending)
         #         raise NotImplementedError(
         #             "Fixed Sequence Testing (ascending) is not implemented yet."
         #         )
 
         else:
-            raise ValueError(f"Unknown FWER control strategy: {fwer_graph}")
-    # elif isinstance(fwer_graph, FWERGraph):
+            raise ValueError(f"Unknown FWER control strategy: {fwer_method}")
+    # elif isinstance(fwer_method, FWERGraph):
     # # Generic graphical FWER control
-    # graph = fwer_graph
+    # graph = fwer_method
     # graph.reset()
 
     # rejected: List[int] = []
@@ -88,7 +88,7 @@ def control_fwer(
     # return np.array(rejected, dtype=int)
     else:
         raise ValueError(
-            "fwer_graph must be either a string or an instance of FWERGraph."
+            "fwer_method must be either a string or an instance of FWERGraph."
         )
 
 
