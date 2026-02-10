@@ -138,29 +138,29 @@ def fst_ascending_multistart(
     which justifies the sequential testing strategy.
     """
     p_values = np.asarray(p_values, dtype=float)
-    n_tests = len(p_values)
+    n_lambdas = len(p_values)
 
-    if n_tests == 0:
+    if n_lambdas == 0:
         raise ValueError("p_values must be non-empty.")
     if not (0 < delta <= 1):
         raise ValueError("delta must be in (0, 1].")
     if n_starts <= 0:
         raise ValueError("n_starts must be a positive integer.")
-    if n_starts > n_tests:
+    if n_starts > n_lambdas:
         warnings.warn(
             "n_starts is greater than the number of tests (n_lambdas). "
             "Hence, it will be set to n_lambdas.",
             UserWarning,
         )
-        n_starts = n_tests
+        n_starts = n_lambdas
 
-    start_indices = np.linspace(0, n_tests - 1, n_starts, dtype=int)
+    start_indices = np.linspace(0, n_lambdas - 1, n_starts, dtype=int)
     rejected = set()
 
     for j in start_indices:
         if j in rejected:
             continue
-        while j < n_tests and p_values[j] <= delta / n_starts:
+        while j < n_lambdas and p_values[j] <= delta / n_starts:
             rejected.add(j)
             j += 1
 
@@ -210,15 +210,15 @@ def sgt_bonferroni_holm(
     i.e., the sum of the local significance levels always equals delta.
     """
     p_values = np.asarray(p_values, dtype=float)
-    n_tests = len(p_values)
+    n_lambdas = len(p_values)
 
-    if n_tests == 0:
+    if n_lambdas == 0:
         raise ValueError("p_values must be non-empty.")
     if not (0 < delta <= 1):
         raise ValueError("delta must be in (0, 1].")
 
-    active_hypotheses: NDArray[np.bool_] = np.ones(n_tests, dtype=bool)
-    local_delta = np.full(n_tests, delta / n_tests)
+    active_hypotheses: NDArray[np.bool_] = np.ones(n_lambdas, dtype=bool)
+    local_delta = np.full(n_lambdas, delta / n_lambdas, dtype=float)
 
     rejected_indices = set()
 
