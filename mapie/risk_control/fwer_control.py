@@ -1,6 +1,5 @@
 import warnings
-from abc import ABC
-from typing import Literal, Optional, Union
+from typing import Literal
 
 import numpy as np
 from numpy.typing import NDArray
@@ -9,8 +8,12 @@ from numpy.typing import NDArray
 def control_fwer(
     p_values: NDArray,
     delta: float,
-    fwer_method: Union["FWERGraph", Literal["bonferroni"], Literal["fst_ascending"]],
-    lambdas: Optional[NDArray] = None,
+    fwer_method: Literal[
+        "bonferroni",
+        "fst_ascending",
+        "sgt_bonferroni_holm",
+    ] = "bonferroni",
+    **kwargs,
 ) -> NDArray:
     """
     Apply a Family-Wise Error Rate (FWER) control procedure.
@@ -238,115 +241,3 @@ def sgt_bonferroni_holm(
         if len(remaining_indices) > 0:
             local_delta[remaining_indices] += released_delta / len(remaining_indices)
     return np.array(sorted(rejected_indices), dtype=int)
-
-
-class FWERGraph(ABC):
-    """
-    Abstract base class for graphical Family-Wise Error Rate (FWER)
-    control procedures.
-
-    A graphical FWER procedure represents a multiple testing strategy
-    through:
-    - an initial allocation of the global error budget across hypotheses,
-    - and a set of transition weights defining how the error budget
-      is redistributed after each rejection.
-
-    This formulation follows the graphical approach introduced in
-    Bretz et al. (2009).
-
-    Subclasses must implement the methods ``reset`` and ``step``
-    to define how the graph state is initialized and updated.
-
-    Parameters
-    ----------
-    delta_np : NDArray of shape (n_hypotheses,)
-        Initial allocation of the FWER budget across hypotheses.
-        The values must sum to 1.
-    transition_matrix : NDArray of shape (n_hypotheses, n_hypotheses)
-        Transition matrix defining how the error budget of a rejected
-        hypothesis is redistributed to the remaining hypotheses.
-        Each row must sum to a value less than or equal to 1.
-    """
-
-    def __init__(
-        self,
-        delta_np: NDArray,
-        transition_matrix: NDArray,
-    ):
-        self.delta_np = delta_np.astype(float)
-        self.W = transition_matrix.astype(float)
-        self._check_valid_graph()
-
-    def _check_valid_graph(self) -> None:
-        """
-        Validate the structure of the graphical FWER procedure.
-
-        Raises
-        ------
-        ValueError
-            If the initial risk budgets do not sum to 1,
-            if the transition matrix contains negative values,
-            or if any row of the transition matrix sums to more than 1.
-        """
-        if not np.isclose(self.delta_np.sum(), 1.0):
-            raise ValueError("Initial risk budgets must sum to 1.")
-        if np.any(self.W < 0):
-            raise ValueError("Transition matrix must be non-negative.")
-        if np.any(self.W.sum(axis=1) > 1):
-            raise ValueError("Row sums of transition matrix must be <= 1.")
-
-    # @abstractmethod
-    # def reset(self) -> None:
-    #     """
-    #     Reset the graph to its initial state.
-
-    #     This method is called before starting a new FWER control
-    #     procedure.
-    #     """
-
-    # @abstractmethod
-    # def step(self, rejected_index: int) -> None:
-    #     """
-    #     Update the graph after rejection of a hypothesis.
-
-    #     Parameters
-    #     ----------
-    #     rejected_index : int
-    #         Index of the rejected hypothesis.
-    #     """
-
-
-# class FixedSequenceGraph(FWERGraph):
-#     """
-#     Graphical representation of a Fixed Sequence Testing procedure.
-#     """
-
-#     def reset(self) -> None:
-#         raise NotImplementedError
-
-#     def step(self, rejected_index: int) -> None:
-#         raise NotImplementedError
-
-
-# class FallbackGraph(FWERGraph):
-#     """
-#     Graphical representation of a Fallback FWER control procedure.
-#     """
-
-#     def reset(self) -> None:
-#         raise NotImplementedError
-
-#     def step(self, rejected_index: int) -> None:
-#         raise NotImplementedError
-
-
-# class HolmGraph(FWERGraph):
-#     """
-#     Graphical representation of the Holm step-down procedure.
-#     """
-
-#     def reset(self) -> None:
-#         raise NotImplementedError
-
-#     def step(self, rejected_index: int) -> None:
-#         raise NotImplementedError
