@@ -30,6 +30,7 @@ def test_fst_ascending_invalid_inputs():
     ):
         fst_ascending(np.array([0.1, 0.2]), delta=0.1, n_starts=5)
 
+
 def test_sgt_bonferroni_holm_invalid_inputs():
     with pytest.raises(ValueError, match=r".*p_values must be non-empty.*"):
         sgt_bonferroni_holm(np.array([]), delta=0.1)
