@@ -22,77 +22,56 @@ def control_fwer(
     of p-values in order to control the family-wise error rate (FWER)
     at level ``delta``.
 
-    Depending on the value of ``fwer_method``, the correction can be:
-    - a standard Bonferroni correction,
-    - a fixed-sequence testing (ascending) procedure,
-    - or a general graphical FWER control procedure.
+    The correction method is selected via the ``fwer_method`` argument.
+
+    Supported methods are:
+    - ``"bonferroni"``: classical Bonferroni correction,
+    - ``"fst_ascending"``: Fixed Sequence Testing (ascending, multi-start),
+    - ``"sgt_bonferroni_holm"``: Sequential Graphical Testing corresponding
+      to the Bonferroni-Holm procedure.
 
     Parameters
     ----------
     p_values : NDArray of shape (n_lambdas,)
-        P-values associated with each tested hypothesis (lambda).
+        P-values associated with each tested hypothesis.
     delta : float
-        Target family-wise error rate.
-    fwer_method : Union[FWERGraph, {"bonferroni", "fst_ascending"}]
-        FWER control strategy. Either a predefined string strategy
-        ("bonferroni", "fst_ascending") or a custom graphical procedure.
-    lambdas : Optional[NDArray], default=None
-        Optional array of tested parameters (λ). This argument is not
-        used by the procedure itself and is only provided for traceability
-        or debugging purposes.
+        Target family-wise error rate. Must be in (0, 1].
+    fwer_method : {"bonferroni", "fst_ascending", "sgt_bonferroni_holm"}, default="bonferroni"
+        FWER control strategy.
+    **kwargs
+        Additional keyword arguments used only when ``fwer_method="fst_ascending"``.
+        Currently supported keyword:
+        - ``n_starts`` (int): number of equally spaced starting points used in
+          the multi-start Fixed Sequence Testing procedure.
 
     Returns
     -------
     valid_index : NDArray
-        Indices of hypotheses (lambdas) rejected under FWER control.
+        Sorted indices of hypotheses rejected under FWER control.
     """
     p_values = np.asarray(p_values, dtype=float)
     n_lambdas = len(p_values)
 
-    if isinstance(fwer_method, str):
-        if fwer_method == "bonferroni":
-            threshold = delta / n_lambdas
-            valid_index = np.nonzero(p_values <= threshold)[0]
-            return valid_index
+    if n_lambdas == 0:
+        raise ValueError("p_values must be non-empty.")
+    if not (0 < delta <= 1):
+        raise ValueError("delta must be in (0, 1].")
 
-        #     elif fwer_method == "fst_ascending":
-        #         # Placeholder for Fixed Sequence Testing (ascending)
-        #         raise NotImplementedError(
-        #             "Fixed Sequence Testing (ascending) is not implemented yet."
-        #         )
+    if fwer_method == "bonferroni":
+        threshold = delta / n_lambdas
+        valid_index = np.nonzero(p_values <= threshold)[0]
+        return valid_index
 
-        else:
-            raise ValueError(f"Unknown FWER control strategy: {fwer_method}")
-    # elif isinstance(fwer_method, FWERGraph):
-    # # Generic graphical FWER control
-    # graph = fwer_method
-    # graph.reset()
+    if fwer_method == "fst_ascending":
+        return fst_ascending(p_values, delta, **kwargs)
 
-    # rejected: List[int] = []
-    # remaining_p_values = p_values.copy()
+    if fwer_method == "sgt_bonferroni_holm":
+        return sgt_bonferroni_holm(p_values, delta)
 
-    # while True:
-    #     # Local significance levels for each hypothesis
-    #     local_alpha = delta * graph.delta_np
-
-    #     # Identify rejectable hypotheses
-    #     candidates = np.where(remaining_p_values <= local_alpha)[0]
-    #     if len(candidates) == 0:
-    #         break
-
-    #     # Reject the hypothesis with the smallest p-value
-    #     idx = candidates[np.argmin(remaining_p_values[candidates])]
-    #     rejected.append(idx)
-
-    #     # Update the graph and remove the rejected hypothesis
-    #     graph.step(idx)
-    #     remaining_p_values[idx] = np.inf
-
-    # return np.array(rejected, dtype=int)
-    else:
-        raise ValueError(
-            "fwer_method must be either a string or an instance of FWERGraph."
-        )
+    raise ValueError(
+        f"Unknown FWER control method: {fwer_method}. "
+        "Supported methods are {'bonferroni', 'fst_ascending', 'sgt_bonferroni_holm'}."
+    )
 
 
 def fst_ascending(
