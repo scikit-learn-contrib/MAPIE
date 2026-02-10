@@ -95,7 +95,7 @@ def control_fwer(
         )
 
 
-def fst_ascending_multistart(
+def fst_ascending(
     p_values: NDArray,
     delta: float,
     n_starts: int = 20,
