@@ -11,7 +11,7 @@ from warnings import warn
 import numpy as np
 
 
-# TODO: add checkings
+# TODO: add checkings from _MapieRegressor
 from mapie.utils import (
     _raise_error_if_fit_called_in_prefit_mode,
     _raise_error_if_method_already_called,
@@ -88,19 +88,56 @@ class _FitterMixin:
 class _RegressorFitterMixin(_FitterMixin):
     estimator_type = RegressorMixin
 
-    def _estimator_predict(
-        self,
-    ):
-        pass
+    def _estimator_predict(self, X, **predict_params):
+        return self._estimator.predict(X, **predict_params)
 
 
 class _ClassifierFitterMixin(_FitterMixin):
     estimator_type = ClassifierMixin
 
-    def _estimator_predict(
-        self,
-    ):
-        pass
+    def _fix_number_of_classes(
+        self, n_classes_training: NDArray, y_proba: NDArray
+    ) -> NDArray:
+        """
+        Fix shape of y_proba of validation set if number of classes
+        of the training set used for cross-validation is different than
+        number of classes of the original dataset y.
+
+        Parameters
+        ----------
+        n_classes_training: NDArray
+            Classes of the training set.
+        y_proba: NDArray
+            Probabilities of the validation set.
+
+        Returns
+        -------
+        NDArray
+            Probabilities with the right number of classes.
+        """
+        y_pred_full = np.zeros(shape=(len(y_proba), self.n_classes))
+        y_index = np.tile(n_classes_training, (len(y_proba), 1))
+        np.put_along_axis(y_pred_full, y_index, y_proba, axis=1)
+        return y_pred_full
+
+    def _estimator_predict(self, X, **predict_params):
+        """
+        Predict probabilities of a test set from a fitted estimator.
+
+        Parameters
+        ----------
+        X: ArrayLike
+            Test set.
+
+        Returns
+        -------
+        ArrayLike
+            Predicted probabilities.
+        """
+        y_pred = self.estimator_.predict_proba(X, **predict_params)
+        if len(self.estimator_.classes_) != self.n_classes:
+            y_pred = self._fix_number_of_classes(self.estimator_.classes_, y_pred)
+        return y_pred
 
 
 class _SplitConformalizer(ABC):
