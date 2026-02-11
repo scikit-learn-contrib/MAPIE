@@ -1,10 +1,12 @@
 from abs import ABC, abstractmethod
 from inspect import signature
-from typing import cast, Union, Optional, Self, Tuple
+from typing import cast, Union, Optional, Self, Tuple, Callable
 from joblib import Parallel, delayed
+from functools import wraps
 from numpy.typing import ArrayLike, NDArray
 from sklearn.utils import _safe_indexing
 from sklearn.utils.validation import _num_samples
+from sklearn.preprocessing import LabelEncoder
 from sklearn.base import RegressorMixin, ClassifierMixin, clone
 from warnings import warn
 
@@ -15,12 +17,14 @@ import numpy as np
 from mapie.utils import (
     _raise_error_if_fit_called_in_prefit_mode,
     _raise_error_if_method_already_called,
+    check_is_fitted,
 )
 
 Estimator = Union[RegressorMixin, ClassifierMixin]
 
 
 # Base Mixin for fitting behavior
+# In constructor estimator_ is set from __base_estimator if cv is prefit
 class _FitterMixin:
     def _fit_estimator(
         self,
@@ -89,11 +93,95 @@ class _RegressorFitterMixin(_FitterMixin):
     estimator_type = RegressorMixin
 
     def _estimator_predict(self, X: ArrayLike, **predict_params):
-        return self._estimator_.predict(X, **predict_params)
+        return self.estimator_.predict(X, **predict_params)
 
 
 class _ClassifierFitterMixin(_FitterMixin):
     estimator_type = ClassifierMixin
+
+    def _set_classes_(self, y) -> Self:
+        """
+        Extracte the number of classes and the classes values
+        from the pre-trained model or the values in y.
+
+        Parameters
+        ----------
+
+        y: NDArray
+            Values to predict.
+
+        Returns
+        -------
+        Self
+
+        Raises
+        ------
+        ValueError
+            If `cv="prefit"` and that classes in `y` are not included into
+            `estimator.classes_`.
+
+        Warning
+            If number of calibration labels is lower than number of labels
+            for training (in prefit setting)
+        """
+        n_unique_y_labels = len(np.unique(y))
+        if self.prefit:
+            classes = estimator.classes_
+            n_classes = len(np.unique(classes))
+            if not set(np.unique(y)).issubset(classes):
+                raise ValueError(
+                    "Values in y do not matched values in estimator.classes_."
+                    + " Check that you are not adding any new label"
+                )
+            if n_classes > n_unique_y_labels:
+                warnings.warn(
+                    "WARNING: your conformalization dataset has less labels"
+                    + " than your training dataset (training"
+                    + f" has {n_classes} unique labels while"
+                    + f" conformalization have {n_unique_y_labels} unique labels"
+                )
+
+        else:
+            n_classes = n_unique_y_labels
+            classes = np.unique(y)
+
+        self.n_classes = n_classes
+        self.classes = classes
+
+    def _set_label_encoder(self) -> Self:
+        """
+        Construct the label encoder with respect to the classes values.
+
+        Returns
+        -------
+        LabelEncoder
+        """
+        self.label_encoder = LabelEncoder().fit(self.classes_)
+
+    # use to decorate fit and conformalize when instanciated with a Conformalizer
+    @staticmethod
+    def _fit_decorator(func: Callable) -> Callable:
+        @wraps(func)
+        def wrapper(self, X: ArrayLike, y: ArrayLike, **kwargs):
+            self._set_classes(y)
+            self._set_label_encoder()
+            return func(X, y, **kwargs)
+
+        return wrapper
+
+    @wraps(_FitterMixin._fit_estimator)
+    def _fit_estimator(
+        self,
+        X: ArrayLike,
+        y: ArrayLike,
+        sample_weight: Optional[NDArray] = None,
+        **fit_params,
+    ) -> Estimator:
+        y_enc = self._encode_labels(y)
+        return super()._fit_estimator(X, y_enc, sample_weight, **fit_params)
+
+    def _encode_labels(self, y):
+        return self.label_encoder.transform(y)
 
     def _fix_number_of_classes(
         self, n_classes_training: NDArray, y_proba: NDArray
@@ -228,6 +316,7 @@ class _SplitConformalizer(ABC, _Conformalizer):
             groups: Optional[ArrayLike] = None,
             **predict_params,
         ) -> Self:
+            check_is_fitted(self)
             X_val, y_val = self._get_val_samples(X, y, groups)
             y_pred = self._safe_predict_oof(X_val, **predict_params)
 
@@ -263,3 +352,29 @@ class _CrossConformalizer(ABC, _Conformalizer):
         )
         self._is_fitted = True
         return self
+
+    def _predict_val(self, estimator: Estimator, X: ArrayLike, **predict_params):
+        self.estimator_ = estimator
+        return self._safe_predict_oof(X, **predict_params)
+
+    def conformalize(
+        self,
+        X: ArrayLike,
+        y: ArrayLike,
+        groups: Optional[ArrayLike] = None,
+        **predict_params,
+    ) -> Self:
+        check_is_fitted(self)
+        val_indices = [val_index for (_, val_index) in self.cv.split(X, y, groups)]
+        preds = Parallel(n_jobs=self.n_jobs, verbose=self.verbose)(
+            delayed(
+                self._predict_val(
+                    estimator,
+                    _safe_indexing(X, val_indices, **predict_params),
+                    **predict_params,
+                )
+                for val_index, estimator in zip(val_indices, self.estimators_)
+            )
+        )
+
+        return preds
