@@ -114,7 +114,7 @@ def test_control_fwer_sgt():
     valid_index = control_fwer(
         p_values,
         delta,
-        fwer_method="sgt_bonferroni_holm",
+        fwer_method="bonferroni_holm",
     )
 
     assert np.array_equal(valid_index, np.array([0, 1]))

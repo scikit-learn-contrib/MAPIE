@@ -11,7 +11,7 @@ def control_fwer(
     fwer_method: Literal[
         "bonferroni",
         "fst_ascending",
-        "sgt_bonferroni_holm",
+        "bonferroni_holm",
     ] = "bonferroni",
     **fwer_kwargs,
 ) -> NDArray:
@@ -27,7 +27,7 @@ def control_fwer(
     Supported methods are:
     - ``"bonferroni"``: classical Bonferroni correction,
     - ``"fst_ascending"``: Fixed Sequence Testing (ascending, multi-start),
-    - ``"sgt_bonferroni_holm"``: Sequential Graphical Testing corresponding
+    - ``"bonferroni_holm"``: Sequential Graphical Testing corresponding
       to the Bonferroni-Holm procedure.
 
     Parameters
@@ -36,7 +36,7 @@ def control_fwer(
         P-values associated with each tested hypothesis.
     delta : float
         Target family-wise error rate. Must be in (0, 1].
-    fwer_method : {"bonferroni", "fst_ascending", "sgt_bonferroni_holm"}, default="bonferroni"
+    fwer_method : {"bonferroni", "fst_ascending", "bonferroni_holm"}, default="bonferroni"
         FWER control strategy.
     **fwer_kwargs
         Additional keyword arguments used only when ``fwer_method="fst_ascending"``.
@@ -65,12 +65,12 @@ def control_fwer(
     if fwer_method == "fst_ascending":
         return fst_ascending(p_values, delta, **fwer_kwargs)
 
-    if fwer_method == "sgt_bonferroni_holm":
+    if fwer_method == "bonferroni_holm":
         return sgt_bonferroni_holm(p_values, delta)
 
     raise ValueError(
         f"Unknown FWER control method: {fwer_method}. "
-        "Supported methods are {'bonferroni', 'fst_ascending', 'sgt_bonferroni_holm'}."
+        "Supported methods are {'bonferroni', 'fst_ascending', 'bonferroni_holm'}."
     )
 
 
