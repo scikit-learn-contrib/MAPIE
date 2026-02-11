@@ -126,7 +126,7 @@ class _ClassifierFitterMixin(_FitterMixin):
         """
         n_unique_y_labels = len(np.unique(y))
         if self.prefit:
-            classes = estimator.classes_
+            classes = self.estimator_.classes_
             n_classes = len(np.unique(classes))
             if not set(np.unique(y)).issubset(classes):
                 raise ValueError(
@@ -134,7 +134,7 @@ class _ClassifierFitterMixin(_FitterMixin):
                     + " Check that you are not adding any new label"
                 )
             if n_classes > n_unique_y_labels:
-                warnings.warn(
+                warn(
                     "WARNING: your conformalization dataset has less labels"
                     + " than your training dataset (training"
                     + f" has {n_classes} unique labels while"
