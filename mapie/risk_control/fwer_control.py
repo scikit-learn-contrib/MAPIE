@@ -77,7 +77,7 @@ def control_fwer(
 def fst_ascending(
     p_values: NDArray,
     delta: float,
-    n_starts: int = 20,
+    n_starts: int = 1,
 ) -> NDArray:
     """
     Apply Fixed Sequential Testing (FST) with multi-start to control
@@ -99,7 +99,7 @@ def fst_ascending(
         the lambda grid (from most conservative to least conservative).
     delta : float
         Target family-wise error rate.
-    n_starts : int, default=20
+    n_starts : int, default=1
         Number of equally spaced starting points used in the multi-start procedure.
 
     Returns
