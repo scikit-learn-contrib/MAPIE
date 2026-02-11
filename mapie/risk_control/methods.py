@@ -332,7 +332,7 @@ def ltt_procedure(
                     "fst_ascending requires a monotonic risk over lambdas."
                 )
 
-        elif direction == "decreasing":
+        if direction == "decreasing":
             order = np.arange(len(p_values))[::-1]
             p_values = p_values[order]
 
