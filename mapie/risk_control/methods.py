@@ -317,6 +317,7 @@ def ltt_procedure(
     # - If decreasing: reverse order so FST tests easiest→hardest;
     #   store permutation to remap indices afterward.
     order = None
+    p_values_original = p_values
     if fwer_method == "fst_ascending":
         if r_hat.shape[0] > 1:
             raise ValueError("fst_ascending cannot be used with multiple risks.")
@@ -342,7 +343,7 @@ def ltt_procedure(
             idx = order[idx]
         l_index = idx.tolist()
         valid_index.append(l_index)
-    return valid_index, p_values
+    return valid_index, p_values_original
 
 
 def compute_hoeffding_bentkus_p_value(
