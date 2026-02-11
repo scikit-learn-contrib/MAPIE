@@ -886,7 +886,7 @@ def test_select_fwer_method_all_branches():
         target_level=[0.8, 0.8],
         fwer_method="auto",
     )
-    assert bcc._select_fwer_method() == "sgt_bonferroni_holm"
+    assert bcc._select_fwer_method() == "bonferroni_holm"
 
     # auto + multi dim param
     bcc = BinaryClassificationController(
@@ -896,7 +896,7 @@ def test_select_fwer_method_all_branches():
         list_predict_params=np.array([[0.2, 0.3]]),
         fwer_method="auto",
     )
-    assert bcc._select_fwer_method() == "sgt_bonferroni_holm"
+    assert bcc._select_fwer_method() == "bonferroni_holm"
 
     # auto + mono everything
     bcc = BinaryClassificationController(

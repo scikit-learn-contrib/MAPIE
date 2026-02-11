@@ -231,7 +231,7 @@ def ltt_procedure(
     fwer_method: Literal[
         "bonferroni",
         "fst_ascending",
-        "sgt_bonferroni_holm",
+        "bonferroni_holm",
     ] = "bonferroni",
     **fwer_kwargs,
 ) -> Tuple[List[List[Any]], NDArray]:
@@ -278,7 +278,7 @@ def ltt_procedure(
     binary: bool, default=False
         Must be True if the loss associated to the risk is binary.
 
-    fwer_method : {"bonferroni", "fst_ascending", "sgt_bonferroni_holm"}, default="bonferroni"
+    fwer_method : {"bonferroni", "fst_ascending", "bonferroni_holm"}, default="bonferroni"
         FWER control strategy.
     **fwer_kwargs
         Additional keyword arguments used only when ``fwer_method="fst_ascending"``.
@@ -327,7 +327,7 @@ def ltt_procedure(
 
         if direction == "none":
             if _auto_selected:
-                fwer_method = "sgt_bonferroni_holm"
+                fwer_method = "bonferroni_holm"
             else:
                 raise ValueError(
                     "fst_ascending requires a monotonic risk over lambdas."

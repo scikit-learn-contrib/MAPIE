@@ -114,7 +114,7 @@ class BinaryClassificationController:
         the shape is (n_params, params_dim).
         Note that performance is degraded when `len(predict_params)` is large as it is used by the Bonferroni correction [1].
 
-    fwer_method : {"bonferroni", "fst_ascending", "sgt_bonferroni_holm", "auto"}, default="bonferroni"
+    fwer_method : {"bonferroni", "fst_ascending", "bonferroni_holm", "auto"}, default="bonferroni"
         Method used to control the family-wise error rate (FWER).
 
         Supported methods:
@@ -122,13 +122,13 @@ class BinaryClassificationController:
         It is valid in all settings but can be conservative, especially when the number of tested parameters is large.
         - ``"fst_ascending"`` : Fixed Sequence Testing (ascending, multi-start).
         Requires the risks to be monotonic along the parameter grid.
-        - ``"sgt_bonferroni_holm"`` : Sequential Graphical Testing corresponding
+        - ``"bonferroni_holm"`` : Sequential Graphical Testing corresponding
         to the Bonferroni–Holm procedure. Suitable for general settings.
         - ``"auto"`` : Automatically selects the most appropriate method:
 
             1. if a single risk is controlled, parameters are one-dimensional,
                 and the empirical risk is monotonic along the grid : ``"fst_ascending"``.
-            2. otherwise :``"sgt_bonferroni_holm"``
+            2. otherwise :``"bonferroni_holm"``
 
     **fwer_kwargs
         Additional keyword arguments forwarded to `control_fwer`.
@@ -224,7 +224,7 @@ class BinaryClassificationController:
         fwer_method: Literal[
             "bonferroni",
             "fst_ascending",
-            "sgt_bonferroni_holm",
+            "bonferroni_holm",
             "auto",
         ] = "bonferroni",
         **fwer_kwargs,
@@ -267,16 +267,16 @@ class BinaryClassificationController:
 
     def _select_fwer_method(
         self,
-    ) -> Literal["bonferroni", "fst_ascending", "sgt_bonferroni_holm"]:
+    ) -> Literal["bonferroni", "fst_ascending", "bonferroni_holm"]:
         """Select the FWER control method."""
         if self.fwer_method != "auto":
             return self.fwer_method
 
         if self.is_multi_risk:
-            return "sgt_bonferroni_holm"
+            return "bonferroni_holm"
 
         if self.is_multi_dimensional_param:
-            return "sgt_bonferroni_holm"
+            return "bonferroni_holm"
 
         return "fst_ascending"
 
