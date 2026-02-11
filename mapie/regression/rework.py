@@ -1,6 +1,6 @@
 from abs import ABC, abstractmethod
 from inspect import signature
-from typing import cast, Union, Optional, Self
+from typing import cast, Union, Optional, Self, Tuple
 from joblib import Parallel, delayed
 from numpy.typing import ArrayLike, NDArray
 from sklearn.utils import _safe_indexing
@@ -88,8 +88,8 @@ class _FitterMixin:
 class _RegressorFitterMixin(_FitterMixin):
     estimator_type = RegressorMixin
 
-    def _estimator_predict(self, X, **predict_params):
-        return self._estimator.predict(X, **predict_params)
+    def _estimator_predict(self, X: ArrayLike, **predict_params):
+        return self._estimator_.predict(X, **predict_params)
 
 
 class _ClassifierFitterMixin(_FitterMixin):
@@ -120,7 +120,7 @@ class _ClassifierFitterMixin(_FitterMixin):
         np.put_along_axis(y_pred_full, y_index, y_proba, axis=1)
         return y_pred_full
 
-    def _estimator_predict(self, X, **predict_params):
+    def _estimator_predict(self, X: ArrayLike, **predict_params):
         """
         Predict probabilities of a test set from a fitted estimator.
 
@@ -140,7 +140,7 @@ class _ClassifierFitterMixin(_FitterMixin):
         return y_pred
 
 
-class _SplitConformalizer(ABC):
+class _Conformalizer(ABC):
     @abstractmethod
     def _fit_estimator(
         self,
@@ -151,6 +151,39 @@ class _SplitConformalizer(ABC):
     ) -> Estimator:
         pass
 
+    @abstractmethod
+    def _estimator_predict(self, X: ArrayLike, **predict_params):
+        pass
+
+    def _safe_predict_oof(self, X: ArrayLike, **predict_param):
+        if _num_samples(X) < 0:
+            return np.array([])
+        return self._estimator_predict(X, **predict_param)
+
+    @abstractmethod
+    def fit(
+        self,
+        X: ArrayLike,
+        y: ArrayLike,
+        sample_weight: Optional[ArrayLike] = None,
+        groups: Optional[ArrayLike] = None,
+        **fit_params,
+    ):
+        pass
+
+    @abstractmethod
+    def conformalize(
+        self,
+        X: ArrayLike,
+        y: ArrayLike,
+        sample_weight: Optional[ArrayLike] = None,
+        groups: Optional[ArrayLike] = None,
+        **fit_params,
+    ):
+        pass
+
+
+class _SplitConformalizer(ABC, _Conformalizer):
     def fit(
         self,
         X: ArrayLike,
@@ -176,18 +209,35 @@ class _SplitConformalizer(ABC):
         self._is_fitted = True
         return self
 
+        def _get_val_samples(
+            self, X: ArrayLike, y: ArrayLike, groups: Optional[ArrayLike] = None
+        ) -> Tuple[ArrayLike, ArrayLike]:
+            X_val = X
+            y_val = y
+            if not self.prefit:
+                _, val_indices = self.cv.split(X, y, groups)
+                X_val = _safe_indexing(X, val_indices)
+                y_val = _safe_indexing(y, val_indices)
 
-class _CrossConformalizer(ABC):
-    @abstractmethod
-    def _fit_estimator(
-        self,
-        X: ArrayLike,
-        y: ArrayLike,
-        sample_weight: Optional[NDArray] = None,
-        **fit_params,
-    ) -> Estimator:
-        pass
+            return X_val, y_val
 
+        def conformalize(
+            self,
+            X: ArrayLike,
+            y: ArrayLike,
+            groups: Optional[ArrayLike] = None,
+            **predict_params,
+        ) -> Self:
+            X_val, y_val = self._get_val_samples(X, y, groups)
+            y_pred = self._safe_predict_oof(X_val, **predict_params)
+
+            self.conformity_scores_ = self.conformity_score.get_conformity_scores(
+                y_val, y_pred, X=X
+            )
+            return self
+
+
+class _CrossConformalizer(ABC, _Conformalizer):
     def fit(
         self,
         X: ArrayLike,
