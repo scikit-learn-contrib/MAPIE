@@ -117,6 +117,7 @@ def fst_ascending(
     which justifies the sequential testing strategy.
     """
     p_values = np.asarray(p_values, dtype=float)
+    p_values = np.nan_to_num(p_values, nan=1.0) # NaN p-values are treated as non-significant
     n_lambdas = len(p_values)
 
     if n_lambdas == 0:
@@ -189,6 +190,7 @@ def sgt_bonferroni_holm(
     i.e., the sum of the local significance levels always equals delta.
     """
     p_values = np.asarray(p_values, dtype=float)
+    p_values = np.nan_to_num(p_values, nan=1.0) # NaN p-values are treated as non-significant
     n_lambdas = len(p_values)
 
     if n_lambdas == 0:
