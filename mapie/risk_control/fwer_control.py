@@ -13,7 +13,7 @@ def control_fwer(
         "fst_ascending",
         "sgt_bonferroni_holm",
     ] = "bonferroni",
-    **kwargs,
+    **fwer_kwargs,
 ) -> NDArray:
     """
     Apply a Family-Wise Error Rate (FWER) control procedure.
@@ -38,7 +38,7 @@ def control_fwer(
         Target family-wise error rate. Must be in (0, 1].
     fwer_method : {"bonferroni", "fst_ascending", "sgt_bonferroni_holm"}, default="bonferroni"
         FWER control strategy.
-    **kwargs
+    **fwer_kwargs
         Additional keyword arguments used only when ``fwer_method="fst_ascending"``.
         Currently supported keyword:
         - ``n_starts`` (int): number of equally spaced starting points used in
@@ -63,7 +63,7 @@ def control_fwer(
         return valid_index
 
     if fwer_method == "fst_ascending":
-        return fst_ascending(p_values, delta, **kwargs)
+        return fst_ascending(p_values, delta, **fwer_kwargs)
 
     if fwer_method == "sgt_bonferroni_holm":
         return sgt_bonferroni_holm(p_values, delta)
