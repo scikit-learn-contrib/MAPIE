@@ -265,7 +265,9 @@ class BinaryClassificationController:
         self.best_predict_param: Optional[Union[float, Tuple[float, ...]]] = None
         self.p_values: Optional[NDArray] = None
 
-    def _select_fwer_method(self) -> str:
+    def _select_fwer_method(
+        self,
+    ) -> Literal["bonferroni", "fst_ascending", "sgt_bonferroni_holm"]:
         """Select the FWER control method."""
         if self.fwer_method != "auto":
             return self.fwer_method
