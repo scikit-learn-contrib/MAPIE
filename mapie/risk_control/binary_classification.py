@@ -14,9 +14,9 @@ from .risks import (
     abstention_rate,
     accuracy,
     false_positive_rate,
-    precision,
     negative_predictive_value,
     positive_predictive_value,
+    precision,
     predicted_positive_fraction,
     recall,
 )
@@ -114,6 +114,30 @@ class BinaryClassificationController:
         the shape is (n_params, params_dim).
         Note that performance is degraded when `len(predict_params)` is large as it is used by the Bonferroni correction [1].
 
+    fwer_method : {"bonferroni", "fst_ascending", "sgt_bonferroni_holm", "auto"}, default="bonferroni"
+        Method used to control the family-wise error rate (FWER).
+
+        Supported methods:
+        - ``"bonferroni"`` : Classical Bonferroni correction. This is the default method.
+        It is valid in all settings but can be conservative, especially when the number of tested parameters is large.
+        - ``"fst_ascending"`` : Fixed Sequence Testing (ascending, multi-start).
+        Requires the risks to be monotonic along the parameter grid.
+        - ``"sgt_bonferroni_holm"`` : Sequential Graphical Testing corresponding
+        to the Bonferroni–Holm procedure. Suitable for general settings.
+        - ``"auto"`` : Automatically selects the most appropriate method:
+
+            1. if a single risk is controlled, parameters are one-dimensional,
+                and the empirical risk is monotonic along the grid : ``"fst_ascending"``.
+            2. otherwise :``"sgt_bonferroni_holm"``
+
+    **fwer_kwargs
+        Additional keyword arguments forwarded to `control_fwer`.
+        These parameters are only used when `fwer_method="fst_ascending"`.
+
+        Supported keyword arguments:
+        - ``n_starts``(int): Number of equally spaced starting points used in
+        the multi-start Fixed Sequence Testing procedure.
+
     Attributes
     ----------
     valid_predict_params : NDArray
@@ -197,6 +221,13 @@ class BinaryClassificationController:
             Literal["auto"], Risk_str, BinaryClassificationRisk
         ] = "auto",
         list_predict_params: NDArray = np.linspace(0, 0.99, 100),
+        fwer_method: Literal[
+            "bonferroni",
+            "fst_ascending",
+            "sgt_bonferroni_holm",
+            "auto",
+        ] = "bonferroni",
+        **fwer_kwargs,
     ):
         self.is_multi_risk = self._check_if_multi_risk_control(risk, target_level)
         self._predict_function = predict_function
@@ -224,6 +255,8 @@ class BinaryClassificationController:
         )
 
         self._predict_params = list_predict_params
+        self.fwer_method = fwer_method
+        self._fwer_kwargs = fwer_kwargs
         self.is_multi_dimensional_param = self._check_if_multi_dimensional_param(
             self._predict_params
         )
@@ -231,6 +264,19 @@ class BinaryClassificationController:
         self.valid_predict_params: NDArray = np.array([])
         self.best_predict_param: Optional[Union[float, Tuple[float, ...]]] = None
         self.p_values: Optional[NDArray] = None
+
+    def _select_fwer_method(self) -> str:
+        """Select the FWER control method."""
+        if self.fwer_method != "auto":
+            return self.fwer_method
+
+        if self.is_multi_risk:
+            return "sgt_bonferroni_holm"
+
+        if self.is_multi_dimensional_param:
+            return "sgt_bonferroni_holm"
+
+        return "fst_ascending"
 
     # All subfunctions are unit-tested. To avoid having to write
     # tests just to make sure those subfunctions are called,
@@ -271,6 +317,9 @@ class BinaryClassificationController:
             self._delta,
             eff_sample_sizes,
             True,
+            fwer_method=self._select_fwer_method(),
+            _auto_selected=(self.fwer_method == "auto"),
+            **self._fwer_kwargs,
         )
         valid_params_index = valid_index[0]
 
