@@ -1,5 +1,5 @@
 import warnings
-from typing import Any, List, Optional, Tuple, Union, cast
+from typing import Any, List, Literal, Optional, Tuple, Union, cast
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -127,6 +127,18 @@ def get_r_hat_plus(
     return r_hat, r_hat_plus
 
 
+def _check_risk_monotonicity(arr: NDArray, tol: float = 1e-6) -> str:
+    diffs = np.diff(arr)
+
+    if np.all(diffs >= -tol):
+        return "increasing"
+
+    if np.all(diffs <= tol):
+        return "decreasing"
+
+    return "none"
+
+
 def _is_increasing_risk(r_hat_plus: NDArray) -> bool:
     """
     Internal function checking if a risk is increasing or not.
@@ -216,6 +228,12 @@ def ltt_procedure(
     delta: float,
     n_obs: NDArray,
     binary: bool = False,
+    fwer_method: Literal[
+        "bonferroni",
+        "fst_ascending",
+        "sgt_bonferroni_holm",
+    ] = "bonferroni",
+    **fwer_kwargs,
 ) -> Tuple[List[List[Any]], NDArray]:
     """
     Apply the Learn-Then-Test procedure for risk control.
@@ -260,6 +278,14 @@ def ltt_procedure(
     binary: bool, default=False
         Must be True if the loss associated to the risk is binary.
 
+    fwer_method : {"bonferroni", "fst_ascending", "sgt_bonferroni_holm"}, default="bonferroni"
+        FWER control strategy.
+    **fwer_kwargs
+        Additional keyword arguments used only when ``fwer_method="fst_ascending"``.
+        Currently supported keyword:
+        - ``n_starts`` (int): number of equally spaced starting points used in
+          the multi-start Fixed Sequence Testing procedure.
+
     Returns
     -------
     valid_index: List[List[Any]].
@@ -285,9 +311,36 @@ def ltt_procedure(
         ]
     )
     p_values = p_values.max(axis=0)  # take max over risks (no effect if mono risk)
+
+    # FST only supports a single monotonic risk.
+    # - If non-monotonic: fallback to SGT when fwer_method="auto" in BCC, else error.
+    # - If decreasing: reverse order so FST tests easiest→hardest;
+    #   store permutation to remap indices afterward.
+    order = None
+    if fwer_method == "fst_ascending":
+        if r_hat.shape[0] > 1:
+            raise ValueError("fst_ascending cannot be used with multiple risks.")
+
+        direction = _check_risk_monotonicity(r_hat[0])
+
+        if direction == "none":
+            if fwer_kwargs.get("_auto_selected", False):
+                fwer_method = "sgt_bonferroni_holm"
+            else:
+                raise ValueError(
+                    "fst_ascending requires a monotonic risk over lambdas."
+                )
+
+        elif direction == "decreasing":
+            order = np.arange(len(p_values))[::-1]
+            p_values = p_values[order]
+
     valid_index = []
     for i in range(alpha_np.shape[1]):
-        l_index = control_fwer(p_values, delta, fwer_method="bonferroni").tolist()
+        idx = control_fwer(p_values, delta, fwer_method=fwer_method, **fwer_kwargs)
+        if order is not None:
+            idx = order[idx]
+        l_index = idx.tolist()
         valid_index.append(l_index)
     return valid_index, p_values
 
