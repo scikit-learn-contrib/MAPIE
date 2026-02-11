@@ -318,6 +318,7 @@ def ltt_procedure(
     #   store permutation to remap indices afterward.
     order = None
     p_values_original = p_values
+    _auto_selected = fwer_kwargs.pop("_auto_selected", False)
     if fwer_method == "fst_ascending":
         if r_hat.shape[0] > 1:
             raise ValueError("fst_ascending cannot be used with multiple risks.")
@@ -325,7 +326,7 @@ def ltt_procedure(
         direction = _check_risk_monotonicity(r_hat[0])
 
         if direction == "none":
-            if fwer_kwargs.get("_auto_selected", False):
+            if _auto_selected:
                 fwer_method = "sgt_bonferroni_holm"
             else:
                 raise ValueError(
