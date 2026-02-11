@@ -867,3 +867,42 @@ def test_functional_multi_dimensional_params_multi_risk():
     assert bcc_multi_dim.best_predict_param is not None
     assert isinstance(bcc_multi_dim.best_predict_param, tuple)
     assert len(bcc_multi_dim.best_predict_param) == 2
+
+
+def test_select_fwer_method_all_branches():
+    # explicit method
+    bcc = BinaryClassificationController(
+        predict_function=dummy_predict,
+        risk="precision",
+        target_level=0.8,
+        fwer_method="bonferroni",
+    )
+    assert bcc._select_fwer_method() == "bonferroni"
+
+    # auto + multi risk
+    bcc = BinaryClassificationController(
+        predict_function=dummy_predict,
+        risk=["precision", "recall"],
+        target_level=[0.8, 0.8],
+        fwer_method="auto",
+    )
+    assert bcc._select_fwer_method() == "sgt_bonferroni_holm"
+
+    # auto + multi dim param
+    bcc = BinaryClassificationController(
+        predict_function=dummy_predict_general_2d,
+        risk="precision",
+        target_level=0.8,
+        list_predict_params=np.array([[0.2, 0.3]]),
+        fwer_method="auto",
+    )
+    assert bcc._select_fwer_method() == "sgt_bonferroni_holm"
+
+    # auto + mono everything
+    bcc = BinaryClassificationController(
+        predict_function=dummy_predict,
+        risk="recall",
+        target_level=0.8,
+        fwer_method="auto",
+    )
+    assert bcc._select_fwer_method() == "fst_ascending"
