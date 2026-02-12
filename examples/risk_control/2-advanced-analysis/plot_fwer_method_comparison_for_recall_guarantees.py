@@ -43,7 +43,6 @@ Using the same classifier, calibration set, and target recall, we:
 - visualize agreement and differences between procedures.
 """
 
-
 # sphinx_gallery_thumbnail_number = 2
 
 import matplotlib.pyplot as plt
@@ -178,7 +177,7 @@ print(
     f"Thresholds found that guarantee a recall of at least {target_recall} with a confidence of {confidence_level}:\n"
     f"- Bonferroni correction: {len(bcc_bonferroni.valid_predict_params)} valid thresholds. The best threshold maximizing precision is: {bcc_bonferroni.best_predict_param:.3f}\n"
     f"- FST procedure: {len(bcc_fst.valid_predict_params)} valid thresholds. The best threshold maximizing precision is: {bcc_fst.best_predict_param:.3f}\n"
-    f"- Holm-Bonferroni method: {len(bcc_bonferroni_holm.valid_predict_params)} valid thresholds. The best threshold maximizing precision is: {bcc_bonferroni_holm.best_predict_param:.3f}\n"
+    f"- Bonferroni-Holm method: {len(bcc_bonferroni_holm.valid_predict_params)} valid thresholds. The best threshold maximizing precision is: {bcc_bonferroni_holm.best_predict_param:.3f}\n"
 )
 
 
@@ -256,7 +255,7 @@ plt.scatter(
     tested_thresholds[only_holm],
     recalls[only_holm],
     c="olive",
-    label="Valid Holm only",
+    label="Valid Bonferroni-Holm only",
 )
 plt.scatter(
     tested_thresholds[best_thr_index_bonferroni],
@@ -283,7 +282,7 @@ plt.scatter(
     marker="*",
     edgecolors="k",
     s=300,
-    label="Best Holm",
+    label="Best Bonferroni-Holm",
 )
 plt.scatter(
     tested_thresholds[naive_threshold_index],
@@ -353,5 +352,5 @@ print(
 #
 # As expected, Bonferroni is the most conservative (fewest valid thresholds),
 # FST is the least conservative when its assumptions hold (largest valid set),
-# and Holm lies in between, offering a compromise between power and generality.
+# and Bonferroni-Holm lies in between, offering a compromise between power and generality.
 ################################################################################
