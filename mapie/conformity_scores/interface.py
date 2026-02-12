@@ -41,7 +41,7 @@ class BaseConformityScore(metaclass=ABCMeta):
         self,
         X: NDArray,
         y: NDArray,
-        y_enc: NDArray,
+        y_enc: Optionnal[NDArray] = None,
         sample_weight: Optional[NDArray] = None,
         groups: Optional[NDArray] = None,
     ):
