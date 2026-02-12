@@ -395,10 +395,8 @@ class _CrossConformalizer(ABC, _Conformalizer):
         groups: Optional[ArrayLike] = None,
         **fit_params,
     ) -> Self:
-        self.k_ = np.full(
-            shape=(_num_samples(X), self.cv.get_n_splits(X, y, groups)),
-            fill_value=np.nan,
-            dtype=float,
+        X, y, sample_weight, groups = self.conformity_scores.split(
+            X, y, sample_weight, groups
         )
 
         self.estimators_ = Parallel(self.n_jobs, verbose=self.verbose)(
