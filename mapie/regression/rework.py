@@ -421,6 +421,7 @@ class _CrossConformalizer(ABC, _Conformalizer):
         self,
         X: ArrayLike,
         y: ArrayLike,
+        sample_weight: Optional[ArrayLike] = None,
         groups: Optional[ArrayLike] = None,
         **predict_params,
     ) -> Self:
