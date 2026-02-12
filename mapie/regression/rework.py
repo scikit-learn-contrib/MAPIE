@@ -208,6 +208,36 @@ class _ClassifierFitterMixin(_FitterMixin):
         np.put_along_axis(y_pred_full, y_index, y_proba, axis=1)
         return y_pred_full
 
+    @staticmethod
+    def _check_proba_normalized(y_pred_proba: ArrayLike, axis: int = 1) -> ArrayLike:
+        """
+        Check if, for all the observations, the sum of
+        the probabilities is equal to one.
+
+        Parameters
+        ----------
+        y_pred_proba: ArrayLike of shape
+            (n_samples, n_classes) or (n_samples, n_train_samples, n_classes)
+            Softmax output of a model.
+
+        Returns
+        -------
+        ArrayLike of shape (n_samples, n_classes)
+            Softmax output of a model if the scores all sum to one.
+
+        Raises
+        ------
+        ValueError
+            If the sum of the scores is not equal to one.
+        """
+        np.testing.assert_allclose(
+            np.sum(y_pred_proba, axis=axis),
+            1,
+            err_msg="The sum of the scores is not equal to one.",
+            rtol=1e-5,
+        )
+        return y_pred_proba
+
     def _estimator_predict(self, X: ArrayLike, **predict_params):
         """
         Predict probabilities of a test set from a fitted estimator.
@@ -225,6 +255,7 @@ class _ClassifierFitterMixin(_FitterMixin):
         y_pred = self.estimator_.predict_proba(X, **predict_params)
         if len(self.estimator_.classes_) != self.n_classes:
             y_pred = self._fix_number_of_classes(self.estimator_.classes_, y_pred)
+        self._check_proba_normalized(y_pred)
         return y_pred
 
 
