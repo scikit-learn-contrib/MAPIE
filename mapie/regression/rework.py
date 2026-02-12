@@ -10,6 +10,7 @@ from sklearn.preprocessing import LabelEncoder
 from sklearn.base import RegressorMixin, ClassifierMixin, clone
 from warnings import warn
 
+from mapie.aggregation_functions import aggregate_all
 import numpy as np
 
 
@@ -18,6 +19,7 @@ from mapie.utils import (
     _raise_error_if_fit_called_in_prefit_mode,
     _raise_error_if_method_already_called,
     check_is_fitted,
+    _check_nan_in_aposteriori_prediction,
 )
 
 Estimator = Union[RegressorMixin, ClassifierMixin]
@@ -95,6 +97,23 @@ class _RegressorFitterMixin(_FitterMixin):
     def _estimator_predict(self, X: ArrayLike, **predict_params):
         return self.estimator_.predict(X, **predict_params)
 
+    def _process_cross_conformal(
+        self, preds: ArrayLike, indices: ArrayLike, n_samples: int, n_splits: int
+    ) -> ArrayLike:
+        pred_matrix = np.full(
+            shape=(n_samples, n_splits), fill_value=np.nan, dtype=float
+        )
+
+        col = 0
+        for ind in indices:
+            pred_matrix[ind, col] = np.array(preds[col], dtype=float)
+            col += 1
+
+        _check_nan_in_aposteriori_prediction(pred_matrix)
+        y_pred = aggregate_all(self.agg_function, pred_matrix)
+
+        return y_pred
+
 
 class _ClassifierFitterMixin(_FitterMixin):
     estimator_type = ClassifierMixin
@@ -158,6 +177,7 @@ class _ClassifierFitterMixin(_FitterMixin):
         """
         self.label_encoder = LabelEncoder().fit(self.classes_)
 
+    # TODO: upgrade typing using ParamSpecs and TypeVar
     # use to decorate fit and conformalize when instanciated with a Conformalizer
     @staticmethod
     def _fit_decorator(func: Callable) -> Callable:
@@ -171,7 +191,7 @@ class _ClassifierFitterMixin(_FitterMixin):
 
     # use to decorate fit and conformalize when instanciated with a Conformalizer
     @staticmethod
-    def _encode(func: Callable) -> Callable:
+    def _encode_labels(func: Callable) -> Callable:
         @wraps(func)
         def wrapper(self, X: ArrayLike, y: ArrayLike, **kwargs):
             y_enc = self.label_encoder.transform(y)
@@ -255,6 +275,16 @@ class _ClassifierFitterMixin(_FitterMixin):
         if len(self.estimator_.classes_) != self.n_classes:
             y_pred = self._fix_number_of_classes(self.estimator_.classes_, y_pred)
         self._check_proba_normalized(y_pred)
+        return y_pred
+
+    def _process_cross_conformal(
+        self, preds: ArrayLike, indices: ArrayLike, n_samples: int, n_splits: int
+    ) -> ArrayLike:
+        y_pred = np.empty((n_samples, self.n_classes), dtype=float)
+
+        for ind, pred in zip(indices, preds):
+            y_pred[ind] = preds
+
         return y_pred
 
 
@@ -407,4 +437,20 @@ class _CrossConformalizer(ABC, _Conformalizer):
             )
         )
 
-        return preds
+        y_pred = self._process_cross_conformal(
+            preds,
+            val_indices,
+            _num_samples(X),
+            self.cv.get_n_splits(),
+        )
+
+        self.conformity_scores_ = self.conformity_score.get_conformity_scores(
+            y,
+            y_pred,
+            X=X,
+            sample_weight=sample_weight,
+            groups=groups,
+            predict_params=predict_params,
+        )
+
+        return self
