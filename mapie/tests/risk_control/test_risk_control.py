@@ -11,6 +11,7 @@ from numpy.typing import NDArray
 from scipy.stats import binom
 
 from mapie.risk_control.methods import (
+    _check_risk_monotonicity,
     compute_hoeffding_bentkus_p_value,
     find_precision_best_predict_param,
     ltt_procedure,
@@ -197,3 +198,50 @@ def test_ltt_multi_risk_error() -> None:
             0.1,
             np.repeat(n, 2, axis=0),
         )
+
+
+def test_check_risk_monotonicity_all_cases():
+    """Test _check_risk_monotonicity for all cases"""
+    assert _check_risk_monotonicity(np.array([1, 2, 3])) == "increasing"
+    assert _check_risk_monotonicity(np.array([3, 2, 1])) == "decreasing"
+    assert _check_risk_monotonicity(np.array([1, 3, 2])) == "none"
+
+
+def test_ltt_fst_multirisk_error():
+    r_hat = np.array([[0.1, 0.2], [0.1, 0.2]])
+    n_obs = np.ones_like(r_hat)
+    alpha_np = np.array([[0.5], [0.5]])
+    delta = 0.1
+    with pytest.raises(ValueError, match=r".*fst_ascending cannot be used.*"):
+        ltt_procedure(r_hat, alpha_np, delta, n_obs, fwer_method="fst_ascending")
+
+
+def test_ltt_fst_non_monotone_error():
+    r_hat = np.array([[0.1, 0.4, 0.2]])
+    n_obs = np.ones_like(r_hat)
+    alpha_np = np.array([[0.5]])
+
+    with pytest.raises(ValueError, match=r".*requires a monotonic risk.*"):
+        ltt_procedure(r_hat, alpha_np, 0.1, n_obs, fwer_method="fst_ascending")
+
+
+def test_ltt_auto_fallback_to_sgt():
+    r_hat = np.array([[0.1, 0.4, 0.2]])
+    n_obs = np.ones_like(r_hat)
+    alpha_np = np.array([[0.5]])
+
+    valid_index, _ = ltt_procedure(
+        r_hat, alpha_np, 0.1, n_obs, fwer_method="fst_ascending", _auto_selected=True
+    )
+    assert isinstance(valid_index, list)
+
+
+def test_ltt_fst_decreasing_reorder():
+    r_hat = np.array([[0.5, 0.3, 0.1]])
+    n_obs = np.ones_like(r_hat)
+    alpha_np = np.array([[0.6]])
+
+    valid_index, _ = ltt_procedure(
+        r_hat, alpha_np, 0.6, n_obs, fwer_method="fst_ascending"
+    )
+    assert np.array_equal(np.array([2]), valid_index[0])
