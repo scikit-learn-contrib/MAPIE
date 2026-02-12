@@ -19,24 +19,24 @@ a risk in binary classification.
 # We compare three FWER procedures:
 #
 # - ``"bonferroni"``: a classical Bonferroni correction valid under any risk structure
-#    and parameter space, but generally conservative.
+#   and parameter space, but generally conservative.
 # - ``"fst_ascending"``: Fixed-Sequence Testing (FST), which exploits monotonicity
 #   of the risk when available to lead to less conservative thresholds.
 # - ``"bonferroni_holm"``: a sequential graphical testing method applying the Bonferroni-Holm
-#   procedure valid under any risk structure and parameter space, but generally more powerful
+#   procedure which is valid under any risk structure and parameter space, but generally more powerful
 #   than the classical Bonferroni correction.
 #
 # The applicability of each method depends on the problem structure:
 #
-# +----------------------------+------------------+---------------+-----------------+
-# | **Method**                 | Monotonic risk   | Multi-risk    | Multi-parameter |
-# +----------------------------+------------------+---------------+-----------------+
-# | Bonferroni                 | ✅               | ✅            | ✅              |
-# +----------------------------+------------------+---------------+-----------------+
-# | FST                        | required         | ❌            | ❌              |
-# +----------------------------+------------------+---------------+-----------------+
-# | Bonferroni-Ho              | ✅               | ✅            | ✅              |
-# +----------------------------+------------------+---------------+-----------------+
+# +----------------------------+--------------------+----------------+---------------------+
+# | **Method**                 | **Monotonic risk** | **Multi-risk** | **Multi-parameter** |
+# +----------------------------+--------------------+----------------+---------------------+
+# | Bonferroni                 | ✅                 | ✅             | ✅                  |
+# +----------------------------+--------------------+----------------+---------------------+
+# | FST                        | required           | ❌             | ❌                  |
+# +----------------------------+--------------------+----------------+---------------------+
+# | Bonferroni-Holm            | ✅                 | ✅             | ✅                  |
+# +----------------------------+--------------------+----------------+---------------------+
 #
 # Here we control **1-recall**, which is monotonic with respect to the decision
 # threshold. We therefore expect FST to be the least conservative, Bonferroni
@@ -135,9 +135,9 @@ clf.fit(X_train, y_train)
 # to satisfy the target metric on unseen data using different FWER control methods,
 # specified via the ``fwer_method`` parameter of the controller:
 #
-# - ``"bonferroni"``: universally valid but conservative,
-# - ``"fst_ascending"``: more powerful when the risk is monotonic,
-# - ``"bonferroni_holm"``: sequential method balancing validity and power.
+# - ``"bonferroni"``: classical Bonerroni correction,
+# - ``"fst_ascending"``: Fixed-Sequence Testing (FST) procedure,,
+# - ``"bonferroni_holm"``: sequential graphical testing method applying the Bonferroni-Holm procedure.
 #
 # The FST procedure requires the risk to be monotonic with respect to the
 # threshold. This holds for recall but not for precision, which is generally
