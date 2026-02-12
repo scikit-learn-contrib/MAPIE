@@ -125,7 +125,7 @@ class _ClassifierFitterMixin(_FitterMixin):
             for training (in prefit setting)
         """
         n_unique_y_labels = len(np.unique(y))
-        if self.prefit:
+        if self.is_fitted:
             classes = self.estimator_.classes_
             n_classes = len(np.unique(classes))
             if not set(np.unique(y)).issubset(classes):
@@ -169,16 +169,15 @@ class _ClassifierFitterMixin(_FitterMixin):
 
         return wrapper
 
-    @wraps(_FitterMixin._fit_estimator)
-    def _fit_estimator(
-        self,
-        X: ArrayLike,
-        y: ArrayLike,
-        sample_weight: Optional[NDArray] = None,
-        **fit_params,
-    ) -> Estimator:
-        y_enc = self._encode_labels(y)
-        return super()._fit_estimator(X, y_enc, sample_weight, **fit_params)
+    # use to decorate fit and conformalize when instanciated with a Conformalizer
+    @staticmethod
+    def _encode(func: Callable) -> Callable:
+        @wraps(func)
+        def wrapper(self, X: ArrayLike, y: ArrayLike, **kwargs):
+            y_enc = self.label_encoder.transform(y)
+            return func(X, y_enc, **kwargs)
+
+        return wrapper
 
     def _encode_labels(self, y):
         return self.label_encoder.transform(y)
