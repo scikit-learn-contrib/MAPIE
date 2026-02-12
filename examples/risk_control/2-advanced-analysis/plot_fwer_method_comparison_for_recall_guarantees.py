@@ -1,7 +1,7 @@
 """
-============================================================================
-Comparison of FWER control methods for risk control in binary classification
-============================================================================
+=================================================================
+Comparing FWER methods for risk control in binary classification
+=================================================================
 
 This example compares how different family-wise error rate (FWER) control
 strategies affect the set of statistically valid thresholds when controlling
@@ -18,24 +18,25 @@ a risk in binary classification.
 #
 # We compare three FWER procedures:
 #
-# - ``"bonferroni"``: a classical correction valid under any dependence
-#   structure but often conservative.
+# - ``"bonferroni"``: a classical Bonferroni correction valid under any risk structure
+#    and parameter space, but generally conservative.
 # - ``"fst_ascending"``: Fixed-Sequence Testing (FST), which exploits monotonicity
-#   of the risk to gain power but requires a single monotonic risk.
-# - ``"bonferroni_holm"``: a sequentially rejective procedure that is less
-#   conservative than Bonferroni while remaining generally valid.
+#   of the risk when available to lead to less conservative thresholds.
+# - ``"bonferroni_holm"``: a sequential graphical testing method applying the Bonferroni-Holm
+#   procedure valid under any risk structure and parameter space, but generally more powerful
+#   than the classical Bonferroni correction.
 #
 # The applicability of each method depends on the problem structure:
 #
-# +----------------------------+------------------+---------------+------------------+
-# | **Method**                 | Monotonic risk   | Multi-risk    | Multi-parameter  |
-# +----------------------------+------------------+---------------+------------------+
-# | Bonferroni                 | ✅               | ✅             | ✅              |
-# +----------------------------+------------------+----------------+-----------------+
-# | FST                        | required         | ❌             | ❌              |
-# +----------------------------+------------------+----------------+-----------------+
-# | Bonferroni-Ho              | ✅               | ✅             | ✅              |
-# +----------------------------+------------------+---------------+------------------+
+# +----------------------------+------------------+---------------+-----------------+
+# | **Method**                 | Monotonic risk   | Multi-risk    | Multi-parameter |
+# +----------------------------+------------------+---------------+-----------------+
+# | Bonferroni                 | ✅               | ✅            | ✅              |
+# +----------------------------+------------------+---------------+-----------------+
+# | FST                        | required         | ❌            | ❌              |
+# +----------------------------+------------------+---------------+-----------------+
+# | Bonferroni-Ho              | ✅               | ✅            | ✅              |
+# +----------------------------+------------------+---------------+-----------------+
 #
 # Here we control **1-recall**, which is monotonic with respect to the decision
 # threshold. We therefore expect FST to be the least conservative, Bonferroni
@@ -128,12 +129,11 @@ clf.fit(X_train, y_train)
 
 ##############################################################################
 # Next, we initialize :class:`~mapie.risk_control.BinaryClassificationController`
-# with the estimator probability function (``clf.predict_proba``), a risk metric
-# (here ``"recall"``), a target level, and a confidence level. We then calibrate
-# it to compute thresholds that are statistically guaranteed to satisfy the
-# target risk on unseen data.
-#
-# We compare three FWER control strategies via the ``fwer_method`` parameter:
+# with the estimator probability function ``clf.predict_proba``, the ``"recall"``
+# performance metric, a target recall level, and a confidence level. We then
+# calibrate it to compute thresholds that are statistically guaranteed
+# to satisfy the target metric on unseen data using different FWER control methods,
+# specified via the ``fwer_method`` parameter of the controller:
 #
 # - ``"bonferroni"``: universally valid but conservative,
 # - ``"fst_ascending"``: more powerful when the risk is monotonic,
@@ -141,7 +141,7 @@ clf.fit(X_train, y_train)
 #
 # The FST procedure requires the risk to be monotonic with respect to the
 # threshold. This holds for recall but not for precision, which is generally
-# non-monotonic; therefore FST cannot be used for controlling 1-precision.
+# non-monotonic; therefore FST cannot be used for controlling ``"precision"``.
 #
 
 target_recall = 0.8
