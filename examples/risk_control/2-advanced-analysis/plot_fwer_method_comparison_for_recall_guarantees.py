@@ -3,52 +3,6 @@
 Comparison of FWER control methods for risk control in binary classification
 ============================================================================
 
-This example illustrates how different family-wise error rate (FWER) control strategies impact
-the set of statistically valid thresholds when controlling a risk in binary classification.
-
-The risk control involves chosing a threshold on the predicted probabilities of the positive class
-to ensure that acertain risk (e.g., 1-precision, 1-recall) is controlled with high probability
-on unseen data. The procedure relies on a calibration set to estimate the risk at different
-thresholds and to select thresholds that are valid with high probability on unseen data.
-The FWER control strategy determines how the multiple comparisons problem is handled
-when testing multiple thresholds.
-
-In this example, we compare the Bonferroni correction, the Fixed-Sequence Testing (FST) procedure,
-and the Holm-Bonferroni method.
-
-- Bonferroni, a classical simultaneous correction that is valid under any dependence structure but can be conservative.
-- Fixed-Sequence Testing, which exploits monotonicity when available to gain power but requires a pre-specified order of testing.
-- Bonferroni-Holm, a sequentially rejective method that is more powerful than Bonferroni while still controlling the FWER under any dependence structure.
-
-Note that the Fixed-Sequence Testing procedure can only be applied when the risk
-is monotonic with respect to the threshold, which is the case for instance for 1-recall but not for 1-precision.
-The table below summarizes the applicability of each method depending on the properties of the risks and parameters.
-
-+-------------------------------+---------------------------+--------------------+-------------------------+
-| **FWER method **              | **Only monotonic risks**  | **Multiple risks** | **Multiple parameters** |
-+-------------------------------+---------------------------+--------------------+-------------------------+
-| **Bonferroni correction**     |             ❌            |         ✅         |            ✅           |
-+-------------------------------+---------------------------+--------------------+-------------------------+
-| **Fixed-Sequence Testing**    |             ✅            |         ❌         |            ❌           |
-+-------------------------------+---------------------------+--------------------+-------------------------+
-| **Bonferroni-Holm**           |             ❌            |         ✅         |            ✅           |
-+-------------------------------+---------------------------+--------------------+-------------------------+
-
-
-In this example, we compare the three methods for controlling the FWER when controlling the 1-recall.
-Using the same classifier, calibration set, test set, and target recall, we:
-
-- Compute the set of valid thresholds for each method.
-- Compare the valid thresholds and the best valid threshold for each method
-- Visualize the valid and invalid thresholds for each method and the best valid threshold for each method.
-
-"""
-
-"""
-============================================================================
-Comparison of FWER control methods for risk control in binary classification
-============================================================================
-
 This example compares how different family-wise error rate (FWER) control
 strategies affect the set of statistically valid thresholds when controlling
 a risk in binary classification.
@@ -170,21 +124,22 @@ clf = MLPClassifier(max_iter=150, random_state=RANDOM_STATE)
 clf.fit(X_train, y_train)
 
 ##############################################################################
-# Next, we initialize a :class:`~mapie.risk_control.BinaryClassificationController`
-# using the probability estimation function from the fitted estimator:
-# ``clf.predict_proba``, a risk or performance metric (here, "recall"),
-# a target risk level, and a confidence level. Then we use the calibration data
-# to compute statistically guaranteed thresholds using a risk control method,
-# and a FWER control strategy passed through the ``fwer_method`` parameter.
+# Next, we initialize :class:`~mapie.risk_control.BinaryClassificationController`
+# with the estimator probability function (``clf.predict_proba``), a risk metric
+# (here ``"recall"``), a target level, and a confidence level. We then calibrate
+# it to compute thresholds that are statistically guaranteed to satisfy the
+# target risk on unseen data.
 #
-# We compare three FWER control strategies: the Bonferroni correction,
-# the FST procedure, and the Holm-Bonferroni method.
+# We compare three FWER control strategies via the ``fwer_method`` parameter:
 #
-# Note that the FTS procedure can only be applied when the risk or performance metric
-# is monotonic with respect to the threshold. Here "recall" is monotonic with respect
-# to the threshold. However, "precision" is not monotonic with respect to the threshold,
-# therefore the FST procedure cannot be applied when controlling the 1-precision.
+# - ``"bonferroni"``: universally valid but conservative,
+# - ``"fst_ascending"``: more powerful when the risk is monotonic,
+# - ``"bonferroni_holm"``: sequential method balancing validity and power.
 #
+# The FST procedure requires the risk to be monotonic with respect to the
+# threshold. This holds for recall but not for precision, which is generally
+# non-monotonic; therefore FST cannot be used for controlling 1-precision.
+##############################################################################
 
 target_recall = 0.8
 confidence_level = 0.7
@@ -228,8 +183,11 @@ print(
 
 
 #################################################################################
-# In the plot below, we visualize how the threshold values impact recall, and what
-# thresholds have been computed as statistically guaranteed for each method.
+# The plot below shows how recall varies with the decision threshold and which
+# thresholds are statistically valid under each FWER control method. Colors
+# indicate agreement or disagreement between methods, and stars mark the best
+# valid threshold selected by each procedure as well as the naive threshold.
+#################################################################################
 
 proba_positive_class = clf.predict_proba(X_calib)[:, 1]
 
@@ -352,8 +310,11 @@ plt.show()
 
 
 #################################################################################
-# Finally, we compare the recall on the test set when using the naive threshold,
-# the best valid threshold for each method, and the corresponding recall on the calibration set.
+# Finally, we compare test-set recall obtained with the naive threshold and with
+# the best valid threshold selected by each FWER method, alongside their
+# calibration-set recalls.
+#################################################################################
+
 
 proba_positive_class_test = clf.predict_proba(X_test)[:, 1]
 y_pred_naive = (
@@ -384,15 +345,13 @@ print(
 )
 
 ################################################################################
-# The risk control procedure provides guarantees on unseen data, which is not the
-# case for the naive threshold selection. In this example, the naive threshold results
-# in a recall on the test set that satisfies the target recall but does not satisfy the
-# confidence level, which means that the guarantee is not satisfied. On the other hand,
-# the thresholds selected by risk control for each method satisfy the target recall on
-# the test set with a confidence level of 0.7, which means that the guarantee is satisfied.
-# The Bonferroni correction is the most conservative method, resulting in the smallest set
-# of valid thresholds and the lowest best threshold, while the FST procedure is the least
-# conservative, resulting in the largest set of valid thresholds and the highest best threshold.
-# The Holm-Bonferroni method is in between, providing a larger set of valid thresholds than
-# Bonferroni but smaller than FST, and a best threshold that is higher than Bonferroni but
-# lower than FST.
+# Risk control provides statistical guarantees on unseen data, unlike naive
+# threshold selection. Although the naive threshold may meet the target recall
+# on this test set, it does not come with a confidence guarantee. In contrast,
+# thresholds selected via risk control are valid with the prescribed confidence
+# level.
+#
+# As expected, Bonferroni is the most conservative (fewest valid thresholds),
+# FST is the least conservative when its assumptions hold (largest valid set),
+# and Holm lies in between, offering a compromise between power and generality.
+################################################################################
