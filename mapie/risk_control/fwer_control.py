@@ -476,5 +476,5 @@ class FWERFixedSequenceTesting(FWERProcedure):
     def _local_significance_levels(self):
         pass
 
-    def _update_on_reject(self, idx: int):
+    def _update_on_reject(self, hypothesis_index: int):
         pass
