@@ -167,6 +167,10 @@ class FWERFixedSequenceTesting(FWERProcedure):
     Hypotheses are assumed to be ordered according to a parameter grid
     such that rejection becomes progressively easier along the sequence.
 
+    If multiple starts are used, each start explores a disjoint segment
+    of hypotheses. Starts falling inside already rejected regions are
+    automatically discarded.
+
     Parameters
     ----------
     n_starts : int, default=1
@@ -311,6 +315,11 @@ def control_fwer(
     -------
     valid_index : NDArray
         Sorted indices of hypotheses rejected under FWER control.
+
+    Notes
+    -----
+    This function is a thin dispatcher that instantiates the requested
+    FWERProcedure and executes it.
     """
     p_values = np.asarray(p_values, dtype=float)
     n_lambdas = len(p_values)
