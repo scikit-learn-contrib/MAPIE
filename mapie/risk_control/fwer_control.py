@@ -179,7 +179,7 @@ class FWERFixedSequenceTesting(FWERProcedure):
 
     def __init__(self, n_starts: int = 1):
         if n_starts <= 0:
-            raise ValueError("n_starts must be positive.")
+            raise ValueError("n_starts must be a positive integer.")
         self.n_starts = n_starts
 
     def _init_state(self, n_lambdas: int, delta: float):
@@ -187,7 +187,7 @@ class FWERFixedSequenceTesting(FWERProcedure):
 
         if self.n_starts > n_lambdas:
             warnings.warn(
-                "n_starts > n_lambdas → reduced to n_lambdas",
+                "n_starts is greater than the number of tests. Thus, it is set to n_lambdas.",
                 UserWarning,
             )
 
