@@ -230,7 +230,7 @@ def ltt_procedure(
     binary: bool = False,
     fwer_method: Literal[
         "bonferroni",
-        "fst_ascending",
+        "fixed_sequence",
         "bonferroni_holm",
     ] = "bonferroni",
     **fwer_kwargs,
@@ -278,10 +278,10 @@ def ltt_procedure(
     binary: bool, default=False
         Must be True if the loss associated to the risk is binary.
 
-    fwer_method : {"bonferroni", "fst_ascending", "bonferroni_holm"}, default="bonferroni"
+    fwer_method : {"bonferroni", "fixed_sequence", "bonferroni_holm"}, default="bonferroni"
         FWER control strategy.
     **fwer_kwargs
-        Additional keyword arguments used only when ``fwer_method="fst_ascending"``.
+        Additional keyword arguments used only when ``fwer_method="fixed_sequence"``.
         Currently supported keyword:
         - ``n_starts`` (int): number of equally spaced starting points used in
           the multi-start Fixed Sequence Testing procedure.
@@ -319,9 +319,9 @@ def ltt_procedure(
     order = None
     p_values_original = p_values
     _auto_selected = fwer_kwargs.pop("_auto_selected", False)
-    if fwer_method == "fst_ascending":
+    if fwer_method == "fixed_sequence":
         if r_hat.shape[0] > 1:
-            raise ValueError("fst_ascending cannot be used with multiple risks.")
+            raise ValueError("fixed_sequence cannot be used with multiple risks.")
 
         direction = _check_risk_monotonicity(r_hat[0])
 
@@ -330,7 +330,7 @@ def ltt_procedure(
                 fwer_method = "bonferroni_holm"
             else:
                 raise ValueError(
-                    "fst_ascending requires a monotonic risk over lambdas."
+                    "fixed_sequence requires a monotonic risk over lambdas."
                 )
 
         if direction == "decreasing":

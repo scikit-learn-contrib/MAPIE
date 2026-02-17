@@ -229,7 +229,7 @@ def _build_fwer(
     method: Union[
         Literal[
             "bonferroni",
-            "fst_ascending",
+            "fixed_sequence",
             "bonferroni_holm",
         ],
         FWERProcedure,
@@ -241,7 +241,7 @@ def _build_fwer(
 
     Parameters
     ----------
-    method : {"bonferroni", "fst_ascending", "bonferroni_holm"}, or FWERProcedure instance
+    method : {"bonferroni", "fixed_sequence", "bonferroni_holm"}, or FWERProcedure instance
         FWER control strategy. If a string is provided, it must be one of the supported methods.
         If an instance of FWERProcedure is provided, it will be used directly.
     **kwargs
@@ -254,7 +254,7 @@ def _build_fwer(
     if method == "bonferroni":
         return FWERBonferroniCorrection()
 
-    if method == "fst_ascending":
+    if method == "fixed_sequence":
         return FWERFixedSequenceTesting(**kwargs)
 
     if method == "bonferroni_holm":
@@ -262,7 +262,7 @@ def _build_fwer(
 
     raise ValueError(
         f"Unknown FWER control method: {method}. "
-        "Supported methods are {'bonferroni','fst_ascending','bonferroni_holm'}, "
+        "Supported methods are {'bonferroni','fixed_sequence','bonferroni_holm'}, "
         "or an instance of FWERProcedure."
     )
 
@@ -273,7 +273,7 @@ def control_fwer(
     fwer_method: Union[
         Literal[
             "bonferroni",
-            "fst_ascending",
+            "fixed_sequence",
             "bonferroni_holm",
         ],
         FWERProcedure,
@@ -291,7 +291,7 @@ def control_fwer(
 
     Supported methods are:
     - ``"bonferroni"``: classical Bonferroni correction,
-    - ``"fst_ascending"``: Fixed Sequence Testing (ascending, multi-start),
+    - ``"fixed_sequence"``: Fixed Sequence Testing (FST),
     - ``"bonferroni_holm"``: Sequential Graphical Testing corresponding
       to the Bonferroni-Holm procedure.
     - Custom procedures can also be implemented by subclassing ``FWERProcedure``
@@ -303,10 +303,10 @@ def control_fwer(
         P-values associated with each tested hypothesis.
     delta : float
         Target family-wise error rate. Must be in (0, 1].
-    fwer_method : {"bonferroni", "fst_ascending", "bonferroni_holm"} or FWERProcedure instance, default="bonferroni"
+    fwer_method : {"bonferroni", "fixed_sequence", "bonferroni_holm"} or FWERProcedure instance, default="bonferroni"
         FWER control strategy.
     **fwer_kwargs
-        Additional keyword arguments used only when ``fwer_method="fst_ascending"``.
+        Additional keyword arguments used only when ``fwer_method="fixed_sequence"``.
         Currently supported keyword:
         - ``n_starts`` (int): number of equally spaced starting points used in
           the multi-start Fixed Sequence Testing procedure.
