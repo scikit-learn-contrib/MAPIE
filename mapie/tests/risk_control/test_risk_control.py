@@ -212,8 +212,8 @@ def test_ltt_fst_multirisk_error():
     n_obs = np.ones_like(r_hat)
     alpha_np = np.array([[0.5], [0.5]])
     delta = 0.1
-    with pytest.raises(ValueError, match=r".*fst_ascending cannot be used.*"):
-        ltt_procedure(r_hat, alpha_np, delta, n_obs, fwer_method="fst_ascending")
+    with pytest.raises(ValueError, match=r".*fixed_sequence cannot be used.*"):
+        ltt_procedure(r_hat, alpha_np, delta, n_obs, fwer_method="fixed_sequence")
 
 
 def test_ltt_fst_non_monotone_error():
@@ -222,7 +222,7 @@ def test_ltt_fst_non_monotone_error():
     alpha_np = np.array([[0.5]])
 
     with pytest.raises(ValueError, match=r".*requires a monotonic risk.*"):
-        ltt_procedure(r_hat, alpha_np, 0.1, n_obs, fwer_method="fst_ascending")
+        ltt_procedure(r_hat, alpha_np, 0.1, n_obs, fwer_method="fixed_sequence")
 
 
 def test_ltt_auto_fallback_to_sgt():
@@ -231,7 +231,7 @@ def test_ltt_auto_fallback_to_sgt():
     alpha_np = np.array([[0.5]])
 
     valid_index, _ = ltt_procedure(
-        r_hat, alpha_np, 0.1, n_obs, fwer_method="fst_ascending", _auto_selected=True
+        r_hat, alpha_np, 0.1, n_obs, fwer_method="fixed_sequence", _auto_selected=True
     )
     assert isinstance(valid_index, list)
 
@@ -242,6 +242,6 @@ def test_ltt_fst_decreasing_reorder():
     alpha_np = np.array([[0.6]])
 
     valid_index, _ = ltt_procedure(
-        r_hat, alpha_np, 0.6, n_obs, fwer_method="fst_ascending"
+        r_hat, alpha_np, 0.6, n_obs, fwer_method="fixed_sequence"
     )
     assert np.array_equal(np.array([2]), valid_index[0])

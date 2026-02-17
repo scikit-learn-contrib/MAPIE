@@ -905,4 +905,4 @@ def test_select_fwer_method_all_branches():
         target_level=0.8,
         fwer_method="auto",
     )
-    assert bcc._select_fwer_method() == "fst_ascending"
+    assert bcc._select_fwer_method() == "fixed_sequence"
