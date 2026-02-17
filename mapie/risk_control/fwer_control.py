@@ -397,84 +397,48 @@ class FWERFixedSequenceTesting(FWERProcedure):
     """
 
     def __init__(self, n_starts: int = 1):
+        if n_starts <= 0:
+            raise ValueError("n_starts must be positive.")
         self.n_starts = n_starts
 
-    def run(self, p_values: NDArray, delta: float) -> NDArray[np.int_]:
-        """
-        Apply Fixed Sequential Testing (FST) with multi-start to control
-        the family-wise error rate.
+    def _init_state(self, n_lambdas: int, delta: float):
+        self.n_lambdas = n_lambdas
 
-        This procedure tests hypotheses sequentially starting from multiple
-        equally spaced entry points along the ordered ``p_values``.
-        For each starting point, hypotheses are tested in ascending index
-        order until a p-value exceeds the locally adjusted significance level.
+        if self.n_starts > n_lambdas:
+            warnings.warn(
+                "n_starts > n_lambdas → reduced to n_lambdas",
+                UserWarning,
+            )
 
-        The final rejection set is defined as the union of all hypotheses
-        rejected across the different starting points.
+        self._effective_starts = min(self.n_starts, n_lambdas)
+        self.local_delta = delta / self._effective_starts
 
-        Parameters
-        ----------
-        p_values : NDArray of shape (n_lambdas,)
-            P-values associated with the hypotheses, ordered according to
-            the lambda grid (from most conservative to least conservative).
-        delta : float
-            Target family-wise error rate.
-
-        Returns
-        -------
-        NDArray[int]
-            Sorted indices of hypotheses rejected under FWER control.
-            These correspond to valid grid positions where the null
-            hypothesis is rejected.
-
-        Notes
-        -----
-        This procedure assumes that hypotheses are ordered so that their
-        associated risk is monotonic along the grid. In particular,
-        null hypotheses are assumed to become progressively easier to reject
-        as the index increases, which justifies the sequential testing rule.
-
-        NaN p-values are treated as non-significant and replaced by 1.0.
-        """
-
-        p_values = np.asarray(p_values, dtype=float)
-        p_values = np.nan_to_num(
-            p_values, nan=1.0
-        )  # NaN p-values are treated as non-significant
-        n_lambdas = len(p_values)
-
-        if n_lambdas == 0:
-            raise ValueError("p_values must be non-empty.")
-        if not (0 < delta <= 1):
-            raise ValueError("delta must be in (0, 1].")
-        if self.n_starts <= 0:
-            raise ValueError("n_starts must be a positive integer.")
-
-        n_starts = min(self.n_starts, n_lambdas)
-
-        start_indices = np.linspace(0, n_lambdas - 1, n_starts, dtype=int)
-
-        rejected = set()
-        local_delta = delta / n_starts
-
-        for j in start_indices:
-            if j in rejected:
-                continue
-
-            while j < n_lambdas and p_values[j] <= local_delta:
-                rejected.add(j)
-                j += 1
-
-        return np.array(sorted(rejected), dtype=int)
-
-    def _init_state(self, n_hypotheses: int, delta: float):
-        pass
+        self.start_positions = list(
+            np.linspace(0, n_lambdas - 1, self._effective_starts, dtype=int)
+        )
 
     def _select_next_hypothesis(self, p_values):
-        pass
+        if len(self.start_positions) == 0:
+            return None
+
+        return min(self.start_positions)
 
     def _local_significance_levels(self):
-        pass
+        levels = np.zeros(self.n_lambdas)
+        for start in self.start_positions:
+            levels[start] = self.local_delta
+        return levels
 
     def _update_on_reject(self, hypothesis_index: int):
-        pass
+        new_start_positions = []
+
+        for start in self.start_positions:
+            if start < hypothesis_index:
+                new_start_positions.append(start)
+            elif start == hypothesis_index:
+                start += 1
+
+            if start < self.n_lambdas:
+                new_start_positions.append(start)
+
+        self.start_positions = new_start_positions
