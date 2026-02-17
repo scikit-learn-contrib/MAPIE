@@ -282,7 +282,7 @@ class FWERProcedure(ABC):
         n_lambdas = len(p_values)
 
         self._init_state(n_lambdas, delta)
-        rejected_mask = np.zeros(n_lambdas, bool)
+        rejected_mask: NDArray[np.bool_] = np.zeros(n_lambdas, dtype=bool)
 
         while True:
             hypothesis_index = self._select_next_hypothesis(p_values)
@@ -332,7 +332,7 @@ class FWERBonferroniCorrection(FWERProcedure):
 
     def _init_state(self, n_lambdas: int, delta: float):
         self.local_deltas = np.full(n_lambdas, delta / n_lambdas)
-        self.active_hypotheses = np.ones(n_lambdas, bool)
+        self.active_hypotheses: NDArray[np.bool_] = np.ones(n_lambdas, dtype=bool)
 
     def _select_next_hypothesis(self, p_values: NDArray) -> Union[int, None]:
         active_indices = np.flatnonzero(self.active_hypotheses)
@@ -364,7 +364,7 @@ class FWERBonferroniHolm(FWERProcedure):
     def _init_state(self, n_lambdas: int, delta: float):
         self.delta = delta
         self.n_lambdas = n_lambdas
-        self.active_hypotheses = np.ones(n_lambdas, bool)
+        self.active_hypotheses: NDArray[np.bool_] = np.ones(n_lambdas, dtype=bool)
 
     def _select_next_hypothesis(self, p_values: NDArray) -> Union[int, None]:
         active_indices = np.flatnonzero(self.active_hypotheses)
