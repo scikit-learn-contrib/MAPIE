@@ -336,7 +336,7 @@ class FWERBonferroniCorrection(FWERProcedure):
 
     def _select_next_hypothesis(self, p_values: NDArray) -> Union[int, None]:
         active_indices = np.flatnonzero(self.active_hypotheses)
-        return None if active_indices.size == 0 else active_indices[0]
+        return None if len(active_indices) == 0 else active_indices[0]
 
     def _local_significance_levels(self) -> NDArray:
         return self.local_deltas
@@ -368,7 +368,7 @@ class FWERBonferroniHolm(FWERProcedure):
 
     def _select_next_hypothesis(self, p_values: NDArray) -> Union[int, None]:
         active_indices = np.flatnonzero(self.active_hypotheses)
-        if active_indices.size == 0:
+        if len(active_indices) == 0:
             return None
         return active_indices[np.argmin(p_values[active_indices])]
 
