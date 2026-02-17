@@ -438,7 +438,9 @@ class FWERFixedSequenceTesting(FWERProcedure):
         """
 
         p_values = np.asarray(p_values, dtype=float)
-        p_values = np.nan_to_num(p_values, nan=1.0)
+        p_values = np.nan_to_num(
+            p_values, nan=1.0
+        )  # NaN p-values are treated as non-significant
         n_lambdas = len(p_values)
 
         if n_lambdas == 0:
@@ -468,10 +470,10 @@ class FWERFixedSequenceTesting(FWERProcedure):
     def _init_state(self, n_hypotheses: int, delta: float):
         pass
 
-    def _select(self, p_values):
+    def _select_next_hypothesis(self, p_values):
         pass
 
-    def _local_levels(self):
+    def _local_significance_levels(self):
         pass
 
     def _update_on_reject(self, idx: int):
