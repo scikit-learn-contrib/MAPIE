@@ -20,7 +20,7 @@ a risk in binary classification.
 #
 # - ``"bonferroni"``: a classical Bonferroni correction valid under any risk structure
 #   and parameter space, but generally conservative.
-# - ``"fst_ascending"``: Fixed-Sequence Testing (FST), which exploits monotonicity
+# - ``"fixed_sequence"``: Fixed-Sequence Testing (FST), which exploits monotonicity
 #   of the risk when available to lead to less conservative thresholds.
 # - ``"bonferroni_holm"``: a sequential graphical testing method applying the Bonferroni-Holm
 #   procedure which is valid under any risk structure and parameter space, but generally more powerful
@@ -136,7 +136,7 @@ clf.fit(X_train, y_train)
 # specified via the ``fwer_method`` parameter of the controller:
 #
 # - ``"bonferroni"``: classical Bonerroni correction,
-# - ``"fst_ascending"``: Fixed-Sequence Testing (FST) procedure,,
+# - ``"fixed_sequence"``: Fixed-Sequence Testing (FST) procedure,,
 # - ``"bonferroni_holm"``: sequential graphical testing method applying the Bonferroni-Holm procedure.
 #
 # The FST procedure requires the risk to be monotonic with respect to the
@@ -161,7 +161,7 @@ bcc_fst = BinaryClassificationController(
     target_level=target_recall,
     confidence_level=confidence_level,
     list_predict_params=np.linspace(0.01, 0.99, 100),
-    fwer_method="fst_ascending",
+    fwer_method="fixed_sequence",
 )
 
 bcc_bonferroni_holm = BinaryClassificationController(
