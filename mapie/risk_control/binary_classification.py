@@ -6,6 +6,7 @@ from typing import Any, Callable, List, Literal, Optional, Tuple, Union
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
+from mapie.risk_control.fwer_control import FWERFixedSequenceTesting, FWERProcedure
 from mapie.utils import check_valid_ltt_params_index
 
 from .methods import ltt_procedure
@@ -221,13 +222,10 @@ class BinaryClassificationController:
             Literal["auto"], Risk_str, BinaryClassificationRisk
         ] = "auto",
         list_predict_params: NDArray = np.linspace(0, 0.99, 100),
-        fwer_method: Literal[
-            "bonferroni",
-            "fixed_sequence",
-            "bonferroni_holm",
-            "auto",
+        fwer_method: Union[
+            Literal["bonferroni", "fixed_sequence", "bonferroni_holm"],
+            FWERProcedure,
         ] = "bonferroni",
-        **fwer_kwargs,
     ):
         self.is_multi_risk = self._check_if_multi_risk_control(risk, target_level)
         self._predict_function = predict_function
@@ -255,30 +253,48 @@ class BinaryClassificationController:
         )
 
         self._predict_params = list_predict_params
-        self.fwer_method = fwer_method
-        self._fwer_kwargs = fwer_kwargs
         self.is_multi_dimensional_param = self._check_if_multi_dimensional_param(
             self._predict_params
         )
+        self.fwer_method = self._check_fwer_method(fwer_method)
 
         self.valid_predict_params: NDArray = np.array([])
         self.best_predict_param: Optional[Union[float, Tuple[float, ...]]] = None
         self.p_values: Optional[NDArray] = None
 
-    def _select_fwer_method(
+    def _check_fwer_method(
         self,
-    ) -> Literal["bonferroni", "fixed_sequence", "bonferroni_holm"]:
-        """Select the FWER control method."""
-        if self.fwer_method != "auto":
-            return self.fwer_method
+        fwer_method: Union[
+            Literal["bonferroni", "fixed_sequence", "bonferroni_holm"],
+            FWERProcedure,
+        ],
+    ) -> Union[
+        Literal["bonferroni", "fixed_sequence", "bonferroni_holm"],
+        FWERProcedure,
+    ]:
+        """Check the FWER control method."""
 
-        if self.is_multi_risk:
-            return "bonferroni_holm"
+        if fwer_method not in [
+            "bonferroni",
+            "fixed_sequence",
+            "bonferroni_holm",
+        ] and not isinstance(fwer_method, FWERProcedure):
+            raise TypeError(
+                "fwer_method must be either a string among "
+                "'bonferroni', 'fixed_sequence', 'bonferroni_holm', "
+                "or an instance of FWERProcedure."
+            )
 
-        if self.is_multi_dimensional_param:
-            return "bonferroni_holm"
+        if (self.is_multi_risk or self.is_multi_dimensional_param) and (
+            fwer_method == "fixed_sequence"
+            or isinstance(fwer_method, FWERFixedSequenceTesting)
+        ):
+            raise ValueError(
+                "Fixed sequence testing procedure cannot be used when controlling multiple risks "
+                "or when using multi-dimensional parameters."
+            )
 
-        return "fixed_sequence"
+        return fwer_method
 
     # All subfunctions are unit-tested. To avoid having to write
     # tests just to make sure those subfunctions are called,
@@ -319,9 +335,7 @@ class BinaryClassificationController:
             self._delta,
             eff_sample_sizes,
             True,
-            fwer_method=self._select_fwer_method(),
-            _auto_selected=(self.fwer_method == "auto"),
-            **self._fwer_kwargs,
+            fwer_method=self.fwer_method,
         )
         valid_params_index = valid_index[0]
 
