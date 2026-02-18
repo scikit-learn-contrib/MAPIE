@@ -6,7 +6,11 @@ from typing import Any, Callable, List, Literal, Optional, Tuple, Union
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
-from mapie.risk_control.fwer_control import FWERFixedSequenceTesting, FWERProcedure
+from mapie.risk_control.fwer_control import (
+    FWER_METHODS,
+    FWERFixedSequenceTesting,
+    FWERProcedure,
+)
 from mapie.utils import check_valid_ltt_params_index
 
 from .methods import ltt_procedure
@@ -222,10 +226,7 @@ class BinaryClassificationController:
             Literal["auto"], Risk_str, BinaryClassificationRisk
         ] = "auto",
         list_predict_params: NDArray = np.linspace(0, 0.99, 100),
-        fwer_method: Union[
-            Literal["bonferroni", "fixed_sequence", "bonferroni_holm"],
-            FWERProcedure,
-        ] = "bonferroni",
+        fwer_method: Union[FWER_METHODS, FWERProcedure] = "bonferroni",
     ):
         self.is_multi_risk = self._check_if_multi_risk_control(risk, target_level)
         self._predict_function = predict_function
@@ -264,14 +265,8 @@ class BinaryClassificationController:
 
     def _check_fwer_method(
         self,
-        fwer_method: Union[
-            Literal["bonferroni", "fixed_sequence", "bonferroni_holm"],
-            FWERProcedure,
-        ],
-    ) -> Union[
-        Literal["bonferroni", "fixed_sequence", "bonferroni_holm"],
-        FWERProcedure,
-    ]:
+        fwer_method: Union[FWER_METHODS, FWERProcedure],
+    ) -> Union[FWER_METHODS, FWERProcedure]:
         """Check the FWER control method."""
 
         if fwer_method not in [
