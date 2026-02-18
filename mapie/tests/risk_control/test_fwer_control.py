@@ -156,7 +156,6 @@ def test_control_fwer_fst():
         p_values,
         delta,
         fwer_method="fixed_sequence",
-        n_starts=3,
     )
 
     assert np.array_equal(valid_index, np.array([0, 1, 2, 3]))
