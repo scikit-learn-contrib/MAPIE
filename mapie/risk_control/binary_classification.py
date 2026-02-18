@@ -119,29 +119,16 @@ class BinaryClassificationController:
         the shape is (n_params, params_dim).
         Note that performance is degraded when `len(predict_params)` is large as it is used by the Bonferroni correction [1].
 
-    fwer_method : {"bonferroni", "fixed_sequence", "bonferroni_holm", "auto"}, default="bonferroni"
+    fwer_method : {"bonferroni", "fixed_sequence", "bonferroni_holm"} or FWERProcedure instance, default="bonferroni"
         Method used to control the family-wise error rate (FWER).
 
         Supported methods:
         - ``"bonferroni"`` : Classical Bonferroni correction. This is the default method.
         It is valid in all settings but can be conservative, especially when the number of tested parameters is large.
-        - ``"fixed_sequence"`` : Fixed Sequence Testing (FST).
-        Requires the risks to be monotonic along the parameter grid.
+        - ``"fixed_sequence"`` : Fixed Sequence Testing (FST) with a single start.
+        However, users can use multi-start by instantiating ``FWERFixedSequenceTesting`` with any desired number of starts and passing the instance to control_fwer.
         - ``"bonferroni_holm"`` : Sequential Graphical Testing corresponding
         to the Bonferroni–Holm procedure. Suitable for general settings.
-        - ``"auto"`` : Automatically selects the most appropriate method:
-
-            1. if a single risk is controlled, parameters are one-dimensional,
-                and the empirical risk is monotonic along the grid : ``"fixed_sequence"``.
-            2. otherwise :``"bonferroni_holm"``
-
-    **fwer_kwargs
-        Additional keyword arguments forwarded to `control_fwer`.
-        These parameters are only used when `fwer_method="fixed_sequence"`.
-
-        Supported keyword arguments:
-        - ``n_starts``(int): Number of equally spaced starting points used in
-        the multi-start Fixed Sequence Testing procedure.
 
     Attributes
     ----------
