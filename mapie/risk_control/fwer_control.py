@@ -314,8 +314,9 @@ def control_fwer(
 
     Notes
     -----
-    This function is a thin dispatcher that instantiates the requested
-    FWERProcedure and executes it.
+    fwer_method="fixed_sequence" corresponds to the fixed sequence testing procedure with one start.
+    However, users can use multi-start by instantiating FWERFixedSequenceTesting with
+    any desired number of starts and passing the instance to control_fwer.
     """
     p_values = np.asarray(p_values, dtype=float)
     n_lambdas = len(p_values)
