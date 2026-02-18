@@ -82,19 +82,19 @@ class FWERProcedure(ABC):
 
     @abstractmethod
     def _init_state(self, n_lambdas: int, delta: float):
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def _select_next_hypothesis(self, p_values: NDArray) -> Union[int, None]:
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def _local_significance_levels(self) -> NDArray:
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def _update_on_reject(self, hypothesis_index: int):
-        pass
+        raise NotImplementedError
 
 
 class FWERBonferroniCorrection(FWERProcedure):
@@ -132,16 +132,16 @@ class FWERBonferroniCorrection(FWERProcedure):
         return np.flatnonzero(rejected_mask)
 
     def _init_state(self, n_lambdas: int, delta: float):
-        pass
+        raise NotImplementedError
 
     def _select_next_hypothesis(self, p_values: NDArray) -> Union[int, None]:
-        pass
+        raise NotImplementedError
 
     def _local_significance_levels(self) -> NDArray:
-        pass
+        raise NotImplementedError
 
     def _update_on_reject(self, hypothesis_index: int):
-        pass
+        raise NotImplementedError
 
 
 class FWERBonferroniHolm(FWERProcedure):
