@@ -331,6 +331,6 @@ def control_fwer(
     if not (0 < delta <= 1):
         raise ValueError("delta must be in (0, 1].")
 
-    procedure = _build_fwer(fwer_method, **fwer_kwargs)
+    procedure = _build_fwer(method=fwer_method)
 
     return procedure.run(p_values, delta)
