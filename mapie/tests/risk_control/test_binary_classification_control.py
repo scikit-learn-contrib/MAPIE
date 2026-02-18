@@ -22,6 +22,7 @@ from mapie.risk_control import (
     recall,
 )
 from mapie.risk_control.binary_classification import Risk
+from mapie.risk_control.fwer_control import FWERFixedSequenceTesting
 
 random_state = 42
 dummy_single_param = np.array([0.5])
@@ -867,3 +868,39 @@ def test_functional_multi_dimensional_params_multi_risk():
     assert bcc_multi_dim.best_predict_param is not None
     assert isinstance(bcc_multi_dim.best_predict_param, tuple)
     assert len(bcc_multi_dim.best_predict_param) == 2
+
+
+def test_check_fwer_method_invalid_method():
+    with pytest.raises(ValueError, match=r".*Unknown fwer_method.*"):
+        BinaryClassificationController(
+            predict_function=dummy_predict,
+            risk=precision,
+            target_level=dummy_target,
+            fwer_method="invalid_method",
+        )
+
+    with pytest.raises(
+        TypeError, match=r".*fwer_method must be a string or FWERProcedure instance.*"
+    ):
+        BinaryClassificationController(
+            predict_function=dummy_predict,
+            risk=precision,
+            target_level=dummy_target,
+            fwer_method=10,
+        )
+
+    with pytest.raises(ValueError, match=r".*Fixed sequence testing cannot be used.*"):
+        BinaryClassificationController(
+            predict_function=dummy_predict,
+            risk=[precision, recall],
+            target_level=[dummy_target, dummy_target],
+            fwer_method="fixed_sequence",
+        )
+
+    with pytest.raises(ValueError, match=r".*Fixed sequence testing cannot be used.*"):
+        BinaryClassificationController(
+            predict_function=dummy_predict,
+            risk=[precision, recall],
+            target_level=[dummy_target, dummy_target],
+            fwer_method=FWERFixedSequenceTesting(),
+        )
