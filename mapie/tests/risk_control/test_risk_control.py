@@ -10,6 +10,7 @@ import pytest
 from numpy.typing import NDArray
 from scipy.stats import binom
 
+from mapie.risk_control.fwer_control import FWERFixedSequenceTesting
 from mapie.risk_control.methods import (
     _check_risk_monotonicity,
     compute_hoeffding_bentkus_p_value,
@@ -226,11 +227,14 @@ def test_ltt_fst_non_monotone_error():
 
 
 def test_ltt_fst_decreasing_reorder():
-    r_hat = np.array([[0.5, 0.3, 0.1]])
+    r_hat = np.array([[3.0, 2.0, 1.0]])
     n_obs = np.ones_like(r_hat)
     alpha_np = np.array([[0.6]])
 
-    valid_index, _ = ltt_procedure(
-        r_hat, alpha_np, 0.6, n_obs, fwer_method="fixed_sequence"
+    valid_index_1, _ = ltt_procedure(
+        r_hat, alpha_np, 0.1, n_obs, fwer_method="fixed_sequence"
     )
-    assert np.array_equal(np.array([2]), valid_index[0])
+    valid_index_2, _ = ltt_procedure(
+        r_hat, alpha_np, 0.1, n_obs, fwer_method=FWERFixedSequenceTesting()
+    )
+    assert np.array_equal(valid_index_1, valid_index_2)
