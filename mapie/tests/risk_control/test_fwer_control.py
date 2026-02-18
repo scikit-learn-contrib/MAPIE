@@ -27,9 +27,9 @@ def test_fwerprocedure_run_stops_when_none():
         def _update_on_reject(self, idx):
             pass
 
-    proc = Dummy()
-    out = proc.run(np.array([0.0]), delta=0.1)
-    assert np.array_equal(out, np.array([0]))
+    fwer_procedure = Dummy()
+    rejected = fwer_procedure.run(np.array([0.0]), delta=0.1)
+    assert np.array_equal(rejected, np.array([0]))
 
 
 def test_fwerprocedure_run_stops_on_failure():
@@ -51,15 +51,15 @@ def test_fwerprocedure_run_stops_on_failure():
         def _update_on_reject(self, idx):
             pass
 
-    proc = Dummy()
-    out = proc.run(np.array([0.1, 0.1]), delta=0.05)
-    assert len(out) == 0
+    fwer_procedure = Dummy()
+    rejected = fwer_procedure.run(np.array([0.1, 0.1]), delta=0.05)
+    assert len(rejected) == 0
 
 
 def test_bonferroni_stops_after_first_failure():
-    proc = FWERBonferroniCorrection()
-    out = proc.run(np.array([0.9, 0.0001]), delta=0.05)
-    assert len(out) == 0
+    fwer_procedure = FWERBonferroniCorrection()
+    rejected = fwer_procedure.run(np.array([0.9, 0.0001]), delta=0.05)
+    assert np.array_equal(rejected, np.array([1]))
 
 
 def test_fixed_sequence_multistart_multiple_starts():
@@ -73,14 +73,14 @@ def test_fixed_sequence_multistart_multiple_starts():
 
 def test_fixed_sequence_starts_clipped():
     fwer_procedure = FWERFixedSequenceTesting(n_starts=10)
-    out = fwer_procedure.run(np.array([0.0, 0.0]), delta=0.1)
-    assert len(out) >= 0
+    rejected = fwer_procedure.run(np.array([0.0, 0.0]), delta=0.1)
+    assert len(rejected) >= 0
 
 
 def test_fixed_sequence_no_start_remaining():
     fwer_procedure = FWERFixedSequenceTesting(n_starts=1)
-    out = fwer_procedure.run(np.array([0.0]), delta=1.0)
-    assert np.array_equal(out, np.array([0]))
+    rejected = fwer_procedure.run(np.array([0.0]), delta=1.0)
+    assert np.array_equal(rejected, np.array([0]))
 
 
 def test_all_subclasses_instantiable():
@@ -131,9 +131,9 @@ def test_sgt_bonferroni_holm_all_rejected():
 
 
 def test_sgt_bonferroni_holm_single_value():
-    proc = FWERBonferroniHolm()
-    out = proc.run(np.array([0.0]), delta=1.0)
-    assert np.array_equal(out, np.array([0]))
+    fwer_procedure = FWERBonferroniHolm()
+    rejected = fwer_procedure.run(np.array([0.0]), delta=1.0)
+    assert np.array_equal(rejected, np.array([0]))
 
 
 def test_control_fwer_bonferroni():
