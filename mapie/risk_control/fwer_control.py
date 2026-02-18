@@ -234,7 +234,6 @@ def _build_fwer(
         ],
         FWERProcedure,
     ],
-    **kwargs,
 ) -> FWERProcedure:
     """
     Build an instance of FWERProcedure based on the specified method.
@@ -244,9 +243,12 @@ def _build_fwer(
     method : {"bonferroni", "fixed_sequence", "bonferroni_holm"}, or FWERProcedure instance
         FWER control strategy. If a string is provided, it must be one of the supported methods.
         If an instance of FWERProcedure is provided, it will be used directly.
-    **kwargs
-        Additional keyword arguments used when method is a string.
-        Currently only used for "FWERFixedSequenceTesting" to specify n_starts.
+
+    Notes
+    -----
+    When method is "fixed_sequence", the number of starts is set to 1 by default.
+    However, users can use multi-start by instantiating FWERFixedSequenceTesting with
+    any desired number of starts and passing the instance to control_fwer.
     """
     if isinstance(method, FWERProcedure):
         return method
@@ -255,7 +257,7 @@ def _build_fwer(
         return FWERBonferroniCorrection()
 
     if method == "fixed_sequence":
-        return FWERFixedSequenceTesting(**kwargs)
+        return FWERFixedSequenceTesting(n_starts=1)
 
     if method == "bonferroni_holm":
         return FWERBonferroniHolm()
