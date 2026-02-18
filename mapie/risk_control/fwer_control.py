@@ -138,7 +138,7 @@ class FWERBonferroniCorrection(FWERProcedure):
         raise NotImplementedError
 
     def _local_significance_levels(self) -> NDArray:
-        raise NotImplementedError
+        return np.asarray([])
 
     def _update_on_reject(self, hypothesis_index: int):
         raise NotImplementedError

@@ -106,10 +106,9 @@ def test_bonferroni_not_implemented_internal_methods():
         fwer_procedure._select_next_hypothesis(np.array([0.1, 0.2]))
 
     with pytest.raises(NotImplementedError):
-        fwer_procedure._local_significance_levels()
-
-    with pytest.raises(NotImplementedError):
         fwer_procedure._update_on_reject(0)
+
+    assert np.array_equal(fwer_procedure._local_significance_levels(), np.asarray([]))
 
 
 def test_fixed_sequence_multistart_multiple_starts():
