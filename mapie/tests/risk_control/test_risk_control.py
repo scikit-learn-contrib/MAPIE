@@ -224,6 +224,7 @@ def test_ltt_fst_non_monotone_error():
     with pytest.raises(ValueError, match=r".*requires a monotonic risk.*"):
         ltt_procedure(r_hat, alpha_np, 0.1, n_obs, fwer_method="fixed_sequence")
 
+
 def test_ltt_fst_decreasing_reorder():
     r_hat = np.array([[0.5, 0.3, 0.1]])
     n_obs = np.ones_like(r_hat)
