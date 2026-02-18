@@ -62,7 +62,7 @@ def test_bonferroni_stops_after_first_failure():
     assert len(out) == 0
 
 
-def test_fst_multistart_multiple_starts():
+def test_fixed_sequence_multistart_multiple_starts():
     p_values = np.array([0.001, 0.003, 0.01, 0.02, 0.2, 0.6])
     delta = 0.1
     n_starts = 3
@@ -71,13 +71,13 @@ def test_fst_multistart_multiple_starts():
     assert rejected.tolist() == [0, 1, 2, 3]
 
 
-def test_fst_starts_clipped():
+def test_fixed_sequence_starts_clipped():
     fwer_procedure = FWERFixedSequenceTesting(n_starts=10)
     out = fwer_procedure.run(np.array([0.0, 0.0]), delta=0.1)
     assert len(out) >= 0
 
 
-def test_fst_no_start_remaining():
+def test_fixed_sequence_no_start_remaining():
     fwer_procedure = FWERFixedSequenceTesting(n_starts=1)
     out = fwer_procedure.run(np.array([0.0]), delta=1.0)
     assert np.array_equal(out, np.array([0]))
@@ -89,7 +89,7 @@ def test_all_subclasses_instantiable():
         assert isinstance(obj, FWERProcedure)
 
 
-def test_fst_ascending_invalid_inputs():
+def test_fixed_sequence_ascending_invalid_inputs():
     with pytest.raises(ValueError, match=r".*n_starts must be a positive integer.*"):
         FWERFixedSequenceTesting(n_starts=0).run(np.array([0.1, 0.2]), delta=0.1)
 
@@ -148,7 +148,7 @@ def test_control_fwer_bonferroni():
     assert np.array_equal(valid_index, np.array([0]))
 
 
-def test_control_fwer_fst():
+def test_control_fwer_fixed_sequence():
     p_values = np.array([0.001, 0.003, 0.01, 0.02, 0.2])
     delta = 0.1
 
@@ -161,7 +161,7 @@ def test_control_fwer_fst():
     assert np.array_equal(valid_index, np.array([0, 1, 2, 3]))
 
 
-def test_control_fwer_sgt():
+def test_control_fwer_bonferroni_holm():
     p_values = np.array([0.001, 0.01, 0.2])
     delta = 0.05
 
