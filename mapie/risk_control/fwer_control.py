@@ -5,6 +5,8 @@ from typing import Literal, Union
 import numpy as np
 from numpy.typing import NDArray
 
+FWER_METHODS = Literal["bonferroni", "fixed_sequence", "bonferroni_holm"]
+
 
 class FWERProcedure(ABC):
     """
@@ -233,10 +235,7 @@ class FWERFixedSequenceTesting(FWERProcedure):
 
 
 def _build_fwer(
-    method: Union[
-        Literal["bonferroni", "fixed_sequence", "bonferroni_holm"],
-        FWERProcedure,
-    ],
+    method: Union[FWER_METHODS, FWERProcedure],
 ) -> FWERProcedure:
     """
     Build an instance of FWERProcedure based on the specified method.
@@ -275,10 +274,7 @@ def _build_fwer(
 def control_fwer(
     p_values: NDArray,
     delta: float,
-    fwer_method: Union[
-        Literal["bonferroni", "fixed_sequence", "bonferroni_holm"],
-        FWERProcedure,
-    ] = "bonferroni",
+    fwer_method: Union[FWER_METHODS, FWERProcedure] = "bonferroni",
 ) -> NDArray:
     """
     Apply a Family-Wise Error Rate (FWER) control procedure.
