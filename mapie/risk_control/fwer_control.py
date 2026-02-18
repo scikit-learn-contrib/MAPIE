@@ -227,11 +227,7 @@ class FWERFixedSequenceTesting(FWERProcedure):
 
 def _build_fwer(
     method: Union[
-        Literal[
-            "bonferroni",
-            "fixed_sequence",
-            "bonferroni_holm",
-        ],
+        Literal["bonferroni", "fixed_sequence", "bonferroni_holm"],
         FWERProcedure,
     ],
 ) -> FWERProcedure:
@@ -273,11 +269,7 @@ def control_fwer(
     p_values: NDArray,
     delta: float,
     fwer_method: Union[
-        Literal[
-            "bonferroni",
-            "fixed_sequence",
-            "bonferroni_holm",
-        ],
+        Literal["bonferroni", "fixed_sequence", "bonferroni_holm"],
         FWERProcedure,
     ] = "bonferroni",
 ) -> NDArray:
