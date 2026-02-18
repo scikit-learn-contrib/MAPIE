@@ -279,7 +279,7 @@ def control_fwer(
             "bonferroni_holm",
         ],
         FWERProcedure,
-    ] = "bonferroni_holm",
+    ] = "bonferroni",
 ) -> NDArray:
     """
     Apply a Family-Wise Error Rate (FWER) control procedure.
@@ -304,7 +304,7 @@ def control_fwer(
         P-values associated with each tested hypothesis.
     delta : float
         Target family-wise error rate. Must be in (0, 1].
-    fwer_method : {"bonferroni", "fixed_sequence", "bonferroni_holm"} or FWERProcedure instance, default="bonferroni_holm"
+    fwer_method : {"bonferroni", "fixed_sequence", "bonferroni_holm"} or FWERProcedure instance, default="bonferroni"
         FWER control strategy.
     **fwer_kwargs
         Additional keyword arguments used only when ``fwer_method="fixed_sequence"``.
