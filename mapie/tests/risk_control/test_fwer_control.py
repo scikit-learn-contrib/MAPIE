@@ -32,11 +32,12 @@ def test_fwerprocedure_run_stops_when_none():
     assert np.array_equal(rejected, np.array([0]))
 
 
-def test_fwerprocedure_run_stops_on_failure():
+def test_fwerprocedure_run_calls_update_and_none():
     class Dummy(FWERProcedure):
         def _init_state(self, n_lambdas, delta):
             self.i = 0
             self.n = n_lambdas
+            self.updated = False
 
         def _select_next_hypothesis(self, p):
             if self.i >= self.n:
@@ -46,20 +47,69 @@ def test_fwerprocedure_run_stops_on_failure():
             return val
 
         def _local_significance_levels(self):
-            return np.zeros(self.n)
+            return np.ones(self.n)
 
         def _update_on_reject(self, idx):
-            pass
+            self.updated = True
 
     fwer_procedure = Dummy()
-    rejected = fwer_procedure.run(np.array([0.1, 0.1]), delta=0.05)
-    assert len(rejected) == 0
+    rejected = fwer_procedure.run(np.array([0.0]), delta=0.05)
+
+    assert rejected.tolist() == [0]
+    assert fwer_procedure.updated is True
+
+
+def test_abstract_methods_raise():
+    class Dummy(FWERProcedure):
+        def _init_state(self, n_lambdas, delta):
+            super()._init_state(n_lambdas, delta)
+
+        def _select_next_hypothesis(self, p):
+            return super()._select_next_hypothesis(p)
+
+        def _local_significance_levels(self):
+            return super()._local_significance_levels()
+
+        def _update_on_reject(self, idx):
+            super()._update_on_reject(idx)
+
+    d = Dummy()
+
+    import pytest
+
+    with pytest.raises(NotImplementedError):
+        d._init_state(1, 0.1)
+
+    with pytest.raises(NotImplementedError):
+        d._select_next_hypothesis(np.array([0.1]))
+
+    with pytest.raises(NotImplementedError):
+        d._local_significance_levels()
+
+    with pytest.raises(NotImplementedError):
+        d._update_on_reject(0)
 
 
 def test_bonferroni_stops_after_first_failure():
     fwer_procedure = FWERBonferroniCorrection()
     rejected = fwer_procedure.run(np.array([0.9, 0.0001]), delta=0.05)
     assert np.array_equal(rejected, np.array([1]))
+
+
+def test_bonferroni_not_implemented_internal_methods():
+    fwer_procedure = FWERBonferroniCorrection()
+
+    with pytest.raises(NotImplementedError):
+        fwer_procedure._init_state(3, 0.1)
+
+    with pytest.raises(NotImplementedError):
+        fwer_procedure._select_next_hypothesis(np.array([0.1, 0.2]))
+
+    with pytest.raises(NotImplementedError):
+        fwer_procedure._local_significance_levels()
+
+    with pytest.raises(NotImplementedError):
+        fwer_procedure._update_on_reject(0)
 
 
 def test_fixed_sequence_multistart_multiple_starts():
@@ -97,6 +147,17 @@ def test_fixed_sequence_ascending_invalid_inputs():
         UserWarning, match=r".*n_starts is greater than the number of tests.*"
     ):
         FWERFixedSequenceTesting(n_starts=5).run(np.array([0.1, 0.2]), delta=0.1)
+
+
+def test_fixed_sequence_branch_start_less_than_index():
+    fwer_procedure = FWERFixedSequenceTesting(n_starts=2)
+    fwer_procedure._init_state(n_lambdas=5, delta=0.1)
+
+    # force start_positions
+    fwer_procedure.start_positions = [0, 3]
+
+    fwer_procedure._update_on_reject(3)
+    assert 0 in fwer_procedure.start_positions
 
 
 def test_sgt_bonferroni_holm_no_rejection():
