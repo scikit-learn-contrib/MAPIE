@@ -5,6 +5,7 @@ from typing import Literal, Union
 import numpy as np
 from numpy.typing import NDArray
 
+FWER_IMPLEMENTED = ["bonferroni", "fixed_sequence", "bonferroni_holm"]
 FWER_METHODS = Literal["bonferroni", "fixed_sequence", "bonferroni_holm"]
 
 
