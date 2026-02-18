@@ -107,19 +107,38 @@ class FWERBonferroniCorrection(FWERProcedure):
     to p-values and does not redistribute error budget after rejections.
     """
 
+    def run(self, p_values: NDArray, delta: float) -> NDArray[np.int_]:
+        """
+        Execute the multiple testing procedure.
+
+        Parameters
+        ----------
+        p_values : NDArray of shape (n_lambdas,)
+            P-values associated with hypotheses.
+        delta : float
+            Target family-wise error rate.
+
+        Returns
+        -------
+        NDArray[int]
+            Sorted indices of rejected hypotheses.
+        """
+        p_values = np.asarray(p_values, float)
+        n_lambdas = len(p_values)
+        rejected_mask = p_values <= delta / n_lambdas
+        return np.flatnonzero(rejected_mask)
+
     def _init_state(self, n_lambdas: int, delta: float):
-        self.local_deltas = np.full(n_lambdas, delta / n_lambdas)
-        self.active_hypotheses: NDArray[np.bool_] = np.ones(n_lambdas, dtype=bool)
+        pass
 
     def _select_next_hypothesis(self, p_values: NDArray) -> Union[int, None]:
-        active_indices = np.flatnonzero(self.active_hypotheses)
-        return None if len(active_indices) == 0 else active_indices[0]
+        pass
 
     def _local_significance_levels(self) -> NDArray:
-        return self.local_deltas
+        pass
 
     def _update_on_reject(self, hypothesis_index: int):
-        self.active_hypotheses[hypothesis_index] = False
+        pass
 
 
 class FWERBonferroniHolm(FWERProcedure):
