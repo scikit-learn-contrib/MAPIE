@@ -94,7 +94,7 @@ class FWERProcedure(ABC):
         pass
 
 
-class FWERBonferroniCorrection(FWERProcedure):
+class FWERBonferroniCorrection:
     """
     Bonferroni procedure for controlling the FWER.
 
@@ -127,18 +127,6 @@ class FWERBonferroniCorrection(FWERProcedure):
         n_lambdas = len(p_values)
         rejected_mask = p_values <= delta / n_lambdas
         return np.flatnonzero(rejected_mask)
-
-    def _init_state(self, n_lambdas: int, delta: float):
-        pass
-
-    def _select_next_hypothesis(self, p_values: NDArray) -> Union[int, None]:
-        pass
-
-    def _local_significance_levels(self) -> NDArray:
-        pass
-
-    def _update_on_reject(self, hypothesis_index: int):
-        pass
 
 
 class FWERBonferroniHolm(FWERProcedure):
