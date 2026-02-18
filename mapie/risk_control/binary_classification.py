@@ -7,6 +7,7 @@ import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
 from mapie.risk_control.fwer_control import (
+    FWER_IMPLEMENTED,
     FWER_METHODS,
     FWERFixedSequenceTesting,
     FWERProcedure,
@@ -250,30 +251,23 @@ class BinaryClassificationController:
         self.best_predict_param: Optional[Union[float, Tuple[float, ...]]] = None
         self.p_values: Optional[NDArray] = None
 
-    def _check_fwer_method(
-        self,
-        fwer_method: Union[FWER_METHODS, FWERProcedure],
-    ) -> Union[FWER_METHODS, FWERProcedure]:
-        """Check the FWER control method."""
+    def _check_fwer_method(self, fwer_method):
+        if isinstance(fwer_method, str):
+            if fwer_method not in FWER_IMPLEMENTED:
+                raise ValueError(
+                    f"Unknown fwer_method '{fwer_method}'. Allowed: {sorted(FWER_IMPLEMENTED)}"
+                )
 
-        if fwer_method not in [
-            "bonferroni",
-            "fixed_sequence",
-            "bonferroni_holm",
-        ] and not isinstance(fwer_method, FWERProcedure):
-            raise TypeError(
-                "fwer_method must be either a string among "
-                "'bonferroni', 'fixed_sequence', 'bonferroni_holm', "
-                "or an instance of FWERProcedure."
-            )
+        elif not isinstance(fwer_method, FWERProcedure):
+            raise TypeError("fwer_method must be a string or FWERProcedure instance.")
 
         if (self.is_multi_risk or self.is_multi_dimensional_param) and (
             fwer_method == "fixed_sequence"
             or isinstance(fwer_method, FWERFixedSequenceTesting)
         ):
             raise ValueError(
-                "Fixed sequence testing procedure cannot be used when controlling multiple risks "
-                "or when using multi-dimensional parameters."
+                "Fixed sequence testing cannot be used with multiple risks "
+                "or multidimensional parameters."
             )
 
         return fwer_method
