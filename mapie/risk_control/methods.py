@@ -1,11 +1,12 @@
 import warnings
-from typing import Any, List, Literal, Optional, Tuple, Union, cast
+from typing import Any, List, Optional, Tuple, Union, cast
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 from scipy.stats import binom
 
 from mapie.risk_control.fwer_control import (
+    FWER_METHODS,
     FWERFixedSequenceTesting,
     FWERProcedure,
     control_fwer,
@@ -232,10 +233,7 @@ def ltt_procedure(
     delta: float,
     n_obs: NDArray,
     binary: bool = False,
-    fwer_method: Union[
-        Literal["bonferroni", "fixed_sequence", "bonferroni_holm"],
-        FWERProcedure,
-    ] = "bonferroni",
+    fwer_method: Union[FWER_METHODS, FWERProcedure] = "bonferroni",
 ) -> Tuple[List[List[Any]], NDArray]:
     """
     Apply the Learn-Then-Test procedure for risk control.
@@ -317,7 +315,7 @@ def ltt_procedure(
 
     # Fixed Sequence Testing (FST) only supports a single monotonic risk.
     # - If non-monotonic: raise error.
-    # - If decreasing: reverse order so FST tests easiest→hardest;
+    # - If decreasing: reverse order so FST tests easiest -> hardest;
     #   store permutation to remap indices afterward.
     order = None
     p_values_original = p_values
