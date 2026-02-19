@@ -90,6 +90,29 @@ def test_abstract_methods_raise():
         d._update_on_reject(0)
 
 
+def test_fwerprocedure_run_break_on_non_reject():
+    class Dummy(FWERProcedure):
+        def _init_state(self, n_lambdas, delta):
+            self.calls = 0
+            self.reject_next = False
+
+        def _select_next_hypothesis(self, p):
+            self.calls += 1
+            if self.calls == 1:
+                return 0
+            return None
+
+        def _local_significance_levels(self):
+            return np.array([1.0])
+
+        def _update_on_reject(self, idx):
+            pass
+
+    fwer_procedure = Dummy()
+    rejected = fwer_procedure.run(np.array([0.0]), delta=0.1)
+    assert rejected.tolist() == [0]
+
+
 def test_bonferroni_stops_after_first_failure():
     fwer_procedure = FWERBonferroniCorrection()
     rejected = fwer_procedure.run(np.array([0.9, 0.0001]), delta=0.05)
