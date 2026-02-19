@@ -88,28 +88,25 @@ def test_abstract_methods_raise():
         d._update_on_reject(0)
 
 
-def test_fwerprocedure_run_full_coverage():
+def test_covert_fwerprocedure_run_break():
     class Dummy(FWERProcedure):
         def _init_state(self, n_lambdas, delta):
             self.calls = 0
-            self.n_lambdas = 2
 
         def _select_next_hypothesis(self, p):
             self.calls += 1
-            if self.calls <= 2:
-                return self.calls - 1
-            return None
+            return self.calls - 1 if self.calls <= 2 else None
 
         def _local_significance_levels(self):
-            return np.array([0.5, 0.5])
+            return np.array([0.5, 0.1])
 
         def _update_on_reject(self, idx):
             pass
 
     fwer_procedure = Dummy()
-    p_values = np.array([0.1, 0.1])
-    rejected = fwer_procedure.run(p_values, delta=0.1)
-    assert rejected.tolist() == [0, 1]
+    rejected = fwer_procedure.run(np.array([0.1, 0.2]), delta=0.1)
+
+    assert rejected.tolist() == [0]
 
 
 def test_bonferroni_stops_after_first_failure():
