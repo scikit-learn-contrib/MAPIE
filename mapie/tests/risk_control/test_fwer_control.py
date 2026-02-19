@@ -90,26 +90,28 @@ def test_abstract_methods_raise():
         d._update_on_reject(0)
 
 
-def test_fwerprocedure_run_break_on_non_reject():
+def test_fwerprocedure_run_full_coverage():
     class Dummy(FWERProcedure):
         def _init_state(self, n_lambdas, delta):
             self.calls = 0
-            self.reject_next = False
 
         def _select_next_hypothesis(self, p):
             self.calls += 1
             if self.calls == 1:
                 return 0
+            if self.calls == 2:
+                return 1
             return None
 
         def _local_significance_levels(self):
-            return np.array([1.0])
+            return np.array([0.5, 0.1])
 
         def _update_on_reject(self, idx):
             pass
 
     fwer_procedure = Dummy()
-    rejected = fwer_procedure.run(np.array([0.0]), delta=0.1)
+    p_values = np.array([0.4, 0.2])
+    rejected = fwer_procedure.run(p_values, delta=0.1)
     assert rejected.tolist() == [0]
 
 
