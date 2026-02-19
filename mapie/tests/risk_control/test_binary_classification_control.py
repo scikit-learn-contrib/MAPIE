@@ -22,6 +22,7 @@ from mapie.risk_control import (
     recall,
 )
 from mapie.risk_control.binary_classification import Risk
+from mapie.risk_control.fwer_control import FWERFixedSequenceTesting
 
 random_state = 42
 dummy_single_param = np.array([0.5])
@@ -869,40 +870,37 @@ def test_functional_multi_dimensional_params_multi_risk():
     assert len(bcc_multi_dim.best_predict_param) == 2
 
 
-def test_select_fwer_method_all_branches():
-    # explicit method
-    bcc = BinaryClassificationController(
-        predict_function=dummy_predict,
-        risk="precision",
-        target_level=0.8,
-        fwer_method="bonferroni",
-    )
-    assert bcc._select_fwer_method() == "bonferroni"
+def test_check_fwer_method_invalid_method():
+    with pytest.raises(ValueError, match=r".*Unknown fwer_method.*"):
+        BinaryClassificationController(
+            predict_function=dummy_predict,
+            risk=precision,
+            target_level=dummy_target,
+            fwer_method="invalid_method",
+        )
 
-    # auto + multi risk
-    bcc = BinaryClassificationController(
-        predict_function=dummy_predict,
-        risk=["precision", "recall"],
-        target_level=[0.8, 0.8],
-        fwer_method="auto",
-    )
-    assert bcc._select_fwer_method() == "bonferroni_holm"
+    with pytest.raises(
+        TypeError, match=r".*fwer_method must be a string or FWERProcedure instance.*"
+    ):
+        BinaryClassificationController(
+            predict_function=dummy_predict,
+            risk=precision,
+            target_level=dummy_target,
+            fwer_method=10,
+        )
 
-    # auto + multi dim param
-    bcc = BinaryClassificationController(
-        predict_function=dummy_predict_general_2d,
-        risk="precision",
-        target_level=0.8,
-        list_predict_params=np.array([[0.2, 0.3]]),
-        fwer_method="auto",
-    )
-    assert bcc._select_fwer_method() == "bonferroni_holm"
+    with pytest.raises(ValueError, match=r".*Fixed sequence testing cannot be used.*"):
+        BinaryClassificationController(
+            predict_function=dummy_predict,
+            risk=[precision, recall],
+            target_level=[dummy_target, dummy_target],
+            fwer_method="fixed_sequence",
+        )
 
-    # auto + mono everything
-    bcc = BinaryClassificationController(
-        predict_function=dummy_predict,
-        risk="recall",
-        target_level=0.8,
-        fwer_method="auto",
-    )
-    assert bcc._select_fwer_method() == "fst_ascending"
+    with pytest.raises(ValueError, match=r".*Fixed sequence testing cannot be used.*"):
+        BinaryClassificationController(
+            predict_function=dummy_predict,
+            risk=[precision, recall],
+            target_level=[dummy_target, dummy_target],
+            fwer_method=FWERFixedSequenceTesting(),
+        )

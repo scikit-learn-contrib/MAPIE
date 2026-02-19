@@ -6,6 +6,12 @@ from typing import Any, Callable, List, Literal, Optional, Tuple, Union
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
+from mapie.risk_control.fwer_control import (
+    FWER_IMPLEMENTED,
+    FWER_METHODS,
+    FWERFixedSequenceTesting,
+    FWERProcedure,
+)
 from mapie.utils import check_valid_ltt_params_index
 
 from .methods import ltt_procedure
@@ -114,29 +120,16 @@ class BinaryClassificationController:
         the shape is (n_params, params_dim).
         Note that performance is degraded when `len(predict_params)` is large as it is used by the Bonferroni correction [1].
 
-    fwer_method : {"bonferroni", "fst_ascending", "bonferroni_holm", "auto"}, default="bonferroni"
+    fwer_method : {"bonferroni", "fixed_sequence", "bonferroni_holm"} or FWERProcedure instance, default="bonferroni"
         Method used to control the family-wise error rate (FWER).
 
         Supported methods:
         - ``"bonferroni"`` : Classical Bonferroni correction. This is the default method.
         It is valid in all settings but can be conservative, especially when the number of tested parameters is large.
-        - ``"fst_ascending"`` : Fixed Sequence Testing (ascending, multi-start).
-        Requires the risks to be monotonic along the parameter grid.
+        - ``"fixed_sequence"`` : Fixed Sequence Testing (FST) with a single start.
+        However, users can use multi-start by instantiating ``FWERFixedSequenceTesting`` with any desired number of starts and passing the instance to control_fwer.
         - ``"bonferroni_holm"`` : Sequential Graphical Testing corresponding
         to the Bonferroni–Holm procedure. Suitable for general settings.
-        - ``"auto"`` : Automatically selects the most appropriate method:
-
-            1. if a single risk is controlled, parameters are one-dimensional,
-                and the empirical risk is monotonic along the grid : ``"fst_ascending"``.
-            2. otherwise :``"bonferroni_holm"``
-
-    **fwer_kwargs
-        Additional keyword arguments forwarded to `control_fwer`.
-        These parameters are only used when `fwer_method="fst_ascending"`.
-
-        Supported keyword arguments:
-        - ``n_starts``(int): Number of equally spaced starting points used in
-        the multi-start Fixed Sequence Testing procedure.
 
     Attributes
     ----------
@@ -221,13 +214,7 @@ class BinaryClassificationController:
             Literal["auto"], Risk_str, BinaryClassificationRisk
         ] = "auto",
         list_predict_params: NDArray = np.linspace(0, 0.99, 100),
-        fwer_method: Literal[
-            "bonferroni",
-            "fst_ascending",
-            "bonferroni_holm",
-            "auto",
-        ] = "bonferroni",
-        **fwer_kwargs,
+        fwer_method: Union[FWER_METHODS, FWERProcedure] = "bonferroni",
     ):
         self.is_multi_risk = self._check_if_multi_risk_control(risk, target_level)
         self._predict_function = predict_function
@@ -255,30 +242,35 @@ class BinaryClassificationController:
         )
 
         self._predict_params = list_predict_params
-        self.fwer_method = fwer_method
-        self._fwer_kwargs = fwer_kwargs
         self.is_multi_dimensional_param = self._check_if_multi_dimensional_param(
             self._predict_params
         )
+        self.fwer_method = self._check_fwer_method(fwer_method)
 
         self.valid_predict_params: NDArray = np.array([])
         self.best_predict_param: Optional[Union[float, Tuple[float, ...]]] = None
         self.p_values: Optional[NDArray] = None
 
-    def _select_fwer_method(
-        self,
-    ) -> Literal["bonferroni", "fst_ascending", "bonferroni_holm"]:
-        """Select the FWER control method."""
-        if self.fwer_method != "auto":
-            return self.fwer_method
+    def _check_fwer_method(self, fwer_method):
+        if isinstance(fwer_method, str):
+            if fwer_method not in FWER_IMPLEMENTED:
+                raise ValueError(
+                    f"Unknown fwer_method '{fwer_method}'. Allowed: {sorted(FWER_IMPLEMENTED)}"
+                )
 
-        if self.is_multi_risk:
-            return "bonferroni_holm"
+        elif not isinstance(fwer_method, FWERProcedure):
+            raise TypeError("fwer_method must be a string or FWERProcedure instance.")
 
-        if self.is_multi_dimensional_param:
-            return "bonferroni_holm"
+        if (self.is_multi_risk or self.is_multi_dimensional_param) and (
+            fwer_method == "fixed_sequence"
+            or isinstance(fwer_method, FWERFixedSequenceTesting)
+        ):
+            raise ValueError(
+                "Fixed sequence testing cannot be used with multiple risks "
+                "or multidimensional parameters."
+            )
 
-        return "fst_ascending"
+        return fwer_method
 
     # All subfunctions are unit-tested. To avoid having to write
     # tests just to make sure those subfunctions are called,
@@ -319,9 +311,7 @@ class BinaryClassificationController:
             self._delta,
             eff_sample_sizes,
             True,
-            fwer_method=self._select_fwer_method(),
-            _auto_selected=(self.fwer_method == "auto"),
-            **self._fwer_kwargs,
+            fwer_method=self.fwer_method,
         )
         valid_params_index = valid_index[0]
 

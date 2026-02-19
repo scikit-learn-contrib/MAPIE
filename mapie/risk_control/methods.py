@@ -1,11 +1,16 @@
 import warnings
-from typing import Any, List, Literal, Optional, Tuple, Union, cast
+from typing import Any, List, Optional, Tuple, Union, cast
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 from scipy.stats import binom
 
-from mapie.risk_control.fwer_control import control_fwer
+from mapie.risk_control.fwer_control import (
+    FWER_METHODS,
+    FWERFixedSequenceTesting,
+    FWERProcedure,
+    control_fwer,
+)
 from mapie.utils import _check_alpha
 
 
@@ -228,12 +233,7 @@ def ltt_procedure(
     delta: float,
     n_obs: NDArray,
     binary: bool = False,
-    fwer_method: Literal[
-        "bonferroni",
-        "fst_ascending",
-        "bonferroni_holm",
-    ] = "bonferroni",
-    **fwer_kwargs,
+    fwer_method: Union[FWER_METHODS, FWERProcedure] = "bonferroni",
 ) -> Tuple[List[List[Any]], NDArray]:
     """
     Apply the Learn-Then-Test procedure for risk control.
@@ -278,13 +278,8 @@ def ltt_procedure(
     binary: bool, default=False
         Must be True if the loss associated to the risk is binary.
 
-    fwer_method : {"bonferroni", "fst_ascending", "bonferroni_holm"}, default="bonferroni"
+    fwer_method : {"bonferroni", "fixed_sequence", "bonferroni_holm"} or FWERProcedure instance, default="bonferroni"
         FWER control strategy.
-    **fwer_kwargs
-        Additional keyword arguments used only when ``fwer_method="fst_ascending"``.
-        Currently supported keyword:
-        - ``n_starts`` (int): number of equally spaced starting points used in
-          the multi-start Fixed Sequence Testing procedure.
 
     Returns
     -------
@@ -295,6 +290,12 @@ def ltt_procedure(
     p_values : NDArray of shape (n_lambdas, n_alpha)
         P-values associated with each tested parameter. In the multi-risk setting,
         they correspond to the maximum over the tested risks.
+
+    Notes
+    -----
+    fwer_method="fixed_sequence" corresponds to the fixed sequence testing procedure with one start.
+    However, users can use multi-start by instantiating FWERFixedSequenceTesting with
+    any desired number of starts and passing the instance to control_fwer.
 
     References
     ----------
@@ -312,34 +313,34 @@ def ltt_procedure(
     )
     p_values = p_values.max(axis=0)  # take max over risks (no effect if mono risk)
 
-    # FST only supports a single monotonic risk.
-    # - If non-monotonic: fallback to SGT when fwer_method="auto" in BCC, else error.
-    # - If decreasing: reverse order so FST tests easiest→hardest;
+    # Fixed Sequence Testing (FST) only supports a single monotonic risk.
+    # - If non-monotonic: raise error.
+    # - If decreasing: reverse order so FST tests easiest -> hardest;
     #   store permutation to remap indices afterward.
     order = None
     p_values_original = p_values
-    _auto_selected = fwer_kwargs.pop("_auto_selected", False)
-    if fwer_method == "fst_ascending":
+    if (fwer_method == "fixed_sequence") or (
+        isinstance(fwer_method, FWERFixedSequenceTesting)
+    ):
         if r_hat.shape[0] > 1:
-            raise ValueError("fst_ascending cannot be used with multiple risks.")
+            raise ValueError("fixed_sequence cannot be used with multiple risks.")
 
         direction = _check_risk_monotonicity(r_hat[0])
 
         if direction == "none":
-            if _auto_selected:
-                fwer_method = "bonferroni_holm"
-            else:
-                raise ValueError(
-                    "fst_ascending requires a monotonic risk over lambdas."
-                )
+            raise ValueError("fixed_sequence requires a monotonic risk over lambdas.")
 
         if direction == "decreasing":
             order = np.arange(len(p_values))[::-1]
             p_values = p_values[order]
 
+        # To have 100% coverage
+        if direction == "increasing":
+            pass
+
     valid_index = []
     for i in range(alpha_np.shape[1]):
-        idx = control_fwer(p_values, delta, fwer_method=fwer_method, **fwer_kwargs)
+        idx = control_fwer(p_values[:, i], delta, fwer_method=fwer_method)
         if order is not None:
             idx = order[idx]
         l_index = idx.tolist()

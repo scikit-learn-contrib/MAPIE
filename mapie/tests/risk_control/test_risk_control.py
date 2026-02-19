@@ -10,6 +10,7 @@ import pytest
 from numpy.typing import NDArray
 from scipy.stats import binom
 
+from mapie.risk_control.fwer_control import FWERFixedSequenceTesting
 from mapie.risk_control.methods import (
     _check_risk_monotonicity,
     compute_hoeffding_bentkus_p_value,
@@ -212,8 +213,8 @@ def test_ltt_fst_multirisk_error():
     n_obs = np.ones_like(r_hat)
     alpha_np = np.array([[0.5], [0.5]])
     delta = 0.1
-    with pytest.raises(ValueError, match=r".*fst_ascending cannot be used.*"):
-        ltt_procedure(r_hat, alpha_np, delta, n_obs, fwer_method="fst_ascending")
+    with pytest.raises(ValueError, match=r".*fixed_sequence cannot be used.*"):
+        ltt_procedure(r_hat, alpha_np, delta, n_obs, fwer_method="fixed_sequence")
 
 
 def test_ltt_fst_non_monotone_error():
@@ -222,26 +223,32 @@ def test_ltt_fst_non_monotone_error():
     alpha_np = np.array([[0.5]])
 
     with pytest.raises(ValueError, match=r".*requires a monotonic risk.*"):
-        ltt_procedure(r_hat, alpha_np, 0.1, n_obs, fwer_method="fst_ascending")
+        ltt_procedure(r_hat, alpha_np, 0.1, n_obs, fwer_method="fixed_sequence")
 
 
-def test_ltt_auto_fallback_to_sgt():
-    r_hat = np.array([[0.1, 0.4, 0.2]])
+def test_ltt_fst_increasing():
+    r_hat = np.array([[1.0, 2.0, 3.0, 4.0, 5.0]])
     n_obs = np.ones_like(r_hat)
-    alpha_np = np.array([[0.5]])
+    alpha_np = np.array([[0.1]])
 
-    valid_index, _ = ltt_procedure(
-        r_hat, alpha_np, 0.1, n_obs, fwer_method="fst_ascending", _auto_selected=True
+    valid_index_1, _ = ltt_procedure(
+        r_hat, alpha_np, 0.1, n_obs, fwer_method="fixed_sequence"
     )
-    assert isinstance(valid_index, list)
+    valid_index_2, _ = ltt_procedure(
+        r_hat, alpha_np, 0.1, n_obs, fwer_method=FWERFixedSequenceTesting()
+    )
+    assert np.array_equal(valid_index_1, valid_index_2)
 
 
 def test_ltt_fst_decreasing_reorder():
-    r_hat = np.array([[0.5, 0.3, 0.1]])
+    r_hat = np.array([[5.0, 4.0, 3.0, 2.0, 1.0]])
     n_obs = np.ones_like(r_hat)
-    alpha_np = np.array([[0.6]])
+    alpha_np = np.array([[0.1]])
 
-    valid_index, _ = ltt_procedure(
-        r_hat, alpha_np, 0.6, n_obs, fwer_method="fst_ascending"
+    valid_index_1, _ = ltt_procedure(
+        r_hat, alpha_np, 0.1, n_obs, fwer_method="fixed_sequence"
     )
-    assert np.array_equal(np.array([2]), valid_index[0])
+    valid_index_2, _ = ltt_procedure(
+        r_hat, alpha_np, 0.1, n_obs, fwer_method=FWERFixedSequenceTesting()
+    )
+    assert np.array_equal(valid_index_1, valid_index_2)
