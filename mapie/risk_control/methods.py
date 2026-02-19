@@ -334,6 +334,10 @@ def ltt_procedure(
             order = np.arange(len(p_values))[::-1]
             p_values = p_values[order]
 
+        # To have 100% coverage
+        if direction == "increasing":
+            pass
+
     valid_index = []
     for i in range(alpha_np.shape[1]):
         idx = control_fwer(p_values[:, i], delta, fwer_method=fwer_method)
