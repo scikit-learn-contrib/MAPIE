@@ -237,7 +237,7 @@ class FWERFixedSequenceTesting(FWERProcedure):
 
 def _build_fwer(
     method: Union[FWER_METHODS, FWERProcedure],
-) -> FWERProcedure | FWERBonferroniCorrection:
+) -> Union[FWERProcedure, FWERBonferroniCorrection]:
     """
     Build an instance of FWERProcedure based on the specified method.
 
