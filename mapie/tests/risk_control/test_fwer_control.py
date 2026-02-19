@@ -104,7 +104,7 @@ def test_covert_fwerprocedure_run_break():
             pass
 
     fwer_procedure = Dummy()
-    rejected = fwer_procedure.run(np.array([0.1, 0.2]), delta=0.1)
+    rejected = fwer_procedure.run(np.array([0.2, 0.2]), delta=0.1)
 
     assert rejected.tolist() == [0]
 
