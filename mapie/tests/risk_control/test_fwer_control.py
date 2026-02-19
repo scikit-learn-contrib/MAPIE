@@ -96,21 +96,6 @@ def test_bonferroni_stops_after_first_failure():
     assert np.array_equal(rejected, np.array([1]))
 
 
-def test_bonferroni_not_implemented_internal_methods():
-    fwer_procedure = FWERBonferroniCorrection()
-
-    with pytest.raises(NotImplementedError):
-        fwer_procedure._init_state(3, 0.1)
-
-    with pytest.raises(NotImplementedError):
-        fwer_procedure._select_next_hypothesis(np.array([0.1, 0.2]))
-
-    with pytest.raises(NotImplementedError):
-        fwer_procedure._update_on_reject(0)
-
-    assert np.array_equal(fwer_procedure._local_significance_levels(), np.asarray([]))
-
-
 def test_fixed_sequence_multistart_multiple_starts():
     p_values = np.array([0.001, 0.003, 0.01, 0.02, 0.2, 0.6])
     delta = 0.1
@@ -216,6 +201,19 @@ def test_control_fwer_fixed_sequence():
         p_values,
         delta,
         fwer_method="fixed_sequence",
+    )
+
+    assert np.array_equal(valid_index, np.array([0, 1, 2, 3]))
+
+
+def test_control_fwer_FWERProcedure_instance():
+    p_values = np.array([0.001, 0.003, 0.01, 0.02, 0.2])
+    delta = 0.1
+
+    valid_index = control_fwer(
+        p_values,
+        delta,
+        fwer_method=FWERFixedSequenceTesting(),
     )
 
     assert np.array_equal(valid_index, np.array([0, 1, 2, 3]))
