@@ -75,7 +75,10 @@ class FWERProcedure(ABC):
             ):
                 rejected_mask[hypothesis_index] = True
                 self._update_on_reject(hypothesis_index)
-            else:
+            if (
+                p_values[hypothesis_index]
+                > self._local_significance_levels()[hypothesis_index]
+            ):
                 break
 
         return np.flatnonzero(rejected_mask)
