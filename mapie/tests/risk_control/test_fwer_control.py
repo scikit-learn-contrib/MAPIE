@@ -75,8 +75,6 @@ def test_abstract_methods_raise():
 
     d = Dummy()
 
-    import pytest
-
     with pytest.raises(NotImplementedError):
         d._init_state(1, 0.1)
 
