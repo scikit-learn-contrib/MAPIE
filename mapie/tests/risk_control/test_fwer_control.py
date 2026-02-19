@@ -181,6 +181,37 @@ def test_sgt_bonferroni_holm_single_value():
     assert np.array_equal(rejected, np.array([0]))
 
 
+def test_fwer_method_conservatism():
+    p_values = [
+        0.001,
+        0.002,
+        0.004,
+        0.006,
+        0.008,
+        0.01,
+        0.02,
+        0.04,
+        0.06,
+        0.08,
+        0.1,
+        0.2,
+        0.4,
+        0.6,
+        0.8,
+    ]
+    delta = 0.2
+    valid_bonferroni = FWERBonferroniCorrection().run(p_values=p_values, delta=delta)
+    valid_bonferroni_holm = FWERBonferroniHolm().run(p_values=p_values, delta=delta)
+    valid_fixed_sequence = FWERFixedSequenceTesting(n_starts=1).run(
+        p_values=p_values, delta=delta
+    )
+    assert len(valid_bonferroni) != 0
+    assert len(valid_bonferroni_holm) != 0
+    assert len(valid_fixed_sequence) != 0
+    assert len(valid_bonferroni) < len(valid_bonferroni_holm)
+    assert len(valid_bonferroni_holm) < len(valid_fixed_sequence)
+
+
 def test_control_fwer_bonferroni():
     p_values = np.array([0.001, 0.02, 0.2, 0.8])
     delta = 0.05
