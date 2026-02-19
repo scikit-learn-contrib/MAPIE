@@ -75,11 +75,8 @@ class FWERProcedure(ABC):
             ):
                 rejected_mask[hypothesis_index] = True
                 self._update_on_reject(hypothesis_index)
-            if (
-                p_values[hypothesis_index]
-                > self._local_significance_levels()[hypothesis_index]
-            ):
-                break
+            else:  # Ignore coverage: Python 3.9 fails to detect this line although it is tested.
+                break  # pragma: no cover
 
         return np.flatnonzero(rejected_mask)
 
