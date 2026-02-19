@@ -97,7 +97,7 @@ class FWERProcedure(ABC):
         raise NotImplementedError
 
 
-class FWERBonferroniCorrection(FWERProcedure):
+class FWERBonferroniCorrection:
     """
     Bonferroni procedure for controlling the FWER.
 
@@ -130,18 +130,6 @@ class FWERBonferroniCorrection(FWERProcedure):
         n_lambdas = len(p_values)
         rejected_mask = p_values <= delta / n_lambdas
         return np.flatnonzero(rejected_mask)
-
-    def _init_state(self, n_lambdas: int, delta: float):
-        raise NotImplementedError
-
-    def _select_next_hypothesis(self, p_values: NDArray) -> Union[int, None]:
-        raise NotImplementedError
-
-    def _local_significance_levels(self) -> NDArray:
-        return np.asarray([])
-
-    def _update_on_reject(self, hypothesis_index: int):
-        raise NotImplementedError
 
 
 class FWERBonferroniHolm(FWERProcedure):
@@ -249,7 +237,7 @@ class FWERFixedSequenceTesting(FWERProcedure):
 
 def _build_fwer(
     method: Union[FWER_METHODS, FWERProcedure],
-) -> FWERProcedure:
+) -> FWERProcedure | FWERBonferroniCorrection:
     """
     Build an instance of FWERProcedure based on the specified method.
 
