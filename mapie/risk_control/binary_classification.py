@@ -335,7 +335,7 @@ class BinaryClassificationController:
 
         return self
 
-    def learn_fixed_sequence_order(
+    def _learn_fixed_sequence_order(
         self,
         X_calibrate: ArrayLike,
         y_calibrate: ArrayLike,
