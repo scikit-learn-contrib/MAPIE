@@ -904,3 +904,89 @@ def test_check_fwer_method_invalid_method():
             target_level=[dummy_target, dummy_target],
             fwer_method=FWERFixedSequenceTesting(),
         )
+
+
+class TestLearnFixedSequenceOrder:
+    def test_mono_risk_mono_param(self):
+        """Single risk and single parameter should return that parameter."""
+        controller = BinaryClassificationController(
+            predict_function=realistic_clf.predict_proba,
+            risk=precision,
+            target_level=0.7,
+            list_predict_params=np.array([0.5]),
+        )
+
+        seq, X_rem, y_rem = controller._learn_fixed_sequence_order(
+            realistic_X_calib,
+            realistic_y_calib,
+            learning_fraction=0.5,
+        )
+
+        assert len(seq) == 1
+        assert seq[0] == 0.5
+        assert len(X_rem) < len(realistic_X_calib)
+        assert len(X_rem) == len(y_rem)
+
+    def test_mono_risk_multi_param(self):
+        """Sequence should be subset of params and unique."""
+        grid = np.linspace(0.01, 0.99, 50)
+
+        controller = BinaryClassificationController(
+            predict_function=realistic_clf.predict_proba,
+            risk=precision,
+            target_level=0.7,
+            list_predict_params=grid,
+        )
+
+        seq, _, _ = controller._learn_fixed_sequence_order(
+            realistic_X_calib,
+            realistic_y_calib,
+            learning_fraction=0.5,
+        )
+
+        assert len(seq) > 0
+        assert set(seq).issubset(set(grid))
+        assert len(seq) == len(set(seq))  # uniqueness
+
+    def test_multi_risk_mono_param(self):
+        """Single parameter multi-risk should still return valid sequence."""
+        controller = BinaryClassificationController(
+            predict_function=realistic_clf.predict_proba,
+            risk=[precision, recall],
+            target_level=[0.7, 0.7],
+            list_predict_params=np.array([0.5]),
+        )
+
+        seq, _, _ = controller._learn_fixed_sequence_order(
+            realistic_X_calib,
+            realistic_y_calib,
+            learning_fraction=0.5,
+        )
+
+        assert seq == [0.5]
+
+    def test_multi_risk_multi_param(self):
+        """Multi-risk multi-dimensional params should return tuples."""
+
+        def predict_interval(X, a, b):
+            probs = realistic_clf.predict_proba(X)[:, 1]
+            return ((probs >= a) & (probs <= b)).astype(int)
+
+        grid = np.array([[l1, l2] for l1 in [0.4, 0.5, 0.6] for l2 in [0.7, 0.8, 0.9]])
+
+        controller = BinaryClassificationController(
+            predict_function=predict_interval,
+            risk=[precision, recall],
+            target_level=[0.6, 0.6],
+            list_predict_params=grid,
+        )
+
+        seq, _, _ = controller._learn_fixed_sequence_order(
+            realistic_X_calib,
+            realistic_y_calib,
+            learning_fraction=0.5,
+        )
+        print(seq)
+        print(isinstance(seq[0], list))
+        assert len(seq) > 0
+        assert all(len(p) == 2 for p in seq)
