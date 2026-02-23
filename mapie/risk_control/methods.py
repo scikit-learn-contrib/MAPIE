@@ -278,7 +278,7 @@ def ltt_procedure(
     binary: bool, default=False
         Must be True if the loss associated to the risk is binary.
 
-    fwer_method : {"bonferroni", "fixed_sequence", "bonferroni_holm"} or FWERProcedure instance, default="bonferroni"
+    fwer_method : {"bonferroni", "bonferroni_holm", "fixed_sequence", "split_fixed_sequence"} or FWERProcedure instance, default="bonferroni"
         FWER control strategy.
 
     Returns
@@ -296,6 +296,9 @@ def ltt_procedure(
     fwer_method="fixed_sequence" corresponds to the fixed sequence testing procedure with one start.
     However, users can use multi-start by instantiating FWERFixedSequenceTesting with
     any desired number of starts and passing the instance to control_fwer.
+
+    fwer_method="split_fixed_sequence" behaves identically to "fixed_sequence" at this stage.
+    The ordering must have been learned beforehand on independent data (typically by the controller).
 
     References
     ----------
