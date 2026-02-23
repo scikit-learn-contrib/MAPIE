@@ -415,9 +415,6 @@ class BinaryClassificationController:
         It only determines a testing order. The statistical guarantee is provided
         later by the fixed-sequence procedure applied on independent data.
         """
-        if not (0 < learning_fraction < 1):
-            raise ValueError("learning_fraction must be in (0,1)")
-
         X_remaining, X_learn, y_remaining, y_learn = train_test_split(
             X_calibrate,
             y_calibrate,
