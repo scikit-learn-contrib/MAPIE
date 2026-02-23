@@ -121,16 +121,18 @@ class BinaryClassificationController:
         the shape is (n_params, params_dim).
         Note that performance is degraded when `len(predict_params)` is large as it is used by the Bonferroni correction [1].
 
-    fwer_method : {"bonferroni", "fixed_sequence", "bonferroni_holm"} or FWERProcedure instance, default="bonferroni"
+    fwer_method : {"bonferroni", "bonferroni_holm", "fixed_sequence", "split_fixed_sequence"} or FWERProcedure instance, default="bonferroni"
         Method used to control the family-wise error rate (FWER).
 
         Supported methods:
         - ``"bonferroni"`` : Classical Bonferroni correction. This is the default method.
         It is valid in all settings but can be conservative, especially when the number of tested parameters is large.
         - ``"fixed_sequence"`` : Fixed Sequence Testing (FST) with a single start.
-        However, users can use multi-start by instantiating ``FWERFixedSequenceTesting`` with any desired number of starts and passing the instance to control_fwer.
         - ``"bonferroni_holm"`` : Sequential Graphical Testing corresponding
         to the Bonferroni–Holm procedure. Suitable for general settings.
+        However, users can use multi-start by instantiating ``FWERFixedSequenceTesting`` with any desired number of starts and passing the instance to control_fwer.
+        - ``"split_fixed_sequence"`` : Split Fixed Sequence Testing (SFST). The parameter ordering is learned
+        on a 30% subset of calibration data and then used for FWER control.
 
     Attributes
     ----------
@@ -268,7 +270,7 @@ class BinaryClassificationController:
         ):
             raise ValueError(
                 "Fixed sequence testing cannot be used with multiple risks "
-                "or multidimensional parameters."
+                "or multidimensional parameters. Use 'split_fixed_sequence' instead."
             )
 
         return fwer_method
@@ -296,8 +298,25 @@ class BinaryClassificationController:
         -------
         BinaryClassificationController
             The calibrated controller instance.
+
+        Notes
+        -----
+        If fwer_method="split_fixed_sequence", the calibration data is internally split:
+
+        - a learning subset used to determine an ordering of parameters
+        - a calibrating subset used for risk control
         """
         y_calibrate_ = np.asarray(y_calibrate, dtype=int)
+
+        original_params = self._predict_params
+        if self.fwer_method == "split_fixed_sequence":
+            learned_params_order, X_calibrate, y_calibrate_ = (
+                self._learn_fixed_sequence_order(
+                    X_calibrate,
+                    y_calibrate_,
+                )
+            )
+            self._predict_params = np.array(learned_params_order)
 
         predictions_per_param = self._get_predictions_per_param(
             X_calibrate, self._predict_params, is_calibration_step=True
@@ -332,6 +351,7 @@ class BinaryClassificationController:
             )
 
         self.p_values = p_values
+        self._predict_params = original_params
 
         return self
 
