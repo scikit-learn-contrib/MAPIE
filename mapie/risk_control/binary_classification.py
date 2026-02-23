@@ -363,7 +363,7 @@ class BinaryClassificationController:
         learning_fraction: float = 0.3,
         random_state: Optional[int] = None,
         binary: bool = False,
-    ) -> Tuple[NDArray, ArrayLike, ArrayLike]:
+    ) -> Tuple[NDArray, NDArray, NDArray]:
         """
         Learn an ordered sequence of prediction parameters for split fixed-sequence FWER control.
 
