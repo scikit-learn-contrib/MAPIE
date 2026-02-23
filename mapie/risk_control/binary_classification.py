@@ -340,7 +340,7 @@ class BinaryClassificationController:
         X_calibrate: ArrayLike,
         y_calibrate: ArrayLike,
         beta_grid: NDArray = np.logspace(-25, 0, 200),
-        learning_fraction: float = 0.1,
+        learning_fraction: float = 0.3,
         random_state: Optional[int] = None,
         binary: bool = False,
     ) -> Tuple[NDArray, ArrayLike, ArrayLike]:
@@ -365,10 +365,10 @@ class BinaryClassificationController:
         y_calibrate : ArrayLike
             Binary labels of the calibration set.
 
-        beta_grid : NDArray, default=np.logspace(-8, 0, 200)
+        beta_grid : NDArray, default=np.logspace(-25, 0, 200)
             Grid of target p-values used to construct the testing order.
 
-        learning_fraction : float, default=0.1
+        learning_fraction : float, default=0.3
             Fraction of the calibration data used to learn the sequence.
             Must be between 0 and 1.
 
@@ -388,7 +388,15 @@ class BinaryClassificationController:
 
         y_remaining : ArrayLike
             Remaining calibration labels.
+
+        Notes
+        -----
+        This procedure does not perform FWER control itself.
+        It only determines a testing order. The statistical guarantee is provided
+        later by the fixed-sequence procedure applied on independent data.
         """
+        if not (0 < learning_fraction < 1):
+            raise ValueError("learning_fraction must be in (0,1)")
 
         X_remaining, X_learn, y_remaining, y_learn = train_test_split(
             X_calibrate,
@@ -438,7 +446,7 @@ class BinaryClassificationController:
         if self.is_multi_dimensional_param:
             ordered_predict_params = [list(p) for p in ordered_predict_params]
 
-        return ordered_predict_params, X_remaining, y_remaining
+        return np.array(ordered_predict_params), X_remaining, y_remaining
 
     def predict(self, X_test: ArrayLike) -> NDArray:
         """
