@@ -256,6 +256,26 @@ def test_control_fwer_fixed_sequence():
     assert np.array_equal(valid_index, np.array([0, 1, 2, 3]))
 
 
+def test_control_fwer_fixed_sequence_equal_split_fixed_sequence_testing():
+    p_values = np.array([0.001, 0.003, 0.01, 0.02, 0.2])
+    delta = 0.1
+
+    valid_index_fst = control_fwer(
+        p_values,
+        delta,
+        fwer_method="fixed_sequence",
+    )
+    valid_index_sfst = control_fwer(
+        p_values,
+        delta,
+        fwer_method="split_fixed_sequence",
+    )
+
+    assert np.array_equal(valid_index_fst, np.array([0, 1, 2, 3]))
+    assert np.array_equal(valid_index_sfst, np.array([0, 1, 2, 3]))
+    assert np.array_equal(valid_index_fst, valid_index_sfst)
+
+
 def test_control_fwer_FWERProcedure_instance():
     p_values = np.array([0.001, 0.003, 0.01, 0.02, 0.2])
     delta = 0.1

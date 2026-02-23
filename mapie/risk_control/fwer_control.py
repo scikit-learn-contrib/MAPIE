@@ -5,8 +5,15 @@ from typing import Literal, Union
 import numpy as np
 from numpy.typing import NDArray
 
-FWER_IMPLEMENTED = ["bonferroni", "fixed_sequence", "bonferroni_holm"]
-FWER_METHODS = Literal["bonferroni", "fixed_sequence", "bonferroni_holm"]
+FWER_IMPLEMENTED = [
+    "bonferroni",
+    "fixed_sequence",
+    "bonferroni_holm",
+    "split_fixed_sequence",
+]
+FWER_METHODS = Literal[
+    "bonferroni", "fixed_sequence", "bonferroni_holm", "split_fixed_sequence"
+]
 
 
 class FWERProcedure(ABC):
@@ -243,7 +250,7 @@ def _build_fwer(
 
     Parameters
     ----------
-    method : {"bonferroni", "fixed_sequence", "bonferroni_holm"}, or FWERProcedure instance
+    method : {"bonferroni", "fixed_sequence", "bonferroni_holm", "split_fixed_sequence"}, or FWERProcedure instance
         FWER control strategy. If a string is provided, it must be one of the supported methods.
         If an instance of FWERProcedure is provided, it will be used directly.
 
@@ -252,6 +259,10 @@ def _build_fwer(
     When method is "fixed_sequence", the number of starts is set to 1 by default.
     However, users can use multi-start by instantiating FWERFixedSequenceTesting with
     any desired number of starts and passing the instance to control_fwer.
+
+    If fwer_method="split_fixed_sequence", this function behaves exactly as
+    "fixed_sequence". The distinction exists only upstream, where the ordering
+    of hypotheses may have been learned from separate data.
     """
     if isinstance(method, FWERProcedure):
         return method
@@ -259,7 +270,7 @@ def _build_fwer(
     if method == "bonferroni":
         return FWERBonferroniCorrection()
 
-    if method == "fixed_sequence":
+    if method in ["fixed_sequence", "split_fixed_sequence"]:
         return FWERFixedSequenceTesting(n_starts=1)
 
     if method == "bonferroni_holm":
@@ -267,7 +278,7 @@ def _build_fwer(
 
     raise ValueError(
         f"Unknown FWER control method: {method}. "
-        "Supported methods are {'bonferroni','fixed_sequence','bonferroni_holm'}, "
+        f"Supported methods are: {FWER_IMPLEMENTED}, "
         "or an instance of FWERProcedure."
     )
 
@@ -288,9 +299,10 @@ def control_fwer(
 
     Supported methods are:
     - ``"bonferroni"``: classical Bonferroni correction,
-    - ``"fixed_sequence"``: Fixed Sequence Testing (FST),
     - ``"bonferroni_holm"``: Sequential Graphical Testing corresponding
       to the Bonferroni-Holm procedure.
+    - ``"fixed_sequence"``: Fixed Sequence Testing (FST),
+    - ``"split_fixed_sequence"``: Split Fixed Sequence Testing (SFST).
     - Custom procedures can also be implemented by subclassing ``FWERProcedure``
       and passing an instance to ``fwer_method``.
 
@@ -300,7 +312,7 @@ def control_fwer(
         P-values associated with each tested hypothesis.
     delta : float
         Target family-wise error rate. Must be in (0, 1].
-    fwer_method : {"bonferroni", "fixed_sequence", "bonferroni_holm"} or FWERProcedure instance, default="bonferroni"
+    fwer_method : {"bonferroni", "bonferroni_holm", "fixed_sequence", "split_fixed_sequence"} or FWERProcedure instance, default="bonferroni"
         FWER control strategy.
 
     Returns
@@ -313,6 +325,10 @@ def control_fwer(
     fwer_method="fixed_sequence" corresponds to the fixed sequence testing procedure with one start.
     However, users can use multi-start by instantiating FWERFixedSequenceTesting with
     any desired number of starts and passing the instance to control_fwer.
+
+    If fwer_method="split_fixed_sequence", this function behaves exactly as
+    "fixed_sequence". The distinction exists only upstream, where the ordering
+    of hypotheses may have been learned from separate data.
     """
     p_values = np.asarray(p_values, dtype=float)
     n_lambdas = len(p_values)
