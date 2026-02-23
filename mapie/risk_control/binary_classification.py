@@ -5,6 +5,7 @@ from typing import Any, Callable, List, Literal, Optional, Tuple, Union
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
+from sklearn.model_selection import train_test_split
 
 from mapie.risk_control.fwer_control import (
     FWER_IMPLEMENTED,
@@ -14,7 +15,7 @@ from mapie.risk_control.fwer_control import (
 )
 from mapie.utils import check_valid_ltt_params_index
 
-from .methods import ltt_procedure
+from .methods import compute_hoeffding_bentkus_p_value, ltt_procedure
 from .risks import (
     BinaryClassificationRisk,
     abstention_rate,
@@ -333,6 +334,100 @@ class BinaryClassificationController:
         self.p_values = p_values
 
         return self
+
+    def learn_lambda_sequence_for_split_fixed_sequence_testing(
+        self,
+        X_calibrate: ArrayLike,
+        y_calibrate: ArrayLike,
+        beta: NDArray = np.logspace(-25, 0, 100),
+        learning_size: float = 0.1,
+        random_state: int = 123,
+        binary: bool = False,
+    ) -> Tuple[NDArray, ArrayLike, ArrayLike]:
+        """
+        Calibrate the BinaryClassificationController.
+        Sets attributes valid_predict_params and best_predict_param (if the risk
+        or performance can be controlled at the target level).
+
+        Parameters
+        ----------
+        X_calibrate : ArrayLike
+            Features of the calibration set.
+
+        y_calibrate : ArrayLike
+            Binary labels of the calibration set.
+
+        beta: NDArray, with default np.logspace(-25, 0, 100)
+            List of float value to compare the p-values with in other to select equlibrate p-values.
+
+        learning_size: float
+            Proportion of the calibration data used to learn the sequence of lambdas to test.
+            Il should be a value in (0, 1)
+
+        random_state: int, defaut 123
+            The random state of the split.
+
+        binary: bool, default=False
+        Must be True if the loss associated to the risk is binary.
+
+        Returns
+        -------
+        A tupe contening:
+        - NDArray : The learned sequence of lambdas to be used for fixed sequence testing.
+        - ArrayLike : The remaning X_calibrate calibration data
+        - ArrayLike : The remaning Y_calibrate calibration data
+        """
+
+        X_calibrate_sfst, X_calibrate_graph, y_calibrate_sfst, y_calibrate_graph = (
+            train_test_split(
+                X_calibrate, y_calibrate, test_size=learning_size, random_state=random_state
+            )
+        )
+
+        y_calibrate_graph_ = np.asarray(y_calibrate_graph, dtype=int)
+        predictions_per_param = self._get_predictions_per_param(
+            X_calibrate_graph, self._predict_params, is_calibration_step=True
+        )
+
+        risk_values, eff_sample_sizes = self._get_risk_values_and_eff_sample_sizes(
+            y_calibrate_graph_, predictions_per_param, self._risk
+        )
+
+        if not (
+            risk_values.shape[0]
+            == eff_sample_sizes.shape[0]
+            == np.expand_dims(self._alpha, axis=1).shape[0]
+        ):
+            raise ValueError("r_hat, n_obs, and alpha_np must have the same length.")
+        p_values = np.array(
+            [
+                compute_hoeffding_bentkus_p_value(r_hat_i, n_obs_i, alpha_np_i, binary)
+                for r_hat_i, n_obs_i, alpha_np_i in zip(
+                    risk_values, eff_sample_sizes, np.expand_dims(self._alpha, axis=1)
+                )
+            ]
+        )
+
+        n_risks = p_values.shape[0]
+        n_lambdas = p_values.shape[1]
+        predict_params_graph = []
+        beta_grid = np.logspace(-25, 0, 100)
+        for d in beta_grid:
+            beta = np.repeat(d, n_risks)
+            dist_to_beta = [
+                np.max(np.abs(p_values[:, idx_lambda, 0] - beta))
+                for idx_lambda in range(n_lambdas)
+            ]
+            j = np.argmin(dist_to_beta)
+            candidate = self._predict_params[j]
+            if self.is_multi_dimensional_param:
+                candidate = tuple(candidate.tolist())
+            if candidate not in predict_params_graph:
+                predict_params_graph.append(candidate)
+        if self.is_multi_dimensional_param:
+            predict_params_graph = [list(param) for param in predict_params_graph]
+
+        return predict_params_graph, X_calibrate_sfst, y_calibrate_sfst
 
     def predict(self, X_test: ArrayLike) -> NDArray:
         """
