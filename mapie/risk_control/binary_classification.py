@@ -464,7 +464,7 @@ class BinaryClassificationController:
             ordered_predict_params = [list(p) for p in ordered_predict_params]
 
         return (
-            np.array(ordered_predict_params),
+            np.array(ordered_predict_params, dtype=object),
             X_remaining,
             np.asarray(y_remaining, dtype=int),
         )
