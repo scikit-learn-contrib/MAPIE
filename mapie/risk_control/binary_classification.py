@@ -446,7 +446,7 @@ class BinaryClassificationController:
         for beta_value in beta_grid:
             beta_vector: NDArray[np.float64] = np.repeat(beta_value, n_risks)
 
-            distances_to_beta: NDArray[np.float64] = [
+            distances_to_beta: list[np.float64] = [
                 np.max(np.abs(p_values[:, idx, 0] - beta_vector))
                 for idx in range(n_lambdas)
             ]
