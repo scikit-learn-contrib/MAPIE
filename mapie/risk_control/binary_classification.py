@@ -313,7 +313,7 @@ class BinaryClassificationController:
             learned_params_order, X_calibrate, y_calibrate_ = (
                 self._learn_fixed_sequence_order(
                     X_calibrate,
-                    y_calibrate_,
+                    y_calibrate,
                 )
             )
             self._predict_params = np.array(learned_params_order)
@@ -444,7 +444,7 @@ class BinaryClassificationController:
         )
 
         n_risks, n_lambdas = p_values.shape[:2]
-        ordered_predict_params = []
+        ordered_predict_params: List[Any] = []
 
         for beta_value in beta_grid:
             beta_vector: NDArray[np.float64] = np.repeat(beta_value, n_risks)
@@ -466,7 +466,11 @@ class BinaryClassificationController:
         if self.is_multi_dimensional_param:
             ordered_predict_params = [list(p) for p in ordered_predict_params]
 
-        return np.array(ordered_predict_params), X_remaining, y_remaining
+        return (
+            np.array(ordered_predict_params),
+            X_remaining,
+            np.asarray(y_remaining, dtype=int),
+        )
 
     def predict(self, X_test: ArrayLike) -> NDArray:
         """
