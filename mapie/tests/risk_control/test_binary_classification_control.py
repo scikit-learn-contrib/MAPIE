@@ -914,18 +914,13 @@ class TestLearnFixedSequenceOrder:
             risk=precision,
             target_level=0.7,
             list_predict_params=np.array([0.5]),
+            fwer_method="split_fixed_sequence",
         )
-
-        ordered_param, X_rem, y_rem = bcc._learn_fixed_sequence_order(
-            realistic_X_calib,
-            realistic_y_calib,
-            learning_fraction=0.5,
-        )
+        bcc.learn_fixed_sequence_order(realistic_X_calib, realistic_y_calib)
+        ordered_param = bcc._learned_fixed_sequence
 
         assert len(ordered_param) == 1
         assert ordered_param[0] == 0.5
-        assert len(X_rem) < len(realistic_X_calib)
-        assert len(X_rem) == len(y_rem)
 
     def test_mono_risk_multi_param(self):
         """Sequence should be subset of params and unique."""
@@ -941,13 +936,12 @@ class TestLearnFixedSequenceOrder:
             risk=precision,
             target_level=0.7,
             list_predict_params=grid,
+            fwer_method="split_fixed_sequence",
         )
 
-        ordered_param, _, _ = bcc._learn_fixed_sequence_order(
-            realistic_X_calib,
-            realistic_y_calib,
-            learning_fraction=0.5,
-        )
+        bcc.learn_fixed_sequence_order(realistic_X_calib, realistic_y_calib)
+        ordered_param = bcc._learned_fixed_sequence
+
         assert len(ordered_param) > 0
 
     def test_multi_risk_mono_param(self):
@@ -957,13 +951,11 @@ class TestLearnFixedSequenceOrder:
             risk=[precision, recall],
             target_level=[0.7, 0.7],
             list_predict_params=np.array([0.5]),
+            fwer_method="split_fixed_sequence",
         )
 
-        ordered_param, _, _ = bcc._learn_fixed_sequence_order(
-            realistic_X_calib,
-            realistic_y_calib,
-            learning_fraction=0.5,
-        )
+        bcc.learn_fixed_sequence_order(realistic_X_calib, realistic_y_calib)
+        ordered_param = bcc._learned_fixed_sequence
 
         assert ordered_param == [0.5]
 
@@ -981,12 +973,44 @@ class TestLearnFixedSequenceOrder:
             risk=[precision, recall],
             target_level=[0.6, 0.6],
             list_predict_params=grid,
+            fwer_method="split_fixed_sequence",
         )
 
-        ordered_param, _, _ = bcc._learn_fixed_sequence_order(
-            realistic_X_calib,
-            realistic_y_calib,
-            learning_fraction=0.5,
-        )
+        bcc.learn_fixed_sequence_order(realistic_X_calib, realistic_y_calib)
+        ordered_param = bcc._learned_fixed_sequence
+
         assert len(ordered_param) > 0
         assert all(len(p) == 2 for p in ordered_param)
+
+
+def test_calibrate_without_learning_sequence_raises():
+    bcc = BinaryClassificationController(
+        predict_function=realistic_clf.predict_proba,
+        risk=precision,
+        target_level=0.7,
+        fwer_method="split_fixed_sequence",
+    )
+    with pytest.raises(
+        ValueError,
+        match=r".*You must call 'learn_fixed_sequence_order' before 'calibrate'.*",
+    ):
+        bcc.calibrate(realistic_X_calib, realistic_y_calib)
+
+
+def test_calibrate_uses_sequence_when_split_fixed():
+    predict_params = np.array([0.1, 0.2, 0.3])
+
+    bcc = BinaryClassificationController(
+        predict_function=realistic_clf.predict_proba,
+        risk=precision,
+        target_level=0.7,
+        list_predict_params=predict_params,
+        fwer_method="split_fixed_sequence",
+    )
+
+    bcc.learn_fixed_sequence_order(realistic_X_calib, realistic_y_calib)
+    learned = bcc._learned_fixed_sequence.copy()
+    bcc.calibrate(realistic_X_calib, realistic_y_calib)
+
+    assert np.array_equiv(bcc._predict_params, predict_params)
+    assert np.array_equiv(bcc._learned_fixed_sequence, learned)

@@ -5,7 +5,6 @@ from typing import Any, Callable, List, Literal, Optional, Tuple, Union
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
-from sklearn.model_selection import train_test_split
 
 from mapie.risk_control.fwer_control import (
     FWER_IMPLEMENTED,
@@ -249,6 +248,7 @@ class BinaryClassificationController:
             self._predict_params
         )
         self.fwer_method = self._check_fwer_method(fwer_method)
+        self._learned_fixed_sequence: Optional[NDArray[Any]] = None
 
         self.valid_predict_params: NDArray = np.array([])
         self.best_predict_param: Optional[Union[float, Tuple[float, ...]]] = None
@@ -301,22 +301,24 @@ class BinaryClassificationController:
 
         Notes
         -----
-        If fwer_method="split_fixed_sequence", the calibration data is internally split:
+        When using ``fwer_method="split_fixed_sequence"``,
+        the learning step must be performed separately on independent data:
 
-        - a learning subset used to determine an ordering of parameters
-        - a calibrating subset used for risk control
+        1. bcc.learn_fixed_sequence_order(X_learn, y_learn)
+        2. bcc.calibrate(X_calibrate, y_calibrate)
+
+        Using the same data for both steps would invalidate guarantees.
         """
         y_calibrate_ = np.asarray(y_calibrate, dtype=int)
 
         original_params = self._predict_params
         if self.fwer_method == "split_fixed_sequence":
-            learned_params_order, X_calibrate, y_calibrate_ = (
-                self._learn_fixed_sequence_order(
-                    X_calibrate,
-                    y_calibrate,
+            if self._learned_fixed_sequence is None:
+                raise ValueError(
+                    "You must call 'learn_fixed_sequence_order' before 'calibrate' "
+                    "when using fwer_method='split_fixed_sequence'."
                 )
-            )
-            self._predict_params = np.array(learned_params_order)
+            self._predict_params = self._learned_fixed_sequence
 
         predictions_per_param = self._get_predictions_per_param(
             X_calibrate, self._predict_params, is_calibration_step=True
@@ -355,23 +357,26 @@ class BinaryClassificationController:
 
         return self
 
-    def _learn_fixed_sequence_order(
+    def learn_fixed_sequence_order(
         self,
-        X_calibrate: ArrayLike,
-        y_calibrate: ArrayLike,
-        beta_grid: NDArray = np.logspace(-25, 0, 200),
-        learning_fraction: float = 0.3,
-        random_state: Optional[int] = None,
+        X_learn: ArrayLike,
+        y_learn: ArrayLike,
+        beta_grid: NDArray = np.logspace(-25, 0, 1000),
         binary: bool = False,
-    ) -> Tuple[NDArray, NDArray, NDArray]:
+    ) -> BinaryClassificationController:
         """
         Learn an ordered sequence of prediction parameters for split fixed-sequence FWER control.
 
         This method performs the learning step of split fixed-sequence testing.
-        The calibration dataset is randomly split into two subsets:
+        It must be called before ``calibrate`` when ``fwer_method="split_fixed_sequence"``.
 
-        - a learning subset used to estimate p-values for each candidate parameter
-        - a remaining subset returned for subsequent calibration
+        The data provided here must be independent from the calibration data used later in ``calibrate``.
+        Using the same data would invalidate the statistical guarantees.
+
+        A typical workflow is to split your calibration dataset:
+
+        - one subset for learning the parameter order
+        - one subset for calibration
 
         For each value in ``beta_grid``, the parameter whose p-value vector is
         closest to the constant vector beta is selected. Duplicate parameters are
@@ -379,49 +384,30 @@ class BinaryClassificationController:
 
         Parameters
         ----------
-        X_calibrate : ArrayLike
-            Features of the calibration set.
+        X_learn : ArrayLike
+            Features used only to learn the parameter order.
 
-        y_calibrate : ArrayLike
-            Binary labels of the calibration set.
+        y_learn : ArrayLike
+            Binary labels associated with X_learn.
 
-        beta_grid : NDArray, default=np.logspace(-25, 0, 200)
-            Grid of target p-values used to construct the testing order.
+        beta_grid : NDArray, default=np.logspace(-25, 0, 1000)
+            Grid of target p-values used to construct the ordering.
+            Smaller values prioritize parameters with stronger evidence.
 
-        learning_fraction : float, default=0.3
-            Fraction of the calibration data used to learn the sequence.
-            Must be between 0 and 1.
-
-        random_state : int or None, default=None
-            Random seed used for the internal split.
-
-        binary: bool, default=False
-            Must be True if the loss associated to the risk is binary.
+        binary : bool, default=False
+            Whether the loss associated with the controlled risk is binary.
 
         Returns
         -------
-        ordered_predict_params : NDArray
-            Ordered sequence of parameters to be used for fixed-sequence testing.
-
-        X_remaining : ArrayLike
-            Remaining calibration features.
-
-        y_remaining : ArrayLike
-            Remaining calibration labels.
+        BinaryClassificationController
+            The controller instance with the learned sequence of ordered prediction parameters.
 
         Notes
         -----
-        This procedure does not perform FWER control itself.
-        It only determines a testing order. The statistical guarantee is provided
-        later by the fixed-sequence procedure applied on independent data.
+        This method does NOT perform risk control.
+        It only determines an order of parameters.
+        Statistical guarantees are provided later when calling ``calibrate``.
         """
-        X_remaining, X_learn, y_remaining, y_learn = train_test_split(
-            X_calibrate,
-            y_calibrate,
-            test_size=learning_fraction,
-            random_state=random_state,
-        )
-
         y_learn = np.asarray(y_learn, dtype=int)
         predictions_per_param = self._get_predictions_per_param(
             X_learn, self._predict_params, is_calibration_step=True
@@ -461,11 +447,9 @@ class BinaryClassificationController:
         if self.is_multi_dimensional_param:
             ordered_predict_params = [list(p) for p in ordered_predict_params]
 
-        return (
-            np.array(ordered_predict_params, dtype=object),
-            X_remaining,
-            np.asarray(y_remaining, dtype=int),
-        )
+        self._learned_fixed_sequence = np.array(ordered_predict_params, dtype=object)
+
+        return self
 
     def predict(self, X_test: ArrayLike) -> NDArray:
         """
