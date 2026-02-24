@@ -431,8 +431,6 @@ class BinaryClassificationController:
             y_learn, predictions_per_param, self._risk
         )
         alpha_np = np.expand_dims(self._alpha, axis=1)
-        if not (r_hat.shape[0] == n_obs.shape[0] == alpha_np.shape[0]):
-            raise ValueError("r_hat, n_obs, and alpha_np must have the same length.")
         p_values = np.array(
             [
                 compute_hoeffding_bentkus_p_value(r_hat_i, n_obs_i, alpha_np_i, binary)
