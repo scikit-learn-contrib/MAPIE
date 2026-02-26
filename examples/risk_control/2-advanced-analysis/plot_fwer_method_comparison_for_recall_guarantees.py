@@ -26,6 +26,13 @@ a risk in binary classification.
 #   procedure which is valid under any risk structure and parameter space, but generally more powerful
 #   than the classical Bonferroni correction.
 #
+# Although not used in this comparison, note that the Split Fixed Sequence Testing (SFST)
+# FWER procedure is also implemented under the name ``"split_fixed_sequence"``.
+# SFST learns an optimal testing order from independent data and then applies
+# the classical FST procedure using this learned order. For a practical illustration,
+# please refer to the risk control example gallery showcasing the use case of
+# the SFST FWER control method.
+#
 # The applicability of each method depends on the problem structure:
 #
 # +----------------------------+--------------------+----------------+---------------------+
@@ -36,6 +43,8 @@ a risk in binary classification.
 # | FST                        | required           | ❌             | ❌                  |
 # +----------------------------+--------------------+----------------+---------------------+
 # | Bonferroni-Holm            | ✅                 | ✅             | ✅                  |
+# +----------------------------+--------------------+----------------+---------------------+
+# | Split FST                  | ✅                 | ✅             | ✅                  |
 # +----------------------------+--------------------+----------------+---------------------+
 #
 # Here we control **1-recall**, which is monotonic with respect to the decision
