@@ -59,7 +59,7 @@ Using the same classifier, dataset, and target precision, we illustrate:
 #
 
 # sphinx_gallery_thumbnail_number = 2
-#%%
+
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.datasets import make_circles
@@ -204,9 +204,7 @@ X_calib_remaining, X_learn, y_calib_remaining, y_learn = train_test_split(
     random_state=RANDOM_STATE,
 )
 bcc_sfst.learn_fixed_sequence_order(
-    X_learn=X_learn,
-    y_learn=y_learn,
-    beta_grid = np.logspace(-25, 0, 1000)
+    X_learn=X_learn, y_learn=y_learn, beta_grid=np.logspace(-25, 0, 1000)
 )
 bcc_sfst.calibrate(X_calib_remaining, y_calib_remaining)
 
@@ -236,7 +234,9 @@ print(
 
 tested_thresholds = bcc_bonferroni._predict_params
 tested_thresholds_sfst = bcc_sfst._learned_fixed_sequence
-non_tested_threshold_sfst = tested_thresholds[~np.isin(tested_thresholds, tested_thresholds_sfst)]
+non_tested_threshold_sfst = tested_thresholds[
+    ~np.isin(tested_thresholds, tested_thresholds_sfst)
+]
 
 proba_positive_class = clf.predict_proba(X_calib)[:, 1]
 precisions = np.full(len(tested_thresholds), np.inf)
@@ -257,9 +257,13 @@ valid_index_sfst = np.array(
 valid_index_bonferroni_holm = np.array(
     [t in bcc_bonferroni_holm.valid_predict_params for t in tested_thresholds]
 )
-best_thr_index_bonferroni = np.where(tested_thresholds == bcc_bonferroni.best_predict_param)[0][0]
+best_thr_index_bonferroni = np.where(
+    tested_thresholds == bcc_bonferroni.best_predict_param
+)[0][0]
 best_thr_index_sfst = np.where(tested_thresholds == bcc_sfst.best_predict_param)[0][0]
-best_thr_index_bonferroni_holm = np.where(tested_thresholds == bcc_bonferroni_holm.best_predict_param)[0][0]
+best_thr_index_bonferroni_holm = np.where(
+    tested_thresholds == bcc_bonferroni_holm.best_predict_param
+)[0][0]
 
 fig, axes = plt.subplots(1, 2, figsize=(14, 5), sharey=True)
 ax_left, ax_right = axes
