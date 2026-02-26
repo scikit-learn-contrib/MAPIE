@@ -145,7 +145,7 @@ clf.fit(X_train, y_train)
 # specified via the ``fwer_method`` parameter of the controller:
 #
 # - ``"bonferroni"``: classical Bonerroni correction,
-# - ``"fixed_sequence"``: Fixed-Sequence Testing (FST) procedure,,
+# - ``"fixed_sequence"``: Fixed-Sequence Testing (FST) procedure,
 # - ``"bonferroni_holm"``: sequential graphical testing method applying the Bonferroni-Holm procedure.
 #
 # The FST procedure requires the risk to be monotonic with respect to the
