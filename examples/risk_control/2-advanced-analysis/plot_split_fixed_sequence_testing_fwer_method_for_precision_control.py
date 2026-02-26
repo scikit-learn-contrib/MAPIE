@@ -57,7 +57,7 @@ Using the same classifier, dataset, and target precision, we illustrate:
 # This separation is essential. Reusing the same data for both steps would lead
 # to optimistic bias and would invalidate the FWER guarantees of the procedure.
 #
-
+# %%
 # sphinx_gallery_thumbnail_number = 2
 
 import matplotlib.pyplot as plt
@@ -337,6 +337,7 @@ ax_left.text(
     "Split FST precision",
     color="teal",
     fontstyle="italic",
+    fontsize=12,
 )
 
 ax_left.axhline(target_precision, color="gray", linestyle="--")
@@ -346,13 +347,15 @@ ax_left.text(
     "Target precision",
     color="gray",
     fontstyle="italic",
+    fontsize=12,
 )
 
 ax_left.axhline(target_precision, color="gray", linestyle="--")
-ax_left.set_title("Bonferroni vs Bonferroni-Holm")
-ax_left.set_xlabel("Threshold")
-ax_left.set_ylabel("Precision")
-ax_left.legend()
+ax_left.set_title("Bonferroni vs Bonferroni-Holm", fontsize=18)
+ax_left.set_xlabel("Threshold", fontsize=16)
+ax_left.set_ylabel("Precision", fontsize=16)
+ax_left.tick_params(labelsize=14)
+ax_left.legend(fontsize=12)
 
 # RIGHT PANEL — Split Fixed Sequence Testing
 tested_mask_sfst = np.isin(tested_thresholds, tested_thresholds_sfst)
@@ -402,6 +405,7 @@ ax_right.text(
     "Split FST precision",
     color="teal",
     fontstyle="italic",
+    fontsize=12,
 )
 ax_right.axhline(target_precision, color="gray", linestyle="--")
 ax_right.text(
@@ -410,12 +414,14 @@ ax_right.text(
     "Target precision",
     color="gray",
     fontstyle="italic",
+    fontsize=12,
 )
 
 ax_right.axhline(target_precision, color="gray", linestyle="--")
-ax_right.set_title("Split Fixed Sequence")
-ax_right.set_xlabel("Threshold")
-ax_right.legend()
+ax_right.set_title("Split Fixed Sequence", fontsize=18)
+ax_right.set_xlabel("Threshold", fontsize=16)
+ax_right.tick_params(labelsize=14)
+ax_right.legend(fontsize=12)
 
 plt.tight_layout()
 plt.show()
