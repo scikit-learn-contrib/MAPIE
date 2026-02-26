@@ -326,6 +326,24 @@ ax_left.scatter(
     label="Naive threshold",
 )
 
+ax_left.axhline(precisions[best_thr_index_sfst], color="teal", linestyle="dotted")
+ax_left.text(
+    0.7,
+    precisions[best_thr_index_sfst] + 0.01,
+    "Split FST precision",
+    color="teal",
+    fontstyle="italic",
+)
+
+ax_left.axhline(target_precision, color="gray", linestyle="--")
+ax_left.text(
+    0.7,
+    target_precision + 0.01,
+    "Target precision",
+    color="gray",
+    fontstyle="italic",
+)
+
 ax_left.axhline(target_precision, color="gray", linestyle="--")
 ax_left.set_title("Bonferroni vs Bonferroni-Holm")
 ax_left.set_xlabel("Threshold")
@@ -352,7 +370,7 @@ ax_right.scatter(
     tested_thresholds[tested_mask_sfst & ~valid_index_sfst],
     precisions[tested_mask_sfst & ~valid_index_sfst],
     c="tab:red",
-    label="Invalid Spli FST",
+    label="Invalid Split FST",
 )
 
 ax_right.scatter(
@@ -363,6 +381,31 @@ ax_right.scatter(
     edgecolors="k",
     s=300,
     label="Best Split FST",
+)
+ax_right.scatter(
+    tested_thresholds[naive_threshold_index],
+    precisions[naive_threshold_index],
+    c="tab:red",
+    marker="*",
+    edgecolors="k",
+    s=300,
+    label="Naive threshold",
+)
+ax_right.axhline(precisions[best_thr_index_sfst], color="teal", linestyle="dotted")
+ax_right.text(
+    0.7,
+    precisions[best_thr_index_sfst] + 0.01,
+    "Split FST precision",
+    color="teal",
+    fontstyle="italic",
+)
+ax_right.axhline(target_precision, color="gray", linestyle="--")
+ax_right.text(
+    0.7,
+    target_precision + 0.01,
+    "Target precision",
+    color="gray",
+    fontstyle="italic",
 )
 
 ax_right.axhline(target_precision, color="gray", linestyle="--")
