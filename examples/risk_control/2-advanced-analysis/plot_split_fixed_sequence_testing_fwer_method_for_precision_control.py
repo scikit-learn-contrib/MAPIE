@@ -315,15 +315,6 @@ ax_left.scatter(
     s=300,
     label="Best Bonferroni-Holm",
 )
-ax_left.scatter(
-    tested_thresholds[best_thr_index_sfst],
-    precisions[best_thr_index_sfst],
-    c="teal",
-    marker="*",
-    edgecolors="k",
-    s=300,
-    label="Best Split FST",
-)
 
 ax_left.scatter(
     tested_thresholds[naive_threshold_index],
