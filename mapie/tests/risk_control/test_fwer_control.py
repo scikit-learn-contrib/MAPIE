@@ -115,7 +115,7 @@ def test_bonferroni_stops_after_first_failure():
     assert np.array_equal(rejected, np.array([1]))
 
 
-def test_fixed_sequence_multistart_multiple_starts():
+def test_fixed_sequence_multi_start():
     p_values = np.array([0.001, 0.003, 0.01, 0.02, 0.2, 0.6])
     delta = 0.1
     n_starts = 3
