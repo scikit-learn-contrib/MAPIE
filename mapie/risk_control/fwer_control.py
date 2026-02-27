@@ -216,10 +216,16 @@ class FWERFixedSequenceTesting(FWERProcedure):
         )
 
     def _select_next_hypothesis(self, p_values):
-        if len(self.start_positions) == 0:
-            return None
+        while self.start_positions:
+            idx = self.start_positions[0]
+            level = self.local_delta
 
-        return min(self.start_positions)
+            if p_values[idx] <= level:
+                return idx
+
+            self.start_positions.pop(0)
+
+        return None
 
     def _local_significance_levels(self):
         levels = np.zeros(self.n_lambdas)
