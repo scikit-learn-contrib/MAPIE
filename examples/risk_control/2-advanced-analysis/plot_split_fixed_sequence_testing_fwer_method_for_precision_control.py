@@ -57,7 +57,7 @@ Using the same classifier, dataset, and target precision, we illustrate:
 # This separation is essential. Reusing the same data for both steps would lead
 # to optimistic bias and would invalidate the FWER guarantees of the procedure.
 #
-# %%
+
 # sphinx_gallery_thumbnail_number = 2
 
 import matplotlib.pyplot as plt
