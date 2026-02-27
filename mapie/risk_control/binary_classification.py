@@ -127,9 +127,10 @@ class BinaryClassificationController:
         - ``"bonferroni"`` : Classical Bonferroni correction. This is the default method.
         It is valid in all settings but can be conservative, especially when the number of tested parameters is large.
         - ``"fixed_sequence"`` : Fixed Sequence Testing (FST) with a single start.
+        However, users can use multi-start by instantiating ``FWERFixedSequenceTesting`` with any desired number
+        of starts and passing the instance to control_fwer.
         - ``"bonferroni_holm"`` : Sequential Graphical Testing corresponding
         to the Bonferroni–Holm procedure. Suitable for general settings.
-        However, users can use multi-start by instantiating ``FWERFixedSequenceTesting`` with any desired number of starts and passing the instance to control_fwer.
         - ``"split_fixed_sequence"`` : Split Fixed Sequence Testing (SFST). The parameter ordering is learned
         on a 30% subset of calibration data and then used for FWER control.
 
