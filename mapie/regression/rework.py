@@ -114,6 +114,25 @@ class _RegressorFitterMixin(_FitterMixin):
 
         return y_pred
 
+    def _aggregate(self, preds):
+        if self.aggregation == 'median':
+            return phi2D(
+                A=preds, B=self.k, fun=lambda(np.nanmedian(preds, axis=1))
+            )
+        if self.aggregation == 'mean':
+            K = np.nan_to_num(self.k, )
+            return np.matmul(preds, (K/K.sum(axis=1, keepdims=True)).T)
+
+    def predict_intervalle(self, X: ArrayLike, **predict_params) -> ArrayLike:
+        return self.conformity_score.predict_set(
+            X,
+            self.alpha,
+            self.conformity_score,
+            ensemble = True,
+            method = self.method,
+            optimize_beta = self.optimize_beta,
+            allowinfinite_bounds = self.allow_infinite_bounds
+        )
 
 class _ClassifierFitterMixin(_FitterMixin):
     estimator_type = ClassifierMixin
@@ -297,9 +316,8 @@ class _ClassifierFitterMixin(_FitterMixin):
 
         return wrapper
 
-    #TODO: rework signature
+    # TODO: rework signature
     def predict_intervalle(self, X: ArrayLike, predict_param) -> ArrayLike:
-
         y_pred = self._estimator_predict(X, predict_params)
 
         prediction_sets = self.conforomity_score.predict_set(
@@ -307,11 +325,15 @@ class _ClassifierFitterMixin(_FitterMixin):
             self.alpha,
             y_pred,
             self.cv,
-            conforomity_scores = self.conformity_scores,
-            include_last_label = self.include_last_label
+            conforomity_scores=self.conformity_scores,
+            include_last_label=self.include_last_label,
         )
 
         return y_pred, prediction_sets
+
+    def _aggregate(self, preds: ArrayLike) -> ArrayLike:
+        if self.aggregation == 'mean':
+            return np.mean(preds, axis=0)
 
 
 class _Conformalizer(ABC):
@@ -488,4 +510,17 @@ class _CrossConformalizer(ABC, _Conformalizer):
         return self
 
     def predict(self, X: ArrayLike, **predict_params) -> ArrayLike:
-        pass
+        preds = Parallel(n_jobs=self.n_jobs, verbose=self.verbose)(
+            delayed(
+                self._predict_val(
+                    estimator,
+                    X,
+                    **predict_params,
+                )
+                for estimator in self.estimators_
+            )
+        )
+        #TODO : not sure it is necessary
+        preds = np.column_stack(preds)
+
+        return self._aggregate(preds)
