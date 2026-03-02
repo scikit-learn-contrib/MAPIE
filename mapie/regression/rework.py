@@ -297,6 +297,22 @@ class _ClassifierFitterMixin(_FitterMixin):
 
         return wrapper
 
+    #TODO: rework signature
+    def predict_intervalle(self, X: ArrayLike, predict_param) -> ArrayLike:
+
+        y_pred = self._estimator_predict(X, predict_params)
+
+        prediction_sets = self.conforomity_score.predict_set(
+            X,
+            self.alpha,
+            y_pred,
+            self.cv,
+            conforomity_scores = self.conformity_scores,
+            include_last_label = self.include_last_label
+        )
+
+        return y_pred, prediction_sets
+
 
 class _Conformalizer(ABC):
     @abstractmethod
