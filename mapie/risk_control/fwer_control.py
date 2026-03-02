@@ -211,9 +211,8 @@ class FWERFixedSequenceTesting(FWERProcedure):
         self._effective_starts = min(self.n_starts, n_lambdas)
         self.local_delta = delta / self._effective_starts
 
-        self.start_positions = list(
-            np.linspace(0, n_lambdas - 1, self._effective_starts, dtype=int)
-        )
+        branch_size = n_lambdas // self._effective_starts
+        self.start_positions = [i * branch_size for i in range(self._effective_starts)]
 
     def _select_next_hypothesis(self, p_values):
         while self.start_positions:
