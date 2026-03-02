@@ -314,7 +314,7 @@ def ltt_procedure(
             for r_hat_i, n_obs_i, alpha_np_i in zip(r_hat, n_obs, alpha_np)
         ]
     )
-    p_values = p_values.max(axis=0)  # take max over risks (no effect if mono risk)
+    p_values = p_values.max(axis=0)  # to handle multiple risks, take max over risks (no effect if mono risk)
 
     # Fixed Sequence Testing (FST) only supports a single monotonic risk.
     # - If non-monotonic: raise error.
