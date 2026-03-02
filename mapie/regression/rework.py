@@ -287,6 +287,16 @@ class _ClassifierFitterMixin(_FitterMixin):
 
         return y_pred
 
+    # use to decorate predict functions when instanciated with a Conformalizer
+    @staticmethod
+    def _decode_labels(func: Callable) -> Callable:
+        @wraps(func)
+        def wrapper(self, X: ArrayLike, **kwargs):
+            y_pred = func(X, **kwargs)
+            return self.label_encoder.inverse_transform(y_pred, axis=1)
+
+        return wrapper
+
 
 class _Conformalizer(ABC):
     @abstractmethod
@@ -328,6 +338,10 @@ class _Conformalizer(ABC):
         groups: Optional[ArrayLike] = None,
         **fit_params,
     ):
+        pass
+
+    @abstractmethod
+    def predict(self, X: ArrayLike, **predict_param) -> ArrayLike:
         pass
 
 
@@ -384,6 +398,10 @@ class _SplitConformalizer(ABC, _Conformalizer):
                 y_val, y_pred, X=X
             )
             return self
+
+        # To be decorated for classifier
+        def predict(self, X: ArrayLike, **predict_param) -> ArrayLike:
+            return self._estimator_predict(X, **predict_param)
 
 
 class _CrossConformalizer(ABC, _Conformalizer):
@@ -451,5 +469,7 @@ class _CrossConformalizer(ABC, _Conformalizer):
             groups=groups,
             predict_params=predict_params,
         )
-
         return self
+
+    def predict(self, X: ArrayLike, **predict_params) -> ArrayLike:
+        pass
