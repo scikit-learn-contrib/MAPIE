@@ -117,7 +117,7 @@ class _RegressorFitterMixin(_FitterMixin):
     def _aggregate(self, preds):
         if self.aggregation == 'median':
             return phi2D(
-                A=preds, B=self.k, fun=lambda(np.nanmedian(preds, axis=1))
+                A=preds, B=self.k, fun=lambda: np.nanmedian(preds, axis=1)
             )
         if self.aggregation == 'mean':
             K = np.nan_to_num(self.k, )
