@@ -125,14 +125,16 @@ def test_fixed_sequence_multi_start():
 
 
 def test_fixed_sequence_multistart_correct_parsing():
-    """Test 3 multi-start [0, 4, 8]"""
-    p_values = np.array([0.03, 0.04, 0.08, 0.1, 0.002, 0.8, 0.08, 0.04, 0.005])
+    """Test 3 equally spaced multi-starts: [0, 4, 8]"""
+    p_values = np.array(
+        [0.03, 0.004, 0.005, 0.25, 0.005, 0.2, 0.8, 0.08, 0.009, 0.005, 0.006, 0.007]
+    )
     delta = 0.09
 
     fwer_procedure = FWERFixedSequenceTesting(n_starts=3)
     rejected = fwer_procedure.run(p_values, delta)
 
-    assert np.array_equal(rejected, np.array([0, 4, 8]))
+    assert np.array_equal(rejected, np.array([0, 1, 2, 4, 8, 9, 10, 11]))
 
 
 def test_fixed_sequence_starts_clipped():
