@@ -131,8 +131,7 @@ class BinaryClassificationController:
         of starts and passing the instance to control_fwer.
         - ``"bonferroni_holm"`` : Sequential Graphical Testing corresponding
         to the Bonferroni–Holm procedure. Suitable for general settings.
-        - ``"split_fixed_sequence"`` : Split Fixed Sequence Testing (SFST). The parameter ordering is learned
-        on a 30% subset of calibration data and then used for FWER control.
+        - ``"split_fixed_sequence"`` : Split Fixed Sequence Testing (SFST).
 
     Attributes
     ----------
