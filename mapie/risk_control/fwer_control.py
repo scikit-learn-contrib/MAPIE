@@ -309,7 +309,7 @@ def control_fwer(
         raise ValueError("delta must be in (0, 1].")
 
     if isinstance(fwer_method, FWERProcedure):
-        procedure = fwer_method
+        procedure: Union[FWERProcedure, FWERBonferroniCorrection] = fwer_method
     elif fwer_method == "bonferroni":
         procedure = FWERBonferroniCorrection()
     elif fwer_method in ["fixed_sequence", "split_fixed_sequence"]:
