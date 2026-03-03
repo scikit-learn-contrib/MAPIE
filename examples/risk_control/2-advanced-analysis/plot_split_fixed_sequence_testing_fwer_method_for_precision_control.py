@@ -34,6 +34,9 @@ restrictive the method is: more conservative procedures tend to select
 smaller sets of valid parameters and may lead to solutions achieving a risk
 well below the target level in order to guarantee validity.
 
+Note that Bonferroni is the default FWER control method due to its simplicity
+and broad applicability across problem settings.
+
 +-----------------+------------------------+--------------------+------------------------+----------------+---------------------+
 | **Method**      | **Conservatism level** | **Monotonic risk** | **Non-monotonic risk** | **Multi-risk** | **Multi-parameter** |
 +-----------------+------------------------+--------------------+------------------------+----------------+---------------------+
