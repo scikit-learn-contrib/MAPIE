@@ -12,9 +12,12 @@ from mapie.risk_control.fwer_control import (
     FWERFixedSequenceTesting,
     FWERProcedure,
 )
+from mapie.risk_control.fwer_control import (
+    learn_fixed_sequence_order as _learn_fixed_sequence_order,
+)
 from mapie.utils import check_valid_ltt_params_index
 
-from .methods import compute_hoeffding_bentkus_p_value, ltt_procedure
+from .methods import ltt_procedure
 from .risks import (
     BinaryClassificationRisk,
     abstention_rate,
@@ -206,6 +209,9 @@ class BinaryClassificationController:
         "abstention_rate": abstention_rate,
     }
 
+    # expose the learn_fixed_sequence_order function as a method of BinaryClassificationController
+    learn_fixed_sequence_order = _learn_fixed_sequence_order
+
     def __init__(
         self,
         predict_function: Callable[[ArrayLike], NDArray],
@@ -354,100 +360,6 @@ class BinaryClassificationController:
 
         self.p_values = p_values
         self._predict_params = original_params
-
-        return self
-
-    def learn_fixed_sequence_order(
-        self,
-        X_learn: ArrayLike,
-        y_learn: ArrayLike,
-        beta_grid: NDArray = np.logspace(-25, 0, 1000),
-        binary: bool = False,
-    ) -> BinaryClassificationController:
-        """
-        Learn an ordered sequence of prediction parameters for split fixed-sequence FWER control.
-
-        This method performs the learning step of split fixed-sequence testing.
-        It must be called before ``calibrate`` when ``fwer_method="split_fixed_sequence"``.
-
-        The data provided here must be independent from the calibration data used later in ``calibrate``.
-        Using the same data would invalidate the statistical guarantees.
-
-        A typical workflow is to split your calibration dataset:
-
-        - one subset for learning the parameter order
-        - one subset for calibration
-
-        For each value in ``beta_grid``, the parameter whose p-value vector is
-        closest to the constant vector beta is selected. Duplicate parameters are
-        removed while preserving order, yielding a deterministic testing sequence.
-
-        Parameters
-        ----------
-        X_learn : ArrayLike
-            Features used only to learn the parameter order.
-
-        y_learn : ArrayLike
-            Binary labels associated with X_learn.
-
-        beta_grid : NDArray, default=np.logspace(-25, 0, 1000)
-            Grid of target p-values used to construct the ordering.
-            Smaller values prioritize parameters with stronger evidence.
-
-        binary : bool, default=False
-            Whether the loss associated with the controlled risk is binary.
-
-        Returns
-        -------
-        BinaryClassificationController
-            The controller instance with the learned sequence of ordered prediction parameters.
-
-        Notes
-        -----
-        This method does NOT perform risk control.
-        It only determines an order of parameters.
-        Statistical guarantees are provided later when calling ``calibrate``.
-        """
-        y_learn = np.asarray(y_learn, dtype=int)
-        predictions_per_param = self._get_predictions_per_param(
-            X_learn, self._predict_params, is_calibration_step=True
-        )
-
-        r_hat, n_obs = self._get_risk_values_and_eff_sample_sizes(
-            y_learn, predictions_per_param, self._risk
-        )
-        alpha_np = np.expand_dims(self._alpha, axis=1)
-        p_values = np.array(
-            [
-                compute_hoeffding_bentkus_p_value(r_hat_i, n_obs_i, alpha_np_i, binary)
-                for r_hat_i, n_obs_i, alpha_np_i in zip(r_hat, n_obs, alpha_np)
-            ]
-        )
-
-        n_risks, n_lambdas = p_values.shape[:2]
-        ordered_predict_params: List[Any] = []
-
-        for beta_value in beta_grid:
-            beta_vector: NDArray[np.float64] = np.repeat(beta_value, n_risks)
-
-            distances_to_beta: list[np.float64] = [
-                np.max(np.abs(p_values[:, idx, 0] - beta_vector))
-                for idx in range(n_lambdas)
-            ]
-
-            best_idx = np.argmin(distances_to_beta)
-            candidate = self._predict_params[best_idx]
-
-            if self.is_multi_dimensional_param:
-                candidate = tuple(candidate.tolist())
-
-            if candidate not in ordered_predict_params:
-                ordered_predict_params.append(candidate)
-
-        if self.is_multi_dimensional_param:
-            ordered_predict_params = [list(p) for p in ordered_predict_params]
-
-        self._learned_fixed_sequence = np.array(ordered_predict_params, dtype=object)
 
         return self
 

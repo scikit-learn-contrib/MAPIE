@@ -1,9 +1,12 @@
 import warnings
 from abc import ABC, abstractmethod
-from typing import Literal, Union
+from typing import TYPE_CHECKING, Any, List, Literal, Union
+
+if TYPE_CHECKING:
+    from mapie.risk_control.binary_classification import BinaryClassificationController
 
 import numpy as np
-from numpy.typing import NDArray
+from numpy.typing import ArrayLike, NDArray
 
 FWER_IMPLEMENTED = [
     "bonferroni",
@@ -251,6 +254,106 @@ class FWERFixedSequenceTesting(FWERProcedure):
                 new_start_positions.append(start)
 
         self.start_positions = new_start_positions
+
+
+def learn_fixed_sequence_order(
+    bcc: "BinaryClassificationController",
+    X_learn: ArrayLike,
+    y_learn: ArrayLike,
+    beta_grid: NDArray = np.logspace(-25, 0, 1000),
+    binary: bool = False,
+) -> "BinaryClassificationController":
+    """
+    Learn an ordered sequence of prediction parameters for split fixed-sequence FWER control [1].
+
+    This method performs the learning step of split fixed-sequence testing.
+    It must be called before ``calibrate`` when ``fwer_method="split_fixed_sequence"``.
+
+    The data provided here must be independent from the calibration data used later in ``calibrate``.
+    Using the same data would invalidate the statistical guarantees.
+
+    A typical workflow is to split your calibration dataset:
+
+    - one subset for learning the parameter order
+    - one subset for calibration
+
+    For each value in ``beta_grid``, the parameter whose p-value vector is
+    closest to the constant vector beta is selected. Duplicate parameters are
+    removed while preserving order, yielding a deterministic testing sequence.
+
+    Parameters
+    ----------
+    X_learn : ArrayLike
+        Features used only to learn the parameter order.
+
+    y_learn : ArrayLike
+        Binary labels associated with X_learn.
+
+    beta_grid : NDArray, default=np.logspace(-25, 0, 1000)
+        Grid of target p-values used to construct the ordering.
+        Smaller values prioritize parameters with stronger evidence.
+
+    binary : bool, default=False
+        Whether the loss associated with the controlled risk is binary.
+
+    Returns
+    -------
+    BinaryClassificationController
+        The controller instance with the learned sequence of ordered prediction parameters.
+
+    Notes
+    -----
+    This method does NOT perform risk control.
+    It only determines an order of parameters.
+    Statistical guarantees are provided later when calling ``calibrate``.
+
+    [1] [1] Angelopoulos, Anastasios N., Stephen, Bates, Emmanuel J. Candès, et al. "Learn Then Test: Calibrating Predictive Algorithms to Achieve Risk Control." (2022).
+    """
+    from mapie.risk_control.methods import (
+        compute_hoeffding_bentkus_p_value,  # Import here to avoid circular imports
+    )
+
+    y_learn = np.asarray(y_learn, dtype=int)
+    predictions_per_param = bcc._get_predictions_per_param(
+        X_learn, bcc._predict_params, is_calibration_step=True
+    )
+
+    r_hat, n_obs = bcc._get_risk_values_and_eff_sample_sizes(
+        y_learn, predictions_per_param, bcc._risk
+    )
+    alpha_np = np.expand_dims(bcc._alpha, axis=1)
+    p_values = np.array(
+        [
+            compute_hoeffding_bentkus_p_value(r_hat_i, n_obs_i, alpha_np_i, binary)
+            for r_hat_i, n_obs_i, alpha_np_i in zip(r_hat, n_obs, alpha_np)
+        ]
+    )
+
+    n_risks, n_lambdas = p_values.shape[:2]
+    ordered_predict_params: List[Any] = []
+
+    for beta_value in beta_grid:
+        beta_vector: NDArray[np.float64] = np.repeat(beta_value, n_risks)
+
+        distances_to_beta: list[np.float64] = [
+            np.max(np.abs(p_values[:, idx, 0] - beta_vector))
+            for idx in range(n_lambdas)
+        ]
+
+        best_idx = np.argmin(distances_to_beta)
+        candidate = bcc._predict_params[best_idx]
+
+        if bcc.is_multi_dimensional_param:
+            candidate = tuple(candidate.tolist())
+
+        if candidate not in ordered_predict_params:
+            ordered_predict_params.append(candidate)
+
+    if bcc.is_multi_dimensional_param:
+        ordered_predict_params = [list(p) for p in ordered_predict_params]
+
+    bcc._learned_fixed_sequence = np.array(ordered_predict_params, dtype=object)
+    return bcc
 
 
 def control_fwer(
