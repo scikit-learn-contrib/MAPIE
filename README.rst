@@ -27,7 +27,7 @@
 .. |Release| image:: https://img.shields.io/github/v/release/scikit-learn-contrib/mapie
     :target: https://github.com/scikit-learn-contrib/MAPIE/releases
 
-.. |Commits| image:: https://img.shields.io/github/commits-since/scikit-learn-contrib/mapie/latest/master
+.. |Commits| image:: https://img.shields.io/github/commits-since/scikit-learn-contrib/mapie/latest
     :target: https://github.com/scikit-learn-contrib/MAPIE/commits/master
 
 .. |Ask DeepWiki| image:: https://deepwiki.com/badge.svg
