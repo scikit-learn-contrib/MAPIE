@@ -24,17 +24,25 @@ cannot be applied directly. SFST circumvents this limitation by learning a
 testing order on separate data, allowing sequential testing while preserving
 valid statistical guarantees.
 
-The applicability of each method depends on the problem structure:
+The applicability of each FWER method depends on the structure of the problem.
+The table below summarizes the conditions under which each procedure can be
+applied (e.g., monotonic or non-monotonic risks, multiple risks, multiple
+parameters).
 
-+----------------------------+--------------------+----------------+---------------------+
-| **Method**                 | **Monotonic risk** | **Multi-risk** | **Multi-parameter** |
-+----------------------------+--------------------+----------------+---------------------+
-| Bonferroni                 | ✅                 | ✅             | ✅                  |
-+----------------------------+--------------------+----------------+---------------------+
-| Bonferroni-Holm            | ✅                 | ✅             | ✅                  |
-+----------------------------+--------------------+----------------+---------------------+
-| Split FST                  | ✅                 | ✅             | ✅                  |
-+----------------------------+--------------------+----------------+---------------------+
+The "Conservatism level" column provides a qualitative indication of how
+restrictive the method is: more conservative procedures tend to select
+smaller sets of valid parameters and may lead to solutions achieving a risk
+well below the target level in order to guarantee validity.
+
++-----------------+------------------------+--------------------+------------------------+----------------+---------------------+
+| **Method**      | **Conservatism level** | **Monotonic risk** | **Non-monotonic risk** | **Multi-risk** | **Multi-parameter** |
++-----------------+------------------------+--------------------+------------------------+----------------+---------------------+
+| Bonferroni      | ➕➕➕➕               | ✅                 | ✅                     | ✅             | ✅                  |
++-----------------+------------------------+--------------------+------------------------+----------------+---------------------+
+| Bonferroni-Holm | ➕➕➕                 | ✅                 | ✅                     | ✅             | ✅                  |
++-----------------+------------------------+--------------------+------------------------+----------------+---------------------+
+| Split FST       | ➕➕                   | ✅                 | ✅                     | ✅             | ✅                  |
++-----------------+------------------------+--------------------+------------------------+----------------+---------------------+
 
 Using the same classifier, dataset, and target precision, we illustrate:
 
