@@ -253,14 +253,6 @@ class FWERFixedSequenceTesting(FWERProcedure):
         self.start_positions = new_start_positions
 
 
-class FWERSplitFixedSequenceTesting(FWERProcedure):
-    """
-    [1] Angelopoulos, Anastasios N., Stephen, Bates, Emmanuel J. Candès, et al. "Learn Then Test: Calibrating Predictive Algorithms to Achieve Risk Control." (2022).
-    """
-
-    pass
-
-
 def _build_fwer(
     method: Union[FWER_METHODS, FWERProcedure],
 ) -> Union[FWERProcedure, FWERBonferroniCorrection]:
