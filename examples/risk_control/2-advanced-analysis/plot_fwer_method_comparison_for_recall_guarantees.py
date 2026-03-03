@@ -33,19 +33,27 @@ a risk in binary classification.
 # please refer to the risk control example gallery showcasing the use case of
 # the SFST FWER control method.
 #
-# The applicability of each method depends on the problem structure:
+# The applicability of each FWER method depends on the structure of the problem.
+# The table below summarizes the conditions under which each procedure can be
+# applied (e.g., monotonic or non-monotonic risks, multiple risks, multiple
+# parameters).
 #
-# +----------------------------+--------------------+----------------+---------------------+
-# | **Method**                 | **Monotonic risk** | **Multi-risk** | **Multi-parameter** |
-# +----------------------------+--------------------+----------------+---------------------+
-# | Bonferroni                 | ✅                 | ✅             | ✅                  |
-# +----------------------------+--------------------+----------------+---------------------+
-# | FST                        | required           | ❌             | ❌                  |
-# +----------------------------+--------------------+----------------+---------------------+
-# | Bonferroni-Holm            | ✅                 | ✅             | ✅                  |
-# +----------------------------+--------------------+----------------+---------------------+
-# | Split FST                  | ✅                 | ✅             | ✅                  |
-# +----------------------------+--------------------+----------------+---------------------+
+# The "Conservatism level" column provides a qualitative indication of how
+# restrictive the method is: more conservative procedures tend to select
+# smaller sets of valid parameters and may lead to solutions achieving a risk
+# well below the target level in order to guarantee validity.
+#
+# +-----------------+------------------------+--------------------+------------------------+----------------+---------------------+
+# | **Method**      | **Conservatism level** | **Monotonic risk** | **Non-monotonic risk** | **Multi-risk** | **Multi-parameter** |
+# +-----------------+------------------------+--------------------+------------------------+----------------+---------------------+
+# | Bonferroni      | ➕➕➕➕               | ✅                 | ✅                     | ✅             | ✅                  |
+# +-----------------+------------------------+--------------------+------------------------+----------------+---------------------+
+# | Bonferroni-Holm | ➕➕➕                 | ✅                 | ✅                     | ✅             | ✅                  |
+# +-----------------+------------------------+--------------------+------------------------+----------------+---------------------+
+# | FST             | ➕                     | ✅                 | ❌                     | ❌             | ❌                  |
+# +-----------------+------------------------+--------------------+------------------------+----------------+---------------------+
+# | Split FST       | ➕➕                   | ✅                 | ✅                     | ✅             | ✅                  |
+# +-----------------+------------------------+--------------------+------------------------+----------------+---------------------+
 #
 # Here we control **1-recall**, which is monotonic with respect to the decision
 # threshold. We therefore expect FST to be the least conservative, Bonferroni
