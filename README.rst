@@ -30,6 +30,9 @@
 .. |Commits| image:: https://img.shields.io/github/commits-since/scikit-learn-contrib/mapie/latest/master
     :target: https://github.com/scikit-learn-contrib/MAPIE/commits/master
 
+.. |Ask DeepWiki| image:: https://deepwiki.com/badge.svg
+    :target: https://deepwiki.com/scikit-learn-contrib/MAPIE
+
 .. image:: https://github.com/scikit-learn-contrib/MAPIE/raw/master/doc/images/mapie_logo_nobg_cut.png
     :width: 400
     :align: center
