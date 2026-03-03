@@ -1,6 +1,6 @@
 .. -*- mode: rst -*-
 
-|GitHubActions| |Codecov| |ReadTheDocs| |License| |PythonVersion| |PyPi| |Conda| |Release| |Commits|
+|GitHubActions| |Codecov| |ReadTheDocs| |License| |PythonVersion| |PyPi| |Conda| |Release| |Commits| |Ask DeepWiki|
 
 .. |GitHubActions| image:: https://github.com/scikit-learn-contrib/MAPIE/actions/workflows/test.yml/badge.svg
     :target: https://github.com/scikit-learn-contrib/MAPIE/actions
@@ -27,8 +27,11 @@
 .. |Release| image:: https://img.shields.io/github/v/release/scikit-learn-contrib/mapie
     :target: https://github.com/scikit-learn-contrib/MAPIE/releases
 
-.. |Commits| image:: https://img.shields.io/github/commits-since/scikit-learn-contrib/mapie/latest/master
+.. |Commits| image:: https://img.shields.io/github/commits-since/scikit-learn-contrib/mapie/latest
     :target: https://github.com/scikit-learn-contrib/MAPIE/commits/master
+
+.. |Ask DeepWiki| image:: https://deepwiki.com/badge.svg
+    :target: https://deepwiki.com/scikit-learn-contrib/MAPIE
 
 .. image:: https://github.com/scikit-learn-contrib/MAPIE/raw/master/doc/images/mapie_logo_nobg_cut.png
     :width: 400
