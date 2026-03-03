@@ -289,6 +289,22 @@ def test_control_fwer_fixed_sequence_equal_split_fixed_sequence_testing():
     assert np.array_equal(valid_index_fst, valid_index_sfst)
 
 
+def test_bonferroni_special_case_of_fixed_sequence_testing():
+    p_values = np.array([0.001, 0.003, 0.01, 0.02, 0.2])
+    delta = 0.1
+
+    fwer_procedure = FWERFixedSequenceTesting(n_starts=len(p_values))
+    valid_index_fst = fwer_procedure.run(p_values, delta)
+
+    valid_index_bonferroni = control_fwer(
+        p_values,
+        delta,
+        fwer_method="bonferroni",
+    )
+
+    assert np.array_equal(valid_index_fst, valid_index_bonferroni)
+
+
 def test_control_fwer_FWERProcedure_instance():
     p_values = np.array([0.001, 0.003, 0.01, 0.02, 0.2])
     delta = 0.1
