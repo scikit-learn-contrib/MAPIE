@@ -253,47 +253,6 @@ class FWERFixedSequenceTesting(FWERProcedure):
         self.start_positions = new_start_positions
 
 
-def _build_fwer(
-    method: Union[FWER_METHODS, FWERProcedure],
-) -> Union[FWERProcedure, FWERBonferroniCorrection]:
-    """
-    Build an instance of FWERProcedure based on the specified method.
-
-    Parameters
-    ----------
-    method : {"bonferroni", "fixed_sequence", "bonferroni_holm", "split_fixed_sequence"}, or FWERProcedure instance
-        FWER control strategy. If a string is provided, it must be one of the supported methods.
-        If an instance of FWERProcedure is provided, it will be used directly.
-
-    Notes
-    -----
-    When method is "fixed_sequence", the number of starts is set to 1 by default.
-    However, users can use multi-start by instantiating FWERFixedSequenceTesting with
-    any desired number of starts and passing the instance to control_fwer.
-
-    If fwer_method="split_fixed_sequence", this function behaves exactly as
-    "fixed_sequence". The distinction exists only upstream, where the ordering
-    of hypotheses may have been learned from separate data.
-    """
-    if isinstance(method, FWERProcedure):
-        return method
-
-    if method == "bonferroni":
-        return FWERBonferroniCorrection()
-
-    if method in ["fixed_sequence", "split_fixed_sequence"]:
-        return FWERFixedSequenceTesting(n_starts=1)
-
-    if method == "bonferroni_holm":
-        return FWERBonferroniHolm()
-
-    raise ValueError(
-        f"Unknown FWER control method: {method}. "
-        f"Supported methods are: {FWER_IMPLEMENTED}, "
-        "or an instance of FWERProcedure."
-    )
-
-
 def control_fwer(
     p_values: NDArray,
     delta: float,
@@ -349,6 +308,19 @@ def control_fwer(
     if not (0 < delta <= 1):
         raise ValueError("delta must be in (0, 1].")
 
-    procedure = _build_fwer(method=fwer_method)
+    if isinstance(fwer_method, FWERProcedure):
+        procedure = fwer_method
+    elif fwer_method == "bonferroni":
+        procedure = FWERBonferroniCorrection()
+    elif fwer_method in ["fixed_sequence", "split_fixed_sequence"]:
+        procedure = FWERFixedSequenceTesting(n_starts=1)
+    elif fwer_method == "bonferroni_holm":
+        procedure = FWERBonferroniHolm()
+    else:
+        raise ValueError(
+            f"Unknown FWER control method: {fwer_method}. "
+            f"Supported methods are: {FWER_IMPLEMENTED}, "
+            "or an instance of FWERProcedure."
+        )
 
     return procedure.run(p_values, delta)
