@@ -106,7 +106,7 @@ class FWERProcedure(ABC):
 
 class FWERBonferroniCorrection:
     """
-    Bonferroni procedure for controlling the FWER.
+    Bonferroni procedure for controlling the FWER [1].
 
     Each hypothesis is tested independently at level delta / n_lambdas.
     The procedure stops as soon as one hypothesis is not rejected.
@@ -115,6 +115,8 @@ class FWERBonferroniCorrection:
     -----
     This is the simplest FWER-controlling method. It does not adapt
     to p-values and does not redistribute error budget after rejections.
+
+    [1] Bonferroni, C. E. (1936). Teoria statistica delle classi e calcolo delle probabilità.
     """
 
     def run(self, p_values: NDArray, delta: float) -> NDArray[np.int_]:
@@ -141,7 +143,7 @@ class FWERBonferroniCorrection:
 
 class FWERBonferroniHolm(FWERProcedure):
     """
-    Holm step-down procedure for controlling the FWER.
+    Holm step-down procedure for controlling the FWER [1].
 
     At each step, the hypothesis with the smallest p-value among the
     remaining ones is tested at level delta / k, where k is the number
@@ -153,6 +155,8 @@ class FWERBonferroniHolm(FWERProcedure):
     -----
     This method strictly dominates Bonferroni in power while preserving
     strong FWER control.
+
+    [1] Holm, S. (1979). A simple sequentially rejective multiple test procedure. Scandinavian journal of statistics, 65-70.
     """
 
     def _init_state(self, n_lambdas: int, delta: float):
@@ -179,7 +183,7 @@ class FWERBonferroniHolm(FWERProcedure):
 class FWERFixedSequenceTesting(FWERProcedure):
     """
     Fixed Sequential Testing (ascending) procedure with multi-start
-    for controlling the Family-Wise Error Rate (FWER).
+    for controlling the Family-Wise Error Rate (FWER) [1].
 
     Hypotheses are assumed to be ordered according to a parameter grid
     such that rejection becomes progressively easier along the sequence.
@@ -192,6 +196,8 @@ class FWERFixedSequenceTesting(FWERProcedure):
     ----------
     n_starts : int, default=1
         Number of equally spaced starting points used in the multi-start procedure.
+
+    [1] P. Bauer, “Multiple testing in clinical trials,” Statistics in Medicine, vol. 10, no. 6, pp. 871–890, 1991.
     """
 
     def __init__(self, n_starts: int = 1):
@@ -245,6 +251,14 @@ class FWERFixedSequenceTesting(FWERProcedure):
                 new_start_positions.append(start)
 
         self.start_positions = new_start_positions
+
+
+class FWERSplitFixedSequenceTesting(FWERProcedure):
+    """
+    [1] Angelopoulos, Anastasios N., Stephen, Bates, Emmanuel J. Candès, et al. "Learn Then Test: Calibrating Predictive Algorithms to Achieve Risk Control." (2022).
+    """
+
+    pass
 
 
 def _build_fwer(
