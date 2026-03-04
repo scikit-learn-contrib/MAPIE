@@ -22,6 +22,7 @@ from mapie.risk_control import (
     recall,
 )
 from mapie.risk_control.binary_classification import Risk
+from mapie.risk_control.fwer_control import FWERFixedSequenceTesting
 
 random_state = 42
 dummy_single_param = np.array([0.5])
@@ -867,3 +868,149 @@ def test_functional_multi_dimensional_params_multi_risk():
     assert bcc_multi_dim.best_predict_param is not None
     assert isinstance(bcc_multi_dim.best_predict_param, tuple)
     assert len(bcc_multi_dim.best_predict_param) == 2
+
+
+def test_check_fwer_method_invalid_method():
+    with pytest.raises(ValueError, match=r".*Unknown fwer_method.*"):
+        BinaryClassificationController(
+            predict_function=dummy_predict,
+            risk=precision,
+            target_level=dummy_target,
+            fwer_method="invalid_method",
+        )
+
+    with pytest.raises(
+        TypeError, match=r".*fwer_method must be a string or FWERProcedure instance.*"
+    ):
+        BinaryClassificationController(
+            predict_function=dummy_predict,
+            risk=precision,
+            target_level=dummy_target,
+            fwer_method=10,
+        )
+
+    with pytest.raises(ValueError, match=r".*Fixed sequence testing cannot be used.*"):
+        BinaryClassificationController(
+            predict_function=dummy_predict,
+            risk=[precision, recall],
+            target_level=[dummy_target, dummy_target],
+            fwer_method="fixed_sequence",
+        )
+
+    with pytest.raises(ValueError, match=r".*Fixed sequence testing cannot be used.*"):
+        BinaryClassificationController(
+            predict_function=dummy_predict,
+            risk=[precision, recall],
+            target_level=[dummy_target, dummy_target],
+            fwer_method=FWERFixedSequenceTesting(),
+        )
+
+
+class TestLearnFixedSequenceOrder:
+    def test_mono_risk_mono_param(self):
+        """Single risk and single parameter should return that parameter."""
+        bcc = BinaryClassificationController(
+            predict_function=realistic_clf.predict_proba,
+            risk=precision,
+            target_level=0.7,
+            list_predict_params=np.array([0.5]),
+            fwer_method="split_fixed_sequence",
+        )
+        bcc.learn_fixed_sequence_order(realistic_X_calib, realistic_y_calib)
+        ordered_param = bcc._learned_fixed_sequence
+
+        assert len(ordered_param) == 1
+        assert ordered_param[0] == 0.5
+
+    def test_mono_risk_multi_param(self):
+        """Sequence should be subset of params and unique."""
+
+        def predict_interval(X, lambda_1, lambda_2):
+            probs = realistic_clf.predict_proba(X)[:, 1]
+            return ((probs >= lambda_1) & (probs <= lambda_2)).astype(int)
+
+        grid = np.array([[l1, l2] for l1 in [0.4, 0.5, 0.6] for l2 in [0.7, 0.8, 0.9]])
+
+        bcc = BinaryClassificationController(
+            predict_function=predict_interval,
+            risk=precision,
+            target_level=0.7,
+            list_predict_params=grid,
+            fwer_method="split_fixed_sequence",
+        )
+
+        bcc.learn_fixed_sequence_order(realistic_X_calib, realistic_y_calib)
+        ordered_param = bcc._learned_fixed_sequence
+
+        assert len(ordered_param) > 0
+
+    def test_multi_risk_mono_param(self):
+        """Single parameter multi-risk should still return valid sequence."""
+        bcc = BinaryClassificationController(
+            predict_function=realistic_clf.predict_proba,
+            risk=[precision, recall],
+            target_level=[0.7, 0.7],
+            list_predict_params=np.array([0.5]),
+            fwer_method="split_fixed_sequence",
+        )
+
+        bcc.learn_fixed_sequence_order(realistic_X_calib, realistic_y_calib)
+        ordered_param = bcc._learned_fixed_sequence
+
+        assert ordered_param == [0.5]
+
+    def test_multi_risk_multi_param(self):
+        """Multi-risk multi-dimensional params should return tuples."""
+
+        def predict_interval(X, lambda_1, lambda_2):
+            probs = realistic_clf.predict_proba(X)[:, 1]
+            return ((probs >= lambda_1) & (probs <= lambda_2)).astype(int)
+
+        grid = np.array([[l1, l2] for l1 in [0.4, 0.5, 0.6] for l2 in [0.7, 0.8, 0.9]])
+
+        bcc = BinaryClassificationController(
+            predict_function=predict_interval,
+            risk=[precision, recall],
+            target_level=[0.6, 0.6],
+            list_predict_params=grid,
+            fwer_method="split_fixed_sequence",
+        )
+
+        bcc.learn_fixed_sequence_order(realistic_X_calib, realistic_y_calib)
+        ordered_param = bcc._learned_fixed_sequence
+
+        assert len(ordered_param) > 0
+        assert all(len(p) == 2 for p in ordered_param)
+
+
+def test_calibrate_without_learning_sequence_raises():
+    bcc = BinaryClassificationController(
+        predict_function=realistic_clf.predict_proba,
+        risk=precision,
+        target_level=0.7,
+        fwer_method="split_fixed_sequence",
+    )
+    with pytest.raises(
+        ValueError,
+        match=r".*You must call 'learn_fixed_sequence_order' before 'calibrate'.*",
+    ):
+        bcc.calibrate(realistic_X_calib, realistic_y_calib)
+
+
+def test_calibrate_uses_sequence_when_split_fixed():
+    predict_params = np.array([0.1, 0.2, 0.3])
+
+    bcc = BinaryClassificationController(
+        predict_function=realistic_clf.predict_proba,
+        risk=precision,
+        target_level=0.7,
+        list_predict_params=predict_params,
+        fwer_method="split_fixed_sequence",
+    )
+
+    bcc.learn_fixed_sequence_order(realistic_X_calib, realistic_y_calib)
+    learned = bcc._learned_fixed_sequence.copy()
+    bcc.calibrate(realistic_X_calib, realistic_y_calib)
+
+    assert np.array_equiv(bcc._predict_params, predict_params)
+    assert np.array_equiv(bcc._learned_fixed_sequence, learned)
