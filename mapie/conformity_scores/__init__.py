@@ -4,6 +4,7 @@ from .bounds import (
     AbsoluteConformityScore,
     GammaConformityScore,
     ResidualNormalisedScore,
+    MultivariateResidualNormalisedScore,
 )
 from .sets import (
     APSConformityScore,
@@ -25,4 +26,5 @@ __all__ = [
     "APSConformityScore",
     "RAPSConformityScore",
     "TopKConformityScore",
+    "MultivariateResidualNormalisedScore"
 ]
