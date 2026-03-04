@@ -115,24 +115,25 @@ class _RegressorFitterMixin(_FitterMixin):
         return y_pred
 
     def _aggregate(self, preds):
-        if self.aggregation == 'median':
-            return phi2D(
-                A=preds, B=self.k, fun=lambda: np.nanmedian(preds, axis=1)
+        if self.aggregation == "median":
+            return phi2D(A=preds, B=self.k, fun=lambda: np.nanmedian(preds, axis=1))
+        if self.aggregation == "mean":
+            K = np.nan_to_num(
+                self.k,
             )
-        if self.aggregation == 'mean':
-            K = np.nan_to_num(self.k, )
-            return np.matmul(preds, (K/K.sum(axis=1, keepdims=True)).T)
+            return np.matmul(preds, (K / K.sum(axis=1, keepdims=True)).T)
 
     def predict_intervalle(self, X: ArrayLike, **predict_params) -> ArrayLike:
         return self.conformity_score.predict_set(
             X,
             self.alpha,
             self.conformity_score,
-            ensemble = True,
-            method = self.method,
-            optimize_beta = self.optimize_beta,
-            allowinfinite_bounds = self.allow_infinite_bounds
+            ensemble=True,
+            method=self.method,
+            optimize_beta=self.optimize_beta,
+            allowinfinite_bounds=self.allow_infinite_bounds,
         )
+
 
 class _ClassifierFitterMixin(_FitterMixin):
     estimator_type = ClassifierMixin
@@ -332,7 +333,7 @@ class _ClassifierFitterMixin(_FitterMixin):
         return y_pred, prediction_sets
 
     def _aggregate(self, preds: ArrayLike) -> ArrayLike:
-        if self.aggregation == 'mean':
+        if self.aggregation == "mean":
             return np.mean(preds, axis=0)
 
 
@@ -520,7 +521,7 @@ class _CrossConformalizer(ABC, _Conformalizer):
                 for estimator in self.estimators_
             )
         )
-        #TODO : not sure it is necessary
+        # TODO : not sure it is necessary
         preds = np.column_stack(preds)
 
         return self._aggregate(preds)
