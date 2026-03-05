@@ -261,6 +261,7 @@ class Trainer:
         self,
         X_train: Union[NDArray, torch.Tensor],
         y_train: Union[NDArray, torch.Tensor],
+        y_pred: Optional[Union[NDArray, torch.Tensor]] = None,
         X_val: Optional[Union[NDArray, torch.Tensor]] = None,
         y_val: Optional[Union[NDArray, torch.Tensor]] = None,
         val_size: float = 0.2,
@@ -279,6 +280,8 @@ class Trainer:
             Training input features.
         y_train : Union[NDArray, torch.Tensor]
             Training target outputs.
+        y_train : Union[NDArray, torch.Tensor]
+            Training target predictions.
         X_val : Optional[Union[NDArray, torch.Tensor]], optional
             Validation input features, by default None.
         y_val : Optional[Union[NDArray, torch.Tensor]], optional
@@ -296,12 +299,14 @@ class Trainer:
         verbose : int, optional
             Verbosity mode (-1 for silent, 1 for sparse, 2 for detailed), by default -1.
         """
-        print('Inside fit')
         optimizer = torch.optim.AdamW(
             list(self.backbone.parameters()) + list(self.head.parameters()),
             lr=lr,
             weight_decay=weight_decay
         )
+
+        if y_pred is not None:
+            raise Exception("Class not implemented with y_pred yet.")
 
         X_train = torch.as_tensor(X_train, dtype=self.dtype, device=self.device)
         y_train = torch.as_tensor(y_train, dtype=self.dtype, device=self.device)
@@ -561,6 +566,26 @@ class Trainer:
         # Solve L z = (y - mu)
         z = torch.linalg.solve_triangular(L, diff, upper=False)
         return torch.sqrt(torch.sum(z.squeeze(-1) ** 2, dim=1))
+    
+    def predict(
+        self, 
+        x: Union[NDArray, torch.Tensor]
+    ) -> NDArray:
+        """
+        Returns the predictions y_pred for the associated X values.
+        
+        Parameters
+        ----------
+        X : ArrayLike
+            The input feature values.
+
+        Returns
+        -------
+        NDArray
+            An array y_pred of the prediction of the model.
+        """
+        x_ = torch.as_tensor(x, dtype=self.dtype, device=self.device)
+        return self.forward(x_)[0].detach().cpu().numpy()
 
     def get_standardized_score(
         self, 

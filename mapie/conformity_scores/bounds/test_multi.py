@@ -14,9 +14,12 @@ class DummyTrainer:
         self.output_dim = output_dim
         self.fitted = False
 
-    def fit(self, X, y, **kwargs):
+    def fit(self, X, y, y_pred=None, **kwargs):
         self.fitted = True
         return self
+    
+    def predict(self, X):
+        return np.zeros((len(X), self.output_dim))
 
     def get_distribution(self, X):
         n_samples = X.shape[0]
@@ -96,7 +99,8 @@ def test_get_signed_conformity_scores_without_y_pred(mock_data):
     """Test score generation when no initial y_pred is provided."""
     X, y, _ = mock_data
     
-    score_calculator = MultivariateResidualNormalisedScore(fit_kwargs={"num_epochs": 1})
+    score_calculator = MultivariateResidualNormalisedScore()
+    score_calculator.fit(X, y, num_epochs=1)
     
     scores = score_calculator.get_signed_conformity_scores(y=y, X=X)
     
@@ -109,23 +113,14 @@ def test_get_signed_conformity_scores_with_y_pred(mock_data):
     """Test score generation when y_pred is provided."""
     X, y, y_pred = mock_data
     
-    score_calculator = MultivariateResidualNormalisedScore(fit_kwargs={"num_epochs": 1})
+    score_calculator = MultivariateResidualNormalisedScore()
+    score_calculator.fit(X, y, num_epochs=1)
     
     scores = score_calculator.get_signed_conformity_scores(y=y, y_pred=y_pred, X=X)
     
     assert isinstance(scores, np.ndarray)
     assert len(scores) > 0
 
-def test_get_signed_conformity_scores_with_y_pred(mock_data):
-    """Test score generation when y_pred is provided."""
-    X, y, y_pred = mock_data
-    
-    score_calculator = MultivariateResidualNormalisedScore(fit_kwargs={"num_epochs": 1})
-    
-    scores = score_calculator.get_signed_conformity_scores(y=y, y_pred=y_pred, X=X)
-    
-    assert isinstance(scores, np.ndarray)
-    assert len(scores) > 0
 
 def test_complex_trainer_get_signed_conformity_scores_with_y_pred(mock_data):
     """Test score generation when y_pred is provided."""
@@ -147,24 +142,37 @@ def test_complex_trainer_get_signed_conformity_scores_with_y_pred(mock_data):
 
     
     for dic_params in list_dic_params:
-        score_calculator = MultivariateResidualNormalisedScore(model_kwargs=dic_params, fit_kwargs={"num_epochs": 1})
+        score_calculator = MultivariateResidualNormalisedScore(**dic_params)
+        score_calculator.fit(X, y, num_epochs=1)
         
         scores = score_calculator.get_signed_conformity_scores(y=y, y_pred=y_pred, X=X)
-        estimation_distribution = score_calculator.get_estimation_distribution(y_pred, scores, X=X)
-        
-        assert isinstance(estimation_distribution, np.ndarray)
+
         assert isinstance(scores, np.ndarray)
         assert len(scores) > 0
 
     for dic_params in list_fit_params:
-        score_calculator = MultivariateResidualNormalisedScore(fit_kwargs=dic_params)
-        
+        score_calculator = MultivariateResidualNormalisedScore()
+        score_calculator.fit(X, y, **dic_params)
         scores = score_calculator.get_signed_conformity_scores(y=y, X=X)
         
         assert isinstance(scores, np.ndarray)
         assert scores.ndim == 1  # Scores should be a 1D array (the norms)
         
         assert score_calculator.covariance_estimator_.fitted is True
+
+def test_get_distribution(mock_data):
+    from typing import Tuple
+    """Test score generation when y_pred is provided."""
+    X, y, y_pred = mock_data
+    
+    score_calculator = MultivariateResidualNormalisedScore()
+    score_calculator.fit(X, y, num_epochs=1)
+    
+    scores = score_calculator.get_signed_conformity_scores(y=y, y_pred=y_pred, X=X)
+    estimation_distribution = score_calculator.get_estimation_distribution(y_pred, scores, X=X)
+    
+    assert isinstance(estimation_distribution[0], np.ndarray)
+    assert isinstance(estimation_distribution[1], np.ndarray)
 
 def test_complex_trainer_get_signed_conformity_scores_without_y_pred(mock_data):
     """Test score generation when no initial y_pred is provided."""
@@ -184,8 +192,9 @@ def test_complex_trainer_get_signed_conformity_scores_without_y_pred(mock_data):
     ]
 
     for dic_params in list_init_params:
-        score_calculator = MultivariateResidualNormalisedScore(model_kwargs=dic_params)
-        
+        score_calculator = MultivariateResidualNormalisedScore(**dic_params)
+        score_calculator.fit(X, y, num_epochs=1)
+
         scores = score_calculator.get_signed_conformity_scores(y=y, X=X)
         
         assert isinstance(scores, np.ndarray)
@@ -194,8 +203,8 @@ def test_complex_trainer_get_signed_conformity_scores_without_y_pred(mock_data):
         assert score_calculator.covariance_estimator_.fitted is True
 
     for dic_params in list_fit_params:
-        score_calculator = MultivariateResidualNormalisedScore(fit_kwargs=dic_params)
-        
+        score_calculator = MultivariateResidualNormalisedScore()
+        score_calculator.fit(X, y, **dic_params)
         scores = score_calculator.get_signed_conformity_scores(y=y, X=X)
         
         assert isinstance(scores, np.ndarray)
@@ -214,6 +223,7 @@ def test_dummy_get_signed_conformity_scores_without_y_pred(mock_data):
         random_state=42,
     )
     
+    score_calculator.fit(X, y)
     scores = score_calculator.get_signed_conformity_scores(y=y, X=X)
     
     assert isinstance(scores, np.ndarray)
@@ -232,6 +242,7 @@ def test_dummy_get_signed_conformity_scores_with_y_pred(mock_data):
         split_size=0.3
     )
     
+    score_calculator.fit(X, y)
     scores = score_calculator.get_signed_conformity_scores(y=y, y_pred=y_pred, X=X)
     
     assert isinstance(scores, np.ndarray)
@@ -240,23 +251,28 @@ def test_dummy_get_signed_conformity_scores_with_y_pred(mock_data):
 def test_non_existing_rank_method(mock_data):
     """Test score generation when no initial y_pred is provided."""
     X, y, _ = mock_data
-
-    dic = {"mode": "jqkncnksjc"}
         
-    score_calculator = MultivariateResidualNormalisedScore(model_kwargs=dic)
+    score_calculator = MultivariateResidualNormalisedScore(mode="jqkncnksjc")
     with pytest.raises(Exception):
         score_calculator.get_signed_conformity_scores(y=y, y_pred=None, X=X)
+
+def test_usage_with_y_pred_to_fit_TO_BE_MODIFIED_FOR_FUTURE_VERSION(mock_data):
+    """Test score generation when no initial y_pred is provided."""
+    X, y, y_pred = mock_data
+        
+    score_calculator = MultivariateResidualNormalisedScore(mode="jqkncnksjc")
+    with pytest.raises(Exception):
+        score_calculator.fit(X, y, y_pred)
     
-def test_model_trained(mock_data):
+def test_model_not_trained(mock_data):
     """Test score generation when y_pred is provided."""
     X, y, y_pred = mock_data
     
     score_calculator = MultivariateResidualNormalisedScore(prefit=True)
     
-    scores = score_calculator.get_signed_conformity_scores(y=y, y_pred=y_pred, X=X)
+    with pytest.raises(Exception):
+        scores = score_calculator.get_signed_conformity_scores(y=y, y_pred=y_pred, X=X)
     
-    assert isinstance(scores, np.ndarray)
-    assert len(scores) > 0
 
 def test_no_X_given(mock_data):
     """

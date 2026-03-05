@@ -13,7 +13,10 @@ import numpy as np
 
 @runtime_checkable
 class CovarianceEstimator(Protocol):
-    def fit(self, X: NDArray, y: Any = None, **kwargs: Any) -> Any: 
+    def fit(self, X: NDArray, y: NDArray, y_pred: Optional[NDArray], **kwargs: Any) -> Any: 
+        ...
+
+    def predict(self, X: NDArray) -> NDArray: 
         ...
         
     def get_distribution(self, X: NDArray) -> Tuple[NDArray, NDArray]: 
@@ -21,8 +24,7 @@ class CovarianceEstimator(Protocol):
         
     def get_covariance_matrix(self, X: NDArray) -> NDArray: 
         ...
-
-      
+    
 class MultivariateResidualNormalisedScore(BaseRegressionScore):
     """
     Multivariate Residual Normalised score.
@@ -78,8 +80,7 @@ class MultivariateResidualNormalisedScore(BaseRegressionScore):
             random_state: Optional[Union[int, np.random.RandomState]] = None,
             sym: bool = False,
             consistency_check: bool = False,
-            model_kwargs: Optional[dict] = dict(),
-            fit_kwargs: Optional[dict] = dict(),
+            **kwargs
         ) -> None:
         """
         Initializes the Multivariate Residual Normalised Score estimator.
@@ -101,18 +102,14 @@ class MultivariateResidualNormalisedScore(BaseRegressionScore):
             Specifies if the conformity score should be symmetric, by default False.
         consistency_check : bool, optional
             Whether to perform consistency checks on the base estimator, by default False.
-        model_kwargs : Optional[dict], optional
-            Additional keyword arguments to pass to the Trainer if `covariance_estimator` is None.
-        fit_kwargs : Optional[dict], optional
-            Additional keyword arguments to pass to the `fit` method of the covariance estimator.
         """
         super().__init__(sym=sym, consistency_check=consistency_check)
         self.prefit = prefit
         self.covariance_estimator_ = covariance_estimator
         self.split_size = split_size
         self.random_state = random_state
-        self.model_kwargs = model_kwargs
-        self.fit_kwargs = fit_kwargs
+        self.kwargs = kwargs
+        self.is_fitted = False
 
     def _check_estimator(
         self, 
@@ -141,7 +138,7 @@ class MultivariateResidualNormalisedScore(BaseRegressionScore):
         """
         if estimator is None:
             from covariance_trainer import Trainer
-            return Trainer(self.input_dim, self.output_dim, **self.model_kwargs)
+            return Trainer(self.input_dim, self.output_dim, **self.kwargs)
         else:
             if not (hasattr(estimator, "fit") and hasattr(estimator, "get_distribution") and hasattr(estimator, "get_covariance_matrix")):
                 raise ValueError(
@@ -199,7 +196,42 @@ class MultivariateResidualNormalisedScore(BaseRegressionScore):
         self,
         X: NDArray,
         y: NDArray,
+        y_pred: Optional[NDArray] = None,
+        **kwargs,
     ) -> Any:
+        """
+        Fits the residual covariance estimator on the provided data.
+
+        Parameters
+        ----------
+        X : NDArray
+            The observed input features used to train the covariance estimator.
+        y : NDArray
+            The target values used to train the covariance estimator.
+        y : Optional[NDArray]
+            The predicted values. If not None, the model learns the residuals,
+            otherwise if learns the center and the covariance matrix.
+
+        Returns
+        -------
+        Any
+            The newly fitted covariance estimator.
+        """
+        self.covariance_estimator_.fit(
+                                X,
+                                y,
+                                y_pred,
+                                **kwargs)
+        
+        return self.covariance_estimator_
+    
+    def fit(
+        self,
+        X: NDArray,
+        y: NDArray,
+        y_pred: Optional[NDArray] = None,
+        **kwargs, 
+    ) -> None:
         """
         Fits the residual covariance estimator on the provided data.
 
@@ -215,12 +247,33 @@ class MultivariateResidualNormalisedScore(BaseRegressionScore):
         Any
             The newly fitted covariance estimator.
         """
-        self.covariance_estimator_.fit(
-                                X,
-                                y,
-                                **self.fit_kwargs)
+        X = cast(ArrayLike, X)
+
+        (X, y, y_pred, self.covariance_estimator_, _) = self._check_parameters(
+            X, y, y_pred
+        )
+
+        self._fit_covariance_estimator(X, y, y_pred, **kwargs)
+        self.is_fitted = True
+
+    def predict(
+        self, 
+        X: ArrayLike
+    ) -> NDArray:
+        """
+        Returns the predictions y_pred for the associated X values.
         
-        return self.covariance_estimator_
+        Parameters
+        ----------
+        X : ArrayLike
+            The input feature values.
+
+        Returns
+        -------
+        NDArray
+            An array y_pred of the prediction of the model.
+        """
+        return self.covariance_estimator_.predict(X)
     
 
     def get_signed_conformity_scores(
@@ -268,54 +321,21 @@ class MultivariateResidualNormalisedScore(BaseRegressionScore):
 
         if y_pred is not None and np.isnan(y_pred).any():
             raise ValueError("y_pred contains NaN values.")
+        if y_pred is None:
+            y_pred = self.predict(X)
 
         full_indexes = np.arange(len(y))
 
-        if y_pred is None or not self.prefit:
-            train_indexes, cal_indexes = train_test_split(
-                full_indexes,
-                test_size=self.split_size,
-                random_state=random_state,
-            )
-            X_train = _safe_indexing(X, train_indexes)
-            y_train = _safe_indexing(y, train_indexes)
-            
-            # If an initial prediction is given, we only learn the covariance
-            if y_pred is not None:
-                y_pred_train = _safe_indexing(y_pred, train_indexes)
-                residuals_train = y_train - y_pred_train
-                self.covariance_estimator_ = self._fit_covariance_estimator(
-                X_train,
-                residuals_train,
-                )
-            # Otherwise we learn the center and the covariance predictor
-            else:
-                self.covariance_estimator_ = self._fit_covariance_estimator(
-                    X_train,
-                    y_train,
-                )
-            self.prefit = True
+        if not self.is_fitted:
+            raise Exception("This score needs to be learned first.")
 
-            X_cal = _safe_indexing(X, cal_indexes)
-            y_cal = _safe_indexing(y, cal_indexes)
-            if y_pred is not None:
-                y_pred_cal = _safe_indexing(y_pred, cal_indexes)
-                Sigma_pred = self.covariance_estimator_.get_covariance_matrix(X_cal)
-                print("y_cal, y_pred_cal, Sigma_pred", type(y_cal), type(y_pred_cal), type(Sigma_pred))
-                conformity_scores = self._get_standardized_score(y_cal, y_pred_cal, Sigma_pred)
-            else:
-                if not hasattr(self.covariance_estimator_, "get_standardized_score"): 
-                    y_pred, Sigma_pred = self.covariance_estimator_.get_distribution(X_cal)
-                    conformity_scores = self._get_standardized_score(y_cal, y_pred, Sigma_pred)
-                else: conformity_scores = self.covariance_estimator_.get_standardized_score(X_cal, y_cal)
-        else:
-            cal_indexes = full_indexes
-            X_cal = _safe_indexing(X, cal_indexes)
-            y_cal = _safe_indexing(y, cal_indexes)
-            
-            y_pred_cal = _safe_indexing(y_pred, cal_indexes)
-            Sigma_pred = self.covariance_estimator_.get_covariance_matrix(X_cal)
-            conformity_scores = self._get_standardized_score(y_cal, y_pred_cal, Sigma_pred)
+        cal_indexes = full_indexes
+        X_cal = _safe_indexing(X, cal_indexes)
+        y_cal = _safe_indexing(y, cal_indexes)
+        
+        y_pred_cal = _safe_indexing(y_pred, cal_indexes)
+        Sigma_pred = self.covariance_estimator_.get_covariance_matrix(X_cal)
+        conformity_scores = self._get_standardized_score(y_cal, y_pred_cal, Sigma_pred)
             
         return conformity_scores
     
@@ -368,9 +388,7 @@ class MultivariateResidualNormalisedScore(BaseRegressionScore):
         ``conformity_scores`` can be either the conformity scores or
         the quantile of the conformity scores.
         """
-        self.covariance_estimator_.get_distribution(X)
-        return np.ones(3)
-        pass
+        return self.covariance_estimator_.get_distribution(X)
         # if X is None:
         #     raise ValueError(
         #         "Additional parameters must be provided for the method to "
