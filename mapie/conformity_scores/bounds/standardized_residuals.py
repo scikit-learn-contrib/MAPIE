@@ -5,7 +5,7 @@ from numpy.typing import ArrayLike, NDArray
 from sklearn.utils import _safe_indexing
 from sklearn.utils.validation import check_random_state, indexable
 
-from mapie.conformity_scores import BaseRegressionScore
+from mapie.conformity_scores.regression import BaseFitRegressionScore
 
 
 @runtime_checkable
@@ -21,7 +21,7 @@ class CovarianceEstimator(Protocol):
     def get_covariance_matrix(self, X: NDArray) -> NDArray: ...
 
 
-class MultivariateResidualNormalisedScore(BaseRegressionScore):
+class MultivariateResidualNormalisedScore(BaseFitRegressionScore):
     """
     Multivariate Residual Normalised score.
 
@@ -71,7 +71,7 @@ class MultivariateResidualNormalisedScore(BaseRegressionScore):
 
     def __init__(
         self,
-        covariance_estimator: Optional[Any] = None,
+        covariance_estimator: Optional[CovarianceEstimator] = None,
         prefit: bool = False,
         split_size: Optional[Union[int, float]] = None,
         random_state: Optional[Union[int, np.random.RandomState]] = None,
@@ -84,7 +84,7 @@ class MultivariateResidualNormalisedScore(BaseRegressionScore):
 
         Parameters
         ----------
-        covariance_estimator : Optional[Any], optional
+        covariance_estimator : Optional[CovarianceEstimator], optional
             The model that learns to predict the covariance of the residuals.
             Must implement `fit`, `get_distribution`, and `get_covariance_matrix`.
             If None, defaults to a Trainer instance, by default None.
@@ -131,7 +131,7 @@ class MultivariateResidualNormalisedScore(BaseRegressionScore):
             If the provided estimator lacks `fit`, `get_distribution`, or `get_covariance_matrix` methods.
         """
         if estimator is None:
-            from covariance_trainer import Trainer
+            from mapie.conformity_scores.bounds.covariance_trainer import Trainer
 
             return Trainer(self.input_dim, self.output_dim, **self.kwargs)
         else:
@@ -212,7 +212,7 @@ class MultivariateResidualNormalisedScore(BaseRegressionScore):
 
         Returns
         -------
-        Any
+        CovarianceEstimator
             The newly fitted covariance estimator.
         """
         self.covariance_estimator_.fit(X, y, y_pred, **kwargs)
@@ -225,7 +225,7 @@ class MultivariateResidualNormalisedScore(BaseRegressionScore):
         y: NDArray,
         y_pred: Optional[NDArray] = None,
         **kwargs,
-    ) -> None:
+    ) -> "MultivariateResidualNormalisedScore":
         """
         Fits the residual covariance estimator on the provided data.
 
@@ -238,8 +238,8 @@ class MultivariateResidualNormalisedScore(BaseRegressionScore):
 
         Returns
         -------
-        Any
-            The newly fitted covariance estimator.
+        MultivariateResidualNormalisedScore
+            The newly fitted score.
         """
         X = cast(ArrayLike, X)
 
@@ -249,6 +249,7 @@ class MultivariateResidualNormalisedScore(BaseRegressionScore):
 
         self._fit_covariance_estimator(X, y, y_pred, **kwargs)
         self.is_fitted = True
+        return self
 
     def predict(self, X: ArrayLike) -> NDArray:
         """
@@ -317,7 +318,7 @@ class MultivariateResidualNormalisedScore(BaseRegressionScore):
         full_indexes = np.arange(len(y))
 
         if not self.is_fitted:
-            raise Exception("This score needs to be learned first.")
+            raise ValueError("This score needs to be learned first.")
 
         cal_indexes = full_indexes
         X_cal = _safe_indexing(X, cal_indexes)

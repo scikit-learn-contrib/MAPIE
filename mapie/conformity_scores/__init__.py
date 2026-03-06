@@ -5,7 +5,7 @@ from .bounds import (
     ResidualNormalisedScore,
 )
 from .classification import BaseClassificationScore
-from .regression import BaseRegressionScore
+from .regression import BaseFitRegressionScore, BaseRegressionScore
 from .sets import (
     APSConformityScore,
     LACConformityScore,
@@ -16,6 +16,7 @@ from .sets import (
 
 __all__ = [
     "BaseRegressionScore",
+    "BaseFitRegressionScore",
     "BaseClassificationScore",
     "AbsoluteConformityScore",
     "GammaConformityScore",
