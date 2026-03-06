@@ -1334,7 +1334,7 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
             )
 
         X, y = indexable(X, y)
-        y = _check_y(y)
+        y = _check_y(y, multi_output=(y.ndim > 1))
         sample_weight, X, y = _check_null_weight(sample_weight, X, y)
         self.n_features_in_ = _check_n_features_in(X)
 
