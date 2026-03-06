@@ -492,7 +492,6 @@ class Trainer:
         x_ = torch.as_tensor(x, dtype=self.dtype, device=self.device)
         with torch.no_grad():
             params = self.forward(x_)
-        B = x_.shape[0]
 
         if self.mode == "low_rank":
             mu, D, V = params

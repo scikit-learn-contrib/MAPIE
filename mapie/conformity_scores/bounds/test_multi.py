@@ -286,7 +286,7 @@ def test_model_not_trained(mock_data):
     score_calculator = MultivariateResidualNormalisedScore(prefit=True)
 
     with pytest.raises(Exception):
-        scores = score_calculator.get_signed_conformity_scores(y=y, y_pred=y_pred, X=X)
+        score_calculator.get_signed_conformity_scores(y=y, y_pred=y_pred, X=X)
 
 
 def test_no_X_given(mock_data):
