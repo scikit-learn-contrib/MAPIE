@@ -215,6 +215,7 @@ class MultivariateResidualNormalisedScore(BaseFitRegressionScore):
         CovarianceEstimator
             The newly fitted covariance estimator.
         """
+        assert self.covariance_estimator_ is not None
         self.covariance_estimator_.fit(X, y, y_pred, **kwargs)
 
         return self.covariance_estimator_
@@ -265,13 +266,14 @@ class MultivariateResidualNormalisedScore(BaseFitRegressionScore):
         NDArray
             An array y_pred of the prediction of the model.
         """
+        assert self.covariance_estimator_ is not None
         return self.covariance_estimator_.predict(X)
 
     def get_signed_conformity_scores(
         self,
         y: ArrayLike,
         y_pred: Optional[ArrayLike] = None,
-        X: Optional[ArrayLike] = None,
+        **kwargs: Any,
     ) -> NDArray:
         """
         Computes the multivariate standardized conformity score:
@@ -299,6 +301,7 @@ class MultivariateResidualNormalisedScore(BaseFitRegressionScore):
         ValueError
             If `X` is None, or if `y_pred` contains NaN values.
         """
+        X: Optional[ArrayLike] = kwargs.get("X", None)
         if X is None:
             raise ValueError(
                 "Additional parameters must be provided for the method to "
@@ -378,6 +381,7 @@ class MultivariateResidualNormalisedScore(BaseFitRegressionScore):
         ``conformity_scores`` can be either the conformity scores or
         the quantile of the conformity scores.
         """
+        assert self.covariance_estimator_ is not None
         return self.covariance_estimator_.get_distribution(X)
         # if X is None:
         #     raise ValueError(
