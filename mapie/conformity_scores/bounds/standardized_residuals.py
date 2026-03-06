@@ -1,30 +1,26 @@
-from typing import Optional, Tuple, Union, cast, Protocol, runtime_checkable, Any
+from typing import Any, Optional, Protocol, Tuple, Union, cast, runtime_checkable
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
-from sklearn.model_selection import train_test_split
 from sklearn.utils import _safe_indexing
 from sklearn.utils.validation import check_random_state, indexable
 
 from mapie.conformity_scores import BaseRegressionScore
 
-import numpy as np
-
 
 @runtime_checkable
 class CovarianceEstimator(Protocol):
-    def fit(self, X: NDArray, y: NDArray, y_pred: Optional[NDArray], **kwargs: Any) -> Any: 
-        ...
+    def fit(
+        self, X: NDArray, y: NDArray, y_pred: Optional[NDArray], **kwargs: Any
+    ) -> Any: ...
 
-    def predict(self, X: NDArray) -> NDArray: 
-        ...
-        
-    def get_distribution(self, X: NDArray) -> Tuple[NDArray, NDArray]: 
-        ...
-        
-    def get_covariance_matrix(self, X: NDArray) -> NDArray: 
-        ...
-    
+    def predict(self, X: NDArray) -> NDArray: ...
+
+    def get_distribution(self, X: NDArray) -> Tuple[NDArray, NDArray]: ...
+
+    def get_covariance_matrix(self, X: NDArray) -> NDArray: ...
+
+
 class MultivariateResidualNormalisedScore(BaseRegressionScore):
     """
     Multivariate Residual Normalised score.
@@ -32,11 +28,11 @@ class MultivariateResidualNormalisedScore(BaseRegressionScore):
     The conformity score = $\Vert\Sigma(X)^{-1/2}(Y-f(X))\Vert_2$. Sigma(X) being the
     predicted covariance of the base estimator.
     It is calculated by a model that learns to predict the covariance of these residuals.
-    The learning is done by minimizing the NLL induced by a Gaussian model. For large dimension, 
-    we encourage to use the low_rank approximation to learn Sigma(X) = Diagonal(X) + R(X)R(X)^T 
+    The learning is done by minimizing the NLL induced by a Gaussian model. For large dimension,
+    we encourage to use the low_rank approximation to learn Sigma(X) = Diagonal(X) + R(X)R(X)^T
     where R() is low rank. To do so, use the ``init_trainer(self, input_dim, output_dim; mode="low_rank")`` function
 
-    The conformity score allows the calculation of prediction sets with improved conditional coverage properties. 
+    The conformity score allows the calculation of prediction sets with improved conditional coverage properties.
     (taking X into account). It is possible to use it only with split and prefit methods (not with cross methods).
 
     Warning : if the estimator provided is not fitted a subset of the
@@ -72,29 +68,30 @@ class MultivariateResidualNormalisedScore(BaseRegressionScore):
         Pass an int for reproducible output across multiple function calls.
         By default ``None``.
     """
+
     def __init__(
-            self,
-            covariance_estimator: Optional[Any] = None,
-            prefit: bool = False,
-            split_size: Optional[Union[int, float]] = None,
-            random_state: Optional[Union[int, np.random.RandomState]] = None,
-            sym: bool = False,
-            consistency_check: bool = False,
-            **kwargs
-        ) -> None:
+        self,
+        covariance_estimator: Optional[Any] = None,
+        prefit: bool = False,
+        split_size: Optional[Union[int, float]] = None,
+        random_state: Optional[Union[int, np.random.RandomState]] = None,
+        sym: bool = False,
+        consistency_check: bool = False,
+        **kwargs,
+    ) -> None:
         """
         Initializes the Multivariate Residual Normalised Score estimator.
 
         Parameters
         ----------
         covariance_estimator : Optional[Any], optional
-            The model that learns to predict the covariance of the residuals. 
-            Must implement `fit`, `get_distribution`, and `get_covariance_matrix`. 
+            The model that learns to predict the covariance of the residuals.
+            Must implement `fit`, `get_distribution`, and `get_covariance_matrix`.
             If None, defaults to a Trainer instance, by default None.
         prefit : bool, optional
             Specify if the `covariance_estimator` is already fitted, by default False.
         split_size : Optional[Union[int, float]], optional
-            The proportion of data used to fit the `covariance_estimator`. 
+            The proportion of data used to fit the `covariance_estimator`.
             Defaults to 0.25 (sklearn's default train_test_split behavior), by default None.
         random_state : Optional[Union[int, np.random.RandomState]], optional
             Pseudo-random number seed for reproducible sampling, by default None.
@@ -111,14 +108,11 @@ class MultivariateResidualNormalisedScore(BaseRegressionScore):
         self.kwargs = kwargs
         self.is_fitted = False
 
-    def _check_estimator(
-        self, 
-        estimator: Optional[Any] = None
-    ) -> Any:
+    def _check_estimator(self, estimator: Optional[Any] = None) -> Any:
         """
         Checks if the estimator is `None` and returns a default `Trainer` instance if necessary.
-        
-        If the `prefit` attribute is True, it implicitly assumes the estimator 
+
+        If the `prefit` attribute is True, it implicitly assumes the estimator
         is already fitted. Otherwise, it verifies the presence of required methods.
 
         Parameters
@@ -138,9 +132,14 @@ class MultivariateResidualNormalisedScore(BaseRegressionScore):
         """
         if estimator is None:
             from covariance_trainer import Trainer
+
             return Trainer(self.input_dim, self.output_dim, **self.kwargs)
         else:
-            if not (hasattr(estimator, "fit") and hasattr(estimator, "get_distribution") and hasattr(estimator, "get_covariance_matrix")):
+            if not (
+                hasattr(estimator, "fit")
+                and hasattr(estimator, "get_distribution")
+                and hasattr(estimator, "get_covariance_matrix")
+            ):
                 raise ValueError(
                     "Invalid estimator. "
                     "Please provide a regressor with fit, get_distribution and get_covariance_matrix methods."
@@ -148,11 +147,10 @@ class MultivariateResidualNormalisedScore(BaseRegressionScore):
             return estimator
 
     def _check_parameters(
-        self, 
-        X: ArrayLike, 
-        y: ArrayLike, 
-        y_pred: Optional[ArrayLike] = None
-    ) -> Tuple[NDArray, NDArray, Optional[NDArray], Any, Union[int, np.random.RandomState]]:
+        self, X: ArrayLike, y: ArrayLike, y_pred: Optional[ArrayLike] = None
+    ) -> Tuple[
+        NDArray, NDArray, Optional[NDArray], Any, Union[int, np.random.RandomState]
+    ]:
         """
         Checks and validates all incoming parameters and target matrices.
 
@@ -217,20 +215,16 @@ class MultivariateResidualNormalisedScore(BaseRegressionScore):
         Any
             The newly fitted covariance estimator.
         """
-        self.covariance_estimator_.fit(
-                                X,
-                                y,
-                                y_pred,
-                                **kwargs)
-        
+        self.covariance_estimator_.fit(X, y, y_pred, **kwargs)
+
         return self.covariance_estimator_
-    
+
     def fit(
         self,
         X: NDArray,
         y: NDArray,
         y_pred: Optional[NDArray] = None,
-        **kwargs, 
+        **kwargs,
     ) -> None:
         """
         Fits the residual covariance estimator on the provided data.
@@ -256,13 +250,10 @@ class MultivariateResidualNormalisedScore(BaseRegressionScore):
         self._fit_covariance_estimator(X, y, y_pred, **kwargs)
         self.is_fitted = True
 
-    def predict(
-        self, 
-        X: ArrayLike
-    ) -> NDArray:
+    def predict(self, X: ArrayLike) -> NDArray:
         """
         Returns the predictions y_pred for the associated X values.
-        
+
         Parameters
         ----------
         X : ArrayLike
@@ -274,19 +265,18 @@ class MultivariateResidualNormalisedScore(BaseRegressionScore):
             An array y_pred of the prediction of the model.
         """
         return self.covariance_estimator_.predict(X)
-    
 
     def get_signed_conformity_scores(
-        self, 
-        y: ArrayLike, 
-        y_pred: Optional[ArrayLike] = None, 
-        X: Optional[ArrayLike] = None
+        self,
+        y: ArrayLike,
+        y_pred: Optional[ArrayLike] = None,
+        X: Optional[ArrayLike] = None,
     ) -> NDArray:
         """
-        Computes the multivariate standardized conformity score: 
+        Computes the multivariate standardized conformity score:
         $ \Vert \Sigma_{pred}^{-1/2}(y - y_{pred}) \Vert_2 $
-        
-        $\Sigma_{pred}$ is the predicted covariance matrix of the residuals, calculated 
+
+        $\Sigma_{pred}$ is the predicted covariance matrix of the residuals, calculated
         by minimizing the NLL of a Gaussian model.
 
         Parameters
@@ -315,8 +305,8 @@ class MultivariateResidualNormalisedScore(BaseRegressionScore):
             )
         X = cast(ArrayLike, X)
 
-        (X, y, y_pred, self.covariance_estimator_, random_state) = self._check_parameters(
-            X, y, y_pred
+        (X, y, y_pred, self.covariance_estimator_, random_state) = (
+            self._check_parameters(X, y, y_pred)
         )
 
         if y_pred is not None and np.isnan(y_pred).any():
@@ -332,22 +322,20 @@ class MultivariateResidualNormalisedScore(BaseRegressionScore):
         cal_indexes = full_indexes
         X_cal = _safe_indexing(X, cal_indexes)
         y_cal = _safe_indexing(y, cal_indexes)
-        
+
         y_pred_cal = _safe_indexing(y_pred, cal_indexes)
         Sigma_pred = self.covariance_estimator_.get_covariance_matrix(X_cal)
         conformity_scores = self._get_standardized_score(y_cal, y_pred_cal, Sigma_pred)
-            
+
         return conformity_scores
-    
+
     @staticmethod
     def _get_standardized_score(
-        y: NDArray, 
-        y_pred: NDArray, 
-        Sigma_pred: NDArray
+        y: NDArray, y_pred: NDArray, Sigma_pred: NDArray
     ) -> NDArray:
         """
         Computes the standardized Euclidean distance $ \Vert \Sigma_{pred}^{-1/2}(y - y_{pred}) \Vert_2 $.
-        
+
         Parameters
         ----------
         y : NDArray
@@ -356,7 +344,7 @@ class MultivariateResidualNormalisedScore(BaseRegressionScore):
             Predicted target values of shape (n, d).
         Sigma_pred : NDArray
             Predicted covariance matrices of shape (n, d, d).
-            
+
         Returns
         -------
         NDArray
@@ -365,10 +353,11 @@ class MultivariateResidualNormalisedScore(BaseRegressionScore):
         residuals = y - y_pred
         vals, vecs = np.linalg.eigh(Sigma_pred)
         inv_sqrt_vals = 1.0 / np.sqrt(vals)
-        Sigma_inv_half = (vecs * inv_sqrt_vals[:, np.newaxis, :]) @ vecs.transpose(0, 2, 1)
+        Sigma_inv_half = (vecs * inv_sqrt_vals[:, np.newaxis, :]) @ vecs.transpose(
+            0, 2, 1
+        )
         standardized_trainiduals = Sigma_inv_half @ residuals[..., np.newaxis]
         return np.linalg.norm(standardized_trainiduals.squeeze(-1), axis=1)
-    
 
     def get_estimation_distribution(
         self,
@@ -394,19 +383,18 @@ class MultivariateResidualNormalisedScore(BaseRegressionScore):
         #         "Additional parameters must be provided for the method to "
         #         + "work (here `X` is missing)."
         #     )
-        
+
         # X = cast(ArrayLike, X)
         # if y_pred is not None:
         #     Sigma_X = self.covariance_estimator_.get_covariance_matrix(X)
         # else:
         #     y_pred, Sigma_X = self.covariance_estimator_.get_distribution(X)
-        
+
         # return y_pred, Sigma_X
-    
+
     # def get_estimation_covariance(
     #     self,
     #     X: ArrayLike,
     # ) -> Tuple[NDArray, NDArray]:
     #     _, Sigma = self.get_estimation_distribution(X)
     #     return Sigma
-        

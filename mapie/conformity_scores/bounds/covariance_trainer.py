@@ -1,29 +1,29 @@
-from typing import Optional, Tuple, Union, Any
-
-from numpy.typing import ArrayLike, NDArray
-from sklearn.model_selection import train_test_split
+import copy
+import math
+from typing import Any, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
-import math
-import copy
+from numpy.typing import NDArray
+from sklearn.model_selection import train_test_split
 
 # ==========================================
 # The model architecture (Backbone + Head)
 # ==========================================
 
+
 class SimpleTabularMLP(nn.Module):
     """
     Robust Backbone: ResNet-MLP for Tabular Data
     """
+
     def __init__(
-        self, 
-        num_cont: int, 
-        hidden_dim: int = 128, 
-        num_layers: int = 3, 
-        dropout: float = 0.1
+        self,
+        num_cont: int,
+        hidden_dim: int = 128,
+        num_layers: int = 3,
+        dropout: float = 0.1,
     ) -> None:
         """
         Initializes a robust ResNet-style Multilayer Perceptron (MLP) for tabular data.
@@ -41,17 +41,20 @@ class SimpleTabularMLP(nn.Module):
         """
         super().__init__()
         self.first_layer = nn.Linear(num_cont, hidden_dim)
-        
-        self.blocks = nn.ModuleList([
-            nn.Sequential(
-                nn.Linear(hidden_dim, hidden_dim),
-                nn.ReLU(),
-                nn.Dropout(dropout),
-                nn.Linear(hidden_dim, hidden_dim),
-                nn.Dropout(dropout)
-            ) for _ in range(num_layers)
-        ])
-        
+
+        self.blocks = nn.ModuleList(
+            [
+                nn.Sequential(
+                    nn.Linear(hidden_dim, hidden_dim),
+                    nn.ReLU(),
+                    nn.Dropout(dropout),
+                    nn.Linear(hidden_dim, hidden_dim),
+                    nn.Dropout(dropout),
+                )
+                for _ in range(num_layers)
+            ]
+        )
+
         self.norm = nn.LayerNorm(hidden_dim)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -66,12 +69,12 @@ class SimpleTabularMLP(nn.Module):
         Returns
         -------
         torch.Tensor
-            The extracted feature representations of shape (Batch, hidden_dim) 
+            The extracted feature representations of shape (Batch, hidden_dim)
             after applying residual connections and layer normalization.
         """
         x = self.first_layer(x)
         for block in self.blocks:
-            x = x + block(x)  
+            x = x + block(x)
         return self.norm(x)
 
 
@@ -79,16 +82,17 @@ class RobustCovarianceHead(nn.Module):
     """
     Unified Head: Switches between Full Cholesky and Low-Rank.
     """
+
     def __init__(
-        self, 
-        input_dim: int, 
-        y_dim: int, 
-        init_sigma: float = 1.0, 
-        mode: str = "full_cholesky"
+        self,
+        input_dim: int,
+        y_dim: int,
+        init_sigma: float = 1.0,
+        mode: str = "full_cholesky",
     ) -> None:
         """
         Initializes a unified head that outputs parameters for a multivariate normal distribution.
-        
+
         It switches between predicting a full Cholesky decomposition or a low-rank approximation.
 
         Parameters
@@ -101,7 +105,7 @@ class RobustCovarianceHead(nn.Module):
             The initial scaling factor for the diagonal covariance elements, by default 1.0.
         mode : str, optional
             The covariance modeling mode, either 'full_cholesky' or 'low_rank', by default 'full_cholesky'.
-            
+
         Raises
         ------
         ValueError
@@ -109,33 +113,38 @@ class RobustCovarianceHead(nn.Module):
         """
         super().__init__()
         self.y_dim = y_dim
-        if mode == 'low_rank':
-            self.mode = 'low_rank'
+        if mode == "low_rank":
+            self.mode = "low_rank"
             rank = int(math.ceil(math.sqrt(y_dim)))
             self.fc_mu = nn.Linear(input_dim, y_dim)
             self.fc_log_diag = nn.Linear(input_dim, y_dim)
             self.fc_factors = nn.Linear(input_dim, y_dim * rank)
             self.rank = rank
-        elif mode=="full_cholesky":
-            if y_dim > 10: print("Large output dimension, initializing with mode = 'low_rank' is recommanded.")
-            self.mode = 'full_cholesky'
+        elif mode == "full_cholesky":
+            if y_dim > 10:
+                print(
+                    "Large output dimension, initializing with mode = 'low_rank' is recommanded."
+                )
+            self.mode = "full_cholesky"
             self.fc_mu = nn.Linear(input_dim, y_dim)
             num_chol = (y_dim * (y_dim + 1)) // 2
             self.fc_chol = nn.Linear(input_dim, num_chol)
-            self.register_buffer('tril_indices', torch.tril_indices(y_dim, y_dim))
-            
+            self.register_buffer("tril_indices", torch.tril_indices(y_dim, y_dim))
+
             # Initialize diagonal to be positive/stable
             with torch.no_grad():
-                diag_mask = (self.tril_indices[0] == self.tril_indices[1])
+                diag_mask = self.tril_indices[0] == self.tril_indices[1]
                 inv_softplus = math.log(math.exp(init_sigma) - 1)
                 self.fc_chol.bias[diag_mask] = inv_softplus
         else:
             raise ValueError("The mode must either be 'full_cholesky' or 'low_rank'.")
 
     def forward(
-        self, 
-        x: torch.Tensor
-    ) -> Union[Tuple[torch.Tensor, torch.Tensor, torch.Tensor], Tuple[torch.Tensor, torch.Tensor]]:
+        self, x: torch.Tensor
+    ) -> Union[
+        Tuple[torch.Tensor, torch.Tensor, torch.Tensor],
+        Tuple[torch.Tensor, torch.Tensor],
+    ]:
         """
         Performs a forward pass to compute the distributional parameters of the covariance matrix.
 
@@ -155,7 +164,7 @@ class RobustCovarianceHead(nn.Module):
                 - mu: (Batch, y_dim) Mean predictions.
                 - L: (Batch, y_dim, y_dim) Lower triangular Cholesky factor.
         """
-        if self.mode == 'low_rank':
+        if self.mode == "low_rank":
             B = x.shape[0]
             mu = self.fc_mu(x)
             D = torch.exp(self.fc_log_diag(x)) + 1e-6
@@ -176,20 +185,21 @@ class RobustCovarianceHead(nn.Module):
 # ==========================================
 # The trainer
 # ==========================================
-           
+
+
 class Trainer:
     def __init__(
-        self, 
-        input_dim: int, 
-        output_dim: int, 
-        hidden_dim: int = 128, 
-        num_layers: int = 3, 
-        dropout: float = 0.1, 
-        init_sigma: float = 1.0, 
-        mode: str = "full_cholesky", 
-        center_model: Optional[Any] = None, 
-        dtype: torch.dtype = torch.float32, 
-        device: Union[str, torch.device] = "cpu"
+        self,
+        input_dim: int,
+        output_dim: int,
+        hidden_dim: int = 128,
+        num_layers: int = 3,
+        dropout: float = 0.1,
+        init_sigma: float = 1.0,
+        mode: str = "full_cholesky",
+        center_model: Optional[Any] = None,
+        dtype: torch.dtype = torch.float32,
+        device: Union[str, torch.device] = "cpu",
     ) -> None:
         """
         Initializes the Trainer with a simple tabular MLP backbone and a robust covariance head.
@@ -223,8 +233,15 @@ class Trainer:
         self.dtype = dtype
         self.device = torch.device(device)
         self.fitted = False
-        self.backbone = SimpleTabularMLP(num_cont=input_dim, hidden_dim=hidden_dim, num_layers=num_layers, dropout=dropout).to(self.device)
-        self.head = RobustCovarianceHead(input_dim=hidden_dim, y_dim=output_dim, init_sigma=init_sigma, mode=mode).to(self.device)
+        self.backbone = SimpleTabularMLP(
+            num_cont=input_dim,
+            hidden_dim=hidden_dim,
+            num_layers=num_layers,
+            dropout=dropout,
+        ).to(self.device)
+        self.head = RobustCovarianceHead(
+            input_dim=hidden_dim, y_dim=output_dim, init_sigma=init_sigma, mode=mode
+        ).to(self.device)
         if self.mode == "low_rank":
             self.eye_rank = torch.eye(self.head.rank, device=self.device).unsqueeze(0)
 
@@ -244,17 +261,19 @@ class Trainer:
         """
         feats = self.backbone(bx)
         preds = self.head(feats)
-        
+
         if self.center_model is not None:
             with torch.no_grad():
                 center_pred = self.center_model(bx)
                 preds = list(preds)
-                
+
                 # Use as_tensor to avoid warnings if it's already a tensor
-                center_tensor = torch.as_tensor(center_pred, dtype=self.dtype, device=self.device)
+                center_tensor = torch.as_tensor(
+                    center_pred, dtype=self.dtype, device=self.device
+                )
                 preds[0] = center_tensor
                 preds = tuple(preds)
-                
+
         return preds
 
     def fit(
@@ -269,7 +288,7 @@ class Trainer:
         num_epochs: int = 300,
         lr: float = 1e-3,
         weight_decay: float = 1e-4,
-        verbose: int = -1
+        verbose: int = -1,
     ) -> None:
         """
         Trains the neural network using negative log-likelihood (NLL) loss.
@@ -302,7 +321,7 @@ class Trainer:
         optimizer = torch.optim.AdamW(
             list(self.backbone.parameters()) + list(self.head.parameters()),
             lr=lr,
-            weight_decay=weight_decay
+            weight_decay=weight_decay,
         )
 
         if y_pred is not None:
@@ -311,7 +330,7 @@ class Trainer:
         X_train = torch.as_tensor(X_train, dtype=self.dtype, device=self.device)
         y_train = torch.as_tensor(y_train, dtype=self.dtype, device=self.device)
 
-        if X_val is None and y_val is None and val_size > 0.:
+        if X_val is None and y_val is None and val_size > 0.0:
             X_train, X_val, y_train, y_val = train_test_split(
                 X_train, y_train, test_size=val_size, random_state=42
             )
@@ -320,12 +339,16 @@ class Trainer:
             y_val = torch.as_tensor(y_val, dtype=self.dtype, device=self.device)
 
         train_loader = torch.utils.data.DataLoader(
-            torch.utils.data.TensorDataset(X_train, y_train), batch_size=batch_size, shuffle=True
+            torch.utils.data.TensorDataset(X_train, y_train),
+            batch_size=batch_size,
+            shuffle=True,
         )
-        
+
         if X_val is not None and y_val is not None:
             val_loader = torch.utils.data.DataLoader(
-                torch.utils.data.TensorDataset(X_val, y_val), batch_size=batch_size, shuffle=False
+                torch.utils.data.TensorDataset(X_val, y_val),
+                batch_size=batch_size,
+                shuffle=False,
             )
         else:
             val_loader = None
@@ -334,7 +357,11 @@ class Trainer:
         best_backbone_state = copy.deepcopy(self.backbone.state_dict())
         best_head_state = copy.deepcopy(self.head.state_dict())
 
-        print_every = max(1, num_epochs // 10) if verbose == 1 else (1 if verbose == 2 else num_epochs + 1)
+        print_every = (
+            max(1, num_epochs // 10)
+            if verbose == 1
+            else (1 if verbose == 2 else num_epochs + 1)
+        )
 
         for epoch in range(num_epochs):
             self.backbone.train()
@@ -347,14 +374,14 @@ class Trainer:
 
                 preds = self.forward(bx)
                 loss = self.loss(preds, by)
-            
+
                 loss.backward()
                 optimizer.step()
 
                 total_loss += loss.item()
 
             avg_train_loss = total_loss / len(train_loader)
-        
+
             self.backbone.eval()
             self.head.eval()
             total_validation_loss = 0.0
@@ -371,13 +398,19 @@ class Trainer:
                 avg_validation_loss = avg_train_loss
 
             if verbose != -1 and epoch % print_every == 0:
-                print(f"Epoch {epoch}: Avg NLL Loss = {avg_train_loss:.4f} -- Validation loss: {avg_validation_loss:.4f} -- Best Validation Loss: {best_validation_loss}")
-                
+                print(
+                    f"Epoch {epoch}: Avg NLL Loss = {avg_train_loss:.4f} -- Validation loss: {avg_validation_loss:.4f} -- Best Validation Loss: {best_validation_loss}"
+                )
+
             if avg_validation_loss < best_validation_loss:
                 best_validation_loss = avg_validation_loss
-                best_backbone_state = {k: v.cpu().clone() for k, v in self.backbone.state_dict().items()}
-                best_head_state = {k: v.cpu().clone() for k, v in self.head.state_dict().items()}
-            
+                best_backbone_state = {
+                    k: v.cpu().clone() for k, v in self.backbone.state_dict().items()
+                }
+                best_head_state = {
+                    k: v.cpu().clone() for k, v in self.head.state_dict().items()
+                }
+
         self.backbone.load_state_dict(best_backbone_state)
         self.head.load_state_dict(best_head_state)
         self.fitted = True
@@ -385,7 +418,9 @@ class Trainer:
         if verbose != -1:
             print(f"Best validation loss achieved: {best_validation_loss:.4f}")
 
-    def loss(self, params: Tuple[torch.Tensor, ...], y_target: torch.Tensor) -> torch.Tensor:
+    def loss(
+        self, params: Tuple[torch.Tensor, ...], y_target: torch.Tensor
+    ) -> torch.Tensor:
         """
         Computes the Negative Log-Likelihood (NLL) loss based on the selected covariance mode.
 
@@ -401,7 +436,7 @@ class Trainer:
         torch.Tensor
             The computed scalar loss value.
         """
-        if self.mode == 'low_rank':
+        if self.mode == "low_rank":
             # Woodbury Identity Loss
             mu, D, V = params
             r = y_target - mu
@@ -409,31 +444,37 @@ class Trainer:
             inv_std = 1.0 / D
             W = V * inv_std.unsqueeze(-1)
             z = r * inv_std
-            
+
             M = self.eye_rank + torch.bmm(W.transpose(1, 2), W)
             L_M = torch.linalg.cholesky(M)
-            
-            log_det = 2 * torch.sum(torch.log(D), 1) + 2 * torch.sum(torch.log(torch.diagonal(L_M, dim1=-2, dim2=-1)), 1)
-            
+
+            log_det = 2 * torch.sum(torch.log(D), 1) + 2 * torch.sum(
+                torch.log(torch.diagonal(L_M, dim1=-2, dim2=-1)), 1
+            )
+
             z_sq = torch.sum(z**2, 1)
             p = torch.bmm(W.transpose(1, 2), z.unsqueeze(-1))
             # q = torch.linalg.cholesky_solve(L_M, p)
             q = torch.cholesky_solve(p, L_M)
             quad = torch.bmm(p.transpose(1, 2), q).squeeze()
-            
+
             return 0.5 * (z_sq - quad + log_det).mean()
-        
+
         else:
             # Full Cholesky Loss
             mu, L = params
             diff = (y_target - mu).unsqueeze(-1)
             z = torch.linalg.solve_triangular(L, diff, upper=False)
             mahalanobis = torch.sum(z.squeeze(-1) ** 2, dim=1)
-            log_det = 2 * torch.sum(torch.log(torch.diagonal(L, dim1=-2, dim2=-1)), dim=1)
-            
+            log_det = 2 * torch.sum(
+                torch.log(torch.diagonal(L, dim1=-2, dim2=-1)), dim=1
+            )
+
             return 0.5 * (mahalanobis + log_det).mean()
-        
-    def get_distribution(self, x: Union[NDArray, torch.Tensor]) -> Tuple[NDArray, NDArray]:
+
+    def get_distribution(
+        self, x: Union[NDArray, torch.Tensor]
+    ) -> Tuple[NDArray, NDArray]:
         """
         Computes the full conditional distribution of Y given X.
 
@@ -452,13 +493,13 @@ class Trainer:
         with torch.no_grad():
             params = self.forward(x_)
         B = x_.shape[0]
-        
-        if self.mode == 'low_rank':
+
+        if self.mode == "low_rank":
             mu, D, V = params
             # Sigma = D + V @ V^T
             # Compute low rank part: V @ V^T
             Sigma = torch.bmm(V, V.transpose(1, 2))
-            
+
             # Add diagonal D efficiently
             # We create an index for the diagonal to avoid creating a full diagonal matrix first
             diag_indices = torch.arange(self.y_dim, device=x_.device)
@@ -467,9 +508,9 @@ class Trainer:
             mu, L = params
             # Sigma = L @ L^T
             Sigma = torch.bmm(L, L.transpose(1, 2))
-            
+
         return mu.detach().cpu().numpy(), Sigma.detach().cpu().numpy()
-    
+
     def get_covariance_matrix(self, x: Union[NDArray, torch.Tensor]) -> NDArray:
         """
         Predicts only the covariance matrix for a given set of inputs.
@@ -488,11 +529,7 @@ class Trainer:
         return Sigma
 
     def _compute_mahalanobis_low_rank(
-        self, 
-        y: torch.Tensor, 
-        mu: torch.Tensor, 
-        D: torch.Tensor, 
-        V: torch.Tensor
+        self, y: torch.Tensor, mu: torch.Tensor, D: torch.Tensor, V: torch.Tensor
     ) -> torch.Tensor:
         """
         Helper method: Computes the Mahalanobis distance using the Woodbury Matrix Identity.
@@ -516,7 +553,7 @@ class Trainer:
         r = y - mu
         inv_std = 1.0 / D
         W = V * inv_std.unsqueeze(-1)  # (B, Y, Rank)
-        z = r * inv_std                # (B, Y)
+        z = r * inv_std  # (B, Y)
 
         # M = I + W^T W
         B, Y, K = V.shape
@@ -528,22 +565,19 @@ class Trainer:
 
         # Term 2: z^T V (I + V^T D^-2 V)^-1 V^T z
         # Let p = W^T z
-        p = torch.bmm(W.transpose(1, 2), z.unsqueeze(-1)) # (B, Rank, 1)
-        
+        p = torch.bmm(W.transpose(1, 2), z.unsqueeze(-1))  # (B, Rank, 1)
+
         # Solve M q = p  => q = M^-1 p
         # q = torch.linalg.cholesky_solve(L_M, p)
         q = torch.cholesky_solve(p, L_M)
-        
+
         # quad = p^T q
         quad = torch.bmm(p.transpose(1, 2), q).squeeze(-1).squeeze(-1)
-        
+
         return torch.sqrt(z_sq - quad)
 
     def _compute_mahalanobis_full_chol(
-        self, 
-        y: torch.Tensor, 
-        mu: torch.Tensor, 
-        L: torch.Tensor
+        self, y: torch.Tensor, mu: torch.Tensor, L: torch.Tensor
     ) -> torch.Tensor:
         """
         Helper method: Computes the Mahalanobis distance using a triangular solve.
@@ -566,14 +600,11 @@ class Trainer:
         # Solve L z = (y - mu)
         z = torch.linalg.solve_triangular(L, diff, upper=False)
         return torch.sqrt(torch.sum(z.squeeze(-1) ** 2, dim=1))
-    
-    def predict(
-        self, 
-        x: Union[NDArray, torch.Tensor]
-    ) -> NDArray:
+
+    def predict(self, x: Union[NDArray, torch.Tensor]) -> NDArray:
         """
         Returns the predictions y_pred for the associated X values.
-        
+
         Parameters
         ----------
         X : ArrayLike
@@ -588,9 +619,7 @@ class Trainer:
         return self.forward(x_)[0].detach().cpu().numpy()
 
     def get_standardized_score(
-        self, 
-        x: Union[NDArray, torch.Tensor], 
-        y: Union[NDArray, torch.Tensor]
+        self, x: Union[NDArray, torch.Tensor], y: Union[NDArray, torch.Tensor]
     ) -> NDArray:
         """
         Calculates the standardized score (Mahalanobis distance) for a set of predictions.
@@ -610,11 +639,12 @@ class Trainer:
         x_ = torch.as_tensor(x, dtype=self.dtype, device=self.device)
         y_ = torch.as_tensor(y, dtype=self.dtype, device=self.device)
         params = self.forward(x_)
-        
-        if self.mode == 'low_rank':
+
+        if self.mode == "low_rank":
             mu, D, V = params
-            return self._compute_mahalanobis_low_rank(y_, mu, D, V).detach().cpu().numpy()
+            return (
+                self._compute_mahalanobis_low_rank(y_, mu, D, V).detach().cpu().numpy()
+            )
         else:
             mu, L = params
             return self._compute_mahalanobis_full_chol(y_, mu, L).detach().cpu().numpy()
-  
