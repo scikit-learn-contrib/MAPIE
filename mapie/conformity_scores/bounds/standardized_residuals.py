@@ -242,8 +242,6 @@ class MultivariateResidualNormalisedScore(BaseFitRegressionScore):
         MultivariateResidualNormalisedScore
             The newly fitted score.
         """
-        X = cast(ArrayLike, X)
-
         (X, y, y_pred, self.covariance_estimator_, _) = self._check_parameters(
             X, y, y_pred
         )
@@ -267,7 +265,8 @@ class MultivariateResidualNormalisedScore(BaseFitRegressionScore):
             An array y_pred of the prediction of the model.
         """
         assert self.covariance_estimator_ is not None
-        return self.covariance_estimator_.predict(X)
+        X_array = cast(NDArray, np.asarray(X))
+        return self.covariance_estimator_.predict(X_array)
 
     def get_signed_conformity_scores(
         self,
@@ -369,7 +368,7 @@ class MultivariateResidualNormalisedScore(BaseFitRegressionScore):
         conformity_scores: ArrayLike,
         X: Optional[ArrayLike] = None,
         **kwargs,
-    ) -> NDArray:
+    ) -> Any:
         """
         Compute samples of the estimation distribution from the predicted
         values and the conformity scores, from the following formula:
@@ -381,8 +380,14 @@ class MultivariateResidualNormalisedScore(BaseFitRegressionScore):
         ``conformity_scores`` can be either the conformity scores or
         the quantile of the conformity scores.
         """
+        if X is None:
+            raise ValueError(
+                "Additional parameters must be provided for the method to "
+                + "work (here `X` is missing)."
+            )
         assert self.covariance_estimator_ is not None
-        return self.covariance_estimator_.get_distribution(X)
+        X_array = cast(NDArray, np.asarray(X))
+        return self.covariance_estimator_.get_distribution(X_array)
         # if X is None:
         #     raise ValueError(
         #         "Additional parameters must be provided for the method to "
