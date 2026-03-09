@@ -152,7 +152,7 @@ p_values = {
 
 
 for name, cum_diff in cum_diffs.items():
-    plt.plot(k, cum_diff, label=f"name (p-value = {p_values[name]:.5f})")
+    plt.plot(k, cum_diff, label=f"{name} (p-value = {p_values[name]:.5f})")
 plt.axhline(y=2 * sigma, color="r", linestyle="--")
 plt.axhline(y=-2 * sigma, color="r", linestyle="--")
 plt.title("Probability curves")
