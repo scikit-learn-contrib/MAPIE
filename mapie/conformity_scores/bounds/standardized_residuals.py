@@ -22,7 +22,7 @@ class CovarianceEstimator(Protocol):
 
 
 class MultivariateResidualNormalisedScore(BaseFitRegressionScore):
-    """
+    r"""
     Multivariate Residual Normalised score.
 
     The conformity score = $\Vert\Sigma(X)^{-1/2}(Y-f(X))\Vert_2$. Sigma(X) being the
@@ -274,7 +274,7 @@ class MultivariateResidualNormalisedScore(BaseFitRegressionScore):
         y_pred: Optional[ArrayLike] = None,
         **kwargs: Any,
     ) -> NDArray:
-        """
+        r"""
         Computes the multivariate standardized conformity score:
         $ \Vert \Sigma_{pred}^{-1/2}(y - y_{pred}) \Vert_2 $
 
@@ -336,7 +336,7 @@ class MultivariateResidualNormalisedScore(BaseFitRegressionScore):
     def _get_standardized_score(
         y: NDArray, y_pred: NDArray, Sigma_pred: NDArray
     ) -> NDArray:
-        """
+        r"""
         Computes the standardized Euclidean distance $ \Vert \Sigma_{pred}^{-1/2}(y - y_{pred}) \Vert_2 $.
 
         Parameters

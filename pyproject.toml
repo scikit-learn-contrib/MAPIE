@@ -59,6 +59,7 @@ dev = [
     "ruff==0.14.3",
     "twine==6.2.0",
     "wheel==0.45.1",
+    "torch>=2.1",
 ]
 docs = [
     "lightgbm==4.6.0",
