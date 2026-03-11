@@ -1,20 +1,21 @@
 from typing import Any
+
 import numpy as np
 import pytest
+from numpy.typing import ArrayLike, NDArray
 from sklearn.linear_model import LinearRegression
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import PolynomialFeatures
 
-from numpy.typing import ArrayLike, NDArray
 from mapie.conformity_scores import (
     AbsoluteConformityScore,
     BaseRegressionScore,
     GammaConformityScore,
     ResidualNormalisedScore,
 )
-from mapie.regression.regression import _MapieRegressor
+from mapie.conformity_scores.regression import BaseFitRegressionScore
 from mapie.conformity_scores.utils import check_regression_conformity_score
-
+from mapie.regression.regression import _MapieRegressor
 
 X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
 y_toy = np.array([5, 7, 9, 11, 13, 15])
@@ -45,6 +46,25 @@ class DummyConformityScore(BaseRegressionScore):
         with the conformity score.
         """
         return np.add(y_pred, conformity_scores) + 1
+
+
+class MinimalFitRegressionScore(BaseFitRegressionScore):
+    def __init__(self) -> None:
+        super().__init__(sym=True, consistency_check=False)
+
+    def get_signed_conformity_scores(
+        self, y: ArrayLike, y_pred: ArrayLike, **kwargs
+    ) -> NDArray:
+        return np.subtract(y, y_pred)
+
+    def get_estimation_distribution(
+        self, y_pred: ArrayLike, conformity_scores: ArrayLike, **kwargs
+    ) -> NDArray:
+        return np.add(y_pred, conformity_scores)
+
+    def fit(self, X: NDArray, y: NDArray, **kwargs) -> "MinimalFitRegressionScore":
+        super().fit(X, y, **kwargs)
+        return self
 
 
 @pytest.mark.parametrize("sym", [False, True])
@@ -219,6 +239,18 @@ def test_check_consistency() -> None:
         ValueError, match=r".*The two functions get_conformity_scores.*"
     ):
         dummy_conf_score.check_consistency(y_toy, y_pred_list, conformity_scores)
+
+
+def test_base_fit_regression_score_fit_sets_is_fitted() -> None:
+    score = MinimalFitRegressionScore()
+    assert getattr(score, "is_fitted", None) is False
+    out = score.fit(X_toy, y_toy)
+    assert score.is_fitted is True
+    assert out is score
+    signed = score.get_signed_conformity_scores(y_toy, y_pred_list)
+    np.testing.assert_allclose(signed, y_toy - y_pred_list)
+    y_obs = score.get_estimation_distribution(y_pred_list, signed)
+    np.testing.assert_allclose(y_obs, y_toy)
 
 
 @pytest.mark.parametrize("y_pred", [np.array(y_pred_list), y_pred_list])

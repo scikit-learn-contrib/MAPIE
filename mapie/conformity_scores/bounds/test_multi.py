@@ -102,6 +102,8 @@ def test_check_estimator_invalid():
     score = MultivariateResidualNormalisedScore(covariance_estimator=BadEstimator())
     with pytest.raises(ValueError, match="Invalid estimator"):
         score._check_estimator(score.covariance_estimator_)
+    est = BadEstimator()
+    est.fit(np.random.randn(5, 2), np.random.randn(5, 2))
 
 
 def test_get_signed_conformity_scores_without_y_pred(mock_data):
@@ -260,6 +262,12 @@ def test_dummy_get_signed_conformity_scores_with_y_pred(mock_data):
     assert isinstance(scores, np.ndarray)
     assert len(scores) > 0
 
+    estimation_distribution = score_calculator.get_estimation_distribution(
+        y_pred, scores, X=X
+    )
+    assert isinstance(estimation_distribution[0], np.ndarray)
+    assert isinstance(estimation_distribution[1], np.ndarray)
+
 
 def test_non_existing_rank_method(mock_data):
     """Test score generation when no initial y_pred is provided."""
@@ -299,6 +307,17 @@ def test_no_X_given(mock_data):
 
     with pytest.raises(Exception):
         score_calculator.get_signed_conformity_scores(y=y, y_pred=y_pred)
+
+
+def test_get_estimation_distribution_without_X(mock_data):
+    X, y, y_pred = mock_data
+
+    score_calculator = MultivariateResidualNormalisedScore()
+    score_calculator.fit(X, y, num_epochs=1)
+    scores = score_calculator.get_signed_conformity_scores(y=y, X=X)
+
+    with pytest.raises(ValueError, match="here `X` is missing"):
+        score_calculator.get_estimation_distribution(y_pred, scores)
 
 
 def test_nan_in_y_pred(mock_data):
