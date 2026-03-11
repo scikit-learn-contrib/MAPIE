@@ -90,6 +90,16 @@ def test_initialization():
     assert score_with_trainer.covariance_estimator_ == trainer
 
 
+def test_univariate_target_raises():
+    """Test that univariate targets raise an AssertionError."""
+    X = np.random.randn(10, 2)
+    y_univariate = np.random.randn(10)  # 1D, univariate
+
+    score = MultivariateResidualNormalisedScore()
+    with pytest.raises(AssertionError, match="multivariate targets"):
+        score.fit(X, y_univariate)
+
+
 def test_check_estimator_invalid():
     """Test that a ValueError is raised if the estimator lacks required methods."""
 

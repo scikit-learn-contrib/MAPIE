@@ -8,14 +8,10 @@ import torch.nn.functional as F
 from numpy.typing import NDArray
 from sklearn.model_selection import train_test_split
 
-# ==========================================
-# The model architecture (Backbone + Head)
-# ==========================================
-
 
 class SimpleTabularMLP(nn.Module):
     """
-    Robust Backbone: ResNet-MLP for Tabular Data
+    Robust Backbone: ResNet-MLP for Tabular Data. Used by MultivariateResidualNormalisedScore.
     """
 
     def __init__(
@@ -80,7 +76,7 @@ class SimpleTabularMLP(nn.Module):
 
 class RobustCovarianceHead(nn.Module):
     """
-    Unified Head: Switches between Full Cholesky and Low-Rank.
+    Unified Head: Switches between Full Cholesky and Low-Rank. Used by MultivariateResidualNormalisedScore.
     """
 
     def __init__(
@@ -182,11 +178,6 @@ class RobustCovarianceHead(nn.Module):
             return (mu, L)
 
 
-# ==========================================
-# The trainer
-# ==========================================
-
-
 class Trainer:
     def __init__(
         self,
@@ -203,6 +194,7 @@ class Trainer:
     ) -> None:
         """
         Initializes the Trainer with a simple tabular MLP backbone and a robust covariance head.
+        Used by MultivariateResidualNormalisedScore.
 
         Parameters
         ----------

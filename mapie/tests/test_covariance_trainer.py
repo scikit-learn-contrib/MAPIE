@@ -2,10 +2,7 @@ import numpy as np
 import pytest
 import torch
 
-from mapie.conformity_scores.bounds.covariance_trainer import (
-    RobustCovarianceHead,
-    Trainer,
-)
+from mapie.conformity_scores.bounds.utils import RobustCovarianceHead, Trainer
 
 
 class TestRobustCovarianceHead:

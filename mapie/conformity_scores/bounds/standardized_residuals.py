@@ -131,7 +131,7 @@ class MultivariateResidualNormalisedScore(BaseFitRegressionScore):
             If the provided estimator lacks `fit`, `get_distribution`, or `get_covariance_matrix` methods.
         """
         if estimator is None:
-            from mapie.conformity_scores.bounds.covariance_trainer import Trainer
+            from mapie.conformity_scores.bounds.utils import Trainer
 
             return Trainer(self.input_dim, self.output_dim, **self.kwargs)
         else:
@@ -178,6 +178,9 @@ class MultivariateResidualNormalisedScore(BaseFitRegressionScore):
         else:
             X_, y_ = indexable(X, y)
             y_pred_ = None
+        assert y_.ndim == 2, (
+            "Multivariate Residual Normalised Score method only supports multivariate targets."
+        )
         self.input_dim = X_.shape[-1]
         self.output_dim = y_.shape[-1]
         covariance_estimator_ = self._check_estimator(self.covariance_estimator_)
