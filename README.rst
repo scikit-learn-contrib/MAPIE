@@ -21,6 +21,9 @@
 .. |PyPi| image:: https://img.shields.io/pypi/v/mapie
     :target: https://pypi.org/project/mapie/
 
+.. |Downloads| image:: https://img.shields.io/pypi/dm/mapie
+    :target: https://pypistats.org/packages/mapie
+
 .. |Conda| image:: https://img.shields.io/conda/vn/conda-forge/mapie
     :target: https://anaconda.org/conda-forge/mapie
 
