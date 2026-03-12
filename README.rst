@@ -1,6 +1,6 @@
 .. -*- mode: rst -*-
 
-|GitHubActions| |Codecov| |ReadTheDocs| |License| |PythonVersion| |PyPi| |Conda| |Release| |Commits| |Ask DeepWiki|
+|GitHubActions| |Codecov| |ReadTheDocs| |License| |PythonVersion| |PyPi| |Downloads| |Conda| |Release| |Commits| |Ask DeepWiki|
 
 .. |GitHubActions| image:: https://github.com/scikit-learn-contrib/MAPIE/actions/workflows/test.yml/badge.svg
     :target: https://github.com/scikit-learn-contrib/MAPIE/actions
