@@ -107,6 +107,7 @@ class MultivariateResidualNormalisedScore(BaseFitRegressionScore):
         self.random_state = random_state
         self.kwargs = kwargs
         self.is_fitted = False
+        self.multi_output = True
 
     def _check_estimator(self, estimator: Optional[Any] = None) -> Any:
         """
