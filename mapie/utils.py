@@ -417,7 +417,7 @@ def _check_no_agg_cv(
     elif isinstance(cv, int):
         return cv == 1
     elif hasattr(cv, "get_n_splits"):
-        return cv.get_n_splits(X, y, groups) == 1
+        return cast(bool, cv.get_n_splits(X, y, groups) == 1)
     else:
         raise ValueError(
             "Invalid cv argument. "

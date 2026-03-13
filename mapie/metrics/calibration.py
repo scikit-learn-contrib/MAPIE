@@ -16,7 +16,7 @@ from mapie.utils import (
 from sklearn.utils.validation import column_or_1d
 
 
-from typing import Tuple, cast, Optional, Union
+from typing import Optional, Tuple, Union, cast
 
 
 def _get_binning_groups(
@@ -154,8 +154,9 @@ def expected_calibration_error(
         y_true_, y_score, num_bins, split_strategy
     )
 
-    return np.divide(
-        np.sum(bin_sizes * np.abs(bin_accs - bin_confs)), np.sum(bin_sizes)
+    return cast(
+        float,
+        np.divide(np.sum(bin_sizes * np.abs(bin_accs - bin_confs)), np.sum(bin_sizes)),
     )
 
 
@@ -429,7 +430,7 @@ def length_scale(s: NDArray) -> float:
     """
     n = len(s)
     length_scale = np.sqrt(np.sum(s * (1 - s))) / n
-    return length_scale
+    return cast(float, length_scale)
 
 
 def kolmogorov_smirnov_statistic(y_true: NDArray, y_score: NDArray) -> float:
@@ -808,7 +809,7 @@ def spiegelhalter_statistic(y_true: NDArray, y_score: NDArray) -> float:
     numerator: float = np.sum((y_true - y_score) * (1 - 2 * y_score))
     denominator = np.sqrt(np.sum((1 - 2 * y_score) ** 2 * y_score * (1 - y_score)))
     sp_stat = numerator / denominator
-    return sp_stat
+    return cast(float, sp_stat)
 
 
 def spiegelhalter_p_value(y_true: NDArray, y_score: NDArray) -> float:
@@ -856,4 +857,4 @@ def spiegelhalter_p_value(y_true: NDArray, y_score: NDArray) -> float:
     _check_array_inf(y_score)
     sp_stat = spiegelhalter_statistic(y_true, y_score)
     sp_p_value = 1 - scipy.stats.norm.cdf(sp_stat)
-    return sp_p_value
+    return cast(float, sp_p_value)

@@ -166,13 +166,15 @@ class ResidualNormalisedScore(BaseRegressionScore):
         X: NDArray,
         y: NDArray,
         y_pred: NDArray,
-    ) -> Tuple[NDArray, NDArray]:
+    ) -> RegressorMixin:
         """
-        Fit the residual estimator and returns the indexes used for the
-        training of the base estimator and those needed for the conformalization.
+        Fit the residual estimator and return the fitted estimator.
 
         Parameters
         ----------
+        residual_estimator_: RegressorMixin
+            The residual estimator to fit.
+
         X: NDArray
             All the observed values used in the general fit.
 
@@ -185,7 +187,7 @@ class ResidualNormalisedScore(BaseRegressionScore):
         Returns
         -------
         RegressorMixin
-            Fitted residual estimator
+            Fitted residual estimator.
         """
         residuals = np.abs(np.subtract(y, y_pred))
         targets = np.log(np.maximum(residuals, np.full(residuals.shape, self.eps)))

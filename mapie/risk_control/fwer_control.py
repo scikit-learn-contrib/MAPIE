@@ -1,6 +1,6 @@
 import warnings
 from abc import ABC, abstractmethod
-from typing import Literal, Union
+from typing import Literal, Union, cast
 
 import numpy as np
 from numpy.typing import NDArray
@@ -168,7 +168,7 @@ class FWERBonferroniHolm(FWERProcedure):
         active_indices = np.flatnonzero(self.active_hypotheses)
         if len(active_indices) == 0:
             return None
-        return active_indices[np.argmin(p_values[active_indices])]
+        return cast(int, active_indices[np.argmin(p_values[active_indices])])
 
     def _local_significance_levels(self) -> NDArray:
         remaining = self.active_hypotheses.sum()
