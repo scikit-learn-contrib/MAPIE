@@ -1,8 +1,5 @@
-from typing import cast
-
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
-from sklearn.utils import column_or_1d
 
 from mapie.utils import (
     _check_arrays_length,
@@ -12,6 +9,7 @@ from mapie.utils import (
     _check_number_bins,
     _check_nb_intervals_sizes,
     _check_alpha,
+    _column_or_1d_ndarray,
 )
 
 
@@ -120,7 +118,7 @@ def regression_coverage_score(
 
     y_intervals = _check_array_shape_regression(y_true, y_intervals)
     if len(y_true.shape) != 2:
-        y_true = cast(NDArray, column_or_1d(y_true))
+        y_true = _column_or_1d_ndarray(y_true)
         y_true = np.expand_dims(y_true, axis=1)
     coverages = np.mean(
         np.logical_and(
@@ -175,7 +173,7 @@ def regression_ssc(y_true: NDArray, y_intervals: NDArray, num_bins: int = 3) -> 
     >>> print(regression_ssc(y_true, y_intervals, num_bins=2))
     [[1. 1.]]
     """
-    y_true = cast(NDArray, column_or_1d(y_true))
+    y_true = _column_or_1d_ndarray(y_true)
     y_intervals = _check_array_shape_regression(y_true, y_intervals)
     _check_number_bins(num_bins)
     widths = np.abs(y_intervals[:, 1, :] - y_intervals[:, 0, :])
@@ -322,7 +320,7 @@ def hsic(
     >>> print(hsic(y_true, y_intervals))
     [0.31787614 0.2962914 ]
     """
-    y_true = cast(NDArray, column_or_1d(y_true))
+    y_true = _column_or_1d_ndarray(y_true)
     y_intervals = _check_array_shape_regression(y_true, y_intervals)
 
     _check_arrays_length(y_true, y_intervals)
@@ -331,7 +329,7 @@ def hsic(
     _check_array_nan(y_intervals)
     _check_array_inf(y_intervals)
 
-    kernel_sizes = cast(NDArray, column_or_1d(kernel_sizes))
+    kernel_sizes = _column_or_1d_ndarray(kernel_sizes)
     if len(kernel_sizes) != 2:
         raise ValueError("kernel_sizes should be an ArrayLike of length 2")
     if (kernel_sizes <= 0).any():
@@ -470,9 +468,9 @@ def coverage_width_based(
     >>> print(np.round(cwb ,2))
     0.69
     """
-    y_true = cast(NDArray, column_or_1d(y_true))
-    y_pred_low = cast(NDArray, column_or_1d(y_pred_low))
-    y_pred_up = cast(NDArray, column_or_1d(y_pred_up))
+    y_true = _column_or_1d_ndarray(y_true)
+    y_pred_low = _column_or_1d_ndarray(y_pred_low)
+    y_pred_up = _column_or_1d_ndarray(y_pred_up)
 
     _check_alpha(confidence_level)
 

@@ -1,4 +1,4 @@
-from typing import Optional, Union, cast
+from typing import Optional, Union
 
 import numpy as np
 from numpy.typing import NDArray
@@ -63,8 +63,7 @@ class TopKConformityScore(BaseClassificationScore):
         NDArray of shape (n_samples,)
             Conformity scores.
         """
-        # Casting
-        y_enc = cast(NDArray, y_enc)
+        y_enc = np.asarray(y_enc)
 
         # Conformity scores
         # Here we reorder the labels by decreasing probability and get the

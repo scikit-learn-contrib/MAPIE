@@ -1,4 +1,4 @@
-from typing import Optional, Tuple, Union, cast
+from typing import Optional, Tuple, Union
 
 import numpy as np
 from numpy.typing import NDArray
@@ -82,7 +82,8 @@ class RAPSConformityScore(APSConformityScore):
             By default ``None``.
         """
         super().set_external_attributes(**kwargs)
-        self.label_encoder_ = cast(LabelEncoder, label_encoder)
+        assert isinstance(label_encoder, LabelEncoder)
+        self.label_encoder_ = label_encoder
         self.size_raps = size_raps
 
     def split_data(
@@ -142,13 +143,12 @@ class RAPSConformityScore(APSConformityScore):
         self.y_raps_no_enc = self.label_encoder_.inverse_transform(self.y_raps)
         y = self.label_encoder_.inverse_transform(y_enc)
 
-        # Cast to NDArray for type checking
-        y_enc = cast(NDArray, y_enc)
+        y_enc = np.asarray(y_enc)
         if sample_weight is not None:
-            sample_weight = cast(NDArray, sample_weight)
+            sample_weight = np.asarray(sample_weight)
             sample_weight = sample_weight[train_raps_index]
         if groups is not None:
-            groups = cast(NDArray, groups)
+            groups = np.asarray(groups)
             groups = groups[train_raps_index]
 
         # Keep sample data size for training and calibration
@@ -307,7 +307,7 @@ class RAPSConformityScore(APSConformityScore):
         ArrayLike of shape (n_alphas, )
             Optimal values of lambda.
         """
-        classes = cast(NDArray, self.classes)
+        classes = np.asarray(self.classes)
 
         lambda_star = np.zeros(len(alpha_np))
         best_sizes = np.full(len(alpha_np), np.finfo(np.float64).max)
@@ -388,11 +388,6 @@ class RAPSConformityScore(APSConformityScore):
         NDArray
             Array of quantiles with respect to alpha_np.
         """
-        # Casting to NDArray to avoid mypy errors
-        # X_raps = cast(NDArray, X_raps)
-        # y_raps_no_enc = cast(NDArray, y_raps_no_enc)
-        # y_pred_proba_raps = cast(NDArray, y_pred_proba_raps)
-        # position_raps = cast(NDArray, position_raps)
 
         _check_alpha_and_n_samples(alpha_np, self.X_raps.shape[0])
         self.k_star = _compute_quantiles(self.position_raps, alpha_np) + 1
@@ -458,11 +453,27 @@ class RAPSConformityScore(APSConformityScore):
             applying the regularization technique.
         """
         if prediction_phase:
-            lambda_ = cast(float, self.lambda_star)
-            k_star = cast(int, self.k_star)
+            assert self.lambda_star is not None
+            assert self.k_star is not None
+            if np.isscalar(self.lambda_star):
+                _lam: float = self.lambda_star  # type: ignore[assignment]
+                lambda_ = _lam
+            else:
+                assert isinstance(self.lambda_star, np.ndarray)
+                _lam = float(np.asarray(self.lambda_star).item(0))
+                lambda_ = _lam
+            if np.isscalar(self.k_star):
+                _k: int = self.k_star  # type: ignore[assignment]
+                k_star = _k
+            else:
+                assert isinstance(self.k_star, np.ndarray)
+                _k = int(np.asarray(self.k_star).item(0))
+                k_star = _k
         else:
-            lambda_ = cast(float, lambda_)
-            k_star = cast(int, lambda_)
+            assert lambda_ is not None
+            assert k_star is not None
+            lambda_ = float(lambda_)
+            k_star = int(k_star)
 
         y_pred_proba_sorted_cumsum += lambda_ * np.maximum(
             0, np.cumsum(np.ones(y_pred_proba_sorted_cumsum.shape), axis=1) - k_star

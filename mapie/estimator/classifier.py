@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import List, Literal, Optional, Tuple, Union, cast
+from typing import List, Literal, Optional, Tuple, Union
 
 import numpy as np
 from joblib import Parallel, delayed
@@ -159,7 +159,7 @@ class EnsembleClassifier:
         y_train = _safe_indexing(y, train_index)
         if sample_weight is not None:
             sample_weight = _safe_indexing(sample_weight, train_index)
-            sample_weight = cast(NDArray, sample_weight)
+            sample_weight = np.asarray(sample_weight)
 
         estimator = _fit_estimator(
             estimator, X_train, y_train, sample_weight=sample_weight, **fit_params
@@ -253,7 +253,7 @@ class EnsembleClassifier:
         val_index: ArrayLike,
         k: int,
         **predict_params,
-    ) -> Tuple[NDArray, ArrayLike, ArrayLike]:
+    ) -> Tuple[NDArray, NDArray, NDArray]:
         """
         Perform predictions on a single out-of-fold model on a validation set.
 
@@ -281,9 +281,10 @@ class EnsembleClassifier:
             )
         else:
             y_pred_proba = np.array([])
-        val_id = cast(NDArray[np.int_], np.full(len(X_val), k, dtype=int))
+        val_id: NDArray[np.int_] = np.full(len(X_val), k, dtype=int)
+        val_index_arr = np.asarray(val_index)
 
-        return y_pred_proba, val_id, val_index
+        return y_pred_proba, val_id, val_index_arr
 
     def fit(
         self,
@@ -345,7 +346,7 @@ class EnsembleClassifier:
             single_estimator_ = self._fit_oof_estimator(
                 clone(estimator), X, y, full_indexes, sample_weight, **fit_params
             )
-            cv = cast(BaseCrossValidator, cv)
+            assert isinstance(cv, (BaseCrossValidator, BaseShuffleSplit))
             k_ = np.empty_like(y, dtype=int)
 
             estimators_ = Parallel(self.n_jobs, verbose=self.verbose)(
@@ -407,9 +408,10 @@ class EnsembleClassifier:
             y_pred_proba = self.single_estimator_.predict_proba(X, **predict_params)
             y_pred_proba = self._check_proba_normalized(y_pred_proba)
         else:
-            X = cast(NDArray, X)
+            X = np.asarray(X)
             y_pred_proba = np.empty((len(X), self.n_classes), dtype=float)
-            cv = cast(BaseCrossValidator, self.cv)
+            assert isinstance(self.cv, (BaseCrossValidator, BaseShuffleSplit))
+            cv = self.cv
             outputs = Parallel(n_jobs=self.n_jobs, verbose=self.verbose)(
                 delayed(self._predict_proba_calib_oof_estimator)(
                     estimator, X, calib_index, k, **predict_params
@@ -418,13 +420,13 @@ class EnsembleClassifier:
                     zip(cv.split(X, y, groups), self.estimators_)
                 )
             )
-            (predictions_list, val_ids_list, val_indices_list) = map(
-                list, zip(*outputs)
-            )
+            predictions_list = [o[0] for o in outputs]
+            val_ids_list = [o[1] for o in outputs]
+            val_indices_list = [o[2] for o in outputs]
 
-            predictions = np.concatenate(cast(List[NDArray], predictions_list))
-            val_ids = np.concatenate(cast(List[NDArray], val_ids_list))
-            val_indices = np.concatenate(cast(List[NDArray], val_indices_list))
+            predictions = np.concatenate(predictions_list)
+            val_ids = np.concatenate(val_ids_list)
+            val_indices = np.concatenate(val_indices_list)
             self.k_[val_indices] = val_ids
             y_pred_proba[val_indices] = predictions
 

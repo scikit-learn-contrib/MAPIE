@@ -5,7 +5,7 @@ from collections.abc import Iterable as IterableType
 from decimal import Decimal
 from inspect import signature
 from math import isclose
-from typing import Any, Iterable, List, Optional, Tuple, Union, cast
+from typing import Any, Iterable, List, Optional, Tuple, Union
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -235,7 +235,7 @@ def _check_null_weight(
         X = _safe_indexing(X, non_null_weight)
         y = _safe_indexing(y, non_null_weight)
         sample_weight = _safe_indexing(sample_weight, non_null_weight)
-        sample_weight = cast(NDArray, sample_weight)
+        sample_weight = np.asarray(sample_weight)
     return sample_weight, X, y
 
 
@@ -298,6 +298,12 @@ def _fit_estimator(
     return estimator
 
 
+def _random_seeds_from_state() -> NDArray:
+    """Return random seeds from current numpy RNG state for np.random.choice."""
+    state = np.random.get_state()
+    return np.asarray(state[1])  # type: ignore[index]
+
+
 def _check_cv(
     cv: Optional[Union[int, str, BaseCrossValidator, BaseShuffleSplit]] = None,
     test_size: Optional[Union[int, float]] = None,
@@ -343,8 +349,7 @@ def _check_cv(
         If the cross-validator is not valid.
     """
     if random_state is None:
-        random_seeds = cast(list, np.random.get_state())[1]
-        random_state = np.random.choice(random_seeds)
+        random_state = np.random.choice(_random_seeds_from_state())
     if cv is None:
         return KFold(n_splits=5, shuffle=True, random_state=random_state)
     elif isinstance(cv, int):
@@ -428,9 +433,9 @@ def _check_no_agg_cv(
 
 def _check_alpha(
     alpha: Optional[Union[float, Iterable[float]]] = None,
-) -> Optional[ArrayLike]:
+) -> Optional[NDArray]:
     """
-    Check alpha (or confidence_level) and prepare it as a ArrayLike.
+    Check alpha (or confidence_level) and prepare it as a NDArray.
 
     Parameters
     ----------
@@ -443,8 +448,8 @@ def _check_alpha(
 
     Returns
     -------
-    ArrayLike
-        Prepared alpha.
+    NDArray or None
+        Prepared alpha as 1D array, or None if alpha is None.
 
     Raises
     ------
@@ -481,6 +486,11 @@ def _check_alpha(
             "Invalid confidence_level or alpha. Allowed values are between 0 and 1."
         )
     return alpha_np
+
+
+def _column_or_1d_ndarray(y: ArrayLike, *, warn: bool = False) -> NDArray:
+    """Wrap column_or_1d to return NDArray for type checker."""
+    return np.asarray(column_or_1d(y, warn=warn))
 
 
 def _check_n_features_in(
@@ -535,7 +545,7 @@ def _check_n_features_in(
     else:
         n_features_in = _num_features(X)
     if cv == "prefit" and hasattr(estimator, "n_features_in_"):
-        if cast(Any, estimator).n_features_in_ != n_features_in:
+        if getattr(estimator, "n_features_in_", None) != n_features_in:
             raise ValueError(
                 "Invalid mismatch between ", "X.shape and estimator.n_features_in_."
             )
@@ -942,7 +952,7 @@ def _check_binary_zero_one(y_true: ArrayLike) -> NDArray:
     ValueError
         If the input array is not binary, then an error is raised.
     """
-    y_true = cast(NDArray, column_or_1d(y_true))
+    y_true = _column_or_1d_ndarray(y_true)
     if type_of_target(y_true) == "binary":
         if (np.unique(y_true) != np.array([0, 1])).any() and len(
             np.unique(y_true)
@@ -1343,7 +1353,8 @@ def _cast_point_predictions_to_ndarray(
             "Developer error: use this function to cast point predictions only, "
             "not points + intervals."
         )
-    return cast(NDArray, point_predictions)
+    assert not isinstance(point_predictions, tuple)
+    return point_predictions
 
 
 def _cast_predictions_to_ndarray_tuple(
@@ -1354,7 +1365,8 @@ def _cast_predictions_to_ndarray_tuple(
             "Developer error: use this function to cast predictions containing points "
             "and intervals, not points only."
         )
-    return cast(Tuple[NDArray, NDArray], predictions)
+    assert isinstance(predictions, tuple)
+    return predictions
 
 
 def _prepare_params(params: Union[dict, None]) -> dict:

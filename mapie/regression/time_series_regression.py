@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Iterable, Optional, Tuple, Union, cast
+from typing import Iterable, Optional, Tuple, Union
 from warnings import warn
 
 import numpy as np
@@ -162,7 +162,7 @@ class TimeSeriesRegressor(_MapieRegressor):
             the length of the training set.
         """
         check_is_fitted(self)
-        X, y = cast(NDArray, X), cast(NDArray, y)
+        X, y = np.asarray(X), np.asarray(y)
         m, n = len(X), len(self.conformity_scores_)
         if m > n:
             raise ValueError(
@@ -227,14 +227,15 @@ class TimeSeriesRegressor(_MapieRegressor):
             self.current_alpha: dict[float, float] = {}
 
         if alpha is not None:
-            alpha_np = cast(NDArray, _check_alpha(alpha))
+            alpha_np = _check_alpha(alpha)
+            assert alpha_np is not None
             alpha_np = np.round(alpha_np, 2)
             for ix, alpha_checked in enumerate(alpha_np):
                 alpha_np[ix] = self.current_alpha.setdefault(
                     alpha_checked, alpha_checked
                 )
-            alpha = alpha_np
-        return alpha
+            return alpha_np
+        return None
 
     def adapt_conformal_inference(
         self,
@@ -301,13 +302,13 @@ class TimeSeriesRegressor(_MapieRegressor):
 
         check_is_fitted(self)
         self._check_gamma(gamma)
-        X, y = cast(NDArray, X), cast(NDArray, y)
+        X, y = np.asarray(X), np.asarray(y)
 
         self._get_alpha()
         alpha = self._transform_confidence_level_to_alpha_array(confidence_level)
         if alpha is None:
             alpha = np.array(list(self.current_alpha.keys()))
-        alpha_np = cast(NDArray, alpha)
+        alpha_np = np.asarray(alpha)
 
         for x_row, y_row in zip(X, y):
             x = np.expand_dims(x_row, axis=0)
@@ -488,7 +489,7 @@ class TimeSeriesRegressor(_MapieRegressor):
     def _transform_confidence_level_to_alpha_array(
         confidence_level: Optional[Union[float, Iterable[float]]] = None,
     ) -> Optional[NDArray]:
-        confidence_level = cast(Optional[NDArray], _check_alpha(confidence_level))
+        confidence_level = _check_alpha(confidence_level)
         if confidence_level is None:
             alpha = None
         else:
