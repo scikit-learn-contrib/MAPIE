@@ -1,6 +1,6 @@
 .. -*- mode: rst -*-
 
-|GitHubActions| |Codecov| |ReadTheDocs| |License| |PythonVersion| |PyPi| |Conda| |Release| |Commits| |Ask DeepWiki|
+|GitHubActions| |Codecov| |ReadTheDocs| |License| |PythonVersion| |PyPi| |Downloads| |Conda| |Release| |Commits| |Ask DeepWiki|
 
 .. |GitHubActions| image:: https://github.com/scikit-learn-contrib/MAPIE/actions/workflows/test.yml/badge.svg
     :target: https://github.com/scikit-learn-contrib/MAPIE/actions
@@ -20,6 +20,9 @@
 
 .. |PyPi| image:: https://img.shields.io/pypi/v/mapie
     :target: https://pypi.org/project/mapie/
+
+.. |Downloads| image:: https://img.shields.io/pypi/dm/mapie
+    :target: https://pypistats.org/packages/mapie
 
 .. |Conda| image:: https://img.shields.io/conda/vn/conda-forge/mapie
     :target: https://anaconda.org/conda-forge/mapie
