@@ -776,7 +776,7 @@ def _compute_quantiles(vector: NDArray, alpha: NDArray) -> NDArray:
                 for i, alpha_ in enumerate(alpha)
             ]
         )[:, 0]
-    return quantiles_
+    return cast(NDArray, quantiles_)
 
 
 def _check_estimator_classification(
