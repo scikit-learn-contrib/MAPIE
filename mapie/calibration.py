@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import warnings
 from inspect import signature
-from typing import Dict, Optional, Tuple, Union, cast
+from typing import Any, Dict, Optional, Tuple, Union, cast
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -1059,7 +1059,9 @@ class VennAbersCalibrator(BaseEstimator, ClassifierMixin):
         self._is_fitted = True
         return self
 
-    def predict_proba(self, X: ArrayLike, loss="log") -> NDArray:
+    def predict_proba(
+        self, X: ArrayLike, loss: str = "log", p0_p1_output: bool = False
+    ) -> Union[NDArray, Tuple[NDArray, Any]]:
         """
         Prediction of the calibrated scores using fitted classifier and
         Venn-ABERS calibrator.
@@ -1069,10 +1071,23 @@ class VennAbersCalibrator(BaseEstimator, ClassifierMixin):
         X : ArrayLike of shape (n_samples, n_features)
             Test data.
 
+        loss : str, default='log'
+            Log or Brier loss function. Only used in inductive/cross-validation
+            mode. For further details see Section 4 in
+            https://arxiv.org/pdf/1511.00213.pdf
+
+        p0_p1_output : bool, default=False
+            If True, returns tuple of (calibrated_probs, p0_p1) where p0_p1
+            contains the Venn-ABERS multiprobability outputs. The (p0, p1)
+            interval can be reported alongside the calibrated probability as
+            a measure of uncertainty.
+
         Returns
         -------
         NDArray of shape (n_samples, n_classes)
             Venn-ABERS calibrated probabilities.
+            If ``p0_p1_output=True``, returns a tuple of
+            (calibrated_probs, p0_p1_data) instead.
         """
         check_is_fitted(self)
 
@@ -1102,10 +1117,10 @@ class VennAbersCalibrator(BaseEstimator, ClassifierMixin):
                     raise RuntimeError(
                         "va_calibrator_ should not be None for binary classification"
                     )
-                p_prime, _ = self.va_calibrator_.predict_proba(p_test_pred)
+                p_prime, p0_p1 = self.va_calibrator_.predict_proba(p_test_pred)
             else:
                 # Multi-class classification
-                p_prime, _ = predict_proba_prefitted_va(
+                p_prime, p0_p1 = predict_proba_prefitted_va(
                     self.p_cal_,
                     self.y_cal_,
                     p_test_pred,
@@ -1113,6 +1128,8 @@ class VennAbersCalibrator(BaseEstimator, ClassifierMixin):
                     va_tpe="one_vs_one",
                 )
 
+            if p0_p1_output:
+                return p_prime, p0_p1
             return p_prime
 
         # Standard inductive or cross validation mode
@@ -1129,13 +1146,15 @@ class VennAbersCalibrator(BaseEstimator, ClassifierMixin):
             )
 
         if "loss" in signature(self.va_calibrator_.predict_proba).parameters:
-            p_prime = self.va_calibrator_.predict_proba(
-                X_processed, loss=loss, p0_p1_output=False
+            result = self.va_calibrator_.predict_proba(
+                X_processed, loss=loss, p0_p1_output=p0_p1_output
             )
         else:
-            p_prime = self.va_calibrator_.predict_proba(X_processed, p0_p1_output=False)
+            result = self.va_calibrator_.predict_proba(
+                X_processed, p0_p1_output=p0_p1_output
+            )
 
-        return p_prime
+        return result
 
     def predict(self, X: ArrayLike, loss="log") -> NDArray:
         """
