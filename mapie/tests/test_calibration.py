@@ -1309,3 +1309,80 @@ def test_va_inductive_loss_branch_and_else_branch() -> None:
     va_cal.va_calibrator_.predict_proba = predict_proba_no_loss  # type: ignore[method-assign]
     assert "loss" not in signature(va_cal.va_calibrator_.predict_proba).parameters
     _ = va_cal.predict_proba(X_binary_test, loss="log")
+
+
+@pytest.mark.filterwarnings("ignore:: RuntimeWarning")
+def test_va_calibrator_p0_p1_output_prefit_binary() -> None:
+    """Test VennAbersCalibrator.predict_proba(p0_p1_output=True) in prefit binary mode."""
+    clf = GaussianNB().fit(X_binary_proper, y_binary_proper)
+    va_cal = VennAbersCalibrator(estimator=clf, cv="prefit")
+    va_cal.fit(X_binary_cal, y_binary_cal)
+
+    # Without p0_p1 — returns NDArray
+    probs_only = va_cal.predict_proba(X_binary_test)
+    assert isinstance(probs_only, np.ndarray)
+    assert probs_only.shape == (len(X_binary_test), 2)
+
+    # With p0_p1 — returns tuple
+    result = va_cal.predict_proba(X_binary_test, p0_p1_output=True)
+    assert isinstance(result, tuple)
+    p_prime, p0_p1 = result
+    assert p_prime.shape == (len(X_binary_test), 2)
+    assert isinstance(p0_p1, np.ndarray)
+    assert p0_p1.shape == (len(X_binary_test), 2)
+    np.testing.assert_array_equal(probs_only, p_prime)
+
+
+@pytest.mark.filterwarnings("ignore:: RuntimeWarning")
+def test_va_calibrator_p0_p1_output_prefit_multiclass() -> None:
+    """Test VennAbersCalibrator.predict_proba(p0_p1_output=True) in prefit multiclass mode."""
+    clf = GaussianNB().fit(X_multi_proper, y_multi_proper)
+    va_cal = VennAbersCalibrator(estimator=clf, cv="prefit")
+    va_cal.fit(X_multi_cal, y_multi_cal)
+
+    result = va_cal.predict_proba(X_multi_test, p0_p1_output=True)
+    assert isinstance(result, tuple)
+    p_prime, p0_p1 = result
+    assert p_prime.shape == (len(X_multi_test), 3)
+    assert np.allclose(p_prime.sum(axis=1), 1.0)
+    assert isinstance(p0_p1, list)
+
+
+@pytest.mark.filterwarnings("ignore:: RuntimeWarning")
+def test_va_calibrator_p0_p1_output_inductive_binary() -> None:
+    """Test VennAbersCalibrator.predict_proba(p0_p1_output=True) in inductive binary mode."""
+    va_cal = VennAbersCalibrator(
+        estimator=GaussianNB(), inductive=True, random_state=random_state_va
+    )
+    va_cal.fit(X_binary_train, y_binary_train)
+
+    # Without p0_p1
+    probs_only = va_cal.predict_proba(X_binary_test)
+    assert isinstance(probs_only, np.ndarray)
+
+    # With p0_p1
+    result = va_cal.predict_proba(X_binary_test, p0_p1_output=True)
+    assert isinstance(result, tuple)
+    p_prime, p0_p1 = result
+    assert p_prime.shape == (len(X_binary_test), 2)
+    assert np.allclose(p_prime.sum(axis=1), 1.0)
+    assert isinstance(p0_p1, list)
+
+
+@pytest.mark.filterwarnings("ignore:: RuntimeWarning")
+def test_va_calibrator_p0_p1_output_inductive_multiclass() -> None:
+    """Test VennAbersCalibrator.predict_proba(p0_p1_output=True) in inductive multiclass mode."""
+    va_cal = VennAbersCalibrator(
+        estimator=GaussianNB(), inductive=True, random_state=random_state_va
+    )
+    va_cal.fit(X_multi_train, y_multi_train)
+
+    result = va_cal.predict_proba(X_multi_test, p0_p1_output=True)
+    assert isinstance(result, tuple)
+    p_prime, p0_p1 = result
+    assert p_prime.shape == (len(X_multi_test), 3)
+    assert np.allclose(p_prime.sum(axis=1), 1.0)
+    assert isinstance(p0_p1, list)
+    # Should have C*(C-1)/2 = 3 pairs for 3 classes
+    assert len(p0_p1) == 3
+
