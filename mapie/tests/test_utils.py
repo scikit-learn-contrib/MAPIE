@@ -512,6 +512,43 @@ def test_fit_estimator_sample_weight() -> None:
         np.testing.assert_almost_equal(y_pred_1, y_pred_2)
 
 
+def test_fit_estimator_pipeline_sample_weight() -> None:
+    """Test that sample_weight is correctly routed through a Pipeline.
+
+    Regression test for https://github.com/scikit-learn-contrib/MAPIE/issues/798
+    """
+    from sklearn.preprocessing import PolynomialFeatures
+    from sklearn.pipeline import Pipeline
+
+    X = np.array([[1], [2], [3], [4], [5], [6], [7], [8]], dtype=float)
+    y = np.array([2.1, 3.9, 6.2, 7.8, 10.1, 12.3, 14.0, 16.1])
+    sw = np.array([100, 100, 100, 100, 0.01, 0.01, 0.01, 0.01])
+
+    # Plain estimator with sample_weight
+    est_plain = _fit_estimator(LinearRegression(), X, y, sw)
+
+    # Pipeline with sample_weight — should produce identical results
+    pipe = Pipeline([
+        ("poly", PolynomialFeatures(degree=1, include_bias=False)),
+        ("lr", LinearRegression()),
+    ])
+    est_pipe = _fit_estimator(pipe, X, y, sw)
+
+    np.testing.assert_allclose(
+        est_plain.coef_, est_pipe[-1].coef_, rtol=1e-10
+    )
+    np.testing.assert_allclose(
+        est_plain.intercept_, est_pipe[-1].intercept_, rtol=1e-10
+    )
+
+    # Verify weights actually affected the result vs unweighted
+    est_unweighted = _fit_estimator(LinearRegression(), X, y)
+    with pytest.raises(AssertionError):
+        np.testing.assert_almost_equal(
+            est_plain.coef_, est_unweighted.coef_
+        )
+
+
 @pytest.mark.parametrize("alpha", [-1, 0, 1, 2, 2.5, "a", ["a", "b"]])
 def test_invalid_alpha(alpha: Any) -> None:
     """Test that invalid alphas raise errors."""

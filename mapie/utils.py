@@ -242,12 +242,12 @@ def _check_null_weight(
 # TODO back-end: this will be useless in v1 because we'll not distinguish
 # sample_weight from other fit_params
 def _fit_estimator(
-    estimator: Union[RegressorMixin, ClassifierMixin],
+    estimator: Union[RegressorMixin, ClassifierMixin, Pipeline],
     X: ArrayLike,
     y: ArrayLike,
     sample_weight: Optional[NDArray] = None,
     **fit_params,
-) -> Union[RegressorMixin, ClassifierMixin]:
+) -> Union[RegressorMixin, ClassifierMixin, Pipeline]:
     """
     Fit an estimator on training data by distinguishing two cases:
     - the estimator supports sample weights and sample weights are provided.
@@ -260,8 +260,9 @@ def _fit_estimator(
 
     Parameters
     ----------
-    estimator: Union[RegressorMixin, ClassifierMixin]
-        Estimator to train.
+    estimator: Union[RegressorMixin, ClassifierMixin, Pipeline]
+        Estimator to train. May be a single estimator or a sklearn
+        ``Pipeline``.
 
     X: ArrayLike of shape (n_samples, n_features)
         Input data.
@@ -278,7 +279,7 @@ def _fit_estimator(
 
     Returns
     -------
-    RegressorMixin
+    Union[RegressorMixin, ClassifierMixin, Pipeline]
         Fitted estimator.
 
     Examples
@@ -293,23 +294,25 @@ def _fit_estimator(
     >>> check_sklearn_user_model_is_fitted(estimator)
     True
     """
+    # Determine the fit target and sample_weight key based on estimator type
     if isinstance(estimator, Pipeline):
-        final_step = estimator[-1]
+        fit_target = estimator[-1]
         final_step_name = estimator.steps[-1][0]
-        fit_parameters = signature(final_step.fit).parameters
-        supports_sw = "sample_weight" in fit_parameters
-        if supports_sw and sample_weight is not None:
-            sw_key = f"{final_step_name}__sample_weight"
-            estimator.fit(X, y, **{sw_key: sample_weight}, **fit_params)
-        else:
-            estimator.fit(X, y, **fit_params)
+        sw_key = f"{final_step_name}__sample_weight"
     else:
-        fit_parameters = signature(estimator.fit).parameters
-        supports_sw = "sample_weight" in fit_parameters
-        if supports_sw and sample_weight is not None:
-            estimator.fit(X, y, sample_weight=sample_weight, **fit_params)
-        else:
-            estimator.fit(X, y, **fit_params)
+        fit_target = estimator
+        sw_key = "sample_weight"
+
+    fit_parameters = signature(fit_target.fit).parameters
+    supports_sw = "sample_weight" in fit_parameters
+
+    if supports_sw and sample_weight is not None:
+        # Place fit_params first so explicit sample_weight takes precedence
+        # if a duplicate key is accidentally present in fit_params.
+        merged_params = {**fit_params, sw_key: sample_weight}
+        estimator.fit(X, y, **merged_params)
+    else:
+        estimator.fit(X, y, **fit_params)
     return estimator
 
 
