@@ -254,6 +254,10 @@ def _fit_estimator(
     - the estimator does not support samples weights or
       samples weights are not provided.
 
+    When the estimator is a sklearn ``Pipeline``, the final step's ``fit``
+    signature is inspected for ``sample_weight`` support, and the weight is
+    routed using sklearn's ``stepname__sample_weight`` convention.
+
     Parameters
     ----------
     estimator: Union[RegressorMixin, ClassifierMixin]
@@ -289,12 +293,23 @@ def _fit_estimator(
     >>> check_sklearn_user_model_is_fitted(estimator)
     True
     """
-    fit_parameters = signature(estimator.fit).parameters
-    supports_sw = "sample_weight" in fit_parameters
-    if supports_sw and sample_weight is not None:
-        estimator.fit(X, y, sample_weight=sample_weight, **fit_params)
+    if isinstance(estimator, Pipeline):
+        final_step = estimator[-1]
+        final_step_name = estimator.steps[-1][0]
+        fit_parameters = signature(final_step.fit).parameters
+        supports_sw = "sample_weight" in fit_parameters
+        if supports_sw and sample_weight is not None:
+            sw_key = f"{final_step_name}__sample_weight"
+            estimator.fit(X, y, **{sw_key: sample_weight}, **fit_params)
+        else:
+            estimator.fit(X, y, **fit_params)
     else:
-        estimator.fit(X, y, **fit_params)
+        fit_parameters = signature(estimator.fit).parameters
+        supports_sw = "sample_weight" in fit_parameters
+        if supports_sw and sample_weight is not None:
+            estimator.fit(X, y, sample_weight=sample_weight, **fit_params)
+        else:
+            estimator.fit(X, y, **fit_params)
     return estimator
 
 
