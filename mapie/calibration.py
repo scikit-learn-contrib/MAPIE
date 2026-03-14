@@ -2,7 +2,12 @@ from __future__ import annotations
 
 import warnings
 from inspect import signature
-from typing import Any, Dict, Optional, Tuple, Union, cast
+from typing import Any, Dict, List, Optional, Tuple, Union, cast, overload
+
+try:
+    from typing import Literal
+except ImportError:
+    from typing_extensions import Literal
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -1059,9 +1064,28 @@ class VennAbersCalibrator(BaseEstimator, ClassifierMixin):
         self._is_fitted = True
         return self
 
+    @overload
     def predict_proba(
-        self, X: ArrayLike, loss: str = "log", p0_p1_output: bool = False
-    ) -> Union[NDArray, Tuple[NDArray, Any]]:
+        self,
+        X: ArrayLike,
+        loss: str = ...,
+        p0_p1_output: Literal[False] = ...,
+    ) -> NDArray: ...
+
+    @overload
+    def predict_proba(
+        self,
+        X: ArrayLike,
+        loss: str = ...,
+        p0_p1_output: Literal[True] = ...,
+    ) -> Tuple[NDArray, Union[NDArray, List[Any]]]: ...
+
+    def predict_proba(
+        self,
+        X: ArrayLike,
+        loss: str = "log",
+        p0_p1_output: bool = False,
+    ) -> Union[NDArray, Tuple[NDArray, Union[NDArray, List[Any]]]]:
         """
         Prediction of the calibrated scores using fitted classifier and
         Venn-ABERS calibrator.
@@ -1077,17 +1101,27 @@ class VennAbersCalibrator(BaseEstimator, ClassifierMixin):
             https://arxiv.org/pdf/1511.00213.pdf
 
         p0_p1_output : bool, default=False
-            If True, returns tuple of (calibrated_probs, p0_p1) where p0_p1
-            contains the Venn-ABERS multiprobability outputs. The (p0, p1)
-            interval can be reported alongside the calibrated probability as
-            a measure of uncertainty.
+            If True, returns a tuple of ``(calibrated_probs, p0_p1_data)``
+            where ``p0_p1_data`` contains the Venn-ABERS multiprobability
+            outputs. The structure of ``p0_p1_data`` depends on the mode:
+
+            - **Prefit binary** (``cv='prefit'``, 2 classes): ``NDArray`` of
+              shape ``(n_samples, 2)`` where columns are ``[p0, p1]``.
+            - **Prefit multiclass** (``cv='prefit'``, >2 classes): list of
+              ``NDArray``, one per one-vs-one pair.
+            - **Inductive/CV binary**: list of length 1, where each element
+              is an ``NDArray`` of shape ``(n_samples, 2)``.
+            - **Inductive/CV multiclass**: list of ``NDArray``, one per
+              one-vs-one pair.
 
         Returns
         -------
         NDArray of shape (n_samples, n_classes)
             Venn-ABERS calibrated probabilities.
-            If ``p0_p1_output=True``, returns a tuple of
-            (calibrated_probs, p0_p1_data) instead.
+
+            If ``p0_p1_output=True``, returns a tuple
+            ``(calibrated_probs, p0_p1_data)`` instead. See the
+            ``p0_p1_output`` parameter for the structure of ``p0_p1_data``.
         """
         check_is_fitted(self)
 
@@ -1177,7 +1211,7 @@ class VennAbersCalibrator(BaseEstimator, ClassifierMixin):
             raise RuntimeError("classes_ should not be None after fitting")
 
         # Get calibrated probabilities
-        p_prime = self.predict_proba(X, loss=loss)
+        p_prime = cast(NDArray, self.predict_proba(X, loss=loss))
 
         # Store classes_ in a local variable to help type checker
         classes: NDArray = self.classes_
