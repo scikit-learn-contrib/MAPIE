@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from typing import List, Optional, Tuple, Union, cast
+from typing import List, Optional, Tuple, Union
 
 import numpy as np
 from joblib import Parallel, delayed
 from numpy.typing import ArrayLike, NDArray
 from sklearn.base import RegressorMixin, clone
-from sklearn.model_selection import BaseCrossValidator
+from sklearn.model_selection import BaseCrossValidator, BaseShuffleSplit
 from sklearn.utils import _safe_indexing
 from sklearn.utils.validation import _num_samples
 
@@ -221,7 +221,7 @@ class EnsembleRegressor:
         y_train = _safe_indexing(y, train_index)
         if sample_weight is not None:
             sample_weight = _safe_indexing(sample_weight, train_index)
-            sample_weight = cast(NDArray, sample_weight)
+            sample_weight = np.asarray(sample_weight)
 
         estimator = _fit_estimator(
             estimator, X_train, y_train, sample_weight=sample_weight, **fit_params
@@ -368,7 +368,8 @@ class EnsembleRegressor:
             if self.method == "naive":
                 y_pred = self.single_estimator_.predict(X)
             else:
-                cv = cast(BaseCrossValidator, self.cv)
+                assert isinstance(self.cv, (BaseCrossValidator, BaseShuffleSplit))
+                cv = self.cv
                 outputs = Parallel(n_jobs=self.n_jobs, verbose=self.verbose)(
                     delayed(self._predict_oof_estimator)(
                         estimator, X, calib_index, **predict_params
@@ -467,7 +468,8 @@ class EnsembleRegressor:
             self.k_ = np.full(shape=(n_samples, 1), fill_value=np.nan, dtype=float)
 
         else:
-            cv = cast(BaseCrossValidator, self.cv)
+            assert isinstance(self.cv, (BaseCrossValidator, BaseShuffleSplit))
+            cv = self.cv
             self.k_ = np.full(
                 shape=(n_samples, cv.get_n_splits(X, y, groups)),
                 fill_value=np.nan,
@@ -507,7 +509,8 @@ class EnsembleRegressor:
         if self.cv == "prefit":
             single_estimator_ = self.estimator
         else:
-            cv = cast(BaseCrossValidator, self.cv)
+            assert isinstance(self.cv, (BaseCrossValidator, BaseShuffleSplit))
+            cv = self.cv
             if self.use_split_method_:
                 train_indexes = [
                     train_index for train_index, test_index in cv.split(X, y, groups)

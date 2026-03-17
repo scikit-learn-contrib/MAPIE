@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import warnings
 from inspect import signature
-from typing import Dict, Optional, Tuple, Union, cast
+from typing import Dict, Optional, Tuple, Union
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -285,7 +285,7 @@ class TopLabelCalibrator(BaseEstimator, ClassifierMixin):
             Calibrated estimator.
         """
         calibrator_ = clone(calibrator)
-        sample_weight = cast(NDArray, sample_weight)
+        sample_weight = np.asarray(sample_weight) if sample_weight is not None else None
         given_label_indices = np.argwhere(y_pred.ravel() == label).ravel()
         y_calib_ = np.equal(y_calib[given_label_indices], label).astype(int)
         top_class_prob_ = top_class_prob[given_label_indices]
@@ -341,7 +341,7 @@ class TopLabelCalibrator(BaseEstimator, ClassifierMixin):
             calibrator_ = self._fit_calibrator(
                 label,
                 calibrator,
-                cast(NDArray, y),
+                np.asarray(y),
                 max_prob,
                 y_pred,
                 sample_weight,
@@ -462,8 +462,8 @@ class TopLabelCalibrator(BaseEstimator, ClassifierMixin):
                 shuffle=shuffle,
                 stratify=stratify,
             )
-        X_train, X_calib = cast(ArrayLike, X_train), cast(ArrayLike, X_calib)
-        y_train, y_calib = cast(ArrayLike, y_train), cast(ArrayLike, y_calib)
+        X_train, X_calib = np.asarray(X_train), np.asarray(X_calib)
+        y_train, y_calib = np.asarray(y_train), np.asarray(y_calib)
         return (
             X_train,
             y_train,

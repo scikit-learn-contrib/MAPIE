@@ -1,4 +1,4 @@
-from typing import Sequence, Union, cast
+from typing import Sequence, Union
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -34,7 +34,7 @@ class SemanticSegmentationController(MultiLabelClassificationController):
         """
         if not isinstance(y_pred_proba, np.ndarray):
             y_pred_proba = np.array(y_pred_proba)
-        y_pred_proba_array = cast(NDArray, y_pred_proba)  # for mypy
+        y_pred_proba_array = np.asarray(y_pred_proba)
 
         if np.min(y_pred_proba_array) < 0 or np.max(y_pred_proba_array) > 1:
             # Apply sigmoid to convert logits to probabilities

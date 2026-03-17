@@ -1,4 +1,4 @@
-from typing import Optional, Tuple, Union, cast
+from typing import Optional, Tuple, Union
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -144,8 +144,8 @@ class APSConformityScore(NaiveConformityScore):
             Conformity scores.
         """
         # Casting
-        y_enc = cast(NDArray, y_enc)
-        classes = cast(NDArray, self.classes)
+        y_enc = np.asarray(y_enc)
+        classes = np.asarray(self.classes)
 
         # Conformity scores
         conformity_scores, self.cutoff = self.get_true_label_cumsum_proba(
@@ -294,7 +294,7 @@ class APSConformityScore(NaiveConformityScore):
 
         # get random numbers for each observation and alpha value
         random_state = check_random_state(self.random_state)
-        random_state = cast(np.random.RandomState, random_state)
+        assert isinstance(random_state, np.random.RandomState)
         u_param = random_state.uniform(size=(prediction_sets.shape[0], 1))
         # remove last label from comparison between uniform number and V
         label_to_keep = np.less_equal(v_param - u_param, EPSILON)

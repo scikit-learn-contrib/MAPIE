@@ -1,6 +1,6 @@
 import logging
 from abc import ABCMeta, abstractmethod
-from typing import Tuple, cast
+from typing import Tuple
 
 import numpy as np
 from numpy.typing import NDArray
@@ -208,13 +208,10 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
             "https://github.com/scikit-learn-contrib/MAPIE/issues/588"
         )
 
-        beta_np = cast(
-            NDArray[np.float64],
-            np.full(
-                shape=(len(lower_bounds), len(alpha_np)),
-                fill_value=np.nan,
-                dtype=float,
-            ),
+        beta_np: NDArray = np.full(
+            shape=(len(lower_bounds), len(alpha_np)),
+            fill_value=np.nan,
+            dtype=float,
         )
         for ind_alpha, _alpha in enumerate(alpha_np):
             betas = np.linspace(

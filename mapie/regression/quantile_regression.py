@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Iterable, List, Optional, Tuple, Union, cast
+from typing import Any, Iterable, List, Optional, Tuple, Union
 
 import warnings
 import numpy as np
@@ -799,12 +799,14 @@ class _MapieQuantileRegressor(_MapieRegressor):
         return self
 
     def _initialize_fit_conformalize(self) -> None:
-        self.cv = self._check_cv(cast(str, self.cv))
+        assert isinstance(self.cv, str)
+        self.cv = self._check_cv(self.cv)
         self.alpha_np = self._check_alpha(self.alpha)
         self.estimators_: List[RegressorMixin] = []
 
     def _initialize_and_check_prefit_estimators(self) -> None:
-        estimator = cast(List, self.estimator)
+        assert isinstance(self.estimator, list)
+        estimator = self.estimator
         self._check_prefit_params(estimator)
         self.estimators_ = list(estimator)
         self.single_estimator_ = self.estimators_[2]
@@ -899,7 +901,7 @@ class _MapieQuantileRegressor(_MapieRegressor):
         if self.cv == "prefit":
             self._initialize_and_check_prefit_estimators()
 
-        X_calib, y_calib = cast(ArrayLike, X), cast(ArrayLike, y)
+        X_calib, y_calib = np.asarray(X), np.asarray(y)
         X_calib, y_calib = indexable(X_calib, y_calib)
         y_calib = _check_y(y_calib)
 
