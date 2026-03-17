@@ -9,8 +9,6 @@ and "aps" on the two-dimensional dataset presented
 by Sadinle et al. (2019).
 """
 
-# sphinx_gallery_thumbnail_number = 5
-
 ##############################################################################
 # We will use MAPIE to estimate a prediction set of several classes such that
 # the probability that the true label of a new test point is included in the
