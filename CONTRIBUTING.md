@@ -73,6 +73,15 @@ If you don't have `pip` installed, you can install it by running:
 python -m ensurepip --upgrade
 ```
 
+### Optional: pre-commit checks
+
+You can run format, lint, and type-check automatically before each commit so you don't need to run them manually. After installing the environment with development dependencies, run once:
+
+```sh
+uv run pre-commit install
+```
+
+(or `pre-commit install` if your virtual environment is activated). Tests and coverage are not run by the hook (they remain manual or via CI).
 
 ## Make your contribution visible
 
@@ -82,7 +91,7 @@ python -m ensurepip --upgrade
 
 ## Validation process
 
-Many aspects of your contribution will be automatically checked by Continuous Integration (CI) tools, and the result will be displayed in the pull request. To debug your contribution, you can run the following checks locally.
+Many aspects of your contribution will be automatically checked by Continuous Integration (CI) tools, and the result will be displayed in the pull request. You can also run format, lint, and type-check automatically before each commit using the [optional pre-commit hook](#optional-pre-commit-checks). To debug your contribution, you can run the following checks locally.
 
 ### Code compatibility
 
