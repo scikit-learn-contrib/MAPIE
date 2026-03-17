@@ -1,6 +1,7 @@
 # History
 
 ## 1.x.x (2026-xx-xx)
+* Add optional pre-commit hook (format, lint, type-check) via pre-commit; documented in CONTRIBUTING.
 
 ## 1.3.0 (2026-02-02)
 * Introduce the Venn-Abers calibrator for both binary and multiclass classification.
