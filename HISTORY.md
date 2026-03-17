@@ -1,6 +1,7 @@
 # History
 
 ## 1.x.x (2026-xx-xx)
+* Add experimental module
 
 ## 1.3.0 (2026-02-02)
 * Introduce the Venn-Abers calibrator for both binary and multiclass classification.
