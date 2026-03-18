@@ -10,6 +10,50 @@ from sklearn.model_selection import train_test_split
 ### Scenarios ###
 
 
+def generate_exchangeable_gaussian(
+    n_samples=1000,
+    mean0=np.array([0, 0]),
+    mean1=np.array([2, 2]),
+    rho=0.3,
+    random_state=None,
+):
+    """
+    Exchangeable Gaussian data with correlated features.
+
+    Covariance has constant correlation rho.
+    """
+
+    is_exchangeable_ground_truth = True
+
+    rng = np.random.RandomState(random_state)
+
+    cov = np.array([[1, rho], [rho, 1]])
+
+    # Train
+    Xtr, ytr = [], []
+    for _ in range(n_samples):
+        label = rng.randint(0, 2)
+        mu = mean0 if label == 0 else mean1
+        Xtr.append(rng.multivariate_normal(mu, cov))
+        ytr.append(label)
+
+    # Test
+    Xtt, ytt = [], []
+    for _ in range(n_samples):
+        label = rng.randint(0, 2)
+        mu = mean0 if label == 0 else mean1
+        Xtt.append(rng.multivariate_normal(mu, cov))
+        ytt.append(label)
+
+    return (
+        is_exchangeable_ground_truth,
+        np.array(Xtt),
+        np.array(ytt),
+        np.array(Xtr),
+        np.array(ytr),
+    )
+
+
 def generate_two_gaussian_abrupt_shift(
     n_samples=1000,
     mean0_before=np.array([0, 0]),
