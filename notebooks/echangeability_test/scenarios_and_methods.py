@@ -1,8 +1,10 @@
+import flintypy
 import numpy as np
 from online_cp import ConformalRidgeRegressor, PluginMartingale
 from online_cp.classifiers import ConformalNearestNeighboursClassifier
 from online_cp.martingale import SimpleJumper
-from sklearn.linear_model import LogisticRegression
+from scipy.spatial.distance import pdist
+from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.model_selection import train_test_split
 
 ### Scenarios ###
@@ -160,7 +162,7 @@ def generate_two_gaussian_slow_shift(
 ### Methods ###
 
 
-def risk_monitoring(X_to_test, y_to_test, X_train, y_train):
+def risk_monitoring(X_to_test, y_to_test, X_train, y_train, **kwargs):
     # Split train into train and test
     X_train, X_test, y_train, y_test = train_test_split(
         X_train, y_train, test_size=0.3, random_state=0
@@ -291,3 +293,32 @@ def simple_jumper_martingale_test(X_to_test, y_to_test, **kwargs):
         **kwargs,
     )
     return is_exchangeable, threshold, martingale_values
+
+
+def _compute_non_conformity_score(X_to_test, y_to_test, X_train, y_train, task):
+    """
+    Compute non-conformity score for each sample in X_to_test.
+    """
+    if task == "regression":
+        model = LinearRegression()
+        model.fit(X_train, y_train)
+        scores = np.abs(model.predict(X_to_test) - y_to_test)
+    elif task == "classification":
+        model = LogisticRegression()
+        model.fit(X_train, y_train)
+        scores = (
+            1 - model.predict_proba(X_to_test)[np.arange(len(X_to_test)), y_to_test]
+        )
+    return scores
+
+
+def v_test(X_to_test, y_to_test, X_train, y_train, task, threshold=0.05):
+    scores = _compute_non_conformity_score(X_to_test, y_to_test, X_train, y_train, task)
+    scores_2d = np.expand_dims(scores, axis=1)  # shape (N, 1)
+
+    # Compute pairwise distances (e.g. Minkowski p=2 for Euclidean)
+    dist_vec = pdist(scores_2d, metric="minkowski", p=2) ** 2  # l_2^2
+    dist_list = [dist_vec]  # one block
+
+    p_value = flintypy.v_stat.dist_data_p_value(dist_list, num_perms=1000)
+    return int(p_value > threshold), threshold, p_value
