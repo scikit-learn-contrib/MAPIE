@@ -6,6 +6,8 @@ from online_cp.martingale import SimpleJumper
 from scipy.spatial.distance import pdist
 from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.model_selection import train_test_split
+from statsmodels.regression.linear_model import yule_walker
+from statsmodels.stats.stattools import durbin_watson
 
 ### Scenarios ###
 
@@ -229,7 +231,7 @@ def risk_monitoring(X_to_test, y_to_test, X_train, y_train, **kwargs):
     upper_bound_source_risk = empirical_source_risk + upper_correction
 
     # Run risk monitoring
-    t_warmup = 10  # initialisation to avoid warnings in the early iterations: need to check the original code on how they handle that
+    t_warmup = 50  # initialisation to avoid warnings in the early iterations: need to check the original code on how they handle that
     lower_bound_target_risk_history = []
     shift_detected_history = []
     for t in range(t_warmup, len(X_to_test)):
@@ -368,3 +370,20 @@ def v_test(
 
     p_value = flintypy.v_stat.dist_data_p_value(dist_list, num_perms=1000)
     return int(p_value > threshold), threshold, p_value
+
+
+def durbin_watson_test(X_to_test, y_to_test, X_train, y_train, task="classification"):
+    # Note: it supposed to be a test for autocorrelation in the residuals of a regression
+    # Returns 2 when there is no autocorrelation, and 0 or 4when there is autocorrelation.
+    # Here we use it for non-conformity scores and return the absolute difference between the statistic and 2.
+    threshold = 1
+    scores = _compute_non_conformity_score(X_to_test, y_to_test, X_train, y_train, task)
+    dw_stat = durbin_watson(scores)
+    return abs(dw_stat - 2) < threshold, threshold, abs(dw_stat - 2)
+
+
+def yule_walker_test(X_to_test, y_to_test, X_train, y_train, task="classification"):
+    threshold = 0.1
+    scores = _compute_non_conformity_score(X_to_test, y_to_test, X_train, y_train, task)
+    rho, _ = yule_walker(scores)
+    return abs(rho.item()) < threshold, threshold, abs(rho.item())
