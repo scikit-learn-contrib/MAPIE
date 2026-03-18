@@ -166,10 +166,9 @@ class ResidualNormalisedScore(BaseRegressionScore):
         X: NDArray,
         y: NDArray,
         y_pred: NDArray,
-    ) -> Tuple[NDArray, NDArray]:
+    ) -> RegressorMixin:
         """
-        Fit the residual estimator and returns the indexes used for the
-        training of the base estimator and those needed for the conformalization.
+        Fit the residual estimator and return the fitted residual estimator.
 
         Parameters
         ----------
