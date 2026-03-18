@@ -205,6 +205,131 @@ def generate_two_gaussian_slow_shift(
     )
 
 
+def generate_var1_dependence(
+    n_samples=1000,
+    A=np.array([[0.7, 0.2], [0.1, 0.6]]),
+    noise_scale=0.3,
+    random_state=None,
+):
+    """
+    Stationary VAR(1) process.
+    """
+
+    is_exchangeable_ground_truth = False
+    rng = np.random.RandomState(random_state)
+
+    burnin = 500
+    n_train = int(n_samples * 0.3)
+
+    total_steps = burnin + n_train + n_samples
+
+    X_full = np.zeros((total_steps, 2))
+    y_full = np.zeros(total_steps, dtype=int)
+
+    x_t = rng.normal(size=2)
+
+    for t in range(total_steps):
+        noise = rng.normal(scale=noise_scale, size=2)
+        x_t = A @ x_t + noise
+
+        X_full[t] = x_t
+
+        score = (
+            np.sin(0.5 * x_t[0])
+            + np.cos(0.5 * x_t[1])
+            + 0.5 * np.sin(0.01 * t)
+            + 5 * x_t[0]
+        )
+        prob = 1 / (1 + np.exp(-score))
+        y_full[t] = rng.binomial(1, prob)
+
+    # remove burn-in
+    X_full = X_full[burnin:]
+    y_full = y_full[burnin:]
+
+    # split
+    Xtr = X_full[:n_train]
+    ytr = y_full[:n_train]
+
+    Xtt = X_full[n_train:]
+    ytt = y_full[n_train:]
+
+    return (
+        is_exchangeable_ground_truth,
+        Xtt,
+        ytt,
+        Xtr,
+        ytr,
+    )
+
+
+def generate_complex_dependence(
+    n_samples=1000,
+    A=np.array([[0.6, 0.2], [0.2, 0.5]]),
+    shift_vector=np.array([0, 5]),
+    prop_shift=0.5,
+    noise_scale=0.3,
+    random_state=None,
+):
+    """
+    VAR(1) + nonlinear trend + abrupt shift (only in test).
+    """
+
+    is_exchangeable_ground_truth = False
+    rng = np.random.RandomState(random_state)
+
+    burnin = 500
+    n_train = int(n_samples * 0.3)
+
+    total_steps = burnin + n_train + n_samples
+
+    shift_start = burnin + n_train + int(n_samples * (1 - prop_shift))
+
+    X_full = np.zeros((total_steps, 2))
+    y_full = np.zeros(total_steps, dtype=int)
+
+    x_t = rng.normal(size=2)
+
+    for t in range(total_steps):
+        noise = rng.normal(scale=noise_scale, size=2)
+
+        # VAR
+        x_t = A @ x_t + noise
+
+        # Add tendance
+        x_t = x_t + 0.002 * t
+
+        # shift only in test
+        if t >= shift_start:
+            x_t = x_t + shift_vector
+
+        X_full[t] = x_t
+
+        # Probabilistic label with noise
+        score = np.sin(0.5 * x_t[0]) + np.cos(0.5 * x_t[1]) + 0.5 * np.sin(0.01 * t)
+        prob = 1 / (1 + np.exp(-score))
+        y_full[t] = rng.binomial(1, prob)
+
+    # remove burn-in
+    X_full = X_full[burnin:]
+    y_full = y_full[burnin:]
+
+    # split
+    Xtr = X_full[:n_train]
+    ytr = y_full[:n_train]
+
+    Xtt = X_full[n_train:]
+    ytt = y_full[n_train:]
+
+    return (
+        is_exchangeable_ground_truth,
+        Xtt,
+        ytt,
+        Xtr,
+        ytr,
+    )
+
+
 ### Methods ###
 
 
