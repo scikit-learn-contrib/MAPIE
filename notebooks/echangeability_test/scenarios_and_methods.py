@@ -312,7 +312,9 @@ def _compute_non_conformity_score(X_to_test, y_to_test, X_train, y_train, task):
     return scores
 
 
-def v_test(X_to_test, y_to_test, X_train, y_train, task, threshold=0.05):
+def v_test(
+    X_to_test, y_to_test, X_train, y_train, task="classification", threshold=0.05
+):
     scores = _compute_non_conformity_score(X_to_test, y_to_test, X_train, y_train, task)
     scores_2d = np.expand_dims(scores, axis=1)  # shape (N, 1)
 
