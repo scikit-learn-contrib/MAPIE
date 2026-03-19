@@ -1,5 +1,6 @@
 import flintypy
 import numpy as np
+from numpy.typing import ArrayLike
 from online_cp import ConformalRidgeRegressor, PluginMartingale
 from online_cp.classifiers import ConformalNearestNeighboursClassifier
 from online_cp.martingale import SimpleJumper
@@ -8,6 +9,7 @@ from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.model_selection import train_test_split
 from statsmodels.regression.linear_model import yule_walker
 from statsmodels.stats.stattools import durbin_watson
+from math import pi
 
 ### Scenarios ###
 
@@ -460,6 +462,93 @@ def simple_jumper_martingale_test(X_to_test, y_to_test, **kwargs):
         task="classification",
         **kwargs,
     )
+    return is_exchangeable, threshold, martingale_values
+
+
+class ContinuousPairwiseBettingMartingale:
+    def __init__(self):
+        self.martingale = [1]
+        self.num_coeff = 0
+        self.denum_coeff = 0
+        self.sum_sigma = 0
+        self.last_observed = None
+
+    @property
+    def parameters(self):
+        return {
+            "coeff": self.num_coeff / self.denum_coeff,
+            "var": 1 / (len(self.martingale) * 2 - 2) * self.sum_sigma,
+        }
+
+    @staticmethod
+    def validate_sequence_shape(X: ArrayLike):
+        if not (len(X.shape) == 1):
+            raise ValueError("Sequence must be a one dimensionnal iterable")
+
+    def update_parameters(self, X1, X2):
+        self.num_coeff += X1 * X2
+        self.denum_coeff += X2**2
+        self.sum_sigma += (X2 - self.num_coeff / self.denum_coeff * X1) ** 2
+        return self
+
+    def null_hypothesis_likelihood(self, X1, X2):
+        return 1 / 2
+
+    def alternative_hypothesis_likelihood(self, X1, X2):
+        params = self.parameters
+        var = params["var"]
+        coeff = params["coeff"]
+
+        num = 1 / (2 * pi * var)
+        expo1 = -1 / (2 * var) * (X1 - coeff * self.last_observed) ** 2
+        expo2 = -1 / (2 * var) * (X2 - coeff * X1) ** 2
+        num *= np.exp(expo1 + expo2)
+        denum = 1 / (2 * pi * var)
+        expo1 = -1 / (2 * var) * (X2 - coeff * self.last_observed) ** 2
+        expo2 = -1 / (2 * var) * (X1 - coeff * X2) ** 2
+        denum *= np.exp(expo1 + expo2)
+        denum += num
+
+        return num / denum
+
+    def bet(self, X1, X2):
+        if len(self.martingale) > 1:
+            return self.alternative_hypothesis_likelihood(
+                X1, X2
+            ) / self.null_hypothesis_likelihood(X1, X2)
+        return 1
+
+    def run_martingale(self, X: ArrayLike):
+        self.validate_sequence_shape(X)
+
+        for i in np.arange(1, len(X) - 1, step=2):
+            X2 = X[i]
+            X1 = X[i - 1]
+            m = 1
+            if self.last_observed is not None:
+                m = self.martingale[-1] * self.bet(X1, X2)
+                self.update_parameters(self.last_observed, X1)
+            self.martingale.append(m)
+            self.update_parameters(X1, X2)
+            self.last_observed = X2
+
+        return self
+
+
+def continuous_pairwise_betting_martingale_test(
+    X_to_test,
+    y_to_test,
+    X_train,
+    y_train,
+    task="classification",
+    threshold=0.01,
+    **kwargs,
+):
+    scores = _compute_non_conformity_score(X_to_test, y_to_test, X_train, y_train, task)
+    M = ContinuousPairwiseBettingMartingale()
+    M = M.run_martingale(scores)
+    martingale_values = np.array(M.martingale)
+    is_exchangeable = int(martingale_values[-1] < 1 / threshold)
     return is_exchangeable, threshold, martingale_values
 
 
