@@ -797,7 +797,7 @@ def sequential_mc_trial_fixed_dataset(
         Wealth trajectory for the selected strategy.
     """
     rng = np.random.RandomState(random_state)
-    X = np.asarray(X).reshape(-1)
+    X = np.asarray(X)
     y = np.asarray(y).reshape(-1)
 
     if X.shape[0] != y.shape[0]:
@@ -818,6 +818,7 @@ def sequential_mc_trial_fixed_dataset(
         )
 
     test_stat = np.mean(X[treated]) - np.mean(X[~treated])
+    test_stat = np.linalg.norm(test_stat)
 
     rank = 1
     wealth_bin = np.array([1.0])
@@ -827,6 +828,7 @@ def sequential_mc_trial_fixed_dataset(
     for i in range(1, B + 1):
         X_perm = rng.permutation(X)
         test_stat_perm = np.mean(X_perm[treated]) - np.mean(X_perm[~treated])
+        test_stat_perm = np.linalg.norm(test_stat_perm)
 
         if test_stat_perm >= test_stat:
             if wealth_bin[-1] * p_zero * (i + 1) / rank <= alpha:
@@ -861,30 +863,48 @@ def sequential_mc_trial_fixed_dataset(
     return is_exchangeable, alpha, martingale_values
 
 
-def fixed_dataset_binomial_martingale_test(X, y, **kwargs):
+def fixed_dataset_binomial_martingale_test(
+    X_to_test, y_to_test, X_train, y_train, **kwargs
+):
     """
     Fixed-dataset sequential MC test with binomial strategy.
     """
-    return sequential_mc_trial_fixed_dataset(X, y, strategy="binomial", **kwargs)
+    return sequential_mc_trial_fixed_dataset(
+        X_to_test, y_to_test, strategy="binomial", **kwargs
+    )
 
 
-def fixed_dataset_aggressive_martingale_test(X, y, **kwargs):
+def fixed_dataset_aggressive_martingale_test(
+    X_to_test, y_to_test, X_train, y_train, **kwargs
+):
     """
     Fixed-dataset sequential MC test with aggressive strategy.
     """
-    return sequential_mc_trial_fixed_dataset(X, y, strategy="aggressive", **kwargs)
+    return sequential_mc_trial_fixed_dataset(
+        X_to_test, y_to_test, strategy="aggressive", **kwargs
+    )
 
 
-def fixed_dataset_binomial_mixture_martingale_test(X, y, **kwargs):
+def fixed_dataset_binomial_mixture_martingale_test(
+    X_to_test, y_to_test, X_train, y_train, **kwargs
+):
     """
     Fixed-dataset sequential MC test with binomial mixture strategy.
     """
     return sequential_mc_trial_fixed_dataset(
-        X, y, strategy="binomial_mixture", **kwargs
+        X_to_test, y_to_test, strategy="binomial_mixture", **kwargs
     )
 
 
-def permutation_pvalue_fixed_dataset(X, y, B=1000, threshold=0.05, random_state=None):
+def permutation_pvalue_fixed_dataset(
+    X_to_test,
+    y_to_test,
+    X_train=None,
+    y_train=None,
+    B=1000,
+    threshold=0.05,
+    random_state=None,
+):
     """
     Classical permutation test on fixed (X, y) with API-compatible output.
 
@@ -898,20 +918,22 @@ def permutation_pvalue_fixed_dataset(X, y, B=1000, threshold=0.05, random_state=
         Running permutation p-values p_t after t permutations.
     """
     rng = np.random.RandomState(random_state)
-    X = np.asarray(X).reshape(-1)
-    treated = np.asarray(y).astype(bool)
+    X = np.asarray(X_to_test)
+    treated = np.asarray(y_to_test).astype(bool)
     if X.shape[0] != treated.shape[0]:
         raise ValueError("X and y must have the same length.")
     if treated.sum() == 0 or (~treated).sum() == 0:
         raise ValueError("y must define two non-empty groups.")
 
     test_stat = np.mean(X[treated]) - np.mean(X[~treated])
+    test_stat = np.linalg.norm(test_stat)
     rank = 1
     p_values = np.empty(B + 1)
     p_values[0] = 1.0
     for t in range(1, B + 1):
         X_perm = rng.permutation(X)
         stat_perm = np.mean(X_perm[treated]) - np.mean(X_perm[~treated])
+        stat_perm = np.linalg.norm(stat_perm)
         if stat_perm >= test_stat:
             rank += 1
         p_values[t] = rank / (t + 1)
