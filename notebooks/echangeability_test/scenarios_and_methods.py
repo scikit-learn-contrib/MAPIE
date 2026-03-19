@@ -5,6 +5,7 @@ from online_cp import ConformalRidgeRegressor, PluginMartingale
 from online_cp.classifiers import ConformalNearestNeighboursClassifier
 from online_cp.martingale import SimpleJumper
 from scipy.spatial.distance import pdist
+from scipy.stats import binom
 from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.model_selection import train_test_split
 from statsmodels.regression.linear_model import yule_walker
@@ -598,3 +599,345 @@ def yule_walker_test(X_to_test, y_to_test, X_train, y_train, task="classificatio
     scores = _compute_non_conformity_score(X_to_test, y_to_test, X_train, y_train, task)
     rho, _ = yule_walker(scores)
     return abs(rho.item()) < threshold, threshold, abs(rho.item())
+
+
+def _mean_or_nan(array: ArrayLike):
+    array = np.asarray(array)
+    if array.size == 0:
+        return np.nan
+    return float(np.mean(array))
+
+
+def _sequential_mc_trial(
+    n=1000,
+    B=1000,
+    mu=0.1,
+    alpha=0.05,
+    prop_treated=0.5,
+    c=None,
+    p_zero=None,
+    h_bc=None,
+    random_state=None,
+):
+    """
+    Run one trial from Power_nperm_generate_data.R in Python.
+
+    Returns decisions, stopping indices, and per-trial p-values for translated strategies.
+    """
+    rng = np.random.RandomState(random_state)
+
+    if c is None:
+        c = alpha * 0.90
+    if p_zero is None:
+        p_zero = 1 / np.ceil(np.sqrt(2 * np.pi * np.exp(1 / 6)) / alpha)
+    if h_bc is None:
+        h_bc = alpha * B
+
+    X = rng.normal(size=n)
+    treated = rng.uniform(size=n) >= prop_treated
+    X = X + mu * treated
+
+    test_stat = np.mean(X[treated]) - np.mean(X[~treated])
+
+    rank = 1
+    bc_count = 1
+    wealth_bin = np.array([1.0])
+    wealth_agg = np.array([1.0])
+    wealth_bm = np.array([])
+
+    idx_dec = B
+    idx_dec_agg = B
+    idx_dec_bc = B
+    idx_dec_bm = B
+    dec_bc = 0
+
+    for i in range(1, B + 1):
+        # Python i is 1-indexed to mirror the R equations.
+        X_perm = rng.permutation(X)
+        test_stat_perm = np.mean(X_perm[treated]) - np.mean(X_perm[~treated])
+
+        if test_stat_perm >= test_stat:
+            if wealth_bin[-1] * p_zero * (i + 1) / rank <= alpha:
+                bet_bin_i = 0.0
+            else:
+                bet_bin_i = p_zero * (i + 1) / rank
+            bet_agg_i = 0.0
+            rank += 1
+        else:
+            if wealth_bin[-1] * p_zero * (i + 1) / rank <= alpha:
+                bet_bin_i = (i + 1) / (i - rank + 1)
+            else:
+                bet_bin_i = (1 - p_zero) * (i + 1) / (i - rank + 1)
+            bet_agg_i = (i + 1) / i
+
+        wealth_bin = np.append(wealth_bin, wealth_bin[-1] * bet_bin_i)
+        if (
+            np.min(wealth_bin) <= alpha or np.max(wealth_bin) > 1 / alpha
+        ) and idx_dec == B:
+            idx_dec = i
+
+        wealth_agg = np.append(wealth_agg, wealth_agg[-1] * bet_agg_i)
+        if (
+            np.min(wealth_agg) <= alpha or np.max(wealth_agg) > 1 / alpha
+        ) and idx_dec_agg == B:
+            idx_dec_agg = i
+
+        if (rank - 1) == h_bc and bc_count == 1 and i < B:
+            dec_bc = -1
+            idx_dec_bc = i
+            bc_count = 0
+        elif i == B and bc_count == 1:
+            idx_dec_bc = i
+            dec_bc = 1
+
+        wealth_bm_i = (1 - binom.cdf(rank - 1, i + 1, c)) / c
+        wealth_bm = np.append(wealth_bm, wealth_bm_i)
+        if (
+            (np.min(wealth_bm) <= alpha and i > 1) or np.max(wealth_bm) > 1 / alpha
+        ) and idx_dec_bm == B:
+            idx_dec_bm = i
+
+    wealth_bin_at_dec = wealth_bin[idx_dec]
+    if wealth_bin_at_dec >= 1 / alpha:
+        dec_bin = 1
+    elif wealth_bin_at_dec < alpha:
+        dec_bin = -1
+    else:
+        dec_bin = 0
+
+    if wealth_bin_at_dec >= (rng.uniform() / alpha):
+        dec_bin_r = 1
+    elif wealth_bin_at_dec < alpha:
+        dec_bin_r = -1
+    else:
+        dec_bin_r = 0
+
+    wealth_agg_at_dec = wealth_agg[idx_dec_agg]
+    if wealth_agg_at_dec >= 1 / alpha:
+        dec_agg = 1
+    elif wealth_agg_at_dec < alpha:
+        dec_agg = -1
+    else:
+        dec_agg = 0
+
+    wealth_bm_at_dec = wealth_bm[idx_dec_bm - 1]
+    if wealth_bm_at_dec >= 1 / alpha:
+        dec_bm = 1
+    elif wealth_bm_at_dec < alpha:
+        dec_bm = -1
+    else:
+        dec_bm = 0
+
+    if wealth_bm_at_dec >= (rng.uniform() / alpha):
+        dec_bm_r = 1
+    elif wealth_bm_at_dec < alpha:
+        dec_bm_r = -1
+    else:
+        dec_bm_r = 0
+
+    p_perm = rank / (B + 1)
+    p_bin = min(1.0, 1.0 / np.max(wealth_bin))
+    p_agg = min(1.0, 1.0 / np.max(wealth_agg))
+    p_bm = min(1.0, 1.0 / np.max(wealth_bm))
+
+    return {
+        "dec_bin": dec_bin,
+        "dec_bin_r": dec_bin_r,
+        "dec_agg": dec_agg,
+        "dec_bc": dec_bc,
+        "dec_bm": dec_bm,
+        "dec_bm_r": dec_bm_r,
+        "idx_dec": idx_dec,
+        "idx_dec_agg": idx_dec_agg,
+        "idx_dec_bc": idx_dec_bc,
+        "idx_dec_bm": idx_dec_bm,
+        "p_perm": p_perm,
+        "p_bin": p_bin,
+        "p_agg": p_agg,
+        "p_bm": p_bm,
+    }
+
+
+def sequential_mc_testing_by_betting(
+    n=1000,
+    m=2000,
+    B=1000,
+    mus=(0.01, 0.05, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5),
+    prop_treated=0.5,
+    alpha=0.05,
+    random_state=None,
+):
+    """
+    Translate Power_nperm_generate_data.R into Python.
+
+    Simulates power and average number of permutations for:
+    - Binomial strategy (and randomized version)
+    - Aggressive strategy
+    - Besag-Clifford strategy
+    - Binomial mixture strategy (and randomized version)
+    """
+    rng = np.random.RandomState(random_state)
+    mus = np.asarray(mus, dtype=float)
+
+    c = alpha * 0.90
+    p_zero = 1 / np.ceil(np.sqrt(2 * np.pi * np.exp(1 / 6)) / alpha)
+    h_bc = alpha * B
+
+    power_bin = np.zeros_like(mus)
+    power_bin_r = np.zeros_like(mus)
+    power_agg = np.zeros_like(mus)
+    power_bc = np.zeros_like(mus)
+    power_bm = np.zeros_like(mus)
+    power_bm_r = np.zeros_like(mus)
+
+    nPerm_bc = np.zeros_like(mus)
+    nPerm_rej_bc = np.zeros_like(mus)
+    nPerm_stop_bc = np.zeros_like(mus)
+
+    nPerm = np.zeros_like(mus)
+    nPerm_rej = np.zeros_like(mus)
+    nPerm_stop = np.zeros_like(mus)
+
+    nPerm_agg = np.zeros_like(mus)
+    nPerm_agg_rej = np.zeros_like(mus)
+    nPerm_agg_stop = np.zeros_like(mus)
+
+    nPerm_bm = np.zeros_like(mus)
+    nPerm_bm_rej = np.zeros_like(mus)
+    nPerm_bm_stop = np.zeros_like(mus)
+
+    for k, mu in enumerate(mus):
+        dec_bin = np.zeros(m, dtype=int)
+        dec_bin_r = np.zeros(m, dtype=int)
+        dec_agg = np.zeros(m, dtype=int)
+        dec_bc = np.zeros(m, dtype=int)
+        dec_bm = np.zeros(m, dtype=int)
+        dec_bm_r = np.zeros(m, dtype=int)
+
+        idx_dec = np.full(m, B, dtype=int)
+        idx_dec_agg = np.full(m, B, dtype=int)
+        idx_dec_bc = np.full(m, B, dtype=int)
+        idx_dec_bm = np.full(m, B, dtype=int)
+
+        for j in range(m):
+            trial = _sequential_mc_trial(
+                n=n,
+                B=B,
+                mu=mu,
+                alpha=alpha,
+                prop_treated=prop_treated,
+                c=c,
+                p_zero=p_zero,
+                h_bc=h_bc,
+                random_state=rng.randint(0, 2**32 - 1),
+            )
+            dec_bin[j] = trial["dec_bin"]
+            dec_bin_r[j] = trial["dec_bin_r"]
+            dec_agg[j] = trial["dec_agg"]
+            dec_bc[j] = trial["dec_bc"]
+            dec_bm[j] = trial["dec_bm"]
+            dec_bm_r[j] = trial["dec_bm_r"]
+            idx_dec[j] = trial["idx_dec"]
+            idx_dec_agg[j] = trial["idx_dec_agg"]
+            idx_dec_bc[j] = trial["idx_dec_bc"]
+            idx_dec_bm[j] = trial["idx_dec_bm"]
+
+        power_bin[k] = np.mean(dec_bin > 0)
+        power_bin_r[k] = np.mean(dec_bin_r > 0)
+        power_bc[k] = np.mean(dec_bc > 0)
+        power_agg[k] = np.mean(dec_agg > 0)
+        power_bm[k] = np.mean(dec_bm > 0)
+        power_bm_r[k] = np.mean(dec_bm_r > 0)
+
+        nPerm[k] = np.mean(idx_dec)
+        nPerm_rej[k] = _mean_or_nan(idx_dec[dec_bin == 1])
+        nPerm_stop[k] = _mean_or_nan(idx_dec[dec_bin == -1])
+
+        nPerm_bc[k] = np.mean(idx_dec_bc)
+        nPerm_rej_bc[k] = _mean_or_nan(idx_dec_bc[dec_bc == 1])
+        nPerm_stop_bc[k] = _mean_or_nan(idx_dec_bc[dec_bc == -1])
+
+        nPerm_agg[k] = np.mean(idx_dec_agg)
+        nPerm_agg_rej[k] = _mean_or_nan(idx_dec_agg[dec_agg == 1])
+        nPerm_agg_stop[k] = _mean_or_nan(idx_dec_agg[dec_agg == -1])
+
+        nPerm_bm[k] = np.mean(idx_dec_bm)
+        nPerm_bm_rej[k] = _mean_or_nan(idx_dec_bm[dec_bm == 1])
+        nPerm_bm_stop[k] = _mean_or_nan(idx_dec_bm[dec_bm == -1])
+
+    return {
+        "mus": mus,
+        "power_bin": power_bin,
+        "power_bin_r": power_bin_r,
+        "power_bc": power_bc,
+        "power_agg": power_agg,
+        "power_bm": power_bm,
+        "power_bm_r": power_bm_r,
+        "nPerm": nPerm,
+        "nPerm_rej": nPerm_rej,
+        "nPerm_stop": nPerm_stop,
+        "nPerm_bc": nPerm_bc,
+        "nPerm_rej_bc": nPerm_rej_bc,
+        "nPerm_stop_bc": nPerm_stop_bc,
+        "nPerm_agg": nPerm_agg,
+        "nPerm_agg_rej": nPerm_agg_rej,
+        "nPerm_agg_stop": nPerm_agg_stop,
+        "nPerm_bm": nPerm_bm,
+        "nPerm_bm_rej": nPerm_bm_rej,
+        "nPerm_bm_stop": nPerm_bm_stop,
+    }
+
+
+def sequential_mc_sorted_log_pvalues(
+    mu,
+    alpha=0.05,
+    n=1000,
+    m=2000,
+    B=1000,
+    prop_treated=0.5,
+    random_state=None,
+):
+    """
+    Simulate sorted log p-values for Figure-1 style plots.
+
+    Returns sorted log p-values for:
+    - Classical permutation p-value
+    - Binomial mixture strategy
+    - Binomial strategy
+    - Aggressive strategy
+    """
+    rng = np.random.RandomState(random_state)
+
+    c = alpha * 0.90
+    p_zero = 1 / np.ceil(np.sqrt(2 * np.pi * np.exp(1 / 6)) / alpha)
+    h_bc = alpha * B
+
+    p_perm = np.empty(m)
+    p_bm = np.empty(m)
+    p_bin = np.empty(m)
+    p_agg = np.empty(m)
+
+    for j in range(m):
+        trial = _sequential_mc_trial(
+            n=n,
+            B=B,
+            mu=mu,
+            alpha=alpha,
+            prop_treated=prop_treated,
+            c=c,
+            p_zero=p_zero,
+            h_bc=h_bc,
+            random_state=rng.randint(0, 2**32 - 1),
+        )
+        p_perm[j] = trial["p_perm"]
+        p_bm[j] = trial["p_bm"]
+        p_bin[j] = trial["p_bin"]
+        p_agg[j] = trial["p_agg"]
+
+    eps = 1e-12
+    return {
+        "Permutation p-value": np.sort(np.log(np.clip(p_perm, eps, 1))),
+        "Binomial mixture": np.sort(np.log(np.clip(p_bm, eps, 1))),
+        "Binomial": np.sort(np.log(np.clip(p_bin, eps, 1))),
+        "Aggressive": np.sort(np.log(np.clip(p_agg, eps, 1))),
+    }
