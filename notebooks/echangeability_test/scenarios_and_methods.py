@@ -356,7 +356,7 @@ def risk_monitoring(X_to_test, y_to_test, X_train, y_train, **kwargs):
     upper_bound_source_risk = empirical_source_risk + upper_correction
 
     # Run risk monitoring
-    t_warmup = 50  # initialisation to avoid warnings in the early iterations: need to check the original code on how they handle that
+    t_warmup = 100  # initialisation to avoid warnings in the early iterations: need to check the original code on how they handle that
     lower_bound_target_risk_history = []
     shift_detected_history = []
     for t in range(t_warmup, len(X_to_test)):
@@ -398,9 +398,6 @@ def martingale_test(
     task="classification",
     **kwargs,
 ):
-    X_train = kwargs.get("X_train", None)
-    y_train = kwargs.get("y_train", None)
-
     dataset = list(zip(np.array(X_to_test), np.array(y_to_test)))
 
     if martingale_type == "plugin_martingale":
