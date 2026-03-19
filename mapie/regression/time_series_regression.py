@@ -71,16 +71,19 @@ class TimeSeriesRegressor(_MapieRegressor):
         conformity_score: Optional[BaseRegressionScore] = None,
         random_state: Optional[Union[int, np.random.RandomState]] = None,
     ) -> None:
-        super().__init__(
-            estimator=estimator,
-            method=method,
-            cv=cv,
-            n_jobs=n_jobs,
-            agg_function=agg_function,
-            verbose=verbose,
-            conformity_score=conformity_score,
-            random_state=random_state,
-        )
+        self.estimator = estimator
+        self.method = method
+        #TODO add cv checking : cv is in valid_methods
+        self.cv = cv
+        self.n_jobs = n_jobs
+        self.agg_function = agg_function
+        self.verbose = verbose
+        self.conformity_score = conformity_score
+        self.random_state = random_state
+        self._is_fitted = False
+        # For test compatibility
+        #TODO: adapt tests and remove unused parameter
+        self.test_size = None
 
     def _relative_conformity_scores(
         self,
