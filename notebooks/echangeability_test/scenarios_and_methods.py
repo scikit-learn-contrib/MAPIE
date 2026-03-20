@@ -1,3 +1,5 @@
+from math import pi
+
 import flintypy
 import numpy as np
 from numpy.typing import ArrayLike
@@ -10,7 +12,6 @@ from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.model_selection import train_test_split
 from statsmodels.regression.linear_model import yule_walker
 from statsmodels.stats.stattools import durbin_watson
-from math import pi
 
 ### Scenarios ###
 
@@ -570,7 +571,7 @@ def _compute_non_conformity_score(X_to_test, y_to_test, X_train, y_train, task):
     return scores
 
 
-def v_test(
+def v_test_distance(
     X_to_test, y_to_test, X_train, y_train, task="classification", threshold=0.05
 ):
     scores = _compute_non_conformity_score(X_to_test, y_to_test, X_train, y_train, task)
@@ -581,6 +582,28 @@ def v_test(
     dist_list = [dist_vec]  # one block
 
     p_value = flintypy.v_stat.dist_data_p_value(dist_list, num_perms=1000)
+    return int(p_value > threshold), threshold, p_value
+
+
+def v_test(
+    X_to_test, y_to_test, X_train, y_train, task="classification", threshold=0.05
+):
+    scores = _compute_non_conformity_score(X_to_test, y_to_test, X_train, y_train, task)
+    scores = np.expand_dims(scores, axis=1)
+
+    p_value = flintypy.v_stat.get_p_value(scores, large_p=True, num_perms=1000)
+
+    return int(p_value > threshold), threshold, p_value
+
+
+def v_test_2d(
+    X_to_test, y_to_test, X_train, y_train, task="classification", threshold=0.05
+):
+    scores = _compute_non_conformity_score(X_to_test, y_to_test, X_train, y_train, task)
+    scores_2d = np.column_stack([scores, np.ones_like(scores)])
+
+    p_value = flintypy.v_stat.get_p_value(scores_2d, large_p=True, num_perms=1000)
+
     return int(p_value > threshold), threshold, p_value
 
 
@@ -940,4 +963,5 @@ def permutation_pvalue_fixed_dataset(
 
     is_exchangeable = int(p_values[-1] > threshold)
     # Keep API-compatible tuple position used by other methods.
+    return is_exchangeable, threshold, p_values
     return is_exchangeable, threshold, p_values
