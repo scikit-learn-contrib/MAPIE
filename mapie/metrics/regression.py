@@ -49,7 +49,7 @@ def regression_mean_width_score(y_intervals: NDArray) -> NDArray:
 
     width = np.abs(y_intervals[:, 1, :] - y_intervals[:, 0, :])
     mean_width = width.mean(axis=0)
-    return mean_width
+    return cast(NDArray, mean_width)
 
 
 def regression_coverage_score(
@@ -129,7 +129,7 @@ def regression_coverage_score(
         ),
         axis=0,
     )
-    return coverages
+    return cast(NDArray, coverages)
 
 
 def regression_ssc(y_true: NDArray, y_intervals: NDArray, num_bins: int = 3) -> NDArray:
@@ -247,7 +247,7 @@ def regression_ssc_score(
     >>> print(regression_ssc_score(y_true, y_intervals, num_bins=2))
     [1.  0.5]
     """
-    return np.min(regression_ssc(y_true, y_intervals, num_bins), axis=1)
+    return cast(NDArray, np.min(regression_ssc(y_true, y_intervals, num_bins), axis=1))
 
 
 def _gaussian_kernel(x: NDArray, kernel_size: int) -> NDArray:
@@ -265,7 +265,7 @@ def _gaussian_kernel(x: NDArray, kernel_size: int) -> NDArray:
     dist = (
         -2 * np.matmul(x, x.transpose((0, 2, 1))) + norm_x + norm_x.transpose((0, 2, 1))
     )
-    return np.exp(-dist / kernel_size)
+    return cast(NDArray, np.exp(-dist / kernel_size))
 
 
 def hsic(
@@ -358,7 +358,7 @@ def hsic(
     hsic_mat /= (n_samples - 1) ** 2
     coef_hsic = np.sqrt(np.matrix.trace(hsic_mat, axis1=1, axis2=2))
 
-    return coef_hsic
+    return cast(NDArray, coef_hsic)
 
 
 def coverage_width_based(
@@ -544,5 +544,5 @@ def regression_mwi_score(
     error_above: float = np.sum((y_true - y_pred_up)[y_true > y_pred_up])
     error_below: float = np.sum((y_pred_low - y_true)[y_true < y_pred_low])
     total_error = error_above + error_below
-    mwi = (width + total_error * 2 / (1 - confidence_level)) / len(y_true)
+    mwi = float((width + total_error * 2 / (1 - confidence_level)) / len(y_true))
     return mwi

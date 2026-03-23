@@ -629,7 +629,7 @@ class TopLabelCalibrator(BaseEstimator, ClassifierMixin):
             The class from the scores.
         """
         check_is_fitted(self)
-        return self.single_estimator_.predict(X)
+        return cast(NDArray, self.single_estimator_.predict(X))
 
 
 class VennAbersCalibrator(BaseEstimator, ClassifierMixin):
@@ -1113,7 +1113,7 @@ class VennAbersCalibrator(BaseEstimator, ClassifierMixin):
                     va_tpe="one_vs_one",
                 )
 
-            return p_prime
+            return cast(NDArray, p_prime)
 
         # Standard inductive or cross validation mode
         if self.va_calibrator_ is None:
@@ -1135,7 +1135,7 @@ class VennAbersCalibrator(BaseEstimator, ClassifierMixin):
         else:
             p_prime = self.va_calibrator_.predict_proba(X_processed, p0_p1_output=False)
 
-        return p_prime
+        return cast(NDArray, p_prime)
 
     def predict(self, X: ArrayLike, loss="log") -> NDArray:
         """
@@ -1172,4 +1172,4 @@ class VennAbersCalibrator(BaseEstimator, ClassifierMixin):
             # Multi-class classification
             y_pred = classes[np.argmax(p_prime, axis=1)]
 
-        return y_pred
+        return cast(NDArray, y_pred)

@@ -287,7 +287,7 @@ class EnsembleRegressor:
         if self.method in self.no_agg_methods_ or self.use_split_method_:
             raise ValueError("There should not be aggregation of predictions.")
         elif self.agg_function == "median":
-            return phi2D(A=x, B=k, fun=lambda x: np.nanmedian(x, axis=1))
+            return cast(NDArray, phi2D(A=x, B=k, fun=lambda x: np.nanmedian(x, axis=1)))
         # To aggregate with mean() the aggregation coud be done
         # with phi2D(A=x, B=k, fun=lambda x: np.nanmean(x, axis=1).
         # However, phi2D contains a np.apply_along_axis loop which
@@ -295,7 +295,7 @@ class EnsembleRegressor:
         # be used to compute the means.
         elif self.agg_function in ["mean", None]:
             K = np.nan_to_num(k, nan=0.0)
-            return np.matmul(x, (K / (K.sum(axis=1, keepdims=True))).T)
+            return cast(NDArray, np.matmul(x, (K / (K.sum(axis=1, keepdims=True))).T))
         else:
             raise ValueError("The value of the aggregation function is not correct")
 
@@ -394,7 +394,7 @@ class EnsembleRegressor:
                     _check_nan_in_aposteriori_prediction(pred_matrix)
                     y_pred = aggregate_all(self.agg_function, pred_matrix)
 
-        return y_pred
+        return cast(NDArray, y_pred)
 
     def fit(
         self,
@@ -574,7 +574,7 @@ class EnsembleRegressor:
 
         y_pred = self.single_estimator_.predict(X, **predict_params)
         if not return_multi_pred and not ensemble:
-            return y_pred
+            return cast(NDArray, y_pred)
 
         if self.method in self.no_agg_methods_ or self.use_split_method_:
             y_pred_multi_low = y_pred[:, np.newaxis]
@@ -602,4 +602,4 @@ class EnsembleRegressor:
         if return_multi_pred:
             return y_pred, y_pred_multi_low, y_pred_multi_up
         else:
-            return y_pred
+            return cast(NDArray, y_pred)

@@ -507,4 +507,4 @@ class RAPSConformityScore(APSConformityScore):
             - self.lambda_star * np.maximum(0, L - self.k_star)
             + self.lambda_star * (L > self.k_star)
         )
-        return v_param
+        return cast(NDArray, v_param)
