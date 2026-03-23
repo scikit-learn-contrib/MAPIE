@@ -781,6 +781,73 @@ def _sequential_mc_trial(
     }
 
 
+def _compute_test_statistic_for_mc_trial_fixed(X, y, n_blocks=10):
+    X = np.asarray(X)
+    y = np.asarray(y).reshape(-1)
+    n = X.shape[0]
+
+    if X.ndim == 1:
+        X = X.reshape(-1, 1)
+
+    unique_labels = np.unique(y)
+    d = X.shape[1]
+
+    # Encode labels → index
+    label_to_idx = {label: i for i, label in enumerate(unique_labels)}
+    y_idx = np.array([label_to_idx[val] for val in y])
+    L = len(unique_labels)
+
+    # cumulative sums per label
+    cumsum = np.zeros((n, L, d))
+    counts = np.zeros((n, L))
+
+    for i in range(n):
+        if i > 0:
+            cumsum[i] = cumsum[i - 1]
+            counts[i] = counts[i - 1]
+        cumsum[i, y_idx[i]] += X[i]
+        counts[i, y_idx[i]] += 1
+
+    total_sum = cumsum[-1]
+    total_count = counts[-1]
+
+    max_stat = 0.0
+
+    for k in range(1, n - 1):
+        left_sum = cumsum[k]
+        left_count = counts[k]
+
+        right_sum = total_sum - left_sum
+        right_count = total_count - left_count
+
+        # avoid division by zero
+        left_mean = np.divide(
+            left_sum,
+            left_count[:, None],
+            out=np.zeros_like(left_sum),
+            where=left_count[:, None] > 0,
+        )
+
+        right_mean = np.divide(
+            right_sum,
+            right_count[:, None],
+            out=np.zeros_like(right_sum),
+            where=right_count[:, None] > 0,
+        )
+
+        diff = left_mean - right_mean
+
+        # CUSUM scaling
+        scale = np.sqrt(k * (n - k) / n)
+
+        stat_k = scale * np.linalg.norm(diff)
+
+        if stat_k > max_stat:
+            max_stat = stat_k
+
+    return max_stat
+
+
 def sequential_mc_trial_fixed_dataset(
     X,
     y,
@@ -826,8 +893,8 @@ def sequential_mc_trial_fixed_dataset(
     if X.shape[0] != y.shape[0]:
         raise ValueError("X and y must have the same length.")
 
-    treated = y.astype(bool)
-    if treated.sum() == 0 or (~treated).sum() == 0:
+    y_bool = y.astype(bool)
+    if y_bool.sum() == 0 or (~y_bool).sum() == 0:
         raise ValueError("y must define two non-empty groups.")
 
     if c is None:
@@ -840,31 +907,31 @@ def sequential_mc_trial_fixed_dataset(
             f"Unknown strategy '{strategy}'. Expected one of {sorted(valid_strategies)}."
         )
 
-    test_stat = np.mean(X[treated]) - np.mean(X[~treated])
-    test_stat = np.linalg.norm(test_stat)
+    test_stat = _compute_test_statistic_for_mc_trial_fixed(X, y_bool)
 
     rank = 1
     wealth_bin = np.array([1.0])
     wealth_agg = np.array([1.0])
     wealth_bm = np.array([])
+    n = len(X)
 
     for i in range(1, B + 1):
-        X_perm = rng.permutation(X)
-        test_stat_perm = np.mean(X_perm[treated]) - np.mean(X_perm[~treated])
-        test_stat_perm = np.linalg.norm(test_stat_perm)
+        perm = rng.permutation(n)
+        X_perm = X[perm]
+        y_bool_perm = y_bool[perm]
+        test_stat_perm = _compute_test_statistic_for_mc_trial_fixed(X_perm, y_bool_perm)
+
+        if wealth_bin[-1] * p_zero * (i + 1) / rank < alpha:
+            pt = 0
+        else:
+            pt = p_zero
 
         if test_stat_perm >= test_stat:
-            if wealth_bin[-1] * p_zero * (i + 1) / rank <= alpha:
-                bet_bin_i = 0.0
-            else:
-                bet_bin_i = p_zero * (i + 1) / rank
+            bet_bin_i = pt * (i + 1) / rank
             bet_agg_i = 0.0
             rank += 1
         else:
-            if wealth_bin[-1] * p_zero * (i + 1) / rank <= alpha:
-                bet_bin_i = (i + 1) / (i - rank + 1)
-            else:
-                bet_bin_i = (1 - p_zero) * (i + 1) / (i - rank + 1)
+            bet_bin_i = (1 - pt) * (i + 1) / (i - (rank - 1))
             bet_agg_i = (i + 1) / i
 
         wealth_bin = np.append(wealth_bin, wealth_bin[-1] * bet_bin_i)
@@ -874,13 +941,34 @@ def sequential_mc_trial_fixed_dataset(
         wealth_bm_i = (1 - binom.cdf(rank - 1, i + 1, c)) / c
         wealth_bm = np.append(wealth_bm, wealth_bm_i)
 
+        if (
+            strategy == "aggressive"
+            and (wealth_agg[-1] < alpha or wealth_agg[-1] >= 1 / alpha)
+            and (i > 50)
+        ):
+            break
+        if (
+            strategy == "binomial"
+            and (wealth_bin[-1] < alpha or wealth_bin[-1] >= 1 / alpha)
+            and (i > 50)
+        ):
+            break
+        if (
+            strategy == "binomial_mixture"
+            and (wealth_agg[-1] < alpha or wealth_agg[-1] >= 1 / alpha)
+            and (i > 50)
+        ):
+            break
+
     if strategy == "binomial":
         martingale_values = np.asarray(wealth_bin)
     elif strategy == "aggressive":
         martingale_values = np.asarray(wealth_agg)
-    else:
+    elif strategy == "binomial_mixture":
         # wealth_bm has length B while others have length B+1
         martingale_values = np.concatenate([[1.0], np.asarray(wealth_bm)])
+    else:
+        raise ValueError
 
     is_exchangeable = int(martingale_values[-1] < 1 / alpha)
     return is_exchangeable, alpha, martingale_values
@@ -963,5 +1051,4 @@ def permutation_pvalue_fixed_dataset(
 
     is_exchangeable = int(p_values[-1] > threshold)
     # Keep API-compatible tuple position used by other methods.
-    return is_exchangeable, threshold, p_values
     return is_exchangeable, threshold, p_values
