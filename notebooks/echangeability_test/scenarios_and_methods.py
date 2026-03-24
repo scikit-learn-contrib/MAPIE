@@ -394,10 +394,14 @@ def risk_monitoring(X_to_test, y_to_test, X_train, y_train, **kwargs):
             shift_point = idx + t_warmup  # account for offset in t
             break
     # Return shift_point as the fourth output (may be None if never True and stays True)
-    return (
-        not any(shift_detected_history),
-        shift_point,
-    )
+    is_exchangeable = int(not any(shift_detected_history))
+    stable_index = shift_point
+    stable_value = np.nan
+    if stable_index is not None and 0 <= stable_index < len(
+        lower_bound_target_risk_history
+    ):
+        stable_value = lower_bound_target_risk_history[stable_index]
+    return is_exchangeable, stable_index, stable_value
 
 
 # Plug-in Maringale and Simple Jumper Martingale
@@ -627,7 +631,7 @@ def v_test_distance(
     dist_list = [dist_vec]  # one block
 
     p_value = flintypy.v_stat.dist_data_p_value(dist_list, num_perms=1000)
-    return int(p_value > threshold), p_value
+    return int(p_value > threshold), None, p_value
 
 
 def v_test(
@@ -638,7 +642,7 @@ def v_test(
 
     p_value = flintypy.v_stat.get_p_value(scores, large_p=True, num_perms=1000)
 
-    return int(p_value > threshold), p_value
+    return int(p_value > threshold), None, p_value
 
 
 def v_test_2d(
@@ -649,7 +653,7 @@ def v_test_2d(
 
     p_value = flintypy.v_stat.get_p_value(scores_2d, large_p=True, num_perms=1000)
 
-    return int(p_value > threshold), p_value
+    return int(p_value > threshold), None, p_value
 
 
 def durbin_watson_test(X_to_test, y_to_test, X_train, y_train, task="classification"):
@@ -659,14 +663,14 @@ def durbin_watson_test(X_to_test, y_to_test, X_train, y_train, task="classificat
     threshold = 1
     scores = _compute_non_conformity_score(X_to_test, y_to_test, X_train, y_train, task)
     dw_stat = durbin_watson(scores)
-    return abs(dw_stat - 2) < threshold, abs(dw_stat - 2)
+    return abs(dw_stat - 2) < threshold, None, abs(dw_stat - 2)
 
 
 def yule_walker_test(X_to_test, y_to_test, X_train, y_train, task="classification"):
     threshold = 0.1
     scores = _compute_non_conformity_score(X_to_test, y_to_test, X_train, y_train, task)
     rho, _ = yule_walker(scores)
-    return abs(rho.item()) < threshold, abs(rho.item())
+    return abs(rho.item()) < threshold, None, abs(rho.item())
 
 
 def _mean_or_nan(array: ArrayLike):
@@ -743,7 +747,7 @@ def _compute_test_statistic_for_mc_trial_fixed(X, y, n_blocks=10):
     return max_stat
 
 
-def sequential_mc_trial_fixed_dataset(
+def sequential_mc_trial(
     X,
     y,
     B=1000,
@@ -868,57 +872,49 @@ def sequential_mc_trial_fixed_dataset(
 
     is_exchangeable = int(martingale_values[-1] < 1 / alpha)
     if is_exchangeable:
-        stable_index = _first_stable_suffix_index(
+        stable_permutation_index = _first_stable_suffix_index(
             martingale_values,
             boundary=alpha,
             use_below=True,
         )
     else:
-        stable_index = _first_stable_suffix_index(
+        stable_permutation_index = _first_stable_suffix_index(
             martingale_values,
             boundary=1 / alpha,
             use_below=False,
         )
     stable_value = (
-        martingale_values[stable_index] if stable_index is not None else np.nan
+        martingale_values[stable_permutation_index]
+        if stable_permutation_index is not None
+        else np.nan
     )
-    return is_exchangeable, stable_index, stable_value
+    return is_exchangeable, stable_permutation_index, stable_value
 
 
-def fixed_dataset_binomial_martingale_test(
-    X_to_test, y_to_test, X_train, y_train, **kwargs
-):
+def binomial_martingale_test(X_to_test, y_to_test, X_train, y_train, **kwargs):
     """
     Fixed-dataset sequential MC test with binomial strategy.
     """
-    return sequential_mc_trial_fixed_dataset(
-        X_to_test, y_to_test, strategy="binomial", **kwargs
-    )
+    return sequential_mc_trial(X_to_test, y_to_test, strategy="binomial", **kwargs)
 
 
-def fixed_dataset_aggressive_martingale_test(
-    X_to_test, y_to_test, X_train, y_train, **kwargs
-):
+def aggressive_martingale_test(X_to_test, y_to_test, X_train, y_train, **kwargs):
     """
     Fixed-dataset sequential MC test with aggressive strategy.
     """
-    return sequential_mc_trial_fixed_dataset(
-        X_to_test, y_to_test, strategy="aggressive", **kwargs
-    )
+    return sequential_mc_trial(X_to_test, y_to_test, strategy="aggressive", **kwargs)
 
 
-def fixed_dataset_binomial_mixture_martingale_test(
-    X_to_test, y_to_test, X_train, y_train, **kwargs
-):
+def binomial_mixture_martingale_test(X_to_test, y_to_test, X_train, y_train, **kwargs):
     """
     Fixed-dataset sequential MC test with binomial mixture strategy.
     """
-    return sequential_mc_trial_fixed_dataset(
+    return sequential_mc_trial(
         X_to_test, y_to_test, strategy="binomial_mixture", **kwargs
     )
 
 
-def permutation_pvalue_fixed_dataset(
+def permutation_pvalue(
     X_to_test,
     y_to_test,
     X_train=None,
@@ -963,16 +959,20 @@ def permutation_pvalue_fixed_dataset(
 
     is_exchangeable = int(p_values[-1] > threshold)
     if is_exchangeable:
-        stable_index = _first_stable_suffix_index(
-            p_values,
-            boundary=threshold,
-            use_below=True,
-        )
-    else:
-        stable_index = _first_stable_suffix_index(
+        stable_permutation_index = _first_stable_suffix_index(
             p_values,
             boundary=threshold,
             use_below=False,
         )
-    stable_value = p_values[stable_index] if stable_index is not None else np.nan
-    return is_exchangeable, stable_index, stable_value
+    else:
+        stable_permutation_index = _first_stable_suffix_index(
+            p_values,
+            boundary=threshold,
+            use_below=True,
+        )
+    stable_value = (
+        p_values[stable_permutation_index]
+        if stable_permutation_index is not None
+        else np.nan
+    )
+    return is_exchangeable, stable_permutation_index, stable_value
