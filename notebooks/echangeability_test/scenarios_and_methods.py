@@ -13,6 +13,7 @@ from sklearn.model_selection import train_test_split
 from statsmodels.regression.linear_model import yule_walker
 from statsmodels.stats.stattools import durbin_watson
 
+THRESHOLD = 0.05
 ### Scenarios ###
 
 
@@ -386,18 +387,44 @@ def risk_monitoring(X_to_test, y_to_test, X_train, y_train, **kwargs):
         else:
             lower_bound_target_risk_history.append(lower_bound_target_risk_t)
 
+    # Find the first index t where shift_detected_history[t] is True and remains True for all subsequent t
+    shift_point = None
+    for idx, detected in enumerate(shift_detected_history):
+        if detected and all(shift_detected_history[idx:]):
+            shift_point = idx + t_warmup  # account for offset in t
+            break
+    # Return shift_point as the fourth output (may be None if never True and stays True)
     return (
         not any(shift_detected_history),
-        upper_bound_source_risk + tol,
-        lower_bound_target_risk_history,
+        shift_point,
     )
 
 
 # Plug-in Maringale and Simple Jumper Martingale
+def _first_stable_suffix_index(martingale_values, boundary, use_below):
+    """
+    Return the first index of the final suffix that stays on one side
+    of the boundary.
+    """
+    values = np.asarray(martingale_values)
+    if values.size == 0:
+        return None
+
+    comparator = np.less if use_below else np.greater
+    condition = comparator(values, boundary)
+    if not condition[-1]:
+        return None
+
+    idx = len(condition) - 1
+    while idx > 0 and condition[idx - 1]:
+        idx -= 1
+    return int(idx)
+
+
 def martingale_test(
     X_to_test,
     y_to_test,
-    threshold=0.01,
+    threshold=THRESHOLD,
     martingale_type="plugin_martingale",
     task="classification",
     **kwargs,
@@ -438,33 +465,42 @@ def martingale_test(
     else:
         raise ValueError
 
-    is_exchangeable = int(martingale_values[-1] < 1 / threshold)
+    boundary = 1 / threshold
+    is_exchangeable = int(martingale_values[-1] < boundary)
+    stable_index = _first_stable_suffix_index(
+        martingale_values,
+        boundary=boundary,
+        use_below=bool(is_exchangeable),
+    )
 
-    return is_exchangeable, threshold, martingale_values
+    stable_value = (
+        martingale_values[stable_index] if stable_index is not None else np.nan
+    )
+    return is_exchangeable, stable_index, stable_value
 
 
 def plugin_martingale_test(X_to_test, y_to_test, **kwargs):
-    is_exchangeable, threshold, martingale_values = martingale_test(
+    is_exchangeable, stable_index, stable_value = martingale_test(
         X_to_test,
         y_to_test,
-        threshold=0.01,
+        threshold=THRESHOLD,
         martingale_type="plugin_martingale",
         task="classification",
         **kwargs,
     )
-    return is_exchangeable, threshold, martingale_values
+    return is_exchangeable, stable_index, stable_value
 
 
 def simple_jumper_martingale_test(X_to_test, y_to_test, **kwargs):
-    is_exchangeable, threshold, martingale_values = martingale_test(
+    is_exchangeable, stable_index, stable_value = martingale_test(
         X_to_test,
         y_to_test,
-        threshold=0.01,
+        threshold=THRESHOLD,
         martingale_type="simple_jumper_martingale",
         task="classification",
         **kwargs,
     )
-    return is_exchangeable, threshold, martingale_values
+    return is_exchangeable, stable_index, stable_value
 
 
 class ContinuousPairwiseBettingMartingale:
@@ -543,15 +579,24 @@ def continuous_pairwise_betting_martingale_test(
     X_train,
     y_train,
     task="classification",
-    threshold=0.01,
+    threshold=THRESHOLD,
     **kwargs,
 ):
     scores = _compute_non_conformity_score(X_to_test, y_to_test, X_train, y_train, task)
     M = ContinuousPairwiseBettingMartingale()
     M = M.run_martingale(scores)
     martingale_values = np.array(M.martingale)
-    is_exchangeable = int(martingale_values[-1] < 1 / threshold)
-    return is_exchangeable, threshold, martingale_values
+    boundary = 1 / threshold
+    is_exchangeable = int(martingale_values[-1] < boundary)
+    stable_index = _first_stable_suffix_index(
+        martingale_values,
+        boundary=boundary,
+        use_below=bool(is_exchangeable),
+    )
+    stable_value = (
+        martingale_values[stable_index] if stable_index is not None else np.nan
+    )
+    return is_exchangeable, stable_index, stable_value
 
 
 def _compute_non_conformity_score(X_to_test, y_to_test, X_train, y_train, task):
@@ -572,7 +617,7 @@ def _compute_non_conformity_score(X_to_test, y_to_test, X_train, y_train, task):
 
 
 def v_test_distance(
-    X_to_test, y_to_test, X_train, y_train, task="classification", threshold=0.05
+    X_to_test, y_to_test, X_train, y_train, task="classification", threshold=THRESHOLD
 ):
     scores = _compute_non_conformity_score(X_to_test, y_to_test, X_train, y_train, task)
     scores_2d = np.expand_dims(scores, axis=1)  # shape (N, 1)
@@ -582,29 +627,29 @@ def v_test_distance(
     dist_list = [dist_vec]  # one block
 
     p_value = flintypy.v_stat.dist_data_p_value(dist_list, num_perms=1000)
-    return int(p_value > threshold), threshold, p_value
+    return int(p_value > threshold), p_value
 
 
 def v_test(
-    X_to_test, y_to_test, X_train, y_train, task="classification", threshold=0.05
+    X_to_test, y_to_test, X_train, y_train, task="classification", threshold=THRESHOLD
 ):
     scores = _compute_non_conformity_score(X_to_test, y_to_test, X_train, y_train, task)
     scores = np.expand_dims(scores, axis=1)
 
     p_value = flintypy.v_stat.get_p_value(scores, large_p=True, num_perms=1000)
 
-    return int(p_value > threshold), threshold, p_value
+    return int(p_value > threshold), p_value
 
 
 def v_test_2d(
-    X_to_test, y_to_test, X_train, y_train, task="classification", threshold=0.05
+    X_to_test, y_to_test, X_train, y_train, task="classification", threshold=THRESHOLD
 ):
     scores = _compute_non_conformity_score(X_to_test, y_to_test, X_train, y_train, task)
     scores_2d = np.column_stack([scores, np.ones_like(scores)])
 
     p_value = flintypy.v_stat.get_p_value(scores_2d, large_p=True, num_perms=1000)
 
-    return int(p_value > threshold), threshold, p_value
+    return int(p_value > threshold), p_value
 
 
 def durbin_watson_test(X_to_test, y_to_test, X_train, y_train, task="classification"):
@@ -614,14 +659,14 @@ def durbin_watson_test(X_to_test, y_to_test, X_train, y_train, task="classificat
     threshold = 1
     scores = _compute_non_conformity_score(X_to_test, y_to_test, X_train, y_train, task)
     dw_stat = durbin_watson(scores)
-    return abs(dw_stat - 2) < threshold, threshold, abs(dw_stat - 2)
+    return abs(dw_stat - 2) < threshold, abs(dw_stat - 2)
 
 
 def yule_walker_test(X_to_test, y_to_test, X_train, y_train, task="classification"):
     threshold = 0.1
     scores = _compute_non_conformity_score(X_to_test, y_to_test, X_train, y_train, task)
     rho, _ = yule_walker(scores)
-    return abs(rho.item()) < threshold, threshold, abs(rho.item())
+    return abs(rho.item()) < threshold, abs(rho.item())
 
 
 def _mean_or_nan(array: ArrayLike):
@@ -629,156 +674,6 @@ def _mean_or_nan(array: ArrayLike):
     if array.size == 0:
         return np.nan
     return float(np.mean(array))
-
-
-def _sequential_mc_trial(
-    n=1000,
-    B=1000,
-    mu=0.1,
-    alpha=0.05,
-    prop_treated=0.5,
-    c=None,
-    p_zero=None,
-    h_bc=None,
-    random_state=None,
-):
-    """
-    Run one trial from Power_nperm_generate_data.R in Python.
-
-    Returns decisions, stopping indices, and per-trial p-values for translated strategies.
-    """
-    rng = np.random.RandomState(random_state)
-
-    if c is None:
-        c = alpha * 0.90
-    if p_zero is None:
-        p_zero = 1 / np.ceil(np.sqrt(2 * np.pi * np.exp(1 / 6)) / alpha)
-    if h_bc is None:
-        h_bc = alpha * B
-
-    X = rng.normal(size=n)
-    treated = rng.uniform(size=n) >= prop_treated
-    X = X + mu * treated
-
-    test_stat = np.mean(X[treated]) - np.mean(X[~treated])
-
-    rank = 1
-    bc_count = 1
-    wealth_bin = np.array([1.0])
-    wealth_agg = np.array([1.0])
-    wealth_bm = np.array([])
-
-    idx_dec = B
-    idx_dec_agg = B
-    idx_dec_bc = B
-    idx_dec_bm = B
-    dec_bc = 0
-
-    for i in range(1, B + 1):
-        # Python i is 1-indexed to mirror the R equations.
-        X_perm = rng.permutation(X)
-        test_stat_perm = np.mean(X_perm[treated]) - np.mean(X_perm[~treated])
-
-        if test_stat_perm >= test_stat:
-            if wealth_bin[-1] * p_zero * (i + 1) / rank <= alpha:
-                bet_bin_i = 0.0
-            else:
-                bet_bin_i = p_zero * (i + 1) / rank
-            bet_agg_i = 0.0
-            rank += 1
-        else:
-            if wealth_bin[-1] * p_zero * (i + 1) / rank <= alpha:
-                bet_bin_i = (i + 1) / (i - rank + 1)
-            else:
-                bet_bin_i = (1 - p_zero) * (i + 1) / (i - rank + 1)
-            bet_agg_i = (i + 1) / i
-
-        wealth_bin = np.append(wealth_bin, wealth_bin[-1] * bet_bin_i)
-        if (
-            np.min(wealth_bin) <= alpha or np.max(wealth_bin) > 1 / alpha
-        ) and idx_dec == B:
-            idx_dec = i
-
-        wealth_agg = np.append(wealth_agg, wealth_agg[-1] * bet_agg_i)
-        if (
-            np.min(wealth_agg) <= alpha or np.max(wealth_agg) > 1 / alpha
-        ) and idx_dec_agg == B:
-            idx_dec_agg = i
-
-        if (rank - 1) == h_bc and bc_count == 1 and i < B:
-            dec_bc = -1
-            idx_dec_bc = i
-            bc_count = 0
-        elif i == B and bc_count == 1:
-            idx_dec_bc = i
-            dec_bc = 1
-
-        wealth_bm_i = (1 - binom.cdf(rank - 1, i + 1, c)) / c
-        wealth_bm = np.append(wealth_bm, wealth_bm_i)
-        if (
-            (np.min(wealth_bm) <= alpha and i > 1) or np.max(wealth_bm) > 1 / alpha
-        ) and idx_dec_bm == B:
-            idx_dec_bm = i
-
-    wealth_bin_at_dec = wealth_bin[idx_dec]
-    if wealth_bin_at_dec >= 1 / alpha:
-        dec_bin = 1
-    elif wealth_bin_at_dec < alpha:
-        dec_bin = -1
-    else:
-        dec_bin = 0
-
-    if wealth_bin_at_dec >= (rng.uniform() / alpha):
-        dec_bin_r = 1
-    elif wealth_bin_at_dec < alpha:
-        dec_bin_r = -1
-    else:
-        dec_bin_r = 0
-
-    wealth_agg_at_dec = wealth_agg[idx_dec_agg]
-    if wealth_agg_at_dec >= 1 / alpha:
-        dec_agg = 1
-    elif wealth_agg_at_dec < alpha:
-        dec_agg = -1
-    else:
-        dec_agg = 0
-
-    wealth_bm_at_dec = wealth_bm[idx_dec_bm - 1]
-    if wealth_bm_at_dec >= 1 / alpha:
-        dec_bm = 1
-    elif wealth_bm_at_dec < alpha:
-        dec_bm = -1
-    else:
-        dec_bm = 0
-
-    if wealth_bm_at_dec >= (rng.uniform() / alpha):
-        dec_bm_r = 1
-    elif wealth_bm_at_dec < alpha:
-        dec_bm_r = -1
-    else:
-        dec_bm_r = 0
-
-    p_perm = rank / (B + 1)
-    p_bin = min(1.0, 1.0 / np.max(wealth_bin))
-    p_agg = min(1.0, 1.0 / np.max(wealth_agg))
-    p_bm = min(1.0, 1.0 / np.max(wealth_bm))
-
-    return {
-        "dec_bin": dec_bin,
-        "dec_bin_r": dec_bin_r,
-        "dec_agg": dec_agg,
-        "dec_bc": dec_bc,
-        "dec_bm": dec_bm,
-        "dec_bm_r": dec_bm_r,
-        "idx_dec": idx_dec,
-        "idx_dec_agg": idx_dec_agg,
-        "idx_dec_bc": idx_dec_bc,
-        "idx_dec_bm": idx_dec_bm,
-        "p_perm": p_perm,
-        "p_bin": p_bin,
-        "p_agg": p_agg,
-        "p_bm": p_bm,
-    }
 
 
 def _compute_test_statistic_for_mc_trial_fixed(X, y, n_blocks=10):
@@ -941,6 +836,7 @@ def sequential_mc_trial_fixed_dataset(
         wealth_bm_i = (1 - binom.cdf(rank - 1, i + 1, c)) / c
         wealth_bm = np.append(wealth_bm, wealth_bm_i)
 
+        # early stopping if possible
         if (
             strategy == "aggressive"
             and (wealth_agg[-1] < alpha or wealth_agg[-1] >= 1 / alpha)
@@ -971,7 +867,22 @@ def sequential_mc_trial_fixed_dataset(
         raise ValueError
 
     is_exchangeable = int(martingale_values[-1] < 1 / alpha)
-    return is_exchangeable, alpha, martingale_values
+    if is_exchangeable:
+        stable_index = _first_stable_suffix_index(
+            martingale_values,
+            boundary=alpha,
+            use_below=True,
+        )
+    else:
+        stable_index = _first_stable_suffix_index(
+            martingale_values,
+            boundary=1 / alpha,
+            use_below=False,
+        )
+    stable_value = (
+        martingale_values[stable_index] if stable_index is not None else np.nan
+    )
+    return is_exchangeable, stable_index, stable_value
 
 
 def fixed_dataset_binomial_martingale_test(
@@ -1013,7 +924,7 @@ def permutation_pvalue_fixed_dataset(
     X_train=None,
     y_train=None,
     B=1000,
-    threshold=0.05,
+    threshold=THRESHOLD,
     random_state=None,
 ):
     """
@@ -1030,25 +941,38 @@ def permutation_pvalue_fixed_dataset(
     """
     rng = np.random.RandomState(random_state)
     X = np.asarray(X_to_test)
-    treated = np.asarray(y_to_test).astype(bool)
-    if X.shape[0] != treated.shape[0]:
+    y_bool = np.asarray(y_to_test).astype(bool)
+    if X.shape[0] != y_bool.shape[0]:
         raise ValueError("X and y must have the same length.")
-    if treated.sum() == 0 or (~treated).sum() == 0:
+    if y_bool.sum() == 0 or (~y_bool).sum() == 0:
         raise ValueError("y must define two non-empty groups.")
 
-    test_stat = np.mean(X[treated]) - np.mean(X[~treated])
-    test_stat = np.linalg.norm(test_stat)
+    test_stat = _compute_test_statistic_for_mc_trial_fixed(X, y_bool)
     rank = 1
     p_values = np.empty(B + 1)
     p_values[0] = 1.0
+    n = len(X)
     for t in range(1, B + 1):
-        X_perm = rng.permutation(X)
-        stat_perm = np.mean(X_perm[treated]) - np.mean(X_perm[~treated])
-        stat_perm = np.linalg.norm(stat_perm)
+        perm = rng.permutation(n)
+        X_perm = X[perm]
+        y_bool_perm = y_bool[perm]
+        stat_perm = _compute_test_statistic_for_mc_trial_fixed(X_perm, y_bool_perm)
         if stat_perm >= test_stat:
             rank += 1
         p_values[t] = rank / (t + 1)
 
     is_exchangeable = int(p_values[-1] > threshold)
-    # Keep API-compatible tuple position used by other methods.
-    return is_exchangeable, threshold, p_values
+    if is_exchangeable:
+        stable_index = _first_stable_suffix_index(
+            p_values,
+            boundary=threshold,
+            use_below=True,
+        )
+    else:
+        stable_index = _first_stable_suffix_index(
+            p_values,
+            boundary=threshold,
+            use_below=False,
+        )
+    stable_value = p_values[stable_index] if stable_index is not None else np.nan
+    return is_exchangeable, stable_index, stable_value
