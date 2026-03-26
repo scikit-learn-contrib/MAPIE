@@ -1420,6 +1420,7 @@ FIT_INDICATORS = [
     "tree_",
     "estimators_",
     "fitted_",
+    "is_fitted",
 ]
 
 

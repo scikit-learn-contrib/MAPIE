@@ -253,24 +253,6 @@ class MultivariateResidualNormalisedScore(BaseFitRegressionScore):
         self.is_fitted = True
         return self
 
-    def predict(self, X: ArrayLike) -> NDArray:
-        """
-        Returns the predictions y_pred for the associated X values.
-
-        Parameters
-        ----------
-        X : ArrayLike
-            The input feature values.
-
-        Returns
-        -------
-        NDArray
-            An array y_pred of the prediction of the model.
-        """
-        assert self.covariance_estimator_ is not None
-        X_array = cast(NDArray, np.asarray(X))
-        return self.covariance_estimator_.predict(X_array)
-
     def get_signed_conformity_scores(
         self,
         y: ArrayLike,
@@ -318,7 +300,7 @@ class MultivariateResidualNormalisedScore(BaseFitRegressionScore):
         if y_pred is not None and np.isnan(y_pred).any():
             raise ValueError("y_pred contains NaN values.")
         if y_pred is None:
-            y_pred = self.predict(X)
+            y_pred = self.covariance_estimator_.predict(X)
 
         full_indexes = np.arange(len(y))
 
@@ -410,4 +392,6 @@ class MultivariateResidualNormalisedScore(BaseFitRegressionScore):
     #     X: ArrayLike,
     # ) -> Tuple[NDArray, NDArray]:
     #     _, Sigma = self.get_estimation_distribution(X)
+    #     return Sigma
+    #     return Sigma
     #     return Sigma

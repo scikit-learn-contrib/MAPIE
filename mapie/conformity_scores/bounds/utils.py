@@ -224,7 +224,7 @@ class Trainer:
         self.mode = mode
         self.dtype = dtype
         self.device = torch.device(device)
-        self.fitted = False
+        self.is_fitted = False
         self.backbone = SimpleTabularMLP(
             num_cont=input_dim,
             hidden_dim=hidden_dim,
@@ -405,7 +405,7 @@ class Trainer:
 
         self.backbone.load_state_dict(best_backbone_state)
         self.head.load_state_dict(best_head_state)
-        self.fitted = True
+        self.is_fitted = True
 
         if verbose != -1:
             print(f"Best validation loss achieved: {best_validation_loss:.4f}")
