@@ -6,6 +6,7 @@ from sklearn.utils import _safe_indexing
 from sklearn.utils.validation import check_random_state, indexable
 
 from mapie.conformity_scores.regression import BaseFitRegressionScore
+from mapie.conformity_scores.bounds.utils import Trainer
 
 
 @runtime_checkable
@@ -132,8 +133,6 @@ class MultivariateResidualNormalisedScore(BaseFitRegressionScore):
             If the provided estimator lacks `fit`, `get_distribution`, or `get_covariance_matrix` methods.
         """
         if estimator is None:
-            from mapie.conformity_scores.bounds.utils import Trainer
-
             return Trainer(self.input_dim, self.output_dim, **self.kwargs)
         else:
             if not (
