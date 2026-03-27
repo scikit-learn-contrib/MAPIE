@@ -547,6 +547,43 @@ def test_fit_estimator_pipeline_sample_weight() -> None:
         np.testing.assert_almost_equal(est_plain.coef_, est_unweighted.coef_)
 
 
+def test_split_conformal_regressor_pipeline_sample_weight() -> None:
+    """Test that SplitConformalRegressor.fit() correctly routes sample_weight
+    through a Pipeline estimator.
+
+    Regression test for https://github.com/scikit-learn-contrib/MAPIE/issues/798
+    """
+    from sklearn.datasets import make_regression
+    from sklearn.preprocessing import PolynomialFeatures
+    from sklearn.pipeline import Pipeline
+    from mapie.regression import SplitConformalRegressor
+    from mapie.utils import train_conformalize_test_split
+
+    X, y = make_regression(
+        n_samples=500, n_features=5, noise=20, random_state=42
+    )
+    (X_train, X_conf, X_test,
+     y_train, y_conf, y_test) = train_conformalize_test_split(
+        X, y, train_size=0.6, conformalize_size=0.2, test_size=0.2,
+        random_state=42,
+    )
+    sw = np.random.RandomState(42).rand(len(X_train))
+
+    pipeline = Pipeline([
+        ("poly", PolynomialFeatures(degree=1, include_bias=False)),
+        ("lr", LinearRegression()),
+    ])
+    mapie_reg = SplitConformalRegressor(
+        estimator=pipeline, confidence_level=0.95, prefit=False,
+    )
+    # This should not raise ValueError
+    mapie_reg.fit(X_train, y_train, {"sample_weight": sw})
+    mapie_reg.conformalize(X_conf, y_conf)
+    points, intervals = mapie_reg.predict_interval(X_test)
+    assert points.shape == (len(X_test),)
+    assert intervals.shape[0] == len(X_test)
+
+
 @pytest.mark.parametrize("alpha", [-1, 0, 1, 2, 2.5, "a", ["a", "b"]])
 def test_invalid_alpha(alpha: Any) -> None:
     """Test that invalid alphas raise errors."""
