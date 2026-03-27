@@ -52,6 +52,6 @@
 * Omid Gheibi <omidgheibi@gmail.com>
 * Aman Vishnoi <amanvishnoi777@gmail.com>
 * Hannes Körner <HannesMK>
-* L. Elaine Dazzio <LEDazzio01>
+* L. Elaine Dazzio <elaine.dazzio@gmail.com>
 
 To be continued ...
