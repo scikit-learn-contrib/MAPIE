@@ -1385,4 +1385,3 @@ def test_va_calibrator_p0_p1_output_inductive_multiclass() -> None:
     assert isinstance(p0_p1, list)
     # Should have C*(C-1)/2 = 3 pairs for 3 classes
     assert len(p0_p1) == 3
-
