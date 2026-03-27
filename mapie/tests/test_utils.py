@@ -528,15 +528,15 @@ def test_fit_estimator_pipeline_sample_weight() -> None:
     est_plain = _fit_estimator(LinearRegression(), X, y, sw)
 
     # Pipeline with sample_weight — should produce identical results
-    pipe = Pipeline([
-        ("poly", PolynomialFeatures(degree=1, include_bias=False)),
-        ("lr", LinearRegression()),
-    ])
+    pipe = Pipeline(
+        [
+            ("poly", PolynomialFeatures(degree=1, include_bias=False)),
+            ("lr", LinearRegression()),
+        ]
+    )
     est_pipe = _fit_estimator(pipe, X, y, sw)
 
-    np.testing.assert_allclose(
-        est_plain.coef_, est_pipe[-1].coef_, rtol=1e-10
-    )
+    np.testing.assert_allclose(est_plain.coef_, est_pipe[-1].coef_, rtol=1e-10)
     np.testing.assert_allclose(
         est_plain.intercept_, est_pipe[-1].intercept_, rtol=1e-10
     )
@@ -544,9 +544,7 @@ def test_fit_estimator_pipeline_sample_weight() -> None:
     # Verify weights actually affected the result vs unweighted
     est_unweighted = _fit_estimator(LinearRegression(), X, y)
     with pytest.raises(AssertionError):
-        np.testing.assert_almost_equal(
-            est_plain.coef_, est_unweighted.coef_
-        )
+        np.testing.assert_almost_equal(est_plain.coef_, est_unweighted.coef_)
 
 
 @pytest.mark.parametrize("alpha", [-1, 0, 1, 2, 2.5, "a", ["a", "b"]])
