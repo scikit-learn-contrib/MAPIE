@@ -1153,9 +1153,11 @@ class VennAbersCalibrator(BaseEstimator, ClassifierMixin):
                 )
 
             if p0_p1_output:
-                return p_prime, p0_p1
-            else:
-                return p_prime
+                return cast(
+                    Tuple[NDArray, Union[NDArray, list[NDArray]]],
+                    (p_prime, p0_p1),
+                )
+            return cast(NDArray, p_prime)
 
         # Standard inductive or cross validation mode
         if self.va_calibrator_ is None:
@@ -1180,9 +1182,8 @@ class VennAbersCalibrator(BaseEstimator, ClassifierMixin):
             )
 
         if p0_p1_output:
-            return result
-        else:
-            return result
+            return cast(Tuple[NDArray, Union[NDArray, list[NDArray]]], result)
+        return cast(NDArray, result)
 
     def predict(self, X: ArrayLike, loss="log") -> NDArray:
         """
@@ -1219,4 +1220,4 @@ class VennAbersCalibrator(BaseEstimator, ClassifierMixin):
             # Multi-class classification
             y_pred = classes[np.argmax(p_prime, axis=1)]
 
-        return y_pred
+        return cast(NDArray, y_pred)
