@@ -91,4 +91,8 @@ target/
 .python-version
 
 # uv
+
+# MkDocs
+site/
+docs/generated/
 uv.lock
