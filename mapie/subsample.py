@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Generator, Optional, Tuple, Union
+from typing import Any, Generator, Optional, Tuple, Union, cast
 
 import numpy as np
 from numpy.lib.stride_tricks import sliding_window_view
@@ -188,8 +188,7 @@ class BlockBootstrap(BaseCrossValidator):  # type: ignore
             length = self.length if self.length is not None else n // self.n_blocks
             n_blocks = self.n_blocks
         else:
-            assert self.length is not None
-            length = self.length
+            length = cast(int, self.length)
             n_blocks = (n // length) + 1
 
         indices = np.arange(n)

@@ -1,5 +1,5 @@
 import warnings
-from typing import Any, List, Optional, Tuple, Union
+from typing import Any, List, Optional, Tuple, Union, cast
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -403,8 +403,7 @@ def compute_hoeffding_bentkus_p_value(
     M. I., & Lei, L. (2021). Learn then test:
     "Calibrating predictive algorithms to achieve risk control".
     """
-    alpha_np = _check_alpha(alpha)
-    assert alpha_np is not None
+    alpha_np = cast(NDArray, _check_alpha(alpha))
     alpha_np = alpha_np[:, np.newaxis]
     r_hat_repeat = np.repeat(np.expand_dims(r_hat, axis=1), len(alpha_np), axis=1)
     alpha_repeat = np.repeat(alpha_np.reshape(1, -1), len(r_hat), axis=0)

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import warnings
 from itertools import chain
-from typing import Callable, Iterable, Optional, Sequence, Union
+from typing import Callable, Iterable, Optional, Sequence, Union, cast
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -497,13 +497,13 @@ class MultiLabelClassificationController:
         Compute optimal predict_params based on the computed risks.
         """
         if self._risk == precision:
-            assert self._delta is not None
+            delta = cast(float, self._delta)
             self.n_obs = len(self._risks)
             self.r_hat = self._risks.mean(axis=0)
             self.valid_index, _ = ltt_procedure(
                 np.expand_dims(self.r_hat, axis=0),
                 np.expand_dims(self._alpha, axis=0),
-                float(self._delta),
+                delta,
                 np.expand_dims(np.array([self.n_obs]), axis=0),
             )
             self.valid_predict_params = []

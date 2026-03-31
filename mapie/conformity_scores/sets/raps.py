@@ -1,4 +1,4 @@
-from typing import Optional, Tuple, Union
+from typing import Optional, Tuple, Union, cast
 
 import numpy as np
 from numpy.typing import NDArray
@@ -453,27 +453,19 @@ class RAPSConformityScore(APSConformityScore):
             applying the regularization technique.
         """
         if prediction_phase:
-            assert self.lambda_star is not None
-            assert self.k_star is not None
-            if np.isscalar(self.lambda_star):
-                _lam: float = self.lambda_star  # type: ignore[assignment]
-                lambda_ = _lam
+            lambda_star = cast(Union[NDArray, float], self.lambda_star)
+            k_star_attr = cast(Union[NDArray, int], self.k_star)
+            if np.isscalar(lambda_star):
+                lambda_ = float(np.asarray(lambda_star).item())
             else:
-                assert isinstance(self.lambda_star, np.ndarray)
-                _lam = float(np.asarray(self.lambda_star).item(0))
-                lambda_ = _lam
-            if np.isscalar(self.k_star):
-                _k: int = self.k_star  # type: ignore[assignment]
-                k_star = _k
+                lambda_ = float(np.asarray(lambda_star).item(0))
+            if np.isscalar(k_star_attr):
+                k_star = int(np.asarray(k_star_attr).item())
             else:
-                assert isinstance(self.k_star, np.ndarray)
-                _k = int(np.asarray(self.k_star).item(0))
-                k_star = _k
+                k_star = int(np.asarray(k_star_attr).item(0))
         else:
-            assert lambda_ is not None
-            assert k_star is not None
-            lambda_ = float(lambda_)
-            k_star = int(k_star)
+            lambda_ = cast(float, lambda_)
+            k_star = cast(int, k_star)
 
         y_pred_proba_sorted_cumsum += lambda_ * np.maximum(
             0, np.cumsum(np.ones(y_pred_proba_sorted_cumsum.shape), axis=1) - k_star

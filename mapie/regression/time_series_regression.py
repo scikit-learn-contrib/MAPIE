@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Iterable, Optional, Tuple, Union
+from typing import Iterable, Optional, Tuple, Union, cast
 from warnings import warn
 
 import numpy as np
@@ -227,8 +227,7 @@ class TimeSeriesRegressor(_MapieRegressor):
             self.current_alpha: dict[float, float] = {}
 
         if alpha is not None:
-            alpha_np = _check_alpha(alpha)
-            assert alpha_np is not None
+            alpha_np = cast(NDArray, _check_alpha(alpha))
             alpha_np = np.round(alpha_np, 2)
             for ix, alpha_checked in enumerate(alpha_np):
                 alpha_np[ix] = self.current_alpha.setdefault(
