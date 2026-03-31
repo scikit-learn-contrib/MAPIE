@@ -338,12 +338,4 @@ def setup(app):
 
 # -- Migration banner ------------------------------------------------------
 # Display a banner on every page announcing the move to MkDocs Material.
-rst_prolog = """
-.. warning::
-
-   📢 **This documentation is being migrated to a new platform.**
-   The new documentation is built with MkDocs Material and is available at:
-   `scikit-learn-contrib.github.io/MAPIE <https://scikit-learn-contrib.github.io/MAPIE>`_.
-   This Read the Docs site will be deprecated in a future release.
-
-"""
+# Implemented via doc/_templates/layout.html (Jinja2 template override).
