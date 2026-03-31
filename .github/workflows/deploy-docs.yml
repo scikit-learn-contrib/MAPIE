@@ -9,11 +9,13 @@ on:
       - 'mkdocs.yml'
       - 'examples/**'
       - 'mapie/**'
+      - 'pyproject.toml'
   pull_request:
     paths:
       - 'docs/**'
       - 'mkdocs.yml'
       - 'examples/**'
+      - 'pyproject.toml'
   release:
     types: [published]
   workflow_dispatch:
