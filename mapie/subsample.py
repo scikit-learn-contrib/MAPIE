@@ -178,8 +178,7 @@ class BlockBootstrap(BaseCrossValidator):  # type: ignore
         """
         if (self.n_blocks is not None) + (self.length is not None) != 1:
             raise ValueError(
-                "Exactly one argument between `length` or "
-                "`n_blocks` has to be not None"
+                "Exactly one argument between `length` or `n_blocks` has to be not None"
             )
 
         n = len(X)
