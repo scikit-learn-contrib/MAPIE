@@ -85,6 +85,44 @@ Implements **peer-reviewed** algorithms with **theoretical guarantees** under mi
 
 ---
 
+## :art: Examples
+
+Explore our gallery of hands-on examples covering all MAPIE use cases:
+
+<div class="grid" markdown>
+
+<div class="card" markdown>
+### :material-chart-line: Regression
+Prediction intervals for regression and time series.
+
+[Browse examples →](generated/regression/index.md)
+</div>
+
+<div class="card" markdown>
+### :material-shape: Classification
+Prediction sets for single-label and multi-label classification.
+
+[Browse examples →](generated/classification/index.md)
+</div>
+
+<div class="card" markdown>
+### :material-shield-alert: Risk Control
+Control risks for complex ML tasks with probabilistic guarantees.
+
+[Browse examples →](generated/risk_control/index.md)
+</div>
+
+<div class="card" markdown>
+### :material-target: Calibration
+Calibrate and evaluate probabilistic predictions.
+
+[Browse examples →](generated/calibration/index.md)
+</div>
+
+</div>
+
+---
+
 ## :zap: Quick Install
 
 === "pip"
