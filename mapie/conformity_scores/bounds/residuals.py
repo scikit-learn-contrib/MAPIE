@@ -166,7 +166,7 @@ class ResidualNormalisedScore(BaseRegressionScore):
         X: NDArray,
         y: NDArray,
         y_pred: NDArray,
-    ) -> Tuple[NDArray, NDArray]:
+    ) -> RegressorMixin:
         """
         Fit the residual estimator and returns the indexes used for the
         training of the base estimator and those needed for the conformalization.
@@ -225,7 +225,7 @@ class ResidualNormalisedScore(BaseRegressionScore):
                 + "the residuals and his predict method should return "
                 + "the exponential of the predictions."
             )
-        return pred
+        return cast(NDArray, pred)
 
     def get_signed_conformity_scores(
         self, y: ArrayLike, y_pred: ArrayLike, X: Optional[ArrayLike] = None, **kwargs

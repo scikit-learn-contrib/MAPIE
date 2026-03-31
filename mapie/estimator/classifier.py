@@ -244,7 +244,7 @@ class EnsembleClassifier:
         # we enforce y_pred_proba to contain all labels included in y
         if len(estimator.classes_) != self.n_classes:
             y_pred_proba = self._fix_number_of_classes(estimator.classes_, y_pred_proba)
-        return y_pred_proba
+        return cast(NDArray, y_pred_proba)
 
     def _predict_proba_calib_oof_estimator(
         self,

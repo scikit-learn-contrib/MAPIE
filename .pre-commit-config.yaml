@@ -1,0 +1,19 @@
+# Pre-commit hooks: format, lint, type-check (tests/coverage stay manual or CI).
+# One-time setup: uv run pre-commit install
+# Run manually: uv run pre-commit run --all-files
+
+repos:
+  - repo: local
+    hooks:
+      - id: format-fix
+        name: format-fix
+        entry: make format-fix
+        language: system
+      - id: lint
+        name: lint
+        entry: make lint
+        language: system
+      - id: type-check
+        name: type-check
+        entry: make type-check
+        language: system

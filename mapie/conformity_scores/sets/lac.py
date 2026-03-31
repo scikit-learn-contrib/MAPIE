@@ -216,4 +216,4 @@ class LACConformityScore(BaseClassificationScore):
                 axis=2,
             )
 
-        return prediction_sets
+        return cast(NDArray, prediction_sets)
