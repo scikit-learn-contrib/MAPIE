@@ -140,8 +140,7 @@ def classification_ssc(
     ----------
     y_true: NDArray of shape (n_samples,)
         True labels.
-    y_pred_set: NDArray of shape (n_samples, n_class, n_confidence_level)
-    or (n_samples, n_class)
+    y_pred_set: NDArray of shape (n_samples, n_class, n_confidence_level) or (n_samples, n_class)
         Prediction sets given by booleans of labels.
     num_bins: int or None
         Number of groups. If None, one value of coverage by possible
@@ -211,8 +210,7 @@ def classification_ssc_score(
     ----------
     y_true: NDArray of shape (n_samples,)
         True labels.
-    y_pred_set: NDArray of shape (n_samples, n_class, n_confidence_level)
-    or (n_samples, n_class)
+    y_pred_set: NDArray of shape (n_samples, n_class, n_confidence_level) or (n_samples, n_class)
         Prediction sets given by booleans of labels.
     num_bins: int or None
         Number of groups. If None, one value of coverage by possible

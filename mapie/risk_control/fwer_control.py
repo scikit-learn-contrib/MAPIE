@@ -198,7 +198,10 @@ class FWERFixedSequenceTesting(FWERProcedure):
     n_starts : int, default=1
         Number of equally spaced starting points used in the multi-start procedure.
 
-    [1] P. Bauer, “Multiple testing in clinical trials,” Statistics in Medicine, vol. 10, no. 6, pp. 871–890, 1991.
+    References
+    ----------
+    [1] P. Bauer, "Multiple testing in clinical trials,"
+    Statistics in Medicine, vol. 10, no. 6, pp. 871-890, 1991.
     """
 
     def __init__(self, n_starts: int = 1):

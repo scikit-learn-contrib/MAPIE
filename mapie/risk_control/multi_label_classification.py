@@ -154,7 +154,7 @@ class MultiLabelClassificationController:
         learn then test (ltt) procedure.
         Contains n_alpha lists.
 
-     sigma_init : Optional[float]
+    sigma_init : Optional[float]
         First variance in the sigma_hat array. The default
         value is the same as in the paper implementation [1].
 

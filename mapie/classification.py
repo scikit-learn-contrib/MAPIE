@@ -79,7 +79,7 @@ class SplitConformalClassifier:
         A custom score function inheriting from BaseClassificationScore may also
         be provided.
 
-        See [theoretical description (classification)](../../theory/classification/).
+        See [theoretical description (classification)](../theory/classification.md).
 
     prefit : bool, default=True
         If True, the base classifier must be fitted, and the `fit`
@@ -339,7 +339,7 @@ class CrossConformalClassifier:
         A custom score function inheriting from BaseClassificationScore may also
         be provided.
 
-        See [theoretical description (classification)](../../theory/classification/).
+        See [theoretical description (classification)](../theory/classification.md).
 
     cv : Union[int, BaseCrossValidator], default=5
         The cross-validator used to compute conformity scores.

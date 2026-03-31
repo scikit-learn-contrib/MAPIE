@@ -381,16 +381,15 @@ def coverage_width_based(
 
     Parameters
     ----------
-    Coverage score : float
-        Prediction interval coverage probability (Coverage score), which is
-        the estimated fraction of true labels that lie within the prediction
-        intervals.
-    Mean Width Score : float
-        Prediction interval normalized average width (Mean Width Score),
-        calculated as the average width of the prediction intervals.
-    eta : int
+    y_true : ArrayLike of shape (n_samples,)
+        True labels.
+    y_pred_low : ArrayLike of shape (n_samples,)
+        Lower bound of the prediction intervals.
+    y_pred_up : ArrayLike of shape (n_samples,)
+        Upper bound of the prediction intervals.
+    eta : float
         A user-defined parameter that balances the contributions of
-        Mean Width Score and Coverage score in the CWC calculation.
+        mean width score and coverage score in the CWC calculation.
     confidence_level : float
         A user-defined parameter representing the designed confidence level of
         the PI.

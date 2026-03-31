@@ -48,8 +48,3 @@ Let \(c\) be the classifier and \(h\) be the maximum score from the classifier. 
 ## References
 
 [^1]: Gupta, C., and Ramdas, A. K. "Top-label calibration and multiclass-to-binary reductions." *arXiv preprint arXiv:2107.08353* (2021).
-[^2]: Arrieta-Ibarra I, et al. "Metrics of calibration for probabilistic predictions." *JMLR* 23(1), 2022.
-[^3]: Tygert M. "Calibration of P-values for calibration and for deviation of a subpopulation from the full population." *arXiv preprint arXiv:2202.00100*, 2022.
-[^4]: Darling, D. A., Siegert, A. J. F. "The First Passage Problem for a Continuous Markov Process." *Ann. Math. Statist.* 24(4), 1953.
-[^5]: Feller, W. "The Asymptotic Distribution of the Range of Sums of Independent Random Variables." *Ann. Math. Statist.* 22(3), 1951.
-[^6]: Spiegelhalter, D. J. "Probabilistic prediction in patient management and clinical trials." *Statistics in Medicine* 5(5), 1986.
