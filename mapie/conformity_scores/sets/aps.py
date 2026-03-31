@@ -294,7 +294,7 @@ class APSConformityScore(NaiveConformityScore):
 
         # get random numbers for each observation and alpha value
         random_state = check_random_state(self.random_state)
-        assert isinstance(random_state, np.random.RandomState)
+        random_state = cast(np.random.RandomState, random_state)
         u_param = random_state.uniform(size=(prediction_sets.shape[0], 1))
         # remove last label from comparison between uniform number and V
         label_to_keep = np.less_equal(v_param - u_param, EPSILON)

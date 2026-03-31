@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from typing import Any, Iterable, Optional, Tuple, Union
+from typing import Any, Iterable, Optional, Tuple, Union, cast
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 from sklearn.base import BaseEstimator, RegressorMixin, clone
 from sklearn.linear_model import LinearRegression
-from sklearn.model_selection import BaseCrossValidator, BaseShuffleSplit
+from sklearn.model_selection import BaseCrossValidator
 from sklearn.pipeline import Pipeline
 from sklearn.utils import check_random_state
 from sklearn.utils.validation import _check_y, indexable
@@ -1338,9 +1338,9 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
         sample_weight, X, y = _check_null_weight(sample_weight, X, y)
         self.n_features_in_ = _check_n_features_in(X)
 
-        assert isinstance(cv, (BaseCrossValidator, BaseShuffleSplit))
-        assert isinstance(estimator, RegressorMixin)
-        assert isinstance(cs_estimator, BaseRegressionScore)
+        cv = cast(BaseCrossValidator, cv)
+        estimator = cast(RegressorMixin, estimator)
+        cs_estimator = cast(BaseRegressionScore, cs_estimator)
         X = np.asarray(X)
         y = np.asarray(y)
         if sample_weight is not None:

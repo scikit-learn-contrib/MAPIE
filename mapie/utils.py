@@ -1353,8 +1353,7 @@ def _cast_point_predictions_to_ndarray(
             "Developer error: use this function to cast point predictions only, "
             "not points + intervals."
         )
-    assert not isinstance(point_predictions, tuple)
-    return point_predictions
+    return cast(NDArray, point_predictions)
 
 
 def _cast_predictions_to_ndarray_tuple(
@@ -1365,8 +1364,7 @@ def _cast_predictions_to_ndarray_tuple(
             "Developer error: use this function to cast predictions containing points "
             "and intervals, not points only."
         )
-    assert isinstance(predictions, tuple)
-    return predictions
+    return cast(Tuple[NDArray, NDArray], predictions)
 
 
 def _prepare_params(params: Union[dict, None]) -> dict:

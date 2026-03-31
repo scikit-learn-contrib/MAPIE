@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Any, Optional, cast
 
 import pytest
 import numpy as np
@@ -158,8 +158,7 @@ def test_get_last_included_proba_shape(k_lambda, include_last_label):
         thresholds = 0.2
     else:
         thresholds = np.random.rand(len(k))
-    thresholds = _check_alpha(thresholds)
-    assert thresholds is not None
+    thresholds = cast(np.ndarray, _check_alpha(thresholds))
     clf = LogisticRegression()
     clf.fit(X, y)
     y_pred_proba = clf.predict_proba(X)

@@ -82,8 +82,7 @@ class RAPSConformityScore(APSConformityScore):
             By default ``None``.
         """
         super().set_external_attributes(**kwargs)
-        assert isinstance(label_encoder, LabelEncoder)
-        self.label_encoder_ = label_encoder
+        self.label_encoder_ = cast(LabelEncoder, label_encoder)
         self.size_raps = size_raps
 
     def split_data(

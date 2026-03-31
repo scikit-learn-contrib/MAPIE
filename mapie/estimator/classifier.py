@@ -346,7 +346,7 @@ class EnsembleClassifier:
             single_estimator_ = self._fit_oof_estimator(
                 clone(estimator), X, y, full_indexes, sample_weight, **fit_params
             )
-            assert isinstance(cv, (BaseCrossValidator, BaseShuffleSplit))
+            cv = cast(BaseCrossValidator, cv)
             k_ = np.empty_like(y, dtype=int)
 
             estimators_ = Parallel(self.n_jobs, verbose=self.verbose)(
@@ -410,8 +410,7 @@ class EnsembleClassifier:
         else:
             X = np.asarray(X)
             y_pred_proba = np.empty((len(X), self.n_classes), dtype=float)
-            assert isinstance(self.cv, (BaseCrossValidator, BaseShuffleSplit))
-            cv = self.cv
+            cv = cast(BaseCrossValidator, self.cv)
             outputs = Parallel(n_jobs=self.n_jobs, verbose=self.verbose)(
                 delayed(self._predict_proba_calib_oof_estimator)(
                     estimator, X, calib_index, k, **predict_params
