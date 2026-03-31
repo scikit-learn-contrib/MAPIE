@@ -178,3 +178,5 @@ nav:
     - Calibration: api/calibration.md
     - Metrics: api/metrics.md
     - Utilities: api/utils.md
+  - Contributing:
+    - Documentation Guide: contributing-docs.md
