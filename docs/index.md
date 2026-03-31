@@ -147,8 +147,20 @@ If you use MAPIE in your research, please cite:
 
 MAPIE has been developed through a collaboration between Capgemini Invent, Inria, Michelin, ENS Paris-Saclay, and with the financial support from Région Ile de France and Confiance.ai.
 
+<div class="affiliations" markdown>
+
+[![Capgemini Invent](https://www.capgemini.com/wp-content/themes/capgemini2020/assets/images/capgemini-invent.svg){ height="35px" }](https://www.capgemini.com/about-us/who-we-are/our-brands/capgemini-invent/)
+[![Inria](https://www.inria.fr/themes/custom/inria/logo/logo.svg){ height="35px" }](https://www.inria.fr/)
+[![Projet P16](https://raw.githubusercontent.com/scikit-learn-contrib/MAPIE/master/doc/_static/img/logo_P16.png){ height="45px" }](https://p16.inria.fr/fr/)
+[![Michelin](https://agngnconpm.cloudimg.io/v7/https://dgaddcosprod.blob.core.windows.net/corporate-production/attachments/cls05tqdd9e0o0tkdghwi9m7n-clooe1x0c3k3x0tlu4cxi6dpn-bibendum-salut.full.png){ height="50px" }](https://www.michelin.com/en/)
+[![ENS Paris-Saclay](https://ens-paris-saclay.fr/sites/default/files/ENSPS_UPSAY_logo_couleur_2.png){ height="35px" }](https://ens-paris-saclay.fr/en)
+[![Confiance.ai](https://pbs.twimg.com/profile_images/1443838558549258264/EvWlv1Vq_400x400.jpg){ height="45px" }](https://www.confiance.ai/)
+[![Île-de-France](https://www.iledefrance.fr/sites/default/files/logo/2024-02/logoGagnerok.svg){ height="35px" }](https://www.iledefrance.fr/)
+
+</div>
+
 ---
 
 <div style="text-align: center; color: var(--md-default-fg-color--light); font-size: 0.85rem; margin-top: 2rem;">
-  Made with :purple_heart: by the MAPIE team · BSD-3-Clause License
+  Made with 💜 by the MAPIE team · BSD-3-Clause License
 </div>
