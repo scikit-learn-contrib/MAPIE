@@ -4,7 +4,7 @@ site_description: "Model Agnostic Prediction Interval Estimator — Conformal Pr
 site_author: MAPIE Team
 repo_url: https://github.com/scikit-learn-contrib/MAPIE
 repo_name: scikit-learn-contrib/MAPIE
-edit_uri: edit/master/docs/
+edit_uri: edit/master/doc/
 
 theme:
   name: material
@@ -46,6 +46,8 @@ theme:
     text: Inter
     code: JetBrains Mono
 
+docs_dir: doc
+
 plugins:
   - search
   - mkdocstrings:
@@ -75,11 +77,11 @@ plugins:
         - examples/risk_control
         - examples/mondrian
       gallery_dirs:
-        - docs/generated/regression
-        - docs/generated/classification
-        - docs/generated/calibration
-        - docs/generated/risk_control
-        - docs/generated/mondrian
+        - doc/generated/regression
+        - doc/generated/classification
+        - doc/generated/calibration
+        - doc/generated/risk_control
+        - doc/generated/mondrian
       within_subsection_order: FileNameSortKey
       plot_gallery: true
       download_all_examples: false
@@ -87,7 +89,7 @@ plugins:
       only_warn_on_example_error: true
 
 hooks:
-  - docs/hooks/gallery_nav_fix.py
+  - doc/hooks/gallery_nav_fix.py
 
 markdown_extensions:
   - abbr

@@ -148,8 +148,13 @@ In order to build the documentation locally, you need the `docs` dependencies in
 You can then build the documentation locally by running:
 
 ```sh
-make clean-doc
-make doc
+mkdocs build --strict
+```
+
+Or serve it locally with live reload:
+
+```sh
+mkdocs serve
 ```
 
 For each commit pushed to a pull request, the documentation is automatically built and deployed to a temporary URL that you can access from the Continuous Integration (CI) results. This allows you to verify that your changes are correctly documented and you can also look at the diff with the previous version.

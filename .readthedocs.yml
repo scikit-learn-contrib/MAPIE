@@ -6,7 +6,7 @@ build:
     python: "3.13"
   jobs:
     post_build:
-      - cd doc && make doctest
+      - cd doc_legacy && make doctest
 
 python:
   install:
@@ -17,5 +17,5 @@ python:
   
 sphinx:
   builder: html
-  configuration: doc/conf.py
+  configuration: doc_legacy/conf.py
   fail_on_warning: false

@@ -138,7 +138,7 @@ exclude = [
     "site-packages",
     "venv",
     "list",
-    "doc/conf.py"
+    "doc_legacy/conf.py"
 ]
 
 line-length = 88

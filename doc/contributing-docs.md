@@ -24,7 +24,7 @@ Open [http://127.0.0.1:8787](http://127.0.0.1:8787) in your browser. Pages reloa
 
 ```
 mkdocs.yml                  # Main configuration
-docs/
+doc/
 ├── index.md                # Homepage
 ├── getting-started/        # Getting started guides
 ├── theory/                 # Theoretical descriptions
@@ -46,10 +46,10 @@ examples/
 
 ### 1. Create the Markdown File
 
-Create a `.md` file in the appropriate directory under `docs/`. For example, to add a new theory page:
+Create a `.md` file in the appropriate directory under `doc/`. For example, to add a new theory page:
 
 ```bash
-docs/theory/my-new-topic.md
+doc/theory/my-new-topic.md
 ```
 
 Write your content using standard Markdown:
@@ -85,7 +85,7 @@ nav:
 
 ### 3. Add Images
 
-Place images in `docs/assets/images/` and reference them:
+Place images in `doc/assets/images/` and reference them:
 
 ```markdown
 ![Description](../assets/images/my-image.png)
@@ -179,8 +179,8 @@ To add an entirely new gallery section (e.g., `examples/time_series/`):
            - examples/regression
            - examples/time_series       # ← add here
          gallery_dirs:
-           - docs/generated/regression
-           - docs/generated/time_series  # ← add here
+           - doc/generated/regression
+           - doc/generated/time_series  # ← add here
    ```
 
 3. Add navigation entry:
@@ -196,7 +196,7 @@ API pages are auto-generated from Python docstrings using [mkdocstrings](https:/
 
 ### How It Works
 
-Each API page in `docs/api/` contains directives like:
+Each API page in `doc/api/` contains directives like:
 
 ```markdown
 ::: mapie.regression.SplitConformalRegressor
@@ -206,7 +206,7 @@ This renders the class documentation directly from the source code docstrings.
 
 ### Adding a New Class to API Docs
 
-1. Open the relevant API file (e.g., `docs/api/regression.md`).
+1. Open the relevant API file (e.g., `doc/api/regression.md`).
 2. Add a mkdocstrings directive:
    ```markdown
    ::: mapie.my_module.MyNewClass
