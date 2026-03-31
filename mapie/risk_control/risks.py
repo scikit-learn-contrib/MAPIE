@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Callable, Tuple, cast
+from typing import Callable, List, Literal, Tuple, Union, cast
 
 import numpy as np
 from numpy.typing import NDArray
@@ -123,6 +123,25 @@ class BinaryClassificationRisk:
             # In the current LTT implementation, providing n_obs=-1 will result
             # in an infinite p_value, effectively invaliding the lambda
             return 1, -1
+
+
+RiskNameLiteral = Literal[
+    "precision",
+    "recall",
+    "accuracy",
+    "fpr",
+    "predicted_positive_fraction",
+    "positive_predictive_value",
+    "negative_predictive_value",
+    "abstention_rate",
+]
+RiskLike = Union[
+    BinaryClassificationRisk,
+    RiskNameLiteral,
+    List[BinaryClassificationRisk],
+    List[RiskNameLiteral],
+    List[Union[BinaryClassificationRisk, RiskNameLiteral]],
+]
 
 
 precision = BinaryClassificationRisk(

@@ -17,6 +17,8 @@ from mapie.utils import check_valid_ltt_params_index
 from .methods import compute_hoeffding_bentkus_p_value, ltt_procedure
 from .risks import (
     BinaryClassificationRisk,
+    RiskLike,
+    RiskNameLiteral,
     abstention_rate,
     accuracy,
     false_positive_rate,
@@ -26,24 +28,6 @@ from .risks import (
     predicted_positive_fraction,
     recall,
 )
-
-Risk_str = Literal[
-    "precision",
-    "recall",
-    "accuracy",
-    "fpr",
-    "predicted_positive_fraction",
-    "positive_predictive_value",
-    "negative_predictive_value",
-    "abstention_rate",
-]
-Risk = Union[
-    BinaryClassificationRisk,
-    Risk_str,
-    List[BinaryClassificationRisk],
-    List[Risk_str],
-    List[Union[BinaryClassificationRisk, Risk_str]],
-]
 
 
 class BinaryClassificationController:
@@ -209,11 +193,11 @@ class BinaryClassificationController:
     def __init__(
         self,
         predict_function: Callable[[ArrayLike], NDArray],
-        risk: Risk,
+        risk: RiskLike,
         target_level: Union[float, List[float]],
         confidence_level: float = 0.9,
         best_predict_param_choice: Union[
-            Literal["auto"], Risk_str, BinaryClassificationRisk
+            Literal["auto"], RiskNameLiteral, BinaryClassificationRisk
         ] = "auto",
         list_predict_params: NDArray = np.linspace(0, 0.99, 100),
         fwer_method: Union[FWER_METHODS, FWERProcedure] = "bonferroni",
@@ -488,7 +472,7 @@ class BinaryClassificationController:
     def _set_best_predict_param_choice(
         self,
         best_predict_param_choice: Union[
-            Literal["auto"], Risk_str, BinaryClassificationRisk
+            Literal["auto"], RiskNameLiteral, BinaryClassificationRisk
         ] = "auto",
     ) -> BinaryClassificationRisk:
         if best_predict_param_choice == "auto":
@@ -616,7 +600,7 @@ class BinaryClassificationController:
 
     @staticmethod
     def _check_if_multi_risk_control(
-        risk: Risk,
+        risk: RiskLike,
         target_level: Union[float, List[float]],
     ) -> bool:
         """
