@@ -41,7 +41,10 @@ jobs:
           python-version: '3.12'
 
       - name: Install dependencies
-        run: pip install -e ".[docs]"
+        run: |
+          pip install -e ".[docs]"
+          echo "--- Installed mkdocstrings versions ---"
+          pip show mkdocstrings mkdocstrings-python
 
       - name: Configure Git
         run: |
