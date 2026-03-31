@@ -334,3 +334,16 @@ sphinx_gallery_conf = {
 def setup(app):
     # a copy button to copy snippet of code from the documentation
     app.add_js_file("js/copybutton.js")
+
+
+# -- Migration banner ------------------------------------------------------
+# Display a banner on every page announcing the move to MkDocs Material.
+rst_prolog = """
+.. warning::
+
+   📢 **This documentation is being migrated to a new platform.**
+   The new documentation is built with MkDocs Material and is available at:
+   `scikit-learn-contrib.github.io/MAPIE <https://scikit-learn-contrib.github.io/MAPIE>`_.
+   This Read the Docs site will be deprecated in a future release.
+
+"""
