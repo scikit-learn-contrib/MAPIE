@@ -64,6 +64,7 @@ plugins:
             docstring_section_style: spacy
             show_signature_annotations: true
             separate_signature: true
+            line_length: 60
             merge_init_into_class: true
             show_symbol_type_heading: true
   - gallery:

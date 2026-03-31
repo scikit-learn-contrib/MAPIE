@@ -8,11 +8,14 @@ on:
       - 'docs/**'
       - 'mkdocs.yml'
       - 'examples/**'
+      - 'mapie/**'
   pull_request:
     paths:
       - 'docs/**'
       - 'mkdocs.yml'
       - 'examples/**'
+  release:
+    types: [published]
   workflow_dispatch:
 
 permissions:
@@ -28,6 +31,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-python@v5
         with:
@@ -36,12 +41,26 @@ jobs:
       - name: Install dependencies
         run: pip install -e ".[docs]"
 
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
       - name: Build documentation
         run: mkdocs build --strict
 
-      - name: Deploy to GitHub Pages (production)
+      - name: Deploy latest (master)
         if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-        run: mkdocs gh-deploy --force
+        run: |
+          mike deploy --push --update-aliases latest
+          mike set-default --push latest
+
+      - name: Deploy stable (release)
+        if: github.event_name == 'release'
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          mike deploy --push --update-aliases "$VERSION" stable
+          mike set-default --push stable
 
       - name: Deploy PR preview
         if: github.event_name == 'pull_request'
