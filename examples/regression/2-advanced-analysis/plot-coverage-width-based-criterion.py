@@ -1,16 +1,13 @@
 """
-===============================================================================
-Focus on intervals width
-===============================================================================
+# Focus on intervals width
 
-
-This example uses :class:`~mapie.regression.CrossConformalRegressor`,
-:class:`~mapie.regression.ConformalizedQuantileRegressor` and
-:class:`~mapie.regression.JackknifeAfterBootstrapRegressor`.
-:class:`~mapie.metrics` is used to estimate the coverage width
+This example uses `CrossConformalRegressor`,
+`ConformalizedQuantileRegressor` and
+`JackknifeAfterBootstrapRegressor`.
+`metrics` is used to estimate the coverage width
 based criterion of 1D homoscedastic data using different strategies.
 The coverage width based criterion is computed with the function
-:func:`~mapie.metrics.coverage_width_based`
+`coverage_width_based`
 """
 
 # sphinx_gallery_thumbnail_number = 2

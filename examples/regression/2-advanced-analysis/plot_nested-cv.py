@@ -1,12 +1,11 @@
 """
-======================================================
-Hyperparameters tuning with cross-conformal regression
-======================================================
+# Hyperparameters tuning with cross-conformal regression
+
 
 
 This example compares non-nested and nested cross-validation strategies
 when using
-:class:`~mapie.regression.CrossConformalRegressor`.
+`CrossConformalRegressor`.
 
 In the regular sequential method, a cross-validation parameter search is performed
 on the entire training set. The best model is then used in MAPIE to estimate
@@ -20,9 +19,9 @@ cross-validation parameter search directly within the MAPIE estimator on each
 *out-of-fold* dataset.
 This ensures that residuals seen by MAPIE are never seen by the algorithm
 beforehand. However, this method is much heavier computationally since
-it results in ``N * P`` calculations, where *N* is the number of
+it results in `N * P` calculations, where *N* is the number of
 *out-of-fold* models and *P* the number of parameter search cross-validations,
-versus ``N + P`` for the non-nested approach.
+versus `N + P` for the non-nested approach.
 
 Here, we compare the two strategies on a toy dataset.
 

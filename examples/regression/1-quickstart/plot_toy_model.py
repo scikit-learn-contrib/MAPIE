@@ -1,8 +1,7 @@
 """
-=====================================================================================
-Plot prediction intervals
-=====================================================================================
-An example plot of :class:`~mapie.regression.SplitConformalRegressor` used
+# Plot prediction intervals
+
+An example plot of `SplitConformalRegressor` used
 in the Quickstart.
 """
 
@@ -49,11 +48,11 @@ X = X.reshape(-1, 1)
 
 ##############################################################################
 # We fit our training data with a MLPRegressor.
-# Then, we initialize a :class:`~mapie.regression.SplitConformalRegressor`
+# Then, we initialize a `SplitConformalRegressor`
 # using our estimator, indicating that it has already been fitted with
 # `prefit=True`.
 # Lastly, we compute the prediction intervals with the desired confidence level using
-# the ``conformalize`` and ``predict_interval`` methods.
+# the `conformalize` and `predict_interval` methods.
 
 regressor = MLPRegressor(activation="relu", random_state=RANDOM_STATE)
 regressor.fit(X_train, y_train)
@@ -66,10 +65,10 @@ mapie_regressor.conformalize(X_conformalize, y_conformalize)
 y_pred, y_pred_interval = mapie_regressor.predict_interval(X_test)
 
 ##############################################################################
-# ``y_pred`` represents the point predictions as a ``np.ndarray`` of shape
-# ``(n_samples)``.
-# ``y_pred_interval`` corresponds to the prediction intervals as a ``np.ndarray`` of
-# shape ``(n_samples, 2, 1)``, giving the lower and upper bounds of the intervals.
+# `y_pred` represents the point predictions as a `np.ndarray` of shape
+# `(n_samples)`.
+# `y_pred_interval` corresponds to the prediction intervals as a `np.ndarray` of
+# shape `(n_samples, 2, 1)`, giving the lower and upper bounds of the intervals.
 
 ##############################################################################
 # Finally, we can easily compute the coverage score (i.e., the proportion of times the
@@ -110,4 +109,4 @@ plt.show()
 
 ##############################################################################
 # On the plot above, the dots represent the samples from our dataset, while the
-# orange area corresponds to the estimated prediction intervals for each ``x`` value.
+# orange area corresponds to the estimated prediction intervals for each `x` value.

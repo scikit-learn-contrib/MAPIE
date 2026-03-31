@@ -1,7 +1,6 @@
 """
-=========================================================
-Control the risk of a multi-label classifier
-=========================================================
+# Control the risk of a multi-label classifier
+
 
 In this example, we explain how to perform risk control for multi-label
 classification using the Learn-Then-Test (LTT) procedure implemented in MAPIE.
@@ -122,16 +121,16 @@ clf = MultiOutputClassifier(GaussianNB())
 clf.fit(X_train, y_train)
 
 ##############################################################################
-# Next, we initialize a :class:`~mapie.risk_control.MultiLabelClassificationController`
+# Next, we initialize a `MultiLabelClassificationController`
 # using the probability estimation function from the fitted estimator:
-# ``clf.predict_proba``, a chosen risk ("precision" in this example),
+# `clf.predict_proba`, a chosen risk ("precision" in this example),
 # a target risk level, and a confidence level. Then we use the calibration data
 # to compute statistically valid thresholds using a risk control procedure.
 #
-# When ``risk="precision"``, the controller relies on the LTT procedure,
+# When `risk="precision"`, the controller relies on the LTT procedure,
 # which is designed to handle non-monotonic risks.
 #
-# Alternatively, ``risk="recall"`` can also be used.
+# Alternatively, `risk="recall"` can also be used.
 # In that case, the controller relies on monotonicity and uses either:
 #
 # - RCPS (Risk-Controlling Prediction Sets), which provides a probabilistic guarantee,

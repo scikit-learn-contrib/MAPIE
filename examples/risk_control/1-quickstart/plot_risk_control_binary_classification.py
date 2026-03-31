@@ -1,7 +1,6 @@
 """
-============================================
-Precision control for a binary classifier
-============================================
+# Precision control for a binary classifier
+
 
 In this example, we explain how to do risk control for binary classification with MAPIE.
 
@@ -89,15 +88,15 @@ clf = MLPClassifier(max_iter=150, random_state=RANDOM_STATE)
 clf.fit(X_train, y_train)
 
 ##############################################################################
-# Next, we initialize a :class:`~mapie.risk_control.BinaryClassificationController`
+# Next, we initialize a `BinaryClassificationController`
 # using the probability estimation function from the fitted estimator:
-# ``clf.predict_proba``, a risk or performance metric (here, "precision"),
+# `clf.predict_proba`, a risk or performance metric (here, "precision"),
 # a target risk level, and a confidence level. Then we use the calibration data
 # to compute statistically guaranteed thresholds using a risk control method.
 #
 # Different risks or performance metrics have been implemented, such as precision
 # and recall, but you can also implement your own custom function using
-# :class:`~mapie.risk_control.BinaryClassificationRisk` and choose your own
+# `BinaryClassificationRisk` and choose your own
 # secondary objective.
 
 target_precision = 0.8
@@ -215,15 +214,15 @@ print(
 # the precision value to be ill-defined and set to 0.
 #
 # Besides computing a set of valid thresholds,
-# :class:`~mapie.risk_control.BinaryClassificationController` also outputs the "best"
+# `BinaryClassificationController` also outputs the "best"
 # one, which is the valid threshold that maximizes a secondary objective
 # (recall here).
 
 
 ##############################################################################
-# After obtaining the best threshold, we can use the ``predict`` function of
-# :class:`~mapie.risk_control.BinaryClassificationController` for future predictions,
-# or use scikit-learn's ``FixedThresholdClassifier`` as a wrapper to benefit
+# After obtaining the best threshold, we can use the `predict` function of
+# `BinaryClassificationController` for future predictions,
+# or use scikit-learn's `FixedThresholdClassifier` as a wrapper to benefit
 # from functionalities like easily plotting the decision boundary as seen below.
 
 y_pred = bcc.predict(X_test)

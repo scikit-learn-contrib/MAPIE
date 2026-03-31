@@ -1,9 +1,8 @@
 """
-=================================================
-Calibrating binary classifier with Venn-ABERS
-=================================================
+# Calibrating binary classifier with Venn-ABERS
+
 This example shows how to calibrate a binary classifier with
-:class:`~mapie.calibration.VennAbersCalibrator` and visualize the
+`VennAbersCalibrator` and visualize the
 impact on predicted probabilities.
 
 We compare an uncalibrated model to its Venn-ABERS calibrated version
@@ -53,7 +52,7 @@ raw_brier = brier_score_loss(y_test, probs_raw)
 ####################################################################
 # 2. Calibrate with Venn-ABERS
 # ----------------------------
-# We wrap the same base model in :class:`~mapie.calibration.VennAbersCalibrator`
+# We wrap the same base model in `VennAbersCalibrator`
 # using the inductive mode (default). The calibrator uses the calibration set
 # to learn a calibration mapping that will improve probability estimates.
 

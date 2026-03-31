@@ -1,7 +1,6 @@
 """
-====================
-Plot prediction sets
-====================
+# Plot prediction sets
+
 
 In this example, we explain how to use MAPIE on a basic classification setting.
 """
@@ -35,11 +34,11 @@ X, y = make_blobs(n_samples=500, n_features=2, centers=3, cluster_std=3.4)
 
 ##############################################################################
 # We fit our training data with a KNN estimator.
-# Then, we initialize a :class:`~mapie.classification.SplitConformalClassifier`
+# Then, we initialize a `SplitConformalClassifier`
 # using our estimator, indicating that it has already been fitted with
 # `prefit=True`.
 # Lastly, we compute the prediction sets with the desired confidence level using the
-# ``conformalize`` and ``predict_set`` methods.
+# `conformalize` and `predict_set` methods.
 
 classifier = KNeighborsClassifier(n_neighbors=10)
 classifier.fit(X_train, y_train)
@@ -52,11 +51,11 @@ mapie_classifier.conformalize(X_conformalize, y_conformalize)
 y_pred, y_pred_set = mapie_classifier.predict_set(X_test)
 
 ##############################################################################
-# ``y_pred`` represents the point predictions as a ``np.ndarray`` of shape
-# ``(n_samples)``.
-# ``y_pred_set`` corresponds to the prediction sets as a ``np.ndarray`` of shape
-# ``(n_samples, 3, 1)``. This array contains only boolean values: ``True`` if the label
-# is included in the prediction set, and ``False`` if not.
+# `y_pred` represents the point predictions as a `np.ndarray` of shape
+# `(n_samples)`.
+# `y_pred_set` corresponds to the prediction sets as a `np.ndarray` of shape
+# `(n_samples, 3, 1)`. This array contains only boolean values: `True` if the label
+# is included in the prediction set, and `False` if not.
 
 ##############################################################################
 # Finally, we can easily compute the coverage score (i.e., the proportion of times the

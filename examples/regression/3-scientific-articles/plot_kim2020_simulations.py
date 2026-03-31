@@ -1,11 +1,10 @@
 """
-=====================================================================================================
-Predictive inference is free with the Jackknife+-after-Bootstrap, Kim et al. (2020)
-=====================================================================================================
+# Predictive inference is free with the Jackknife+-after-Bootstrap, Kim et al. (2020)
 
 
-:class:`~mapie.regression.JackknifeAfterBootstrapRegressor` and
-:class:`~mapie.regression.CrossConformalRegressor` are used to
+
+`JackknifeAfterBootstrapRegressor` and
+`CrossConformalRegressor` are used to
 reproduce the simulations by Kim et al. (2020) [1] in their article
 which introduces the jackknife+-after-bootstrap method.
 
@@ -15,12 +14,12 @@ loaded from 'https://archive.ics.uci.edu/', and compares the coverage levels
 and the width means of the PIs.
 
 In order to reproduce results from the tutorial notebook of [1], we
-implemented their regression model ``Ridge2``, a variant of `sklearn.Ridge`
+implemented their regression model `Ridge2`, a variant of `sklearn.Ridge`
 with an adaptive regularization parameter (other models can also be tested).
 
 We compare jackknife+ and jackknife+-after-bootstrap, with fixed and random
-numbers of bootstraps, for a given training set of size ``n``, and different
-resampling sets of size ``m``, following the discussion in [1].
+numbers of bootstraps, for a given training set of size `n`, and different
+resampling sets of size `m`, following the discussion in [1].
 
 This simulation is carried out to assert that the jackknife+ and
 jackknife+-after-bootsrap methods implemented in MAPIE give the same
@@ -57,7 +56,7 @@ from mapie.subsample import Subsample
 
 def get_X_y() -> Tuple[NDArray, NDArray]:
     """
-    Downloads the ``blog`` dataset from a zip file on the UCI Machine Learning
+    Downloads the `blog` dataset from a zip file on the UCI Machine Learning
     website, and returns X and y, which are respectively the explicative
     data and the labels.
 
@@ -89,9 +88,9 @@ class Ridge2(RegressorMixin, BaseEstimator):
     Parameters
     ----------
     ridge_mult : float
-        Multiplicative factor such that the alpha factor of the ``Ridge`` model
-        fitted by ``Ridge2`` is the squared maximum eigenvalue of the training
-        set times ``ridge_mult``.
+        Multiplicative factor such that the alpha factor of the `Ridge` model
+        fitted by `Ridge2` is the squared maximum eigenvalue of the training
+        set times `ridge_mult`.
     """
 
     def __init__(self, ridge_mult: float = 0.001) -> None:
@@ -207,7 +206,7 @@ def compute_PIs(
 def get_coverage_width(PIs: pd.DataFrame, y: NDArray) -> Tuple[float, float]:
     """
     Computes the mean coverage and width of the predictions intervals of a
-    DataFrame given by the ``compute_PIs`` function
+    DataFrame given by the `compute_PIs` function
 
     Parameters
     ----------

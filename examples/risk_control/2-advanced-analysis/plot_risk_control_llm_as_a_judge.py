@@ -192,7 +192,7 @@ def abstain_to_answer(X, lambda_1, lambda_2) -> NDArray[np.int_]:
 
 
 #############################################################################
-# Given the abstention task and the definition of ``abstain_to_answer``, we must
+# Given the abstention task and the definition of `abstain_to_answer`, we must
 # enforce the constraint `lambda_1 <= lambda_2`. Therefore, we avoid exploring
 # regions of the bi-variate parameter space where `lambda_1 > lambda_2`.
 # We construct a grid of parameter pairs that respects this constraint.
@@ -208,13 +208,13 @@ for lambda_1 in lambda_1_values:
 to_explore = np.array(to_explore)
 
 ##############################################################################
-# We now initialize a :class:`~mapie.risk_control.BinaryClassificationController`
+# We now initialize a `BinaryClassificationController`
 # using the `abstain_to_answer` prediction function and three specific risks, each
-# represented as an instance of :class:`BinaryClassificationRisk`:
+# represented as an instance of `BinaryClassificationRisk`:
 #
-# - ``negative_predictive_value``: precision (NPV) on class 0 ("not hallucinated"),
-# - ``positive_predictive_value``: precision (PPV) on class 1 ("hallucinated"),
-# - ``abstention_rate``: proportion of abstentions (i.e., np.nan predictions).
+# - `negative_predictive_value`: precision (NPV) on class 0 ("not hallucinated"),
+# - `positive_predictive_value`: precision (PPV) on class 1 ("hallucinated"),
+# - `abstention_rate`: proportion of abstentions (i.e., np.nan predictions).
 #
 # We set a target level for each risk and use the calibration data to compute
 # statistically guaranteed thresholds. Among the valid thresholds, we select

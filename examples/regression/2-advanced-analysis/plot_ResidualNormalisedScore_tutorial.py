@@ -1,7 +1,6 @@
 """
-=====================================================================
-Focus on residual normalised score
-=====================================================================
+# Focus on residual normalised score
+
 
 
 We will use the sklearn california housing dataset to understand how the
@@ -64,7 +63,7 @@ plt.show()
 # conformalize, residual and test set. Recall that the conformalize set is used
 # for calibrating the prediction intervals and the residual set is used to fit
 # the residual estimator used by the
-# :class:`~mapie.conformity_scores.ResidualNormalisedScore`.
+# `ResidualNormalisedScore`.
 
 np.array(X)
 np.array(y)
@@ -91,15 +90,15 @@ X_conformalize_prefit, X_res, y_conformalize_prefit, y_res = train_test_split(
 # We will now define 4 different ways of using the residual normalised score.
 # Remember that this score is only available in the split setup. First, the
 # simplest one with all the default parameters :
-# a :class:`~sklearn.linear_model.LinearRegression` is used for the residual
+# a `LinearRegression` is used for the residual
 # estimator. (Note that to avoid negative values it is trained with the log
 # of the features and the exponential of the predictions are used).
-# It is also possible to use it with ``prefit=True`` i.e. with
+# It is also possible to use it with `prefit=True` i.e. with
 # the base model trained beforehand. The third setup that we illustrate here
 # is with the residual model prefitted : we can set the estimator in parameters
-# of the class, not forgetting to specify ``prefit="True"``. Finally, as an
+# of the class, not forgetting to specify `prefit="True"`. Finally, as an
 # example of the exotic parameterisation we use as a residual
-# estimator a :class:`~sklearn.linear_model.LinearRegression` wrapped to avoid
+# estimator a `LinearRegression` wrapped to avoid
 # negative values like it is done by default in the class.
 
 

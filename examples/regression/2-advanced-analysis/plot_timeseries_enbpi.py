@@ -1,7 +1,6 @@
 """
-==================================================================
-EnbPI technique for time series
-==================================================================
+# EnbPI technique for time series
+
 
 Note: in this example, we use the following terms employed in the scientific literature:
 
@@ -11,7 +10,7 @@ Note: in this example, we use the following terms employed in the scientific lit
 —
 
 This example uses
-:class:`~mapie.time_series_regression.TimeSeriesRegressor` to estimate
+`TimeSeriesRegressor` to estimate
 prediction intervals associated with time series forecast. It follows [6].
 
 We use here the Victoria electricity demand dataset used in the book
@@ -20,13 +19,13 @@ The electricity demand features daily and weekly seasonalities and is impacted
 by the temperature, considered here as a exogeneous variable.
 
 A Random Forest model is already fitted on data. The hyper-parameters are
-optimized with a :class:`~sklearn.model_selection.RandomizedSearchCV` using a
+optimized with a `RandomizedSearchCV` using a
 fixed validation set, which is only used for hyper-parameter search to avoid
 data leakage.
 The best model is then fed into
-:class:`~mapie.time_series_regression.TimeSeriesRegressor` to estimate the
+`TimeSeriesRegressor` to estimate the
 associated prediction intervals. We compare two approaches: with or without calling
-``update`` at every step, following [6]. The results show coverage closer
+`update` at every step, following [6]. The results show coverage closer
 to the target, along with narrower PIs.
 """
 

@@ -1,11 +1,10 @@
 """
-=======================================================================
-The symmetric correction parameter in conformalized quantile regression
-=======================================================================
+# The symmetric correction parameter in conformalized quantile regression
 
 
-An example plot of :class:`~mapie.regression.ConformalizedQuantileRegressor`
-illustrating the impact of the ``symmetric_correction`` parameter.
+
+An example plot of `ConformalizedQuantileRegressor`
+illustrating the impact of the `symmetric_correction` parameter.
 """
 
 import numpy as np
@@ -126,10 +125,10 @@ plt.tight_layout()
 plt.show()
 
 ##############################################################################
-# The symmetric intervals (``symmetric_correction=True``) use a combined set of
+# The symmetric intervals (`symmetric_correction=True`) use a combined set of
 # residuals for both bounds, while the asymmetric intervals
-# (``symmetric_correction=False``) use distinct residuals for each bound,
+# (`symmetric_correction=False`) use distinct residuals for each bound,
 # allowing for more flexible and accurate intervals that reflect the
 # heteroscedastic nature of the data. The resulting effective coverages
 # demonstrate the theoretical guarantee of the target coverage level
-# ``confidence_level``.
+# `confidence_level`.
