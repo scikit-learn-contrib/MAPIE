@@ -1,5 +1,5 @@
 import warnings
-from typing import Optional, Tuple, Union
+from typing import Optional, Tuple, Union, cast
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray

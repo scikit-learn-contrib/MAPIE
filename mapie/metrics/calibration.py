@@ -16,7 +16,7 @@ from mapie.utils import (
 )
 
 
-from typing import Tuple, Optional, Union
+from typing import Optional, Tuple, Union, cast
 
 
 def _get_binning_groups(

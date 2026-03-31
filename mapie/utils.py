@@ -5,7 +5,7 @@ from collections.abc import Iterable as IterableType
 from decimal import Decimal
 from inspect import signature
 from math import isclose
-from typing import Any, Iterable, List, Optional, Tuple, Union
+from typing import Any, Iterable, List, Optional, Tuple, Union, cast
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray

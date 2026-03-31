@@ -1,4 +1,4 @@
-from typing import Optional, Union
+from typing import Optional, Union, cast
 
 import numpy as np
 from numpy.typing import NDArray

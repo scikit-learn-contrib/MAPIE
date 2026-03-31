@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Union, cast
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import List, Literal, Optional, Tuple, Union
+from typing import List, Literal, Optional, Tuple, Union, cast
 
 import numpy as np
 from joblib import Parallel, delayed
