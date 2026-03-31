@@ -23,20 +23,20 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
 
     consistency_check: bool, optional
         Whether to check the consistency between the methods
-        ``get_estimation_distribution`` and ``get_conformity_scores``.
-        If ``True``, the following equality must be verified::
+        `get_estimation_distribution` and `get_conformity_scores`.
+        If `True`, the following equality must be verified::
 
             y == self.get_estimation_distribution(
                 y_pred,
                 self.get_conformity_scores(y, y_pred, **kwargs),
                 **kwargs)
 
-        By default ``True``.
+        By default `True`.
 
     eps: float, optional
         Threshold to consider when checking the consistency
-        between ``get_estimation_distribution`` and ``get_conformity_scores``.
-        It should be specified if ``consistency_check==True``.
+        between `get_estimation_distribution` and `get_conformity_scores`.
+        It should be specified if `consistency_check==True`.
 
         By default, it is defined by the default precision.
     """
@@ -57,7 +57,7 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
         self, y: NDArray, y_pred: NDArray, **kwargs
     ) -> NDArray:
         """
-        Placeholder for ``get_conformity_scores``.
+        Placeholder for `get_conformity_scores`.
         Subclasses should implement this method!
 
         Compute the sample conformity scores given the predicted and
@@ -107,7 +107,7 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
     ) -> None:
         """
         Check consistency between the following methods:
-        ``get_estimation_distribution`` and ``get_signed_conformity_scores``
+        `get_estimation_distribution` and `get_signed_conformity_scores`
 
         The following equality should be verified::
 
@@ -155,7 +155,7 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
         self, y_pred: NDArray, conformity_scores: NDArray, **kwargs
     ) -> NDArray:
         """
-        Placeholder for ``get_estimation_distribution``.
+        Placeholder for `get_estimation_distribution`.
         Subclasses should implement this method!
 
         Compute samples of the estimation distribution given the predicted
@@ -199,7 +199,7 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
         -------
         NDArray of shape (n_samples,)
             Array of betas minimizing the differences
-            ``(1-alpha+beta)-quantile - beta-quantile``.
+            `(1-alpha+beta)-quantile - beta-quantile`.
         """
         # Using logging.warning instead of warnings.warn to avoid warnings during tests
         logging.warning(
@@ -252,7 +252,7 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
     ) -> Tuple[NDArray, NDArray, NDArray]:
         """
         Compute bounds of the prediction intervals from the observed values,
-        the estimator of type ``EnsembleRegressor`` and the conformity scores.
+        the estimator of type `EnsembleRegressor` and the conformity scores.
 
         Parameters
         ----------
@@ -260,7 +260,7 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
             Observed feature values.
 
         alpha_np: NDArray of shape (n_alpha,)
-            NDArray of floats between ``0`` and ``1``, represents the
+            NDArray of floats between `0` and `1`, represents the
             uncertainty of the confidence interval.
 
         estimator: EnsembleRegressor
@@ -272,26 +272,26 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
         ensemble: bool
             Boolean determining whether the predictions are ensembled or not.
 
-            By default ``False``.
+            By default `False`.
 
         method: str
             Method to choose for prediction interval estimates.
-            The ``"plus"`` method implies that the quantile is calculated
+            The `"plus"` method implies that the quantile is calculated
             after estimating the bounds, whereas the other methods
-            (among the ``"naive"``, ``"base"`` or ``"minmax"`` methods,
+            (among the `"naive"`, `"base"` or `"minmax"` methods,
             for example) do the opposite.
 
-            By default ``base``.
+            By default `base`.
 
         optimize_beta: bool
             Whether to optimize the PIs' width or not.
 
-            By default ``False``.
+            By default `False`.
 
         allow_infinite_bounds: bool
             Allow infinite prediction intervals to be produced.
 
-            By default ``False``.
+            By default `False`.
 
         Returns
         -------
@@ -394,8 +394,9 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
 
         Returns
         --------
-        The output structure depend on the ``get_bounds`` method.
+        result
             The prediction sets for each sample and each alpha level.
+            The output structure depends on the `get_bounds` method.
         """
         return self.get_bounds(X=X, alpha_np=alpha_np, **kwargs)
 

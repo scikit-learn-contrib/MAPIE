@@ -439,7 +439,7 @@ def kolmogorov_smirnov_statistic(y_true: NDArray, y_score: NDArray) -> float:
     (Estimated Cumulative Calibration Errors - Maximum Absolute Deviation).
     The closer to zero, the better the scores are calibrated.
     Indeed, if the scores are perfectly calibrated,
-    the cumulative differences between ``y_true`` and ``y_score``
+    the cumulative differences between `y_true` and `y_score`
     should share the same properties of a standard Brownian motion
     asymptotically.
 
@@ -598,7 +598,7 @@ def kuiper_statistic(y_true: NDArray, y_score: NDArray) -> float:
     Also called ECCE-R (Estimated Cumulative Calibration Errors - Range).
     The closer to zero, the better the scores are calibrated.
     Indeed, if the scores are perfectly calibrated,
-    the cumulative differences between ``y_true`` and ``y_score``
+    the cumulative differences between `y_true` and `y_score`
     should share the same properties of a standard Brownian motion
     asymptotically.
 

@@ -17,7 +17,7 @@ from mapie.utils import (
 def classification_mean_width_score(y_pred_set: ArrayLike) -> NDArray:
     """
     Mean width of prediction set output by
-    :class:`~mapie.classification._MapieClassifier`.
+    `mapie.classification._MapieClassifier`.
 
     Parameters
     ----------
@@ -58,13 +58,13 @@ def classification_coverage_score(y_true: NDArray, y_pred_set: NDArray) -> NDArr
     The effective coverage is obtained by estimating the fraction
     of true labels that lie within the prediction sets.
 
-    Prediction sets obtained by the ``predict`` method can be passed directly to the
-    ``y_pred_set`` argument (see example below).
+    Prediction sets obtained by the `predict` method can be passed directly to the
+    `y_pred_set` argument (see example below).
 
     Beside this intended use, this function also works with:
 
-    - ``y_true`` of shape (n_sample,) and ``y_pred_set`` of shape (n_sample, n_class)
-    - ``y_true`` of shape (n_sample, n) and ``y_pred_set`` of shape
+    - `y_true` of shape (n_sample,) and `y_pred_set` of shape (n_sample, n_class)
+    - `y_true` of shape (n_sample, n) and `y_pred_set` of shape
       (n_sample, n_class, n)
 
     Parameters
@@ -74,7 +74,7 @@ def classification_coverage_score(y_true: NDArray, y_pred_set: NDArray) -> NDArr
 
     y_pred_set: NDArray of shape (n_samples, n_class, n_confidence_level)
         Prediction sets with different confidence levels, given by booleans of labels
-        with the ``predict`` method.
+        with the `predict` method.
 
     Returns
     -------

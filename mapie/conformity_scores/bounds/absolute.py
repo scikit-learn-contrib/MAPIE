@@ -46,7 +46,7 @@ class AbsoluteConformityScore(BaseRegressionScore):
         signed conformity score = y - y_pred
         <=> y = y_pred + signed conformity score
 
-        ``conformity_scores`` can be either the conformity scores or
+        `conformity_scores` can be either the conformity scores or
         the quantile of the conformity scores.
         """
         return np.add(y_pred, conformity_scores)

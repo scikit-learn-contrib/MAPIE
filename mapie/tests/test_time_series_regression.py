@@ -99,9 +99,9 @@ sklearn_version_float = float(sklearn_version.rsplit(".", 1)[0])
 )
 def test_mapie_time_series_regressor_sklearn_estim() -> None:
     """
-    Some checks are breaking because the usage of ``partial_fit`` does not match the
-    sklearn convention in the strictest sense since ``partial_fit`` can only be invoked
-     after ``fit``; the corresponding estimator check is marked as an expected failure.
+    Some checks are breaking because the usage of `partial_fit` does not match the
+    sklearn convention in the strictest sense since `partial_fit` can only be invoked
+     after `fit`; the corresponding estimator check is marked as an expected failure.
 
     The other checks are breaking because of sklearn 1.6,
      following dependencies upgrade in MAPIE v1.
@@ -313,8 +313,8 @@ def test_not_enough_resamplings() -> None:
 
 def test_no_agg_fx_specified_with_subsample() -> None:
     """
-    Test that an error is raised if ``cv`` is ``BlockBootstrap`` but
-    ``agg_function`` is ``None``.
+    Test that an error is raised if `cv` is `BlockBootstrap` but
+    `agg_function` is `None`.
     """
     with pytest.raises(ValueError, match=r"You need to specify an aggregation*"):
         mapie_ts_reg = TimeSeriesRegressor(
@@ -346,7 +346,7 @@ def test_pred_loof_isnan() -> None:
 
 
 def test_MapieTimeSeriesRegressor_if_alpha_is_None() -> None:
-    """Test ``predict`` when ``alpha`` is None."""
+    """Test `predict` when `alpha` is None."""
     mapie_ts_reg = TimeSeriesRegressor(cv=-1).fit(X_toy, y_toy)
 
     with pytest.raises(ValueError, match=r".*too many values to unpackt*"):
@@ -354,7 +354,7 @@ def test_MapieTimeSeriesRegressor_if_alpha_is_None() -> None:
 
 
 def test_MapieTimeSeriesRegressor_update_conformity_scores_with_ensemble() -> None:
-    """Test ``_update_conformity_scores_with_ensemble``"""
+    """Test `_update_conformity_scores_with_ensemble`"""
     mapie_ts_reg = TimeSeriesRegressor(method="enbpi", cv=-1)
     mapie_ts_reg.fit(X_toy, y_toy)
     mapie_ts_reg._update_conformity_scores_with_ensemble(X_toy, y_toy, ensemble=True)
@@ -372,7 +372,7 @@ def test_MapieTimeSeriesRegressor_update_conformity_scores_with_ensemble() -> No
 def test_MapieTimeSeriesRegressor_update_conformity_scores_with_ensemble_too_big() -> (
     None
 ):
-    """Test that ``_update_conformity_scores_with_ensemble`` raises an error."""
+    """Test that `_update_conformity_scores_with_ensemble` raises an error."""
     mapie_ts_reg = TimeSeriesRegressor(method="enbpi", cv=-1)
     mapie_ts_reg.fit(X_toy, y_toy)
     with pytest.raises(ValueError, match=r".*The number of observations*"):
@@ -380,7 +380,7 @@ def test_MapieTimeSeriesRegressor_update_conformity_scores_with_ensemble_too_big
 
 
 def test_MapieTimeSeriesRegressor_beta_optimize_error() -> None:
-    """Test ``beta_optimize`` raised error."""
+    """Test `beta_optimize` raised error."""
     mapie_ts_reg = TimeSeriesRegressor(
         cv=-1, conformity_score=AbsoluteConformityScore(sym=True)
     ).fit(X_toy, y_toy)
@@ -391,7 +391,7 @@ def test_MapieTimeSeriesRegressor_beta_optimize_error() -> None:
 
 
 def test_interval_prediction_with_beta_optimize() -> None:
-    """Test use of ``beta_optimize`` in prediction."""
+    """Test use of `beta_optimize` in prediction."""
     X_train_val, X_test, y_train_val, y_test = train_test_split(
         X, y, test_size=1 / 3, random_state=random_state
     )

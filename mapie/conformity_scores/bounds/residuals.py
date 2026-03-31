@@ -41,23 +41,23 @@ class ResidualNormalisedScore(BaseRegressionScore):
     ----------
     residual_estimator: Optional[RegressorMixin]
         The model that learns to predict the residuals of the base estimator.
-        It can be any regressor with scikit-learn API (i.e. with ``fit``
-        and ``predict`` methods).
-        If ``None``, estimator defaults to a ``LinearRegression`` instance.
+        It can be any regressor with scikit-learn API (i.e. with `fit`
+        and `predict` methods).
+        If `None`, estimator defaults to a `LinearRegression` instance.
 
     prefit: bool
-        Specify if the ``residual_estimator`` is already fitted or not.
-        By default ``False``.
+        Specify if the `residual_estimator` is already fitted or not.
+        By default `False`.
 
     split_size: Optional[Union[int, float]]
-        The proportion of data that is used to fit the ``residual_estimator``.
+        The proportion of data that is used to fit the `residual_estimator`.
         By default it is the default value of
-        ``sklearn.model_selection.train_test_split`` ie 0.25.
+        `sklearn.model_selection.train_test_split` ie 0.25.
 
     random_state: Optional[Union[int, np.random.RandomState]]
         Pseudo random number used for random sampling.
         Pass an int for reproducible output across multiple function calls.
-        By default ``None``.
+        By default `None`.
     """
 
     def __init__(
@@ -79,30 +79,30 @@ class ResidualNormalisedScore(BaseRegressionScore):
         self, estimator: Optional[RegressorMixin] = None
     ) -> RegressorMixin:
         """
-        Check if estimator is ``None``,
-        and returns a ``LinearRegression`` instance if necessary.
-        If the ``prefit`` attribute is ``True``,
+        Check if estimator is `None`,
+        and returns a `LinearRegression` instance if necessary.
+        If the `prefit` attribute is `True`,
         check if estimator is indeed already fitted.
 
         Parameters
         ----------
         estimator: Optional[RegressorMixin]
-            Estimator to check, by default ``None``.
+            Estimator to check, by default `None`.
 
         Returns
         -------
         RegressorMixin
-            The estimator itself or a default ``LinearRegression`` instance.
+            The estimator itself or a default `LinearRegression` instance.
 
         Raises
         ------
         ValueError
-            If the estimator is not ``None``
-            and has no ``fit`` nor ``predict`` methods.
+            If the estimator is not `None`
+            and has no `fit` nor `predict` methods.
 
         NotFittedError
             If the estimator is not fitted
-            and ``prefit`` attribute is ``True``.
+            and `prefit` attribute is `True`.
         """
         if estimator is None:
             return LinearRegression()
@@ -233,7 +233,7 @@ class ResidualNormalisedScore(BaseRegressionScore):
         """
         Computes the signed conformity score = (y - y_pred) / r_pred.
         r_pred being the predicted residual abs(y - y_pred) of the estimator.
-        It is calculated by a model (``residual_estimator_``) that learns
+        It is calculated by a model (`residual_estimator_`) that learns
         to predict this residual.
 
         The learning is done with the log of the residual and later we
@@ -300,12 +300,12 @@ class ResidualNormalisedScore(BaseRegressionScore):
         """
         Compute samples of the estimation distribution from the predicted
         values and the conformity scores, from the following formula:
-        ``y_pred + conformity_scores * r_pred``.
+        `y_pred + conformity_scores * r_pred`.
 
         The learning has been done with the log of the residual so we use the
         exponential of the prediction to avoid negative values.
 
-        ``conformity_scores`` can be either the conformity scores or
+        `conformity_scores` can be either the conformity scores or
         the quantile of the conformity scores.
         """
         if X is None:

@@ -13,7 +13,7 @@ from mapie.utils import _compute_quantiles
 class LACConformityScore(BaseClassificationScore):
     """
     Least Ambiguous set-valued Classifier (LAC) method-based
-    non conformity score (also formerly called ``"score"``).
+    non conformity score (also formerly called `"score"`).
 
     It is based on the scores (i.e. 1 minus the softmax score of the true
     label) on the conformalization set.
@@ -33,7 +33,7 @@ class LACConformityScore(BaseClassificationScore):
         Pseudo random number generator state.
 
     quantiles_: ArrayLike of shape (n_alpha)
-        The quantiles estimated from ``get_sets`` method.
+        The quantiles estimated from `get_sets` method.
     """
 
     def __init__(self) -> None:
@@ -87,7 +87,7 @@ class LACConformityScore(BaseClassificationScore):
             Observed feature values (not used since predictions are passed).
 
         alpha_np: NDArray of shape (n_alpha,)
-            NDArray of floats between ``0`` and ``1``, represents the
+            NDArray of floats between `0` and `1`, represents the
             uncertainty of the confidence interval.
 
         y_pred_proba: NDArray
@@ -101,7 +101,7 @@ class LACConformityScore(BaseClassificationScore):
             If "mean", the scores are averaged. If "crossval", the scores are
             obtained from cross-validation.
 
-            By default ``"mean"``.
+            By default `"mean"`.
 
         Returns
         --------
@@ -143,7 +143,7 @@ class LACConformityScore(BaseClassificationScore):
             If "mean", the scores are averaged. If "crossval", the scores are
             obtained from cross-validation.
 
-            By default ``"mean"``.
+            By default `"mean"`.
 
         Returns
         --------
@@ -192,7 +192,7 @@ class LACConformityScore(BaseClassificationScore):
             If "mean", the scores are averaged. If "crossval", the scores are
             obtained from cross-validation.
 
-            By default ``"mean"``.
+            By default `"mean"`.
 
         Returns
         --------

@@ -12,7 +12,7 @@ def phi1D(
 ) -> NDArray:
     """
     The function phi1D is called by phi2D.
-    It aims at applying a function ``fun`` after multiplying each row
+    It aims at applying a function `fun` after multiplying each row
     of B by x.
 
     Parameters
@@ -27,9 +27,9 @@ def phi1D(
     Returns
     -------
     NDArray
-        The function fun is applied to the product of ``x`` and ``B``.
-        Typically, ``fun`` is a numpy function, ignoring nan,
-        with argument ``axis=1``.
+        The function fun is applied to the product of `x` and `B`.
+        Typically, `fun` is a numpy function, ignoring nan,
+        with argument `axis=1`.
 
     Examples
     --------
@@ -84,7 +84,7 @@ def phi2D(
 def aggregate_all(agg_function: Optional[str], X: NDArray) -> NDArray:
     """
     Applies np.nanmean(, axis=1) or np.nanmedian(, axis=1) according
-    to the string ``agg_function``.
+    to the string `agg_function`.
 
     Parameters
     -----------
@@ -99,7 +99,7 @@ def aggregate_all(agg_function: Optional[str], X: NDArray) -> NDArray:
     Raises
     ------
     ValueError
-        If agg_function is ``None``
+        If agg_function is `None`
 
     Examples
     --------

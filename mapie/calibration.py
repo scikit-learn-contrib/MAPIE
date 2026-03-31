@@ -38,16 +38,16 @@ class TopLabelCalibrator(BaseEstimator, ClassifierMixin):
     estimator : Optional[ClassifierMixin]
         Any classifier with scikit-learn API
         (i.e. with fit, predict, and predict_proba methods), by default
-        ``None``.
-        If ``None``, estimator defaults to a ``LogisticRegression`` instance.
+        `None`.
+        If `None`, estimator defaults to a `LogisticRegression` instance.
 
     calibrator : Optional[Union[str, RegressorMixin]]
         Any calibrator with scikit-learn API
         (i.e. with fit, predict, and predict_proba methods), by default
-        ``None``.
-        If ``None``, calibrator defaults to a string "sigmoid" instance.
+        `None`.
+        If `None`, calibrator defaults to a string "sigmoid" instance.
 
-        By default ``None``.
+        By default `None`.
 
     cv: Optional[str]
         The cross-validation strategy to compute scores :
@@ -55,8 +55,8 @@ class TopLabelCalibrator(BaseEstimator, ClassifierMixin):
         - "split", performs a standard splitting into a calibration and a
           test set.
 
-        - "prefit", assumes that ``estimator`` has been fitted already.
-          All the data that are provided in the ``fit`` method are then used
+        - "prefit", assumes that `estimator` has been fitted already.
+          All the data that are provided in the `fit` method are then used
           to calibrate the predictions through the score computation.
 
         By default "split".
@@ -70,7 +70,7 @@ class TopLabelCalibrator(BaseEstimator, ClassifierMixin):
         Number of classes that are in the training dataset.
 
     uncalib_pred: NDArray
-        Array of the uncalibrated predictions set by the ``estimator``.
+        Array of the uncalibrated predictions set by the `estimator`.
 
     single_estimator_: ClassifierMixin
         Classifier fitted on the training data.
@@ -140,7 +140,7 @@ class TopLabelCalibrator(BaseEstimator, ClassifierMixin):
         cv: Optional[str],
     ) -> str:
         """
-        Check if cross-validator is ``"prefit"`` or ``"split"``.
+        Check if cross-validator is `"prefit"` or `"split"`.
         Else raise error.
 
         Parameters
@@ -174,9 +174,9 @@ class TopLabelCalibrator(BaseEstimator, ClassifierMixin):
         ----------
         calibrator : Union[str, RegressorMixin]
             If calibrator is a string then it returns the corresponding
-            estimator of ``named_calibrators``, else returns calibrator.
+            estimator of `named_calibrators`, else returns calibrator.
 
-            By defaults ``None``. If ``None``, defaults to ``"sigmoid"``.
+            By defaults `None`. If `None`, defaults to `"sigmoid"`.
 
         Returns
         -------
@@ -186,7 +186,7 @@ class TopLabelCalibrator(BaseEstimator, ClassifierMixin):
         Raises
         ------
         ValueError
-            If calibrator is not a key of ``named_calibrators``.
+            If calibrator is not a key of `named_calibrators`.
         """
         if calibrator is None:
             calibrator = "sigmoid"
@@ -205,7 +205,7 @@ class TopLabelCalibrator(BaseEstimator, ClassifierMixin):
 
     def _get_labels(self, X: ArrayLike) -> Tuple[NDArray, NDArray]:
         """
-        This method depends on the value of ``method`` and collects the labels
+        This method depends on the value of `method` and collects the labels
         that are needed to transform a multi-class calibration to multiple
         binary calibrations.
 
@@ -272,12 +272,12 @@ class TopLabelCalibrator(BaseEstimator, ClassifierMixin):
         y_calib : NDArray of shape (n_samples,)
             Training labels.
         top_class_prob : NDArray of shape (n_samples,)
-            The highest score for each input of the method ``predict_proba``
+            The highest score for each input of the method `predict_proba`
             of the ``estimator`.
         y_pred : NDArray of shape (n_samples,)
             Predictions.
         sample_weight : Optional[ArrayLike] of shape (n_samples,)
-            Sample weights. If ``None``, then samples are equally weighted.
+            Sample weights. If `None`, then samples are equally weighted.
 
         Returns
         -------
@@ -311,7 +311,7 @@ class TopLabelCalibrator(BaseEstimator, ClassifierMixin):
     ) -> Dict[Union[int, str], RegressorMixin]:
         """
         This method sequentially fits the calibrators for each labels
-        defined by ``_get_labels`` method.
+        defined by `_get_labels` method.
 
         Parameters
         ----------
@@ -321,10 +321,10 @@ class TopLabelCalibrator(BaseEstimator, ClassifierMixin):
             Training labels.
         sample_weight : Optional[ArrayLike] of shape (n_samples,)
             Sample weights for fitting the out-of-fold models.
-            If ``None``, then samples are equally weighted.
+            If `None`, then samples are equally weighted.
             Note that the sample weight defined are only for the training, not
             for the calibration.
-            By default ``None``.
+            By default `None`.
         calibrator : RegressorMixin
             Calibrator to fit.
 
@@ -413,7 +413,7 @@ class TopLabelCalibrator(BaseEstimator, ClassifierMixin):
 
         Parameters
         ----------
-        Same definition of parameters as for the ``fit`` method.
+        Same definition of parameters as for the `fit` method.
 
         Returns
         -------
@@ -496,27 +496,27 @@ class TopLabelCalibrator(BaseEstimator, ClassifierMixin):
             Training labels.
         sample_weight : Optional[ArrayLike] of shape (n_samples,)
             Sample weights for fitting the out-of-fold models.
-            If ``None``, then samples are equally weighted.
+            If `None`, then samples are equally weighted.
             Note that the sample weight defined are only for the training, not
             for the calibration procedure.
-            By default ``None``.
+            By default `None`.
         calib_size : Optional[float]
-            If ``cv == split`` and X_calib and y_calib are not defined, then
+            If `cv == split` and X_calib and y_calib are not defined, then
             the calibration dataset is created with the split defined by
             calib_size.
-        random_state : int, RandomState instance or ``None``, default is
-            ``None``
-            See ``sklearn.model_selection.train_test_split`` documentation.
+        random_state : int, RandomState instance or `None`, default is
+            `None`
+            See `sklearn.model_selection.train_test_split` documentation.
             Controls the shuffling applied to the data before applying the
             split.
             Pass an int for reproducible output across multiple function calls.
         shuffle : bool, default=True
-            See ``sklearn.model_selection.train_test_split`` documentation.
+            See `sklearn.model_selection.train_test_split` documentation.
             Whether or not to shuffle the data before splitting.
-            If shuffle=False, then stratify must be ``None``.
+            If shuffle=False, then stratify must be `None`.
         stratify : array-like, default=None
-            See ``sklearn.model_selection.train_test_split`` documentation.
-            If not ``None``, data is split in a stratified fashion, using this
+            See `sklearn.model_selection.train_test_split` documentation.
+            If not `None`, data is split in a stratified fashion, using this
             as the class label.
         **fit_params : dict
             Additional fit parameters.
@@ -655,49 +655,49 @@ class VennAbersCalibrator(BaseEstimator, ClassifierMixin):
     cv : Optional[str], default=None
         The cross-validation strategy:
 
-        - ``"prefit"``: Assumes that ``estimator`` has been fitted already.
-            All data provided in ``fit`` are used for calibration only.
-        - ``None``: Uses inductive or cross validation based on the
-            ``inductive`` parameter.
+        - `"prefit"`: Assumes that `estimator` has been fitted already.
+            All data provided in `fit` are used for calibration only.
+        - `None`: Uses inductive or cross validation based on the
+            `inductive` parameter.
 
     inductive : bool, default=True
-        Determines the calibration strategy when ``cv=None``:
+        Determines the calibration strategy when `cv=None`:
 
-        - ``True``: Inductive Venn-ABERS (IVAP) - splits data into proper
+        - `True`: Inductive Venn-ABERS (IVAP) - splits data into proper
             training and calibration sets.
-        - ``False``: Cross Venn-ABERS (CVAP) - uses k-fold cross-validation.
+        - `False`: Cross Venn-ABERS (CVAP) - uses k-fold cross-validation.
 
     n_splits : Optional[int], default=None
         Number of folds for Cross Venn-ABERS (CVAP). Must be at least 2.
-        Only used when ``inductive=False`` and ``cv=None``.
-        Uses ``sklearn.model_selection.StratifiedKFold`` functionality.
+        Only used when `inductive=False` and `cv=None`.
+        Uses `sklearn.model_selection.StratifiedKFold` functionality.
 
     train_proper_size : Optional[float], default=None
         Proportion of the dataset to use for proper training in Inductive
-        Venn-ABERS (IVAP). Only used when ``inductive=True`` and ``cv=None``.
+        Venn-ABERS (IVAP). Only used when `inductive=True` and `cv=None`.
 
         - If float, should be between 0.0 and 1.0.
         - If int, represents the absolute number of training samples.
-        - If ``None``, automatically set to complement of ``cal_size``.
+        - If `None`, automatically set to complement of `cal_size`.
 
     random_state : Optional[int], default=None
         Controls the shuffling applied to the data before splitting.
         Pass an int for reproducible output across multiple function calls.
-        Can be overridden in the ``fit`` method.
+        Can be overridden in the `fit` method.
 
     shuffle : bool, default=True
         Whether to shuffle the data before splitting.
 
-        - For IVAP: if ``shuffle=False``, then ``stratify`` must be ``None``.
+        - For IVAP: if `shuffle=False`, then `stratify` must be `None`.
         - For CVAP: controls whether to shuffle each class's samples before
             splitting into batches.
 
-        Can be overridden in the ``fit`` method.
+        Can be overridden in the `fit` method.
 
     stratify : Optional[ArrayLike], default=None
-        For Inductive Venn-ABERS (IVAP) only. If not ``None``, data is split
+        For Inductive Venn-ABERS (IVAP) only. If not `None`, data is split
         in a stratified fashion, using this as the class labels.
-        Can be overridden in the ``fit`` method.
+        Can be overridden in the `fit` method.
 
     precision : Optional[int], default=None
         Number of decimal points to round Venn-ABERS calibration probabilities.
@@ -822,9 +822,9 @@ class VennAbersCalibrator(BaseEstimator, ClassifierMixin):
         probabilities with minimal assumptions.
     - For multi-class problems, the method uses a one-vs-one approach
         to extend binary Venn-ABERS to multiple classes.
-    - The ``precision`` parameter can significantly speed up computation
+    - The `precision` parameter can significantly speed up computation
         for large datasets with minimal impact on calibration quality.
-    - When using ``cv="prefit"``, ensure the estimator is fitted on a
+    - When using `cv="prefit"`, ensure the estimator is fitted on a
         different dataset than the one used for calibration to avoid
         overfitting.
 
@@ -925,18 +925,18 @@ class VennAbersCalibrator(BaseEstimator, ClassifierMixin):
 
         sample_weight : Optional[NDArray] of shape (n_samples,)
             Sample weights for fitting the out-of-fold models.
-            If ``None``, then samples are equally weighted.
+            If `None`, then samples are equally weighted.
             Note that the sample weight defined are only for the training, not
             for the calibration procedure.
-            By default ``None``.
+            By default `None`.
 
         calib_size : Optional[float], default=0.33
             Proportion of the dataset to use for calibration when using
-            Inductive Venn-ABERS (IVAP) mode (``inductive=True`` and ``cv=None``).
+            Inductive Venn-ABERS (IVAP) mode (`inductive=True` and `cv=None`).
             It should be between 0.0 and 1.0 and represents
             the proportion of the dataset to include in the calibration split.
-            This parameter is ignored when ``cv="prefit"`` or when using
-            Cross Venn-ABERS (``inductive=False``).
+            This parameter is ignored when `cv="prefit"` or when using
+            Cross Venn-ABERS (`inductive=False`).
 
         random_state : Optional[Union[int, np.random.RandomState, None]], default=None
             Controls the shuffling applied to the data before applying the split.
@@ -1093,7 +1093,7 @@ class VennAbersCalibrator(BaseEstimator, ClassifierMixin):
             https://arxiv.org/pdf/1511.00213.pdf
 
         p0_p1_output : bool, default=False
-            If True, also returns ``p0_p1`` Venn-ABERS probabilistic outputs.
+            If True, also returns `p0_p1` Venn-ABERS probabilistic outputs.
 
         Returns
         -------
@@ -1102,16 +1102,16 @@ class VennAbersCalibrator(BaseEstimator, ClassifierMixin):
 
         p0_p1 : Union[NDArray, list[NDArray]], default=None
             Venn-ABERS calibrated p0 and p1 outputs when
-            ``p0_p1_output=True``.
+            `p0_p1_output=True`.
 
             - For binary classification, this is an array.
             - For multiclass classification, this is a list where each element
               corresponds to one binary subproblem. The size of the list
               corresponds to the number of one-vs-one or one-vs-all binary
               problems. Each element is an array of shape
-              ``(n_samples, n_folds * 2)``, with the first ``n_folds`` entries
+              `(n_samples, n_folds * 2)`, with the first `n_folds` entries
               in each row corresponding to p0 outputs and the last
-              ``n_folds`` to p1 outputs.
+              `n_folds` to p1 outputs.
         """
         check_is_fitted(self)
 

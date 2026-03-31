@@ -23,7 +23,7 @@ def regression_mean_width_score(y_intervals: NDArray) -> NDArray:
     ----------
     y_intervals: NDArray of shape (n_samples, 2, n_confidence_level)
         Lower and upper bound of prediction intervals
-        with different confidence levels, given by the ``predict_interval`` method
+        with different confidence levels, given by the `predict_interval` method
 
     Returns
     ---------
@@ -59,13 +59,13 @@ def regression_coverage_score(
     """
     Effective coverage obtained by the prediction intervals.
 
-    Intervals given by the ``predict_interval`` method can be passed directly
-    to the ``y_intervals`` argument (see example below).
+    Intervals given by the `predict_interval` method can be passed directly
+    to the `y_intervals` argument (see example below).
 
     Beside this intended use, this function also works with:
 
-    - ``y_true`` of shape (n_sample,) and ``y_intervals`` of shape (n_sample, 2)
-    - ``y_true`` of shape (n_sample, n) and `y_intervals` of shape
+    - `y_true` of shape (n_sample,) and `y_intervals` of shape (n_sample, 2)
+    - `y_true` of shape (n_sample, n) and `y_intervals` of shape
       (n_sample, 2, n)
 
     The effective coverage is obtained by computing the fraction
@@ -78,7 +78,7 @@ def regression_coverage_score(
 
     y_intervals: NDArray of shape (n_samples, 2, n_confidence_level)
         Lower and upper bound of prediction intervals
-        with different confidence levels, given by the ``predict_interval`` method
+        with different confidence levels, given by the `predict_interval` method
 
     Returns
     ---------

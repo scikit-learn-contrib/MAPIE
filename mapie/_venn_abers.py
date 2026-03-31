@@ -534,7 +534,7 @@ class VennAbersCV:
         If float, should be between 0.0 and 1.0 and represent the proportion
         of the dataset to include in the proper training / calibration split.
         If int, represents the absolute number of test samples. If None, the
-        value is set to the complement of the train size. If ``train_size``
+        value is set to the complement of the train size. If `train_size`
         is also None, it will be set to 0.25.
 
     train_proper_size : float or int, default=None
@@ -801,7 +801,7 @@ class VennAbersMultiClass:
         If float, should be between 0.0 and 1.0 and represent the proportion
         of the dataset to include in the proper training / calibration split.
         If int, represents the absolute number of test samples. If None, the
-        value is set to the complement of the train size. If ``train_size``
+        value is set to the complement of the train size. If `train_size`
         is also None, it will be set to 0.25.
 
     train_size : float or int, default=None

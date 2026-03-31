@@ -31,7 +31,7 @@ class FWERProcedure(ABC):
     - how local significance levels are computed,
     - how the state evolves after a rejection.
 
-    The main entry point is ``run`` which executes the procedure and returns
+    The main entry point is `run` which executes the procedure and returns
     the indices of rejected hypotheses.
 
     Methods to implement
@@ -264,18 +264,18 @@ def control_fwer(
 
     This function applies a multiple testing correction to a collection
     of p-values in order to control the family-wise error rate (FWER)
-    at level ``delta``.
+    at level `delta`.
 
-    The correction method is selected via the ``fwer_method`` argument.
+    The correction method is selected via the `fwer_method` argument.
 
     Supported methods are:
-    - ``"bonferroni"``: classical Bonferroni correction,
-    - ``"bonferroni_holm"``: Sequential Graphical Testing corresponding
+    - `"bonferroni"`: classical Bonferroni correction,
+    - `"bonferroni_holm"`: Sequential Graphical Testing corresponding
       to the Bonferroni-Holm procedure.
-    - ``"fixed_sequence"``: Fixed Sequence Testing (FST),
-    - ``"split_fixed_sequence"``: Split Fixed Sequence Testing (SFST).
-    - Custom procedures can also be implemented by subclassing ``FWERProcedure``
-      and passing an instance to ``fwer_method``.
+    - `"fixed_sequence"`: Fixed Sequence Testing (FST),
+    - `"split_fixed_sequence"`: Split Fixed Sequence Testing (SFST).
+    - Custom procedures can also be implemented by subclassing `FWERProcedure`
+      and passing an instance to `fwer_method`.
 
     Parameters
     ----------
