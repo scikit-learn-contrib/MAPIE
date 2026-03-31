@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Callable, Tuple, cast
+from typing import Callable, List, Literal, Tuple, Union, cast
 
 import numpy as np
 from numpy.typing import NDArray
@@ -151,6 +151,25 @@ class BinaryClassificationRisk:
         risk_occurrences = self._risk_occurrence(y_true, y_pred)
         risk_conditions = self._risk_condition(y_true, y_pred)
         return risk_occurrences[risk_conditions]
+
+
+RiskNameLiteral = Literal[
+    "precision",
+    "recall",
+    "accuracy",
+    "fpr",
+    "predicted_positive_fraction",
+    "positive_predictive_value",
+    "negative_predictive_value",
+    "abstention_rate",
+]
+RiskLike = Union[
+    BinaryClassificationRisk,
+    RiskNameLiteral,
+    List[BinaryClassificationRisk],
+    List[RiskNameLiteral],
+    List[Union[BinaryClassificationRisk, RiskNameLiteral]],
+]
 
 
 RiskNameLiteral = Literal[
