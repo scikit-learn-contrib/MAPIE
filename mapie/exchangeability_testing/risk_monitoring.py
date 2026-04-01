@@ -117,7 +117,7 @@ class RiskMonitoring:
             raise ValueError(
                 "Threshold must be computed with compute_threshold or set at initialization before checking for harmful shift."
             )
-        return bool(self.online_risk_lower_bound_latest > self.threshold)
+        return self.online_risk_lower_bound_sequence[-1] > self.threshold
 
     def compute_threshold(self, y_true: NDArray, y_pred: NDArray) -> "RiskMonitoring":
         """

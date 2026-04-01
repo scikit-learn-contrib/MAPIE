@@ -150,10 +150,7 @@ class BinaryClassificationRisk:
         """
         risk_occurrences = self._risk_occurrence(y_true, y_pred)
         risk_conditions = self._risk_condition(y_true, y_pred)
-        risk_sequence = risk_occurrences[risk_conditions].astype(int)
-        if self.higher_is_better:
-            risk_sequence = 1 - risk_sequence
-        return risk_sequence
+        return risk_occurrences[risk_conditions]
 
 
 RiskNameLiteral = Literal[
