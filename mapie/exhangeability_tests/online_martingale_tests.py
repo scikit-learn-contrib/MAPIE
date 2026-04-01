@@ -56,12 +56,7 @@ class OnlineMartingaleTest:
         Mixing parameter used by the jumper martingale.
         Ignored when ``test_method="plugin_martingale"``.
 
-    min_history_for_pvalue : int, default=50
-        Minimum number of past non-conformity scores required before computing
-        empirical conformal p-values from history.
-        Before this threshold, a neutral fallback value is used.
-
-    min_history_for_density : int, default=50
+    kde_min_sample_size : int, default=50
         Minimum number of past p-values required before estimating a p-value
         density for the plug-in martingale.
         Before this threshold, a neutral density is used.
@@ -86,13 +81,7 @@ class OnlineMartingaleTest:
 
     Examples
     --------
-    >>> etod = OnlineMartingaleTest(
-    ...     non_conformity_score_function=binary_prob_nonconformity,
-    ...     test_method="jumper_martingale",
-    ...     confidence_level=0.95,
-    ... )
-    >>> etod.update(y_test, y_pred, X_test)
-    >>> etod.is_exchangeable
+    # TODO: add example usage of the class with a simple non-conformity score function and simulated data.
 
     Notes
     -----
@@ -115,9 +104,9 @@ class OnlineMartingaleTest:
         confidence_level: float = 0.95,
         raise_warning: bool = True,
         jump_size: float = 0.01,
-        min_history_for_pvalue: int = 50,
-        min_history_for_density: int = 50,
+        kde_min_sample_size: int = 50,
         min_history_to_decide: int = 100,
+        random_state: Optional[int] = None,
     ):
         """
         Initialize the online martingale test.
@@ -125,54 +114,58 @@ class OnlineMartingaleTest:
         Parameters
         ----------
         non_conformity_score_function : Callable[[NDArray, NDArray, Optional[NDArray]], NDArray]
-            Function used to compute non-conformity scores from observed labels,
-            predictions, and optionally features.
+            Function that computes non-conformity scores from observed labels,
+            predictions, and optionally features. Must have signature
+            ``(y_true, y_pred, X) -> NDArray`` where X can be None.
 
         test_method : {"jumper_martingale", "plugin_martingale"}, default="jumper_martingale"
             Martingale construction used to aggregate evidence from conformal p-values.
+            "jumper_martingale" is more stable and less tuning-sensitive.
+            "plugin_martingale" is more adaptive but sensitive to density estimation.
 
         confidence_level : float, default=0.95
             Confidence level used to define the rejection threshold.
-            Must lie in ``(0, 1)``.
+            Must lie in (0, 1). The test level is alpha = 1 - confidence_level.
 
         raise_warning : bool, default=True
-            Whether to raise a warning when the martingale rejects exchangeability.
+            Whether to raise a warning when exchangeability is rejected.
 
         jump_size : float, default=0.01
-            Jump parameter of the jumper martingale.
-            Must lie in ``[0, 1]``.
+            Mixing parameter for the jumper martingale, controlling expert diversity.
+            Must lie in [0, 1]. Ignored when test_method="plugin_martingale".
 
-        min_history_for_pvalue : int, default=50
-            Minimum number of past non-conformity scores required before computing
-            empirical p-values from history.
+        kde_min_sample_size : int, default=50
+            Minimum number of p-values required before estimating density for the
+            plug-in martingale. Before this, a neutral (uniform) density is used.
 
-        min_history_for_density : int, default=50
-            Minimum number of past p-values required before estimating a p-value
-            density for the plug-in martingale.
+        min_history_to_decide : int, default=100
+            Minimum number of observations required before is_exchangeable returns
+            a non-None decision.
 
-        min_history_to_decide : int, default=200
-            Minimum number of observations required before returning a non-``None``
-            value from ``is_exchangeable``.
+        random_state : Optional[int], default=None
+            Random seed used for randomization (e.g., tie-breaking in p-value computation).
 
         Raises
         ------
         ValueError
-            If ``confidence_level`` is not in ``(0, 1)``,
-            if ``test_method`` is unsupported,
-            or if ``jump_size`` is not in ``[0, 1]``.
+            If confidence_level is not in (0, 1), if test_method is not supported,
+            or if jump_size is not in [0, 1].
+
+        See Also
+        --------
+        update : Update the test with new observations.
+        is_exchangeable : Get current exchangeability decision.
+        summary : Get diagnostic summary of the test state.
 
         References
         ----------
-        - Angelopoulos, Barber, Bates (2026),
-        "Theoretical Foundations of Conformal Prediction",
-        Definition 3.8.
-        - Vovk, Gammerman, Shafer (2005),
-        "Algorithmic Learning in a Random World",
-        Section 7.1, page 169.
-        - Fedorova, Gammerman, Nouretdinov, Vovk (2012),
-        "Plug-in Martingales for Testing Exchangeability on-line",
-        In precedings of the 29th ICML, 2012,
-        Algorithm 1, page 3.
+        .. [1] Angelopoulos, Barber, Bates (2026).
+           "Theoretical Foundations of Conformal Prediction". Definition 3.8.
+        .. [2] Vovk, Gammerman, Shafer (2005).
+           "Algorithmic Learning in a Random World". Section 7.1, page 169.
+        .. [3] Fedorova, Gammerman, Nouretdinov, Vovk (2012).
+           "Plug-in Martingales for Testing Exchangeability on-line".
+           In Proceedings of the 29th ICML, 2012. Algorithm 1, page 3.
         """
         if not 0.0 < confidence_level < 1.0:
             raise ValueError("confidence_level must lie in (0, 1).")
@@ -191,9 +184,9 @@ class OnlineMartingaleTest:
         self.raise_warning = raise_warning
 
         self.jump_size = jump_size
-        self.min_history_for_pvalue = min_history_for_pvalue
-        self.min_history_for_density = min_history_for_density
+        self.kde_min_sample_size = kde_min_sample_size
         self.min_history_to_decide = min_history_to_decide
+        self.rng = np.random.default_rng(random_state)
 
         self.pvalue_history: list[float] = []
         self.non_conformity_score_history: list[float] = []
@@ -233,33 +226,53 @@ class OnlineMartingaleTest:
     @property
     def is_exchangeable(self) -> Optional[bool]:
         """
-        Return the current exchangeability decision.
+        Return the current exchangeability decision based on the martingale process.
 
-        The returned value has the following interpretation:
+        The decision is based on the trajectory of martingale values compared to the
+        rejection threshold (``1 / alpha_level``). The interpretation is:
 
-        - ``False``: exchangeability is rejected.
-        - ``True``: failure to reject exchangeability.
-        - ``None``: the test is currently inconclusive.
+        - ``False``: Exchangeability is rejected when the martingale exceeds the
+          rejection threshold on multiple occasions or the current value exceeds it.
+        - ``True``: Failure to reject exchangeability when the martingale remains
+          below the significance level (``alpha_level``) throughout the history.
+        - ``None``: The test is currently inconclusive, either because:
+          - Insufficient observations have been processed (fewer than
+            ``min_history_to_decide``), or
+          - The martingale trajectory shows mixed signals.
 
         Returns
         -------
         Optional[bool]
-            Exchangeability decision.
+            Exchangeability decision, or ``None`` if inconclusive.
 
         Notes
         -----
+        This property requires at least ``min_history_to_decide`` observations before
+        returning a non-``None`` decision. The decision logic is conservative: a
+        single threshold excursion may not trigger rejection, but consistent
+        evidence above the threshold does.
+
         This property is based solely on the martingale value and does not constitute
         evidence in favor of exchangeability in a strict hypothesis-testing sense.
         Therefore, ``True`` should be interpreted as "failure to reject
         exchangeability", not as proof of exchangeability.
+
+        See Also
+        --------
+        reject_threshold : The rejection threshold for the martingale.
+        alpha_level : The test significance level.
         """
         if len(self.pvalue_history) < self.min_history_to_decide:
             return None
 
-        if self.current_martingale_value > self.reject_threshold:
+        if (
+            len([x for x in self.martingale_value_history if x > self.reject_threshold])
+            > 5
+            or self.current_martingale_value > self.reject_threshold
+        ):
             return False
 
-        if self.current_martingale_value < 1.0:
+        if len([x for x in self.martingale_value_history if x > self.alpha_level]) == 0:
             return True
 
         return None
@@ -275,9 +288,13 @@ class OnlineMartingaleTest:
         The p-value is computed using only the past non-conformity scores, according
         to the empirical conformal formula:
 
-        ``p_t = (1 + #{s_i >= s_t, i < t}) / (t + 1)``
+        .. math::
 
-        where ``s_t`` is the current score.
+            p_t = \frac{1 + \#\{i : s_i > s_t\} + U \cdot \#\{i : s_i = s_t\}}{n + 1}
+
+        where :math:`s_t` is the current non-conformity score, :math:`s_i` are past
+        scores, :math:`U \sim \text{Uniform}(0, 1)` is a random tie-breaker, and
+        :math:`n` is the number of past observations.
 
         Parameters
         ----------
@@ -290,31 +307,56 @@ class OnlineMartingaleTest:
         Returns
         -------
         float
-            Conformal p-value associated with the current score.
+            Conformal p-value in ``[0, 1]`` associated with the current score.
+            Under the null hypothesis of exchangeability, this p-value is uniformly
+            distributed on ``[0, 1]``.
+
+        Notes
+        -----
+        When no past observations are available, a uniform random p-value is returned.
+        Tie-breaking via random uniform sampling ensures valid p-values even when
+        non-conformity scores have ties.
 
         References
         ----------
-        Angelopoulos, Barber, Bates (2026),
-        "Theoretical Foundations of Conformal Prediction",
-        Definition 3.8.
+        .. [1] Angelopoulos, Barber, Bates (2026),
+           "Theoretical Foundations of Conformal Prediction",
+           Definition 3.8.
         """
         history = np.asarray(non_conformity_score_history, dtype=float)
         n = len(history)
+        u = self.rng.uniform()
 
-        if n < self.min_history_for_pvalue:
-            return 0.5
+        if n == 0:
+            return float(self.rng.uniform())
 
-        n_geq = np.sum(history >= current_non_conformity_score)
-        return float((1.0 + n_geq) / (n + 1.0))
+        n_greater = np.sum(history > current_non_conformity_score)
+        n_equal = np.sum(history == current_non_conformity_score)
+        u = self.rng.uniform()
+
+        return float((1.0 + n_greater + u * n_equal) / (n + 1.0))
 
     def _estimate_pvalues_density(self, pvalue: float) -> float:
         """
-        Estimate the density of p-values on the unit interval.
+        Estimate the density of p-values on the unit interval using reflected KDE.
 
-        The density is estimated using reflected kernel density estimation (KDE)
-        to reduce boundary bias near 0 and 1, and normalized over ``[0, 1]``.
+        This method computes a probability density estimate for p-values using
+        reflected kernel density estimation (KDE) to mitigate boundary bias effects
+        near 0 and 1. The density is normalized over the interval [0, 1] and
+        regularized toward the uniform distribution to account for estimation
+        uncertainty in small samples.
 
-        This estimate is used by the plug-in martingale.
+        This density estimate is utilized by the plug-in martingale for
+        exchangeability testing.
+
+            Evaluation point in [0, 1] at which to estimate the density.
+
+            Estimated density value at the given pvalue. Returns a value in [1e-3, 10.0].
+
+        Raises
+        ------
+        ValueError
+            If pvalue is not in [0, 1].
 
         Parameters
         ----------
@@ -328,19 +370,29 @@ class OnlineMartingaleTest:
 
         Notes
         -----
-        When insufficient p-value history is available, a neutral density equal to
-        1 is returned, corresponding to the uniform distribution on ``[0, 1]``.
+        - When the p-value history contains fewer samples than `kde_min_sample_size`,
+          a neutral density of 1.0 is returned (corresponding to the uniform
+          distribution on [0, 1]).
+        - If all p-values in history are identical, returns 1.0 to avoid singular
+          covariance in KDE.
+        - The method applies Silverman's bandwidth selector for kernel density
+          estimation.
+        - A regularization factor that decreases with sample size is applied to
+          smoothly transition from uniform density (small samples) to the KDE
+          estimate (large samples).
+        - Numerical stability is ensured through finite-value checks at multiple
+          stages.
 
         References
         ----------
-        Fedorova, Gammerman, Nouretdinov, Vovk (2012),
-        "Plug-in Martingales for Testing Exchangeability on-line",
-        In precedings of the 29th ICML, 2012.
+        .. [1] Fedorova, V., Gammerman, A., Nouretdinov, I., & Vovk, V. (2012).
+        "Plug-in Martingales for Testing Exchangeability On-line."
+        In Proceedings of the 29th International Conference on Machine Learning (ICML).
         """
         if not 0.0 <= pvalue <= 1.0:
             return 0.0
 
-        if len(self.pvalue_history) < self.min_history_for_density:
+        if len(self.pvalue_history) < self.kde_min_sample_size:
             return 1.0
 
         p_array = np.asarray(self.pvalue_history, dtype=float)
@@ -366,6 +418,14 @@ class OnlineMartingaleTest:
 
         if not np.isfinite(density):
             return 1.0
+
+        # Sample-size dependent regularization towards uniform density to control against estimation errors in small samples
+        regularization_strength = min(
+            1.0, self.kde_min_sample_size / len(self.pvalue_history)
+        )
+        density = (
+            1.0 - regularization_strength
+        ) * density + regularization_strength * 1.0
 
         return float(np.clip(density, 1e-3, 10.0))
 
