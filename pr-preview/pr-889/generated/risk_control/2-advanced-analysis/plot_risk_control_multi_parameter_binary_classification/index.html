@@ -1,0 +1,5632 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Model Agnostic Prediction Interval Estimator — Conformal Prediction for Python">
+      
+      
+        <meta name="author" content="MAPIE Team">
+      
+      
+        <link rel="canonical" href="https://scikit-learn-contrib.github.io/MAPIE/generated/risk_control/2-advanced-analysis/plot_risk_control_multi_parameter_binary_classification/">
+      
+      
+        <link rel="prev" href="../plot_risk_control_multi-label_classification/">
+      
+      
+        <link rel="next" href="../plot_semantic_segmentation_precision_control/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../../images/mapie_logo_nobg_cut.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Control risk of a binary classifier with multiple prediction parameters - MAPIE</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,700,700i%7CJetBrains+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../../../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../../../../stylesheets/extra.css">
+    
+      <link rel="stylesheet" href="../../../../sg_gallery-binder.css">
+    
+      <link rel="stylesheet" href="../../../../sg_gallery-dataframe.css">
+    
+      <link rel="stylesheet" href="../../../../sg_gallery-rendered-html.css">
+    
+      <link rel="stylesheet" href="../../../../sg_gallery.css">
+    
+    <script>__md_scope=new URL("../../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="deep-purple" data-md-color-accent="amber">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#control-risk-of-a-binary-classifier-with-multiple-prediction-parameters" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../../.." title="MAPIE" class="md-header__button md-logo" aria-label="MAPIE" data-md-component="logo">
+      
+  <img src="../../../../images/mapie_logo_nobg_cut.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            MAPIE
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Control risk of a binary classifier with multiple prediction parameters
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="deep-purple" data-md-color-accent="amber"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="deep-purple" data-md-color-accent="amber"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/scikit-learn-contrib/MAPIE" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    scikit-learn-contrib/MAPIE
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../../getting-started/quick-start/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Getting Started
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../../theory/regression/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Uncertainty Quantification
+
+        </a>
+      </li>
+    
+  
+
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../../theory/risk-control/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Risk Control
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../../theory/calibration/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Calibration
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../../../regression/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Examples
+
+        </a>
+      </li>
+    
+  
+
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../../theory/metrics/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Q&A
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../../api/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  API Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../../contributing-docs/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Contributing
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../../.." title="MAPIE" class="md-nav__button md-logo" aria-label="MAPIE" data-md-component="logo">
+      
+  <img src="../../../../images/mapie_logo_nobg_cut.png" alt="logo">
+
+    </a>
+    MAPIE
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/scikit-learn-contrib/MAPIE" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    scikit-learn-contrib/MAPIE
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../getting-started/quick-start/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quick Start
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../getting-started/split-cross-conformal/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Conformalization Set
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../getting-started/choosing-algorithm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Choosing the Right Algorithm
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../getting-started/v1-release-notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    v1 Release Notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Uncertainty Quantification
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Uncertainty Quantification
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_1" id="__nav_3_1_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Regression
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Regression
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../theory/regression/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Theoretical Description
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../theory/conformity-scores/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Conformity Scores
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_2" id="__nav_3_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Classification
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Classification
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../theory/classification/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Theoretical Description
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Risk Control
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Risk Control
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../theory/risk-control/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Calibration
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Calibration
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../theory/calibration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Theoretical Description
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../calibration/notebooks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Notebooks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Examples
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Examples
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_1" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../regression/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Regression
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_6_1" id="__nav_6_1_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Regression
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_1_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_6_1_2" id="__nav_6_1_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quickstart
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_1_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_1_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Quickstart
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../regression/1-quickstart/plot_compare_conformity_scores/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data with gamma distribution
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../regression/1-quickstart/plot_heteroscedastic_1d_data/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data with uneven uncertainty
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../regression/1-quickstart/plot_homoscedastic_1d_data/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data with constant uncertainty
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../regression/1-quickstart/plot_prefit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Use a pre-trained model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../regression/1-quickstart/plot_toy_model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Plot prediction intervals
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../regression/1-quickstart/plot_ts-tutorial/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tutorial for time series
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_1_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_6_1_3" id="__nav_6_1_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Advanced Analysis
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_1_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_1_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Advanced Analysis
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../regression/2-advanced-analysis/plot-coverage-width-based-criterion/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Focus on intervals width
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../regression/2-advanced-analysis/plot_ResidualNormalisedScore_tutorial/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Focus on residual normalised score
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../regression/2-advanced-analysis/plot_both_uncertainties/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Estimating aleatoric and epistemic uncertainties
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../regression/2-advanced-analysis/plot_conditional_coverage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Focus on local (or "conditional") coverage
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../regression/2-advanced-analysis/plot_conformal_predictive_distribution/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Conformal Predictive Distribution
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../regression/2-advanced-analysis/plot_coverage_validity/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Coverage validity for regression tasks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../regression/2-advanced-analysis/plot_cqr_symmetry_difference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The symmetric correction parameter in conformalized quantile regression
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../regression/2-advanced-analysis/plot_cqr_tutorial/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Conformalized quantile regression on gamma distributed data
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../regression/2-advanced-analysis/plot_main-tutorial-regression/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Comparison between conformalized quantile regressor and cross methods
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../regression/2-advanced-analysis/plot_nested-cv/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hyperparameters tuning with cross-conformal regression
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../regression/2-advanced-analysis/plot_timeseries_enbpi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    EnbPI technique for time series
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_1_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_6_1_4" id="__nav_6_1_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Scientific Articles
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_1_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_1_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Scientific Articles
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../regression/3-scientific-articles/plot_barber2020_simulations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Predictive inference with the jackknife+, Foygel-Barber et al. (2020)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../regression/3-scientific-articles/plot_kim2020_simulations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Predictive inference is free with the Jackknife+-after-Bootstrap, Kim et al. (2020)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../regression/3-scientific-articles/plot_zaffran2022_comparison/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Adaptive conformal predictions for time series, Zaffran et al. (2022)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_2" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../classification/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Classification
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_6_2" id="__nav_6_2_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Classification
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_2_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_6_2_2" id="__nav_6_2_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quickstart
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_2_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_2_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Quickstart
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../classification/1-quickstart/plot_quickstart_classification/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Plot prediction sets
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_2_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_6_2_3" id="__nav_6_2_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Advanced Analysis
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_2_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_2_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Advanced Analysis
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../classification/2-advanced-analysis/plot_comp_methods_on_2d_dataset/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LAC and APS methods explained
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../classification/2-advanced-analysis/plot_crossconformal/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cross conformal classification explained
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../classification/2-advanced-analysis/plot_main-tutorial-binary-classification/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Set prediction example in the binary classification setting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_2_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_6_2_4" id="__nav_6_2_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Scientific Articles
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_2_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_2_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Scientific Articles
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../classification/3-scientific-articles/plot_sadinle2019_example/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Least Ambiguous Set-Valued Classifiers with Bounded Error Levels, Sadinle et al. (2019)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../calibration/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Calibration
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_6_3" id="__nav_6_3_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Calibration
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_3_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_6_3_2" id="__nav_6_3_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quickstart
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_3_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_3_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Quickstart
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../calibration/1-quickstart/plot_calibration_hypothesis_testing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing for calibration in binary classification settings
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../calibration/1-quickstart/plot_calibration_venn_abers_binary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Calibrating binary classifier with Venn-ABERS
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../calibration/1-quickstart/plot_calibration_venn_abers_multiclass/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Calibrating multi-class classifier with Venn-ABERS
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_3_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_6_3_3" id="__nav_6_3_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Advanced Analysis
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_3_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_3_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Advanced Analysis
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../calibration/2-advanced-analysis/plot_asymptotic_convergence_of_p_values/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evaluating the asymptotic convergence of p-values
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_4" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Risk Control
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_6_4" id="__nav_6_4_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_6_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Risk Control
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_4_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_6_4_2" id="__nav_6_4_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quickstart
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_4_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_4_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Quickstart
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../1-quickstart/plot_risk_control_binary_classification/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Precision control for a binary classifier
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_4_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_6_4_3" id="__nav_6_4_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Advanced Analysis
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_4_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_6_4_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Advanced Analysis
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plot_fwer_method_comparison_for_recall_guarantees/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Comparing FWER methods for risk control in binary classification
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plot_multi_risk_control_binary_classification/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Control multiple risks of a binary classifier
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plot_risk_control_llm_as_a_judge/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Risk Control for LLM as a Judge with Abstention
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plot_risk_control_multi-label_classification/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Control the risk of a multi-label classifier
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Control risk of a binary classifier with multiple prediction parameters
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plot_semantic_segmentation_precision_control/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Precision control for semantic segmentation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plot_semantic_segmentation_recall_control/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Recall control for semantic segmentation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plot_split_fixed_sequence_testing_fwer_method_for_precision_control/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Split Fixed Sequence Testing for Precision Control under Multiple Testing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../mondrian/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mondrian
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_6_5" id="__nav_6_5_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Mondrian
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_5_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_6_5_2" id="__nav_6_5_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quickstart
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_5_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_5_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Quickstart
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../mondrian/1-quickstart/plot_main-tutorial-mondrian-regression/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tutorial: how to ensure fairness across groups with Mondrian
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Q&A
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Q&A
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../theory/metrics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Metrics
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../theory/mondrian/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mondrian
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../theory/llm-risk-control/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM Risk Control
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../theory/binary-classification/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Binary Classification
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_8" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../../api/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_8" id="__nav_8_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../api/regression/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Regression
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../api/classification/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Classification
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../api/conformity-scores/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Conformity Scores
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../api/risk-control/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Risk Control
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../api/calibration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Calibration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../api/metrics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Metrics
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../api/utils/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Utilities
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Contributing
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../contributing-docs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Documentation Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<!--
+ DO NOT EDIT.
+ THIS FILE WAS AUTOMATICALLY GENERATED BY mkdocs-gallery.
+ TO MAKE CHANGES, EDIT THE SOURCE PYTHON FILE:
+ "examples/risk_control/2-advanced-analysis/plot_risk_control_multi_parameter_binary_classification.py"
+ LINE NUMBERS ARE GIVEN BELOW.
+-->
+
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Click <a href="#download_links">here</a>
+to download the full example code</p>
+</div>
+<h1 id="control-risk-of-a-binary-classifier-with-multiple-prediction-parameters">Control risk of a binary classifier with multiple prediction parameters<a class="headerlink" href="#control-risk-of-a-binary-classifier-with-multiple-prediction-parameters" title="Permanent link">&para;</a></h1>
+<p>AI is a powerful tool for email sorting (for example between spam and urgent emails).
+However, because algorithms are not perfect, manual verification is sometimes required.
+Thus one would like to be able to control the amount of emails sent to human validation.
+One way to do so is to define a multi-parameter prediction function based on a
+classifier's predicted scores. This would allow defining a rule for email checking,
+which could be adapted by varying the prediction parameters.</p>
+<p>In this example, we explain how to do risk control for binary classification relying
+on multiple prediction parameters with MAPIE.</p>
+<!-- GENERATED FROM PYTHON SOURCE LINES 16-33 -->
+
+<div class="highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># sphinx_gallery_thumbnail_number = 2</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.patches</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">patches</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.colors</span><span class="w"> </span><span class="kn">import</span> <span class="n">LinearSegmentedColormap</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.lines</span><span class="w"> </span><span class="kn">import</span> <span class="n">Line2D</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.patches</span><span class="w"> </span><span class="kn">import</span> <span class="n">Patch</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_circles</span>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.neural_network</span><span class="w"> </span><span class="kn">import</span> <span class="n">MLPClassifier</span>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mapie.risk_control</span><span class="w"> </span><span class="kn">import</span> <span class="n">BinaryClassificationController</span>
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mapie.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">train_conformalize_test_split</span>
+</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>
+</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="n">RANDOM_STATE</span> <span class="o">=</span> <span class="mi">1</span>
+</span></code></pre></div>
+<!-- GENERATED FROM PYTHON SOURCE LINES 34-36 -->
+
+<p>First, load the dataset and then split it into training, calibration,
+and test sets.</p>
+<!-- GENERATED FROM PYTHON SOURCE LINES 36-94 -->
+
+<div class="highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">X</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">make_circles</span><span class="p">(</span><span class="n">n_samples</span><span class="o">=</span><span class="mi">5000</span><span class="p">,</span> <span class="n">noise</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">factor</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="n">RANDOM_STATE</span><span class="p">)</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">X_calib</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">y_calib</span><span class="p">,</span> <span class="n">y_test</span><span class="p">)</span> <span class="o">=</span> <span class="n">train_conformalize_test_split</span><span class="p">(</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>    <span class="n">X</span><span class="p">,</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    <span class="n">y</span><span class="p">,</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>    <span class="n">train_size</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>    <span class="n">conformalize_size</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>    <span class="n">test_size</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>    <span class="n">random_state</span><span class="o">=</span><span class="n">RANDOM_STATE</span><span class="p">,</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="p">)</span>
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="c1"># Plot the three datasets to visualize the distribution of the two classes. We can</span>
+</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="c1"># assume that the feature space represents some embedding of emails.</span>
+</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">18</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="n">titles</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Training Data&quot;</span><span class="p">,</span> <span class="s2">&quot;Calibration Data&quot;</span><span class="p">,</span> <span class="s2">&quot;Test Data&quot;</span><span class="p">]</span>
+</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="n">datasets</span> <span class="o">=</span> <span class="p">[(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">),</span> <span class="p">(</span><span class="n">X_calib</span><span class="p">,</span> <span class="n">y_calib</span><span class="p">),</span> <span class="p">(</span><span class="n">X_test</span><span class="p">,</span> <span class="n">y_test</span><span class="p">)]</span>
+</span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>
+</span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a><span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="p">(</span><span class="n">X_data</span><span class="p">,</span> <span class="n">y_data</span><span class="p">),</span> <span class="n">title</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">axes</span><span class="p">,</span> <span class="n">datasets</span><span class="p">,</span> <span class="n">titles</span><span class="p">)):</span>
+</span><span id="__span-1-18"><a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>    <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span>
+</span><span id="__span-1-19"><a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>        <span class="n">X_data</span><span class="p">[</span><span class="n">y_data</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+</span><span id="__span-1-20"><a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>        <span class="n">X_data</span><span class="p">[</span><span class="n">y_data</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+</span><span id="__span-1-21"><a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>        <span class="n">edgecolors</span><span class="o">=</span><span class="s2">&quot;k&quot;</span><span class="p">,</span>
+</span><span id="__span-1-22"><a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>        <span class="n">c</span><span class="o">=</span><span class="s2">&quot;tab:blue&quot;</span><span class="p">,</span>
+</span><span id="__span-1-23"><a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>        <span class="n">label</span><span class="o">=</span><span class="s1">&#39;&quot;negative&quot; class&#39;</span><span class="p">,</span>
+</span><span id="__span-1-24"><a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>        <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+</span><span id="__span-1-25"><a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a>    <span class="p">)</span>
+</span><span id="__span-1-26"><a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a>    <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span>
+</span><span id="__span-1-27"><a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a>        <span class="n">X_data</span><span class="p">[</span><span class="n">y_data</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+</span><span id="__span-1-28"><a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a>        <span class="n">X_data</span><span class="p">[</span><span class="n">y_data</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+</span><span id="__span-1-29"><a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a>        <span class="n">edgecolors</span><span class="o">=</span><span class="s2">&quot;k&quot;</span><span class="p">,</span>
+</span><span id="__span-1-30"><a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a>        <span class="n">c</span><span class="o">=</span><span class="s2">&quot;tab:red&quot;</span><span class="p">,</span>
+</span><span id="__span-1-31"><a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a>        <span class="n">label</span><span class="o">=</span><span class="s1">&#39;&quot;positive&quot; class&#39;</span><span class="p">,</span>
+</span><span id="__span-1-32"><a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a>        <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+</span><span id="__span-1-33"><a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a>    <span class="p">)</span>
+</span><span id="__span-1-34"><a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a>    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">18</span><span class="p">)</span>
+</span><span id="__span-1-35"><a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a>    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Feature 1&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+</span><span id="__span-1-36"><a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a>    <span class="n">ax</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">labelsize</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
+</span><span id="__span-1-37"><a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a>
+</span><span id="__span-1-38"><a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a>    <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+</span><span id="__span-1-39"><a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a>        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Feature 2&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+</span><span id="__span-1-40"><a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a>    <span class="k">else</span><span class="p">:</span>
+</span><span id="__span-1-41"><a id="__codelineno-1-41" name="__codelineno-1-41" href="#__codelineno-1-41"></a>        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+</span><span id="__span-1-42"><a id="__codelineno-1-42" name="__codelineno-1-42" href="#__codelineno-1-42"></a>        <span class="n">ax</span><span class="o">.</span><span class="n">set_yticks</span><span class="p">([])</span>
+</span><span id="__span-1-43"><a id="__codelineno-1-43" name="__codelineno-1-43" href="#__codelineno-1-43"></a>
+</span><span id="__span-1-44"><a id="__codelineno-1-44" name="__codelineno-1-44" href="#__codelineno-1-44"></a><span class="n">handles</span><span class="p">,</span> <span class="n">labels</span> <span class="o">=</span> <span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get_legend_handles_labels</span><span class="p">()</span>
+</span><span id="__span-1-45"><a id="__codelineno-1-45" name="__codelineno-1-45" href="#__codelineno-1-45"></a><span class="n">fig</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span>
+</span><span id="__span-1-46"><a id="__codelineno-1-46" name="__codelineno-1-46" href="#__codelineno-1-46"></a>    <span class="n">handles</span><span class="p">,</span>
+</span><span id="__span-1-47"><a id="__codelineno-1-47" name="__codelineno-1-47" href="#__codelineno-1-47"></a>    <span class="n">labels</span><span class="p">,</span>
+</span><span id="__span-1-48"><a id="__codelineno-1-48" name="__codelineno-1-48" href="#__codelineno-1-48"></a>    <span class="n">loc</span><span class="o">=</span><span class="s2">&quot;lower center&quot;</span><span class="p">,</span>
+</span><span id="__span-1-49"><a id="__codelineno-1-49" name="__codelineno-1-49" href="#__codelineno-1-49"></a>    <span class="n">bbox_to_anchor</span><span class="o">=</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.01</span><span class="p">),</span>
+</span><span id="__span-1-50"><a id="__codelineno-1-50" name="__codelineno-1-50" href="#__codelineno-1-50"></a>    <span class="n">ncol</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+</span><span id="__span-1-51"><a id="__codelineno-1-51" name="__codelineno-1-51" href="#__codelineno-1-51"></a>    <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span>
+</span><span id="__span-1-52"><a id="__codelineno-1-52" name="__codelineno-1-52" href="#__codelineno-1-52"></a><span class="p">)</span>
+</span><span id="__span-1-53"><a id="__codelineno-1-53" name="__codelineno-1-53" href="#__codelineno-1-53"></a>
+</span><span id="__span-1-54"><a id="__codelineno-1-54" name="__codelineno-1-54" href="#__codelineno-1-54"></a><span class="n">plt</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="s2">&quot;Visualization of Train, Calibration, and Test Sets&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">22</span><span class="p">)</span>
+</span><span id="__span-1-55"><a id="__codelineno-1-55" name="__codelineno-1-55" href="#__codelineno-1-55"></a><span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">(</span><span class="n">rect</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mf">0.95</span><span class="p">])</span>
+</span><span id="__span-1-56"><a id="__codelineno-1-56" name="__codelineno-1-56" href="#__codelineno-1-56"></a><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</span></code></pre></div>
+<p><img alt="Visualization of Train, Calibration, and Test Sets, Training Data, Calibration Data, Test Data" class="mkd-glr-single-img" src="../images/mkd_glr_plot_risk_control_multi_parameter_binary_classification_001.png" srcset="../images/mkd_glr_plot_risk_control_multi_parameter_binary_classification_001.png" /></p>
+<!-- GENERATED FROM PYTHON SOURCE LINES 95-96 -->
+
+<p>Second, fit a Multi-layer Perceptron classifier on the training data.</p>
+<!-- GENERATED FROM PYTHON SOURCE LINES 96-101 -->
+
+<div class="highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">clf</span> <span class="o">=</span> <span class="n">MLPClassifier</span><span class="p">(</span><span class="n">max_iter</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="n">RANDOM_STATE</span><span class="p">)</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">clf</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
+</span></code></pre></div>
+<div class="output_subarea output_html rendered_html output_result">
+    <style>#sk-container-id-6 {
+      /* Definition of color scheme common for light and dark mode */
+      --sklearn-color-text: #000;
+      --sklearn-color-text-muted: #666;
+      --sklearn-color-line: gray;
+      /* Definition of color scheme for unfitted estimators */
+      --sklearn-color-unfitted-level-0: #fff5e6;
+      --sklearn-color-unfitted-level-1: #f6e4d2;
+      --sklearn-color-unfitted-level-2: #ffe0b3;
+      --sklearn-color-unfitted-level-3: chocolate;
+      /* Definition of color scheme for fitted estimators */
+      --sklearn-color-fitted-level-0: #f0f8ff;
+      --sklearn-color-fitted-level-1: #d4ebff;
+      --sklearn-color-fitted-level-2: #b3dbfd;
+      --sklearn-color-fitted-level-3: cornflowerblue;
+    }
+
+    #sk-container-id-6.light {
+      /* Specific color for light theme */
+      --sklearn-color-text-on-default-background: black;
+      --sklearn-color-background: white;
+      --sklearn-color-border-box: black;
+      --sklearn-color-icon: #696969;
+    }
+
+    #sk-container-id-6.dark {
+      --sklearn-color-text-on-default-background: white;
+      --sklearn-color-background: #111;
+      --sklearn-color-border-box: white;
+      --sklearn-color-icon: #878787;
+    }
+
+    #sk-container-id-6 {
+      color: var(--sklearn-color-text);
+    }
+
+    #sk-container-id-6 pre {
+      padding: 0;
+    }
+
+    #sk-container-id-6 input.sk-hidden--visually {
+      border: 0;
+      clip: rect(1px 1px 1px 1px);
+      clip: rect(1px, 1px, 1px, 1px);
+      height: 1px;
+      margin: -1px;
+      overflow: hidden;
+      padding: 0;
+      position: absolute;
+      width: 1px;
+    }
+
+    #sk-container-id-6 div.sk-dashed-wrapped {
+      border: 1px dashed var(--sklearn-color-line);
+      margin: 0 0.4em 0.5em 0.4em;
+      box-sizing: border-box;
+      padding-bottom: 0.4em;
+      background-color: var(--sklearn-color-background);
+    }
+
+    #sk-container-id-6 div.sk-container {
+      /* jupyter's `normalize.less` sets `[hidden] { display: none; }`
+         but bootstrap.min.css set `[hidden] { display: none !important; }`
+         so we also need the `!important` here to be able to override the
+         default hidden behavior on the sphinx rendered scikit-learn.org.
+         See: https://github.com/scikit-learn/scikit-learn/issues/21755 */
+      display: inline-block !important;
+      position: relative;
+    }
+
+    #sk-container-id-6 div.sk-text-repr-fallback {
+      display: none;
+    }
+
+    div.sk-parallel-item,
+    div.sk-serial,
+    div.sk-item {
+      /* draw centered vertical line to link estimators */
+      background-image: linear-gradient(var(--sklearn-color-text-on-default-background), var(--sklearn-color-text-on-default-background));
+      background-size: 2px 100%;
+      background-repeat: no-repeat;
+      background-position: center center;
+    }
+
+    /* Parallel-specific style estimator block */
+
+    #sk-container-id-6 div.sk-parallel-item::after {
+      content: "";
+      width: 100%;
+      border-bottom: 2px solid var(--sklearn-color-text-on-default-background);
+      flex-grow: 1;
+    }
+
+    #sk-container-id-6 div.sk-parallel {
+      display: flex;
+      align-items: stretch;
+      justify-content: center;
+      background-color: var(--sklearn-color-background);
+      position: relative;
+    }
+
+    #sk-container-id-6 div.sk-parallel-item {
+      display: flex;
+      flex-direction: column;
+    }
+
+    #sk-container-id-6 div.sk-parallel-item:first-child::after {
+      align-self: flex-end;
+      width: 50%;
+    }
+
+    #sk-container-id-6 div.sk-parallel-item:last-child::after {
+      align-self: flex-start;
+      width: 50%;
+    }
+
+    #sk-container-id-6 div.sk-parallel-item:only-child::after {
+      width: 0;
+    }
+
+    /* Serial-specific style estimator block */
+
+    #sk-container-id-6 div.sk-serial {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background-color: var(--sklearn-color-background);
+      padding-right: 1em;
+      padding-left: 1em;
+    }
+
+
+    /* Toggleable style: style used for estimator/Pipeline/ColumnTransformer box that is
+    clickable and can be expanded/collapsed.
+    - Pipeline and ColumnTransformer use this feature and define the default style
+    - Estimators will overwrite some part of the style using the `sk-estimator` class
+    */
+
+    /* Pipeline and ColumnTransformer style (default) */
+
+    #sk-container-id-6 div.sk-toggleable {
+      /* Default theme specific background. It is overwritten whether we have a
+      specific estimator or a Pipeline/ColumnTransformer */
+      background-color: var(--sklearn-color-background);
+    }
+
+    /* Toggleable label */
+    #sk-container-id-6 label.sk-toggleable__label {
+      cursor: pointer;
+      display: flex;
+      width: 100%;
+      margin-bottom: 0;
+      padding: 0.5em;
+      box-sizing: border-box;
+      text-align: center;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5em;
+    }
+
+    #sk-container-id-6 label.sk-toggleable__label .caption {
+      font-size: 0.6rem;
+      font-weight: lighter;
+      color: var(--sklearn-color-text-muted);
+    }
+
+    #sk-container-id-6 label.sk-toggleable__label-arrow:before {
+      /* Arrow on the left of the label */
+      content: "▸";
+      float: left;
+      margin-right: 0.25em;
+      color: var(--sklearn-color-icon);
+    }
+
+    #sk-container-id-6 label.sk-toggleable__label-arrow:hover:before {
+      color: var(--sklearn-color-text);
+    }
+
+    /* Toggleable content - dropdown */
+
+    #sk-container-id-6 div.sk-toggleable__content {
+      display: none;
+      text-align: left;
+      /* unfitted */
+      background-color: var(--sklearn-color-unfitted-level-0);
+    }
+
+    #sk-container-id-6 div.sk-toggleable__content.fitted {
+      /* fitted */
+      background-color: var(--sklearn-color-fitted-level-0);
+    }
+
+    #sk-container-id-6 div.sk-toggleable__content pre {
+      margin: 0.2em;
+      border-radius: 0.25em;
+      color: var(--sklearn-color-text);
+      /* unfitted */
+      background-color: var(--sklearn-color-unfitted-level-0);
+    }
+
+    #sk-container-id-6 div.sk-toggleable__content.fitted pre {
+      /* unfitted */
+      background-color: var(--sklearn-color-fitted-level-0);
+    }
+
+    #sk-container-id-6 input.sk-toggleable__control:checked~div.sk-toggleable__content {
+      /* Expand drop-down */
+      display: block;
+      width: 100%;
+      overflow: visible;
+    }
+
+    #sk-container-id-6 input.sk-toggleable__control:checked~label.sk-toggleable__label-arrow:before {
+      content: "▾";
+    }
+
+    /* Pipeline/ColumnTransformer-specific style */
+
+    #sk-container-id-6 div.sk-label input.sk-toggleable__control:checked~label.sk-toggleable__label {
+      color: var(--sklearn-color-text);
+      background-color: var(--sklearn-color-unfitted-level-2);
+    }
+
+    #sk-container-id-6 div.sk-label.fitted input.sk-toggleable__control:checked~label.sk-toggleable__label {
+      background-color: var(--sklearn-color-fitted-level-2);
+    }
+
+    /* Estimator-specific style */
+
+    /* Colorize estimator box */
+    #sk-container-id-6 div.sk-estimator input.sk-toggleable__control:checked~label.sk-toggleable__label {
+      /* unfitted */
+      background-color: var(--sklearn-color-unfitted-level-2);
+    }
+
+    #sk-container-id-6 div.sk-estimator.fitted input.sk-toggleable__control:checked~label.sk-toggleable__label {
+      /* fitted */
+      background-color: var(--sklearn-color-fitted-level-2);
+    }
+
+    #sk-container-id-6 div.sk-label label.sk-toggleable__label,
+    #sk-container-id-6 div.sk-label label {
+      /* The background is the default theme color */
+      color: var(--sklearn-color-text-on-default-background);
+    }
+
+    /* On hover, darken the color of the background */
+    #sk-container-id-6 div.sk-label:hover label.sk-toggleable__label {
+      color: var(--sklearn-color-text);
+      background-color: var(--sklearn-color-unfitted-level-2);
+    }
+
+    /* Label box, darken color on hover, fitted */
+    #sk-container-id-6 div.sk-label.fitted:hover label.sk-toggleable__label.fitted {
+      color: var(--sklearn-color-text);
+      background-color: var(--sklearn-color-fitted-level-2);
+    }
+
+    /* Estimator label */
+
+    #sk-container-id-6 div.sk-label label {
+      font-family: monospace;
+      font-weight: bold;
+      line-height: 1.2em;
+    }
+
+    #sk-container-id-6 div.sk-label-container {
+      text-align: center;
+    }
+
+    /* Estimator-specific */
+    #sk-container-id-6 div.sk-estimator {
+      font-family: monospace;
+      border: 1px dotted var(--sklearn-color-border-box);
+      border-radius: 0.25em;
+      box-sizing: border-box;
+      margin-bottom: 0.5em;
+      /* unfitted */
+      background-color: var(--sklearn-color-unfitted-level-0);
+    }
+
+    #sk-container-id-6 div.sk-estimator.fitted {
+      /* fitted */
+      background-color: var(--sklearn-color-fitted-level-0);
+    }
+
+    /* on hover */
+    #sk-container-id-6 div.sk-estimator:hover {
+      /* unfitted */
+      background-color: var(--sklearn-color-unfitted-level-2);
+    }
+
+    #sk-container-id-6 div.sk-estimator.fitted:hover {
+      /* fitted */
+      background-color: var(--sklearn-color-fitted-level-2);
+    }
+
+    /* Specification for estimator info (e.g. "i" and "?") */
+
+    /* Common style for "i" and "?" */
+
+    .sk-estimator-doc-link,
+    a:link.sk-estimator-doc-link,
+    a:visited.sk-estimator-doc-link {
+      float: right;
+      font-size: smaller;
+      line-height: 1em;
+      font-family: monospace;
+      background-color: var(--sklearn-color-unfitted-level-0);
+      border-radius: 1em;
+      height: 1em;
+      width: 1em;
+      text-decoration: none !important;
+      margin-left: 0.5em;
+      text-align: center;
+      /* unfitted */
+      border: var(--sklearn-color-unfitted-level-3) 1pt solid;
+      color: var(--sklearn-color-unfitted-level-3);
+    }
+
+    .sk-estimator-doc-link.fitted,
+    a:link.sk-estimator-doc-link.fitted,
+    a:visited.sk-estimator-doc-link.fitted {
+      /* fitted */
+      background-color: var(--sklearn-color-fitted-level-0);
+      border: var(--sklearn-color-fitted-level-3) 1pt solid;
+      color: var(--sklearn-color-fitted-level-3);
+    }
+
+    /* On hover */
+    div.sk-estimator:hover .sk-estimator-doc-link:hover,
+    .sk-estimator-doc-link:hover,
+    div.sk-label-container:hover .sk-estimator-doc-link:hover,
+    .sk-estimator-doc-link:hover {
+      /* unfitted */
+      background-color: var(--sklearn-color-unfitted-level-3);
+      border: var(--sklearn-color-fitted-level-0) 1pt solid;
+      color: var(--sklearn-color-unfitted-level-0);
+      text-decoration: none;
+    }
+
+    div.sk-estimator.fitted:hover .sk-estimator-doc-link.fitted:hover,
+    .sk-estimator-doc-link.fitted:hover,
+    div.sk-label-container:hover .sk-estimator-doc-link.fitted:hover,
+    .sk-estimator-doc-link.fitted:hover {
+      /* fitted */
+      background-color: var(--sklearn-color-fitted-level-3);
+      border: var(--sklearn-color-fitted-level-0) 1pt solid;
+      color: var(--sklearn-color-fitted-level-0);
+      text-decoration: none;
+    }
+
+    /* Span, style for the box shown on hovering the info icon */
+    .sk-estimator-doc-link span {
+      display: none;
+      z-index: 9999;
+      position: relative;
+      font-weight: normal;
+      right: .2ex;
+      padding: .5ex;
+      margin: .5ex;
+      width: min-content;
+      min-width: 20ex;
+      max-width: 50ex;
+      color: var(--sklearn-color-text);
+      box-shadow: 2pt 2pt 4pt #999;
+      /* unfitted */
+      background: var(--sklearn-color-unfitted-level-0);
+      border: .5pt solid var(--sklearn-color-unfitted-level-3);
+    }
+
+    .sk-estimator-doc-link.fitted span {
+      /* fitted */
+      background: var(--sklearn-color-fitted-level-0);
+      border: var(--sklearn-color-fitted-level-3);
+    }
+
+    .sk-estimator-doc-link:hover span {
+      display: block;
+    }
+
+    /* "?"-specific style due to the `<a>` HTML tag */
+
+    #sk-container-id-6 a.estimator_doc_link {
+      float: right;
+      font-size: 1rem;
+      line-height: 1em;
+      font-family: monospace;
+      background-color: var(--sklearn-color-unfitted-level-0);
+      border-radius: 1rem;
+      height: 1rem;
+      width: 1rem;
+      text-decoration: none;
+      /* unfitted */
+      color: var(--sklearn-color-unfitted-level-1);
+      border: var(--sklearn-color-unfitted-level-1) 1pt solid;
+    }
+
+    #sk-container-id-6 a.estimator_doc_link.fitted {
+      /* fitted */
+      background-color: var(--sklearn-color-fitted-level-0);
+      border: var(--sklearn-color-fitted-level-1) 1pt solid;
+      color: var(--sklearn-color-fitted-level-1);
+    }
+
+    /* On hover */
+    #sk-container-id-6 a.estimator_doc_link:hover {
+      /* unfitted */
+      background-color: var(--sklearn-color-unfitted-level-3);
+      color: var(--sklearn-color-background);
+      text-decoration: none;
+    }
+
+    #sk-container-id-6 a.estimator_doc_link.fitted:hover {
+      /* fitted */
+      background-color: var(--sklearn-color-fitted-level-3);
+    }
+
+    .estimator-table {
+        font-family: monospace;
+    }
+
+    .estimator-table summary {
+        padding: .5rem;
+        cursor: pointer;
+    }
+
+    .estimator-table summary::marker {
+        font-size: 0.7rem;
+    }
+
+    .estimator-table details[open] {
+        padding-left: 0.1rem;
+        padding-right: 0.1rem;
+        padding-bottom: 0.3rem;
+    }
+
+    .estimator-table .parameters-table {
+        margin-left: auto !important;
+        margin-right: auto !important;
+        margin-top: 0;
+    }
+
+    .estimator-table .parameters-table tr:nth-child(odd) {
+        background-color: #fff;
+    }
+
+    .estimator-table .parameters-table tr:nth-child(even) {
+        background-color: #f6f6f6;
+    }
+
+    .estimator-table .parameters-table tr:hover {
+        background-color: #e0e0e0;
+    }
+
+    .estimator-table table td {
+        border: 1px solid rgba(106, 105, 104, 0.232);
+    }
+
+    /*
+        `table td`is set in notebook with right text-align.
+        We need to overwrite it.
+    */
+    .estimator-table table td.param {
+        text-align: left;
+        position: relative;
+        padding: 0;
+    }
+
+    .user-set td {
+        color:rgb(255, 94, 0);
+        text-align: left !important;
+    }
+
+    .user-set td.value {
+        color:rgb(255, 94, 0);
+        background-color: transparent;
+    }
+
+    .default td {
+        color: black;
+        text-align: left !important;
+    }
+
+    .user-set td i,
+    .default td i {
+        color: black;
+    }
+
+    /*
+        Styles for parameter documentation links
+        We need styling for visited so jupyter doesn't overwrite it
+    */
+    a.param-doc-link,
+    a.param-doc-link:link,
+    a.param-doc-link:visited {
+        text-decoration: underline dashed;
+        text-underline-offset: .3em;
+        color: inherit;
+        display: block;
+        padding: .5em;
+    }
+
+    /* "hack" to make the entire area of the cell containing the link clickable */
+    a.param-doc-link::before {
+        position: absolute;
+        content: "";
+        inset: 0;
+    }
+
+    .param-doc-description {
+        display: none;
+        position: absolute;
+        z-index: 9999;
+        left: 0;
+        padding: .5ex;
+        margin-left: 1.5em;
+        color: var(--sklearn-color-text);
+        box-shadow: .3em .3em .4em #999;
+        width: max-content;
+        text-align: left;
+        max-height: 10em;
+        overflow-y: auto;
+
+        /* unfitted */
+        background: var(--sklearn-color-unfitted-level-0);
+        border: thin solid var(--sklearn-color-unfitted-level-3);
+    }
+
+    /* Fitted state for parameter tooltips */
+    .fitted .param-doc-description {
+        /* fitted */
+        background: var(--sklearn-color-fitted-level-0);
+        border: thin solid var(--sklearn-color-fitted-level-3);
+    }
+
+    .param-doc-link:hover .param-doc-description {
+        display: block;
+    }
+
+    .copy-paste-icon {
+        background-image: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0NDggNTEyIj48IS0tIUZvbnQgQXdlc29tZSBGcmVlIDYuNy4yIGJ5IEBmb250YXdlc29tZSAtIGh0dHBzOi8vZm9udGF3ZXNvbWUuY29tIExpY2Vuc2UgLSBodHRwczovL2ZvbnRhd2Vzb21lLmNvbS9saWNlbnNlL2ZyZWUgQ29weXJpZ2h0IDIwMjUgRm9udGljb25zLCBJbmMuLS0+PHBhdGggZD0iTTIwOCAwTDMzMi4xIDBjMTIuNyAwIDI0LjkgNS4xIDMzLjkgMTQuMWw2Ny45IDY3LjljOSA5IDE0LjEgMjEuMiAxNC4xIDMzLjlMNDQ4IDMzNmMwIDI2LjUtMjEuNSA0OC00OCA0OGwtMTkyIDBjLTI2LjUgMC00OC0yMS41LTQ4LTQ4bDAtMjg4YzAtMjYuNSAyMS41LTQ4IDQ4LTQ4ek00OCAxMjhsODAgMCAwIDY0LTY0IDAgMCAyNTYgMTkyIDAgMC0zMiA2NCAwIDAgNDhjMCAyNi41LTIxLjUgNDgtNDggNDhMNDggNTEyYy0yNi41IDAtNDgtMjEuNS00OC00OEwwIDE3NmMwLTI2LjUgMjEuNS00OCA0OC00OHoiLz48L3N2Zz4=);
+        background-repeat: no-repeat;
+        background-size: 14px 14px;
+        background-position: 0;
+        display: inline-block;
+        width: 14px;
+        height: 14px;
+        cursor: pointer;
+    }
+    </style><body><div id="sk-container-id-6" class="sk-top-container"><div class="sk-text-repr-fallback"><pre>MLPClassifier(max_iter=150, random_state=1)</pre><b>In a Jupyter environment, please rerun this cell to show the HTML representation or trust the notebook. <br />On GitHub, the HTML representation is unable to render, please try loading this page with nbviewer.org.</b></div><div class="sk-container" hidden><div class="sk-item"><div class="sk-estimator fitted sk-toggleable"><input class="sk-toggleable__control sk-hidden--visually" id="sk-estimator-id-8" type="checkbox" checked><label for="sk-estimator-id-8" class="sk-toggleable__label fitted sk-toggleable__label-arrow"><div><div>MLPClassifier</div></div><div><a class="sk-estimator-doc-link fitted" rel="noreferrer" target="_blank" href="https://scikit-learn.org/1.8/modules/generated/sklearn.neural_network.MLPClassifier.html">?<span>Documentation for MLPClassifier</span></a><span class="sk-estimator-doc-link fitted">i<span>Fitted</span></span></div></label><div class="sk-toggleable__content fitted" data-param-prefix="">
+            <div class="estimator-table">
+                <details>
+                    <summary>Parameters</summary>
+                    <table class="parameters-table">
+                      <tbody>
+
+            <tr class="default">
+                <td><i class="copy-paste-icon"
+                     onclick="copyToClipboard('hidden_layer_sizes',
+                              this.parentElement.nextElementSibling)"
+                ></i></td>
+                <td class="param">
+            <a class="param-doc-link"
+                rel="noreferrer" target="_blank" href="https://scikit-learn.org/1.8/modules/generated/sklearn.neural_network.MLPClassifier.html#:~:text=hidden_layer_sizes,-array-like%20of%20shape%28n_layers%20-%202%2C%29%2C%20default%3D%28100%2C%29">
+                hidden_layer_sizes
+                <span class="param-doc-description">hidden_layer_sizes: array-like of shape(n_layers - 2,), default=(100,)<br><br>The ith element represents the number of neurons in the ith<br>hidden layer.</span>
+            </a>
+        </td>
+                <td class="value">(100,)</td>
+            </tr>
+
+
+            <tr class="default">
+                <td><i class="copy-paste-icon"
+                     onclick="copyToClipboard('activation',
+                              this.parentElement.nextElementSibling)"
+                ></i></td>
+                <td class="param">
+            <a class="param-doc-link"
+                rel="noreferrer" target="_blank" href="https://scikit-learn.org/1.8/modules/generated/sklearn.neural_network.MLPClassifier.html#:~:text=activation,-%7B%27identity%27%2C%20%27logistic%27%2C%20%27tanh%27%2C%20%27relu%27%7D%2C%20default%3D%27relu%27">
+                activation
+                <span class="param-doc-description">activation: {'identity', 'logistic', 'tanh', 'relu'}, default='relu'<br><br>Activation function for the hidden layer.<br><br>- 'identity', no-op activation, useful to implement linear bottleneck,<br>  returns f(x) = x<br><br>- 'logistic', the logistic sigmoid function,<br>  returns f(x) = 1 / (1 + exp(-x)).<br><br>- 'tanh', the hyperbolic tan function,<br>  returns f(x) = tanh(x).<br><br>- 'relu', the rectified linear unit function,<br>  returns f(x) = max(0, x)</span>
+            </a>
+        </td>
+                <td class="value">&#x27;relu&#x27;</td>
+            </tr>
+
+
+            <tr class="default">
+                <td><i class="copy-paste-icon"
+                     onclick="copyToClipboard('solver',
+                              this.parentElement.nextElementSibling)"
+                ></i></td>
+                <td class="param">
+            <a class="param-doc-link"
+                rel="noreferrer" target="_blank" href="https://scikit-learn.org/1.8/modules/generated/sklearn.neural_network.MLPClassifier.html#:~:text=solver,-%7B%27lbfgs%27%2C%20%27sgd%27%2C%20%27adam%27%7D%2C%20default%3D%27adam%27">
+                solver
+                <span class="param-doc-description">solver: {'lbfgs', 'sgd', 'adam'}, default='adam'<br><br>The solver for weight optimization.<br><br>- 'lbfgs' is an optimizer in the family of quasi-Newton methods.<br><br>- 'sgd' refers to stochastic gradient descent.<br><br>- 'adam' refers to a stochastic gradient-based optimizer proposed<br>  by Kingma, Diederik, and Jimmy Ba<br><br>For a comparison between Adam optimizer and SGD, see<br>:ref:`sphx_glr_auto_examples_neural_networks_plot_mlp_training_curves.py`.<br><br>Note: The default solver 'adam' works pretty well on relatively<br>large datasets (with thousands of training samples or more) in terms of<br>both training time and validation score.<br>For small datasets, however, 'lbfgs' can converge faster and perform<br>better.</span>
+            </a>
+        </td>
+                <td class="value">&#x27;adam&#x27;</td>
+            </tr>
+
+
+            <tr class="default">
+                <td><i class="copy-paste-icon"
+                     onclick="copyToClipboard('alpha',
+                              this.parentElement.nextElementSibling)"
+                ></i></td>
+                <td class="param">
+            <a class="param-doc-link"
+                rel="noreferrer" target="_blank" href="https://scikit-learn.org/1.8/modules/generated/sklearn.neural_network.MLPClassifier.html#:~:text=alpha,-float%2C%20default%3D0.0001">
+                alpha
+                <span class="param-doc-description">alpha: float, default=0.0001<br><br>Strength of the L2 regularization term. The L2 regularization term<br>is divided by the sample size when added to the loss.<br><br>For an example usage and visualization of varying regularization, see<br>:ref:`sphx_glr_auto_examples_neural_networks_plot_mlp_alpha.py`.</span>
+            </a>
+        </td>
+                <td class="value">0.0001</td>
+            </tr>
+
+
+            <tr class="default">
+                <td><i class="copy-paste-icon"
+                     onclick="copyToClipboard('batch_size',
+                              this.parentElement.nextElementSibling)"
+                ></i></td>
+                <td class="param">
+            <a class="param-doc-link"
+                rel="noreferrer" target="_blank" href="https://scikit-learn.org/1.8/modules/generated/sklearn.neural_network.MLPClassifier.html#:~:text=batch_size,-int%2C%20default%3D%27auto%27">
+                batch_size
+                <span class="param-doc-description">batch_size: int, default='auto'<br><br>Size of minibatches for stochastic optimizers.<br>If the solver is 'lbfgs', the classifier will not use minibatch.<br>When set to "auto", `batch_size=min(200, n_samples)`.</span>
+            </a>
+        </td>
+                <td class="value">&#x27;auto&#x27;</td>
+            </tr>
+
+
+            <tr class="default">
+                <td><i class="copy-paste-icon"
+                     onclick="copyToClipboard('learning_rate',
+                              this.parentElement.nextElementSibling)"
+                ></i></td>
+                <td class="param">
+            <a class="param-doc-link"
+                rel="noreferrer" target="_blank" href="https://scikit-learn.org/1.8/modules/generated/sklearn.neural_network.MLPClassifier.html#:~:text=learning_rate,-%7B%27constant%27%2C%20%27invscaling%27%2C%20%27adaptive%27%7D%2C%20default%3D%27constant%27">
+                learning_rate
+                <span class="param-doc-description">learning_rate: {'constant', 'invscaling', 'adaptive'}, default='constant'<br><br>Learning rate schedule for weight updates.<br><br>- 'constant' is a constant learning rate given by<br>  'learning_rate_init'.<br><br>- 'invscaling' gradually decreases the learning rate at each<br>  time step 't' using an inverse scaling exponent of 'power_t'.<br>  effective_learning_rate = learning_rate_init / pow(t, power_t)<br><br>- 'adaptive' keeps the learning rate constant to<br>  'learning_rate_init' as long as training loss keeps decreasing.<br>  Each time two consecutive epochs fail to decrease training loss by at<br>  least tol, or fail to increase validation score by at least tol if<br>  'early_stopping' is on, the current learning rate is divided by 5.<br><br>Only used when ``solver='sgd'``.</span>
+            </a>
+        </td>
+                <td class="value">&#x27;constant&#x27;</td>
+            </tr>
+
+
+            <tr class="default">
+                <td><i class="copy-paste-icon"
+                     onclick="copyToClipboard('learning_rate_init',
+                              this.parentElement.nextElementSibling)"
+                ></i></td>
+                <td class="param">
+            <a class="param-doc-link"
+                rel="noreferrer" target="_blank" href="https://scikit-learn.org/1.8/modules/generated/sklearn.neural_network.MLPClassifier.html#:~:text=learning_rate_init,-float%2C%20default%3D0.001">
+                learning_rate_init
+                <span class="param-doc-description">learning_rate_init: float, default=0.001<br><br>The initial learning rate used. It controls the step-size<br>in updating the weights. Only used when solver='sgd' or 'adam'.</span>
+            </a>
+        </td>
+                <td class="value">0.001</td>
+            </tr>
+
+
+            <tr class="default">
+                <td><i class="copy-paste-icon"
+                     onclick="copyToClipboard('power_t',
+                              this.parentElement.nextElementSibling)"
+                ></i></td>
+                <td class="param">
+            <a class="param-doc-link"
+                rel="noreferrer" target="_blank" href="https://scikit-learn.org/1.8/modules/generated/sklearn.neural_network.MLPClassifier.html#:~:text=power_t,-float%2C%20default%3D0.5">
+                power_t
+                <span class="param-doc-description">power_t: float, default=0.5<br><br>The exponent for inverse scaling learning rate.<br>It is used in updating effective learning rate when the learning_rate<br>is set to 'invscaling'. Only used when solver='sgd'.</span>
+            </a>
+        </td>
+                <td class="value">0.5</td>
+            </tr>
+
+
+            <tr class="user-set">
+                <td><i class="copy-paste-icon"
+                     onclick="copyToClipboard('max_iter',
+                              this.parentElement.nextElementSibling)"
+                ></i></td>
+                <td class="param">
+            <a class="param-doc-link"
+                rel="noreferrer" target="_blank" href="https://scikit-learn.org/1.8/modules/generated/sklearn.neural_network.MLPClassifier.html#:~:text=max_iter,-int%2C%20default%3D200">
+                max_iter
+                <span class="param-doc-description">max_iter: int, default=200<br><br>Maximum number of iterations. The solver iterates until convergence<br>(determined by 'tol') or this number of iterations. For stochastic<br>solvers ('sgd', 'adam'), note that this determines the number of epochs<br>(how many times each data point will be used), not the number of<br>gradient steps.</span>
+            </a>
+        </td>
+                <td class="value">150</td>
+            </tr>
+
+
+            <tr class="default">
+                <td><i class="copy-paste-icon"
+                     onclick="copyToClipboard('shuffle',
+                              this.parentElement.nextElementSibling)"
+                ></i></td>
+                <td class="param">
+            <a class="param-doc-link"
+                rel="noreferrer" target="_blank" href="https://scikit-learn.org/1.8/modules/generated/sklearn.neural_network.MLPClassifier.html#:~:text=shuffle,-bool%2C%20default%3DTrue">
+                shuffle
+                <span class="param-doc-description">shuffle: bool, default=True<br><br>Whether to shuffle samples in each iteration. Only used when<br>solver='sgd' or 'adam'.</span>
+            </a>
+        </td>
+                <td class="value">True</td>
+            </tr>
+
+
+            <tr class="user-set">
+                <td><i class="copy-paste-icon"
+                     onclick="copyToClipboard('random_state',
+                              this.parentElement.nextElementSibling)"
+                ></i></td>
+                <td class="param">
+            <a class="param-doc-link"
+                rel="noreferrer" target="_blank" href="https://scikit-learn.org/1.8/modules/generated/sklearn.neural_network.MLPClassifier.html#:~:text=random_state,-int%2C%20RandomState%20instance%2C%20default%3DNone">
+                random_state
+                <span class="param-doc-description">random_state: int, RandomState instance, default=None<br><br>Determines random number generation for weights and bias<br>initialization, train-test split if early stopping is used, and batch<br>sampling when solver='sgd' or 'adam'.<br>Pass an int for reproducible results across multiple function calls.<br>See :term:`Glossary <random_state>`.</span>
+            </a>
+        </td>
+                <td class="value">1</td>
+            </tr>
+
+
+            <tr class="default">
+                <td><i class="copy-paste-icon"
+                     onclick="copyToClipboard('tol',
+                              this.parentElement.nextElementSibling)"
+                ></i></td>
+                <td class="param">
+            <a class="param-doc-link"
+                rel="noreferrer" target="_blank" href="https://scikit-learn.org/1.8/modules/generated/sklearn.neural_network.MLPClassifier.html#:~:text=tol,-float%2C%20default%3D1e-4">
+                tol
+                <span class="param-doc-description">tol: float, default=1e-4<br><br>Tolerance for the optimization. When the loss or score is not improving<br>by at least ``tol`` for ``n_iter_no_change`` consecutive iterations,<br>unless ``learning_rate`` is set to 'adaptive', convergence is<br>considered to be reached and training stops.</span>
+            </a>
+        </td>
+                <td class="value">0.0001</td>
+            </tr>
+
+
+            <tr class="default">
+                <td><i class="copy-paste-icon"
+                     onclick="copyToClipboard('verbose',
+                              this.parentElement.nextElementSibling)"
+                ></i></td>
+                <td class="param">
+            <a class="param-doc-link"
+                rel="noreferrer" target="_blank" href="https://scikit-learn.org/1.8/modules/generated/sklearn.neural_network.MLPClassifier.html#:~:text=verbose,-bool%2C%20default%3DFalse">
+                verbose
+                <span class="param-doc-description">verbose: bool, default=False<br><br>Whether to print progress messages to stdout.</span>
+            </a>
+        </td>
+                <td class="value">False</td>
+            </tr>
+
+
+            <tr class="default">
+                <td><i class="copy-paste-icon"
+                     onclick="copyToClipboard('warm_start',
+                              this.parentElement.nextElementSibling)"
+                ></i></td>
+                <td class="param">
+            <a class="param-doc-link"
+                rel="noreferrer" target="_blank" href="https://scikit-learn.org/1.8/modules/generated/sklearn.neural_network.MLPClassifier.html#:~:text=warm_start,-bool%2C%20default%3DFalse">
+                warm_start
+                <span class="param-doc-description">warm_start: bool, default=False<br><br>When set to True, reuse the solution of the previous<br>call to fit as initialization, otherwise, just erase the<br>previous solution. See :term:`the Glossary <warm_start>`.</span>
+            </a>
+        </td>
+                <td class="value">False</td>
+            </tr>
+
+
+            <tr class="default">
+                <td><i class="copy-paste-icon"
+                     onclick="copyToClipboard('momentum',
+                              this.parentElement.nextElementSibling)"
+                ></i></td>
+                <td class="param">
+            <a class="param-doc-link"
+                rel="noreferrer" target="_blank" href="https://scikit-learn.org/1.8/modules/generated/sklearn.neural_network.MLPClassifier.html#:~:text=momentum,-float%2C%20default%3D0.9">
+                momentum
+                <span class="param-doc-description">momentum: float, default=0.9<br><br>Momentum for gradient descent update. Should be between 0 and 1. Only<br>used when solver='sgd'.</span>
+            </a>
+        </td>
+                <td class="value">0.9</td>
+            </tr>
+
+
+            <tr class="default">
+                <td><i class="copy-paste-icon"
+                     onclick="copyToClipboard('nesterovs_momentum',
+                              this.parentElement.nextElementSibling)"
+                ></i></td>
+                <td class="param">
+            <a class="param-doc-link"
+                rel="noreferrer" target="_blank" href="https://scikit-learn.org/1.8/modules/generated/sklearn.neural_network.MLPClassifier.html#:~:text=nesterovs_momentum,-bool%2C%20default%3DTrue">
+                nesterovs_momentum
+                <span class="param-doc-description">nesterovs_momentum: bool, default=True<br><br>Whether to use Nesterov's momentum. Only used when solver='sgd' and<br>momentum > 0.</span>
+            </a>
+        </td>
+                <td class="value">True</td>
+            </tr>
+
+
+            <tr class="default">
+                <td><i class="copy-paste-icon"
+                     onclick="copyToClipboard('early_stopping',
+                              this.parentElement.nextElementSibling)"
+                ></i></td>
+                <td class="param">
+            <a class="param-doc-link"
+                rel="noreferrer" target="_blank" href="https://scikit-learn.org/1.8/modules/generated/sklearn.neural_network.MLPClassifier.html#:~:text=early_stopping,-bool%2C%20default%3DFalse">
+                early_stopping
+                <span class="param-doc-description">early_stopping: bool, default=False<br><br>Whether to use early stopping to terminate training when validation<br>score is not improving. If set to True, it will automatically set<br>aside ``validation_fraction`` of training data as validation and<br>terminate training when validation score is not improving by at least<br>``tol`` for ``n_iter_no_change`` consecutive epochs. The split is<br>stratified, except in a multilabel setting.<br>If early stopping is False, then the training stops when the training<br>loss does not improve by more than ``tol`` for ``n_iter_no_change``<br>consecutive passes over the training set.<br>Only effective when solver='sgd' or 'adam'.</span>
+            </a>
+        </td>
+                <td class="value">False</td>
+            </tr>
+
+
+            <tr class="default">
+                <td><i class="copy-paste-icon"
+                     onclick="copyToClipboard('validation_fraction',
+                              this.parentElement.nextElementSibling)"
+                ></i></td>
+                <td class="param">
+            <a class="param-doc-link"
+                rel="noreferrer" target="_blank" href="https://scikit-learn.org/1.8/modules/generated/sklearn.neural_network.MLPClassifier.html#:~:text=validation_fraction,-float%2C%20default%3D0.1">
+                validation_fraction
+                <span class="param-doc-description">validation_fraction: float, default=0.1<br><br>The proportion of training data to set aside as validation set for<br>early stopping. Must be between 0 and 1.<br>Only used if early_stopping is True.</span>
+            </a>
+        </td>
+                <td class="value">0.1</td>
+            </tr>
+
+
+            <tr class="default">
+                <td><i class="copy-paste-icon"
+                     onclick="copyToClipboard('beta_1',
+                              this.parentElement.nextElementSibling)"
+                ></i></td>
+                <td class="param">
+            <a class="param-doc-link"
+                rel="noreferrer" target="_blank" href="https://scikit-learn.org/1.8/modules/generated/sklearn.neural_network.MLPClassifier.html#:~:text=beta_1,-float%2C%20default%3D0.9">
+                beta_1
+                <span class="param-doc-description">beta_1: float, default=0.9<br><br>Exponential decay rate for estimates of first moment vector in adam,<br>should be in [0, 1). Only used when solver='adam'.</span>
+            </a>
+        </td>
+                <td class="value">0.9</td>
+            </tr>
+
+
+            <tr class="default">
+                <td><i class="copy-paste-icon"
+                     onclick="copyToClipboard('beta_2',
+                              this.parentElement.nextElementSibling)"
+                ></i></td>
+                <td class="param">
+            <a class="param-doc-link"
+                rel="noreferrer" target="_blank" href="https://scikit-learn.org/1.8/modules/generated/sklearn.neural_network.MLPClassifier.html#:~:text=beta_2,-float%2C%20default%3D0.999">
+                beta_2
+                <span class="param-doc-description">beta_2: float, default=0.999<br><br>Exponential decay rate for estimates of second moment vector in adam,<br>should be in [0, 1). Only used when solver='adam'.</span>
+            </a>
+        </td>
+                <td class="value">0.999</td>
+            </tr>
+
+
+            <tr class="default">
+                <td><i class="copy-paste-icon"
+                     onclick="copyToClipboard('epsilon',
+                              this.parentElement.nextElementSibling)"
+                ></i></td>
+                <td class="param">
+            <a class="param-doc-link"
+                rel="noreferrer" target="_blank" href="https://scikit-learn.org/1.8/modules/generated/sklearn.neural_network.MLPClassifier.html#:~:text=epsilon,-float%2C%20default%3D1e-8">
+                epsilon
+                <span class="param-doc-description">epsilon: float, default=1e-8<br><br>Value for numerical stability in adam. Only used when solver='adam'.</span>
+            </a>
+        </td>
+                <td class="value">1e-08</td>
+            </tr>
+
+
+            <tr class="default">
+                <td><i class="copy-paste-icon"
+                     onclick="copyToClipboard('n_iter_no_change',
+                              this.parentElement.nextElementSibling)"
+                ></i></td>
+                <td class="param">
+            <a class="param-doc-link"
+                rel="noreferrer" target="_blank" href="https://scikit-learn.org/1.8/modules/generated/sklearn.neural_network.MLPClassifier.html#:~:text=n_iter_no_change,-int%2C%20default%3D10">
+                n_iter_no_change
+                <span class="param-doc-description">n_iter_no_change: int, default=10<br><br>Maximum number of epochs to not meet ``tol`` improvement.<br>Only effective when solver='sgd' or 'adam'.<br><br>.. versionadded:: 0.20</span>
+            </a>
+        </td>
+                <td class="value">10</td>
+            </tr>
+
+
+            <tr class="default">
+                <td><i class="copy-paste-icon"
+                     onclick="copyToClipboard('max_fun',
+                              this.parentElement.nextElementSibling)"
+                ></i></td>
+                <td class="param">
+            <a class="param-doc-link"
+                rel="noreferrer" target="_blank" href="https://scikit-learn.org/1.8/modules/generated/sklearn.neural_network.MLPClassifier.html#:~:text=max_fun,-int%2C%20default%3D15000">
+                max_fun
+                <span class="param-doc-description">max_fun: int, default=15000<br><br>Only used when solver='lbfgs'. Maximum number of loss function calls.<br>The solver iterates until convergence (determined by 'tol'), number<br>of iterations reaches max_iter, or this number of loss function calls.<br>Note that number of loss function calls will be greater than or equal<br>to the number of iterations for the `MLPClassifier`.<br><br>.. versionadded:: 0.22</span>
+            </a>
+        </td>
+                <td class="value">15000</td>
+            </tr>
+
+                      </tbody>
+                    </table>
+                </details>
+            </div>
+        </div></div></div></div></div><script>function copyToClipboard(text, element) {
+        // Get the parameter prefix from the closest toggleable content
+        const toggleableContent = element.closest('.sk-toggleable__content');
+        const paramPrefix = toggleableContent ? toggleableContent.dataset.paramPrefix : '';
+        const fullParamName = paramPrefix ? `${paramPrefix}${text}` : text;
+
+        const originalStyle = element.style;
+        const computedStyle = window.getComputedStyle(element);
+        const originalWidth = computedStyle.width;
+        const originalHTML = element.innerHTML.replace('Copied!', '');
+
+        navigator.clipboard.writeText(fullParamName)
+            .then(() => {
+                element.style.width = originalWidth;
+                element.style.color = 'green';
+                element.innerHTML = "Copied!";
+
+                setTimeout(() => {
+                    element.innerHTML = originalHTML;
+                    element.style = originalStyle;
+                }, 2000);
+            })
+            .catch(err => {
+                console.error('Failed to copy:', err);
+                element.style.color = 'red';
+                element.innerHTML = "Failed!";
+                setTimeout(() => {
+                    element.innerHTML = originalHTML;
+                    element.style = originalStyle;
+                }, 2000);
+            });
+        return false;
+    }
+
+    document.querySelectorAll('.copy-paste-icon').forEach(function(element) {
+        const toggleableContent = element.closest('.sk-toggleable__content');
+        const paramPrefix = toggleableContent ? toggleableContent.dataset.paramPrefix : '';
+        const paramName = element.parentElement.nextElementSibling
+            .textContent.trim().split(' ')[0];
+        const fullParamName = paramPrefix ? `${paramPrefix}${paramName}` : paramName;
+
+        element.setAttribute('title', fullParamName);
+    });
+
+
+    /**
+     * Adapted from Skrub
+     * https://github.com/skrub-data/skrub/blob/403466d1d5d4dc76a7ef569b3f8228db59a31dc3/skrub/_reporting/_data/templates/report.js#L789
+     * @returns "light" or "dark"
+     */
+    function detectTheme(element) {
+        const body = document.querySelector('body');
+
+        // Check VSCode theme
+        const themeKindAttr = body.getAttribute('data-vscode-theme-kind');
+        const themeNameAttr = body.getAttribute('data-vscode-theme-name');
+
+        if (themeKindAttr && themeNameAttr) {
+            const themeKind = themeKindAttr.toLowerCase();
+            const themeName = themeNameAttr.toLowerCase();
+
+            if (themeKind.includes("dark") || themeName.includes("dark")) {
+                return "dark";
+            }
+            if (themeKind.includes("light") || themeName.includes("light")) {
+                return "light";
+            }
+        }
+
+        // Check Jupyter theme
+        if (body.getAttribute('data-jp-theme-light') === 'false') {
+            return 'dark';
+        } else if (body.getAttribute('data-jp-theme-light') === 'true') {
+            return 'light';
+        }
+
+        // Guess based on a parent element's color
+        const color = window.getComputedStyle(element.parentNode, null).getPropertyValue('color');
+        const match = color.match(/^rgb\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)\s*$/i);
+        if (match) {
+            const [r, g, b] = [
+                parseFloat(match[1]),
+                parseFloat(match[2]),
+                parseFloat(match[3])
+            ];
+
+            // https://en.wikipedia.org/wiki/HSL_and_HSV#Lightness
+            const luma = 0.299 * r + 0.587 * g + 0.114 * b;
+
+            if (luma > 180) {
+                // If the text is very bright we have a dark theme
+                return 'dark';
+            }
+            if (luma < 75) {
+                // If the text is very dark we have a light theme
+                return 'light';
+            }
+            // Otherwise fall back to the next heuristic.
+        }
+
+        // Fallback to system preference
+        return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+
+
+    function forceTheme(elementId) {
+        const estimatorElement = document.querySelector(`#${elementId}`);
+        if (estimatorElement === null) {
+            console.error(`Element with id ${elementId} not found.`);
+        } else {
+            const theme = detectTheme(estimatorElement);
+            estimatorElement.classList.add(theme);
+        }
+    }
+
+    forceTheme('sk-container-id-6');</script></body>
+</div>
+
+<!-- GENERATED FROM PYTHON SOURCE LINES 102-108 -->
+
+<p>Third define a multi-parameter prediction function. For an email to be sent
+to human verification, we want the predicted score of the positive class to be
+between two thresholds <code>lambda_1</code> and <code>lambda_2</code>. High (respectively low) values of
+the score correspond to high confidence that the email is a spam (respectively not a spam).
+Therefore, emails with intermediate scores are the ones for which the classifier
+is the least certain, and we want these emails to be verified by a human.</p>
+<!-- GENERATED FROM PYTHON SOURCE LINES 108-113 -->
+
+<div class="highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">send_to_human</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">lambda_1</span><span class="p">,</span> <span class="n">lambda_2</span><span class="p">):</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>    <span class="n">y_score</span> <span class="o">=</span> <span class="n">clf</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">X</span><span class="p">)[:,</span> <span class="mi">1</span><span class="p">]</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>    <span class="k">return</span> <span class="p">(</span><span class="n">lambda_1</span> <span class="o">&lt;=</span> <span class="n">y_score</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">y_score</span> <span class="o">&lt;</span> <span class="n">lambda_2</span><span class="p">)</span>
+</span></code></pre></div>
+<!-- GENERATED FROM PYTHON SOURCE LINES 114-117 -->
+
+<p>From the previous function, we know we have a constraint
+<code>lambda_1</code> &lt;= <code>lambda_2</code>. We can generate a set of values to explore respecting
+this constraint.</p>
+<!-- GENERATED FROM PYTHON SOURCE LINES 117-128 -->
+
+<div class="highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">to_explore</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">9</span><span class="p">):</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>    <span class="n">lambda_1</span> <span class="o">=</span> <span class="n">i</span> <span class="o">/</span> <span class="mi">10</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">10</span><span class="p">):</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>        <span class="n">lambda_2</span> <span class="o">=</span> <span class="n">j</span> <span class="o">/</span> <span class="mi">10</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>        <span class="k">if</span> <span class="n">lambda_2</span> <span class="o">&gt;</span> <span class="mf">0.99</span><span class="p">:</span>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>            <span class="k">break</span>
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>        <span class="n">to_explore</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">lambda_1</span><span class="p">,</span> <span class="n">lambda_2</span><span class="p">))</span>
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="n">to_explore</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">to_explore</span><span class="p">)</span>
+</span></code></pre></div>
+<!-- GENERATED FROM PYTHON SOURCE LINES 129-138 -->
+
+<p>Because we want to control the proportion of emails to be verified by a human,
+we use <code>predicted_positive_fraction</code>, a specific <code>BinaryClassificationRisk</code> which represents
+the fraction of samples predicted as positive (i.e., sent to human verification).</p>
+<p>Finally, we initialize a <code>BinaryClassificationController</code>
+using our custom function <code>send_to_human</code>, the chosen risk <code>predicted_positive_fraction</code>,
+a target risk level (0.2), and a confidence level (0.9). Then we use the calibration
+data to compute statistically guaranteed thresholds using a multi-parameter control
+method.</p>
+<!-- GENERATED FROM PYTHON SOURCE LINES 138-159 -->
+
+<div class="highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">target_level</span> <span class="o">=</span> <span class="mf">0.2</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="n">confidence_level</span> <span class="o">=</span> <span class="mf">0.9</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="n">bcc</span> <span class="o">=</span> <span class="n">BinaryClassificationController</span><span class="p">(</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>    <span class="n">predict_function</span><span class="o">=</span><span class="n">send_to_human</span><span class="p">,</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>    <span class="n">risk</span><span class="o">=</span><span class="s2">&quot;predicted_positive_fraction&quot;</span><span class="p">,</span>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>    <span class="n">target_level</span><span class="o">=</span><span class="n">target_level</span><span class="p">,</span>
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>    <span class="n">confidence_level</span><span class="o">=</span><span class="n">confidence_level</span><span class="p">,</span>
+</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>    <span class="n">best_predict_param_choice</span><span class="o">=</span><span class="s2">&quot;recall&quot;</span><span class="p">,</span>
+</span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>    <span class="n">list_predict_params</span><span class="o">=</span><span class="n">to_explore</span><span class="p">,</span>
+</span><span id="__span-5-11"><a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="p">)</span>
+</span><span id="__span-5-12"><a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a><span class="n">bcc</span><span class="o">.</span><span class="n">calibrate</span><span class="p">(</span><span class="n">X_calib</span><span class="p">,</span> <span class="n">y_calib</span><span class="p">)</span>
+</span><span id="__span-5-13"><a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a>
+</span><span id="__span-5-14"><a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a><span class="nb">print</span><span class="p">(</span>
+</span><span id="__span-5-15"><a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a>    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">bcc</span><span class="o">.</span><span class="n">valid_predict_params</span><span class="p">)</span><span class="si">}</span><span class="s2"> multi-dimensional parameters &quot;</span>
+</span><span id="__span-5-16"><a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a>    <span class="sa">f</span><span class="s2">&quot;found that guarantee a proportion of emails sent</span><span class="se">\n</span><span class="s2">&quot;</span>
+</span><span id="__span-5-17"><a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a>    <span class="sa">f</span><span class="s2">&quot;to verification of at most </span><span class="si">{</span><span class="n">target_level</span><span class="si">}</span><span class="s2"> with &quot;</span>
+</span><span id="__span-5-18"><a id="__codelineno-5-18" name="__codelineno-5-18" href="#__codelineno-5-18"></a>    <span class="sa">f</span><span class="s2">&quot;a confidence of </span><span class="si">{</span><span class="n">confidence_level</span><span class="si">}</span><span class="s2">.&quot;</span>
+</span><span id="__span-5-19"><a id="__codelineno-5-19" name="__codelineno-5-19" href="#__codelineno-5-19"></a><span class="p">)</span>
+</span></code></pre></div>
+<p class="mkd-glr-script-out">Out:</p>
+<div class="mkd-glr-script-out-disp highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="m">19</span><span class="w"> </span>multi-dimensional<span class="w"> </span>parameters<span class="w"> </span>found<span class="w"> </span>that<span class="w"> </span>guarantee<span class="w"> </span>a<span class="w"> </span>proportion<span class="w"> </span>of<span class="w"> </span>emails<span class="w"> </span>sent
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>to<span class="w"> </span>verification<span class="w"> </span>of<span class="w"> </span>at<span class="w"> </span>most<span class="w"> </span><span class="m">0</span>.2<span class="w"> </span>with<span class="w"> </span>a<span class="w"> </span>confidence<span class="w"> </span>of<span class="w"> </span><span class="m">0</span>.9.
+</span></code></pre></div>
+<!-- GENERATED FROM PYTHON SOURCE LINES 160-265 -->
+
+<div class="highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="n">grid_size</span> <span class="o">=</span> <span class="mi">10</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="n">matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">((</span><span class="n">grid_size</span><span class="p">,</span> <span class="n">grid_size</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="c1"># Build p-values matrix</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">l1</span><span class="p">,</span> <span class="n">l2</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">to_explore</span><span class="p">):</span>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>    <span class="n">row</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">l1</span> <span class="o">*</span> <span class="n">grid_size</span><span class="p">)</span>
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>    <span class="n">col</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">l2</span> <span class="o">*</span> <span class="n">grid_size</span><span class="p">)</span>
+</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>    <span class="n">matrix</span><span class="p">[</span><span class="n">row</span><span class="p">,</span> <span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">bcc</span><span class="o">.</span><span class="n">p_values</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>
+</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="c1"># Build valid thresholds mask</span>
+</span><span id="__span-7-11"><a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="n">valid_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">grid_size</span><span class="p">,</span> <span class="n">grid_size</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+</span><span id="__span-7-12"><a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a><span class="k">for</span> <span class="n">l1</span><span class="p">,</span> <span class="n">l2</span> <span class="ow">in</span> <span class="n">bcc</span><span class="o">.</span><span class="n">valid_predict_params</span><span class="p">:</span>
+</span><span id="__span-7-13"><a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a>    <span class="n">row</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">l1</span> <span class="o">*</span> <span class="n">grid_size</span><span class="p">)</span>
+</span><span id="__span-7-14"><a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a>    <span class="n">col</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">l2</span> <span class="o">*</span> <span class="n">grid_size</span><span class="p">)</span>
+</span><span id="__span-7-15"><a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a>    <span class="n">valid_matrix</span><span class="p">[</span><span class="n">row</span><span class="p">,</span> <span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+</span><span id="__span-7-16"><a id="__codelineno-7-16" name="__codelineno-7-16" href="#__codelineno-7-16"></a>
+</span><span id="__span-7-17"><a id="__codelineno-7-17" name="__codelineno-7-17" href="#__codelineno-7-17"></a><span class="c1"># Plot p-value matrix</span>
+</span><span id="__span-7-18"><a id="__codelineno-7-18" name="__codelineno-7-18" href="#__codelineno-7-18"></a><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mf">7.5</span><span class="p">,</span> <span class="mf">7.5</span><span class="p">))</span>
+</span><span id="__span-7-19"><a id="__codelineno-7-19" name="__codelineno-7-19" href="#__codelineno-7-19"></a>
+</span><span id="__span-7-20"><a id="__codelineno-7-20" name="__codelineno-7-20" href="#__codelineno-7-20"></a><span class="n">colors</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;#cde2f9&quot;</span><span class="p">,</span> <span class="s2">&quot;#96bfd7&quot;</span><span class="p">,</span> <span class="s2">&quot;#3765a9&quot;</span><span class="p">]</span>
+</span><span id="__span-7-21"><a id="__codelineno-7-21" name="__codelineno-7-21" href="#__codelineno-7-21"></a><span class="n">cmap</span> <span class="o">=</span> <span class="n">LinearSegmentedColormap</span><span class="o">.</span><span class="n">from_list</span><span class="p">(</span><span class="s2">&quot;custom_blue&quot;</span><span class="p">,</span> <span class="n">colors</span><span class="p">,</span> <span class="n">gamma</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+</span><span id="__span-7-22"><a id="__codelineno-7-22" name="__codelineno-7-22" href="#__codelineno-7-22"></a><span class="n">masked_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_invalid</span><span class="p">(</span><span class="n">matrix</span><span class="p">)</span>
+</span><span id="__span-7-23"><a id="__codelineno-7-23" name="__codelineno-7-23" href="#__codelineno-7-23"></a><span class="n">im</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">masked_matrix</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="s2">&quot;nearest&quot;</span><span class="p">)</span>
+</span><span id="__span-7-24"><a id="__codelineno-7-24" name="__codelineno-7-24" href="#__codelineno-7-24"></a>
+</span><span id="__span-7-25"><a id="__codelineno-7-25" name="__codelineno-7-25" href="#__codelineno-7-25"></a><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">grid_size</span><span class="p">):</span>
+</span><span id="__span-7-26"><a id="__codelineno-7-26" name="__codelineno-7-26" href="#__codelineno-7-26"></a>    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">grid_size</span><span class="p">):</span>
+</span><span id="__span-7-27"><a id="__codelineno-7-27" name="__codelineno-7-27" href="#__codelineno-7-27"></a>        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">matrix</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]):</span>
+</span><span id="__span-7-28"><a id="__codelineno-7-28" name="__codelineno-7-28" href="#__codelineno-7-28"></a>            <span class="n">rect</span> <span class="o">=</span> <span class="n">patches</span><span class="o">.</span><span class="n">Rectangle</span><span class="p">(</span>
+</span><span id="__span-7-29"><a id="__codelineno-7-29" name="__codelineno-7-29" href="#__codelineno-7-29"></a>                <span class="p">(</span><span class="n">j</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">i</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">),</span>
+</span><span id="__span-7-30"><a id="__codelineno-7-30" name="__codelineno-7-30" href="#__codelineno-7-30"></a>                <span class="mi">1</span><span class="p">,</span>
+</span><span id="__span-7-31"><a id="__codelineno-7-31" name="__codelineno-7-31" href="#__codelineno-7-31"></a>                <span class="mi">1</span><span class="p">,</span>
+</span><span id="__span-7-32"><a id="__codelineno-7-32" name="__codelineno-7-32" href="#__codelineno-7-32"></a>                <span class="n">hatch</span><span class="o">=</span><span class="s2">&quot;///&quot;</span><span class="p">,</span>
+</span><span id="__span-7-33"><a id="__codelineno-7-33" name="__codelineno-7-33" href="#__codelineno-7-33"></a>                <span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;none&quot;</span><span class="p">,</span>
+</span><span id="__span-7-34"><a id="__codelineno-7-34" name="__codelineno-7-34" href="#__codelineno-7-34"></a>                <span class="n">edgecolor</span><span class="o">=</span><span class="s2">&quot;grey&quot;</span><span class="p">,</span>
+</span><span id="__span-7-35"><a id="__codelineno-7-35" name="__codelineno-7-35" href="#__codelineno-7-35"></a>                <span class="n">linewidth</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+</span><span id="__span-7-36"><a id="__codelineno-7-36" name="__codelineno-7-36" href="#__codelineno-7-36"></a>            <span class="p">)</span>
+</span><span id="__span-7-37"><a id="__codelineno-7-37" name="__codelineno-7-37" href="#__codelineno-7-37"></a>            <span class="n">ax</span><span class="o">.</span><span class="n">add_patch</span><span class="p">(</span><span class="n">rect</span><span class="p">)</span>
+</span><span id="__span-7-38"><a id="__codelineno-7-38" name="__codelineno-7-38" href="#__codelineno-7-38"></a>
+</span><span id="__span-7-39"><a id="__codelineno-7-39" name="__codelineno-7-39" href="#__codelineno-7-39"></a><span class="c1"># Add valid parameters area shape</span>
+</span><span id="__span-7-40"><a id="__codelineno-7-40" name="__codelineno-7-40" href="#__codelineno-7-40"></a><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">grid_size</span><span class="p">):</span>
+</span><span id="__span-7-41"><a id="__codelineno-7-41" name="__codelineno-7-41" href="#__codelineno-7-41"></a>    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">grid_size</span><span class="p">):</span>
+</span><span id="__span-7-42"><a id="__codelineno-7-42" name="__codelineno-7-42" href="#__codelineno-7-42"></a>        <span class="k">if</span> <span class="n">valid_matrix</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+</span><span id="__span-7-43"><a id="__codelineno-7-43" name="__codelineno-7-43" href="#__codelineno-7-43"></a>            <span class="n">neighbors</span> <span class="o">=</span> <span class="p">[(</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">j</span><span class="p">),</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">j</span><span class="p">),</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)]</span>
+</span><span id="__span-7-44"><a id="__codelineno-7-44" name="__codelineno-7-44" href="#__codelineno-7-44"></a>            <span class="k">if</span> <span class="n">i</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">valid_matrix</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+</span><span id="__span-7-45"><a id="__codelineno-7-45" name="__codelineno-7-45" href="#__codelineno-7-45"></a>                <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="n">j</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">j</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">],</span> <span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">i</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;#2ecc71&quot;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+</span><span id="__span-7-46"><a id="__codelineno-7-46" name="__codelineno-7-46" href="#__codelineno-7-46"></a>            <span class="k">if</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">&gt;=</span> <span class="n">grid_size</span> <span class="ow">or</span> <span class="n">valid_matrix</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+</span><span id="__span-7-47"><a id="__codelineno-7-47" name="__codelineno-7-47" href="#__codelineno-7-47"></a>                <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="n">j</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">j</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">],</span> <span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;#2ecc71&quot;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+</span><span id="__span-7-48"><a id="__codelineno-7-48" name="__codelineno-7-48" href="#__codelineno-7-48"></a>            <span class="k">if</span> <span class="n">j</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">valid_matrix</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+</span><span id="__span-7-49"><a id="__codelineno-7-49" name="__codelineno-7-49" href="#__codelineno-7-49"></a>                <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="n">j</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">j</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">],</span> <span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;#2ecc71&quot;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+</span><span id="__span-7-50"><a id="__codelineno-7-50" name="__codelineno-7-50" href="#__codelineno-7-50"></a>            <span class="k">if</span> <span class="n">j</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">&gt;=</span> <span class="n">grid_size</span> <span class="ow">or</span> <span class="n">valid_matrix</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+</span><span id="__span-7-51"><a id="__codelineno-7-51" name="__codelineno-7-51" href="#__codelineno-7-51"></a>                <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="n">j</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">j</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">],</span> <span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;#2ecc71&quot;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+</span><span id="__span-7-52"><a id="__codelineno-7-52" name="__codelineno-7-52" href="#__codelineno-7-52"></a>
+</span><span id="__span-7-53"><a id="__codelineno-7-53" name="__codelineno-7-53" href="#__codelineno-7-53"></a><span class="c1"># Add best predict param as a star</span>
+</span><span id="__span-7-54"><a id="__codelineno-7-54" name="__codelineno-7-54" href="#__codelineno-7-54"></a><span class="n">best_l1</span><span class="p">,</span> <span class="n">best_l2</span> <span class="o">=</span> <span class="n">bcc</span><span class="o">.</span><span class="n">best_predict_param</span>
+</span><span id="__span-7-55"><a id="__codelineno-7-55" name="__codelineno-7-55" href="#__codelineno-7-55"></a><span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span>
+</span><span id="__span-7-56"><a id="__codelineno-7-56" name="__codelineno-7-56" href="#__codelineno-7-56"></a>    <span class="n">best_l2</span> <span class="o">*</span> <span class="n">grid_size</span><span class="p">,</span>
+</span><span id="__span-7-57"><a id="__codelineno-7-57" name="__codelineno-7-57" href="#__codelineno-7-57"></a>    <span class="n">best_l1</span> <span class="o">*</span> <span class="n">grid_size</span><span class="p">,</span>
+</span><span id="__span-7-58"><a id="__codelineno-7-58" name="__codelineno-7-58" href="#__codelineno-7-58"></a>    <span class="n">c</span><span class="o">=</span><span class="s2">&quot;#2ecc71&quot;</span><span class="p">,</span>
+</span><span id="__span-7-59"><a id="__codelineno-7-59" name="__codelineno-7-59" href="#__codelineno-7-59"></a>    <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;*&quot;</span><span class="p">,</span>
+</span><span id="__span-7-60"><a id="__codelineno-7-60" name="__codelineno-7-60" href="#__codelineno-7-60"></a>    <span class="n">edgecolors</span><span class="o">=</span><span class="s2">&quot;k&quot;</span><span class="p">,</span>
+</span><span id="__span-7-61"><a id="__codelineno-7-61" name="__codelineno-7-61" href="#__codelineno-7-61"></a>    <span class="n">s</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span>
+</span><span id="__span-7-62"><a id="__codelineno-7-62" name="__codelineno-7-62" href="#__codelineno-7-62"></a>    <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Best threshold pair&quot;</span><span class="p">,</span>
+</span><span id="__span-7-63"><a id="__codelineno-7-63" name="__codelineno-7-63" href="#__codelineno-7-63"></a><span class="p">)</span>
+</span><span id="__span-7-64"><a id="__codelineno-7-64" name="__codelineno-7-64" href="#__codelineno-7-64"></a>
+</span><span id="__span-7-65"><a id="__codelineno-7-65" name="__codelineno-7-65" href="#__codelineno-7-65"></a><span class="c1"># Set up axes, theme and legend</span>
+</span><span id="__span-7-66"><a id="__codelineno-7-66" name="__codelineno-7-66" href="#__codelineno-7-66"></a><span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$\lambda_2$&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+</span><span id="__span-7-67"><a id="__codelineno-7-67" name="__codelineno-7-67" href="#__codelineno-7-67"></a><span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$\lambda_1$&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+</span><span id="__span-7-68"><a id="__codelineno-7-68" name="__codelineno-7-68" href="#__codelineno-7-68"></a><span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span>
+</span><span id="__span-7-69"><a id="__codelineno-7-69" name="__codelineno-7-69" href="#__codelineno-7-69"></a>    <span class="s2">&quot;P-values per parameter pair</span><span class="se">\n</span><span class="s2">with valid parameter zone highlighted&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span>
+</span><span id="__span-7-70"><a id="__codelineno-7-70" name="__codelineno-7-70" href="#__codelineno-7-70"></a><span class="p">)</span>
+</span><span id="__span-7-71"><a id="__codelineno-7-71" name="__codelineno-7-71" href="#__codelineno-7-71"></a><span class="n">ax</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">grid_size</span><span class="p">))</span>
+</span><span id="__span-7-72"><a id="__codelineno-7-72" name="__codelineno-7-72" href="#__codelineno-7-72"></a><span class="n">ax</span><span class="o">.</span><span class="n">set_xticklabels</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">grid_size</span><span class="p">)</span> <span class="o">/</span> <span class="n">grid_size</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
+</span><span id="__span-7-73"><a id="__codelineno-7-73" name="__codelineno-7-73" href="#__codelineno-7-73"></a><span class="n">ax</span><span class="o">.</span><span class="n">set_yticks</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">grid_size</span><span class="p">))</span>
+</span><span id="__span-7-74"><a id="__codelineno-7-74" name="__codelineno-7-74" href="#__codelineno-7-74"></a><span class="n">ax</span><span class="o">.</span><span class="n">set_yticklabels</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">grid_size</span><span class="p">)</span> <span class="o">/</span> <span class="n">grid_size</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
+</span><span id="__span-7-75"><a id="__codelineno-7-75" name="__codelineno-7-75" href="#__codelineno-7-75"></a>
+</span><span id="__span-7-76"><a id="__codelineno-7-76" name="__codelineno-7-76" href="#__codelineno-7-76"></a><span class="n">cbar</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">im</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">orientation</span><span class="o">=</span><span class="s2">&quot;horizontal&quot;</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">fraction</span><span class="o">=</span><span class="mf">0.035</span><span class="p">)</span>
+</span><span id="__span-7-77"><a id="__codelineno-7-77" name="__codelineno-7-77" href="#__codelineno-7-77"></a><span class="n">cbar</span><span class="o">.</span><span class="n">set_label</span><span class="p">(</span><span class="s2">&quot;P-value&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+</span><span id="__span-7-78"><a id="__codelineno-7-78" name="__codelineno-7-78" href="#__codelineno-7-78"></a><span class="n">legend_elements</span> <span class="o">=</span> <span class="p">[</span>
+</span><span id="__span-7-79"><a id="__codelineno-7-79" name="__codelineno-7-79" href="#__codelineno-7-79"></a>    <span class="n">Patch</span><span class="p">(</span><span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="n">edgecolor</span><span class="o">=</span><span class="s2">&quot;grey&quot;</span><span class="p">,</span> <span class="n">hatch</span><span class="o">=</span><span class="s2">&quot;///&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Non-explored zone&quot;</span><span class="p">),</span>
+</span><span id="__span-7-80"><a id="__codelineno-7-80" name="__codelineno-7-80" href="#__codelineno-7-80"></a>    <span class="n">Patch</span><span class="p">(</span><span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="n">edgecolor</span><span class="o">=</span><span class="s2">&quot;#2ecc71&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Valid parameter zone&quot;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span>
+</span><span id="__span-7-81"><a id="__codelineno-7-81" name="__codelineno-7-81" href="#__codelineno-7-81"></a>    <span class="n">Line2D</span><span class="p">(</span>
+</span><span id="__span-7-82"><a id="__codelineno-7-82" name="__codelineno-7-82" href="#__codelineno-7-82"></a>        <span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+</span><span id="__span-7-83"><a id="__codelineno-7-83" name="__codelineno-7-83" href="#__codelineno-7-83"></a>        <span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+</span><span id="__span-7-84"><a id="__codelineno-7-84" name="__codelineno-7-84" href="#__codelineno-7-84"></a>        <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;*&quot;</span><span class="p">,</span>
+</span><span id="__span-7-85"><a id="__codelineno-7-85" name="__codelineno-7-85" href="#__codelineno-7-85"></a>        <span class="n">color</span><span class="o">=</span><span class="s2">&quot;w&quot;</span><span class="p">,</span>
+</span><span id="__span-7-86"><a id="__codelineno-7-86" name="__codelineno-7-86" href="#__codelineno-7-86"></a>        <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Best threshold pair&quot;</span><span class="p">,</span>
+</span><span id="__span-7-87"><a id="__codelineno-7-87" name="__codelineno-7-87" href="#__codelineno-7-87"></a>        <span class="n">markerfacecolor</span><span class="o">=</span><span class="s2">&quot;#2ecc71&quot;</span><span class="p">,</span>
+</span><span id="__span-7-88"><a id="__codelineno-7-88" name="__codelineno-7-88" href="#__codelineno-7-88"></a>        <span class="n">markeredgecolor</span><span class="o">=</span><span class="s2">&quot;k&quot;</span><span class="p">,</span>
+</span><span id="__span-7-89"><a id="__codelineno-7-89" name="__codelineno-7-89" href="#__codelineno-7-89"></a>        <span class="n">markersize</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span>
+</span><span id="__span-7-90"><a id="__codelineno-7-90" name="__codelineno-7-90" href="#__codelineno-7-90"></a>    <span class="p">),</span>
+</span><span id="__span-7-91"><a id="__codelineno-7-91" name="__codelineno-7-91" href="#__codelineno-7-91"></a><span class="p">]</span>
+</span><span id="__span-7-92"><a id="__codelineno-7-92" name="__codelineno-7-92" href="#__codelineno-7-92"></a><span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span>
+</span><span id="__span-7-93"><a id="__codelineno-7-93" name="__codelineno-7-93" href="#__codelineno-7-93"></a>    <span class="n">handles</span><span class="o">=</span><span class="n">legend_elements</span><span class="p">,</span>
+</span><span id="__span-7-94"><a id="__codelineno-7-94" name="__codelineno-7-94" href="#__codelineno-7-94"></a>    <span class="n">loc</span><span class="o">=</span><span class="s2">&quot;lower center&quot;</span><span class="p">,</span>
+</span><span id="__span-7-95"><a id="__codelineno-7-95" name="__codelineno-7-95" href="#__codelineno-7-95"></a>    <span class="n">bbox_to_anchor</span><span class="o">=</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.25</span><span class="p">),</span>
+</span><span id="__span-7-96"><a id="__codelineno-7-96" name="__codelineno-7-96" href="#__codelineno-7-96"></a>    <span class="n">ncol</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+</span><span id="__span-7-97"><a id="__codelineno-7-97" name="__codelineno-7-97" href="#__codelineno-7-97"></a>    <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span>
+</span><span id="__span-7-98"><a id="__codelineno-7-98" name="__codelineno-7-98" href="#__codelineno-7-98"></a>    <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+</span><span id="__span-7-99"><a id="__codelineno-7-99" name="__codelineno-7-99" href="#__codelineno-7-99"></a><span class="p">)</span>
+</span><span id="__span-7-100"><a id="__codelineno-7-100" name="__codelineno-7-100" href="#__codelineno-7-100"></a><span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+</span><span id="__span-7-101"><a id="__codelineno-7-101" name="__codelineno-7-101" href="#__codelineno-7-101"></a><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</span><span id="__span-7-102"><a id="__codelineno-7-102" name="__codelineno-7-102" href="#__codelineno-7-102"></a><span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$\lambda_1$&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+</span><span id="__span-7-103"><a id="__codelineno-7-103" name="__codelineno-7-103" href="#__codelineno-7-103"></a><span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Valid parameters&quot;</span><span class="p">)</span>
+</span><span id="__span-7-104"><a id="__codelineno-7-104" name="__codelineno-7-104" href="#__codelineno-7-104"></a><span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+</span><span id="__span-7-105"><a id="__codelineno-7-105" name="__codelineno-7-105" href="#__codelineno-7-105"></a><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</span></code></pre></div>
+<p><img alt="Valid parameters" class="mkd-glr-single-img" src="../images/mkd_glr_plot_risk_control_multi_parameter_binary_classification_002.png" srcset="../images/mkd_glr_plot_risk_control_multi_parameter_binary_classification_002.png" /></p>
+<p><strong>Total running time of the script:</strong> ( 0 minutes  1.193 seconds)</p>
+<div id="download_links"></div>
+
+<p><a class="md-button center" href="../plot_risk_control_multi_parameter_binary_classification.py"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M256 32c0-17.7-14.3-32-32-32s-32 14.3-32 32v210.7l-41.4-41.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l96 96c12.5 12.5 32.8 12.5 45.3 0l96-96c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 242.7zM64 320c-35.3 0-64 28.7-64 64v32c0 35.3 28.7 64 64 64h320c35.3 0 64-28.7 64-64v-32c0-35.3-28.7-64-64-64h-46.9l-56.6 56.6c-31.2 31.2-81.9 31.2-113.1 0L110.9 320zm304 56a24 24 0 1 1 0 48 24 24 0 1 1 0-48"/></svg></span> Download Python source code: plot_risk_control_multi_parameter_binary_classification.py</a></p>
+<p><a class="md-button center" href="../plot_risk_control_multi_parameter_binary_classification.ipynb"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M256 32c0-17.7-14.3-32-32-32s-32 14.3-32 32v210.7l-41.4-41.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l96 96c12.5 12.5 32.8 12.5 45.3 0l96-96c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 242.7zM64 320c-35.3 0-64 28.7-64 64v32c0 35.3 28.7 64 64 64h320c35.3 0 64-28.7 64-64v-32c0-35.3-28.7-64-64-64h-46.9l-56.6 56.6c-31.2 31.2-81.9 31.2-113.1 0L110.9 320zm304 56a24 24 0 1 1 0 48 24 24 0 1 1 0-48"/></svg></span> Download Jupyter notebook: plot_risk_control_multi_parameter_binary_classification.ipynb</a></p>
+<p><a class="mkd-glr-signature" href="https://smarie.github.io/mkdocs-gallery">Gallery generated by mkdocs-gallery</a></p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2021 - 2026 MAPIE Team — BSD-3-Clause License
+    </div>
+  
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/scikit-learn-contrib/MAPIE" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://pypi.org/project/mapie/" target="_blank" rel="noopener" title="pypi.org" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.8 200.5c-7.7-30.9-22.3-54.2-53.4-54.2h-40.1v47.4c0 36.8-31.2 67.8-66.8 67.8H172.7c-29.2 0-53.4 25-53.4 54.3v101.8c0 29 25.2 46 53.4 54.3 33.8 9.9 66.3 11.7 106.8 0 26.9-7.8 53.4-23.5 53.4-54.3v-40.7H226.2v-13.6h160.2c31.1 0 42.6-21.7 53.4-54.2 11.2-33.5 10.7-65.7 0-108.6M286.2 444.7a20.4 20.4 0 1 1 0-40.7 20.4 20.4 0 1 1 0 40.7M167.8 248.1h106.8c29.7 0 53.4-24.5 53.4-54.3V91.9c0-29-24.4-50.7-53.4-55.6-35.8-5.9-74.7-5.6-106.8.1-45.2 8-53.4 24.7-53.4 55.6v40.7h106.9v13.6h-147c-31.1 0-58.3 18.7-66.8 54.2-9.8 40.7-10.2 66.1 0 108.6 7.6 31.6 25.7 54.2 56.8 54.2H101v-48.8c0-35.3 30.5-66.4 66.8-66.4m-6.6-183.4a20.4 20.4 0 1 1 0 40.8 20.4 20.4 0 1 1 0-40.8"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.top", "navigation.indexes", "toc.follow", "search.suggest", "search.highlight", "content.tabs.link", "content.code.copy", "content.code.annotate"], "search": "../../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+    
+    
+      <script src="../../../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../../../../javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>
