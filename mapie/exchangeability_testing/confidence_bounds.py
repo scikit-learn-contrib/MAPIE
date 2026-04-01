@@ -4,13 +4,28 @@ import math
 from typing import Literal
 
 import numpy as np
-from numpy.typing import ArrayLike, NDArray
 from scipy.special import gammainc, gammaln
 
 
 class GammaExponentialMixtureBound:
     """
     Python translation of the gamma-exponential mixture bound from ``confseq``.
+
+    This implementation is adapted from the ``gamma_exponential_mixture_bound``
+    functionality in the `confseq` package by Steven R. Howard, Ian
+    Waudby-Smith, and Aaditya Ramdas. See ``THIRD_PARTY_NOTICES.md`` for the
+    corresponding MIT license notice.
+
+    References
+    ----------
+    Howard, S. R., Ramdas, A., McAuliffe, J., and Sekhon, J. (2021).
+    "Time-uniform, nonparametric, nonasymptotic confidence sequences."
+    The Annals of Statistics, 49(2), 1055-1080.
+
+    Howard, S. R., Waudby-Smith, I., and Ramdas, A. (2021--).
+    ``ConfSeq``: software for confidence sequences and uniform boundaries.
+    https://github.com/gostevehoward/confseq
+    """
 
     This implementation is adapted from the ``gamma_exponential_mixture_bound``
     functionality in the `confseq` package by Steven R. Howard, Ian
@@ -126,11 +141,7 @@ class GammaExponentialMixtureBound:
         return self.bound(v=v, alpha=alpha, tol=tol, max_iter=max_iter)
 
 
-def hoeffding_bound(
-    empirical_risk_sequence: ArrayLike,
-    delta: float,
-    bound_side: Literal["upper", "lower"] = "upper",
-) -> float:
+def hoeffding_bound(empirical_risk_sequence, delta, bound_side="upper"):
     """
     Predictably-mixed Hoeffding's (PM-H) risk bound.
 
@@ -155,20 +166,20 @@ def hoeffding_bound(
     radius = np.sqrt(np.log(1 / delta) / (2 * num_observations))
 
     if bound_side == "lower":
-        return float(empirical_mean - radius)
+        return empirical_mean - radius
     elif bound_side == "upper":
-        return float(empirical_mean + radius)
+        return empirical_mean + radius
     else:
         raise ValueError("bound_side must be either 'upper' or 'lower'.")
 
 
 def conjugate_mixture_empirical_bernstein_bound(
-    empirical_risk_sequence: ArrayLike,
-    v_opt: float,
-    alpha: float = 0.05,
-    bound_side: Literal["upper", "lower"] = "upper",
-    running_intersection: bool = True,
-) -> NDArray[np.float64]:
+    empirical_risk_sequence,
+    v_opt,
+    alpha=0.05,
+    bound_side="upper",
+    running_intersection=True,
+):
     """
     Conjugate mixture empirical Bernstein (CM-EB) bound.
 
