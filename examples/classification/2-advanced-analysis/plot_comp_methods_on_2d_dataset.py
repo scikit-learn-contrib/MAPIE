@@ -1,10 +1,9 @@
 """
-=============================
-LAC and APS methods explained
-=============================
+# LAC and APS methods explained
+
 
 In this tutorial, we compare the prediction sets estimated by
-:class:`~mapie_v1.classification.SplitConformalClassifier` with the "lac"
+`SplitConformalClassifier` with the "lac"
 and "aps" on the two-dimensional dataset presented
 by Sadinle et al. (2019).
 """
@@ -13,7 +12,7 @@ by Sadinle et al. (2019).
 # We will use MAPIE to estimate a prediction set of several classes such that
 # the probability that the true label of a new test point is included in the
 # prediction set is always higher than the target confidence level :
-# ``1 - α``.
+# `1 - α`.
 # Throughout this tutorial, we compare two conformity scores :
 # softmax score or cumulated softmax score.
 # We start by using the softmax score or cumulated score output by the base
@@ -23,18 +22,18 @@ by Sadinle et al. (2019).
 # * First we generate a dataset with train, conformalization and test, the model
 #   is fitted in the training set.
 #
-# * We set the conformal score ``Sᵢ = 𝑓̂(Xᵢ)ᵧᵢ``
+# * We set the conformal score `Sᵢ = 𝑓̂(Xᵢ)ᵧᵢ`
 #   from the softmax output of the true class or the cumulated score
 #   (by decreasing order) for each sample in the conformalization set.
 #
 # * Then we define q̂ as being the
-#   ``(n + 1)(1 - α) / n``
-#   previous quantile of ``S₁, ..., Sₙ`` (this is essentially the
+#   `(n + 1)(1 - α) / n`
+#   previous quantile of `S₁, ..., Sₙ` (this is essentially the
 #   quantile α, but with a small sample correction).
 #
-# * Finally, for a new test data point (where ``Xₙ₊₁`` is known but
-#   ``Yₙ₊₁`` is not), create a prediction set
-#   ``C(Xₙ₊₁) = {y: 𝑓̂(Xₙ₊₁)ᵧ > q̂}`` which includes
+# * Finally, for a new test data point (where `Xₙ₊₁` is known but
+#   `Yₙ₊₁` is not), create a prediction set
+#   `C(Xₙ₊₁) = {y: 𝑓̂(Xₙ₊₁)ᵧ > q̂}` which includes
 #   all the classes with a sufficiently high conformity score.
 #
 # We use a two-dimensional dataset with three labels.
@@ -100,10 +99,10 @@ plt.show()
 
 ##############################################################################
 # We fit our training data with a Gaussian Naive Base estimator.
-# Then, we initialize a :class:`~mapie_v1.classification.SplitConformalClassifier` with
-# conformity scores ``"lac"`` and ``"aps"`` , using our pre-fitted estimator.
+# Then, we initialize a `SplitConformalClassifier` with
+# conformity scores `"lac"` and `"aps"` , using our pre-fitted estimator.
 # Lastly, we compute the prediction sets with different alpha values using the
-# ``conformalize`` and ``predict`` methods.
+# `conformalize` and `predict` methods.
 
 clf = GaussianNB()
 clf.fit(X_train, y_train)
@@ -243,7 +242,7 @@ for conformity_score in conformity_scores:
 # in ambiguous regions.
 #
 # Let's now compare the effective coverage and the average of prediction set
-# widths as function of the ``1 - α`` target coverage.
+# widths as function of the `1 - α` target coverage.
 
 alpha_ = np.arange(0.02, 0.98, 0.02)
 coverage, mean_width = {}, {}
@@ -291,6 +290,6 @@ plt.show()
 
 ##############################################################################
 # It is seen that both methods give coverages close to the target coverages,
-# regardless of the ``α`` value. However, the "aps"
+# regardless of the `α` value. However, the "aps"
 # produces slightly bigger prediction sets, but without empty regions
 # (if the selection of the last label is not randomized).

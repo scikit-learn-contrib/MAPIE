@@ -1,12 +1,11 @@
 """
-=========================================
-Cross conformal classification explained
-=========================================
+# Cross conformal classification explained
+
 
 In this tutorial, we estimate the impact of the
 training/conformalization split on the prediction sets and
 on the resulting coverage estimated by
-:class:`~mapie_v1.classification.SplitConformalClassifier`.
+`SplitConformalClassifier`.
 We then adopt a cross-validation approach in which the
 conformity scores of all conformalization sets are used to
 estimate the quantile. We demonstrate that this second
@@ -18,11 +17,11 @@ by Sadinle et al. (2019) also introduced by other examples
 of this documentation.
 
 We start the tutorial by splitting our training dataset
-in ``K`` folds, and sequentially use each fold as a
-conformalization set, while the ``K-1`` folds remaining are
+in `K` folds, and sequentially use each fold as a
+conformalization set, while the `K-1` folds remaining are
 used for training the base model using
-the ``prefit=True`` option of
-:class:`~mapie_v1.classification.SplitConformalClassifier`.
+the `prefit=True` option of
+`SplitConformalClassifier`.
 """
 
 # sphinx_gallery_thumbnail_number = 5
@@ -106,7 +105,7 @@ plt.show()
 # We split our training dataset into 5 folds and use each fold as a
 # conformalization set. Each conformalization set is therefore used to estimate the
 # conformity scores and the given quantiles for the two methods implemented in
-# :class:`~mapie_v1.classification.SplitConformalClassifier`.
+# `SplitConformalClassifier`.
 
 
 kf = KFold(n_splits=5, shuffle=True)
@@ -141,7 +140,7 @@ for conformity_score in conformity_scores:
 
 ##############################################################################
 # Let's now plot the distribution of conformity scores for each conformity
-# set and the estimated quantile for ``confidence_level`` = 0.9.
+# set and the estimated quantile for `confidence_level` = 0.9.
 
 
 fig, axs = plt.subplots(1, len(mapies[conformity_scores[0]]), figsize=(20, 4))
@@ -206,7 +205,7 @@ def plot_results(
 # The prediction sets and the resulting coverages slightly vary among
 # conformalization sets. Let's now visualize the coverage score and the
 # prediction set size of each fold and for both conformity scores, when
-# ``confidence_level`` = 0.9.
+# `confidence_level` = 0.9.
 
 
 plot_results(
@@ -301,12 +300,12 @@ plot_coverage_width(confidence_level, split_coverages[1], split_widths[1], "aps"
 #    (as presented in Romano et al. 2020 for the "aps" method)
 #
 # Let's explore the two possibilities with the "lac" method using
-# :class:`~mapie_v1.classification.CrossConformalClassifier`.
+# `CrossConformalClassifier`.
 #
 # All we need to do is to provide with the `cv` argument a cross-validation
 # object or an integer giving the number of folds.
 # When estimating the prediction sets, we define how the scores are aggregated
-# with the ``agg_scores`` attribute.
+# with the `agg_scores` attribute.
 
 Params = TypedDict(
     "Params",

@@ -35,7 +35,7 @@ class TopKConformityScore(BaseClassificationScore):
         Pseudo random number generator state.
 
     quantiles_: ArrayLike of shape (n_alpha)
-        The quantiles estimated from ``get_sets`` method.
+        The quantiles estimated from `get_sets` method.
     """
 
     def __init__(self) -> None:
@@ -90,7 +90,7 @@ class TopKConformityScore(BaseClassificationScore):
             Observed feature values (not used since predictions are passed).
 
         alpha_np: NDArray of shape (n_alpha,)
-            NDArray of floats between ``0`` and ``1``, represents the
+            NDArray of floats between `0` and `1`, represents the
             uncertainty of the confidence interval.
 
         y_pred_proba: NDArray

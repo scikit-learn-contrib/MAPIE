@@ -80,7 +80,7 @@ class GammaConformityScore(BaseRegressionScore):
         signed conformity score = (y - y_pred) / y_pred
         <=> y = y_pred * (1 + signed conformity score)
 
-        ``conformity_scores`` can be either the conformity scores or
+        `conformity_scores` can be either the conformity scores or
         the quantile of the conformity scores.
         """
         self._check_predicted_data(y_pred)

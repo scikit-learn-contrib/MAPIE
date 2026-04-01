@@ -1,0 +1,185 @@
+site_name: MAPIE
+site_url: https://scikit-learn-contrib.github.io/MAPIE
+site_description: "Model Agnostic Prediction Interval Estimator — Conformal Prediction for Python"
+site_author: MAPIE Team
+repo_url: https://github.com/scikit-learn-contrib/MAPIE
+repo_name: scikit-learn-contrib/MAPIE
+edit_uri: edit/master/doc/
+
+theme:
+  name: material
+  logo: assets/images/mapie_logo_nobg_cut.png
+  favicon: assets/images/mapie_logo_nobg_cut.png
+  icon:
+    repo: fontawesome/brands/github
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: deep purple
+      accent: amber
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: deep purple
+      accent: amber
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - navigation.indexes
+    - toc.follow
+    - search.suggest
+    - search.highlight
+    - content.tabs.link
+    - content.code.copy
+    - content.code.annotate
+  font:
+    text: Inter
+    code: JetBrains Mono
+
+docs_dir: doc
+
+plugins:
+  - search
+  - mkdocstrings:
+      default_handler: python
+      handlers:
+        python:
+          paths: [.]
+          options:
+            show_source: true
+            show_bases: true
+            show_root_heading: true
+            show_root_full_path: true
+            heading_level: 2
+            members_order: source
+            docstring_style: numpy
+            docstring_section_style: spacy
+            show_signature_annotations: true
+            separate_signature: true
+            line_length: 60
+            merge_init_into_class: true
+            show_symbol_type_heading: true
+  - gallery:
+      examples_dirs:
+        - examples/regression
+        - examples/classification
+        - examples/calibration
+        - examples/risk_control
+        - examples/mondrian
+      gallery_dirs:
+        - doc/generated/regression
+        - doc/generated/classification
+        - doc/generated/calibration
+        - doc/generated/risk_control
+        - doc/generated/mondrian
+      within_subsection_order: FileNameSortKey
+      plot_gallery: true
+      download_all_examples: false
+      abort_on_example_error: false
+      only_warn_on_example_error: true
+
+hooks:
+  - doc/hooks/gallery_nav_fix.py
+
+markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.betterem
+  - pymdownx.caret
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.magiclink
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+
+extra_javascript:
+  - javascripts/mathjax.js
+  - https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js
+
+extra_css:
+  - stylesheets/extra.css
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/scikit-learn-contrib/MAPIE
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/mapie/
+  version:
+    provider: mike
+  generator: false
+
+copyright: Copyright &copy; 2021 - 2026 MAPIE Team — BSD-3-Clause License
+
+nav:
+  - Home: index.md
+  - Getting Started:
+    - Quick Start: getting-started/quick-start.md
+    - Conformalization Set: getting-started/split-cross-conformal.md
+    - Choosing the Right Algorithm: getting-started/choosing-algorithm.md
+    - v1 Release Notes: getting-started/v1-release-notes.md
+  - Uncertainty Quantification:
+    - Regression:
+      - Theoretical Description: theory/regression.md
+      - Conformity Scores: theory/conformity-scores.md
+    - Classification:
+      - Theoretical Description: theory/classification.md
+  - Risk Control:
+    - Getting Started: theory/risk-control.md
+  - Calibration:
+    - Theoretical Description: theory/calibration.md
+    - Notebooks: calibration/notebooks.md
+  - Examples:
+    - Regression: generated/regression
+    - Classification: generated/classification
+    - Calibration: generated/calibration
+    - Risk Control: generated/risk_control
+    - Mondrian: generated/mondrian
+  - Q&A:
+    - Metrics: theory/metrics.md
+    - Mondrian: theory/mondrian.md
+    - LLM Risk Control: theory/llm-risk-control.md
+    - Binary Classification: theory/binary-classification.md
+  - API Reference:
+    - Overview: api/index.md
+    - Regression: api/regression.md
+    - Classification: api/classification.md
+    - Conformity Scores: api/conformity-scores.md
+    - Risk Control: api/risk-control.md
+    - Calibration: api/calibration.md
+    - Metrics: api/metrics.md
+    - Utilities: api/utils.md
+  - Contributing:
+    - Documentation Guide: contributing-docs.md

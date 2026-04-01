@@ -1,7 +1,6 @@
 """
-====================================================================================
-Control risk of a binary classifier with multiple prediction parameters
-====================================================================================
+# Control risk of a binary classifier with multiple prediction parameters
+
 
 AI is a powerful tool for email sorting (for example between spam and urgent emails).
 However, because algorithms are not perfect, manual verification is sometimes required.
@@ -128,11 +127,11 @@ to_explore = np.array(to_explore)
 
 #############################################################################
 # Because we want to control the proportion of emails to be verified by a human,
-# we use `predicted_positive_fraction`, a specific :class:`BinaryClassificationRisk` which represents
+# we use `predicted_positive_fraction`, a specific `BinaryClassificationRisk` which represents
 # the fraction of samples predicted as positive (i.e., sent to human verification).
 #
-# Finally, we initialize a :class:`~mapie.risk_control.BinaryClassificationController`
-# using our custom function ``send_to_human``, the chosen risk ``predicted_positive_fraction``,
+# Finally, we initialize a `BinaryClassificationController`
+# using our custom function `send_to_human`, the chosen risk `predicted_positive_fraction`,
 # a target risk level (0.2), and a confidence level (0.9). Then we use the calibration
 # data to compute statistically guaranteed thresholds using a multi-parameter control
 # method.

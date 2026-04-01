@@ -334,3 +334,8 @@ sphinx_gallery_conf = {
 def setup(app):
     # a copy button to copy snippet of code from the documentation
     app.add_js_file("js/copybutton.js")
+
+
+# -- Migration banner ------------------------------------------------------
+# Display a banner on every page announcing the move to MkDocs Material.
+# Implemented via doc/_templates/layout.html (Jinja2 template override).

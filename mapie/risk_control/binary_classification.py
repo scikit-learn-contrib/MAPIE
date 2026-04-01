@@ -124,14 +124,14 @@ class BinaryClassificationController:
         Method used to control the family-wise error rate (FWER).
 
         Supported methods:
-        - ``"bonferroni"`` : Classical Bonferroni correction. This is the default method.
+        - `"bonferroni"` : Classical Bonferroni correction. This is the default method.
         It is valid in all settings but can be conservative, especially when the number of tested parameters is large.
-        - ``"fixed_sequence"`` : Fixed Sequence Testing (FST) with a single start.
-        However, users can use multi-start by instantiating ``FWERFixedSequenceTesting`` with any desired number
+        - `"fixed_sequence"` : Fixed Sequence Testing (FST) with a single start.
+        However, users can use multi-start by instantiating `FWERFixedSequenceTesting` with any desired number
         of starts and passing the instance to control_fwer.
-        - ``"bonferroni_holm"`` : Sequential Graphical Testing corresponding
+        - `"bonferroni_holm"` : Sequential Graphical Testing corresponding
         to the Bonferroni–Holm procedure. Suitable for general settings.
-        - ``"split_fixed_sequence"`` : Split Fixed Sequence Testing (SFST).
+        - `"split_fixed_sequence"` : Split Fixed Sequence Testing (SFST).
 
     Attributes
     ----------
@@ -301,7 +301,7 @@ class BinaryClassificationController:
 
         Notes
         -----
-        When using ``fwer_method="split_fixed_sequence"``,
+        When using `fwer_method="split_fixed_sequence"`,
         the learning step must be performed separately on independent data:
 
         1. bcc.learn_fixed_sequence_order(X_learn, y_learn)
@@ -368,9 +368,9 @@ class BinaryClassificationController:
         Learn an ordered sequence of prediction parameters for split fixed-sequence FWER control.
 
         This method performs the learning step of split fixed-sequence testing.
-        It must be called before ``calibrate`` when ``fwer_method="split_fixed_sequence"``.
+        It must be called before `calibrate` when `fwer_method="split_fixed_sequence"`.
 
-        The data provided here must be independent from the calibration data used later in ``calibrate``.
+        The data provided here must be independent from the calibration data used later in `calibrate`.
         Using the same data would invalidate the statistical guarantees.
 
         A typical workflow is to split your calibration dataset:
@@ -378,7 +378,7 @@ class BinaryClassificationController:
         - one subset for learning the parameter order
         - one subset for calibration
 
-        For each value in ``beta_grid``, the parameter whose p-value vector is
+        For each value in `beta_grid`, the parameter whose p-value vector is
         closest to the constant vector beta is selected. Duplicate parameters are
         removed while preserving order, yielding a deterministic testing sequence.
 
@@ -406,7 +406,7 @@ class BinaryClassificationController:
         -----
         This method does NOT perform risk control.
         It only determines an order of parameters.
-        Statistical guarantees are provided later when calling ``calibrate``.
+        Statistical guarantees are provided later when calling `calibrate`.
         """
         y_learn = np.asarray(y_learn, dtype=int)
         predictions_per_param = self._get_predictions_per_param(

@@ -1,17 +1,16 @@
 """
-===========================================================
-Conformalized quantile regression on gamma distributed data
-===========================================================
+# Conformalized quantile regression on gamma distributed data
+
 
 
 We will use the sklearn california housing dataset as the base for the
 comparison of the different methods available on MAPIE. Two classes will
-be used: :class:`~mapie.regression.ConformalizedQuantileRegressor` for CQR.
-We use :class:`~mapie.regression.CrossConformalRegressor` and
-:class:`~mapie.regression.JackknifeAfterBootstrapRegressor` for the other methods.
+be used: `ConformalizedQuantileRegressor` for CQR.
+We use `CrossConformalRegressor` and
+`JackknifeAfterBootstrapRegressor` for the other methods.
 
-For this example, the estimator will be :class:`~lightgbm.LGBMRegressor` with
-``objective="quantile"`` as this is a necessary component for CQR, the
+For this example, the estimator will be `LGBMRegressor` with
+`objective="quantile"` as this is a necessary component for CQR, the
 regression needs to be from a quantile regressor.
 
 We then compare the coverage and the intervals width.
@@ -101,8 +100,8 @@ X_train_conformalize, X_test, y_train_conformalize, y_test = train_test_split(
 # --------------------------------------------------------------------------
 # Before estimating uncertainties, let's start by optimizing the base model
 # in order to reduce our prediction error. We will use the
-# :class:`~lightgbm.LGBMRegressor` in the quantile setting. The optimization
-# is performed using :class:`~sklearn.model_selection.RandomizedSearchCV`
+# `LGBMRegressor` in the quantile setting. The optimization
+# is performed using `RandomizedSearchCV`
 # to find the optimal model to predict the house prices.
 
 
@@ -137,7 +136,7 @@ estimator = optim_model.best_estimator_
 # description of the documentation for more details on these methods.
 #
 # We also create two functions, one to sort the dataset in increasing values
-# of ``y_test`` and a plotting function, so that we can plot all predictions
+# of `y_test` and a plotting function, so that we can plot all predictions
 # and prediction intervals for different conformal methods.
 
 
@@ -228,7 +227,7 @@ def plot_prediction_intervals(
 
 ##############################################################################
 # Here, we use MAPIE to return the predictions and prediction intervals.
-# We will use an ``confidence_level=CONFIDENCE_LEVEL``, (this is the target
+# We will use an `confidence_level=CONFIDENCE_LEVEL`, (this is the target
 # coverage for our prediction intervals).
 # Note that that we will use symmetrical residuals for the CQR.
 
@@ -395,7 +394,7 @@ plt.show()
 
 ##############################################################################
 # None of the methods seems to
-# have conditional coverage at the target ``confidence_level``. However, we can
+# have conditional coverage at the target `confidence_level`. However, we can
 # clearly notice that the CQR seems to better adapt to large prices. Its
 # conditional coverage is closer to the target coverage not only for higher
 # prices, but also for lower prices where the other methods have a higher

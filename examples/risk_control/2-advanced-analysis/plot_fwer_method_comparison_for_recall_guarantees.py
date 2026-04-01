@@ -1,7 +1,6 @@
 """
-=================================================================
-Comparing FWER methods for risk control in binary classification
-=================================================================
+# Comparing FWER methods for risk control in binary classification
+
 
 This example compares how different family-wise error rate (FWER) control
 strategies affect the set of statistically valid thresholds when controlling
@@ -18,16 +17,16 @@ a risk in binary classification.
 #
 # We compare three FWER procedures:
 #
-# - ``"bonferroni"``: a classical Bonferroni correction valid under any risk structure
+# - `"bonferroni"`: a classical Bonferroni correction valid under any risk structure
 #   and parameter space, but generally conservative.
-# - ``"fixed_sequence"``: Fixed-Sequence Testing (FST), which exploits monotonicity
+# - `"fixed_sequence"`: Fixed-Sequence Testing (FST), which exploits monotonicity
 #   of the risk when available to lead to less conservative thresholds.
-# - ``"bonferroni_holm"``: a sequential graphical testing method applying the Bonferroni-Holm
+# - `"bonferroni_holm"`: a sequential graphical testing method applying the Bonferroni-Holm
 #   procedure which is valid under any risk structure and parameter space, but generally more powerful
 #   than the classical Bonferroni correction.
 #
 # Although not used in this comparison, note that the Split Fixed Sequence Testing (SFST)
-# FWER procedure is also implemented under the name ``"split_fixed_sequence"``.
+# FWER procedure is also implemented under the name `"split_fixed_sequence"`.
 # SFST learns an optimal testing order from independent data and then applies
 # the classical FST procedure using this learned order. For a practical illustration,
 # please refer to the risk control example gallery showcasing the use case of
@@ -148,20 +147,20 @@ clf = MLPClassifier(max_iter=150, random_state=RANDOM_STATE)
 clf.fit(X_train, y_train)
 
 ##############################################################################
-# Next, we initialize :class:`~mapie.risk_control.BinaryClassificationController`
-# with the estimator probability function ``clf.predict_proba``, the ``"recall"``
+# Next, we initialize `BinaryClassificationController`
+# with the estimator probability function `clf.predict_proba`, the `"recall"`
 # performance metric, a target recall level, and a confidence level. We then
 # calibrate it to compute thresholds that are statistically guaranteed
 # to satisfy the target metric on unseen data using different FWER control methods,
-# specified via the ``fwer_method`` parameter of the controller:
+# specified via the `fwer_method` parameter of the controller:
 #
-# - ``"bonferroni"``: classical Bonerroni correction,
-# - ``"fixed_sequence"``: Fixed-Sequence Testing (FST) procedure,
-# - ``"bonferroni_holm"``: sequential graphical testing method applying the Bonferroni-Holm procedure.
+# - `"bonferroni"`: classical Bonerroni correction,
+# - `"fixed_sequence"`: Fixed-Sequence Testing (FST) procedure,
+# - `"bonferroni_holm"`: sequential graphical testing method applying the Bonferroni-Holm procedure.
 #
 # The FST procedure requires the risk to be monotonic with respect to the
 # threshold. This holds for recall but not for precision, which is generally
-# non-monotonic; therefore FST cannot be used for controlling ``"precision"``.
+# non-monotonic; therefore FST cannot be used for controlling `"precision"`.
 #
 
 target_recall = 0.8

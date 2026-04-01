@@ -1,12 +1,11 @@
 """
-========================================
-Recall control for semantic segmentation
-========================================
+# Recall control for semantic segmentation
+
 
 This example illustrates how to control the recall of a
 semantic segmentation model using MAPIE.
 
-We use :class:`~mapie.risk_control.SemanticSegmentationController`
+We use `SemanticSegmentationController`
 to calibrate a decision threshold that statistically guarantees
 a target recall level on unseen data.
 
@@ -105,7 +104,7 @@ print(f"Calibration set size: {len(calib_dataset)}")
 print(f"Test set size: {len(test_dataset)}")
 
 ###############################################################################
-# A :class:`~mapie.risk_control.SemanticSegmentationController` is instantiated
+# A `SemanticSegmentationController` is instantiated
 # to control the recall risk (1 - recall) and automatically select a threshold
 # that meets the target recall level with high confidence.
 #

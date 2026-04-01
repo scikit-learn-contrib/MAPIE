@@ -33,7 +33,7 @@ class APSConformityScore(NaiveConformityScore):
         Pseudo random number generator state.
 
     quantiles_: ArrayLike of shape (n_alpha)
-        The quantiles estimated from ``get_sets`` method.
+        The quantiles estimated from `get_sets` method.
     """
 
     def __init__(self) -> None:
@@ -57,7 +57,7 @@ class APSConformityScore(NaiveConformityScore):
             Observed feature values (not used since predictions are passed).
 
         alpha_np: NDArray of shape (n_alpha,)
-            NDArray of floats between ``0`` and ``1``, represents the
+            NDArray of floats between `0` and `1`, represents the
             uncertainty of the confidence interval.
 
         y_pred_proba: NDArray
@@ -71,7 +71,7 @@ class APSConformityScore(NaiveConformityScore):
             If "mean", the scores are averaged. If "crossval", the scores are
             obtained from cross-validation.
 
-            By default ``"mean"``.
+            By default `"mean"`.
 
         Returns
         --------
@@ -186,7 +186,7 @@ class APSConformityScore(NaiveConformityScore):
             If "mean", the scores are averaged. If "crossval", the scores are
             obtained from cross-validation.
 
-            By default ``"mean"``.
+            By default `"mean"`.
 
         Returns
         --------
@@ -271,11 +271,11 @@ class APSConformityScore(NaiveConformityScore):
             Threshold to compare with y_proba_last_cumsum, can be either:
 
             - the quantiles associated with alpha values when
-                ``cv`` == "prefit", ``cv`` == "split"
-                or ``agg_scores`` is "mean"
+                `cv` == "prefit", `cv` == "split"
+                or `agg_scores` is "mean"
 
             - the conformity score from training samples otherwise (i.e., when
-            ``cv`` is CV splitter and ``agg_scores`` is "crossval")
+            `cv` is CV splitter and `agg_scores` is "crossval")
 
         Returns
         -------
@@ -337,7 +337,7 @@ class APSConformityScore(NaiveConformityScore):
             If "mean", the scores are averaged. If "crossval", the scores are
             obtained from cross-validation.
 
-            By default ``"mean"``.
+            By default `"mean"`.
 
         include_last_label: Optional[Union[bool, str]]
             Whether or not to include last label in
@@ -352,12 +352,12 @@ class APSConformityScore(NaiveConformityScore):
               number and the difference between the cumulated score of
               the last label and the quantile.
 
-            When set to ``True`` or ``False``, it may result in a coverage
-            higher than ``1 - alpha`` (because contrary to the "randomized"
+            When set to `True` or `False`, it may result in a coverage
+            higher than `1 - alpha` (because contrary to the "randomized"
             setting, none of these methods create empty prediction sets). See
             [1] and [2] for more details.
 
-            By default ``True``.
+            By default `True`.
 
         Returns
         --------

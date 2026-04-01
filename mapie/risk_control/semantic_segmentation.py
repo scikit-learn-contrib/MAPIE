@@ -51,7 +51,7 @@ class SemanticSegmentationController(MultiLabelClassificationController):
     ) -> NDArray:
         """
         Prediction sets on new samples based on the target risk level.
-        Prediction sets for a given ``alpha`` are deduced from the computed
+        Prediction sets for a given `alpha` are deduced from the computed
         risks.
 
         Parameters

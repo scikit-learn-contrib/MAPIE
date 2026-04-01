@@ -1,10 +1,9 @@
 """
-===========================================================================================
-Predictive inference with the jackknife+, Foygel-Barber et al. (2020)
-===========================================================================================
+# Predictive inference with the jackknife+, Foygel-Barber et al. (2020)
 
 
-:class:`~mapie.regression.CrossConformalRegressor` is used to investigate
+
+`CrossConformalRegressor` is used to investigate
 the coverage level and the prediction interval width as a function
 of the dimension using simulated data points as introduced in
 Foygel-Barber et al. (2021) [1].

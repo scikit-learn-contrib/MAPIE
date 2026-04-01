@@ -23,7 +23,7 @@ def regression_mean_width_score(y_intervals: NDArray) -> NDArray:
     ----------
     y_intervals: NDArray of shape (n_samples, 2, n_confidence_level)
         Lower and upper bound of prediction intervals
-        with different confidence levels, given by the ``predict_interval`` method
+        with different confidence levels, given by the `predict_interval` method
 
     Returns
     ---------
@@ -59,13 +59,13 @@ def regression_coverage_score(
     """
     Effective coverage obtained by the prediction intervals.
 
-    Intervals given by the ``predict_interval`` method can be passed directly
-    to the ``y_intervals`` argument (see example below).
+    Intervals given by the `predict_interval` method can be passed directly
+    to the `y_intervals` argument (see example below).
 
     Beside this intended use, this function also works with:
 
-    - ``y_true`` of shape (n_sample,) and ``y_intervals`` of shape (n_sample, 2)
-    - ``y_true`` of shape (n_sample, n) and `y_intervals` of shape
+    - `y_true` of shape (n_sample,) and `y_intervals` of shape (n_sample, 2)
+    - `y_true` of shape (n_sample, n) and `y_intervals` of shape
       (n_sample, 2, n)
 
     The effective coverage is obtained by computing the fraction
@@ -78,7 +78,7 @@ def regression_coverage_score(
 
     y_intervals: NDArray of shape (n_samples, 2, n_confidence_level)
         Lower and upper bound of prediction intervals
-        with different confidence levels, given by the ``predict_interval`` method
+        with different confidence levels, given by the `predict_interval` method
 
     Returns
     ---------
@@ -381,16 +381,15 @@ def coverage_width_based(
 
     Parameters
     ----------
-    Coverage score : float
-        Prediction interval coverage probability (Coverage score), which is
-        the estimated fraction of true labels that lie within the prediction
-        intervals.
-    Mean Width Score : float
-        Prediction interval normalized average width (Mean Width Score),
-        calculated as the average width of the prediction intervals.
-    eta : int
+    y_true : ArrayLike of shape (n_samples,)
+        True labels.
+    y_pred_low : ArrayLike of shape (n_samples,)
+        Lower bound of the prediction intervals.
+    y_pred_up : ArrayLike of shape (n_samples,)
+        Upper bound of the prediction intervals.
+    eta : float
         A user-defined parameter that balances the contributions of
-        Mean Width Score and Coverage score in the CWC calculation.
+        mean width score and coverage score in the CWC calculation.
     confidence_level : float
         A user-defined parameter representing the designed confidence level of
         the PI.

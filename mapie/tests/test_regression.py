@@ -677,7 +677,7 @@ def test_linear_regression_results(strategy: str) -> None:
 
 
 def test_results_prefit_ignore_method() -> None:
-    """Test that method is ignored when ``cv="prefit"``."""
+    """Test that method is ignored when `cv="prefit"`."""
     estimator = LinearRegression().fit(X, y)
     all_y_pis: List[NDArray] = []
     for method in METHODS:
@@ -753,7 +753,7 @@ def test_invalid_aggregate_all() -> None:
 
 def test_aggregate_with_mask_with_prefit() -> None:
     """
-    Test ``_aggregate_with_mask`` in case ``cv`` is ``"prefit"``.
+    Test `_aggregate_with_mask` in case `cv` is `"prefit"`.
     """
     mapie_reg = _MapieRegressor(LinearRegression().fit(X, y), cv="prefit")
     mapie_reg = mapie_reg.fit(X, y)
@@ -765,7 +765,7 @@ def test_aggregate_with_mask_with_prefit() -> None:
 
 
 def test_aggregate_with_mask_with_invalid_agg_function() -> None:
-    """Test ``_aggregate_with_mask`` in case ``agg_function`` is invalid."""
+    """Test `_aggregate_with_mask` in case `agg_function` is invalid."""
     ens_reg = EnsembleRegressor(
         LinearRegression(),
         "plus",

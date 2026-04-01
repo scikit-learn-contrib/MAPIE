@@ -32,22 +32,22 @@ def check_include_last_label(
     include_last_label: Optional[Union[bool, str]],
 ) -> Optional[Union[bool, str]]:
     """
-    Check if ``include_last_label`` is a boolean or a string.
+    Check if `include_last_label` is a boolean or a string.
     Else raise error.
 
     Parameters
     ----------
     include_last_label: Optional[Union[bool, str]]
         Whether or not to include last label in
-        prediction sets for the ``"aps"`` method. Choose among:
+        prediction sets for the `"aps"` method. Choose among:
 
-        - ``False``, does not include label whose cumulated score is just
+        - `False`, does not include label whose cumulated score is just
             over the quantile.
 
-        - ``True``, includes label whose cumulated score is just over the
+        - `True`, includes label whose cumulated score is just over the
             quantile, unless there is only one label in the prediction set.
 
-        - ``"randomized"``, randomly includes label whose cumulated score
+        - `"randomized"`, randomly includes label whose cumulated score
             is just over the quantile based on the comparison of a uniform
             number and the difference between the cumulated score of the last
             label and the quantile.
@@ -91,12 +91,12 @@ def get_last_index_included(
         Threshold to compare with y_proba_last_cumsum, can be either:
 
         - the quantiles associated with alpha values when
-            ``cv`` == "prefit", ``cv`` == "split"
-            or ``agg_scores`` is "mean"
+            `cv` == "prefit", `cv` == "split"
+            or `agg_scores` is "mean"
 
         - the conformity score from training samples otherwise
-            (i.e., when ``cv`` is a CV splitter and
-            ``agg_scores`` is "crossval")
+            (i.e., when `cv` is a CV splitter and
+            `agg_scores` is "crossval")
 
     include_last_label: Union[bool, str]
         Whether or not include the last label. If 'randomized',

@@ -1,7 +1,6 @@
 """
-=====================================================================================================
-Adaptive conformal predictions for time series, Zaffran et al. (2022)
-=====================================================================================================
+# Adaptive conformal predictions for time series, Zaffran et al. (2022)
+
 
 Note: in this example, we use the following terms employed in the scientific literature:
 
@@ -10,7 +9,7 @@ Note: in this example, we use the following terms employed in the scientific lit
 
 —
 
-:class:`~mapie.regression.TimeSeriesRegressor` is used to reproduce a
+`TimeSeriesRegressor` is used to reproduce a
 part of the paper experiments of Zaffran et al. (2022) in their article [1]
 which we argue that Adaptive Conformal Inference (ACI, Gibbs & Candès, 2021)
 [2], developed for distribution-shift time series, is a good procedure for
@@ -22,7 +21,7 @@ repository https://github.com/mzaffran/AdaptiveConformalPredictionsTimeSeries
 and compares the bounds of the PIs.
 
 In order to reproduce the results of the github repository, we reuse the
-``RandomForestRegressor`` regression model and follow the same conformal
+`RandomForestRegressor` regression model and follow the same conformal
 prediction procedure (see in AdaptiveConformalPredictionsTimeSeries
 project the `models.py` file).
 

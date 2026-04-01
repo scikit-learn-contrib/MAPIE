@@ -1,7 +1,6 @@
 """
-========================
-Tutorial for time series
-========================
+# Tutorial for time series
+
 
 Note: in this tutorial, we use the following terms employed in the scientific
 literature:
@@ -12,7 +11,7 @@ literature:
 —
 
 In this tutorial we describe how to use
-:class:`~mapie.regression.TimeSeriesRegressor`
+`TimeSeriesRegressor`
 to estimate prediction intervals associated with time series forecast.
 
 Here, we use the Victoria electricity demand dataset used in the book
@@ -22,19 +21,19 @@ by the temperature, considered here as a exogeneous variable.
 
 Before estimating prediction intervals with MAPIE, we optimize the base model,
 here a Random Forest model. The hyper-parameters are
-optimized with a :class:`~sklearn.model_selection.RandomizedSearchCV` using a
+optimized with a `RandomizedSearchCV` using a
 fixed validation set, which is only used for hyper-parameter search to avoid
 data leakage.
 
 Once the base model is optimized, we can use
-:class:`~TimeSeriesRegressor` to estimate
+`TimeSeriesRegressor` to estimate
 the prediction intervals associated with one-step ahead forecasts through
 the EnbPI method.
 
-:class:`~mapie.regression.TimeSeriesRegressor` has two main arguments :
+`TimeSeriesRegressor` has two main arguments :
 "cv", and "method".
 In order to implement EnbPI, "method" must be set to "enbpi" (the default
-value) while "cv" must be set to the :class:`~mapie.subsample.BlockBootstrap`
+value) while "cv" must be set to the `BlockBootstrap`
 class that block bootstraps the training set.
 This sampling method is used instead of the traditional bootstrap
 strategy as it is more suited for time series data.
@@ -42,8 +41,8 @@ strategy as it is more suited for time series data.
 The EnbPI method allows you update the residuals during the prediction,
 each time new observations are available so that the deterioration of
 predictions, or the increase of noise level, can be dynamically taken into
-account. It can be done with :class:`~mapie.regression.TimeSeriesRegressor`
-through the ``update`` class method called at every step.
+account. It can be done with `TimeSeriesRegressor`
+through the `update` class method called at every step.
 
 
 The ACI strategy allows you to adapt the conformal inference
@@ -143,8 +142,8 @@ plt.show()
 # ------------------------------
 #
 # Before estimating the prediction intervals with MAPIE, let's optimize the
-# base model, here a :class:`~RandomForestRegressor` through a
-# :class:`~RandomizedSearchCV` with a fixed validation set.
+# base model, here a `RandomForestRegressor` through a
+# `RandomizedSearchCV` with a fixed validation set.
 # For the sake of computational time, the best parameters are already tuned.
 
 model_params_fit_not_done = False
@@ -178,28 +177,28 @@ else:
 # 3. Estimate prediction intervals on the test set
 # ------------------------------------------------
 #
-# We now use :class:`~TimeSeriesRegressor` to build prediction intervals
+# We now use `TimeSeriesRegressor` to build prediction intervals
 # associated with one-step ahead forecasts. As explained in the introduction,
 # we use the EnbPI method and the ACI method.
 #
 # Estimating prediction intervals can be possible in three ways:
 #
-# - with a regular ``.fit`` and ``.predict`` process, limiting the use of
+# - with a regular `.fit` and `.predict` process, limiting the use of
 #   trainining set residuals to build prediction intervals
 #
-# - using ``.update`` in addition to ``.fit`` and ``.predict`` allowing
+# - using `.update` in addition to `.fit` and `.predict` allowing
 #   MAPIE to use new residuals from the test points as new data are becoming
 #   available.
 #
-# - using ``.update`` and ``.adapt_conformal_inference`` in addition to
-#   ``.fit`` and ``.predict`` allowing MAPIE to use new residuals from the
+# - using `.update` and `.adapt_conformal_inference` in addition to
+#   `.fit` and `.predict` allowing MAPIE to use new residuals from the
 #   test points as new data are becoming available.
 #
 # The latter method is particularly useful to adjust prediction intervals to
 # sudden change points on test sets that have not been seen by the model
 # during training.
 #
-# We use the :class:`~BlockBootstrap` sampling
+# We use the `BlockBootstrap` sampling
 # method instead of the traditional bootstrap strategy for training the model
 # since the former is more suited for time series data.
 # Here, we choose to perform 10 resamplings with 10 blocks.

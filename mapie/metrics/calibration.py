@@ -179,8 +179,7 @@ def top_label_ece(
     ----------
     y_true: ArrayLike of shape (n_samples,)
         The target values for the calibrator.
-    y_scores: ArrayLike of shape (n_samples, n_classes)
-    or (n_samples,)
+    y_scores: ArrayLike of shape (n_samples, n_classes) or (n_samples,)
         The predictions scores, either the maximum score and the
         argmax needs to be inputted or in the form of the prediction
         probabilities.
@@ -439,7 +438,7 @@ def kolmogorov_smirnov_statistic(y_true: NDArray, y_score: NDArray) -> float:
     (Estimated Cumulative Calibration Errors - Maximum Absolute Deviation).
     The closer to zero, the better the scores are calibrated.
     Indeed, if the scores are perfectly calibrated,
-    the cumulative differences between ``y_true`` and ``y_score``
+    the cumulative differences between `y_true` and `y_score`
     should share the same properties of a standard Brownian motion
     asymptotically.
 
@@ -598,7 +597,7 @@ def kuiper_statistic(y_true: NDArray, y_score: NDArray) -> float:
     Also called ECCE-R (Estimated Cumulative Calibration Errors - Range).
     The closer to zero, the better the scores are calibrated.
     Indeed, if the scores are perfectly calibrated,
-    the cumulative differences between ``y_true`` and ``y_score``
+    the cumulative differences between `y_true` and `y_score`
     should share the same properties of a standard Brownian motion
     asymptotically.
 

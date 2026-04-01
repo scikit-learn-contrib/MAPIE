@@ -1,19 +1,18 @@
 """
-=======================================================================================
-Least Ambiguous Set-Valued Classifiers with Bounded Error Levels, Sadinle et al. (2019)
-=======================================================================================
+# Least Ambiguous Set-Valued Classifiers with Bounded Error Levels, Sadinle et al. (2019)
 
-We use :class:`~mapie_v1.classification.SplitConformalClassifier` to reproduce
+
+We use `SplitConformalClassifier` to reproduce
 Example 7 from Sadinle et al. (2019).
 
 We consider a two-dimensional dataset with three labels. The distribution
 of the data is a bivariate normal with diagonal covariance matrices for
 each label.
 We model the data with Gaussian Naive Bayes classifier
-:class:`~sklearn.naive_bayes.GaussianNB` as a base model.
+`GaussianNB` as a base model.
 
 Prediction sets are estimated by
-:class:`~mapie_v1.classification.SplitConformalClassifier` from the distribution of the
+`SplitConformalClassifier` from the distribution of the
 softmax scores of the true labels for three confidence level values (0.8, 0.9, and 0.95)
 giving different class coverage levels.
 

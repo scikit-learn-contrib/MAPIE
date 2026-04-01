@@ -1,7 +1,6 @@
 """
-===============================================================================
-Coverage validity for regression tasks
-===============================================================================
+# Coverage validity for regression tasks
+
 
 
 This example verifies that conformal claims are valid in the MAPIE package
@@ -171,8 +170,8 @@ def cumulative_average(arr):
 # Experiment 1: Coverage Validity for given confidence_level and n_conformalize
 # --------------------------------------------------------------------------------
 #
-# To begin, we propose to use ``confidence_level=0.8`` and
-# ``n_conformalize=6`` and compare the coverage validity claim
+# To begin, we propose to use `confidence_level=0.8` and
+# `n_conformalize=6` and compare the coverage validity claim
 # of the MAPIE class and the referenced class.
 
 RANDOM_STATE = 1

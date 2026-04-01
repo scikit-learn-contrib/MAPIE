@@ -1,11 +1,10 @@
 r"""
-=======================================================================
-Comparison between conformalized quantile regressor and cross methods
-=======================================================================
+# Comparison between conformalized quantile regressor and cross methods
+
 
 
 In this tutorial, we compare the prediction intervals estimated by MAPIE on a
-simple, one-dimensional, ground truth function ``f(x) = x * sin(x)``.
+simple, one-dimensional, ground truth function `f(x) = x * sin(x)`.
 Throughout this tutorial, we will answer the following questions:
 
 - How well do the MAPIE strategies capture the aleatoric uncertainty
@@ -53,7 +52,7 @@ warnings.filterwarnings("ignore")
 # 1. Estimating the aleatoric uncertainty of homoscedastic noisy data
 # -------------------------------------------------------------------
 #
-# Let's start by defining the ``x * sin(x)`` function and another
+# Let's start by defining the `x * sin(x)` function and another
 # simple function that generates one-dimensional data with normal noise
 # uniformely in a given interval.
 
@@ -100,7 +99,7 @@ plt.show()
 ##############################################################################
 # As mentioned previously, we fit our training data with a simple
 # polynomial function. Here, we choose a degree equal to 10 so the function
-# is able to perfectly fit ``x * sin(x)``.
+# is able to perfectly fit `x * sin(x)`.
 
 DEGREE_POLYN = 10
 polyn_model = Pipeline(
@@ -194,7 +193,7 @@ for strategy_name, strategy_params in STRATEGIES.items():
 # intervals obtained with the Jackknife+, Jackknife-minmax, CV+, CV-minmax,
 # Jackknife+-after-Boostrap, and conformalized quantile regression (CQR)
 # strategies. Note that when the CQR method is called thanks to
-# :class:`~mapie.quantile_regression.ConformalizedQuantileRegressor` with prefit=False,
+# `ConformalizedQuantileRegressor` with prefit=False,
 # it will use a "split" strategy.
 
 
@@ -308,7 +307,7 @@ pd.DataFrame(
 # 2. Estimating the aleatoric uncertainty of heteroscedastic noisy data
 # ---------------------------------------------------------------------
 #
-# Let's define again the ``x * sin(x)`` function and another simple
+# Let's define again the `x * sin(x)` function and another simple
 # function that generates one-dimensional data with normal noise uniformely
 # in a given interval.
 
@@ -353,7 +352,7 @@ plt.show()
 ##############################################################################
 # As mentioned previously, we fit our training data with a simple
 # polynomial function. Here, we choose a degree equal to 10 so the function
-# is able to perfectly fit ``x * sin(x)``.
+# is able to perfectly fit `x * sin(x)`.
 
 DEGREE_POLYN = 10
 polyn_model = Pipeline(
@@ -490,12 +489,12 @@ plt.show()
 # One can observe that all the strategies behave in a similar way as in the
 # first example shown previously. One exception is the CQR method which takes
 # into account the heteroscedasticity of the data. In this method we observe
-# very low interval widths at low values of ``x``.
+# very low interval widths at low values of `x`.
 # This is the only method that
 # even slightly follows the true width, and therefore is the preferred method
 # for heteroscedastic data. Notice also that the true width is greater (lower)
-# than the predicted width from the other methods at ``x ≳ 3``
-# (``x ≤ 3``). This means that while the marginal coverage is correct for
+# than the predicted width from the other methods at `x ≳ 3`
+# (`x ≤ 3`). This means that while the marginal coverage is correct for
 # these methods, the conditional coverage is likely not guaranteed as we will
 # observe in the next figure.
 
@@ -705,10 +704,10 @@ plt.show()
 
 ##############################################################################
 # At first glance, our polynomial function does not give accurate
-# predictions with respect to the true function when ``|x| > 6``.
+# predictions with respect to the true function when `|x| > 6`.
 # The prediction intervals estimated with the Jackknife+ do not seem to
 # increase. On the other hand, the CV and other related methods seem to capture
-# some uncertainty when ``x > 6``.
+# some uncertainty when `x > 6`.
 #
 # Let's now compare the prediction interval widths between all strategies.
 
@@ -722,16 +721,16 @@ plt.show()
 
 ##############################################################################
 # The prediction interval widths start to increase exponentially
-# for ``|x| > 4`` for the CV+, CV-minmax, Jackknife-minmax, and JackknifeAB
+# for `|x| > 4` for the CV+, CV-minmax, Jackknife-minmax, and JackknifeAB
 # strategies. On the other hand, the prediction intervals estimated by
-# Jackknife+ remain roughly constant until ``|x| ≈ 6`` before
+# Jackknife+ remain roughly constant until `|x| ≈ 6` before
 # increasing.
 # The CQR strategy seems to perform well, however, on the extreme values
 # of the data the quantile regression fails to give reliable results as it
 # outputs
 # negative value for the prediction intervals. This occurs because the quantile
 # regressor with quantile `1 - α/2` gives higher values than the
-# quantile regressor with quantile ``α/2``. Note that a warning will
+# quantile regressor with quantile `α/2`. Note that a warning will
 # be issued when this occurs.
 
 pd.DataFrame(

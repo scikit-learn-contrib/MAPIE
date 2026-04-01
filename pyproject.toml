@@ -64,11 +64,18 @@ dev = [
 docs = [
     "lightgbm==4.6.0",
     "matplotlib==3.9.4",
+    "mkdocs-material>=9.5",
+    "mkdocs-gallery>=0.10",
+    "mkdocstrings[python]>=1.0",
+    "mkdocstrings-python>=2.0",
+    "ruff>=0.4",
+    "mike>=2.0",
+    "pymdown-extensions>=10.0",
     "numpydoc==1.9.0",
-    "pandas==2.3.3",
     "sphinx==7.4.7",
     "sphinx-gallery==0.19.0",
     "sphinx_rtd_theme==3.0.2",
+    "pandas==2.3.3",
     "typing_extensions==4.15.0",
     "torch>=2.1",
     "pytorch-lightning>=2.0",
@@ -131,7 +138,7 @@ exclude = [
     "site-packages",
     "venv",
     "list",
-    "doc/conf.py"
+    "doc_legacy/conf.py"
 ]
 
 line-length = 88

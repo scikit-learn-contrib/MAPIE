@@ -1,20 +1,19 @@
 """
-==============================================================
-Focus on local (or "conditional") coverage
-==============================================================
+# Focus on local (or "conditional") coverage
 
 
-This example uses :class:`~mapie.regression.SplitConformalRegressor`,
-:class:`~mapie.regression.JackknifeAfterBootstrapRegressor`,
+
+This example uses `SplitConformalRegressor`,
+`JackknifeAfterBootstrapRegressor`,
 with conformal scores that returns adaptive intervals i.e.
-(:class:`~mapie.conformity_scores.GammaConformityScore` and
-:class:`~mapie.conformity_scores.ResidualNormalisedScore`) as well as
-:class:`~mapie.regression.ConformalizedQuantileRegressor` and
-:class:`~mapie.regression.CrossConformalRegressor.
+(`GammaConformityScore` and
+`ResidualNormalisedScore`) as well as
+`ConformalizedQuantileRegressor` and
+`
 The conditional coverage is computed with the three
 functions that allows to estimate the conditional coverage in regression
-:func:`~mapie.metrics.regression_ssc`,
-:func:`~mapie.metrics.regression_ssc_score` and :func:`~mapie.metrics.hsic`.
+`regression_ssc`,
+`regression_ssc_score` and `hsic`.
 """
 
 import warnings
@@ -182,7 +181,7 @@ with pd.option_context("display.max_rows", None, "display.max_columns", None):
 ##############################################################################
 # The global coverage is similar for all methods. To determine if these
 # methods are good adaptive conformal methods, we use two metrics:
-# :func:`~mapie.metrics.regression_ssc_score` and :func:`~mapie.metrics.hsic`.
+# `regression_ssc_score` and `hsic`.
 #
 # - SSC (Size Stratified Coverage): This measures the maximum violation
 #   of coverage by grouping intervals by width and computing coverage for
@@ -329,7 +328,7 @@ plt.show()
 # indicates a more adaptive method.
 #
 # The plot of coverage by bins of intervals grouped by widths
-# (output of :func:`~mapie.metrics.regression_ssc`) should
+# (output of `regression_ssc`) should
 # show bins as constant as possible around the global coverage (0.9).
 
 # The gamma score does not perform well in size stratified coverage,

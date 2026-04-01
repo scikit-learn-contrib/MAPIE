@@ -1,17 +1,16 @@
 """
-===========================================================================================
-Data with uneven uncertainty
-===========================================================================================
+# Data with uneven uncertainty
 
 
-:class:`~mapie.regression.CrossConformalRegressor`,
-:class:`~mapie.regression.JackknifeAfterBootstrapRegressor`,
-:class:`~mapie.regression.ConformalizedQuantileRegressor` are used
+
+`CrossConformalRegressor`,
+`JackknifeAfterBootstrapRegressor`,
+`ConformalizedQuantileRegressor` are used
 to estimate the prediction intervals of 1D heteroscedastic data using
 different strategies.
 
 The example clearly shows that
-:class:`~mapie.regression.ConformalizedQuantileRegressor`
+`ConformalizedQuantileRegressor`
 should provide the same coverage for a lower width of intervals because it
 adapts the prediction intervals to the local heteroscedastic noise.
 """

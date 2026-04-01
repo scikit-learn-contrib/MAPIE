@@ -1,14 +1,13 @@
 """
-=========================================================================================
-Data with constant uncertainty
-=========================================================================================
+# Data with constant uncertainty
+
 
 
 We show here how to use various MAPIE methods on data with homoscedastic data.
 
-:class:`~mapie.regression.CrossConformalRegressor`,
-:class:`~mapie.regression.JackknifeAfterBootstrapRegressor`,
-:class:`~mapie.regression.ConformalizedQuantileRegressor`,
+`CrossConformalRegressor`,
+`JackknifeAfterBootstrapRegressor`,
+`ConformalizedQuantileRegressor`,
 are used to estimate the prediction intervals of 1D homoscedastic
 data using different strategies.
 """

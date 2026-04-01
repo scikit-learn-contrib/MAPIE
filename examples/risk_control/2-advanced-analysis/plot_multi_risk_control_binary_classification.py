@@ -1,7 +1,6 @@
 """
-==========================================================
-Control multiple risks of a binary classifier
-==========================================================
+# Control multiple risks of a binary classifier
+
 
 In this example, we explain how to do multi-risk control for binary classification with MAPIE.
 
@@ -91,16 +90,16 @@ clf = MLPClassifier(max_iter=150, random_state=RANDOM_STATE)
 clf.fit(X_train, y_train)
 
 ##############################################################################
-# Next, we initialize a :class:`~mapie.risk_control.BinaryClassificationController`
+# Next, we initialize a `BinaryClassificationController`
 # using the probability estimation function from the fitted estimator:
-# ``clf.predict_proba``, a list of risk or performance metric (here, ["precision", "recall"]),
+# `clf.predict_proba`, a list of risk or performance metric (here, ["precision", "recall"]),
 # a list target risk level, and a single confidence level. Then we use the calibration data
 # to compute statistically guaranteed thresholds using a multi-risk control method.
 #
 # Different risks or performance metrics have been implemented, such as precision,
 # recall and accuracy, but you can also implement your own custom functions using
-# :class:`~mapie.risk_control.BinaryClassificationRisk` and choose your own
-# secondary objective (passed in ``best_predict_param_choice``)
+# `BinaryClassificationRisk` and choose your own
+# secondary objective (passed in `best_predict_param_choice`)
 #
 # Note that if the secondary objective is not specified, the first risk in the list is used
 # as the secondary objective by default. Here, we choose "recall" as the secondary objective.
@@ -133,7 +132,7 @@ clf.fit(X_train, y_train)
 # with statistical guarantees.
 #
 # Note that in the mono-risk case, the best predict parameter is left as "auto".
-# See :class:`~mapie.risk_control.BinaryClassificationController` documentation for more details.
+# See `BinaryClassificationController` documentation for more details.
 
 
 ##############################################################################
@@ -396,13 +395,13 @@ plt.show()
 
 # For Scenario 1 - Multi-risk only:
 # Besides computing a set of valid thresholds,
-# :class:`~mapie.risk_control.BinaryClassificationController` also outputs the "best"
+# `BinaryClassificationController` also outputs the "best"
 # one, which is the valid threshold that maximizes a secondary objective
 # (recall here).
 #
-# After obtaining the best threshold, we can use the ``predict`` function of
-# :class:`~mapie.risk_control.BinaryClassificationController` for future predictions,
-# or use scikit-learn's ``FixedThresholdClassifier`` as a wrapper to benefit
+# After obtaining the best threshold, we can use the `predict` function of
+# `BinaryClassificationController` for future predictions,
+# or use scikit-learn's `FixedThresholdClassifier` as a wrapper to benefit
 # from functionalities like easily plotting the decision boundary as seen below.
 
 y_pred = bcc_1.predict(X_test)

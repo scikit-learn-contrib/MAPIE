@@ -1,12 +1,11 @@
 """
-===========================================
-Precision control for semantic segmentation
-===========================================
+# Precision control for semantic segmentation
+
 
 This example illustrates how to control the precision of a
 semantic segmentation model using MAPIE.
 
-We use :class:`~mapie.risk_control.SemanticSegmentationController`
+We use `SemanticSegmentationController`
 to calibrate a decision threshold that statistically guarantees
 a target precision level on unseen data.
 
@@ -105,7 +104,7 @@ print(f"Calibration set size: {len(calib_dataset)}")
 print(f"Test set size: {len(test_dataset)}")
 
 ###############################################################################
-# A :class:`~mapie.risk_control.SemanticSegmentationController` is instantiated
+# A `SemanticSegmentationController` is instantiated
 # to control the precision risk (1 - precision) and automatically select a threshold
 # that meets the target precision level with high confidence.
 #

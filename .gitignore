@@ -9,16 +9,16 @@ __pycache__/
 *.so
 
 # documentation specific
-doc/_build/
-doc/examples_classification/
-doc/examples_regression/
-doc/examples_calibration/
-doc/examples_risk_control/
-doc/examples_mondrian/
-doc/auto_examples/
-doc/modules/generated/
-doc/datasets/generated/
-doc/generated/
+doc_legacy/_build/
+doc_legacy/examples_classification/
+doc_legacy/examples_regression/
+doc_legacy/examples_calibration/
+doc_legacy/examples_risk_control/
+doc_legacy/examples_mondrian/
+doc_legacy/auto_examples/
+doc_legacy/modules/generated/
+doc_legacy/datasets/generated/
+doc_legacy/generated/
 
 # Distribution / packaging
 
@@ -68,8 +68,8 @@ coverage.xml
 *.log
 
 # Sphinx documentation
-doc/_build/
-doc/generated/
+doc_legacy/_build/
+doc_legacy/generated/
 
 # Notebooks checkpoints
 **.ipynb_checkpoints
@@ -91,4 +91,8 @@ target/
 .python-version
 
 # uv
+
+# MkDocs
+site/
+doc/generated/
 uv.lock

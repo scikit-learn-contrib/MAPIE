@@ -36,44 +36,44 @@ class ConformalizedQuantileRegressor:
     """
     Computes prediction intervals using the conformalized quantile regression technique:
 
-    1. The ``fit`` method fits three models to the training data using the provided
+    1. The `fit` method fits three models to the training data using the provided
        regressor: a model to predict the target, and models to predict upper
        and lower quantiles around the target.
-    2. The ``conformalize`` method estimates the uncertainty of the quantile models
+    2. The `conformalize` method estimates the uncertainty of the quantile models
        using the conformalization set.
-    3. The ``predict_interval`` computes prediction points and intervals.
+    3. The `predict_interval` computes prediction points and intervals.
 
     Parameters
     ----------
-    estimator : Union[``RegressorMixin``, ``Pipeline``, \
-``List[Union[RegressorMixin, Pipeline]]``]
+    estimator : Union[`RegressorMixin`, `Pipeline`, \
+`List[Union[RegressorMixin, Pipeline]]`]
         The regressor used to predict points and quantiles.
 
-        When ``prefit=False`` (default), a single regressor that supports the quantile
+        When `prefit=False` (default), a single regressor that supports the quantile
         loss must be passed. Valid options:
 
-        - ``sklearn.linear_model.QuantileRegressor``
-        - ``sklearn.ensemble.GradientBoostingRegressor``
-        - ``sklearn.ensemble.HistGradientBoostingRegressor``
-        - ``lightgbm.LGBMRegressor``
+        - `sklearn.linear_model.QuantileRegressor`
+        - `sklearn.ensemble.GradientBoostingRegressor`
+        - `sklearn.ensemble.HistGradientBoostingRegressor`
+        - `lightgbm.LGBMRegressor`
 
-        When ``prefit=True``, a list of three fitted quantile regressors predicting the
+        When `prefit=True`, a list of three fitted quantile regressors predicting the
         lower, upper, and median quantiles must be passed (in that order).
         These quantiles must be:
 
-        - ``lower quantile = (1 - confidence_level) / 2``
-        - ``upper quantile = (1 + confidence_level) / 2``
-        - ``median quantile = 0.5``
+        - `lower quantile = (1 - confidence_level) / 2`
+        - `upper quantile = (1 + confidence_level) / 2`
+        - `median quantile = 0.5`
 
     confidence_level : float default=0.9
         The confidence level for the prediction intervals, indicating the
         desired coverage probability of the prediction intervals.
 
     prefit : bool, default=False
-        If True, three fitted quantile regressors must be provided, and the ``fit``
+        If True, three fitted quantile regressors must be provided, and the `fit`
         method must be skipped.
 
-        If False, the three regressors will be fitted during the ``fit`` method.
+        If False, the three regressors will be fitted during the `fit` method.
 
     Examples
     --------
@@ -144,7 +144,7 @@ class ConformalizedQuantileRegressor:
             Training data targets.
 
         fit_params : Optional[dict], default=None
-            Parameters to pass to the ``fit`` method of the regressors.
+            Parameters to pass to the `fit` method of the regressors.
 
         Returns
         -------
@@ -187,9 +187,9 @@ class ConformalizedQuantileRegressor:
             Targets of the conformalization set.
 
         predict_params : Optional[dict], default=None
-            Parameters to pass to the ``predict`` method of the regressors.
-            These parameters will also be used in the ``predict_interval``
-            and ``predict`` methods of this SplitConformalRegressor.
+            Parameters to pass to the `predict` method of the regressors.
+            These parameters will also be used in the `predict_interval`
+            and `predict` methods of this SplitConformalRegressor.
 
         Returns
         -------
@@ -244,8 +244,8 @@ class ConformalizedQuantileRegressor:
             technique corrects the predictions of the upper and lower quantile
             regressors by adding a constant.
 
-            If ``symmetric_correction`` is set to ``False`` , this constant is different
-            for the upper and the lower quantile predictions. If set to ``True``,
+            If `symmetric_correction` is set to `False` , this constant is different
+            for the upper and the lower quantile predictions. If set to `True`,
             this constant is the same for both.
 
         Returns
@@ -253,8 +253,8 @@ class ConformalizedQuantileRegressor:
         Tuple[NDArray, NDArray]
             Two arrays:
 
-            - Prediction points, of shape ``(n_samples,)``
-            - Prediction intervals, of shape ``(n_samples, 2, 1)``
+            - Prediction points, of shape `(n_samples,)`
+            - Prediction intervals, of shape `(n_samples, 2, 1)`
         """
         _raise_error_if_previous_method_not_called(
             "predict_interval",
@@ -286,7 +286,7 @@ class ConformalizedQuantileRegressor:
         Returns
         -------
         NDArray
-            Array of point predictions with shape ``(n_samples,)``.
+            Array of point predictions with shape `(n_samples,)`.
         """
         _raise_error_if_previous_method_not_called(
             "predict",
@@ -312,32 +312,32 @@ class _MapieQuantileRegressor(_MapieRegressor):
     ----------
     estimator : Optional[RegressorMixin]
         Any regressor with scikit-learn API
-        (i.e. with ``fit`` and ``predict`` methods).
-        If ``None``, estimator defaults to a ``QuantileRegressor`` instance.
+        (i.e. with `fit` and `predict` methods).
+        If `None`, estimator defaults to a `QuantileRegressor` instance.
 
-        By default ``"None"``.
+        By default `"None"`.
 
     method: str
         Method to choose for prediction, in this case, the only valid method
-        is the ``"quantile"`` method.
+        is the `"quantile"` method.
 
-        By default ``"quantile"``.
+        By default `"quantile"`.
 
     cv: Optional[str]
         The cross-validation strategy for computing conformity scores.
         In theory a split method is implemented as it is needed to provide
         both a training and calibration set.
 
-        By default ``None``.
+        By default `None`.
 
     alpha: float
-        Between ``0.0`` and ``1.0``, represents the risk level of the
+        Between `0.0` and `1.0`, represents the risk level of the
         confidence interval.
-        Lower ``alpha`` produce larger (more conservative) prediction
+        Lower `alpha` produce larger (more conservative) prediction
         intervals.
-        ``alpha`` is the complement of the target coverage level.
+        `alpha` is the complement of the target coverage level.
 
-        By default ``0.1``.
+        By default `0.1`.
 
     Attributes
     ----------
@@ -353,11 +353,11 @@ class _MapieQuantileRegressor(_MapieRegressor):
         - [2]: Estimator with quantile value of 0.5
 
     conformity_scores_: NDArray of shape (n_samples_train, 3)
-        Conformity scores between ``y_calib`` and ``y_pred``.
+        Conformity scores between `y_calib` and `y_pred`.
 
-        - [:, 0]: for ``y_calib`` coming from prediction estimator
+        - [:, 0]: for `y_calib` coming from prediction estimator
           with quantile of alpha/2
-        - [:, 1]: for ``y_calib`` coming from prediction estimator
+        - [:, 1]: for `y_calib` coming from prediction estimator
           with quantile of 1 - alpha/2
         - [:, 2]: maximum of those first two scores
 
@@ -447,12 +447,12 @@ class _MapieQuantileRegressor(_MapieRegressor):
         Parameters
         ----------
         alpha : float
-            Can only be a float value between ``0.0`` and ``1.0``.
+            Can only be a float value between `0.0` and `1.0`.
             Represent the risk level of the confidence interval.
             Lower alpha produce larger (more conservative) prediction
             intervals. Alpha is the complement of the target coverage level.
 
-            By default ``0.1``.
+            By default `0.1`.
 
         Returns
         -------
@@ -469,7 +469,7 @@ class _MapieQuantileRegressor(_MapieRegressor):
             If alpha is not a float.
 
         ValueError
-            If the value of ``alpha`` is not between ``0.0`` and ``1.0``.
+            If the value of `alpha` is not between `0.0` and `1.0`.
         """
         if isinstance(alpha, float):
             if np.any(np.logical_or(alpha <= 0, alpha >= 1.0)):
@@ -490,26 +490,26 @@ class _MapieQuantileRegressor(_MapieRegressor):
         Perform several checks on the estimator to check if it has
         all the required specifications to be used with this methodology.
         The estimators that can be used in _MapieQuantileRegressor need to
-        have a ``fit`` and ``predict`` attribute, but also need to allow
+        have a `fit` and `predict` attribute, but also need to allow
         a quantile loss and therefore also setting a quantile value.
-        Note that there is a ``TypedDict`` to check which methods allow for
+        Note that there is a `TypedDict` to check which methods allow for
         quantile regression.
 
         Parameters
         ----------
         estimator : Optional[RegressorMixin], optional
-            Estimator to check, by default ``None``.
+            Estimator to check, by default `None`.
 
         Returns
         -------
         RegressorMixin
-            The estimator itself or a default ``QuantileRegressor`` instance
-            with ``solver`` set to "highs".
+            The estimator itself or a default `QuantileRegressor` instance
+            with `solver` set to "highs".
 
         Raises
         ------
         ValueError
-            If the estimator implements ``fit`` or ``predict`` methods.
+            If the estimator implements `fit` or `predict` methods.
 
         ValueError
             We check if it's a known estimator that does quantile regression
@@ -518,12 +518,12 @@ class _MapieQuantileRegressor(_MapieRegressor):
             available estimators.
 
         ValueError
-            The estimator does not have the ``"loss_name"`` in its parameters
+            The estimator does not have the `"loss_name"` in its parameters
             and therefore can not be used as an estimator.
 
         ValueError
-            There is no quantile ``"loss_name"`` and therefore this estimator
-            can not be used as a ``_MapieQuantileRegressor``.
+            There is no quantile `"loss_name"` and therefore this estimator
+            can not be used as a `_MapieQuantileRegressor`.
 
         ValueError
             The parameter to set the alpha value does not exist in this
@@ -552,7 +552,7 @@ class _MapieQuantileRegressor(_MapieRegressor):
                         if param_estimator[loss_name] != "quantile":
                             raise ValueError(
                                 "You need to set the loss/objective argument"
-                                + " of your base model to ``quantile``."
+                                + " of your base model to `quantile`."
                             )
                         else:
                             if alpha_name in param_estimator:
@@ -574,28 +574,28 @@ class _MapieQuantileRegressor(_MapieRegressor):
                         "The base model is not supported. \n"
                         "Give a base model among: \n"
                         f"{self.quantile_estimator_params.keys()} "
-                        "Or, add your base model to" + " ``quantile_estimator_params``."
+                        "Or, add your base model to" + " `quantile_estimator_params`."
                     )
 
     def _check_cv(self, cv: Optional[str] = None) -> str:
         """
-        Check if cv argument is ``None``, ``"split"`` or ``"prefit"``.
+        Check if cv argument is `None`, `"split"` or `"prefit"`.
 
         Parameters
         ----------
         cv : Optional[str], optional
-           cv to check, by default ``None``.
+           cv to check, by default `None`.
 
         Returns
         -------
         str
-            cv itself or a default ``"split"``.
+            cv itself or a default `"split"`.
 
         Raises
         ------
         ValueError
             Raises an error if the cv is anything else but the method
-            ``"split"`` or ``"prefit"``.
+            `"split"` or `"prefit"`.
             Only the split method has been implemented.
         """
         if cv is None:
@@ -603,7 +603,7 @@ class _MapieQuantileRegressor(_MapieRegressor):
         if cv in ("split", "prefit"):
             return cv
         else:
-            raise ValueError("Invalid cv method, only valid method is ``split``.")
+            raise ValueError("Invalid cv method, only valid method is `split`.")
 
     def _train_calib_split(
         self,
@@ -701,10 +701,10 @@ class _MapieQuantileRegressor(_MapieRegressor):
         """
         Fit estimator and compute residuals used for prediction intervals.
         All the clones of the estimators for different quantile values are
-        stored in order alpha/2, 1 - alpha/2, 0.5 in the ``estimators_``
+        stored in order alpha/2, 1 - alpha/2, 0.5 in the `estimators_`
         attribute. Residuals for the first two estimators and the maximum
         of residuals among these residuals are stored in the
-        ``conformity_scores_`` attribute.
+        `conformity_scores_` attribute.
 
         Parameters
         ----------
@@ -716,7 +716,7 @@ class _MapieQuantileRegressor(_MapieRegressor):
 
         sample_weight: Optional[ArrayLike] of shape (n_samples,)
             Sample weights for fitting the out-of-fold models.
-            If ``None``, then samples are equally weighted.
+            If `None`, then samples are equally weighted.
             If some weights are null,
             their corresponding observations are removed
             before the fitting process and hence have no residuals.
@@ -724,7 +724,7 @@ class _MapieQuantileRegressor(_MapieRegressor):
             Note that the sample weight defined are only for the training, not
             for the calibration procedure.
 
-            By default ``None``.
+            By default `None`.
 
         groups: Optional[ArrayLike] of shape (n_samples,)
             Always ignored, exists for compatibility.
@@ -736,33 +736,33 @@ class _MapieQuantileRegressor(_MapieRegressor):
             Calibration labels.
 
         calib_size: Optional[float]
-            If ``X_calib`` and ``y_calib`` are not defined,
+            If `X_calib` and `y_calib` are not defined,
             then the calibration dataset is created with the split
-            defined by ``calib_size``.
+            defined by `calib_size`.
 
         random_state: Optional[Union[int, np.random.RandomState]], default=None
-            For the ``sklearn.model_selection.train_test_split`` documentation.
+            For the `sklearn.model_selection.train_test_split` documentation.
             Controls the shuffling applied to the data before applying the
             split.
             Pass an int for reproducible output across multiple function calls.
             See :term:`Glossary <random_state>`.
 
-            By default ``None``.
+            By default `None`.
 
         shuffle: bool, default=True
-            For the ``sklearn.model_selection.train_test_split`` documentation.
+            For the `sklearn.model_selection.train_test_split` documentation.
             Whether or not to shuffle the data before splitting.
-            If ``shuffle=False`` then stratify must be None.
+            If `shuffle=False` then stratify must be None.
 
-            By default ``True``.
+            By default `True`.
 
         stratify: array-like, default=None
-            For the ``sklearn.model_selection.train_test_split`` documentation.
-            If not ``None``, data is split in a stratified fashion, using this
+            For the `sklearn.model_selection.train_test_split` documentation.
+            If not `None`, data is split in a stratified fashion, using this
             as the class labels.
-            Read more in the :ref:`User Guide <stratification>`.
+            Read more in the [User Guide](https://scikit-learn.org/stable/modules/cross_validation.html#cross-validation-iterators-with-stratification).
 
-            By default ``None``.
+            By default `None`.
 
         **fit_params : dict
             Additional fit parameters.
@@ -929,7 +929,7 @@ class _MapieQuantileRegressor(_MapieRegressor):
     ) -> None:
         """
         Check that the parameters defined for the predict method
-        of ``_MapieQuantileRegressor`` are correct.
+        of `_MapieQuantileRegressor` are correct.
 
         Parameters
         ----------
@@ -937,17 +937,17 @@ class _MapieQuantileRegressor(_MapieRegressor):
             Ensemble has not been defined in predict and therefore should
             will not have any effects in this method.
         alpha: Optional[Union[float, Iterable[float]]]
-            For ``MapieQuantileRegresor`` the alpha has to be defined
+            For `MapieQuantileRegresor` the alpha has to be defined
             directly in initial arguments of the class.
 
         Raises
         ------
         Warning
             If the ensemble value is defined in the predict function
-            of ``_MapieQuantileRegressor``.
+            of `_MapieQuantileRegressor`.
         Warning
             If the alpha value is defined in the predict function
-            of ``_MapieQuantileRegressor``.
+            of `_MapieQuantileRegressor`.
 
         Examples
         --------
@@ -959,12 +959,12 @@ class _MapieQuantileRegressor(_MapieRegressor):
         ... except Exception as exception:
         ...     print(exception)
         ...
-        WARNING: ensemble is not utilized in ``_MapieQuantileRegressor``.
+        WARNING: ensemble is not utilized in `_MapieQuantileRegressor`.
         """
 
         if ensemble is True:
             warnings.warn(
-                "WARNING: ensemble is not utilized in ``_MapieQuantileRegressor``."
+                "WARNING: ensemble is not utilized in `_MapieQuantileRegressor`."
             )
         if alpha is not None:
             warnings.warn(
@@ -987,7 +987,7 @@ class _MapieQuantileRegressor(_MapieRegressor):
         Predict target on new samples with confidence intervals.
         Residuals from the training set and predictions from the model clones
         are central to the computation.
-        Prediction Intervals for a given ``alpha`` are deduced from the
+        Prediction Intervals for a given `alpha` are deduced from the
         quantile regression at the alpha values: alpha/2, 1 - (alpha/2)
         while adding a constant based uppon their residuals.
 
@@ -1001,7 +1001,7 @@ class _MapieQuantileRegressor(_MapieRegressor):
             will not have any effects in this method.
 
         alpha: Optional[Union[float, Iterable[float]]]
-            For ``MapieQuantileRegresor`` the alpha has to be defined
+            For `MapieQuantileRegresor` the alpha has to be defined
             directly in initial arguments of the class.
 
         symmetry: Optional[bool]
@@ -1015,9 +1015,9 @@ class _MapieQuantileRegressor(_MapieRegressor):
         Returns
         -------
         Union[NDArray, Tuple[NDArray, NDArray]]
-            - NDArray of shape (n_samples,) if ``alpha`` is ``None``.
+            - NDArray of shape (n_samples,) if `alpha` is `None`.
             - Tuple[NDArray, NDArray] of shapes (n_samples,) and
-              (n_samples, 2, n_alpha) if ``alpha`` is not ``None``.
+              (n_samples, 2, n_alpha) if `alpha` is not `None`.
               - [:, 0, :]: Lower bound of the prediction interval.
               - [:, 1, :]: Upper bound of the prediction interval.
         """

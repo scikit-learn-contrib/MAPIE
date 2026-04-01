@@ -1,10 +1,9 @@
 """
-============================================================
-Set prediction example in the binary classification setting
-============================================================
+# Set prediction example in the binary classification setting
+
 
 In this example, we propose set prediction for binary classification
-estimated by :class:`~mapie_v1.classification.SplitConformalClassifier` with the "lac"
+estimated by `SplitConformalClassifier` with the "lac"
 method on two-dimensional dataset.
 
 Throughout this tutorial, we will answer the following questions:
@@ -21,8 +20,8 @@ PLEASE NOTE: we don't recommend using set prediction in binary classification se
 even though we offer this tutorial for those who might be interested.
 Instead, we recommend the use of calibration (see more details in the
 Calibration section of the documentation or by using the
-:class:`~sklearn.calibration.CalibratedClassifierCV` proposed by sklearn
-or :class:`~mapie.calibration.TopLabelCalibrator` proposed in MAPIE).
+`CalibratedClassifierCV` proposed by sklearn
+or `TopLabelCalibrator` proposed in MAPIE).
 """
 
 # sphinx_gallery_thumbnail_number = 3
@@ -58,18 +57,18 @@ from mapie.utils import train_conformalize_test_split
 # * First we generate a dataset with train, conformalization and test, the model
 #   is fitted in the training set.
 #
-# * We set the conformal score ``Sᵢ = 𝑓̂(Xᵢ)ᵧᵢ``
+# * We set the conformal score `Sᵢ = 𝑓̂(Xᵢ)ᵧᵢ`
 #   from the softmax output of the true class for each sample
 #   in the conformalization set.
 #
-# * Then we define ``q̂`` as being the
-#   ``(n + 1) (1 - α) / n``
-#   previous quantile of ``S₁, ...,  Sₙ`` (this is essentially the
-#   quantile ``α``, but with a small sample correction).
+# * Then we define `q̂` as being the
+#   `(n + 1) (1 - α) / n`
+#   previous quantile of `S₁, ...,  Sₙ` (this is essentially the
+#   quantile `α`, but with a small sample correction).
 #
-# * Finally, for a new test data point (where ``Xₙ₊₁`` is known but
-#   ``Yₙ₊₁`` is not), create a prediction set
-#   ``C(Xₙ₊₁) = {y: 𝑓̂(Xₙ₊₁)ᵧ > q̂}`` which includes
+# * Finally, for a new test data point (where `Xₙ₊₁` is known but
+#   `Yₙ₊₁` is not), create a prediction set
+#   `C(Xₙ₊₁) = {y: 𝑓̂(Xₙ₊₁)ᵧ > q̂}` which includes
 #   all the classes with a sufficiently high conformity score.
 #
 # We use a two-dimensional dataset with two classes (i.e. YES or NO).
@@ -120,15 +119,15 @@ plt.show()
 ##############################################################################
 # We fit our training data with a Gaussian Naive Base estimator.
 # We first apply a probability calibration with
-# :class:`~sklearn.calibration.CalibratedClassifierCV` proposed by sklearn
+# `CalibratedClassifierCV` proposed by sklearn
 # so that scores can be interpreted as probabilities
 # (see documentation for more information).
-# Then we apply :class:`~mapie_v1.classification.SplitConformalClassifier` on the
+# Then we apply `SplitConformalClassifier` on the
 # conformity data with the LAC conformity score
 # to the estimator indicating that it has already been fitted with
 # `prefit=True`.
 # We then estimate the prediction sets with different confidence level values with a
-# ``conformalize`` and ``predict`` process.
+# `conformalize` and `predict` process.
 
 clf = GaussianNB()
 clf.fit(X_train, y_train)
@@ -153,10 +152,10 @@ y_pred_mapie, y_ps_mapie = mapie_clf.predict_set(X_test)
 ##############################################################################
 # MAPIE produces two outputs:
 #
-# - ``y_pred_mapie``: the prediction in the test set given by the
+# - `y_pred_mapie`: the prediction in the test set given by the
 #   base estimator.
 #
-# - ``y_ps_mapie``: the prediction sets estimated by MAPIE using the "lac"
+# - `y_ps_mapie`: the prediction sets estimated by MAPIE using the "lac"
 #   conformity score.
 #
 # Let's now visualize the distribution of the conformity scores with the two
@@ -285,7 +284,7 @@ print(
 
 ##############################################################################
 # Let's now compare the effective coverage and the average of prediction set
-# widths as function of the ``confidence_level`` target coverage.
+# widths as function of the `confidence_level` target coverage.
 
 confidence_level_ = np.arange(0.02, 0.98, 0.02)
 
@@ -330,7 +329,7 @@ plot_coverages_widths(confidence_level_, coverage, mean_width, "lac")
 
 ##############################################################################
 # It is seen that the method gives coverages close to the target coverages,
-# regardless of the ``confidence_level`` value.
+# regardless of the `confidence_level` value.
 
 ##############################################################################
 # Lastly, let us explore how the prediction sets change as a function of different

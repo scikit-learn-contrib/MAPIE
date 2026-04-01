@@ -20,12 +20,12 @@ class BinaryClassificationRisk:
     positives over the total number of predicted positives. In other words, precision is
     the average of correct predictions (occurrence) given that those predictions
     are positive (condition). Programmatically,
-    ``precision = (sum(y_pred == y_true) if y_pred == 1)/sum(y_pred == 1)``.
+    `precision = (sum(y_pred == y_true) if y_pred == 1)/sum(y_pred == 1)`.
     Because precision is a performance metric rather than a risk, `higher_is_better`
     must be set to `True`. See the implementation of `precision` in mapie.risk_control.
 
     Note: any risk or performance metric that can be defined as
-    ``sum(occurrence if condition) / sum(condition)`` can be theoretically controlled
+    `sum(occurrence if condition) / sum(condition)` can be theoretically controlled
     with the BinaryClassificationController, thanks to the LearnThenTest framework [1]
     and the binary Hoeffding-Bentkus p-values implemented in MAPIE.
 

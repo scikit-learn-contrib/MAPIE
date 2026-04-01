@@ -1,17 +1,16 @@
 """
-==========================================================================================================
-Use a pre-trained model
-==========================================================================================================
+# Use a pre-trained model
 
 
-:class:`~mapie.regression.SplitConformalRegressor` and
-:class:`~mapie.regression.ConformalizedQuantileRegressor`
+
+`SplitConformalRegressor` and
+`ConformalizedQuantileRegressor`
 are used to conformalize uncertainties for large models for
 which the cost of cross-validation is too high. Typically,
 neural networks rely on a single validation set.
 
 In this example, we first fit a neural network on the training set. We
-then compute residuals on a validation set with the ``prefit=True`` parameter.
+then compute residuals on a validation set with the `prefit=True` parameter.
 Finally, we evaluate the model with prediction intervals on a testing set.
 In a second part, we will also show how to use the prefit method in the
 conformalized quantile regressor.
@@ -75,8 +74,8 @@ y = f(X) + rng.normal(0, sigma, n_samples)
 # -----------------------------------------------------------------------------
 #
 # For this example, we will train a
-# :class:`~sklearn.neural_network.MLPRegressor` for
-# :class:`~mapie.regression.SplitConformalRegressor`.
+# `MLPRegressor` for
+# `SplitConformalRegressor`.
 
 
 # Train a MLPRegressor for SplitConformalRegressor
@@ -110,7 +109,7 @@ coverage = regression_coverage_score(y_test, y_pis)[0]
 #
 # In order to view the results, we will plot the predictions of the
 # the multi-layer perceptron (MLP) with their prediction intervals calculated with
-# :class:`~mapie.regression.SplitConformalRegressor`.
+# `SplitConformalRegressor`.
 
 # Plot obtained prediction intervals on testing set
 theoretical_semi_width = scipy.stats.norm.ppf(1 - confidence_level) * sigma
@@ -169,9 +168,9 @@ plt.show()
 # For this example, we will train multiple LGBMRegressor with a
 # quantile objective as this is a requirement to perform conformalized
 # quantile regression using
-# :class:`~mapie.regression.ConformalizedQuantileRegressor`. Note that the
+# `ConformalizedQuantileRegressor`. Note that the
 # three estimators need to be trained at quantile values of
-# ``(1+confidence_level)/2, (1-confidence_level)/2, 0.5)``.
+# `(1+confidence_level)/2, (1-confidence_level)/2, 0.5)`.
 
 # Train LGBMRegressor models for _MapieQuantileRegressor
 list_estimators_cqr = []
@@ -208,7 +207,7 @@ coverage_cqr = regression_coverage_score(y_test, y_pis_cqr)[0]
 #
 # As fdor the MLP predictions, we plot the predictions of the LGBMRegressor
 # with their prediction intervals calculated with
-# :class:`~mapie.regression.ConformalizedQuantileRegressor`.
+# `ConformalizedQuantileRegressor`.
 
 # Plot obtained prediction intervals on testing set
 theoretical_semi_width = scipy.stats.norm.ppf(1 - confidence_level) * sigma

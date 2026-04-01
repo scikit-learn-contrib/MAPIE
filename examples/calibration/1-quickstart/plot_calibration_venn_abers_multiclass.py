@@ -1,9 +1,8 @@
 """
-====================================================
-Calibrating multi-class classifier with Venn-ABERS
-====================================================
+# Calibrating multi-class classifier with Venn-ABERS
+
 This example shows how to calibrate a multi-class classifier with
-:class:`~mapie.calibration.VennAbersCalibrator` and visualize the
+`VennAbersCalibrator` and visualize the
 impact on predicted probabilities. We compare an uncalibrated model
 against its Venn-ABERS calibrated version using reliability diagrams
 and multi-class Brier scores.
