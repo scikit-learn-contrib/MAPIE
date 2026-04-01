@@ -1,3 +1,5 @@
+from typing import Literal
+
 import math
 
 import numpy as np

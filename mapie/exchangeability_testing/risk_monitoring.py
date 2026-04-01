@@ -1,9 +1,12 @@
+import warnings
+from typing import Literal, Optional
+
+import numpy as np
 from numpy.typing import NDArray
 
 from mapie.exchangeability_testing.confidence_bounds import (
     conjugate_mixture_empirical_bernstein_bound,
 )
-from mapie.risk_control.risks import Risk
 
 
 class RiskMonitoring:
@@ -63,12 +66,12 @@ class RiskMonitoring:
         self,
         risk: Risk,
         confidence_level: float = 0.95,
-        reference_risk=None,
-        tolerance=0.05,
-        tolerance_type="absolute",
-        threshold=None,
-        warn=True,
-    ):
+        reference_risk: Optional[float] = None,
+        tolerance: float = 0.05,
+        tolerance_type: Literal["absolute", "relative"] = "absolute",
+        threshold: Optional[float] = None,
+        warn: bool = True,
+    ) -> None:
         self.risk = risk
         self.tolerance = tolerance
         self.tolerance_type = tolerance_type
@@ -85,7 +88,7 @@ class RiskMonitoring:
         # Initialize other necessary attributes for the test
 
     @property
-    def harmful_shift_detected(self):
+    def harmful_shift_detected(self) -> bool:
         if len(self.online_risk_sequence_history) == 0:
             raise ValueError(
                 "Online risk lower limit must be computed with update_online_risk before checking for harmful shift."
@@ -145,5 +148,5 @@ class RiskMonitoring:
 
         return self
 
-    def summary(self):
+    def summary(self) -> None:
         pass
