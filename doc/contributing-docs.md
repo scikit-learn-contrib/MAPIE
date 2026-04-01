@@ -30,7 +30,7 @@ doc/
 ├── theory/                 # Theoretical descriptions
 ├── calibration/            # Calibration section
 ├── api/                    # API reference (auto-generated from docstrings)
-├── assets/images/          # Images used in documentation
+├── images/                 # Images used in documentation
 ├── stylesheets/extra.css   # Custom CSS overrides
 ├── javascripts/mathjax.js  # MathJax configuration
 └── hooks/                  # MkDocs build hooks
@@ -85,10 +85,10 @@ nav:
 
 ### 3. Add Images
 
-Place images in `doc/assets/images/` and reference them:
+Place images in `doc/images/` and reference them:
 
 ```markdown
-![Description](../assets/images/my-image.png)
+![Description](images/my-image.png)
 ```
 
 ## Adding a New Gallery Example

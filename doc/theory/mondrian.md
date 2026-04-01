@@ -39,7 +39,7 @@ The quantile for each group:
 where \(s_1, \ldots, s_{n^g}\) are the conformity scores of training points in group \(g\).
 
 <figure markdown>
-  ![Mondrian](../assets/images/mondrian.png){ width="600" }
+  ![Mondrian](../images/mondrian.png){ width="600" }
   <figcaption>Illustration of Mondrian conformal prediction (from [^1]).</figcaption>
 </figure>
 

@@ -24,11 +24,11 @@ Compute conformity scores ("conformalization") on a conformalization set _not se
 
 ### Split conformal with a pre-trained model
 
-![Split conformal prefit](../assets/images/cp_prefit.png){ width="800" }
+![Split conformal prefit](../images/cp_prefit.png){ width="800" }
 
 ### Split conformal with an untrained model
 
-![Split conformal split](../assets/images/cp_split.png){ width="800" }
+![Split conformal split](../images/cp_split.png){ width="800" }
 
 ---
 
@@ -39,4 +39,4 @@ Compute conformity scores ("conformalization") on a conformalization set _not se
 
 **MAPIE** then combines all these elements in a way that provides prediction intervals on new data with strong theoretical guarantees.
 
-![Cross conformal](../assets/images/cp_cross.png){ width="600" }
+![Cross conformal](../images/cp_cross.png){ width="600" }
