@@ -96,13 +96,6 @@ class RiskMonitoring:
             )
         return self.online_risk_lower_bound_sequence[-1] > self.threshold
 
-    def _compute_risk_sequence(self, y_true: NDArray, y_pred: NDArray) -> NDArray:
-        # TODO: à faire dans risks.py
-        risk_occurrences = self.risk._risk_occurrence(y_true, y_pred)
-        risk_conditions = self.risk._risk_condition(y_true, y_pred)
-        risks = risk_occurrences[risk_conditions]
-        return risks
-
     def compute_threshold(self, y_true: NDArray, y_pred: NDArray) -> "RiskMonitoring":
         if self.threshold is not None:
             raise ValueError("Threshold is already computed.")

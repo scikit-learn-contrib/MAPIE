@@ -124,6 +124,34 @@ class BinaryClassificationRisk:
             # in an infinite p_value, effectively invaliding the lambda
             return 1, -1
 
+    def get_risk_sequence(
+        self,
+        y_true: NDArray,
+        y_pred: NDArray,
+    ) -> NDArray:
+        """
+        Returns the sequence of risks on the effective samples.
+
+        Parameters
+        ----------
+        y_true : NDArray
+            NDArray of ground truth labels, of shape (n_samples,), with values
+            in {0, 1}.
+
+        y_pred : NDArray
+            NDArray of predictions, of shape (n_samples,), with values in
+            {0, 1}.
+
+        Returns
+        -------
+        NDArray
+            Risk occurrences restricted to the samples satisfying the risk
+            condition.
+        """
+        risk_occurrences = self._risk_occurrence(y_true, y_pred)
+        risk_conditions = self._risk_condition(y_true, y_pred)
+        return risk_occurrences[risk_conditions]
+
 
 RiskNameLiteral = Literal[
     "precision",
