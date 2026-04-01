@@ -1,12 +1,44 @@
 import math
 
 import numpy as np
-from confseq.boundaries import gamma_exponential_mixture_bound
 from scipy.special import gammainc, gammaln
 
 
 class GammaExponentialMixtureBound:
-    """Standalone Python version of the gamma-exponential mixture bound."""
+    """
+    Python translation of the gamma-exponential mixture bound from ``confseq``.
+
+    This implementation is adapted from the ``gamma_exponential_mixture_bound``
+    functionality in the `confseq` package by Steven R. Howard, Ian
+    Waudby-Smith, and Aaditya Ramdas. See ``THIRD_PARTY_NOTICES.md`` for the
+    corresponding MIT license notice.
+
+    References
+    ----------
+    Howard, S. R., Ramdas, A., McAuliffe, J., and Sekhon, J. (2021).
+    "Time-uniform, nonparametric, nonasymptotic confidence sequences."
+    The Annals of Statistics, 49(2), 1055-1080.
+
+    Howard, S. R., Waudby-Smith, I., and Ramdas, A. (2021--).
+    ``ConfSeq``: software for confidence sequences and uniform boundaries.
+    https://github.com/gostevehoward/confseq
+    """
+
+    This implementation is adapted from the ``gamma_exponential_mixture_bound``
+    functionality in the `confseq` package by Steven R. Howard, Ian
+    Waudby-Smith, and Aaditya Ramdas. See ``THIRD_PARTY_NOTICES.md`` for the
+    corresponding MIT license notice.
+
+    References
+    ----------
+    Howard, S. R., Ramdas, A., McAuliffe, J., and Sekhon, J. (2021).
+    "Time-uniform, nonparametric, nonasymptotic confidence sequences."
+    The Annals of Statistics, 49(2), 1055-1080.
+
+    Howard, S. R., Waudby-Smith, I., and Ramdas, A. (2021--).
+    ``ConfSeq``: software for confidence sequences and uniform boundaries.
+    https://github.com/gostevehoward/confseq
+    """
 
     def __init__(self, v_opt: float, c: float, alpha_opt: float = 0.05):
         if v_opt <= 0:
@@ -106,17 +138,31 @@ class GammaExponentialMixtureBound:
         return self.bound(v=v, alpha=alpha, tol=tol, max_iter=max_iter)
 
 
-def hoeffding_upper_limit(seq, delta):
+def hoeffding_bound(empirical_risk_sequence, delta, bound_side="upper"):
     """
     Predictably-mixed Hoeffding's (PM-H) confidence sequence.
     """
     n = len(seq)
 
-    emp_mean = np.mean(seq)
-    return emp_mean + np.sqrt(np.log(1 / delta) / (2 * n))
+    empirical_mean = np.mean(empirical_risk_sequence)
+
+    radius = np.sqrt(np.log(1 / delta) / (2 * num_observations))
+
+    if bound_side == "lower":
+        return empirical_mean - radius
+    elif bound_side == "upper":
+        return empirical_mean + radius
+    else:
+        raise ValueError("bound_side must be either 'upper' or 'lower'.")
 
 
-def conjmix_empbern_cs(x, v_opt, alpha=0.05, running_intersection=True):
+def conjugate_mixture_empirical_bernstein_bound(
+    empirical_risk_sequence,
+    v_opt,
+    alpha=0.05,
+    bound_side="upper",
+    running_intersection=True,
+):
     """
     Conjugate mixture empirical Bernstein (CM-EB) confidence sequence
     Parameters

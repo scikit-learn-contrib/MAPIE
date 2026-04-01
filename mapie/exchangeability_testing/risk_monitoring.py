@@ -1,8 +1,8 @@
-import warnings
-
 from numpy.typing import NDArray
 
-from mapie.exchangeability_testing.confidence_bounds import hoeffding_upper_limit
+from mapie.exchangeability_testing.confidence_bounds import (
+    conjugate_mixture_empirical_bernstein_bound,
+)
 from mapie.risk_control.risks import Risk
 
 
@@ -80,11 +80,13 @@ class RiskMonitoring:
         self.delta_reference = delta / 2
         self.delta_online = delta / 2
 
+        self.online_risk_sequence_history = np.array([], dtype=float)
+
         # Initialize other necessary attributes for the test
 
     @property
     def harmful_shift_detected(self):
-        if self.online_risk_lower_bound is None:
+        if len(self.online_risk_sequence_history) == 0:
             raise ValueError(
                 "Online risk lower limit must be computed with update_online_risk before checking for harmful shift."
             )
@@ -92,10 +94,7 @@ class RiskMonitoring:
             raise ValueError(
                 "Threshold must be computed with compute_threshold or set at initialization before checking for harmful shift."
             )
-        if self.online_risk_lower_bound > self.threshold:
-            return True
-        else:
-            return False
+        return self.online_risk_lower_bound_sequence[-1] > self.threshold
 
     def _compute_risk_sequence(self, y_true: NDArray, y_pred: NDArray) -> NDArray:
         # TODO: à faire dans risks.py
@@ -131,13 +130,24 @@ class RiskMonitoring:
                 "Threshold must be computed with compute_threshold or set at initialization before updating the online risk"
             )
 
-        online_risk_sequence = self._compute_risk_sequence(y_true, y_pred)
+        new_risk_sequence = self._compute_risk_sequence(y_true, y_pred)
+        self.online_risk_sequence_history = np.concatenate(
+            [self.online_risk_sequence_history, new_risk_sequence]
+        )
 
-        online_risk_lower_bound = online_risk_sequence
+        # in the current implementation, the bound is recomputed from scratch with the full history
+        self.online_risk_lower_bound_sequence = (
+            conjugate_mixture_empirical_bernstein_bound(
+                self.online_risk_sequence_history,
+                v_opt=1,
+                alpha=self.delta_online,
+                bound_side="lower",
+            )
+        )
 
         if self.harmful_shift_detected and self.warn:
             warnings.warn(
-                f"Harmful shift detected. Online risk lower limit ({online_risk_lower_bound:.3f}) is greater than the threshold ({self.threshold:.3f})."
+                f"Harmful shift detected. The last value of the online risk lower bound ({self.online_risk_lower_bound_sequence[-1]:.3f}) is greater than the threshold ({self.threshold:.3f})."
             )
 
         return self
