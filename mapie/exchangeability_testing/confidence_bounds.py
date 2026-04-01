@@ -1,3 +1,5 @@
+from typing import Literal
+
 import math
 from typing import Literal
 

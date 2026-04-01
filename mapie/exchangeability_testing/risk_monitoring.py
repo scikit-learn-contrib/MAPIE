@@ -1,3 +1,5 @@
+from typing import Literal, Optional
+
 import warnings
 from typing import Literal, Optional
 
@@ -8,7 +10,7 @@ from mapie.exchangeability_testing.confidence_bounds import (
     conjugate_mixture_empirical_bernstein_bound,
     hoeffding_bound,
 )
-from mapie.risk_control.risks import RiskLike, risk_choice_map
+from mapie.risk_control.risks import RiskLike
 
 
 class RiskMonitoring:
@@ -90,13 +92,7 @@ class RiskMonitoring:
         threshold: Optional[float] = None,
         warn: bool = True,
     ) -> None:
-        try:
-            self.risk = risk_choice_map[risk] if isinstance(risk, str) else risk
-        except KeyError as e:
-            raise ValueError(
-                "When risk is provided as a string, it must be one of: "
-                f"{list(risk_choice_map.keys())}"
-            ) from e
+        self.risk = risk
         self.tolerance = tolerance
         self.tolerance_type = tolerance_type
         self.warn = warn
@@ -113,7 +109,7 @@ class RiskMonitoring:
 
     @property
     def harmful_shift_detected(self) -> bool:
-        if len(self.online_risk_lower_bound_sequence_history) == 0:
+        if len(self.online_risk_sequence_history) == 0:
             raise ValueError(
                 "Online risk lower bound must be computed with update_online_risk before checking for harmful shift."
             )
@@ -213,5 +209,4 @@ class RiskMonitoring:
         return self
 
     def summary(self) -> None:
-        """Placeholder for a future summary API."""
         pass
