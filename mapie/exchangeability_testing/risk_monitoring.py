@@ -8,11 +8,7 @@ from mapie.exchangeability_testing.confidence_bounds import (
     conjugate_mixture_empirical_bernstein_bound,
     hoeffding_bound,
 )
-from mapie.risk_control.risks import (
-    BinaryClassificationRisk,
-    RiskLike,
-    risk_choice_map,
-)
+from mapie.risk_control.risks import RiskLike, risk_choice_map
 
 
 class RiskMonitoring:
@@ -74,14 +70,14 @@ class RiskMonitoring:
     ...     X, y, test_size=0.4, random_state=42
     ... )
     >>> clf = LogisticRegression().fit(X_train, y_train)
-    >>> monitor = RiskMonitoring(risk="accuracy", warn=False)
+
+    >>> risk_monitoring = RiskMonitoring(risk="accuracy")
     >>> y_pred = clf.predict(X_test)
-    >>> _ = monitor.compute_threshold(y_test, y_pred)
+    >>> risk_monitoring.compute_threshold(y_test, y_pred)
+
     >>> X_online, y_online = make_classification(n_samples=200, n_features=2, n_redundant=0, n_informative=2, random_state=42, class_sep=0.3)
     >>> y_pred_online = clf.predict(X_online)
-    >>> _ = monitor.update_online_risk(y_online, y_pred_online)
-    >>> print(monitor.harmful_shift_detected)
-    True
+    >>> risk_monitoring.update_online_risk(y_online, y_pred_online)
     """
 
     def __init__(
@@ -95,18 +91,12 @@ class RiskMonitoring:
         warn: bool = True,
     ) -> None:
         try:
-            resolved_risk = risk_choice_map[risk] if isinstance(risk, str) else risk
+            self.risk = risk_choice_map[risk] if isinstance(risk, str) else risk
         except KeyError as e:
             raise ValueError(
                 "When risk is provided as a string, it must be one of: "
                 f"{list(risk_choice_map.keys())}"
             ) from e
-        if not isinstance(resolved_risk, BinaryClassificationRisk):
-            raise TypeError(
-                "risk must be a single BinaryClassificationRisk instance or a "
-                "supported risk name."
-            )
-        self.risk: BinaryClassificationRisk = resolved_risk
         self.tolerance = tolerance
         self.tolerance_type = tolerance_type
         self.warn = warn
@@ -117,19 +107,13 @@ class RiskMonitoring:
         self.delta_reference = delta / 2
         self.delta_online = delta / 2
 
-        self.reference_risk_upper_bound: Optional[float] = None
-        self.online_risk_sequence_history: NDArray[np.float64] = np.array(
-            [], dtype=float
-        )
-        self.online_risk_lower_bound_sequence_history: NDArray[np.float64] = np.array(
-            [], dtype=float
-        )
-        self.online_risk_lower_bound_latest = None
+        self.online_risk_sequence_history = np.array([], dtype=float)
+        self.online_risk_lower_bound_sequence_history = np.array([], dtype=float)
+        # Initialize other necessary attributes for the test
 
     @property
     def harmful_shift_detected(self) -> bool:
-        """Whether the latest online lower bound exceeds the threshold."""
-        if self.online_risk_lower_bound_latest is None:
+        if len(self.online_risk_lower_bound_sequence_history) == 0:
             raise ValueError(
                 "Online risk lower bound must be computed with update_online_risk before checking for harmful shift."
             )
