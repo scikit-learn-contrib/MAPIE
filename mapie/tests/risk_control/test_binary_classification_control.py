@@ -22,7 +22,7 @@ from mapie.risk_control import (
     recall,
 )
 from mapie.risk_control.fwer_control import FWERFixedSequenceTesting
-from mapie.risk_control.risks import RiskLike
+from mapie.risk_control.risks import risk_choice_map
 
 random_state = 42
 dummy_single_param = np.array([0.5])
@@ -147,6 +147,58 @@ def test_binary_classification_risk(
     assert n == expected_n
 
 
+@pytest.mark.parametrize(
+    "risk_instance, y_true, y_pred, expected_sequence",
+    [
+        (
+            precision,
+            np.array([1, 0, 1, 0]),
+            np.array([1, 1, 0, 0]),
+            np.array([0, 1]),
+        ),
+        (
+            accuracy,
+            np.array([1, 0, 1, 0]),
+            np.array([1, 1, 0, 0]),
+            np.array([0, 1, 1, 0]),
+        ),
+        (
+            recall,
+            np.array([1, 0, 1, 0]),
+            np.array([1, 1, 0, 0]),
+            np.array([0, 1]),
+        ),
+        (
+            false_positive_rate,
+            np.array([1, 0, 1, 0]),
+            np.array([1, 1, 0, 0]),
+            np.array([1, 0]),
+        ),
+        (
+            positive_predictive_value,
+            np.array([1, 0, 1, 0]),
+            np.array([1, 1, 0, 0]),
+            np.array([0, 1]),
+        ),
+        (
+            precision,
+            np.array([1, 0, 1, 0]),
+            np.array([0, 0, 0, 0]),
+            np.array([], dtype=int),
+        ),
+    ],
+)
+def test_binary_classification_risk_sequence(
+    risk_instance: BinaryClassificationRisk,
+    y_true: NDArray,
+    y_pred: NDArray,
+    expected_sequence: NDArray,
+) -> None:
+    risk_sequence = risk_instance.get_risk_sequence(y_true, y_pred)
+
+    np.testing.assert_array_equal(risk_sequence, expected_sequence)
+
+
 class TestBinaryClassificationControllerBestPredictParamChoice:
     @pytest.mark.parametrize(
         "risk_instance, expected",
@@ -180,7 +232,7 @@ class TestBinaryClassificationControllerBestPredictParamChoice:
         )
 
         result = controller._set_best_predict_param_choice(str_risk)
-        assert result is BinaryClassificationController.risk_choice_map[str_risk]
+        assert result is risk_choice_map[str_risk]
 
     def test_custom(self):
         """Test _set_best_predict_param_choice with a custom risk instance."""
