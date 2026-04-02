@@ -1,5 +1,6 @@
 """
-# Comparing FWER methods for risk control in binary classification
+Comparing FWER methods for risk control in binary classification
+================================================================
 
 
 This example compares how different family-wise error rate (FWER) control

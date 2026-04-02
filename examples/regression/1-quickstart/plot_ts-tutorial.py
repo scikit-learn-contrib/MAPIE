@@ -1,5 +1,6 @@
 """
-# Tutorial for time series
+Tutorial for time series
+========================
 
 
 Note: in this tutorial, we use the following terms employed in the scientific

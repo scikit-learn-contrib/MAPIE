@@ -1,5 +1,6 @@
 """
-# Recall control for semantic segmentation
+Recall control for semantic segmentation
+========================================
 
 
 This example illustrates how to control the recall of a

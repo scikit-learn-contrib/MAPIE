@@ -1,5 +1,6 @@
 """
-# Precision control for semantic segmentation
+Precision control for semantic segmentation
+===========================================
 
 
 This example illustrates how to control the precision of a

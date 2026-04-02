@@ -1,5 +1,6 @@
 """
-# Calibrating multi-class classifier with Venn-ABERS
+Calibrating multi-class classifier with Venn-ABERS
+==================================================
 
 This example shows how to calibrate a multi-class classifier with
 `VennAbersCalibrator` and visualize the

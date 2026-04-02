@@ -1,5 +1,6 @@
 """
-# Data with gamma distribution
+Data with gamma distribution
+============================
 
 
 
