@@ -7,6 +7,7 @@ from numpy.typing import NDArray
 from mapie.exchangeability_testing.confidence_bounds import (
     conjugate_mixture_empirical_bernstein_bound,
 )
+from mapie.risk_control.risks import risk_choice_map
 
 
 class RiskMonitoring:
@@ -47,19 +48,13 @@ class RiskMonitoring:
 
     >>> clf = LogisticRegression().fit(X_train, y_train)
 
-    >>> risk_monitoring = RiskMonitoring(
-    ...     risk="precision",
-    ...     confidence_level=0.95,
-    ...     reference_risk=0.1,
-    ...     tolerance=0.05,
-    ...     warn=True
-    ... )
-
-    >>> y_pred = clf.predict_proba(X_test.reshape(1, -1))[0, 1]
+    >>> risk_monitoring = RiskMonitoring(risk="accuracy")
+    >>> y_pred = clf.predict(X_test)
     >>> risk_monitoring.compute_threshold(y_test, y_pred)
-    >>> y_pred_online = clf.predict_proba(X_online.reshape(1, -1))[0, 1]
+
+    >>> X_online, y_online = make_classification(n_samples=200, n_features=2, n_redundant=0, n_informative=2, random_state=42, class_sep=0.3)
+    >>> y_pred_online = clf.predict(X_online)
     >>> risk_monitoring.update_online_risk(y_online, y_pred_online)
-    >>> risk_monitoring.summary()
     """
 
     def __init__(
@@ -72,7 +67,13 @@ class RiskMonitoring:
         threshold: Optional[float] = None,
         warn: bool = True,
     ) -> None:
-        self.risk = risk
+        try:
+            self.risk = risk_choice_map[risk] if isinstance(risk, str) else risk
+        except KeyError as e:
+            raise ValueError(
+                "When risk is provided as a string, it must be one of: "
+                f"{list(risk_choice_map.keys())}"
+            ) from e
         self.tolerance = tolerance
         self.tolerance_type = tolerance_type
         self.warn = warn
@@ -84,12 +85,12 @@ class RiskMonitoring:
         self.delta_online = delta / 2
 
         self.online_risk_sequence_history = np.array([], dtype=float)
-
+        self.online_risk_lower_bound_sequence_history = np.array([], dtype=float)
         # Initialize other necessary attributes for the test
 
     @property
     def harmful_shift_detected(self) -> bool:
-        if len(self.online_risk_sequence_history) == 0:
+        if len(self.online_risk_lower_bound_sequence_history) == 0:
             raise ValueError(
                 "Online risk lower limit must be computed with update_online_risk before checking for harmful shift."
             )

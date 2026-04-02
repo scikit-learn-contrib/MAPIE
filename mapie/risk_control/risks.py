@@ -150,7 +150,10 @@ class BinaryClassificationRisk:
         """
         risk_occurrences = self._risk_occurrence(y_true, y_pred)
         risk_conditions = self._risk_condition(y_true, y_pred)
-        return risk_occurrences[risk_conditions]
+        risk_sequence = risk_occurrences[risk_conditions].astype(int)
+        if self.higher_is_better:
+            risk_sequence = 1 - risk_sequence
+        return risk_sequence
 
 
 RiskNameLiteral = Literal[
@@ -218,3 +221,23 @@ abstention_rate = BinaryClassificationRisk(
     risk_condition=lambda y_true, y_pred: np.repeat(True, len(y_true)),
     higher_is_better=False,
 )
+
+
+_best_predict_param_choice_map = {
+    precision: recall,
+    recall: precision,
+    accuracy: accuracy,
+    false_positive_rate: recall,
+}
+
+
+risk_choice_map = {
+    "precision": precision,
+    "recall": recall,
+    "accuracy": accuracy,
+    "fpr": false_positive_rate,
+    "predicted_positive_fraction": predicted_positive_fraction,
+    "positive_predictive_value": positive_predictive_value,
+    "negative_predictive_value": negative_predictive_value,
+    "abstention_rate": abstention_rate,
+}
