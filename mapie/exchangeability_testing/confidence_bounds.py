@@ -1,8 +1,8 @@
+import math
 from typing import Literal
 
-import math
-
 import numpy as np
+from numpy.typing import ArrayLike, NDArray
 from scipy.special import gammainc, gammaln
 
 
@@ -26,23 +26,7 @@ class GammaExponentialMixtureBound:
     https://github.com/gostevehoward/confseq
     """
 
-    This implementation is adapted from the ``gamma_exponential_mixture_bound``
-    functionality in the `confseq` package by Steven R. Howard, Ian
-    Waudby-Smith, and Aaditya Ramdas. See ``THIRD_PARTY_NOTICES.md`` for the
-    corresponding MIT license notice.
-
-    References
-    ----------
-    Howard, S. R., Ramdas, A., McAuliffe, J., and Sekhon, J. (2021).
-    "Time-uniform, nonparametric, nonasymptotic confidence sequences."
-    The Annals of Statistics, 49(2), 1055-1080.
-
-    Howard, S. R., Waudby-Smith, I., and Ramdas, A. (2021--).
-    ``ConfSeq``: software for confidence sequences and uniform boundaries.
-    https://github.com/gostevehoward/confseq
-    """
-
-    def __init__(self, v_opt: float, c: float, alpha_opt: float = 0.05):
+    def __init__(self, v_opt: float, c: float, alpha_opt: float = 0.05) -> None:
         if v_opt <= 0:
             raise ValueError("v_opt must be > 0")
         if c <= 0:
@@ -53,7 +37,7 @@ class GammaExponentialMixtureBound:
         self.v_opt = float(v_opt)
         self.c = float(c)
         self.alpha_opt = float(alpha_opt)
-        self.rho = self._one_sided_best_rho(self.v_opt, self.alpha_opt)
+        self.rho: float = self._one_sided_best_rho(self.v_opt, self.alpha_opt)
         self.c_sq = self.c * self.c
         self.rho_c_sq = self.rho / self.c_sq
         self.leading_constant = (
@@ -91,7 +75,7 @@ class GammaExponentialMixtureBound:
         v_rho_csq = (v + self.rho) / self.c_sq
         x = cs_v_csq + self.rho_c_sq
 
-        return (
+        return float(
             self.leading_constant
             + gammaln(v_rho_csq)
             + self._log_lower_regularized_gamma(v_rho_csq, x)
@@ -140,69 +124,90 @@ class GammaExponentialMixtureBound:
         return self.bound(v=v, alpha=alpha, tol=tol, max_iter=max_iter)
 
 
-def hoeffding_bound(empirical_risk_sequence, delta, bound_side="upper"):
+def hoeffding_bound(
+    empirical_risk_sequence: ArrayLike,
+    delta: float,
+    bound_side: Literal["upper", "lower"] = "upper",
+) -> float:
     """
-    Predictably-mixed Hoeffding's (PM-H) confidence sequence.
+    Predictably-mixed Hoeffding's (PM-H) risk bound.
+
+    Parameters
+    ----------
+    empirical_risk_sequence : array-like
+        Empirical risk estimates.
+    delta : float
+        Confidence level complement.
+    bound_side : {"upper", "lower"}
+        Side of the bound to return.
+    Returns
+    -------
+    bound : float
+        Lower or upper risk bound.
     """
-    n = len(seq)
+
+    num_observations = len(empirical_risk_sequence)
 
     empirical_mean = np.mean(empirical_risk_sequence)
 
     radius = np.sqrt(np.log(1 / delta) / (2 * num_observations))
 
     if bound_side == "lower":
-        return empirical_mean - radius
+        return float(empirical_mean - radius)
     elif bound_side == "upper":
-        return empirical_mean + radius
+        return float(empirical_mean + radius)
     else:
         raise ValueError("bound_side must be either 'upper' or 'lower'.")
 
 
 def conjugate_mixture_empirical_bernstein_bound(
-    empirical_risk_sequence,
-    v_opt,
-    alpha=0.05,
-    bound_side="upper",
-    running_intersection=True,
-):
+    empirical_risk_sequence: ArrayLike,
+    v_opt: float,
+    alpha: float = 0.05,
+    bound_side: Literal["upper", "lower"] = "upper",
+    running_intersection: bool = True,
+) -> NDArray[np.float64]:
     """
-    Conjugate mixture empirical Bernstein (CM-EB) confidence sequence
+    Conjugate mixture empirical Bernstein (CM-EB) bound.
+
     Parameters
     ----------
-    x, array-like of reals
-        The observed data
+    empirical_risk_sequence, array-like of reals
+        Sequence of observed risks.
     v_opt, positive real
-        Intrinsic time at which to optimize the confidence sequence.
+        Intrinsic time at which to optimize the confidence bound.
         For example, if the variance is given by sigma, and one
         wishes to optimize for time t, then v_opt = t*sigma^2.
     alpha, (0, 1)-valued real
         Significance level
+    bound_side, {"upper", "lower"}
+        Side of the bound to return.
     running_intersection, boolean
         Should the running intersection be taken?
     Returns
     -------
-    l, array-like of reals
-        Lower confidence sequence
-    u, array-like of reals
-        Upper confidence sequence
+    bound, array-like of reals
+        Lower or upper confidence bound sequence.
     """
-    x = np.array(x)
-    t = np.arange(1, len(x) + 1)
-    S_t = np.cumsum(x)
+    empirical_risk_sequence = np.array(empirical_risk_sequence)
+    t = np.arange(1, len(empirical_risk_sequence) + 1)
+    S_t = np.cumsum(empirical_risk_sequence)
     mu_hat_t = S_t / t
     mu_hat_tminus1 = np.append(1 / 2, mu_hat_t[0 : (len(mu_hat_t) - 1)])
-    V_t = np.cumsum(np.power(x - mu_hat_tminus1, 2))
-    bdry = (
-        gamma_exponential_mixture_bound(
-            V_t, alpha=alpha / 2, v_opt=v_opt, c=1, alpha_opt=alpha / 2
-        )
-        / t
+    V_t = np.cumsum(np.power(empirical_risk_sequence - mu_hat_tminus1, 2))
+    mixture_bound = GammaExponentialMixtureBound(v_opt=v_opt, c=1, alpha_opt=alpha / 2)
+    boundary = (
+        np.array([mixture_bound(v=float(v_t), alpha=alpha / 2) for v_t in V_t]) / t
     )
-    lower, upper = mu_hat_t - bdry, mu_hat_t + bdry
-    lower = np.maximum(lower, 0)
-    upper = np.minimum(upper, 1)
-    if running_intersection:
-        lower = np.maximum.accumulate(lower)
-        upper = np.minimum.accumulate(upper)
+    if bound_side == "lower":
+        bound = np.maximum(mu_hat_t - boundary, 0)
+        if running_intersection:
+            bound = np.maximum.accumulate(bound)
+    elif bound_side == "upper":
+        bound = np.minimum(mu_hat_t + boundary, 1)
+        if running_intersection:
+            bound = np.minimum.accumulate(bound)
+    else:
+        raise ValueError("bound_side must be either 'upper' or 'lower'.")
 
-    return lower, upper
+    return bound
