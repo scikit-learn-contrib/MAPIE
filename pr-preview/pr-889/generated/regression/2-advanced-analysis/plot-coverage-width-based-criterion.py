@@ -1,5 +1,6 @@
 """
-# Focus on intervals width
+Focus on intervals width
+========================
 
 This example uses `CrossConformalRegressor`,
 `ConformalizedQuantileRegressor` and

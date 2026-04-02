@@ -4315,7 +4315,7 @@ arXiv preprint arXiv:2202.00100.
 The First Passage Problem for a Continuous Markov Process.
 Ann. Math. Statist. 24 (4) 624 - 639, December,
 1953.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 27-39 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 28-40 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
@@ -4328,13 +4328,13 @@ Ann. Math. Statist. 24 (4) 624 - 639, December,
 </span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    <span class="n">length_scale</span><span class="p">,</span>
 </span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="p">)</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 40-46 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 41-47 -->
 
 <h2 id="1-create-1-dimensional-dataset-and-scores-to-test-for-calibration">1. Create 1-dimensional dataset and scores to test for calibration<a class="headerlink" href="#1-create-1-dimensional-dataset-and-scores-to-test-for-calibration" title="Permanent link">&para;</a></h2>
 <p>We start by simulating a 1-dimensional binary classification problem.
 We assume that the ground truth probability is driven by a sigmoid function,
 and we generate label according to this probability distribution.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 46-64 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 47-65 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">sigmoid</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">):</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    <span class="n">y</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="p">))</span>
@@ -4352,18 +4352,18 @@ and we generate label according to this probability distribution.</p>
 </span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="n">y_prob</span> <span class="o">=</span> <span class="n">sigmoid</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
 </span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="n">y_true</span> <span class="o">=</span> <span class="n">generate_y_true_calibrated</span><span class="p">(</span><span class="n">y_prob</span><span class="p">)</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 65-66 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 66-67 -->
 
 <p>Next we provide two additional miscalibrated scores (on purpose).</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 66-70 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 67-71 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">y</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;y_prob&quot;</span><span class="p">:</span> <span class="n">y_prob</span><span class="p">,</span> <span class="s2">&quot;y_pred_1&quot;</span><span class="p">:</span> <span class="n">sigmoid</span><span class="p">(</span><span class="mf">1.3</span> <span class="o">*</span> <span class="n">X</span><span class="p">),</span> <span class="s2">&quot;y_pred_2&quot;</span><span class="p">:</span> <span class="n">sigmoid</span><span class="p">(</span><span class="mf">0.7</span> <span class="o">*</span> <span class="n">X</span><span class="p">)}</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 71-73 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 72-74 -->
 
 <p>This is how the two miscalibration curves stands next to the
 ground truth.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 73-84 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 74-85 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">y_score</span> <span class="ow">in</span> <span class="n">y</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y_score</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
@@ -4375,11 +4375,11 @@ ground truth.</p>
 </span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </span></code></pre></div>
 <p><img alt="Probability curves" class="mkd-glr-single-img" src="../images/mkd_glr_plot_calibration_hypothesis_testing_001.png" srcset="../images/mkd_glr_plot_calibration_hypothesis_testing_001.png" /></p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 85-87 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 86-88 -->
 
 <p>Alternatively, you can readily see how much there is miscalibration
 in this view where we plot scores against the ground truth probability.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 87-97 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 88-98 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">y_score</span> <span class="ow">in</span> <span class="n">y</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">y_prob</span><span class="p">,</span> <span class="n">y_score</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
@@ -4391,7 +4391,7 @@ in this view where we plot scores against the ground truth probability.</p>
 </span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </span></code></pre></div>
 <p><img alt="Probability curves" class="mkd-glr-single-img" src="../images/mkd_glr_plot_calibration_hypothesis_testing_002.png" srcset="../images/mkd_glr_plot_calibration_hypothesis_testing_002.png" /></p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 98-112 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 99-113 -->
 
 <h2 id="2-visualizing-and-testing-for-miscalibration">2. Visualizing and testing for miscalibration<a class="headerlink" href="#2-visualizing-and-testing-for-miscalibration" title="Permanent link">&para;</a></h2>
 <p>We leverage the Kolomogorov-Smirnov statistical test
@@ -4403,37 +4403,37 @@ with the standard Brownian motion, in particular its range and
 maximum absolute value [1, 2].</p>
 <p>Let's have a look.</p>
 <p>First we compute the cumulative differences.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 112-118 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 113-119 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">cum_diffs</span> <span class="o">=</span> <span class="p">{</span>
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>    <span class="n">name</span><span class="p">:</span> <span class="n">cumulative_differences</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_score</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">y_score</span> <span class="ow">in</span> <span class="n">y</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
 </span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="p">}</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 119-120 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 120-121 -->
 
 <p>We want to plot is along the proportion of scores taken into account.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 120-124 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 121-125 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">k</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">y_true</span><span class="p">))</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">y_true</span><span class="p">)</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 125-127 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 126-128 -->
 
 <p>We also want to compare the extension of the curve to that of a typical
 Brownian motion.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 127-131 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 128-132 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="n">sigma</span> <span class="o">=</span> <span class="n">length_scale</span><span class="p">(</span><span class="n">y_prob</span><span class="p">)</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 132-133 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 133-134 -->
 
 <p>Finally, we compute the p-value according to Kolmogorov-Smirnov test [2, 3].</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 133-139 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 134-140 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="n">p_values</span> <span class="o">=</span> <span class="p">{</span>
 </span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>    <span class="n">name</span><span class="p">:</span> <span class="n">kolmogorov_smirnov_p_value</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_score</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">y_score</span> <span class="ow">in</span> <span class="n">y</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
 </span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="p">}</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 140-151 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 141-152 -->
 
 <p>The graph hereafter shows cumulative differences of each series of scores.
 The horizontal bars are typical length scales expected if the null
@@ -4445,7 +4445,7 @@ with a p-value close to 1.</p>
 <p>So we conclude by both visual and statistical
 arguments that we reject the null hypothesis for the two
 miscalibrated scores !</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 151-163 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 152-164 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">cum_diff</span> <span class="ow">in</span> <span class="n">cum_diffs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
 </span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">cum_diff</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> (p-value = </span><span class="si">{</span><span class="n">p_values</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="si">:</span><span class="s2">.5f</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
@@ -4459,7 +4459,7 @@ miscalibrated scores !</p>
 </span><span id="__span-9-10"><a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </span></code></pre></div>
 <p><img alt="Probability curves" class="mkd-glr-single-img" src="../images/mkd_glr_plot_calibration_hypothesis_testing_003.png" srcset="../images/mkd_glr_plot_calibration_hypothesis_testing_003.png" /></p>
-<p><strong>Total running time of the script:</strong> ( 0 minutes  0.223 seconds)</p>
+<p><strong>Total running time of the script:</strong> ( 0 minutes  0.215 seconds)</p>
 <div id="download_links"></div>
 
 <p><a class="md-button center" href="../plot_calibration_hypothesis_testing.py"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M256 32c0-17.7-14.3-32-32-32s-32 14.3-32 32v210.7l-41.4-41.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l96 96c12.5 12.5 32.8 12.5 45.3 0l96-96c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 242.7zM64 320c-35.3 0-64 28.7-64 64v32c0 35.3 28.7 64 64 64h320c35.3 0 64-28.7 64-64v-32c0-35.3-28.7-64-64-64h-46.9l-56.6 56.6c-31.2 31.2-81.9 31.2-113.1 0L110.9 320zm304 56a24 24 0 1 1 0 48 24 24 0 1 1 0-48"/></svg></span> Download Python source code: plot_calibration_hypothesis_testing.py</a></p>

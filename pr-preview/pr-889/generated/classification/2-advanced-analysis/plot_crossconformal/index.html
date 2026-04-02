@@ -4315,7 +4315,7 @@ conformalization set, while the <code>K-1</code> folds remaining are
 used for training the base model using
 the <code>prefit=True</code> option of
 <code>SplitConformalClassifier</code>.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 26-45 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 27-46 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># sphinx_gallery_thumbnail_number = 5</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
@@ -4335,7 +4335,7 @@ the <code>prefit=True</code> option of
 </span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>    <span class="n">classification_mean_width_score</span><span class="p">,</span>
 </span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="p">)</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 46-54 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 47-55 -->
 
 <h2 id="1-estimating-the-impact-of-trainconformalization-split-on-the-prediction-sets">1. Estimating the impact of train/conformalization split on the prediction sets<a class="headerlink" href="#1-estimating-the-impact-of-trainconformalization-split-on-the-prediction-sets" title="Permanent link">&para;</a></h2>
 <p>We start by generating the two-dimensional dataset and extracting training
@@ -4343,7 +4343,7 @@ and test sets. Two test sets are created, one with the same distribution
 as the training set and a second one with a regular mesh for visualization.
 The dataset is two-dimensional with three classes, data points of each class
 are obtained from a normal distribution.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 54-84 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 55-85 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">centers</span> <span class="o">=</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">3.5</span><span class="p">),</span> <span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="n">covs</span> <span class="o">=</span> <span class="p">[[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]],</span> <span class="p">[[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">]],</span> <span class="p">[[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]]]</span>
@@ -4372,10 +4372,10 @@ are obtained from a normal distribution.</p>
 </span><span id="__span-1-25"><a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a><span class="n">xx</span><span class="p">,</span> <span class="n">yy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">x_min</span><span class="p">,</span> <span class="n">x_max</span><span class="p">,</span> <span class="n">step</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">x_min</span><span class="p">,</span> <span class="n">x_max</span><span class="p">,</span> <span class="n">step</span><span class="p">))</span>
 </span><span id="__span-1-26"><a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a><span class="n">X_test</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">xx</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span> <span class="n">yy</span><span class="o">.</span><span class="n">ravel</span><span class="p">()],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 85-86 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 86-87 -->
 
 <p>Let's visualize the two-dimensional dataset.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 86-104 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 87-105 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">colors</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="s2">&quot;#1f77b4&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span> <span class="s2">&quot;#ff7f0e&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="p">:</span> <span class="s2">&quot;#2ca02c&quot;</span><span class="p">,</span> <span class="mi">3</span><span class="p">:</span> <span class="s2">&quot;#d62728&quot;</span><span class="p">}</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">y_train_col</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">colors</span><span class="o">.</span><span class="n">get</span><span class="p">,</span> <span class="n">y_train</span><span class="p">))</span>
@@ -4393,13 +4393,13 @@ are obtained from a normal distribution.</p>
 </span><span id="__span-2-14"><a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </span></code></pre></div>
 <p><img alt="plot crossconformal" class="mkd-glr-single-img" src="../images/mkd_glr_plot_crossconformal_001.png" srcset="../images/mkd_glr_plot_crossconformal_001.png" /></p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 105-109 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 106-110 -->
 
 <p>We split our training dataset into 5 folds and use each fold as a
 conformalization set. Each conformalization set is therefore used to estimate the
 conformity scores and the given quantiles for the two methods implemented in
 <code>SplitConformalClassifier</code>.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 109-141 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 110-142 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">kf</span> <span class="o">=</span> <span class="n">KFold</span><span class="p">(</span><span class="n">n_splits</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">clfs</span><span class="p">,</span> <span class="n">mapies</span><span class="p">,</span> <span class="n">y_preds</span><span class="p">,</span> <span class="n">y_ps_mapies</span> <span class="o">=</span> <span class="p">{},</span> <span class="p">{},</span> <span class="p">{},</span> <span class="p">{}</span>
@@ -4430,11 +4430,11 @@ conformity scores and the given quantiles for the two methods implemented in
 </span><span id="__span-3-27"><a id="__codelineno-3-27" name="__codelineno-3-27" href="#__codelineno-3-27"></a>        <span class="n">y_ps_mapies</span><span class="p">[</span><span class="n">conformity_score</span><span class="p">],</span>
 </span><span id="__span-3-28"><a id="__codelineno-3-28" name="__codelineno-3-28" href="#__codelineno-3-28"></a>    <span class="p">)</span> <span class="o">=</span> <span class="p">(</span><span class="n">clfs_</span><span class="p">,</span> <span class="n">mapies_</span><span class="p">,</span> <span class="n">y_preds_</span><span class="p">,</span> <span class="n">y_ps_mapies_</span><span class="p">)</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 142-144 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 143-145 -->
 
 <p>Let's now plot the distribution of conformity scores for each conformity
 set and the estimated quantile for <code>confidence_level</code> = 0.9.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 144-160 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 145-161 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">fig</span><span class="p">,</span> <span class="n">axs</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">mapies</span><span class="p">[</span><span class="n">conformity_scores</span><span class="p">[</span><span class="mi">0</span><span class="p">]]),</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">mapie</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">mapies</span><span class="p">[</span><span class="n">conformity_scores</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
@@ -4450,14 +4450,14 @@ set and the estimated quantile for <code>confidence_level</code> = 0.9.</p>
 </span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </span></code></pre></div>
 <p><img alt="Distribution of scores on each conformity fold for the lac conformity score, split=0 quantile=0.685, split=1 quantile=0.557, split=2 quantile=0.544, split=3 quantile=0.630, split=4 quantile=0.606" class="mkd-glr-single-img" src="../images/mkd_glr_plot_crossconformal_002.png" srcset="../images/mkd_glr_plot_crossconformal_002.png" /></p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 161-167 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 162-168 -->
 
 <p>We notice that the estimated quantile slightly varies among the conformity
 sets for the two conformity scores explored here, suggesting that the
 train/conformalization splitting can slightly impact our results.</p>
 <p>Let's now visualize this impact on the number of labels included in each
 prediction set induced by the different conformalization sets.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 167-204 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 168-205 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">plot_results</span><span class="p">(</span>
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>    <span class="n">mapies</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
@@ -4493,13 +4493,13 @@ prediction set induced by the different conformalization sets.</p>
 </span><span id="__span-5-32"><a id="__codelineno-5-32" name="__codelineno-5-32" href="#__codelineno-5-32"></a>    <span class="p">)</span>
 </span><span id="__span-5-33"><a id="__codelineno-5-33" name="__codelineno-5-33" href="#__codelineno-5-33"></a>    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 205-209 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 206-210 -->
 
 <p>The prediction sets and the resulting coverages slightly vary among
 conformalization sets. Let's now visualize the coverage score and the
 prediction set size of each fold and for both conformity scores, when
 <code>confidence_level</code> = 0.9.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 209-220 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 210-221 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">plot_results</span><span class="p">(</span>
 </span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>    <span class="n">mapies</span><span class="p">[</span><span class="n">conformity_scores</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">X_test_distrib</span><span class="p">,</span> <span class="n">y_test_distrib</span><span class="p">,</span> <span class="s2">&quot;lac&quot;</span>
@@ -4513,11 +4513,11 @@ prediction set size of each fold and for both conformity scores, when
 <img alt="Number of labels in prediction sets for the lac conformity score, coverage = 0.916, coverage = 0.882, coverage = 0.878, coverage = 0.903, coverage = 0.897" src="../images/mkd_glr_plot_crossconformal_003.png" srcset="../images/mkd_glr_plot_crossconformal_003.png", class="sphx-glr-single-img" /><img alt="Number of labels in prediction sets for the aps conformity score, coverage = 0.982, coverage = 0.980, coverage = 0.972, coverage = 0.975, coverage = 0.975" src="../images/mkd_glr_plot_crossconformal_004.png" srcset="../images/mkd_glr_plot_crossconformal_004.png", class="sphx-glr-single-img" />
 </ul>
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 221-223 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 222-224 -->
 
 <p>Let's now compare the coverages and prediction set sizes obtained with the
 different folds used as conformalization sets.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 223-277 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 224-278 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">plot_coverage_width</span><span class="p">(</span>
 </span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>    <span class="n">confidence_level</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">,</span>
@@ -4574,7 +4574,7 @@ different folds used as conformalization sets.</p>
 <img alt="Effective coverage and prediction set size for the lac conformity score" src="../images/mkd_glr_plot_crossconformal_005.png" srcset="../images/mkd_glr_plot_crossconformal_005.png", class="sphx-glr-single-img" /><img alt="Effective coverage and prediction set size for the aps conformity score" src="../images/mkd_glr_plot_crossconformal_006.png" srcset="../images/mkd_glr_plot_crossconformal_006.png", class="sphx-glr-single-img" />
 </ul>
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 278-286 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 279-287 -->
 
 <p>One can notice that the train/conformity indeed impacts the coverage and
 prediction set.</p>
@@ -4587,7 +4587,7 @@ prediction set.</p>
 <p>The prediction sets are impacted by the way we extract the conformalization set.</p>
 </li>
 </ul>
-<!-- GENERATED FROM PYTHON SOURCE LINES 288-309 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 289-310 -->
 
 <h2 id="2-aggregating-the-conformity-scores-through-cross-validation">2. Aggregating the conformity scores through cross-validation<a class="headerlink" href="#2-aggregating-the-conformity-scores-through-cross-validation" title="Permanent link">&para;</a></h2>
 <p>It is possible to "aggregate" the predictions through cross-validation
@@ -4610,7 +4610,7 @@ mainly via two methods:</p>
 object or an integer giving the number of folds.
 When estimating the prediction sets, we define how the scores are aggregated
 with the <code>agg_scores</code> attribute.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 309-377 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 310-378 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="n">Params</span> <span class="o">=</span> <span class="n">TypedDict</span><span class="p">(</span>
 </span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>    <span class="s2">&quot;Params&quot;</span><span class="p">,</span>
@@ -4678,14 +4678,14 @@ with the <code>agg_scores</code> attribute.</p>
 </span><span id="__span-8-64"><a id="__codelineno-8-64" name="__codelineno-8-64" href="#__codelineno-8-64"></a>    <span class="n">mapie_clf</span><span class="o">.</span><span class="n">fit_conformalize</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
 </span><span id="__span-8-65"><a id="__codelineno-8-65" name="__codelineno-8-65" href="#__codelineno-8-65"></a>    <span class="n">_</span><span class="p">,</span> <span class="n">y_ps</span><span class="p">[</span><span class="n">strategy</span><span class="p">]</span> <span class="o">=</span> <span class="n">mapie_clf</span><span class="o">.</span><span class="n">predict_set</span><span class="p">(</span><span class="n">X_test_distrib</span><span class="p">,</span> <span class="o">**</span><span class="n">args_predict</span><span class="p">)</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 378-383 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 379-384 -->
 
 <p>Next, we estimate the coverages and widths of prediction sets for both
 aggregation strategies and both methods.
 We also estimate the "violation" score defined as the absolute difference
 between the effective coverage and the target coverage averaged over all
 confidence level values.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 383-392 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 384-393 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="n">coverages</span><span class="p">,</span> <span class="n">widths</span><span class="p">,</span> <span class="n">violations</span> <span class="o">=</span> <span class="p">{},</span> <span class="p">{},</span> <span class="p">{}</span>
 </span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>
@@ -4694,11 +4694,11 @@ confidence level values.</p>
 </span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>    <span class="n">widths</span><span class="p">[</span><span class="n">strategy</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">classification_mean_width_score</span><span class="p">(</span><span class="n">y_ps_</span><span class="p">))</span>
 </span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>    <span class="n">violations</span><span class="p">[</span><span class="n">strategy</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">coverages</span><span class="p">[</span><span class="n">strategy</span><span class="p">]</span> <span class="o">-</span> <span class="n">confidence_level</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 393-395 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 394-396 -->
 
 <p>Next, we visualize their coverages and prediction set sizes as function of
 the <code>confidence_level</code> parameter.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 395-413 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 396-414 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="n">plot_coverage_width</span><span class="p">(</span>
 </span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>    <span class="n">confidence_level</span><span class="p">,</span>
@@ -4720,7 +4720,7 @@ the <code>confidence_level</code> parameter.</p>
 <img alt="Effective coverage and prediction set size for the lac conformity score" src="../images/mkd_glr_plot_crossconformal_007.png" srcset="../images/mkd_glr_plot_crossconformal_007.png", class="sphx-glr-single-img" /><img alt="Effective coverage and prediction set size for the aps conformity score" src="../images/mkd_glr_plot_crossconformal_008.png" srcset="../images/mkd_glr_plot_crossconformal_008.png", class="sphx-glr-single-img" />
 </ul>
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 414-422 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 415-423 -->
 
 <p>Both methods give here the same coverages and prediction set sizes for this
 example. In practice, we obtain very similar results for datasets containing
@@ -4729,7 +4729,7 @@ a high number of points. However, this is not the case for small datasets.</p>
 more robust than with the split-conformal used above. Let's check this first
 impression by comparing the violation of the effective coverage from the
 target coverage between the cross-conformal and split-conformal methods.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 422-438 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 423-439 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="n">violations_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
 </span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>    <span class="n">index</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;lac&quot;</span><span class="p">,</span> <span class="s2">&quot;aps&quot;</span><span class="p">],</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;cv_mean&quot;</span><span class="p">,</span> <span class="s2">&quot;cv_crossval&quot;</span><span class="p">,</span> <span class="s2">&quot;splits&quot;</span><span class="p">]</span>
@@ -4752,7 +4752,7 @@ target coverage between the cross-conformal and split-conformal methods.</p>
 </span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>lac<span class="w">   </span><span class="m">0</span>.00764<span class="w">     </span><span class="m">0</span>.00764<span class="w">  </span><span class="m">0</span>.014893
 </span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>aps<span class="w">  </span><span class="m">0</span>.008273<span class="w">    </span><span class="m">0</span>.006304<span class="w">  </span><span class="m">0</span>.017948
 </span></code></pre></div>
-<p><strong>Total running time of the script:</strong> ( 0 minutes  14.457 seconds)</p>
+<p><strong>Total running time of the script:</strong> ( 0 minutes  14.278 seconds)</p>
 <div id="download_links"></div>
 
 <p><a class="md-button center" href="../plot_crossconformal.py"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M256 32c0-17.7-14.3-32-32-32s-32 14.3-32 32v210.7l-41.4-41.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l96 96c12.5 12.5 32.8 12.5 45.3 0l96-96c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 242.7zM64 320c-35.3 0-64 28.7-64 64v32c0 35.3 28.7 64 64 64h320c35.3 0 64-28.7 64-64v-32c0-35.3-28.7-64-64-64h-46.9l-56.6 56.6c-31.2 31.2-81.9 31.2-113.1 0L110.9 320zm304 56a24 24 0 1 1 0 48 24 24 0 1 1 0-48"/></svg></span> Download Python source code: plot_crossconformal.py</a></p>

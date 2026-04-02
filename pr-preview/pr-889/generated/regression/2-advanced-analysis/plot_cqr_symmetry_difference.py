@@ -1,5 +1,6 @@
 """
-# The symmetric correction parameter in conformalized quantile regression
+The symmetric correction parameter in conformalized quantile regression
+=======================================================================
 
 
 

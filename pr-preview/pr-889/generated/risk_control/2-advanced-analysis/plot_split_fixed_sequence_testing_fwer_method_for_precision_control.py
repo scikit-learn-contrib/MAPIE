@@ -1,5 +1,6 @@
 """
-# Split Fixed Sequence Testing for Precision Control under Multiple Testing
+Split Fixed Sequence Testing for Precision Control under Multiple Testing
+=========================================================================
 
 
 This example demonstrates how to control a non-monotonic risk such as

@@ -4234,7 +4234,7 @@ arXiv preprint arXiv:2202.00100.
 The First Passage Problem for a Continuous Markov Process.
 Ann. Math. Statist. 24 (4) 624 - 639, December,
 1953.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 36-45 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 37-46 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
@@ -4244,12 +4244,12 @@ Ann. Math. Statist. 24 (4) 624 - 639, December,
 </span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mapie.metrics.calibration</span><span class="w"> </span><span class="kn">import</span> <span class="n">spiegelhalter_p_value</span>
 </span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mapie.metrics.calibration</span><span class="w"> </span><span class="kn">import</span> <span class="n">kolmogorov_smirnov_p_value</span><span class="p">,</span> <span class="n">kuiper_p_value</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 46-49 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 47-50 -->
 
 <p>First we need to generate scores that are perfecty calibrated. To do so,
 we simply start from a given array of probabilities between 0 and 1,
 and draw random labels 0 or 1 according to these probabilities.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 49-58 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 50-59 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">generate_y_true_calibrated</span><span class="p">(</span><span class="n">y_prob</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">,</span> <span class="n">random_state</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">:</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    <span class="n">generator</span> <span class="o">=</span> <span class="n">check_random_state</span><span class="p">(</span><span class="n">random_state</span><span class="p">)</span>
@@ -4257,12 +4257,12 @@ and draw random labels 0 or 1 according to these probabilities.</p>
 </span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    <span class="n">y_true</span> <span class="o">=</span> <span class="p">(</span><span class="n">uniform</span> <span class="o">&lt;=</span> <span class="n">y_prob</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
 </span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>    <span class="k">return</span> <span class="n">y_true</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 59-62 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 60-63 -->
 
 <p>Then, we draw many different calibrated datasets, each with a fixed
 dataset size. For each of these datasets, we compute the available p-values
 implemented in MAPIE.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 62-82 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 63-83 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">n_sets</span> <span class="o">=</span> <span class="mi">10000</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">n_points</span> <span class="o">=</span> <span class="mi">500</span>
@@ -4282,7 +4282,7 @@ implemented in MAPIE.</p>
 </span><span id="__span-2-16"><a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a><span class="n">ku_p_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">ku_p_values</span><span class="p">)</span>
 </span><span id="__span-2-17"><a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a><span class="n">sp_p_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">sp_p_values</span><span class="p">)</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 83-89 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 84-90 -->
 
 <p>Finally, we plot the empirical cumulative distribution function of
 the p-values computed on these many datasets. We see that even for
@@ -4290,7 +4290,7 @@ moderately sized datasets, the p-values computed closely follow the
 expected uniform distribution under the null hypothesis. It appears that
 Kuiper p-value is the slowest to converge compared to Spiegelhalter
 and Kolmogorov-Smirnov.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 89-116 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 90-117 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">plt</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>    <span class="n">ks_p_values</span><span class="p">,</span>
@@ -4320,7 +4320,7 @@ and Kolmogorov-Smirnov.</p>
 </span><span id="__span-3-26"><a id="__codelineno-3-26" name="__codelineno-3-26" href="#__codelineno-3-26"></a><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </span></code></pre></div>
 <p><img alt="Distribution of p-values for calibrated datasets" class="mkd-glr-single-img" src="../images/mkd_glr_plot_asymptotic_convergence_of_p_values_001.png" srcset="../images/mkd_glr_plot_asymptotic_convergence_of_p_values_001.png" /></p>
-<p><strong>Total running time of the script:</strong> ( 0 minutes  11.038 seconds)</p>
+<p><strong>Total running time of the script:</strong> ( 0 minutes  11.267 seconds)</p>
 <div id="download_links"></div>
 
 <p><a class="md-button center" href="../plot_asymptotic_convergence_of_p_values.py"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M256 32c0-17.7-14.3-32-32-32s-32 14.3-32 32v210.7l-41.4-41.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l96 96c12.5 12.5 32.8 12.5 45.3 0l96-96c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 242.7zM64 320c-35.3 0-64 28.7-64 64v32c0 35.3 28.7 64 64 64h320c35.3 0 64-28.7 64-64v-32c0-35.3-28.7-64-64-64h-46.9l-56.6 56.6c-31.2 31.2-81.9 31.2-113.1 0L110.9 320zm304 56a24 24 0 1 1 0 48 24 24 0 1 1 0-48"/></svg></span> Download Python source code: plot_asymptotic_convergence_of_p_values.py</a></p>

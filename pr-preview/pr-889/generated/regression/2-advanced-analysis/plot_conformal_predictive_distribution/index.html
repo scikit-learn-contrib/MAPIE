@@ -4319,11 +4319,11 @@
 to download the full example code</p>
 </div>
 <h1 id="conformal-predictive-distribution">Conformal Predictive Distribution<a class="headerlink" href="#conformal-predictive-distribution" title="Permanent link">&para;</a></h1>
-<!-- GENERATED FROM PYTHON SOURCE LINES 6-9 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 7-10 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># sphinx_gallery_thumbnail_number = 3</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 10-20 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 11-21 -->
 
 <p>In this advanced analysis, we propose to use MAPIE for Conformal Predictive
 Distribution (CPD) in few steps. Here are some reference papers for more
@@ -4333,7 +4333,7 @@ information about CPD:</p>
 <p>[2] Vovk, V., Shen, J., Manokhin, V., &amp; Xie, M. G. (2017, May). Nonparametric
 predictive distributions based on conformal prediction. In Conformal and
 probabilistic prediction and applications (pp. 82-102). PMLR.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 20-37 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 21-38 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
@@ -4350,11 +4350,11 @@ probabilistic prediction and applications (pp. 82-102). PMLR.</p>
 </span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>
 </span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="n">RANDOM_STATE</span> <span class="o">=</span> <span class="mi">15</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 38-42 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 39-43 -->
 
 <h2 id="1-generating-toy-dataset">1. Generating toy dataset<a class="headerlink" href="#1-generating-toy-dataset" title="Permanent link">&para;</a></h2>
 <p>Here, we propose just to generate data for regression task, then split it.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 42-65 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 43-66 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">X</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">make_regression</span><span class="p">(</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>    <span class="n">n_samples</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">n_features</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">noise</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="n">RANDOM_STATE</span>
@@ -4378,14 +4378,14 @@ probabilistic prediction and applications (pp. 82-102). PMLR.</p>
 </span><span id="__span-2-20"><a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </span></code></pre></div>
 <p><img alt="plot conformal predictive distribution" class="mkd-glr-single-img" src="../images/mkd_glr_plot_conformal_predictive_distribution_001.png" srcset="../images/mkd_glr_plot_conformal_predictive_distribution_001.png" /></p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 66-73 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 67-74 -->
 
 <h2 id="2-defining-a-conformal-predictive-distribution-class-with-mapie">2. Defining a Conformal Predictive Distribution class with MAPIE<a class="headerlink" href="#2-defining-a-conformal-predictive-distribution-class-with-mapie" title="Permanent link">&para;</a></h2>
 <p>To be able to obtain the cumulative distribution function of
 a prediction with MAPIE, we propose here to wrap the
 <code>SplitConformalRegressor</code> to add a new method named
 <code>get_cumulative_distribution_function</code>.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 73-90 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 74-91 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">MapieConformalPredictiveDistribution</span><span class="p">(</span><span class="n">SplitConformalRegressor</span><span class="p">):</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -4401,13 +4401,13 @@ a prediction with MAPIE, we propose here to wrap the
 </span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>        <span class="p">)</span>
 </span><span id="__span-3-13"><a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>        <span class="k">return</span> <span class="n">res</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 91-95 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 92-96 -->
 
 <p>Now, we propose to use it with two different conformity scores -
 <code>AbsoluteConformityScore</code> and
 <code>ResidualNormalisedScore</code> -
 in split-conformal inference.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 95-125 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 96-126 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">mapie_regressor_1</span> <span class="o">=</span> <span class="n">MapieConformalPredictiveDistribution</span><span class="p">(</span>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>    <span class="n">estimator</span><span class="o">=</span><span class="n">LinearRegression</span><span class="p">(),</span>
@@ -4438,12 +4438,12 @@ in split-conformal inference.</p>
 </span><span id="__span-4-27"><a id="__codelineno-4-27" name="__codelineno-4-27" href="#__codelineno-4-27"></a><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </span></code></pre></div>
 <p><img alt="plot conformal predictive distribution" class="mkd-glr-single-img" src="../images/mkd_glr_plot_conformal_predictive_distribution_002.png" srcset="../images/mkd_glr_plot_conformal_predictive_distribution_002.png" /></p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 126-131 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 127-132 -->
 
 <h2 id="3-visualizing-the-cumulative-distribution-function">3. Visualizing the cumulative distribution function<a class="headerlink" href="#3-visualizing-the-cumulative-distribution-function" title="Permanent link">&para;</a></h2>
 <p>We now propose to visualize the cumulative distribution functions of
 the predictive distribution in a graph in order to compare the two methods.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 131-152 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 132-153 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">nb_bins</span> <span class="o">=</span> <span class="mi">100</span>
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
@@ -4466,7 +4466,7 @@ the predictive distribution in a graph in order to compare the two methods.</p>
 </span><span id="__span-5-19"><a id="__codelineno-5-19" name="__codelineno-5-19" href="#__codelineno-5-19"></a><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </span></code></pre></div>
 <p><img alt="plot conformal predictive distribution" class="mkd-glr-single-img" src="../images/mkd_glr_plot_conformal_predictive_distribution_003.png" srcset="../images/mkd_glr_plot_conformal_predictive_distribution_003.png" /></p>
-<p><strong>Total running time of the script:</strong> ( 0 minutes  0.173 seconds)</p>
+<p><strong>Total running time of the script:</strong> ( 0 minutes  0.176 seconds)</p>
 <div id="download_links"></div>
 
 <p><a class="md-button center" href="../plot_conformal_predictive_distribution.py"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M256 32c0-17.7-14.3-32-32-32s-32 14.3-32 32v210.7l-41.4-41.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l96 96c12.5 12.5 32.8 12.5 45.3 0l96-96c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 242.7zM64 320c-35.3 0-64 28.7-64 64v32c0 35.3 28.7 64 64 64h320c35.3 0 64-28.7 64-64v-32c0-35.3-28.7-64-64-64h-46.9l-56.6 56.6c-31.2 31.2-81.9 31.2-113.1 0L110.9 320zm304 56a24 24 0 1 1 0 48 24 24 0 1 1 0-48"/></svg></span> Download Python source code: plot_conformal_predictive_distribution.py</a></p>

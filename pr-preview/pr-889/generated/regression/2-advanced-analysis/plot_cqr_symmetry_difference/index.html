@@ -4210,7 +4210,7 @@ to download the full example code</p>
 <h1 id="the-symmetric-correction-parameter-in-conformalized-quantile-regression">The symmetric correction parameter in conformalized quantile regression<a class="headerlink" href="#the-symmetric-correction-parameter-in-conformalized-quantile-regression" title="Permanent link">&para;</a></h1>
 <p>An example plot of <code>ConformalizedQuantileRegressor</code>
 illustrating the impact of the <code>symmetric_correction</code> parameter.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 9-21 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 10-22 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
@@ -4223,10 +4223,10 @@ illustrating the impact of the <code>symmetric_correction</code> parameter.</p>
 </span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>
 </span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="n">RANDOM_STATE</span> <span class="o">=</span> <span class="mi">1</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 22-23 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 23-24 -->
 
 <p>We generate a synthetic data.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 23-76 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 24-77 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">X</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">make_regression</span><span class="p">(</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    <span class="n">n_samples</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">n_features</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">noise</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="n">RANDOM_STATE</span>
@@ -4285,13 +4285,13 @@ illustrating the impact of the <code>symmetric_correction</code> parameter.</p>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>y_pis_sym<span class="o">[</span>:,<span class="w"> </span><span class="m">0</span><span class="o">]</span>.shape:<span class="w"> </span><span class="o">(</span><span class="m">200</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>y_pis_sym<span class="o">[</span>:,<span class="w"> </span><span class="m">1</span><span class="o">]</span>.shape:<span class="w"> </span><span class="o">(</span><span class="m">200</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 77-81 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 78-82 -->
 
 <p>We will plot the predictions and prediction intervals for both symmetric
 and asymmetric intervals. The line represents the predicted values, the
 dashed lines represent the prediction intervals, and the shaded area
 represents the symmetric and asymmetric prediction intervals.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 81-127 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 82-128 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">14</span><span class="p">,</span> <span class="mi">7</span><span class="p">))</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
@@ -4339,7 +4339,7 @@ represents the symmetric and asymmetric prediction intervals.</p>
 </span><span id="__span-3-44"><a id="__codelineno-3-44" name="__codelineno-3-44" href="#__codelineno-3-44"></a><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </span></code></pre></div>
 <p><img alt="Symmetric Intervals Target and effective coverages for confidence_level=0.80; coverage=0.795), Asymmetric Intervals Target and effective coverages for confidence_level=0.80; coverage=0.795)" class="mkd-glr-single-img" src="../images/mkd_glr_plot_cqr_symmetry_difference_001.png" srcset="../images/mkd_glr_plot_cqr_symmetry_difference_001.png" /></p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 128-135 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 129-136 -->
 
 <p>The symmetric intervals (<code>symmetric_correction=True</code>) use a combined set of
 residuals for both bounds, while the asymmetric intervals
@@ -4348,7 +4348,7 @@ allowing for more flexible and accurate intervals that reflect the
 heteroscedastic nature of the data. The resulting effective coverages
 demonstrate the theoretical guarantee of the target coverage level
 <code>confidence_level</code>.</p>
-<p><strong>Total running time of the script:</strong> ( 0 minutes  0.687 seconds)</p>
+<p><strong>Total running time of the script:</strong> ( 0 minutes  0.708 seconds)</p>
 <div id="download_links"></div>
 
 <p><a class="md-button center" href="../plot_cqr_symmetry_difference.py"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M256 32c0-17.7-14.3-32-32-32s-32 14.3-32 32v210.7l-41.4-41.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l96 96c12.5 12.5 32.8 12.5 45.3 0l96-96c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 242.7zM64 320c-35.3 0-64 28.7-64 64v32c0 35.3 28.7 64 64 64h320c35.3 0 64-28.7 64-64v-32c0-35.3-28.7-64-64-64h-46.9l-56.6 56.6c-31.2 31.2-81.9 31.2-113.1 0L110.9 320zm304 56a24 24 0 1 1 0 48 24 24 0 1 1 0-48"/></svg></span> Download Python source code: plot_cqr_symmetry_difference.py</a></p>

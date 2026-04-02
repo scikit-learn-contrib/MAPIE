@@ -4253,7 +4253,7 @@ and broad applicability across problem settings.</p>
 <li>how different FWER procedures impact the set of valid thresholds,</li>
 <li>and why SFST can often identify better thresholds than classical corrections.</li>
 </ul>
-<!-- GENERATED FROM PYTHON SOURCE LINES 58-70 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 59-71 -->
 
 <p>Split Fixed Sequence Testing requires learning an order in which candidate
 thresholds will be tested. This order must be estimated on independent data
@@ -4265,7 +4265,7 @@ to avoid selection bias.</p>
 </ul>
 <p>This separation is essential. Reusing the same data for both steps would lead
 to optimistic bias and would invalidate the FWER guarantees of the procedure.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 70-85 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 71-86 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># sphinx_gallery_thumbnail_number = 2</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
@@ -4281,11 +4281,11 @@ to optimistic bias and would invalidate the FWER guarantees of the procedure.</p
 </span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>
 </span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="n">RANDOM_STATE</span> <span class="o">=</span> <span class="mi">42</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 86-88 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 87-89 -->
 
 <p>First, load the dataset and then split it into training, calibration
 (for conformalization), and test sets.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 88-145 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 89-146 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">X</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">make_circles</span><span class="p">(</span><span class="n">n_samples</span><span class="o">=</span><span class="mi">5000</span><span class="p">,</span> <span class="n">noise</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">factor</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="n">RANDOM_STATE</span><span class="p">)</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">X_calib</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">y_calib</span><span class="p">,</span> <span class="n">y_test</span><span class="p">)</span> <span class="o">=</span> <span class="n">train_conformalize_test_split</span><span class="p">(</span>
@@ -4344,10 +4344,10 @@ to optimistic bias and would invalidate the FWER guarantees of the procedure.</p
 </span><span id="__span-1-55"><a id="__codelineno-1-55" name="__codelineno-1-55" href="#__codelineno-1-55"></a><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </span></code></pre></div>
 <p><img alt="Visualization of Train, Calibration, and Test Sets, Training Data, Calibration Data, Test Data" class="mkd-glr-single-img" src="../images/mkd_glr_plot_split_fixed_sequence_testing_fwer_method_for_precision_control_001.png" srcset="../images/mkd_glr_plot_split_fixed_sequence_testing_fwer_method_for_precision_control_001.png" /></p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 146-147 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 147-148 -->
 
 <p>Second, fit a Multi-layer Perceptron classifier on the training data.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 147-151 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 148-152 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">clf</span> <span class="o">=</span> <span class="n">MLPClassifier</span><span class="p">(</span><span class="n">max_iter</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="n">RANDOM_STATE</span><span class="p">)</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">clf</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
@@ -5399,7 +5399,7 @@ to optimistic bias and would invalidate the FWER guarantees of the procedure.</p
     forceTheme('sk-container-id-7');</script></body>
 </div>
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 152-178 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 153-179 -->
 
 <p>Next, we initialize <code>BinaryClassificationController</code>
 with the estimator probability function <code>clf.predict_proba</code>, the
@@ -5425,7 +5425,7 @@ sequential testing while preserving statistical guarantees.</p>
 <p>In practice, we expect Bonferroni to be the most conservative, Holm to lie
 in between, and Split Fixed Sequence to often yield more powerful results
 when the learned ordering prioritizes promising thresholds.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 178-221 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 179-222 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">target_precision</span> <span class="o">=</span> <span class="mf">0.8</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">confidence_level</span> <span class="o">=</span> <span class="mf">0.9</span>
@@ -5470,9 +5470,9 @@ when the learned ordering prioritizes promising thresholds.</p>
 </span><span id="__span-3-41"><a id="__codelineno-3-41" name="__codelineno-3-41" href="#__codelineno-3-41"></a><span class="n">bcc_sfst</span><span class="o">.</span><span class="n">calibrate</span><span class="p">(</span><span class="n">X_calib_remaining</span><span class="p">,</span> <span class="n">y_calib_remaining</span><span class="p">)</span>
 </span></code></pre></div>
 <p class="mkd-glr-script-out">Out:</p>
-<div class="mkd-glr-script-out-disp highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>&lt;mapie.risk_control.binary_classification.BinaryClassificationController<span class="w"> </span>object<span class="w"> </span>at<span class="w"> </span>0x7f93d038b4a0&gt;
+<div class="mkd-glr-script-out-disp highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>&lt;mapie.risk_control.binary_classification.BinaryClassificationController<span class="w"> </span>object<span class="w"> </span>at<span class="w"> </span>0x7f8c0b0b3020&gt;
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 222-230 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 223-231 -->
 
 <p>Note that, in the case of SFST, the controller has first learned a deterministic
 order of thresholds using <code>learn_fixed_sequence_order</code> method.
@@ -5480,7 +5480,7 @@ Second, during calibration with the <code>calibrate</code> method,
 it has tested them sequentially until rejection.</p>
 <p>The important difference compared to Bonferroni correction, is that SFST tests only a subset
 of prediction parameters, with the most promising ones first.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 230-238 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 231-239 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nb">print</span><span class="p">(</span>
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>    <span class="sa">f</span><span class="s2">&quot;Thresholds found that guarantee a precision of at least </span><span class="si">{</span><span class="n">target_precision</span><span class="si">}</span><span class="s2"> with a confidence of </span><span class="si">{</span><span class="n">confidence_level</span><span class="si">}</span><span class="s2">:</span><span class="se">\n</span><span class="s2">&quot;</span>
@@ -5495,13 +5495,13 @@ of prediction parameters, with the most promising ones first.</p>
 </span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>-<span class="w"> </span>Split<span class="w"> </span>FST<span class="w"> </span>procedure:<span class="w"> </span><span class="m">38</span><span class="w"> </span>valid<span class="w"> </span>thresholds.<span class="w"> </span>The<span class="w"> </span>best<span class="w"> </span>threshold<span class="w"> </span>maximizing<span class="w"> </span>recall<span class="w"> </span>is:<span class="w"> </span><span class="m">0</span>.356
 </span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>-<span class="w"> </span>Holm-Bonferroni<span class="w"> </span>method:<span class="w"> </span><span class="m">53</span><span class="w"> </span>valid<span class="w"> </span>thresholds.<span class="w"> </span>The<span class="w"> </span>best<span class="w"> </span>threshold<span class="w"> </span>maximizing<span class="w"> </span>recall<span class="w"> </span>is:<span class="w"> </span><span class="m">0</span>.465
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 239-244 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 240-245 -->
 
 <p>The plot below shows how precision varies with the decision threshold and which
 thresholds are statistically valid under each FWER control method. Colors
 indicate agreement or disagreement between methods, and stars mark the best
 valid threshold selected by each procedure as well as the naive threshold.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 244-440 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 245-441 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="n">tested_thresholds</span> <span class="o">=</span> <span class="n">bcc_bonferroni</span><span class="o">.</span><span class="n">_predict_params</span>
 </span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="n">tested_thresholds_sfst</span> <span class="o">=</span> <span class="n">bcc_sfst</span><span class="o">.</span><span class="n">_learned_fixed_sequence</span>
@@ -5698,12 +5698,12 @@ valid threshold selected by each procedure as well as the naive threshold.</p>
 </span><span id="__span-7-193"><a id="__codelineno-7-193" name="__codelineno-7-193" href="#__codelineno-7-193"></a><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </span></code></pre></div>
 <p><img alt="Bonferroni vs Bonferroni-Holm, Split Fixed Sequence" class="mkd-glr-single-img" src="../images/mkd_glr_plot_split_fixed_sequence_testing_fwer_method_for_precision_control_002.png" srcset="../images/mkd_glr_plot_split_fixed_sequence_testing_fwer_method_for_precision_control_002.png" /></p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 441-445 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 442-446 -->
 
 <p>Finally, we compare test-set precision obtained with the naive threshold and with
 the best valid threshold selected by each FWER method, alongside their
 calibration-set recalls.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 445-474 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 446-475 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="n">proba_positive_class_test</span> <span class="o">=</span> <span class="n">clf</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">X_test</span><span class="p">)[:,</span> <span class="mi">1</span><span class="p">]</span>
 </span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="n">y_pred_naive</span> <span class="o">=</span> <span class="p">(</span>
@@ -5753,7 +5753,7 @@ calibration-set recalls.</p>
 </span><span id="__span-9-17"><a id="__codelineno-9-17" name="__codelineno-9-17" href="#__codelineno-9-17"></a><span class="w"> </span>-<span class="w"> </span><span class="m">0</span>.851<span class="w"> </span>on<span class="w"> </span>the<span class="w"> </span>calibration<span class="w"> </span><span class="nb">set</span>
 </span><span id="__span-9-18"><a id="__codelineno-9-18" name="__codelineno-9-18" href="#__codelineno-9-18"></a><span class="w"> </span>-<span class="w"> </span><span class="m">0</span>.815<span class="w"> </span>on<span class="w"> </span>the<span class="w"> </span><span class="nb">test</span><span class="w"> </span>set.
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 475-491 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 476-492 -->
 
 <p>Risk control provides statistical guarantees on unseen data, unlike naive
 threshold selection. Although the naive threshold may appear to satisfy the
@@ -5768,7 +5768,7 @@ will meet the target level.</p>
 thresholds), Split Fixed Sequence Testing is typically the least conservative
 when its assumptions hold (largest valid set), and Bonferroni-Holm lies in
 between, offering a practical compromise between power and generality.</p>
-<p><strong>Total running time of the script:</strong> ( 0 minutes  2.124 seconds)</p>
+<p><strong>Total running time of the script:</strong> ( 0 minutes  2.106 seconds)</p>
 <div id="download_links"></div>
 
 <p><a class="md-button center" href="../plot_split_fixed_sequence_testing_fwer_method_for_precision_control.py"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M256 32c0-17.7-14.3-32-32-32s-32 14.3-32 32v210.7l-41.4-41.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l96 96c12.5 12.5 32.8 12.5 45.3 0l96-96c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 242.7zM64 320c-35.3 0-64 28.7-64 64v32c0 35.3 28.7 64 64 64h320c35.3 0 64-28.7 64-64v-32c0-35.3-28.7-64-64-64h-46.9l-56.6 56.6c-31.2 31.2-81.9 31.2-113.1 0L110.9 320zm304 56a24 24 0 1 1 0 48 24 24 0 1 1 0-48"/></svg></span> Download Python source code: plot_split_fixed_sequence_testing_fwer_method_for_precision_control.py</a></p>

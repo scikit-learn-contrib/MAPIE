@@ -4209,7 +4209,7 @@ to download the full example code</p>
 </div>
 <h1 id="control-multiple-risks-of-a-binary-classifier">Control multiple risks of a binary classifier<a class="headerlink" href="#control-multiple-risks-of-a-binary-classifier" title="Permanent link">&para;</a></h1>
 <p>In this example, we explain how to do multi-risk control for binary classification with MAPIE.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 8-26 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 9-27 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># sphinx_gallery_thumbnail_number = 2</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
@@ -4228,11 +4228,11 @@ to download the full example code</p>
 </span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>
 </span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="n">RANDOM_STATE</span> <span class="o">=</span> <span class="mi">1</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 27-29 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 28-30 -->
 
 <p>First, load the dataset and then split it into training, calibration
 (for conformalization), and test sets.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 29-86 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 30-87 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">X</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">make_circles</span><span class="p">(</span><span class="n">n_samples</span><span class="o">=</span><span class="mi">5000</span><span class="p">,</span> <span class="n">noise</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">factor</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="n">RANDOM_STATE</span><span class="p">)</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">X_calib</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">y_calib</span><span class="p">,</span> <span class="n">y_test</span><span class="p">)</span> <span class="o">=</span> <span class="n">train_conformalize_test_split</span><span class="p">(</span>
@@ -4291,10 +4291,10 @@ to download the full example code</p>
 </span><span id="__span-1-55"><a id="__codelineno-1-55" name="__codelineno-1-55" href="#__codelineno-1-55"></a><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </span></code></pre></div>
 <p><img alt="Visualization of Train, Calibration, and Test Sets, Training Data, Calibration Data, Test Data" class="mkd-glr-single-img" src="../images/mkd_glr_plot_multi_risk_control_binary_classification_001.png" srcset="../images/mkd_glr_plot_multi_risk_control_binary_classification_001.png" /></p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 87-88 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 88-89 -->
 
 <p>Second, fit a Multi-layer Perceptron classifier on the training data.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 88-92 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 89-93 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">clf</span> <span class="o">=</span> <span class="n">MLPClassifier</span><span class="p">(</span><span class="n">max_iter</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="n">RANDOM_STATE</span><span class="p">)</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">clf</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
@@ -5346,7 +5346,7 @@ to download the full example code</p>
     forceTheme('sk-container-id-4');</script></body>
 </div>
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 93-110 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 94-111 -->
 
 <p>Next, we initialize a <code>BinaryClassificationController</code>
 using the probability estimation function from the fitted estimator:
@@ -5362,7 +5362,7 @@ as the secondary objective by default. Here, we choose "recall" as the secondary
 <p>Here we consider the list of risks ["precision", "recall"] and choose "recall" as the secondary
 objective. Furthermore, we consider two scenarios according to different target levels
 for precision and recall.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 112-136 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 113-137 -->
 
 <p>The following table summarizes the configuration of both scenarios:</p>
 <p>+-------------------------------+------------------------+------------------------+
@@ -5384,7 +5384,7 @@ the multi-risk controller may not find any threshold that satisfies both simulta
 with statistical guarantees.</p>
 <p>Note that in the mono-risk case, the best predict parameter is left as "auto".
 See <code>BinaryClassificationController</code> documentation for more details.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 139-182 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 140-183 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># Scenario 1:</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">target_levels_1</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.75</span><span class="p">,</span> <span class="mf">0.70</span><span class="p">]</span>
@@ -5433,7 +5433,7 @@ See <code>BinaryClassificationController</code> documentation for more details.<
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>and<span class="w"> </span>a<span class="w"> </span>recall<span class="w"> </span>of<span class="w"> </span>at<span class="w"> </span>least<span class="w"> </span><span class="m">0</span>.7<span class="w"> </span>with<span class="w"> </span>a<span class="w"> </span>confidence<span class="w"> </span>of<span class="w"> </span><span class="m">0</span>.9.Among<span class="w"> </span>those,<span class="w"> </span>the<span class="w"> </span>one<span class="w"> </span>that<span class="w"> </span>maximizes
 </span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>the<span class="w"> </span>secondary<span class="w"> </span>objective<span class="w"> </span><span class="o">(</span>here,<span class="w"> </span>recall,<span class="w"> </span>passed<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="sb">`</span>best_predict_param_choice<span class="sb">`</span><span class="o">)</span><span class="w"> </span>is:<span class="w"> </span><span class="m">0</span>.500.
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 183-222 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 184-223 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1"># Scenario 2:</span>
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="n">target_levels_2</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.85</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">]</span>
@@ -5476,11 +5476,11 @@ See <code>BinaryClassificationController</code> documentation for more details.<
 <p class="mkd-glr-script-out">Out:</p>
 <div class="mkd-glr-script-out-disp highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>Scenario<span class="w"> </span><span class="m">2</span><span class="w"> </span>-<span class="w"> </span>Multiple<span class="w"> </span>risks<span class="w"> </span>:<span class="w"> </span>No<span class="w"> </span>predict<span class="w"> </span>parameters<span class="w"> </span>were<span class="w"> </span>found<span class="w"> </span>to<span class="w"> </span>control<span class="w"> </span>the<span class="w"> </span>risk<span class="w"> </span>at<span class="w"> </span>the<span class="w"> </span>given<span class="w"> </span>target<span class="w"> </span>and<span class="w"> </span>confidence<span class="w"> </span>levels.<span class="w"> </span>Try<span class="w"> </span>using<span class="w"> </span>a<span class="w"> </span>larger<span class="w"> </span>calibration<span class="w"> </span><span class="nb">set</span><span class="w"> </span>or<span class="w"> </span>a<span class="w"> </span>better<span class="w"> </span>model<span class="w"> </span>or<span class="w"> </span>less<span class="w"> </span>strict<span class="w"> </span>target<span class="w"> </span>and<span class="w"> </span>confidence<span class="w"> </span>levels.
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 223-225 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 224-226 -->
 
 <p>In the plot below, we visualize how the threshold values impact precision
 and recall, and what thresholds have been computed as statistically guaranteed.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 225-388 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 226-389 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="n">proba_positive_class</span> <span class="o">=</span> <span class="n">clf</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">X_calib</span><span class="p">)[:,</span> <span class="mi">1</span><span class="p">]</span>
 </span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="n">scenarios</span> <span class="o">=</span> <span class="p">[</span>
@@ -5644,7 +5644,7 @@ and recall, and what thresholds have been computed as statistically guaranteed.<
 </span><span id="__span-7-160"><a id="__codelineno-7-160" name="__codelineno-7-160" href="#__codelineno-7-160"></a><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </span></code></pre></div>
 <p><img alt="Precision and recall by threshold for all scenarios, Scenario 1 - Mono risk, Scenario 1 - Multi risk, Scenario 2 - Mono risk, Scenario 2 - Multi risk" class="mkd-glr-single-img" src="../images/mkd_glr_plot_multi_risk_control_binary_classification_002.png" srcset="../images/mkd_glr_plot_multi_risk_control_binary_classification_002.png" /></p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 389-395 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 390-396 -->
 
 <p>In scenario 1, both the mono-risk controllers and the multi-risk controller found
 valid thresholds that satisfy the precision and recall targets individually and jointly.
@@ -5652,7 +5652,7 @@ The jointly valid thresholds found by the multi-risk controller are shown as gre
 In scenario 2, although valid thresholds are found individually for precision and recall
 by the mono-risk controllers, the multi-risk controller cannot find any threshold
 that satisfies both targets simultaneously.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 395-441 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 396-442 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="c1"># For Scenario 1 - Multi-risk only:</span>
 </span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="c1"># Besides computing a set of valid thresholds,</span>
@@ -5701,7 +5701,7 @@ that satisfies both targets simultaneously.</p>
 </span><span id="__span-8-45"><a id="__codelineno-8-45" name="__codelineno-8-45" href="#__codelineno-8-45"></a><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </span></code></pre></div>
 <p><img alt="Decision Boundary of FixedThresholdClassifier for the Scenario 1 - Multi Risk" class="mkd-glr-single-img" src="../images/mkd_glr_plot_multi_risk_control_binary_classification_003.png" srcset="../images/mkd_glr_plot_multi_risk_control_binary_classification_003.png" /></p>
-<p><strong>Total running time of the script:</strong> ( 0 minutes  3.471 seconds)</p>
+<p><strong>Total running time of the script:</strong> ( 0 minutes  3.436 seconds)</p>
 <div id="download_links"></div>
 
 <p><a class="md-button center" href="../plot_multi_risk_control_binary_classification.py"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M256 32c0-17.7-14.3-32-32-32s-32 14.3-32 32v210.7l-41.4-41.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l96 96c12.5 12.5 32.8 12.5 45.3 0l96-96c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 242.7zM64 320c-35.3 0-64 28.7-64 64v32c0 35.3 28.7 64 64 64h320c35.3 0 64-28.7 64-64v-32c0-35.3-28.7-64-64-64h-46.9l-56.6 56.6c-31.2 31.2-81.9 31.2-113.1 0L110.9 320zm304 56a24 24 0 1 1 0 48 24 24 0 1 1 0-48"/></svg></span> Download Python source code: plot_multi_risk_control_binary_classification.py</a></p>
