@@ -2,6 +2,7 @@ import math
 
 import numpy as np
 import pytest
+from numpy.typing import NDArray
 
 from mapie.exchangeability_testing import RiskMonitoring
 from mapie.exchangeability_testing.confidence_bounds import (
@@ -9,6 +10,7 @@ from mapie.exchangeability_testing.confidence_bounds import (
     conjugate_mixture_empirical_bernstein_bound,
     hoeffding_bound,
 )
+from mapie.risk_control.risks import RiskNameLiteral
 
 
 class TestGammaExponentialMixtureBound:
@@ -165,7 +167,7 @@ class TestConjugateMixtureEmpiricalBernsteinBound:
 
 class TestRiskMonitoring:
     @staticmethod
-    def _binary_data() -> tuple[np.ndarray, np.ndarray]:
+    def _binary_data() -> tuple[NDArray[np.int_], NDArray[np.int_]]:
         y_true = np.array([0, 1, 1, 0, 1, 0, 1, 0])
         y_pred = np.array([0, 1, 0, 0, 1, 1, 1, 0])
         return y_true, y_pred
@@ -179,10 +181,11 @@ class TestRiskMonitoring:
             RiskMonitoring(risk="unknown_risk")  # type: ignore[arg-type]
 
     def test_init_rejects_non_scalar_risk(self) -> None:
+        invalid_risk: list[RiskNameLiteral] = ["accuracy"]
         with pytest.raises(
             TypeError, match="risk must be a single BinaryClassificationRisk"
         ):
-            RiskMonitoring(risk=["accuracy"])  # type: ignore[list-item]
+            RiskMonitoring(risk=invalid_risk)
 
     def test_harmful_shift_detected_requires_online_bound(self) -> None:
         monitor = RiskMonitoring(risk="accuracy")
@@ -261,8 +264,8 @@ class TestRiskMonitoring:
         assert monitor.harmful_shift_detected is False
 
     def test_update_online_risk_warns_when_harmful_shift_detected(self) -> None:
-        y_true = np.zeros(20, dtype=int)
-        y_pred = np.ones(20, dtype=int)
+        y_true: NDArray[np.int_] = np.zeros(20, dtype=int)
+        y_pred: NDArray[np.int_] = np.ones(20, dtype=int)
         monitor = RiskMonitoring(risk="accuracy", threshold=-0.1, warn=True)
 
         with pytest.warns(UserWarning, match="Harmful shift detected"):
@@ -270,6 +273,6 @@ class TestRiskMonitoring:
 
         assert monitor.harmful_shift_detected is True
 
-    def test_summary_returns_none(self) -> None:
+    def test_summary_can_be_called(self) -> None:
         monitor = RiskMonitoring(risk="accuracy")
-        assert monitor.summary() is None
+        monitor.summary()

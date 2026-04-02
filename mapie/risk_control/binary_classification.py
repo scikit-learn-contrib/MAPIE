@@ -17,6 +17,8 @@ from mapie.utils import check_valid_ltt_params_index
 from .methods import compute_hoeffding_bentkus_p_value, ltt_procedure
 from .risks import (
     BinaryClassificationRisk,
+    RiskLike,
+    RiskNameLiteral,
     _best_predict_param_choice_map,
     risk_choice_map,
 )

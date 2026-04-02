@@ -124,7 +124,7 @@ class RiskMonitoring:
         self.online_risk_lower_bound_sequence_history: NDArray[np.float64] = np.array(
             [], dtype=float
         )
-        self.online_risk_lower_bound_latest = None
+        self.online_risk_lower_bound_latest: Optional[float] = None
 
     @property
     def harmful_shift_detected(self) -> bool:

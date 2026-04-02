@@ -22,7 +22,7 @@ from mapie.risk_control import (
     recall,
 )
 from mapie.risk_control.fwer_control import FWERFixedSequenceTesting
-from mapie.risk_control.risks import risk_choice_map
+from mapie.risk_control.risks import RiskLike, risk_choice_map
 
 random_state = 42
 dummy_single_param = np.array([0.5])
