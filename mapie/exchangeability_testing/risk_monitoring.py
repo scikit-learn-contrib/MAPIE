@@ -8,11 +8,7 @@ from mapie.exchangeability_testing.confidence_bounds import (
     conjugate_mixture_empirical_bernstein_bound,
     hoeffding_bound,
 )
-from mapie.risk_control.risks import (
-    BinaryClassificationRisk,
-    RiskLike,
-    risk_choice_map,
-)
+from mapie.risk_control.risks import BinaryClassificationRisk, RiskLike, risk_choice_map
 
 
 class RiskMonitoring:
@@ -82,6 +78,12 @@ class RiskMonitoring:
     >>> _ = monitor.update_online_risk(y_online, y_pred_online)
     >>> print(monitor.harmful_shift_detected)
     True
+
+    References
+    ----------
+    [1] Aleksandr Podkopaev and Aaditya Ramdas. Tracking the risk of a deployed
+    model and detecting harmful distribution shifts.
+    International Conference on Learning Representations, 2022.
     """
 
     def __init__(
