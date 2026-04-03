@@ -38,7 +38,7 @@ where \(\hat{q}_{n, \alpha}^+\) is the \((1-\alpha)\) quantile of the distributi
     Since this method estimates conformity scores on the **training set**, it tends to be too optimistic and underestimates the width of prediction intervals due to potential overfitting.
 
 <figure markdown>
-  ![Naive method](../assets/images/jackknife_naive.png){ width="200" }
+  ![Naive method](../images/jackknife_naive.png){ width="200" }
   <figcaption>Illustration of the naive method.</figcaption>
 </figure>
 
@@ -101,7 +101,7 @@ A more conservative alternative using the **min and max** of leave-one-out predi
     This method guarantees a coverage level of \(1-\alpha\).
 
 <figure markdown>
-  ![Jackknife methods](../assets/images/jackknife_jackknife.png){ width="800" }
+  ![Jackknife methods](../images/jackknife_jackknife.png){ width="800" }
   <figcaption>Comparison of the three jackknife methods (adapted from Fig. 1 of [^1]).</figcaption>
 </figure>
 
@@ -129,7 +129,7 @@ To reduce computational time, one can use a **cross-validation** approach instea
 By analogy with the standard jackknife and jackknife-minmax, these rely on out-of-fold regression models.
 
 <figure markdown>
-  ![CV methods](../assets/images/jackknife_cv.png){ width="800" }
+  ![CV methods](../images/jackknife_cv.png){ width="800" }
   <figcaption>Comparison of the three CV methods.</figcaption>
 </figure>
 
@@ -154,7 +154,7 @@ Uses **bootstrap** instead of leave-one-out for reduced computational time and m
 CQR allows for **better interval widths with heteroscedastic data** by using quantile regressors:
 
 <figure markdown>
-  ![CQR method](../assets/images/cqr.png){ width="800" }
+  ![CQR method](../images/cqr.png){ width="800" }
   <figcaption>Illustration of the CQR method.</figcaption>
 </figure>
 

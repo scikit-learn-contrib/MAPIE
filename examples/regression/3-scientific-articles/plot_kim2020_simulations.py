@@ -1,5 +1,6 @@
 """
-# Predictive inference is free with the Jackknife+-after-Bootstrap, Kim et al. (2020)
+Predictive inference is free with the Jackknife+-after-Bootstrap, Kim et al. (2020)
+===================================================================================
 
 
 

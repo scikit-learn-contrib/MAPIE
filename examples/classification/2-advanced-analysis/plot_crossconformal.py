@@ -1,5 +1,6 @@
 """
-# Cross conformal classification explained
+Cross conformal classification explained
+========================================
 
 
 In this tutorial, we estimate the impact of the

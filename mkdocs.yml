@@ -8,8 +8,8 @@ edit_uri: edit/master/doc/
 
 theme:
   name: material
-  logo: assets/images/mapie_logo_nobg_cut.png
-  favicon: assets/images/mapie_logo_nobg_cut.png
+  logo: images/mapie_logo_nobg_cut.png
+  favicon: images/mapie_logo_nobg_cut.png
   icon:
     repo: fontawesome/brands/github
   palette:

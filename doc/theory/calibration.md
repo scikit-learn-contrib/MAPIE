@@ -15,7 +15,7 @@ One method for multi-class calibration has been implemented in MAPIE: **Top-Labe
 The goal of binary calibration is to **transform a score** (typically given by an ML model) that is not a probability **into a probability**. The algorithms used for calibration can be interpreted as estimators of the confidence level.
 
 <figure markdown>
-  ![Calibration basic](../assets/images/calibration_basic.png){ width="300" }
+  ![Calibration basic](../images/calibration_basic.png){ width="300" }
   <figcaption>Expected result: predicted scores closer to true probabilities after calibration.</figcaption>
 </figure>
 
