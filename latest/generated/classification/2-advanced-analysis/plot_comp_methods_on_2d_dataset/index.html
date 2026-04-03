@@ -24,7 +24,7 @@
         
       
       
-      <link rel="icon" href="../../../../assets/images/mapie_logo_nobg_cut.png">
+      <link rel="icon" href="../../../../images/mapie_logo_nobg_cut.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
@@ -114,7 +114,7 @@
   <nav class="md-header__inner md-grid" aria-label="Header">
     <a href="../../../.." title="MAPIE" class="md-header__button md-logo" aria-label="MAPIE" data-md-component="logo">
       
-  <img src="../../../../assets/images/mapie_logo_nobg_cut.png" alt="logo">
+  <img src="../../../../images/mapie_logo_nobg_cut.png" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -481,7 +481,7 @@
   <label class="md-nav__title" for="__drawer">
     <a href="../../../.." title="MAPIE" class="md-nav__button md-logo" aria-label="MAPIE" data-md-component="logo">
       
-  <img src="../../../../assets/images/mapie_logo_nobg_cut.png" alt="logo">
+  <img src="../../../../images/mapie_logo_nobg_cut.png" alt="logo">
 
     </a>
     MAPIE
@@ -4212,7 +4212,7 @@ to download the full example code</p>
 <code>SplitConformalClassifier</code> with the "lac"
 and "aps" on the two-dimensional dataset presented
 by Sadinle et al. (2019).</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 12-42 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 13-43 -->
 
 <p>We will use MAPIE to estimate a prediction set of several classes such that
 the probability that the true label of a new test point is included in the
@@ -4249,7 +4249,7 @@ We estimate the prediction sets as follows :</p>
 <p>We use a two-dimensional dataset with three labels.
 The distribution of the data is a bivariate normal with diagonal covariance
 matrices for each label.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 42-81 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 43-82 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># Reference:</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="c1"># Mauricio Sadinle, Jing Lei, and Larry Wasserman.</span>
@@ -4288,10 +4288,10 @@ matrices for each label.</p>
 </span><span id="__span-0-35"><a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a><span class="n">xx</span><span class="p">,</span> <span class="n">yy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">x_min</span><span class="p">,</span> <span class="n">x_max</span><span class="p">,</span> <span class="n">step</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">x_min</span><span class="p">,</span> <span class="n">x_max</span><span class="p">,</span> <span class="n">step</span><span class="p">))</span>
 </span><span id="__span-0-36"><a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a><span class="n">X_test</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">xx</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span> <span class="n">yy</span><span class="o">.</span><span class="n">ravel</span><span class="p">()],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 82-83 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 83-84 -->
 
 <p>Let's see our training data</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 83-100 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 84-101 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">colors</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="s2">&quot;#1f77b4&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span> <span class="s2">&quot;#ff7f0e&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="p">:</span> <span class="s2">&quot;#2ca02c&quot;</span><span class="p">,</span> <span class="mi">3</span><span class="p">:</span> <span class="s2">&quot;#d62728&quot;</span><span class="p">}</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="n">y_train_col</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">colors</span><span class="o">.</span><span class="n">get</span><span class="p">,</span> <span class="n">y_train</span><span class="p">))</span>
@@ -4309,14 +4309,14 @@ matrices for each label.</p>
 </span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </span></code></pre></div>
 <p><img alt="plot comp methods on 2d dataset" class="mkd-glr-single-img" src="../images/mkd_glr_plot_comp_methods_on_2d_dataset_001.png" srcset="../images/mkd_glr_plot_comp_methods_on_2d_dataset_001.png" /></p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 101-106 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 102-107 -->
 
 <p>We fit our training data with a Gaussian Naive Base estimator.
 Then, we initialize a <code>SplitConformalClassifier</code> with
 conformity scores <code>"lac"</code> and <code>"aps"</code> , using our pre-fitted estimator.
 Lastly, we compute the prediction sets with different alpha values using the
 <code>conformalize</code> and <code>predict</code> methods.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 106-130 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 107-131 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">clf</span> <span class="o">=</span> <span class="n">GaussianNB</span><span class="p">()</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">clf</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
@@ -4340,7 +4340,7 @@ Lastly, we compute the prediction sets with different alpha values using the
 </span><span id="__span-2-20"><a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a>        <span class="n">conformity_score</span>
 </span><span id="__span-2-21"><a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a>    <span class="p">]</span><span class="o">.</span><span class="n">predict_set</span><span class="p">(</span><span class="n">X_test</span><span class="p">,</span> <span class="n">conformity_score_params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;include_last_label&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">})</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 131-140 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 132-141 -->
 
 <p>MAPIE produces two outputs:</p>
 <ul>
@@ -4354,7 +4354,7 @@ Lastly, we compute the prediction sets with different alpha values using the
 </ul>
 <p>Let's now visualize the distribution of the conformity scores with the two
 methods with the calculated quantiles for the three alpha values.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 140-179 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 141-180 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">plot_scores</span><span class="p">(</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>    <span class="n">alphas</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
@@ -4393,11 +4393,11 @@ methods with the calculated quantiles for the three alpha values.</p>
 </span><span id="__span-3-35"><a id="__codelineno-3-35" name="__codelineno-3-35" href="#__codelineno-3-35"></a><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </span></code></pre></div>
 <p><img alt="Distribution of scores for 'lac' method, Distribution of scores for 'aps' method" class="mkd-glr-single-img" src="../images/mkd_glr_plot_comp_methods_on_2d_dataset_002.png" srcset="../images/mkd_glr_plot_comp_methods_on_2d_dataset_002.png" /></p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 180-182 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 181-183 -->
 
 <p>We will now compare the differences between the prediction sets of the
 different values ​​of alpha.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 182-234 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 183-235 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">plot_results</span><span class="p">(</span>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>    <span class="n">alphas</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="n">y_pred_mapie</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">,</span> <span class="n">y_ps_mapie</span><span class="p">:</span> <span class="n">NDArray</span>
@@ -4452,7 +4452,7 @@ different values ​​of alpha.</p>
 <img alt="Predicted labels, Number of labels for alpha=0.2, Number of labels for alpha=0.1, Number of labels for alpha=0.05" src="../images/mkd_glr_plot_comp_methods_on_2d_dataset_003.png" srcset="../images/mkd_glr_plot_comp_methods_on_2d_dataset_003.png", class="sphx-glr-single-img" /><img alt="Predicted labels, Number of labels for alpha=0.2, Number of labels for alpha=0.1, Number of labels for alpha=0.05" src="../images/mkd_glr_plot_comp_methods_on_2d_dataset_004.png" srcset="../images/mkd_glr_plot_comp_methods_on_2d_dataset_004.png", class="sphx-glr-single-img" />
 </ul>
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 235-246 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 236-247 -->
 
 <p>For the "lac" method, when the class coverage is not large enough, the
 prediction sets can be empty when the model is uncertain at the border
@@ -4464,7 +4464,7 @@ prediction sets. However, the prediction sets tend to be slightly bigger
 in ambiguous regions.</p>
 <p>Let's now compare the effective coverage and the average of prediction set
 widths as function of the <code>1 - α</code> target coverage.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 246-291 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 247-292 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">alpha_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mf">0.02</span><span class="p">,</span> <span class="mf">0.98</span><span class="p">,</span> <span class="mf">0.02</span><span class="p">)</span>
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="n">coverage</span><span class="p">,</span> <span class="n">mean_width</span> <span class="o">=</span> <span class="p">{},</span> <span class="p">{}</span>
@@ -4511,13 +4511,13 @@ widths as function of the <code>1 - α</code> target coverage.</p>
 </span><span id="__span-5-43"><a id="__codelineno-5-43" name="__codelineno-5-43" href="#__codelineno-5-43"></a><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </span></code></pre></div>
 <p><img alt="plot comp methods on 2d dataset" class="mkd-glr-single-img" src="../images/mkd_glr_plot_comp_methods_on_2d_dataset_005.png" srcset="../images/mkd_glr_plot_comp_methods_on_2d_dataset_005.png" /></p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 292-296 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 293-297 -->
 
 <p>It is seen that both methods give coverages close to the target coverages,
 regardless of the <code>α</code> value. However, the "aps"
 produces slightly bigger prediction sets, but without empty regions
 (if the selection of the last label is not randomized).</p>
-<p><strong>Total running time of the script:</strong> ( 0 minutes  2.400 seconds)</p>
+<p><strong>Total running time of the script:</strong> ( 0 minutes  2.437 seconds)</p>
 <div id="download_links"></div>
 
 <p><a class="md-button center" href="../plot_comp_methods_on_2d_dataset.py"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M256 32c0-17.7-14.3-32-32-32s-32 14.3-32 32v210.7l-41.4-41.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l96 96c12.5 12.5 32.8 12.5 45.3 0l96-96c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 242.7zM64 320c-35.3 0-64 28.7-64 64v32c0 35.3 28.7 64 64 64h320c35.3 0 64-28.7 64-64v-32c0-35.3-28.7-64-64-64h-46.9l-56.6 56.6c-31.2 31.2-81.9 31.2-113.1 0L110.9 320zm304 56a24 24 0 1 1 0 48 24 24 0 1 1 0-48"/></svg></span> Download Python source code: plot_comp_methods_on_2d_dataset.py</a></p>

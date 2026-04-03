@@ -1,5 +1,6 @@
 """
-# Estimating aleatoric and epistemic uncertainties
+Estimating aleatoric and epistemic uncertainties
+================================================
 
 
 

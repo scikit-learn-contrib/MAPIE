@@ -24,7 +24,7 @@
         
       
       
-      <link rel="icon" href="../../../../assets/images/mapie_logo_nobg_cut.png">
+      <link rel="icon" href="../../../../images/mapie_logo_nobg_cut.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
@@ -114,7 +114,7 @@
   <nav class="md-header__inner md-grid" aria-label="Header">
     <a href="../../../.." title="MAPIE" class="md-header__button md-logo" aria-label="MAPIE" data-md-component="logo">
       
-  <img src="../../../../assets/images/mapie_logo_nobg_cut.png" alt="logo">
+  <img src="../../../../images/mapie_logo_nobg_cut.png" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -481,7 +481,7 @@
   <label class="md-nav__title" for="__drawer">
     <a href="../../../.." title="MAPIE" class="md-nav__button md-logo" aria-label="MAPIE" data-md-component="logo">
       
-  <img src="../../../../assets/images/mapie_logo_nobg_cut.png" alt="logo">
+  <img src="../../../../images/mapie_logo_nobg_cut.png" alt="logo">
 
     </a>
     MAPIE
@@ -4479,7 +4479,7 @@ In International Conference on Machine Learning (pp. 25834-25866). PMLR.</p>
 <p>[2] Gibbs, I., &amp; Candes, E. (2021). Adaptive conformal inference under
 distribution shift.
 Advances in Neural Information Processing Systems, 34, 1660-1672.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 40-63 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 41-64 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># sphinx_gallery_thumbnail_number = 2</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
@@ -4502,11 +4502,11 @@ Advances in Neural Information Processing Systems, 34, 1660-1672.</p>
 </span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>
 </span><span id="__span-0-20"><a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">)</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 64-66 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 65-67 -->
 
 <p>Global random forests parameters</p>
 <h6 id="_1"><a class="headerlink" href="#_1" title="Permanent link">&para;</a></h6>
-<!-- GENERATED FROM PYTHON SOURCE LINES 66-90 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 67-91 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">init_model</span><span class="p">():</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    <span class="c1"># the number of trees in the forest</span>
@@ -4529,11 +4529,11 @@ Advances in Neural Information Processing Systems, 34, 1660-1672.</p>
 </span><span id="__span-1-19"><a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>
 </span><span id="__span-1-20"><a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>    <span class="k">return</span> <span class="n">model</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 91-93 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 92-94 -->
 
 <p>Get data</p>
 <h6 id="_2"><a class="headerlink" href="#_2" title="Permanent link">&para;</a></h6>
-<!-- GENERATED FROM PYTHON SOURCE LINES 93-114 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 94-115 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">get_data</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -4553,11 +4553,11 @@ Advances in Neural Information Processing Systems, 34, 1660-1672.</p>
 </span><span id="__span-2-16"><a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>    <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
 </span><span id="__span-2-17"><a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a>    <span class="k">return</span> <span class="n">df</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 115-117 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 116-118 -->
 
 <p>Get &amp; Present data</p>
 <h6 id="_3"><a class="headerlink" href="#_3" title="Permanent link">&para;</a></h6>
-<!-- GENERATED FROM PYTHON SOURCE LINES 117-135 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 118-136 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">data</span> <span class="o">=</span> <span class="n">get_data</span><span class="p">()</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
@@ -4576,11 +4576,11 @@ Advances in Neural Information Processing Systems, 34, 1660-1672.</p>
 </span><span id="__span-3-15"><a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </span></code></pre></div>
 <p><img alt="plot zaffran2022 comparison" class="mkd-glr-single-img" src="../images/mkd_glr_plot_zaffran2022_comparison_001.png" srcset="../images/mkd_glr_plot_zaffran2022_comparison_001.png" /></p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 136-138 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 137-139 -->
 
 <p>Prepare data</p>
 <h6 id="_4"><a class="headerlink" href="#_4" title="Permanent link">&para;</a></h6>
-<!-- GENERATED FROM PYTHON SOURCE LINES 138-166 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 139-167 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">limit</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2019</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">tzinfo</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="n">id_train</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;Date&quot;</span><span class="p">],</span> <span class="n">utc</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">limit</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
@@ -4608,11 +4608,11 @@ Advances in Neural Information Processing Systems, 34, 1660-1672.</p>
 </span><span id="__span-4-24"><a id="__codelineno-4-24" name="__codelineno-4-24" href="#__codelineno-4-24"></a><span class="n">all_x</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">sub_data</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">sub_data</span><span class="o">.</span><span class="n">hour</span> <span class="o">==</span> <span class="n">h</span><span class="p">])</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">24</span><span class="p">)]</span>
 </span><span id="__span-4-25"><a id="__codelineno-4-25" name="__codelineno-4-25" href="#__codelineno-4-25"></a><span class="n">all_y</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">data</span><span class="o">.</span><span class="n">hour</span> <span class="o">==</span> <span class="n">h</span><span class="p">,</span> <span class="s2">&quot;Spot&quot;</span><span class="p">])</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">24</span><span class="p">)]</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 167-169 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 168-170 -->
 
 <p>Select Data (hour 0)</p>
 <h6 id="_5"><a class="headerlink" href="#_5" title="Permanent link">&para;</a></h6>
-<!-- GENERATED FROM PYTHON SOURCE LINES 169-184 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 170-185 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">h</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># Let define hour = 0</span>
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
@@ -4627,11 +4627,11 @@ Advances in Neural Information Processing Systems, 34, 1660-1672.</p>
 </span><span id="__span-5-11"><a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="n">n_half</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">train_size</span> <span class="o">/</span> <span class="mi">2</span><span class="p">))</span>
 </span><span id="__span-5-12"><a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a><span class="n">idx_train</span><span class="p">,</span> <span class="n">idx_cal</span> <span class="o">=</span> <span class="n">idx</span><span class="p">[:</span><span class="n">n_half</span><span class="p">],</span> <span class="n">idx</span><span class="p">[</span><span class="n">n_half</span> <span class="p">:</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">n_half</span><span class="p">]</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 185-187 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 186-188 -->
 
 <p>Prepare model</p>
 <h6 id="_6"><a class="headerlink" href="#_6" title="Permanent link">&para;</a></h6>
-<!-- GENERATED FROM PYTHON SOURCE LINES 187-203 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 188-204 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">iteration_max</span> <span class="o">=</span> <span class="mi">10</span>
 </span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="n">alpha</span> <span class="o">=</span> <span class="mf">0.1</span>
@@ -4648,11 +4648,11 @@ Advances in Neural Information Processing Systems, 34, 1660-1672.</p>
 </span><span id="__span-6-13"><a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a>    <span class="n">random_state</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
 </span><span id="__span-6-14"><a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a><span class="p">)</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 204-206 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 205-207 -->
 
 <p>Reproduce experiment and results</p>
 <h6 id="_7"><a class="headerlink" href="#_7" title="Permanent link">&para;</a></h6>
-<!-- GENERATED FROM PYTHON SOURCE LINES 206-232 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 207-233 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="n">y_pred_aci_pfit</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(((</span><span class="mi">365</span><span class="p">,)))</span>
 </span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="n">y_pis_aci_pfit</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(((</span><span class="mi">365</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span>
@@ -4678,11 +4678,11 @@ Advances in Neural Information Processing Systems, 34, 1660-1672.</p>
 </span><span id="__span-7-22"><a id="__codelineno-7-22" name="__codelineno-7-22" href="#__codelineno-7-22"></a>
 </span><span id="__span-7-23"><a id="__codelineno-7-23" name="__codelineno-7-23" href="#__codelineno-7-23"></a><span class="n">results</span> <span class="o">=</span> <span class="n">y_pis_aci_pfit</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 233-235 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 234-236 -->
 
 <p>Get referenced result to reproduce</p>
 <h6 id="_8"><a class="headerlink" href="#_8" title="Permanent link">&para;</a></h6>
-<!-- GENERATED FROM PYTHON SOURCE LINES 235-265 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 236-266 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">get_pickle</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">NDArray</span><span class="p">,</span> <span class="n">NDArray</span><span class="p">]:</span>
 </span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -4711,11 +4711,11 @@ Advances in Neural Information Processing Systems, 34, 1660-1672.</p>
 </span><span id="__span-8-25"><a id="__codelineno-8-25" name="__codelineno-8-25" href="#__codelineno-8-25"></a>
 </span><span id="__span-8-26"><a id="__codelineno-8-26" name="__codelineno-8-26" href="#__codelineno-8-26"></a><span class="n">data_ref</span> <span class="o">=</span> <span class="n">get_pickle</span><span class="p">()</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 266-268 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 267-269 -->
 
 <p>Compare results</p>
 <h6 id="_9"><a class="headerlink" href="#_9" title="Permanent link">&para;</a></h6>
-<!-- GENERATED FROM PYTHON SOURCE LINES 268-317 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 269-318 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="c1"># Flatten the array to shape (n, 2)</span>
 </span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="n">results_ref</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">data_ref</span><span class="p">[</span><span class="s2">&quot;Y_inf&quot;</span><span class="p">],</span> <span class="n">data_ref</span><span class="p">[</span><span class="s2">&quot;Y_sup&quot;</span><span class="p">]],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
@@ -4783,7 +4783,7 @@ Advances in Neural Information Processing Systems, 34, 1660-1672.</p>
 </span><span id="__span-10-13"><a id="__codelineno-10-13" name="__codelineno-10-13" href="#__codelineno-10-13"></a>Comparison<span class="w"> </span><span class="k">for</span><span class="w"> </span>ACP_0.04<span class="w"> </span><span class="o">(</span>Y_sup<span class="o">)</span>:<span class="w"> </span>True
 </span><span id="__span-10-14"><a id="__codelineno-10-14" name="__codelineno-10-14" href="#__codelineno-10-14"></a>Comparison<span class="w"> </span><span class="k">for</span><span class="w"> </span>ACP_0.04<span class="w"> </span><span class="o">(</span>Y_pred<span class="o">)</span>:<span class="w"> </span>True
 </span></code></pre></div>
-<p><strong>Total running time of the script:</strong> ( 0 minutes  50.274 seconds)</p>
+<p><strong>Total running time of the script:</strong> ( 0 minutes  49.995 seconds)</p>
 <div id="download_links"></div>
 
 <p><a class="md-button center" href="../plot_zaffran2022_comparison.py"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M256 32c0-17.7-14.3-32-32-32s-32 14.3-32 32v210.7l-41.4-41.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l96 96c12.5 12.5 32.8 12.5 45.3 0l96-96c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 242.7zM64 320c-35.3 0-64 28.7-64 64v32c0 35.3 28.7 64 64 64h320c35.3 0 64-28.7 64-64v-32c0-35.3-28.7-64-64-64h-46.9l-56.6 56.6c-31.2 31.2-81.9 31.2-113.1 0L110.9 320zm304 56a24 24 0 1 1 0 48 24 24 0 1 1 0-48"/></svg></span> Download Python source code: plot_zaffran2022_comparison.py</a></p>

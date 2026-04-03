@@ -24,7 +24,7 @@
         
       
       
-      <link rel="icon" href="../../../../assets/images/mapie_logo_nobg_cut.png">
+      <link rel="icon" href="../../../../images/mapie_logo_nobg_cut.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
@@ -114,7 +114,7 @@
   <nav class="md-header__inner md-grid" aria-label="Header">
     <a href="../../../.." title="MAPIE" class="md-header__button md-logo" aria-label="MAPIE" data-md-component="logo">
       
-  <img src="../../../../assets/images/mapie_logo_nobg_cut.png" alt="logo">
+  <img src="../../../../images/mapie_logo_nobg_cut.png" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -481,7 +481,7 @@
   <label class="md-nav__title" for="__drawer">
     <a href="../../../.." title="MAPIE" class="md-nav__button md-logo" aria-label="MAPIE" data-md-component="logo">
       
-  <img src="../../../../assets/images/mapie_logo_nobg_cut.png" alt="logo">
+  <img src="../../../../images/mapie_logo_nobg_cut.png" alt="logo">
 
     </a>
     MAPIE
@@ -4396,7 +4396,7 @@ Quantification: Avoid these Missteps in Validating Your Conformal Claims!"
 <p>[2] Angelopoulos, Anastasios N., and Stephen Bates.
 "Conformal prediction: A gentle introduction." Foundations and Trends®
 in Machine Learning 16.4 (2023): 494-591.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 22-41 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 23-42 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
@@ -4415,14 +4415,14 @@ in Machine Learning 16.4 (2023): 494-591.</p>
 </span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">,</span> <span class="ne">RuntimeWarning</span><span class="p">)</span>
 </span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">,</span> <span class="ne">UserWarning</span><span class="p">)</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 42-49 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 43-50 -->
 
 <h2 id="section-1-comparison-with-the-split-conformalizer-method-light-version">Section 1: Comparison with the split conformalizer method (light version)<a class="headerlink" href="#section-1-comparison-with-the-split-conformalizer-method-light-version" title="Permanent link">&para;</a></h2>
 <p>We propose here to implement a lighter version of split CP by calculating
 the quantile with a small correction according to [1].
 We prepare the fit/conformalize/test routine in order to calculate the average
 coverage over several simulations.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 49-169 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 50-170 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># Conformalizer Class</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="k">class</span><span class="w"> </span><span class="nc">StandardConformalizer</span><span class="p">:</span>
@@ -4541,13 +4541,13 @@ coverage over several simulations.</p>
 </span><span id="__span-1-115"><a id="__codelineno-1-115" name="__codelineno-1-115" href="#__codelineno-1-115"></a>    <span class="n">cumulative_avg</span> <span class="o">=</span> <span class="n">cumsum</span> <span class="o">/</span> <span class="n">indices</span>
 </span><span id="__span-1-116"><a id="__codelineno-1-116" name="__codelineno-1-116" href="#__codelineno-1-116"></a>    <span class="k">return</span> <span class="n">cumulative_avg</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 170-176 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 171-177 -->
 
 <h2 id="experiment-1-coverage-validity-for-given-confidence_level-and-n_conformalize">Experiment 1: Coverage Validity for given confidence_level and n_conformalize<a class="headerlink" href="#experiment-1-coverage-validity-for-given-confidence_level-and-n_conformalize" title="Permanent link">&para;</a></h2>
 <p>To begin, we propose to use <code>confidence_level=0.8</code> and
 <code>n_conformalize=6</code> and compare the coverage validity claim
 of the MAPIE class and the referenced class.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 176-265 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 177-266 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">RANDOM_STATE</span> <span class="o">=</span> <span class="mi">1</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
@@ -4637,19 +4637,19 @@ of the MAPIE class and the referenced class.</p>
 </span><span id="__span-2-86"><a id="__codelineno-2-86" name="__codelineno-2-86" href="#__codelineno-2-86"></a><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </span></code></pre></div>
 <p><img alt="$|D_{cal}| = $6 and $\delta = $0.8" class="mkd-glr-single-img" src="../images/mkd_glr_plot_coverage_validity_001.png" srcset="../images/mkd_glr_plot_coverage_validity_001.png" /></p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 266-270 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 267-271 -->
 
 <p>It can be seen that the two curves overlap, proving that both methods
 produce the same results. Their effective coverage stabilizes between
 the theoretical limits, always above the target coverage and converges
 towards the exact coverage (i.e. expected according to the theory).</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 273-279 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 274-280 -->
 
 <h2 id="experiment-2-coverage-validity-with-different-random-states">Experiment 2: Coverage validity with different random states<a class="headerlink" href="#experiment-2-coverage-validity-with-different-random-states" title="Permanent link">&para;</a></h2>
 <p>We just propose to reproduce the previous experiment without fixing the
 random_state. The methods therefore follow different trajectories but
 always achieve the expected coverage.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 279-340 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 280-341 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># Run the experiment</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">empirical_coverages_ref</span> <span class="o">=</span> <span class="p">[]</span>
@@ -4711,13 +4711,13 @@ always achieve the expected coverage.</p>
 </span><span id="__span-3-58"><a id="__codelineno-3-58" name="__codelineno-3-58" href="#__codelineno-3-58"></a><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </span></code></pre></div>
 <p><img alt="$|D_{cal}| = $6 and $\delta = $0.8" class="mkd-glr-single-img" src="../images/mkd_glr_plot_coverage_validity_002.png" srcset="../images/mkd_glr_plot_coverage_validity_002.png" /></p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 341-347 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 342-348 -->
 
 <h2 id="section-2-comparison-with-different-mapie-cp-methods">Section 2: Comparison with different MAPIE CP methods<a class="headerlink" href="#section-2-comparison-with-different-mapie-cp-methods" title="Permanent link">&para;</a></h2>
 <p>We propose to reproduce the previous experience with different methods of
 the MAPIE package (prefit, prefit with asymmetrical non-conformity scores
 and split).</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 347-396 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 348-397 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">run_get_coverage_prefit</span><span class="p">(</span>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>    <span class="n">model</span><span class="p">,</span>
@@ -4765,14 +4765,14 @@ and split).</p>
 </span><span id="__span-4-44"><a id="__codelineno-4-44" name="__codelineno-4-44" href="#__codelineno-4-44"></a>    <span class="p">),</span>
 </span><span id="__span-4-45"><a id="__codelineno-4-45" name="__codelineno-4-45" href="#__codelineno-4-45"></a><span class="p">}</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 397-404 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 398-405 -->
 
 <h2 id="experiment-3-coverage-with-different-mapie-cp-methods">Experiment 3: Coverage with different MAPIE CP methods<a class="headerlink" href="#experiment-3-coverage-with-different-mapie-cp-methods" title="Permanent link">&para;</a></h2>
 <p>The methods always follow different trajectories but always achieve the
 expected coverage.
 Since asymmetric scores can be used, the limits are not exactly the same.
 We should calculate them differently but that doesn't change our conclusion.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 404-448 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 405-449 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1"># Parameters of the modelisation</span>
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="n">confidence_level</span> <span class="o">=</span> <span class="mf">0.8</span>
@@ -4817,7 +4817,7 @@ We should calculate them differently but that doesn't change our conclusion.</p>
 </span><span id="__span-5-41"><a id="__codelineno-5-41" name="__codelineno-5-41" href="#__codelineno-5-41"></a><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </span></code></pre></div>
 <p><img alt="$|D_{cal}| = $12 and $\delta = $0.8" class="mkd-glr-single-img" src="../images/mkd_glr_plot_coverage_validity_003.png" srcset="../images/mkd_glr_plot_coverage_validity_003.png" /></p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 449-460 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 450-461 -->
 
 <h2 id="experiment-4-extensive-experimentation-on-different-delta-and-n_calib">Experiment 4: Extensive experimentation on different delta and n_calib<a class="headerlink" href="#experiment-4-extensive-experimentation-on-different-delta-and-n_calib" title="Permanent link">&para;</a></h2>
 <p>Here we propose to extend the experiment on different sizes of the
@@ -4828,7 +4828,7 @@ limits with respect to the size of the calibration dataset but continues
 to converge towards the target coverage.
 It can be noted that all methods follow this trajectory and continue to
 achieve coverage validity.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 460-554 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 461-555 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">num_splits</span> <span class="o">=</span> <span class="mi">100</span>
 </span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>
@@ -4925,7 +4925,7 @@ achieve coverage validity.</p>
 </span><span id="__span-6-93"><a id="__codelineno-6-93" name="__codelineno-6-93" href="#__codelineno-6-93"></a><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </span></code></pre></div>
 <p><img alt="$\delta = $0.8" class="mkd-glr-single-img" src="../images/mkd_glr_plot_coverage_validity_004.png" srcset="../images/mkd_glr_plot_coverage_validity_004.png" /></p>
-<p><strong>Total running time of the script:</strong> ( 0 minutes  17.364 seconds)</p>
+<p><strong>Total running time of the script:</strong> ( 0 minutes  17.981 seconds)</p>
 <div id="download_links"></div>
 
 <p><a class="md-button center" href="../plot_coverage_validity.py"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M256 32c0-17.7-14.3-32-32-32s-32 14.3-32 32v210.7l-41.4-41.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l96 96c12.5 12.5 32.8 12.5 45.3 0l96-96c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 242.7zM64 320c-35.3 0-64 28.7-64 64v32c0 35.3 28.7 64 64 64h320c35.3 0 64-28.7 64-64v-32c0-35.3-28.7-64-64-64h-46.9l-56.6 56.6c-31.2 31.2-81.9 31.2-113.1 0L110.9 320zm304 56a24 24 0 1 1 0 48 24 24 0 1 1 0-48"/></svg></span> Download Python source code: plot_coverage_validity.py</a></p>

@@ -24,7 +24,7 @@
         
       
       
-      <link rel="icon" href="../../assets/images/mapie_logo_nobg_cut.png">
+      <link rel="icon" href="../../images/mapie_logo_nobg_cut.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
@@ -114,7 +114,7 @@
   <nav class="md-header__inner md-grid" aria-label="Header">
     <a href="../.." title="MAPIE" class="md-header__button md-logo" aria-label="MAPIE" data-md-component="logo">
       
-  <img src="../../assets/images/mapie_logo_nobg_cut.png" alt="logo">
+  <img src="../../images/mapie_logo_nobg_cut.png" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -479,7 +479,7 @@
   <label class="md-nav__title" for="__drawer">
     <a href="../.." title="MAPIE" class="md-nav__button md-logo" aria-label="MAPIE" data-md-component="logo">
       
-  <img src="../../assets/images/mapie_logo_nobg_cut.png" alt="logo">
+  <img src="../../images/mapie_logo_nobg_cut.png" alt="logo">
 
     </a>
     MAPIE
@@ -4535,7 +4535,7 @@
 <p>Consider a binary classification model that separates data into two classes using a threshold on predicted probabilities. Suppose we want to find a threshold that <strong>guarantees a certain precision level</strong>.</p>
 <p>A naive approach: evaluate how precision varies with different thresholds on a validation dataset.</p>
 <figure>
-<p><img alt="Without risk control" src="../../assets/images/example_without_risk_control.png" width="600" />
+<p><img alt="Without risk control" src="../../images/example_without_risk_control.png" width="600" />
   </p>
 <figcaption>Naive approach: no guarantees on unseen data.</figcaption>
 </figure>
@@ -4545,7 +4545,7 @@
 </div>
 <p><strong>Risk control</strong> adjusts a model parameter <span class="arithmatex">\(\lambda\)</span> so that a given risk stays below a desired level <strong>with high probability on unseen data</strong>.</p>
 <figure>
-<p><img alt="With risk control" src="../../assets/images/example_with_risk_control.png" width="600" />
+<p><img alt="With risk control" src="../../images/example_with_risk_control.png" width="600" />
   </p>
 <figcaption>Risk control: statistically guaranteed thresholds.</figcaption>
 </figure>
@@ -4555,7 +4555,7 @@
 <li><span class="arithmatex">\(\delta\)</span>: confidence level associated with the risk control</li>
 </ul>
 <figure>
-<p><img alt="Alpha plot" src="../../assets/images/plot_alpha.png" width="600" /></p>
+<p><img alt="Alpha plot" src="../../images/plot_alpha.png" width="600" /></p>
 </figure>
 <p>The three methods provide different guarantees:</p>
 <ul>
@@ -4563,7 +4563,7 @@
 <li><strong>RCPS</strong> and <strong>LTT</strong>: Require <strong>i.i.d.</strong> data → <span class="arithmatex">\(\mathbb{P}(R \leq \alpha) \geq 1 - \delta\)</span></li>
 </ul>
 <figure>
-<p><img alt="Risk distribution" src="../../assets/images/risk_distribution.png" width="600" />
+<p><img alt="Risk distribution" src="../../images/risk_distribution.png" width="600" />
   </p>
 <figcaption>Comparison of expectation vs. probability guarantees.</figcaption>
 </figure>
@@ -4588,7 +4588,7 @@ S_1 \subset S_2 \Rightarrow L(y, S_1) \geq L(y, S_2)
 \hat{\lambda} = \inf\{\lambda \in \Lambda: \hat{R}^+(\lambda') &lt; \alpha, \;\forall \lambda' \geq \lambda\}
 \]</div>
 <figure>
-<p><img alt="R hat plus" src="../../assets/images/r_hat_plus.png" width="600" /></p>
+<p><img alt="R hat plus" src="../../images/r_hat_plus.png" width="600" /></p>
 </figure>
 <div class="admonition success">
 <p class="admonition-title">Guarantee</p>

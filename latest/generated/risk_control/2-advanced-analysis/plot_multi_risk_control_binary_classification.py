@@ -1,5 +1,6 @@
 """
-# Control multiple risks of a binary classifier
+Control multiple risks of a binary classifier
+=============================================
 
 
 In this example, we explain how to do multi-risk control for binary classification with MAPIE.

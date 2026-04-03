@@ -24,7 +24,7 @@
         
       
       
-      <link rel="icon" href="../../../../assets/images/mapie_logo_nobg_cut.png">
+      <link rel="icon" href="../../../../images/mapie_logo_nobg_cut.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
@@ -114,7 +114,7 @@
   <nav class="md-header__inner md-grid" aria-label="Header">
     <a href="../../../.." title="MAPIE" class="md-header__button md-logo" aria-label="MAPIE" data-md-component="logo">
       
-  <img src="../../../../assets/images/mapie_logo_nobg_cut.png" alt="logo">
+  <img src="../../../../images/mapie_logo_nobg_cut.png" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -481,7 +481,7 @@
   <label class="md-nav__title" for="__drawer">
     <a href="../../../.." title="MAPIE" class="md-nav__button md-logo" aria-label="MAPIE" data-md-component="logo">
       
-  <img src="../../../../assets/images/mapie_logo_nobg_cut.png" alt="logo">
+  <img src="../../../../images/mapie_logo_nobg_cut.png" alt="logo">
 
     </a>
     MAPIE
@@ -4282,7 +4282,7 @@ to download the full example code</p>
 based criterion of 1D homoscedastic data using different strategies.
 The coverage width based criterion is computed with the function
 <code>coverage_width_based</code></p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 12-42 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 13-43 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># sphinx_gallery_thumbnail_number = 2</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
@@ -4314,13 +4314,13 @@ The coverage width based criterion is computed with the function
 </span><span id="__span-0-28"><a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>
 </span><span id="__span-0-29"><a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a><span class="n">RANDOM_STATE</span> <span class="o">=</span> <span class="mi">1</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 43-49 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 44-50 -->
 
 <h2 id="estimating-the-aleatoric-uncertainty-of-heteroscedastic-noisy-data">Estimating the aleatoric uncertainty of heteroscedastic noisy data<a class="headerlink" href="#estimating-the-aleatoric-uncertainty-of-heteroscedastic-noisy-data" title="Permanent link">&para;</a></h2>
 <p>Let's define again the <code>x * sin(x)</code> function and another simple
 function that generates one-dimensional data with normal noise uniformely
 in a given interval.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 49-71 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 50-72 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">x_sinx</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;One-dimensional x*sin(x) function.&quot;&quot;&quot;</span>
@@ -4341,23 +4341,23 @@ in a given interval.</p>
 </span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>    <span class="n">y_mesh</span> <span class="o">=</span> <span class="n">funct</span><span class="p">(</span><span class="n">X_test</span><span class="p">)</span>
 </span><span id="__span-1-18"><a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>    <span class="k">return</span> <span class="p">(</span><span class="n">X_train</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">X_test</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">y_test</span><span class="p">,</span> <span class="n">y_mesh</span><span class="p">)</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 72-75 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 73-76 -->
 
 <p>We first generate noisy one-dimensional data uniformely on an interval.
 Here, the noise is considered as <em>heteroscedastic</em>, since it will increase
 linearly with <code>x</code>.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 75-81 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 76-82 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">min_x</span><span class="p">,</span> <span class="n">max_x</span><span class="p">,</span> <span class="n">n_samples</span><span class="p">,</span> <span class="n">noise</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">300</span><span class="p">,</span> <span class="mf">0.5</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="p">(</span><span class="n">X_train_conformalize</span><span class="p">,</span> <span class="n">y_train_conformalize</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">y_test</span><span class="p">,</span> <span class="n">y_mesh</span><span class="p">)</span> <span class="o">=</span> <span class="p">(</span>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    <span class="n">get_1d_data_with_heteroscedastic_noise</span><span class="p">(</span><span class="n">x_sinx</span><span class="p">,</span> <span class="n">min_x</span><span class="p">,</span> <span class="n">max_x</span><span class="p">,</span> <span class="n">n_samples</span><span class="p">,</span> <span class="n">noise</span><span class="p">)</span>
 </span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="p">)</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 82-84 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 83-85 -->
 
 <p>Let's visualize our noisy function. As x increases, the data becomes more
 noisy.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 84-91 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 85-92 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;x&quot;</span><span class="p">)</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;y&quot;</span><span class="p">)</span>
@@ -4366,12 +4366,12 @@ noisy.</p>
 </span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </span></code></pre></div>
 <p><img alt="plot coverage width based criterion" class="mkd-glr-single-img" src="../images/mkd_glr_plot-coverage-width-based-criterion_001.png" srcset="../images/mkd_glr_plot-coverage-width-based-criterion_001.png" /></p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 92-95 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 93-96 -->
 
 <p>As mentioned previously, we fit our training data with a simple
 polynomial function. Here, we choose a degree equal to 10 so the function
 is able to perfectly fit <code>x * sin(x)</code>.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 95-113 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 96-114 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">degree_polyn</span> <span class="o">=</span> <span class="mi">10</span>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="n">polyn_model</span> <span class="o">=</span> <span class="n">Pipeline</span><span class="p">(</span>
@@ -4390,13 +4390,13 @@ is able to perfectly fit <code>x * sin(x)</code>.</p>
 </span><span id="__span-4-15"><a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a>    <span class="p">]</span>
 </span><span id="__span-4-16"><a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a><span class="p">)</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 114-118 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 115-119 -->
 
 <p>We then estimate the prediction intervals for all the strategies very easily
 with a <code>fit</code> and <code>predict</code> process. The prediction interval's lower and
 upper bounds are then saved in a DataFrame. Here, we set an alpha value of
 0.05 in order to obtain a 95% confidence for our prediction intervals.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 118-181 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 119-182 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">STRATEGIES</span> <span class="o">=</span> <span class="p">{</span>
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>    <span class="s2">&quot;cv&quot;</span><span class="p">:</span> <span class="p">{</span>
@@ -4463,12 +4463,12 @@ upper bounds are then saved in a DataFrame. Here, we set an alpha value of
 <p class="mkd-glr-script-out">Out:</p>
 <div class="mkd-glr-script-out-disp highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>INFO:root:The<span class="w"> </span>predictions<span class="w"> </span>are<span class="w"> </span>ill-sorted.
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 182-185 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 183-186 -->
 
 <p>Once again, let’s compare the target confidence intervals with prediction
 intervals obtained with the Jackknife+, Jackknife-minmax, CV+, CV-minmax,
 Jackknife+-after-Boostrap, and CQR strategies.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 185-239 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 186-240 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">plot_1d_data</span><span class="p">(</span>
 </span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>    <span class="n">X_train</span><span class="p">,</span>
@@ -4522,13 +4522,13 @@ Jackknife+-after-Boostrap, and CQR strategies.</p>
 </span><span id="__span-7-50"><a id="__codelineno-7-50" name="__codelineno-7-50" href="#__codelineno-7-50"></a><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </span></code></pre></div>
 <p><img alt="jackknife_plus, jackknife_minmax, cv_plus, cv_minmax, jackknife_plus_ab, conformalized_quantile_regression" class="mkd-glr-single-img" src="../images/mkd_glr_plot-coverage-width-based-criterion_002.png" srcset="../images/mkd_glr_plot-coverage-width-based-criterion_002.png" /></p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 240-244 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 241-245 -->
 
 <p>Let’s now conclude by summarizing the <em>effective</em> coverage, namely the
 fraction of test
 points whose true values lie within the prediction intervals, given by
 the different strategies.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 244-272 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 245-273 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="n">coverage_score</span> <span class="o">=</span> <span class="p">{}</span>
 </span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="n">width_mean_score</span> <span class="o">=</span> <span class="p">{}</span>
@@ -4570,12 +4570,12 @@ the different strategies.</p>
 </span><span id="__span-9-11"><a id="__codelineno-9-11" name="__codelineno-9-11" href="#__codelineno-9-11"></a>
 </span><span id="__span-9-12"><a id="__codelineno-9-12" name="__codelineno-9-12" href="#__codelineno-9-12"></a><span class="o">[</span><span class="m">9</span><span class="w"> </span>rows<span class="w"> </span>x<span class="w"> </span><span class="m">3</span><span class="w"> </span>columns<span class="o">]</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 273-276 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 274-277 -->
 
 <p>All the strategies have the wanted coverage, however, we notice that the CQR
 strategy has much lower interval width than all the other methods, therefore,
 with heteroscedastic noise, CQR would be the preferred method.</p>
-<p><strong>Total running time of the script:</strong> ( 0 minutes  2.749 seconds)</p>
+<p><strong>Total running time of the script:</strong> ( 0 minutes  2.747 seconds)</p>
 <div id="download_links"></div>
 
 <p><a class="md-button center" href="../plot-coverage-width-based-criterion.py"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M256 32c0-17.7-14.3-32-32-32s-32 14.3-32 32v210.7l-41.4-41.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l96 96c12.5 12.5 32.8 12.5 45.3 0l96-96c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 242.7zM64 320c-35.3 0-64 28.7-64 64v32c0 35.3 28.7 64 64 64h320c35.3 0 64-28.7 64-64v-32c0-35.3-28.7-64-64-64h-46.9l-56.6 56.6c-31.2 31.2-81.9 31.2-113.1 0L110.9 320zm304 56a24 24 0 1 1 0 48 24 24 0 1 1 0-48"/></svg></span> Download Python source code: plot-coverage-width-based-criterion.py</a></p>

@@ -24,7 +24,7 @@
         
       
       
-      <link rel="icon" href="../../../../assets/images/mapie_logo_nobg_cut.png">
+      <link rel="icon" href="../../../../images/mapie_logo_nobg_cut.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
@@ -114,7 +114,7 @@
   <nav class="md-header__inner md-grid" aria-label="Header">
     <a href="../../../.." title="MAPIE" class="md-header__button md-logo" aria-label="MAPIE" data-md-component="logo">
       
-  <img src="../../../../assets/images/mapie_logo_nobg_cut.png" alt="logo">
+  <img src="../../../../images/mapie_logo_nobg_cut.png" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -481,7 +481,7 @@
   <label class="md-nav__title" for="__drawer">
     <a href="../../../.." title="MAPIE" class="md-nav__button md-logo" aria-label="MAPIE" data-md-component="logo">
       
-  <img src="../../../../assets/images/mapie_logo_nobg_cut.png" alt="logo">
+  <img src="../../../../images/mapie_logo_nobg_cut.png" alt="logo">
 
     </a>
     MAPIE
@@ -4209,11 +4209,11 @@ to download the full example code</p>
 </div>
 <h1 id="plot-prediction-sets">Plot prediction sets<a class="headerlink" href="#plot-prediction-sets" title="Permanent link">&para;</a></h1>
 <p>In this example, we explain how to use MAPIE on a basic classification setting.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 9-11 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 10-12 -->
 
 <p>We will use MAPIE to estimate prediction sets on a two-dimensional dataset with
 three labels.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 11-24 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 12-25 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
@@ -4227,10 +4227,10 @@ three labels.</p>
 </span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>
 </span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 25-26 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 26-27 -->
 
 <p>Firstly, let us create our dataset:</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 26-35 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 27-36 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">X</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">make_blobs</span><span class="p">(</span><span class="n">n_samples</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">n_features</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">centers</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">cluster_std</span><span class="o">=</span><span class="mf">3.4</span><span class="p">)</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
@@ -4240,7 +4240,7 @@ three labels.</p>
 </span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>    <span class="p">)</span>
 </span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="p">)</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 36-42 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 37-43 -->
 
 <p>We fit our training data with a KNN estimator.
 Then, we initialize a <code>SplitConformalClassifier</code>
@@ -4248,7 +4248,7 @@ using our estimator, indicating that it has already been fitted with
 <code>prefit=True</code>.
 Lastly, we compute the prediction sets with the desired confidence level using the
 <code>conformalize</code> and <code>predict_set</code> methods.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 42-53 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 43-54 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">classifier</span> <span class="o">=</span> <span class="n">KNeighborsClassifier</span><span class="p">(</span><span class="n">n_neighbors</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">classifier</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
@@ -4260,18 +4260,18 @@ Lastly, we compute the prediction sets with the desired confidence level using t
 </span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="n">mapie_classifier</span><span class="o">.</span><span class="n">conformalize</span><span class="p">(</span><span class="n">X_conformalize</span><span class="p">,</span> <span class="n">y_conformalize</span><span class="p">)</span>
 </span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="n">y_pred</span><span class="p">,</span> <span class="n">y_pred_set</span> <span class="o">=</span> <span class="n">mapie_classifier</span><span class="o">.</span><span class="n">predict_set</span><span class="p">(</span><span class="n">X_test</span><span class="p">)</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 54-59 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 55-60 -->
 
 <p><code>y_pred</code> represents the point predictions as a <code>np.ndarray</code> of shape
 <code>(n_samples)</code>.
 <code>y_pred_set</code> corresponds to the prediction sets as a <code>np.ndarray</code> of shape
 <code>(n_samples, 3, 1)</code>. This array contains only boolean values: <code>True</code> if the label
 is included in the prediction set, and <code>False</code> if not.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 61-63 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 62-64 -->
 
 <p>Finally, we can easily compute the coverage score (i.e., the proportion of times the
 true labels fall within the predicted sets).</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 63-71 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 64-72 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">coverage_score</span> <span class="o">=</span> <span class="n">classification_coverage_score</span><span class="p">(</span><span class="n">y_test</span><span class="p">,</span> <span class="n">y_pred_set</span><span class="p">)</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="nb">print</span><span class="p">(</span>
@@ -4283,18 +4283,18 @@ true labels fall within the predicted sets).</p>
 <p class="mkd-glr-script-out">Out:</p>
 <div class="mkd-glr-script-out-disp highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>For<span class="w"> </span>a<span class="w"> </span>confidence<span class="w"> </span>level<span class="w"> </span>of<span class="w"> </span><span class="m">0</span>.95,<span class="w"> </span>the<span class="w"> </span>target<span class="w"> </span>coverage<span class="w"> </span>is<span class="w"> </span><span class="m">0</span>.950,<span class="w"> </span>and<span class="w"> </span>the<span class="w"> </span>effective<span class="w"> </span>coverage<span class="w"> </span>is<span class="w"> </span><span class="m">0</span>.980.
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 72-76 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 73-77 -->
 
 <p>In this example, the effective coverage is slightly above the target coverage
 (i.e., 0.95), indicating that the confidence level we set has been reached.
 Therefore, we can confirm that the prediction sets effectively contain the
 true label more than 95% of the time.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 78-81 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 79-82 -->
 
 <p>Now, let us plot the confidence regions across the plane.
 This plot will give us insights about what the prediction set looks like for each
 point.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 81-123 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 82-124 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">x_min</span><span class="p">,</span> <span class="n">x_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">X</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]),</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">X</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])</span>
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="n">y_min</span><span class="p">,</span> <span class="n">y_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">X</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]),</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">X</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">])</span>
@@ -4338,7 +4338,7 @@ point.</p>
 </span><span id="__span-5-40"><a id="__codelineno-5-40" name="__codelineno-5-40" href="#__codelineno-5-40"></a><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </span></code></pre></div>
 <p><img alt="Confidence regions with KNN" class="mkd-glr-single-img" src="../images/mkd_glr_plot_quickstart_classification_001.png" srcset="../images/mkd_glr_plot_quickstart_classification_001.png" /></p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 124-130 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 125-131 -->
 
 <p>On the plot above, the dots represent the samples from our dataset, with their
 color indicating their respective label.
@@ -4346,7 +4346,7 @@ The blue, orange and green zones correspond to prediction sets
 containing only the blue label, orange label and green label respectively.
 The purple zone represents areas where the prediction sets contain more than one
 label, indicating that the model is uncertain.</p>
-<p><strong>Total running time of the script:</strong> ( 0 minutes  1.013 seconds)</p>
+<p><strong>Total running time of the script:</strong> ( 0 minutes  0.995 seconds)</p>
 <div id="download_links"></div>
 
 <p><a class="md-button center" href="../plot_quickstart_classification.py"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M256 32c0-17.7-14.3-32-32-32s-32 14.3-32 32v210.7l-41.4-41.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l96 96c12.5 12.5 32.8 12.5 45.3 0l96-96c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 242.7zM64 320c-35.3 0-64 28.7-64 64v32c0 35.3 28.7 64 64 64h320c35.3 0 64-28.7 64-64v-32c0-35.3-28.7-64-64-64h-46.9l-56.6 56.6c-31.2 31.2-81.9 31.2-113.1 0L110.9 320zm304 56a24 24 0 1 1 0 48 24 24 0 1 1 0-48"/></svg></span> Download Python source code: plot_quickstart_classification.py</a></p>

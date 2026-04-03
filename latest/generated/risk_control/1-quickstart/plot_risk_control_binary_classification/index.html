@@ -24,7 +24,7 @@
         
       
       
-      <link rel="icon" href="../../../../assets/images/mapie_logo_nobg_cut.png">
+      <link rel="icon" href="../../../../images/mapie_logo_nobg_cut.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
@@ -114,7 +114,7 @@
   <nav class="md-header__inner md-grid" aria-label="Header">
     <a href="../../../.." title="MAPIE" class="md-header__button md-logo" aria-label="MAPIE" data-md-component="logo">
       
-  <img src="../../../../assets/images/mapie_logo_nobg_cut.png" alt="logo">
+  <img src="../../../../images/mapie_logo_nobg_cut.png" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -481,7 +481,7 @@
   <label class="md-nav__title" for="__drawer">
     <a href="../../../.." title="MAPIE" class="md-nav__button md-logo" aria-label="MAPIE" data-md-component="logo">
       
-  <img src="../../../../assets/images/mapie_logo_nobg_cut.png" alt="logo">
+  <img src="../../../../images/mapie_logo_nobg_cut.png" alt="logo">
 
     </a>
     MAPIE
@@ -4209,7 +4209,7 @@ to download the full example code</p>
 </div>
 <h1 id="precision-control-for-a-binary-classifier">Precision control for a binary classifier<a class="headerlink" href="#precision-control-for-a-binary-classifier" title="Permanent link">&para;</a></h1>
 <p>In this example, we explain how to do risk control for binary classification with MAPIE.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 8-24 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 9-25 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># sphinx_gallery_thumbnail_number = 2</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
@@ -4226,11 +4226,11 @@ to download the full example code</p>
 </span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>
 </span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="n">RANDOM_STATE</span> <span class="o">=</span> <span class="mi">42</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 25-27 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 26-28 -->
 
 <p>First, load the dataset and then split it into training, calibration
 (for conformalization), and test sets.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 27-84 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 28-85 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">X</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">make_circles</span><span class="p">(</span><span class="n">n_samples</span><span class="o">=</span><span class="mi">5000</span><span class="p">,</span> <span class="n">noise</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">factor</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="n">RANDOM_STATE</span><span class="p">)</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">X_calib</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">y_calib</span><span class="p">,</span> <span class="n">y_test</span><span class="p">)</span> <span class="o">=</span> <span class="n">train_conformalize_test_split</span><span class="p">(</span>
@@ -4289,10 +4289,10 @@ to download the full example code</p>
 </span><span id="__span-1-55"><a id="__codelineno-1-55" name="__codelineno-1-55" href="#__codelineno-1-55"></a><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </span></code></pre></div>
 <p><img alt="Visualization of Train, Calibration, and Test Sets, Training Data, Calibration Data, Test Data" class="mkd-glr-single-img" src="../images/mkd_glr_plot_risk_control_binary_classification_001.png" srcset="../images/mkd_glr_plot_risk_control_binary_classification_001.png" /></p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 85-86 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 86-87 -->
 
 <p>Second, fit a Multi-layer Perceptron classifier on the training data.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 86-90 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 87-91 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">clf</span> <span class="o">=</span> <span class="n">MLPClassifier</span><span class="p">(</span><span class="n">max_iter</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="n">RANDOM_STATE</span><span class="p">)</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">clf</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
@@ -5344,7 +5344,7 @@ to download the full example code</p>
     forceTheme('sk-container-id-2');</script></body>
 </div>
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 91-101 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 92-102 -->
 
 <p>Next, we initialize a <code>BinaryClassificationController</code>
 using the probability estimation function from the fitted estimator:
@@ -5355,7 +5355,7 @@ to compute statistically guaranteed thresholds using a risk control method.</p>
 and recall, but you can also implement your own custom function using
 <code>BinaryClassificationRisk</code> and choose your own
 secondary objective.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 101-120 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 102-121 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">target_precision</span> <span class="o">=</span> <span class="mf">0.8</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">confidence_level</span> <span class="o">=</span> <span class="mf">0.9</span>
@@ -5378,11 +5378,11 @@ secondary objective.</p>
 <div class="mkd-glr-script-out-disp highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="m">49</span><span class="w"> </span>thresholds<span class="w"> </span>found<span class="w"> </span>that<span class="w"> </span>guarantee<span class="w"> </span>a<span class="w"> </span>precision<span class="w"> </span>of<span class="w"> </span>at<span class="w"> </span>least<span class="w"> </span><span class="m">0</span>.8<span class="w"> </span>with<span class="w"> </span>a<span class="w"> </span>confidence<span class="w"> </span>of<span class="w"> </span><span class="m">0</span>.9.
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>Among<span class="w"> </span>those,<span class="w"> </span>the<span class="w"> </span>one<span class="w"> </span>that<span class="w"> </span>maximizes<span class="w"> </span>the<span class="w"> </span>secondary<span class="w"> </span>objective<span class="w"> </span><span class="o">(</span>recall<span class="w"> </span>here<span class="o">)</span><span class="w"> </span>is:<span class="w"> </span><span class="m">0</span>.50.
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 121-123 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 122-124 -->
 
 <p>In the plot below, we visualize how the threshold values impact precision, and what
 thresholds have been computed as statistically guaranteed.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 123-201 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 124-202 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">proba_positive_class</span> <span class="o">=</span> <span class="n">clf</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">X_calib</span><span class="p">)[:,</span> <span class="mi">1</span><span class="p">]</span>
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
@@ -5472,7 +5472,7 @@ thresholds have been computed as statistically guaranteed.</p>
 </span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="w"> </span>-<span class="w"> </span><span class="m">0</span>.886<span class="w"> </span>on<span class="w"> </span>the<span class="w"> </span>calibration<span class="w"> </span><span class="nb">set</span>
 </span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="w"> </span>-<span class="w"> </span><span class="m">0</span>.857<span class="w"> </span>on<span class="w"> </span>the<span class="w"> </span><span class="nb">test</span><span class="w"> </span>set.
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 202-220 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 203-221 -->
 
 <p>Contrary to the naive way of computing a threshold to satisfy a precision target on
 calibration data, risk control provides statistical guarantees on unseen data.
@@ -5490,13 +5490,13 @@ the precision value to be ill-defined and set to 0.</p>
 <code>BinaryClassificationController</code> also outputs the "best"
 one, which is the valid threshold that maximizes a secondary objective
 (recall here).</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 223-227 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 224-228 -->
 
 <p>After obtaining the best threshold, we can use the <code>predict</code> function of
 <code>BinaryClassificationController</code> for future predictions,
 or use scikit-learn's <code>FixedThresholdClassifier</code> as a wrapper to benefit
 from functionalities like easily plotting the decision boundary as seen below.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 227-260 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 228-261 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="n">y_pred</span> <span class="o">=</span> <span class="n">bcc</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_test</span><span class="p">)</span>
 </span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>
@@ -5532,7 +5532,7 @@ from functionalities like easily plotting the decision boundary as seen below.</
 </span><span id="__span-7-32"><a id="__codelineno-7-32" name="__codelineno-7-32" href="#__codelineno-7-32"></a><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </span></code></pre></div>
 <p><img alt="Decision Boundary of FixedThresholdClassifier" class="mkd-glr-single-img" src="../images/mkd_glr_plot_risk_control_binary_classification_003.png" srcset="../images/mkd_glr_plot_risk_control_binary_classification_003.png" /></p>
-<p><strong>Total running time of the script:</strong> ( 0 minutes  2.397 seconds)</p>
+<p><strong>Total running time of the script:</strong> ( 0 minutes  2.441 seconds)</p>
 <div id="download_links"></div>
 
 <p><a class="md-button center" href="../plot_risk_control_binary_classification.py"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M256 32c0-17.7-14.3-32-32-32s-32 14.3-32 32v210.7l-41.4-41.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l96 96c12.5 12.5 32.8 12.5 45.3 0l96-96c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 242.7zM64 320c-35.3 0-64 28.7-64 64v32c0 35.3 28.7 64 64 64h320c35.3 0 64-28.7 64-64v-32c0-35.3-28.7-64-64-64h-46.9l-56.6 56.6c-31.2 31.2-81.9 31.2-113.1 0L110.9 320zm304 56a24 24 0 1 1 0 48 24 24 0 1 1 0-48"/></svg></span> Download Python source code: plot_risk_control_binary_classification.py</a></p>

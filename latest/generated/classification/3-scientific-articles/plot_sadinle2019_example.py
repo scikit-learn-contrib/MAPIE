@@ -1,5 +1,6 @@
 """
-# Least Ambiguous Set-Valued Classifiers with Bounded Error Levels, Sadinle et al. (2019)
+Least Ambiguous Set-Valued Classifiers with Bounded Error Levels, Sadinle et al. (2019)
+=======================================================================================
 
 
 We use `SplitConformalClassifier` to reproduce

@@ -24,7 +24,7 @@
         
       
       
-      <link rel="icon" href="../../../../assets/images/mapie_logo_nobg_cut.png">
+      <link rel="icon" href="../../../../images/mapie_logo_nobg_cut.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
@@ -114,7 +114,7 @@
   <nav class="md-header__inner md-grid" aria-label="Header">
     <a href="../../../.." title="MAPIE" class="md-header__button md-logo" aria-label="MAPIE" data-md-component="logo">
       
-  <img src="../../../../assets/images/mapie_logo_nobg_cut.png" alt="logo">
+  <img src="../../../../images/mapie_logo_nobg_cut.png" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -481,7 +481,7 @@
   <label class="md-nav__title" for="__drawer">
     <a href="../../../.." title="MAPIE" class="md-nav__button md-logo" aria-label="MAPIE" data-md-component="logo">
       
-  <img src="../../../../assets/images/mapie_logo_nobg_cut.png" alt="logo">
+  <img src="../../../../images/mapie_logo_nobg_cut.png" alt="logo">
 
     </a>
     MAPIE
@@ -4343,7 +4343,7 @@ proportional to the predicted mean. For low prices, the Gamma prediction
 intervals are narrower than the default ones, conversely to high prices
 for which the confidence intervals are higher but visually more relevant.
 The empirical coverage is similar between the two conformity scores.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 35-65 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 36-66 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">io</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kn">import</span><span class="w"> </span><span class="nn">zipfile</span>
@@ -4374,13 +4374,13 @@ The empirical coverage is similar between the two conformity scores.</p>
 </span><span id="__span-0-27"><a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a><span class="n">rf_kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;n_estimators&quot;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span> <span class="s2">&quot;random_state&quot;</span><span class="p">:</span> <span class="n">RANDOM_STATE</span><span class="p">}</span>
 </span><span id="__span-0-28"><a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a><span class="n">model</span> <span class="o">=</span> <span class="n">RandomForestRegressor</span><span class="p">(</span><span class="o">**</span><span class="n">rf_kwargs</span><span class="p">)</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 66-72 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 67-73 -->
 
 <h2 id="1-load-dataset-with-a-target-following-approximativeley-a-gamma-distribution">1. Load dataset with a target following approximativeley a Gamma distribution<a class="headerlink" href="#1-load-dataset-with-a-target-following-approximativeley-a-gamma-distribution" title="Permanent link">&para;</a></h2>
 <p>We start by loading a dataset with a target following approximately
 a Gamma distribution.
 Two sub datasets are extracted: the training and test ones.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 72-89 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 73-90 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">dataset_url</span> <span class="o">=</span> <span class="p">(</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    <span class="s2">&quot;https://www.kaggle.com&quot;</span>
@@ -4398,7 +4398,7 @@ Two sub datasets are extracted: the training and test ones.</p>
 </span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>    <span class="n">X</span><span class="p">[</span><span class="n">features</span><span class="p">],</span> <span class="n">y</span><span class="p">,</span> <span class="n">test_size</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="n">RANDOM_STATE</span>
 </span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="p">)</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 90-103 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 91-104 -->
 
 <h2 id="2-train-model-with-two-conformity-scores">2. Train model with two conformity scores<a class="headerlink" href="#2-train-model-with-two-conformity-scores" title="Permanent link">&para;</a></h2>
 <p>Two models are trained with two different conformity score:</p>
@@ -4415,11 +4415,11 @@ Two sub datasets are extracted: the training and test ones.</p>
   scale with the predicted value.</p>
 </li>
 </ul>
-<!-- GENERATED FROM PYTHON SOURCE LINES 105-107 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 106-108 -->
 
 <p>First, train model with
 conformity_score = "absolute".</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 107-115 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 108-116 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">mapie</span> <span class="o">=</span> <span class="n">CrossConformalRegressor</span><span class="p">(</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>    <span class="n">model</span><span class="p">,</span> <span class="n">confidence_level</span><span class="o">=</span><span class="n">confidence_level</span><span class="p">,</span> <span class="n">conformity_score</span><span class="o">=</span><span class="s2">&quot;absolute&quot;</span>
@@ -4429,11 +4429,11 @@ conformity_score = "absolute".</p>
 </span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>
 </span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="n">coverage_absconfscore</span> <span class="o">=</span> <span class="n">regression_coverage_score</span><span class="p">(</span><span class="n">y_test</span><span class="p">,</span> <span class="n">y_pis_absconfscore</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 116-118 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 117-119 -->
 
 <p>Prepare the results for matplotlib. Get the prediction intervals and their
 corresponding widths.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 118-133 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 119-134 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">get_yerr</span><span class="p">(</span><span class="n">y_pred</span><span class="p">,</span> <span class="n">y_pis</span><span class="p">):</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span>
@@ -4448,11 +4448,11 @@ corresponding widths.</p>
 </span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="n">yerr_absconfscore</span> <span class="o">=</span> <span class="n">get_yerr</span><span class="p">(</span><span class="n">y_pred_absconfscore</span><span class="p">,</span> <span class="n">y_pis_absconfscore</span><span class="p">)</span>
 </span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a><span class="n">pred_int_width_absconfscore</span> <span class="o">=</span> <span class="n">y_pis_absconfscore</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">y_pis_absconfscore</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 134-136 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 135-137 -->
 
 <p>Then, train the model with:
 <code>conformity_score = "gamma"</code>.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 136-150 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 137-151 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">mapie</span> <span class="o">=</span> <span class="n">CrossConformalRegressor</span><span class="p">(</span>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>    <span class="n">model</span><span class="p">,</span> <span class="n">confidence_level</span><span class="o">=</span><span class="n">confidence_level</span><span class="p">,</span> <span class="n">conformity_score</span><span class="o">=</span><span class="s2">&quot;gamma&quot;</span>
@@ -4467,7 +4467,7 @@ corresponding widths.</p>
 </span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>    <span class="n">y_pis_gammaconfscore</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">y_pis_gammaconfscore</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
 </span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="p">)</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 151-162 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 152-163 -->
 
 <h2 id="3-compare-the-prediction-intervals">3. Compare the prediction intervals<a class="headerlink" href="#3-compare-the-prediction-intervals" title="Permanent link">&para;</a></h2>
 <p>Once the models have been trained, we now compare the prediction intervals
@@ -4477,7 +4477,7 @@ prediction interval with almost the same width for all the predicted values.
 Conversely, the <code>"gamma"</code> conformity score
 yields prediction interval with width scaling with the predicted values.</p>
 <p>The choice of the conformity score depends on the problem we face.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 162-205 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 163-206 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">fig</span><span class="p">,</span> <span class="n">axs</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
@@ -4522,8 +4522,8 @@ yields prediction interval with width scaling with the predicted values.</p>
 </span><span id="__span-5-41"><a id="__codelineno-5-41" name="__codelineno-5-41" href="#__codelineno-5-41"></a><span class="n">plt</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">wspace</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">hspace</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
 </span><span id="__span-5-42"><a id="__codelineno-5-42" name="__codelineno-5-42" href="#__codelineno-5-42"></a><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </span></code></pre></div>
-<p><img alt="Predicted values with the prediction intervals of level 0.95, AbsoluteResidualScore - coverage=95%, GammaResidualScore - coverage=96%" class="mkd-glr-single-img" src="../images/mkd_glr_plot_compare_conformity_scores_001.png" srcset="../images/mkd_glr_plot_compare_conformity_scores_001.png" /></p>
-<p><strong>Total running time of the script:</strong> ( 0 minutes  2.928 seconds)</p>
+<p><img alt="Predicted values with the prediction intervals of level 0.95, AbsoluteResidualScore - coverage=95%, GammaResidualScore - coverage=97%" class="mkd-glr-single-img" src="../images/mkd_glr_plot_compare_conformity_scores_001.png" srcset="../images/mkd_glr_plot_compare_conformity_scores_001.png" /></p>
+<p><strong>Total running time of the script:</strong> ( 0 minutes  3.254 seconds)</p>
 <div id="download_links"></div>
 
 <p><a class="md-button center" href="../plot_compare_conformity_scores.py"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M256 32c0-17.7-14.3-32-32-32s-32 14.3-32 32v210.7l-41.4-41.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l96 96c12.5 12.5 32.8 12.5 45.3 0l96-96c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 242.7zM64 320c-35.3 0-64 28.7-64 64v32c0 35.3 28.7 64 64 64h320c35.3 0 64-28.7 64-64v-32c0-35.3-28.7-64-64-64h-46.9l-56.6 56.6c-31.2 31.2-81.9 31.2-113.1 0L110.9 320zm304 56a24 24 0 1 1 0 48 24 24 0 1 1 0-48"/></svg></span> Download Python source code: plot_compare_conformity_scores.py</a></p>

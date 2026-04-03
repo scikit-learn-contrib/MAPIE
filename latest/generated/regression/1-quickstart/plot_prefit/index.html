@@ -24,7 +24,7 @@
         
       
       
-      <link rel="icon" href="../../../../assets/images/mapie_logo_nobg_cut.png">
+      <link rel="icon" href="../../../../images/mapie_logo_nobg_cut.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
@@ -114,7 +114,7 @@
   <nav class="md-header__inner md-grid" aria-label="Header">
     <a href="../../../.." title="MAPIE" class="md-header__button md-logo" aria-label="MAPIE" data-md-component="logo">
       
-  <img src="../../../../assets/images/mapie_logo_nobg_cut.png" alt="logo">
+  <img src="../../../../images/mapie_logo_nobg_cut.png" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -481,7 +481,7 @@
   <label class="md-nav__title" for="__drawer">
     <a href="../../../.." title="MAPIE" class="md-nav__button md-logo" aria-label="MAPIE" data-md-component="logo">
       
-  <img src="../../../../assets/images/mapie_logo_nobg_cut.png" alt="logo">
+  <img src="../../../../images/mapie_logo_nobg_cut.png" alt="logo">
 
     </a>
     MAPIE
@@ -4439,7 +4439,7 @@ then compute residuals on a validation set with the <code>prefit=True</code> par
 Finally, we evaluate the model with prediction intervals on a testing set.
 In a second part, we will also show how to use the prefit method in the
 conformalized quantile regressor.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 18-37 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 19-38 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
@@ -4459,12 +4459,12 @@ conformalized quantile regressor.</p>
 </span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="n">RANDOM_STATE</span> <span class="o">=</span> <span class="mi">1</span>
 </span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="n">confidence_level</span> <span class="o">=</span> <span class="mf">0.9</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 38-41 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 39-42 -->
 
 <p>We start by defining a function that we will use to generate data. We then
 add random noise to the y values. Then we split the dataset to have
 a training, conformalize and test set.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 43-70 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 44-71 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">:</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Polynomial function used to generate one-dimensional data.&quot;&quot;&quot;</span>
@@ -4490,14 +4490,14 @@ a training, conformalize and test set.</p>
 </span><span id="__span-1-22"><a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>    <span class="p">)</span>
 </span><span id="__span-1-23"><a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a><span class="p">)</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 71-79 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 72-80 -->
 
 <h2 id="1-use-a-neural-network">1. Use a neural network<a class="headerlink" href="#1-use-a-neural-network" title="Permanent link">&para;</a></h2>
 <h2 id="11-pre-train-a-neural-network">1.1 Pre-train a neural network<a class="headerlink" href="#11-pre-train-a-neural-network" title="Permanent link">&para;</a></h2>
 <p>For this example, we will train a
 <code>MLPRegressor</code> for
 <code>SplitConformalRegressor</code>.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 79-86 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 80-87 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># Train a MLPRegressor for SplitConformalRegressor</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">est_mlp</span> <span class="o">=</span> <span class="n">MLPRegressor</span><span class="p">(</span><span class="n">activation</span><span class="o">=</span><span class="s2">&quot;relu&quot;</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="n">RANDOM_STATE</span><span class="p">)</span>
@@ -5566,13 +5566,13 @@ a training, conformalize and test set.</p>
     forceTheme('sk-container-id-1');</script></body>
 </div>
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 87-93 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 88-94 -->
 
 <h2 id="12-use-mapie-to-conformalize-the-models">1.2 Use MAPIE to conformalize the models<a class="headerlink" href="#12-use-mapie-to-conformalize-the-models" title="Permanent link">&para;</a></h2>
 <p>We will now proceed to conformalize the models using MAPIE. To this aim, we set
 <code>prefit=True</code> so that we use the model that we already trained prior.
 We then predict using the test set and evaluate its coverage.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 93-106 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 94-107 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># Conformalize uncertainties on conformalize set</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">mapie</span> <span class="o">=</span> <span class="n">SplitConformalRegressor</span><span class="p">(</span>
@@ -5584,13 +5584,13 @@ We then predict using the test set and evaluate its coverage.</p>
 </span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="n">y_pred</span><span class="p">,</span> <span class="n">y_pis</span> <span class="o">=</span> <span class="n">mapie</span><span class="o">.</span><span class="n">predict_interval</span><span class="p">(</span><span class="n">X_test</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
 </span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="n">coverage</span> <span class="o">=</span> <span class="n">regression_coverage_score</span><span class="p">(</span><span class="n">y_test</span><span class="p">,</span> <span class="n">y_pis</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 107-113 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 108-114 -->
 
 <h2 id="13-plot-results">1.3 Plot results<a class="headerlink" href="#13-plot-results" title="Permanent link">&para;</a></h2>
 <p>In order to view the results, we will plot the predictions of the
 the multi-layer perceptron (MLP) with their prediction intervals calculated with
 <code>SplitConformalRegressor</code>.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 113-162 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 114-163 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># Plot obtained prediction intervals on testing set</span>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="n">theoretical_semi_width</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">norm</span><span class="o">.</span><span class="n">ppf</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">confidence_level</span><span class="p">)</span> <span class="o">*</span> <span class="n">sigma</span>
@@ -5640,7 +5640,7 @@ the multi-layer perceptron (MLP) with their prediction intervals calculated with
 </span><span id="__span-4-46"><a id="__codelineno-4-46" name="__codelineno-4-46" href="#__codelineno-4-46"></a><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </span></code></pre></div>
 <p><img alt="Target and effective coverages for:  MLP with SplitConformalRegressor, confidence_level=0.9: (coverage is 0.897) " class="mkd-glr-single-img" src="../images/mkd_glr_plot_prefit_001.png" srcset="../images/mkd_glr_plot_prefit_001.png" /></p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 163-174 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 164-175 -->
 
 <h2 id="2-use-lgbm-models">2. Use LGBM models<a class="headerlink" href="#2-use-lgbm-models" title="Permanent link">&para;</a></h2>
 <h2 id="21-pre-train-lgbm-models">2.1 Pre-train LGBM models<a class="headerlink" href="#21-pre-train-lgbm-models" title="Permanent link">&para;</a></h2>
@@ -5650,7 +5650,7 @@ quantile regression using
 <code>ConformalizedQuantileRegressor</code>. Note that the
 three estimators need to be trained at quantile values of
 <code>(1+confidence_level)/2, (1-confidence_level)/2, 0.5)</code>.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 174-185 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 175-186 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1"># Train LGBMRegressor models for _MapieQuantileRegressor</span>
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="n">list_estimators_cqr</span> <span class="o">=</span> <span class="p">[]</span>
@@ -5673,19 +5673,19 @@ three estimators need to be trained at quantile values of
 </span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="o">[</span>LightGBM<span class="o">]</span><span class="w"> </span><span class="o">[</span>Info<span class="o">]</span><span class="w"> </span>Total<span class="w"> </span>Bins<span class="w"> </span><span class="m">255</span>
 </span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="o">[</span>LightGBM<span class="o">]</span><span class="w"> </span><span class="o">[</span>Info<span class="o">]</span><span class="w"> </span>Number<span class="w"> </span>of<span class="w"> </span>data<span class="w"> </span>points<span class="w"> </span><span class="k">in</span><span class="w"> </span>the<span class="w"> </span>train<span class="w"> </span>set:<span class="w"> </span><span class="m">8000</span>,<span class="w"> </span>number<span class="w"> </span>of<span class="w"> </span>used<span class="w"> </span>features:<span class="w"> </span><span class="m">1</span>
 </span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="o">[</span>LightGBM<span class="o">]</span><span class="w"> </span><span class="o">[</span>Info<span class="o">]</span><span class="w"> </span>Start<span class="w"> </span>training<span class="w"> </span>from<span class="w"> </span>score<span class="w"> </span><span class="m">0</span>.836819
-</span><span id="__span-6-11"><a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a><span class="o">[</span>LightGBM<span class="o">]</span><span class="w"> </span><span class="o">[</span>Info<span class="o">]</span><span class="w"> </span>Auto-choosing<span class="w"> </span>col-wise<span class="w"> </span>multi-threading,<span class="w"> </span>the<span class="w"> </span>overhead<span class="w"> </span>of<span class="w"> </span>testing<span class="w"> </span>was<span class="w"> </span><span class="m">0</span>.000046<span class="w"> </span>seconds.
+</span><span id="__span-6-11"><a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a><span class="o">[</span>LightGBM<span class="o">]</span><span class="w"> </span><span class="o">[</span>Info<span class="o">]</span><span class="w"> </span>Auto-choosing<span class="w"> </span>col-wise<span class="w"> </span>multi-threading,<span class="w"> </span>the<span class="w"> </span>overhead<span class="w"> </span>of<span class="w"> </span>testing<span class="w"> </span>was<span class="w"> </span><span class="m">0</span>.000047<span class="w"> </span>seconds.
 </span><span id="__span-6-12"><a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a>You<span class="w"> </span>can<span class="w"> </span><span class="nb">set</span><span class="w"> </span><span class="sb">`</span><span class="nv">force_col_wise</span><span class="o">=</span><span class="nb">true</span><span class="sb">`</span><span class="w"> </span>to<span class="w"> </span>remove<span class="w"> </span>the<span class="w"> </span>overhead.
 </span><span id="__span-6-13"><a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a><span class="o">[</span>LightGBM<span class="o">]</span><span class="w"> </span><span class="o">[</span>Info<span class="o">]</span><span class="w"> </span>Total<span class="w"> </span>Bins<span class="w"> </span><span class="m">255</span>
 </span><span id="__span-6-14"><a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a><span class="o">[</span>LightGBM<span class="o">]</span><span class="w"> </span><span class="o">[</span>Info<span class="o">]</span><span class="w"> </span>Number<span class="w"> </span>of<span class="w"> </span>data<span class="w"> </span>points<span class="w"> </span><span class="k">in</span><span class="w"> </span>the<span class="w"> </span>train<span class="w"> </span>set:<span class="w"> </span><span class="m">8000</span>,<span class="w"> </span>number<span class="w"> </span>of<span class="w"> </span>used<span class="w"> </span>features:<span class="w"> </span><span class="m">1</span>
 </span><span id="__span-6-15"><a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a><span class="o">[</span>LightGBM<span class="o">]</span><span class="w"> </span><span class="o">[</span>Info<span class="o">]</span><span class="w"> </span>Start<span class="w"> </span>training<span class="w"> </span>from<span class="w"> </span>score<span class="w"> </span><span class="m">0</span>.505079
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 186-192 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 187-193 -->
 
 <h2 id="22-use-mapie-to-conformalize-the-models">2.2 Use MAPIE to conformalize the models<a class="headerlink" href="#22-use-mapie-to-conformalize-the-models" title="Permanent link">&para;</a></h2>
 <p>We will now proceed to conformalize the models using MAPIE. To this aim, we set
 <code>prefit=True</code> so that we use the models that we already trained prior.
 We then predict using the test set and evaluate its coverage.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 192-204 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 193-205 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1"># Conformalize uncertainties on conformalize set</span>
 </span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="n">mapie_cqr</span> <span class="o">=</span> <span class="n">ConformalizedQuantileRegressor</span><span class="p">(</span>
@@ -5697,13 +5697,13 @@ We then predict using the test set and evaluate its coverage.</p>
 </span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="n">y_pred_cqr</span><span class="p">,</span> <span class="n">y_pis_cqr</span> <span class="o">=</span> <span class="n">mapie_cqr</span><span class="o">.</span><span class="n">predict_interval</span><span class="p">(</span><span class="n">X_test</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
 </span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="n">coverage_cqr</span> <span class="o">=</span> <span class="n">regression_coverage_score</span><span class="p">(</span><span class="n">y_test</span><span class="p">,</span> <span class="n">y_pis_cqr</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 205-211 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 206-212 -->
 
 <h2 id="23-plot-results">2.3 Plot results<a class="headerlink" href="#23-plot-results" title="Permanent link">&para;</a></h2>
 <p>As fdor the MLP predictions, we plot the predictions of the LGBMRegressor
 with their prediction intervals calculated with
 <code>ConformalizedQuantileRegressor</code>.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 211-258 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 212-259 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="c1"># Plot obtained prediction intervals on testing set</span>
 </span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="n">theoretical_semi_width</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">norm</span><span class="o">.</span><span class="n">ppf</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">confidence_level</span><span class="p">)</span> <span class="o">*</span> <span class="n">sigma</span>
@@ -5753,7 +5753,7 @@ with their prediction intervals calculated with
 </span><span id="__span-8-46"><a id="__codelineno-8-46" name="__codelineno-8-46" href="#__codelineno-8-46"></a><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </span></code></pre></div>
 <p><img alt="Target and effective coverages for:  LGBM with ConformalizedQuantileRegressor, confidence_level=0.9: (coverage is 0.887)" class="mkd-glr-single-img" src="../images/mkd_glr_plot_prefit_002.png" srcset="../images/mkd_glr_plot_prefit_002.png" /></p>
-<p><strong>Total running time of the script:</strong> ( 0 minutes  0.948 seconds)</p>
+<p><strong>Total running time of the script:</strong> ( 0 minutes  0.956 seconds)</p>
 <div id="download_links"></div>
 
 <p><a class="md-button center" href="../plot_prefit.py"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M256 32c0-17.7-14.3-32-32-32s-32 14.3-32 32v210.7l-41.4-41.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l96 96c12.5 12.5 32.8 12.5 45.3 0l96-96c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 242.7zM64 320c-35.3 0-64 28.7-64 64v32c0 35.3 28.7 64 64 64h320c35.3 0 64-28.7 64-64v-32c0-35.3-28.7-64-64-64h-46.9l-56.6 56.6c-31.2 31.2-81.9 31.2-113.1 0L110.9 320zm304 56a24 24 0 1 1 0 48 24 24 0 1 1 0-48"/></svg></span> Download Python source code: plot_prefit.py</a></p>

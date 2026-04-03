@@ -24,7 +24,7 @@
         
       
       
-      <link rel="icon" href="../../../../assets/images/mapie_logo_nobg_cut.png">
+      <link rel="icon" href="../../../../images/mapie_logo_nobg_cut.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
@@ -114,7 +114,7 @@
   <nav class="md-header__inner md-grid" aria-label="Header">
     <a href="../../../.." title="MAPIE" class="md-header__button md-logo" aria-label="MAPIE" data-md-component="logo">
       
-  <img src="../../../../assets/images/mapie_logo_nobg_cut.png" alt="logo">
+  <img src="../../../../images/mapie_logo_nobg_cut.png" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -481,7 +481,7 @@
   <label class="md-nav__title" for="__drawer">
     <a href="../../../.." title="MAPIE" class="md-nav__button md-logo" aria-label="MAPIE" data-md-component="logo">
       
-  <img src="../../../../assets/images/mapie_logo_nobg_cut.png" alt="logo">
+  <img src="../../../../images/mapie_logo_nobg_cut.png" alt="logo">
 
     </a>
     MAPIE
@@ -4211,7 +4211,7 @@ to download the full example code</p>
 <p>This example compares how different family-wise error rate (FWER) control
 strategies affect the set of statistically valid thresholds when controlling
 a risk in binary classification.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 12-69 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 13-70 -->
 
 <p>Risk control consists in selecting a threshold on predicted probabilities
 so that a chosen risk (e.g., 1-recall) is guaranteed to stay below a target
@@ -4264,7 +4264,7 @@ the most conservative, and Bonferroni-Holm to lie in between.</p>
 <li>compare their selected best thresholds,</li>
 <li>visualize agreement and differences between procedures.</li>
 </ul>
-<!-- GENERATED FROM PYTHON SOURCE LINES 69-83 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 70-84 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># sphinx_gallery_thumbnail_number = 2</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
@@ -4279,11 +4279,11 @@ the most conservative, and Bonferroni-Holm to lie in between.</p>
 </span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>
 </span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="n">RANDOM_STATE</span> <span class="o">=</span> <span class="mi">42</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 84-86 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 85-87 -->
 
 <p>First, load the dataset and then split it into training, calibration
 (for conformalization), and test sets.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 86-143 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 87-144 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">X</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">make_circles</span><span class="p">(</span><span class="n">n_samples</span><span class="o">=</span><span class="mi">5000</span><span class="p">,</span> <span class="n">noise</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">factor</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="n">RANDOM_STATE</span><span class="p">)</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">X_calib</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">y_calib</span><span class="p">,</span> <span class="n">y_test</span><span class="p">)</span> <span class="o">=</span> <span class="n">train_conformalize_test_split</span><span class="p">(</span>
@@ -4342,10 +4342,10 @@ the most conservative, and Bonferroni-Holm to lie in between.</p>
 </span><span id="__span-1-55"><a id="__codelineno-1-55" name="__codelineno-1-55" href="#__codelineno-1-55"></a><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </span></code></pre></div>
 <p><img alt="Visualization of Train, Calibration, and Test Sets, Training Data, Calibration Data, Test Data" class="mkd-glr-single-img" src="../images/mkd_glr_plot_fwer_method_comparison_for_recall_guarantees_001.png" srcset="../images/mkd_glr_plot_fwer_method_comparison_for_recall_guarantees_001.png" /></p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 144-145 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 145-146 -->
 
 <p>Second, fit a Multi-layer Perceptron classifier on the training data.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 145-149 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 146-150 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">clf</span> <span class="o">=</span> <span class="n">MLPClassifier</span><span class="p">(</span><span class="n">max_iter</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="n">RANDOM_STATE</span><span class="p">)</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">clf</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
@@ -5397,7 +5397,7 @@ the most conservative, and Bonferroni-Holm to lie in between.</p>
     forceTheme('sk-container-id-3');</script></body>
 </div>
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 150-165 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 151-166 -->
 
 <p>Next, we initialize <code>BinaryClassificationController</code>
 with the estimator probability function <code>clf.predict_proba</code>, the <code>"recall"</code>
@@ -5413,7 +5413,7 @@ specified via the <code>fwer_method</code> parameter of the controller:</p>
 <p>The FST procedure requires the risk to be monotonic with respect to the
 threshold. This holds for recall but not for precision, which is generally
 non-monotonic; therefore FST cannot be used for controlling <code>"precision"</code>.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 165-207 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 166-208 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">target_recall</span> <span class="o">=</span> <span class="mf">0.8</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">confidence_level</span> <span class="o">=</span> <span class="mf">0.7</span>
@@ -5461,13 +5461,13 @@ non-monotonic; therefore FST cannot be used for controlling <code>"precision"</c
 </span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>-<span class="w"> </span>FST<span class="w"> </span>procedure:<span class="w"> </span><span class="m">54</span><span class="w"> </span>valid<span class="w"> </span>thresholds.<span class="w"> </span>The<span class="w"> </span>best<span class="w"> </span>threshold<span class="w"> </span>maximizing<span class="w"> </span>precision<span class="w"> </span>is:<span class="w"> </span><span class="m">0</span>.535
 </span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>-<span class="w"> </span>Bonferroni-Holm<span class="w"> </span>method:<span class="w"> </span><span class="m">40</span><span class="w"> </span>valid<span class="w"> </span>thresholds.<span class="w"> </span>The<span class="w"> </span>best<span class="w"> </span>threshold<span class="w"> </span>maximizing<span class="w"> </span>precision<span class="w"> </span>is:<span class="w"> </span><span class="m">0</span>.396
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 208-213 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 209-214 -->
 
 <p>The plot below shows how recall varies with the decision threshold and which
 thresholds are statistically valid under each FWER control method. Colors
 indicate agreement or disagreement between methods, and stars mark the best
 valid threshold selected by each procedure as well as the naive threshold.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 213-334 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 214-335 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">proba_positive_class</span> <span class="o">=</span> <span class="n">clf</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">X_calib</span><span class="p">)[:,</span> <span class="mi">1</span><span class="p">]</span>
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
@@ -5589,12 +5589,12 @@ valid threshold selected by each procedure as well as the naive threshold.</p>
 </span><span id="__span-5-118"><a id="__codelineno-5-118" name="__codelineno-5-118" href="#__codelineno-5-118"></a><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </span></code></pre></div>
 <p><img alt="plot fwer method comparison for recall guarantees" class="mkd-glr-single-img" src="../images/mkd_glr_plot_fwer_method_comparison_for_recall_guarantees_002.png" srcset="../images/mkd_glr_plot_fwer_method_comparison_for_recall_guarantees_002.png" /></p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 335-339 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 336-340 -->
 
 <p>Finally, we compare test-set recall obtained with the naive threshold and with
 the best valid threshold selected by each FWER method, alongside their
 calibration-set recalls.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 339-369 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 340-370 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">proba_positive_class_test</span> <span class="o">=</span> <span class="n">clf</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">X_test</span><span class="p">)[:,</span> <span class="mi">1</span><span class="p">]</span>
 </span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="n">y_pred_naive</span> <span class="o">=</span> <span class="p">(</span>
@@ -5644,7 +5644,7 @@ calibration-set recalls.</p>
 </span><span id="__span-7-17"><a id="__codelineno-7-17" name="__codelineno-7-17" href="#__codelineno-7-17"></a><span class="w"> </span>-<span class="w"> </span><span class="m">0</span>.867<span class="w"> </span>on<span class="w"> </span>the<span class="w"> </span>calibration<span class="w"> </span><span class="nb">set</span>
 </span><span id="__span-7-18"><a id="__codelineno-7-18" name="__codelineno-7-18" href="#__codelineno-7-18"></a><span class="w"> </span>-<span class="w"> </span><span class="m">0</span>.881<span class="w"> </span>on<span class="w"> </span>the<span class="w"> </span><span class="nb">test</span><span class="w"> </span>set.
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 370-380 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 371-381 -->
 
 <p>Risk control provides statistical guarantees on unseen data, unlike naive
 threshold selection. Although the naive threshold may meet the target recall
@@ -5654,7 +5654,7 @@ level.</p>
 <p>As expected, Bonferroni is the most conservative (fewest valid thresholds),
 FST is the least conservative when its assumptions hold (largest valid set),
 and Bonferroni-Holm lies in between, offering a compromise between power and generality.</p>
-<p><strong>Total running time of the script:</strong> ( 0 minutes  1.471 seconds)</p>
+<p><strong>Total running time of the script:</strong> ( 0 minutes  1.496 seconds)</p>
 <div id="download_links"></div>
 
 <p><a class="md-button center" href="../plot_fwer_method_comparison_for_recall_guarantees.py"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M256 32c0-17.7-14.3-32-32-32s-32 14.3-32 32v210.7l-41.4-41.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l96 96c12.5 12.5 32.8 12.5 45.3 0l96-96c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 242.7zM64 320c-35.3 0-64 28.7-64 64v32c0 35.3 28.7 64 64 64h320c35.3 0 64-28.7 64-64v-32c0-35.3-28.7-64-64-64h-46.9l-56.6 56.6c-31.2 31.2-81.9 31.2-113.1 0L110.9 320zm304 56a24 24 0 1 1 0 48 24 24 0 1 1 0-48"/></svg></span> Download Python source code: plot_fwer_method_comparison_for_recall_guarantees.py</a></p>

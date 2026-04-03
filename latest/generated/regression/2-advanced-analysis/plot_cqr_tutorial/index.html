@@ -24,7 +24,7 @@
         
       
       
-      <link rel="icon" href="../../../../assets/images/mapie_logo_nobg_cut.png">
+      <link rel="icon" href="../../../../images/mapie_logo_nobg_cut.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
@@ -114,7 +114,7 @@
   <nav class="md-header__inner md-grid" aria-label="Header">
     <a href="../../../.." title="MAPIE" class="md-header__button md-logo" aria-label="MAPIE" data-md-component="logo">
       
-  <img src="../../../../assets/images/mapie_logo_nobg_cut.png" alt="logo">
+  <img src="../../../../images/mapie_logo_nobg_cut.png" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -481,7 +481,7 @@
   <label class="md-nav__title" for="__drawer">
     <a href="../../../.." title="MAPIE" class="md-nav__button md-logo" aria-label="MAPIE" data-md-component="logo">
       
-  <img src="../../../../assets/images/mapie_logo_nobg_cut.png" alt="logo">
+  <img src="../../../../images/mapie_logo_nobg_cut.png" alt="logo">
 
     </a>
     MAPIE
@@ -4328,7 +4328,7 @@ We use <code>CrossConformalRegressor</code> and
 <code>objective="quantile"</code> as this is a necessary component for CQR, the
 regression needs to be from a quantile regressor.</p>
 <p>We then compare the coverage and the intervals width.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 18-49 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 19-50 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># sphinx_gallery_thumbnail_number = 3</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
@@ -4360,7 +4360,7 @@ regression needs to be from a quantile regressor.</p>
 </span><span id="__span-0-28"><a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>
 </span><span id="__span-0-29"><a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a><span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">)</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 50-59 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 51-60 -->
 
 <h2 id="1-data">1. Data<a class="headerlink" href="#1-data" title="Permanent link">&para;</a></h2>
 <p>The target variable of this dataset is the median house value for the
@@ -4370,17 +4370,17 @@ neighborhood, the average number rooms or bedrooms or even the location in
 latitude and longitude. In total there are around 20k observations.
 As the value is expressed in thousands of $ we will multiply it by 100 for
 better visualization (note that this will not affect the results).</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 59-65 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 60-66 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">data</span> <span class="o">=</span> <span class="n">fetch_california_housing</span><span class="p">(</span><span class="n">as_frame</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="n">X</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">feature_names</span><span class="p">)</span>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">y</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">target</span><span class="p">)</span> <span class="o">*</span> <span class="mi">100</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 66-68 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 67-69 -->
 
 <p>Let's visualize the dataset by showing the correlations between the
 independent variables.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 68-75 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 69-76 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">pear_corr</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">corr</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="s2">&quot;pearson&quot;</span><span class="p">)</span>
@@ -4388,356 +4388,356 @@ independent variables.</p>
 </span></code></pre></div>
 <div class="output_subarea output_html rendered_html output_result">
     <style type="text/css">
-    #T_d5d2b_row0_col0, #T_d5d2b_row1_col1, #T_d5d2b_row2_col2, #T_d5d2b_row3_col3, #T_d5d2b_row4_col4, #T_d5d2b_row5_col5, #T_d5d2b_row6_col6, #T_d5d2b_row7_col7, #T_d5d2b_row8_col8 {
+    #T_78196_row0_col0, #T_78196_row1_col1, #T_78196_row2_col2, #T_78196_row3_col3, #T_78196_row4_col4, #T_78196_row5_col5, #T_78196_row6_col6, #T_78196_row7_col7, #T_78196_row8_col8 {
       background-color: #00441b;
       color: #f1f1f1;
     }
-    #T_d5d2b_row0_col1 {
+    #T_78196_row0_col1 {
       background-color: #e3f4de;
       color: #000000;
     }
-    #T_d5d2b_row0_col2 {
+    #T_78196_row0_col2 {
       background-color: #92d28f;
       color: #000000;
     }
-    #T_d5d2b_row0_col3 {
+    #T_78196_row0_col3 {
       background-color: #f5fbf3;
       color: #000000;
     }
-    #T_d5d2b_row0_col4 {
+    #T_78196_row0_col4 {
       background-color: #cbebc5;
       color: #000000;
     }
-    #T_d5d2b_row0_col5 {
+    #T_78196_row0_col5 {
       background-color: #f1faee;
       color: #000000;
     }
-    #T_d5d2b_row0_col6 {
+    #T_78196_row0_col6 {
       background-color: #8ace88;
       color: #000000;
     }
-    #T_d5d2b_row0_col7 {
+    #T_78196_row0_col7 {
       background-color: #7fc97f;
       color: #000000;
     }
-    #T_d5d2b_row0_col8 {
+    #T_78196_row0_col8 {
       background-color: #289049;
       color: #f1f1f1;
     }
-    #T_d5d2b_row1_col0, #T_d5d2b_row1_col2, #T_d5d2b_row1_col3, #T_d5d2b_row1_col4, #T_d5d2b_row4_col1, #T_d5d2b_row6_col7, #T_d5d2b_row6_col8, #T_d5d2b_row7_col6, #T_d5d2b_row8_col5 {
+    #T_78196_row1_col0, #T_78196_row1_col2, #T_78196_row1_col3, #T_78196_row1_col4, #T_78196_row4_col1, #T_78196_row6_col7, #T_78196_row6_col8, #T_78196_row7_col6, #T_78196_row8_col5 {
       background-color: #f7fcf5;
       color: #000000;
     }
-    #T_d5d2b_row1_col5 {
+    #T_78196_row1_col5 {
       background-color: #f2faef;
       color: #000000;
     }
-    #T_d5d2b_row1_col6, #T_d5d2b_row3_col7 {
+    #T_78196_row1_col6, #T_78196_row3_col7 {
       background-color: #79c67a;
       color: #000000;
     }
-    #T_d5d2b_row1_col7, #T_d5d2b_row4_col6 {
+    #T_78196_row1_col7, #T_78196_row4_col6 {
       background-color: #90d18d;
       color: #000000;
     }
-    #T_d5d2b_row1_col8 {
+    #T_78196_row1_col8 {
       background-color: #cfecc9;
       color: #000000;
     }
-    #T_d5d2b_row2_col0 {
+    #T_78196_row2_col0 {
       background-color: #98d594;
       color: #000000;
     }
-    #T_d5d2b_row2_col1, #T_d5d2b_row4_col0 {
+    #T_78196_row2_col1, #T_78196_row4_col0 {
       background-color: #e7f6e3;
       color: #000000;
     }
-    #T_d5d2b_row2_col3 {
+    #T_78196_row2_col3 {
       background-color: #05712f;
       color: #f1f1f1;
     }
-    #T_d5d2b_row2_col4 {
+    #T_78196_row2_col4 {
       background-color: #daf0d4;
       color: #000000;
     }
-    #T_d5d2b_row2_col5, #T_d5d2b_row3_col5 {
+    #T_78196_row2_col5, #T_78196_row3_col5 {
       background-color: #f5fbf2;
       color: #000000;
     }
-    #T_d5d2b_row2_col6 {
+    #T_78196_row2_col6 {
       background-color: #65bd6f;
       color: #f1f1f1;
     }
-    #T_d5d2b_row2_col7 {
+    #T_78196_row2_col7 {
       background-color: #80ca80;
       color: #000000;
     }
-    #T_d5d2b_row2_col8 {
+    #T_78196_row2_col8 {
       background-color: #c4e8bd;
       color: #000000;
     }
-    #T_d5d2b_row3_col0 {
+    #T_78196_row3_col0 {
       background-color: #f0f9ec;
       color: #000000;
     }
-    #T_d5d2b_row3_col1 {
+    #T_78196_row3_col1 {
       background-color: #dbf1d5;
       color: #000000;
     }
-    #T_d5d2b_row3_col2 {
+    #T_78196_row3_col2 {
       background-color: #016e2d;
       color: #f1f1f1;
     }
-    #T_d5d2b_row3_col4 {
+    #T_78196_row3_col4 {
       background-color: #d9f0d3;
       color: #000000;
     }
-    #T_d5d2b_row3_col6 {
+    #T_78196_row3_col6 {
       background-color: #6dc072;
       color: #000000;
     }
-    #T_d5d2b_row3_col8, #T_d5d2b_row7_col3, #T_d5d2b_row7_col8 {
+    #T_78196_row3_col8, #T_78196_row7_col3, #T_78196_row7_col8 {
       background-color: #ebf7e7;
       color: #000000;
     }
-    #T_d5d2b_row4_col2 {
+    #T_78196_row4_col2 {
       background-color: #edf8ea;
       color: #000000;
     }
-    #T_d5d2b_row4_col3 {
+    #T_78196_row4_col3 {
       background-color: #f6fcf4;
       color: #000000;
     }
-    #T_d5d2b_row4_col5, #T_d5d2b_row7_col0 {
+    #T_78196_row4_col5, #T_78196_row7_col0 {
       background-color: #eaf7e6;
       color: #000000;
     }
-    #T_d5d2b_row4_col7 {
+    #T_78196_row4_col7 {
       background-color: #66bd6f;
       color: #f1f1f1;
     }
-    #T_d5d2b_row4_col8, #T_d5d2b_row5_col8 {
+    #T_78196_row4_col8, #T_78196_row5_col8 {
       background-color: #e8f6e4;
       color: #000000;
     }
-    #T_d5d2b_row5_col0 {
+    #T_78196_row5_col0 {
       background-color: #e5f5e1;
       color: #000000;
     }
-    #T_d5d2b_row5_col1 {
+    #T_78196_row5_col1 {
       background-color: #caeac3;
       color: #000000;
     }
-    #T_d5d2b_row5_col2 {
+    #T_78196_row5_col2 {
       background-color: #e5f5e0;
       color: #000000;
     }
-    #T_d5d2b_row5_col3 {
+    #T_78196_row5_col3 {
       background-color: #eef8ea;
       color: #000000;
     }
-    #T_d5d2b_row5_col4 {
+    #T_78196_row5_col4 {
       background-color: #bde5b6;
       color: #000000;
     }
-    #T_d5d2b_row5_col6, #T_d5d2b_row5_col7 {
+    #T_78196_row5_col6, #T_78196_row5_col7 {
       background-color: #7ac77b;
       color: #000000;
     }
-    #T_d5d2b_row6_col0 {
+    #T_78196_row6_col0 {
       background-color: #f2faf0;
       color: #000000;
     }
-    #T_d5d2b_row6_col1 {
+    #T_78196_row6_col1 {
       background-color: #cbeac4;
       color: #000000;
     }
-    #T_d5d2b_row6_col2 {
+    #T_78196_row6_col2 {
       background-color: #cdecc7;
       color: #000000;
     }
-    #T_d5d2b_row6_col3 {
+    #T_78196_row6_col3 {
       background-color: #e2f4dd;
       color: #000000;
     }
-    #T_d5d2b_row6_col4, #T_d5d2b_row7_col1 {
+    #T_78196_row6_col4, #T_78196_row7_col1 {
       background-color: #e0f3db;
       color: #000000;
     }
-    #T_d5d2b_row6_col5, #T_d5d2b_row7_col5 {
+    #T_78196_row6_col5, #T_78196_row7_col5 {
       background-color: #f4fbf1;
       color: #000000;
     }
-    #T_d5d2b_row7_col2 {
+    #T_78196_row7_col2 {
       background-color: #e8f6e3;
       color: #000000;
     }
-    #T_d5d2b_row7_col4 {
+    #T_78196_row7_col4 {
       background-color: #b6e2af;
       color: #000000;
     }
-    #T_d5d2b_row8_col0 {
+    #T_78196_row8_col0 {
       background-color: #2a924a;
       color: #f1f1f1;
     }
-    #T_d5d2b_row8_col1 {
+    #T_78196_row8_col1 {
       background-color: #b5e1ae;
       color: #000000;
     }
-    #T_d5d2b_row8_col2 {
+    #T_78196_row8_col2 {
       background-color: #c3e7bc;
       color: #000000;
     }
-    #T_d5d2b_row8_col3 {
+    #T_78196_row8_col3 {
       background-color: #f3faf0;
       color: #000000;
     }
-    #T_d5d2b_row8_col4 {
+    #T_78196_row8_col4 {
       background-color: #d1edcb;
       color: #000000;
     }
-    #T_d5d2b_row8_col6 {
+    #T_78196_row8_col6 {
       background-color: #97d492;
       color: #000000;
     }
-    #T_d5d2b_row8_col7 {
+    #T_78196_row8_col7 {
       background-color: #84cc83;
       color: #000000;
     }
     </style>
-    <table id="T_d5d2b">
+    <table id="T_78196">
       <thead>
         <tr>
           <th class="blank level0" >&nbsp;</th>
-          <th id="T_d5d2b_level0_col0" class="col_heading level0 col0" >MedInc</th>
-          <th id="T_d5d2b_level0_col1" class="col_heading level0 col1" >HouseAge</th>
-          <th id="T_d5d2b_level0_col2" class="col_heading level0 col2" >AveRooms</th>
-          <th id="T_d5d2b_level0_col3" class="col_heading level0 col3" >AveBedrms</th>
-          <th id="T_d5d2b_level0_col4" class="col_heading level0 col4" >Population</th>
-          <th id="T_d5d2b_level0_col5" class="col_heading level0 col5" >AveOccup</th>
-          <th id="T_d5d2b_level0_col6" class="col_heading level0 col6" >Latitude</th>
-          <th id="T_d5d2b_level0_col7" class="col_heading level0 col7" >Longitude</th>
-          <th id="T_d5d2b_level0_col8" class="col_heading level0 col8" >MedHouseVal</th>
+          <th id="T_78196_level0_col0" class="col_heading level0 col0" >MedInc</th>
+          <th id="T_78196_level0_col1" class="col_heading level0 col1" >HouseAge</th>
+          <th id="T_78196_level0_col2" class="col_heading level0 col2" >AveRooms</th>
+          <th id="T_78196_level0_col3" class="col_heading level0 col3" >AveBedrms</th>
+          <th id="T_78196_level0_col4" class="col_heading level0 col4" >Population</th>
+          <th id="T_78196_level0_col5" class="col_heading level0 col5" >AveOccup</th>
+          <th id="T_78196_level0_col6" class="col_heading level0 col6" >Latitude</th>
+          <th id="T_78196_level0_col7" class="col_heading level0 col7" >Longitude</th>
+          <th id="T_78196_level0_col8" class="col_heading level0 col8" >MedHouseVal</th>
         </tr>
       </thead>
       <tbody>
         <tr>
-          <th id="T_d5d2b_level0_row0" class="row_heading level0 row0" >MedInc</th>
-          <td id="T_d5d2b_row0_col0" class="data row0 col0" >1.000000</td>
-          <td id="T_d5d2b_row0_col1" class="data row0 col1" >-0.119034</td>
-          <td id="T_d5d2b_row0_col2" class="data row0 col2" >0.326895</td>
-          <td id="T_d5d2b_row0_col3" class="data row0 col3" >-0.062040</td>
-          <td id="T_d5d2b_row0_col4" class="data row0 col4" >0.004834</td>
-          <td id="T_d5d2b_row0_col5" class="data row0 col5" >0.018766</td>
-          <td id="T_d5d2b_row0_col6" class="data row0 col6" >-0.079809</td>
-          <td id="T_d5d2b_row0_col7" class="data row0 col7" >-0.015176</td>
-          <td id="T_d5d2b_row0_col8" class="data row0 col8" >0.688075</td>
+          <th id="T_78196_level0_row0" class="row_heading level0 row0" >MedInc</th>
+          <td id="T_78196_row0_col0" class="data row0 col0" >1.000000</td>
+          <td id="T_78196_row0_col1" class="data row0 col1" >-0.119034</td>
+          <td id="T_78196_row0_col2" class="data row0 col2" >0.326895</td>
+          <td id="T_78196_row0_col3" class="data row0 col3" >-0.062040</td>
+          <td id="T_78196_row0_col4" class="data row0 col4" >0.004834</td>
+          <td id="T_78196_row0_col5" class="data row0 col5" >0.018766</td>
+          <td id="T_78196_row0_col6" class="data row0 col6" >-0.079809</td>
+          <td id="T_78196_row0_col7" class="data row0 col7" >-0.015176</td>
+          <td id="T_78196_row0_col8" class="data row0 col8" >0.688075</td>
         </tr>
         <tr>
-          <th id="T_d5d2b_level0_row1" class="row_heading level0 row1" >HouseAge</th>
-          <td id="T_d5d2b_row1_col0" class="data row1 col0" >-0.119034</td>
-          <td id="T_d5d2b_row1_col1" class="data row1 col1" >1.000000</td>
-          <td id="T_d5d2b_row1_col2" class="data row1 col2" >-0.153277</td>
-          <td id="T_d5d2b_row1_col3" class="data row1 col3" >-0.077747</td>
-          <td id="T_d5d2b_row1_col4" class="data row1 col4" >-0.296244</td>
-          <td id="T_d5d2b_row1_col5" class="data row1 col5" >0.013191</td>
-          <td id="T_d5d2b_row1_col6" class="data row1 col6" >0.011173</td>
-          <td id="T_d5d2b_row1_col7" class="data row1 col7" >-0.108197</td>
-          <td id="T_d5d2b_row1_col8" class="data row1 col8" >0.105623</td>
+          <th id="T_78196_level0_row1" class="row_heading level0 row1" >HouseAge</th>
+          <td id="T_78196_row1_col0" class="data row1 col0" >-0.119034</td>
+          <td id="T_78196_row1_col1" class="data row1 col1" >1.000000</td>
+          <td id="T_78196_row1_col2" class="data row1 col2" >-0.153277</td>
+          <td id="T_78196_row1_col3" class="data row1 col3" >-0.077747</td>
+          <td id="T_78196_row1_col4" class="data row1 col4" >-0.296244</td>
+          <td id="T_78196_row1_col5" class="data row1 col5" >0.013191</td>
+          <td id="T_78196_row1_col6" class="data row1 col6" >0.011173</td>
+          <td id="T_78196_row1_col7" class="data row1 col7" >-0.108197</td>
+          <td id="T_78196_row1_col8" class="data row1 col8" >0.105623</td>
         </tr>
         <tr>
-          <th id="T_d5d2b_level0_row2" class="row_heading level0 row2" >AveRooms</th>
-          <td id="T_d5d2b_row2_col0" class="data row2 col0" >0.326895</td>
-          <td id="T_d5d2b_row2_col1" class="data row2 col1" >-0.153277</td>
-          <td id="T_d5d2b_row2_col2" class="data row2 col2" >1.000000</td>
-          <td id="T_d5d2b_row2_col3" class="data row2 col3" >0.847621</td>
-          <td id="T_d5d2b_row2_col4" class="data row2 col4" >-0.072213</td>
-          <td id="T_d5d2b_row2_col5" class="data row2 col5" >-0.004852</td>
-          <td id="T_d5d2b_row2_col6" class="data row2 col6" >0.106389</td>
-          <td id="T_d5d2b_row2_col7" class="data row2 col7" >-0.027540</td>
-          <td id="T_d5d2b_row2_col8" class="data row2 col8" >0.151948</td>
+          <th id="T_78196_level0_row2" class="row_heading level0 row2" >AveRooms</th>
+          <td id="T_78196_row2_col0" class="data row2 col0" >0.326895</td>
+          <td id="T_78196_row2_col1" class="data row2 col1" >-0.153277</td>
+          <td id="T_78196_row2_col2" class="data row2 col2" >1.000000</td>
+          <td id="T_78196_row2_col3" class="data row2 col3" >0.847621</td>
+          <td id="T_78196_row2_col4" class="data row2 col4" >-0.072213</td>
+          <td id="T_78196_row2_col5" class="data row2 col5" >-0.004852</td>
+          <td id="T_78196_row2_col6" class="data row2 col6" >0.106389</td>
+          <td id="T_78196_row2_col7" class="data row2 col7" >-0.027540</td>
+          <td id="T_78196_row2_col8" class="data row2 col8" >0.151948</td>
         </tr>
         <tr>
-          <th id="T_d5d2b_level0_row3" class="row_heading level0 row3" >AveBedrms</th>
-          <td id="T_d5d2b_row3_col0" class="data row3 col0" >-0.062040</td>
-          <td id="T_d5d2b_row3_col1" class="data row3 col1" >-0.077747</td>
-          <td id="T_d5d2b_row3_col2" class="data row3 col2" >0.847621</td>
-          <td id="T_d5d2b_row3_col3" class="data row3 col3" >1.000000</td>
-          <td id="T_d5d2b_row3_col4" class="data row3 col4" >-0.066197</td>
-          <td id="T_d5d2b_row3_col5" class="data row3 col5" >-0.006181</td>
-          <td id="T_d5d2b_row3_col6" class="data row3 col6" >0.069721</td>
-          <td id="T_d5d2b_row3_col7" class="data row3 col7" >0.013344</td>
-          <td id="T_d5d2b_row3_col8" class="data row3 col8" >-0.046701</td>
+          <th id="T_78196_level0_row3" class="row_heading level0 row3" >AveBedrms</th>
+          <td id="T_78196_row3_col0" class="data row3 col0" >-0.062040</td>
+          <td id="T_78196_row3_col1" class="data row3 col1" >-0.077747</td>
+          <td id="T_78196_row3_col2" class="data row3 col2" >0.847621</td>
+          <td id="T_78196_row3_col3" class="data row3 col3" >1.000000</td>
+          <td id="T_78196_row3_col4" class="data row3 col4" >-0.066197</td>
+          <td id="T_78196_row3_col5" class="data row3 col5" >-0.006181</td>
+          <td id="T_78196_row3_col6" class="data row3 col6" >0.069721</td>
+          <td id="T_78196_row3_col7" class="data row3 col7" >0.013344</td>
+          <td id="T_78196_row3_col8" class="data row3 col8" >-0.046701</td>
         </tr>
         <tr>
-          <th id="T_d5d2b_level0_row4" class="row_heading level0 row4" >Population</th>
-          <td id="T_d5d2b_row4_col0" class="data row4 col0" >0.004834</td>
-          <td id="T_d5d2b_row4_col1" class="data row4 col1" >-0.296244</td>
-          <td id="T_d5d2b_row4_col2" class="data row4 col2" >-0.072213</td>
-          <td id="T_d5d2b_row4_col3" class="data row4 col3" >-0.066197</td>
-          <td id="T_d5d2b_row4_col4" class="data row4 col4" >1.000000</td>
-          <td id="T_d5d2b_row4_col5" class="data row4 col5" >0.069863</td>
-          <td id="T_d5d2b_row4_col6" class="data row4 col6" >-0.108785</td>
-          <td id="T_d5d2b_row4_col7" class="data row4 col7" >0.099773</td>
-          <td id="T_d5d2b_row4_col8" class="data row4 col8" >-0.024650</td>
+          <th id="T_78196_level0_row4" class="row_heading level0 row4" >Population</th>
+          <td id="T_78196_row4_col0" class="data row4 col0" >0.004834</td>
+          <td id="T_78196_row4_col1" class="data row4 col1" >-0.296244</td>
+          <td id="T_78196_row4_col2" class="data row4 col2" >-0.072213</td>
+          <td id="T_78196_row4_col3" class="data row4 col3" >-0.066197</td>
+          <td id="T_78196_row4_col4" class="data row4 col4" >1.000000</td>
+          <td id="T_78196_row4_col5" class="data row4 col5" >0.069863</td>
+          <td id="T_78196_row4_col6" class="data row4 col6" >-0.108785</td>
+          <td id="T_78196_row4_col7" class="data row4 col7" >0.099773</td>
+          <td id="T_78196_row4_col8" class="data row4 col8" >-0.024650</td>
         </tr>
         <tr>
-          <th id="T_d5d2b_level0_row5" class="row_heading level0 row5" >AveOccup</th>
-          <td id="T_d5d2b_row5_col0" class="data row5 col0" >0.018766</td>
-          <td id="T_d5d2b_row5_col1" class="data row5 col1" >0.013191</td>
-          <td id="T_d5d2b_row5_col2" class="data row5 col2" >-0.004852</td>
-          <td id="T_d5d2b_row5_col3" class="data row5 col3" >-0.006181</td>
-          <td id="T_d5d2b_row5_col4" class="data row5 col4" >0.069863</td>
-          <td id="T_d5d2b_row5_col5" class="data row5 col5" >1.000000</td>
-          <td id="T_d5d2b_row5_col6" class="data row5 col6" >0.002366</td>
-          <td id="T_d5d2b_row5_col7" class="data row5 col7" >0.002476</td>
-          <td id="T_d5d2b_row5_col8" class="data row5 col8" >-0.023737</td>
+          <th id="T_78196_level0_row5" class="row_heading level0 row5" >AveOccup</th>
+          <td id="T_78196_row5_col0" class="data row5 col0" >0.018766</td>
+          <td id="T_78196_row5_col1" class="data row5 col1" >0.013191</td>
+          <td id="T_78196_row5_col2" class="data row5 col2" >-0.004852</td>
+          <td id="T_78196_row5_col3" class="data row5 col3" >-0.006181</td>
+          <td id="T_78196_row5_col4" class="data row5 col4" >0.069863</td>
+          <td id="T_78196_row5_col5" class="data row5 col5" >1.000000</td>
+          <td id="T_78196_row5_col6" class="data row5 col6" >0.002366</td>
+          <td id="T_78196_row5_col7" class="data row5 col7" >0.002476</td>
+          <td id="T_78196_row5_col8" class="data row5 col8" >-0.023737</td>
         </tr>
         <tr>
-          <th id="T_d5d2b_level0_row6" class="row_heading level0 row6" >Latitude</th>
-          <td id="T_d5d2b_row6_col0" class="data row6 col0" >-0.079809</td>
-          <td id="T_d5d2b_row6_col1" class="data row6 col1" >0.011173</td>
-          <td id="T_d5d2b_row6_col2" class="data row6 col2" >0.106389</td>
-          <td id="T_d5d2b_row6_col3" class="data row6 col3" >0.069721</td>
-          <td id="T_d5d2b_row6_col4" class="data row6 col4" >-0.108785</td>
-          <td id="T_d5d2b_row6_col5" class="data row6 col5" >0.002366</td>
-          <td id="T_d5d2b_row6_col6" class="data row6 col6" >1.000000</td>
-          <td id="T_d5d2b_row6_col7" class="data row6 col7" >-0.924664</td>
-          <td id="T_d5d2b_row6_col8" class="data row6 col8" >-0.144160</td>
+          <th id="T_78196_level0_row6" class="row_heading level0 row6" >Latitude</th>
+          <td id="T_78196_row6_col0" class="data row6 col0" >-0.079809</td>
+          <td id="T_78196_row6_col1" class="data row6 col1" >0.011173</td>
+          <td id="T_78196_row6_col2" class="data row6 col2" >0.106389</td>
+          <td id="T_78196_row6_col3" class="data row6 col3" >0.069721</td>
+          <td id="T_78196_row6_col4" class="data row6 col4" >-0.108785</td>
+          <td id="T_78196_row6_col5" class="data row6 col5" >0.002366</td>
+          <td id="T_78196_row6_col6" class="data row6 col6" >1.000000</td>
+          <td id="T_78196_row6_col7" class="data row6 col7" >-0.924664</td>
+          <td id="T_78196_row6_col8" class="data row6 col8" >-0.144160</td>
         </tr>
         <tr>
-          <th id="T_d5d2b_level0_row7" class="row_heading level0 row7" >Longitude</th>
-          <td id="T_d5d2b_row7_col0" class="data row7 col0" >-0.015176</td>
-          <td id="T_d5d2b_row7_col1" class="data row7 col1" >-0.108197</td>
-          <td id="T_d5d2b_row7_col2" class="data row7 col2" >-0.027540</td>
-          <td id="T_d5d2b_row7_col3" class="data row7 col3" >0.013344</td>
-          <td id="T_d5d2b_row7_col4" class="data row7 col4" >0.099773</td>
-          <td id="T_d5d2b_row7_col5" class="data row7 col5" >0.002476</td>
-          <td id="T_d5d2b_row7_col6" class="data row7 col6" >-0.924664</td>
-          <td id="T_d5d2b_row7_col7" class="data row7 col7" >1.000000</td>
-          <td id="T_d5d2b_row7_col8" class="data row7 col8" >-0.045967</td>
+          <th id="T_78196_level0_row7" class="row_heading level0 row7" >Longitude</th>
+          <td id="T_78196_row7_col0" class="data row7 col0" >-0.015176</td>
+          <td id="T_78196_row7_col1" class="data row7 col1" >-0.108197</td>
+          <td id="T_78196_row7_col2" class="data row7 col2" >-0.027540</td>
+          <td id="T_78196_row7_col3" class="data row7 col3" >0.013344</td>
+          <td id="T_78196_row7_col4" class="data row7 col4" >0.099773</td>
+          <td id="T_78196_row7_col5" class="data row7 col5" >0.002476</td>
+          <td id="T_78196_row7_col6" class="data row7 col6" >-0.924664</td>
+          <td id="T_78196_row7_col7" class="data row7 col7" >1.000000</td>
+          <td id="T_78196_row7_col8" class="data row7 col8" >-0.045967</td>
         </tr>
         <tr>
-          <th id="T_d5d2b_level0_row8" class="row_heading level0 row8" >MedHouseVal</th>
-          <td id="T_d5d2b_row8_col0" class="data row8 col0" >0.688075</td>
-          <td id="T_d5d2b_row8_col1" class="data row8 col1" >0.105623</td>
-          <td id="T_d5d2b_row8_col2" class="data row8 col2" >0.151948</td>
-          <td id="T_d5d2b_row8_col3" class="data row8 col3" >-0.046701</td>
-          <td id="T_d5d2b_row8_col4" class="data row8 col4" >-0.024650</td>
-          <td id="T_d5d2b_row8_col5" class="data row8 col5" >-0.023737</td>
-          <td id="T_d5d2b_row8_col6" class="data row8 col6" >-0.144160</td>
-          <td id="T_d5d2b_row8_col7" class="data row8 col7" >-0.045967</td>
-          <td id="T_d5d2b_row8_col8" class="data row8 col8" >1.000000</td>
+          <th id="T_78196_level0_row8" class="row_heading level0 row8" >MedHouseVal</th>
+          <td id="T_78196_row8_col0" class="data row8 col0" >0.688075</td>
+          <td id="T_78196_row8_col1" class="data row8 col1" >0.105623</td>
+          <td id="T_78196_row8_col2" class="data row8 col2" >0.151948</td>
+          <td id="T_78196_row8_col3" class="data row8 col3" >-0.046701</td>
+          <td id="T_78196_row8_col4" class="data row8 col4" >-0.024650</td>
+          <td id="T_78196_row8_col5" class="data row8 col5" >-0.023737</td>
+          <td id="T_78196_row8_col6" class="data row8 col6" >-0.144160</td>
+          <td id="T_78196_row8_col7" class="data row8 col7" >-0.045967</td>
+          <td id="T_78196_row8_col8" class="data row8 col8" >1.000000</td>
         </tr>
       </tbody>
     </table>
 
 </div>
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 76-77 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 77-78 -->
 
 <p>Now let's visualize a histogram of the price of the houses.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 77-87 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 78-88 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">fig</span><span class="p">,</span> <span class="n">axs</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">axs</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
@@ -4747,18 +4747,18 @@ independent variables.</p>
 </span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </span></code></pre></div>
 <p><img alt="Histogram of house prices" class="mkd-glr-single-img" src="../images/mkd_glr_plot_cqr_tutorial_001.png" srcset="../images/mkd_glr_plot_cqr_tutorial_001.png" /></p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 88-91 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 89-92 -->
 
 <p>Let's now create the different splits for the dataset, with a training,
 conformalize and test set. Remember that the conformalize set is used to
 conformalize the prediction intervals.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 91-98 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 92-99 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">X_train_conformalize</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">y_train_conformalize</span><span class="p">,</span> <span class="n">y_test</span> <span class="o">=</span> <span class="n">train_test_split</span><span class="p">(</span>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>    <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">[</span><span class="s2">&quot;MedHouseVal&quot;</span><span class="p">],</span> <span class="n">random_state</span><span class="o">=</span><span class="n">RANDOM_STATE</span>
 </span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="p">)</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 99-106 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 100-107 -->
 
 <h2 id="2-optimizing-estimator">2. Optimizing estimator<a class="headerlink" href="#2-optimizing-estimator" title="Permanent link">&para;</a></h2>
 <p>Before estimating uncertainties, let's start by optimizing the base model
@@ -4766,7 +4766,7 @@ in order to reduce our prediction error. We will use the
 <code>LGBMRegressor</code> in the quantile setting. The optimization
 is performed using <code>RandomizedSearchCV</code>
 to find the optimal model to predict the house prices.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 106-129 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 107-130 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">estimator</span> <span class="o">=</span> <span class="n">LGBMRegressor</span><span class="p">(</span>
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>    <span class="n">objective</span><span class="o">=</span><span class="s2">&quot;quantile&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="n">RANDOM_STATE</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=-</span><span class="mi">1</span>
@@ -4788,7 +4788,7 @@ to find the optimal model to predict the house prices.</p>
 </span><span id="__span-5-18"><a id="__codelineno-5-18" name="__codelineno-5-18" href="#__codelineno-5-18"></a><span class="n">optim_model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train_conformalize</span><span class="p">,</span> <span class="n">y_train_conformalize</span><span class="p">)</span>
 </span><span id="__span-5-19"><a id="__codelineno-5-19" name="__codelineno-5-19" href="#__codelineno-5-19"></a><span class="n">estimator</span> <span class="o">=</span> <span class="n">optim_model</span><span class="o">.</span><span class="n">best_estimator_</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 130-141 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 131-142 -->
 
 <h2 id="3-comparison-of-mapie-methods">3. Comparison of MAPIE methods<a class="headerlink" href="#3-comparison-of-mapie-methods" title="Permanent link">&para;</a></h2>
 <p>We will now proceed to compare the different methods available in MAPIE used
@@ -4799,7 +4799,7 @@ description of the documentation for more details on these methods.</p>
 <p>We also create two functions, one to sort the dataset in increasing values
 of <code>y_test</code> and a plotting function, so that we can plot all predictions
 and prediction intervals for different conformal methods.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 141-228 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 142-229 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">sort_y_values</span><span class="p">(</span><span class="n">y_test</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="n">y_pis</span><span class="p">):</span>
 </span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -4885,13 +4885,13 @@ and prediction intervals for different conformal methods.</p>
 </span><span id="__span-6-82"><a id="__codelineno-6-82" name="__codelineno-6-82" href="#__codelineno-6-82"></a>    <span class="n">axs</span><span class="o">.</span><span class="n">add_artist</span><span class="p">(</span><span class="n">ab</span><span class="p">)</span>
 </span><span id="__span-6-83"><a id="__codelineno-6-83" name="__codelineno-6-83" href="#__codelineno-6-83"></a>    <span class="n">axs</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">fontweight</span><span class="o">=</span><span class="s2">&quot;bold&quot;</span><span class="p">)</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 229-233 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 230-234 -->
 
 <p>Here, we use MAPIE to return the predictions and prediction intervals.
 We will use an <code>confidence_level=CONFIDENCE_LEVEL</code>, (this is the target
 coverage for our prediction intervals).
 Note that that we will use symmetrical residuals for the CQR.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 233-292 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 234-293 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="n">STRATEGIES</span> <span class="o">=</span> <span class="p">{</span>
 </span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>    <span class="s2">&quot;cv&quot;</span><span class="p">:</span> <span class="p">{</span>
@@ -4949,11 +4949,11 @@ Note that that we will use symmetrical residuals for the CQR.</p>
 </span><span id="__span-7-54"><a id="__codelineno-7-54" name="__codelineno-7-54" href="#__codelineno-7-54"></a>    <span class="n">coverage</span><span class="p">[</span><span class="n">strategy_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">regression_coverage_score</span><span class="p">(</span><span class="n">y_test</span><span class="p">,</span> <span class="n">y_pis</span><span class="p">[</span><span class="n">strategy_name</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
 </span><span id="__span-7-55"><a id="__codelineno-7-55" name="__codelineno-7-55" href="#__codelineno-7-55"></a>    <span class="n">width</span><span class="p">[</span><span class="n">strategy_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">regression_mean_width_score</span><span class="p">(</span><span class="n">y_pis</span><span class="p">[</span><span class="n">strategy_name</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 293-295 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 294-296 -->
 
 <p>We will now proceed to the plotting stage, note that we only plot 2% of the
 observations in order to not crowd the plot too much.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 295-327 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 296-328 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="n">perc_obs_plot</span> <span class="o">=</span> <span class="mf">0.02</span>
 </span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="n">num_plots</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">y_test</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">perc_obs_plot</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">y_test</span><span class="p">)),</span> <span class="n">replace</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
@@ -4985,12 +4985,12 @@ observations in order to not crowd the plot too much.</p>
 </span><span id="__span-8-28"><a id="__codelineno-8-28" name="__codelineno-8-28" href="#__codelineno-8-28"></a><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </span></code></pre></div>
 <p><img alt="cv, cv_plus, jackknife_plus_ab, conformalized_quantile_regression" class="mkd-glr-single-img" src="../images/mkd_glr_plot_cqr_tutorial_002.png" srcset="../images/mkd_glr_plot_cqr_tutorial_002.png" /></p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 328-331 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 329-332 -->
 
 <p>We notice more adaptability of the prediction intervals for the
 conformalized quantile regression while the other methods have fixed
 interval width.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 331-379 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 332-380 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">get_coverages_widths_by_bins</span><span class="p">(</span>
 </span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>    <span class="n">want</span><span class="p">,</span> <span class="n">y_test</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="n">lower_bound</span><span class="p">,</span> <span class="n">upper_bound</span><span class="p">,</span> <span class="n">STRATEGIES</span><span class="p">,</span> <span class="n">bins</span>
@@ -5037,12 +5037,12 @@ interval width.</p>
 </span><span id="__span-9-43"><a id="__codelineno-9-43" name="__codelineno-9-43" href="#__codelineno-9-43"></a>    <span class="s2">&quot;coverage&quot;</span><span class="p">,</span> <span class="n">y_test_sorted</span><span class="p">,</span> <span class="n">y_pred_sorted</span><span class="p">,</span> <span class="n">lower_bound</span><span class="p">,</span> <span class="n">upper_bound</span><span class="p">,</span> <span class="n">STRATEGIES</span><span class="p">,</span> <span class="n">bins</span>
 </span><span id="__span-9-44"><a id="__codelineno-9-44" name="__codelineno-9-44" href="#__codelineno-9-44"></a><span class="p">)</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 380-383 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 381-384 -->
 
 <p>To confirm these insights, we will now observe what happens when we plot
 the conditional coverage and interval width on these intervals splitted by
 quantiles.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 383-395 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 384-396 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="n">binned_data</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
 </span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="n">plt</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="n">CONFIDENCE_LEVEL</span><span class="p">,</span> <span class="n">ls</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;k&quot;</span><span class="p">)</span>
@@ -5054,7 +5054,7 @@ quantiles.</p>
 </span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </span></code></pre></div>
 <p><img alt="plot cqr tutorial" class="mkd-glr-single-img" src="../images/mkd_glr_plot_cqr_tutorial_003.png" srcset="../images/mkd_glr_plot_cqr_tutorial_003.png" /></p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 396-403 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 397-404 -->
 
 <p>None of the methods seems to
 have conditional coverage at the target <code>confidence_level</code>. However, we can
@@ -5063,7 +5063,7 @@ conditional coverage is closer to the target coverage not only for higher
 prices, but also for lower prices where the other methods have a higher
 coverage than needed. This will very likely have an impact on the widths
 of the intervals.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 403-418 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 404-419 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="n">binned_data</span> <span class="o">=</span> <span class="n">get_coverages_widths_by_bins</span><span class="p">(</span>
 </span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>    <span class="s2">&quot;width&quot;</span><span class="p">,</span> <span class="n">y_test_sorted</span><span class="p">,</span> <span class="n">y_pred_sorted</span><span class="p">,</span> <span class="n">lower_bound</span><span class="p">,</span> <span class="n">upper_bound</span><span class="p">,</span> <span class="n">STRATEGIES</span><span class="p">,</span> <span class="n">bins</span>
@@ -5078,13 +5078,13 @@ of the intervals.</p>
 </span><span id="__span-11-11"><a id="__codelineno-11-11" name="__codelineno-11-11" href="#__codelineno-11-11"></a><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </span></code></pre></div>
 <p><img alt="plot cqr tutorial" class="mkd-glr-single-img" src="../images/mkd_glr_plot_cqr_tutorial_004.png" srcset="../images/mkd_glr_plot_cqr_tutorial_004.png" /></p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 419-423 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 420-424 -->
 
 <p>When observing the values of the the interval width we again see what was
 observed in the previous graphs with the interval widths. It's important to
 note that the prediction
 intervals are shorter when the estimator is more certain.</p>
-<p><strong>Total running time of the script:</strong> ( 0 minutes  22.572 seconds)</p>
+<p><strong>Total running time of the script:</strong> ( 0 minutes  23.816 seconds)</p>
 <div id="download_links"></div>
 
 <p><a class="md-button center" href="../plot_cqr_tutorial.py"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M256 32c0-17.7-14.3-32-32-32s-32 14.3-32 32v210.7l-41.4-41.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l96 96c12.5 12.5 32.8 12.5 45.3 0l96-96c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 242.7zM64 320c-35.3 0-64 28.7-64 64v32c0 35.3 28.7 64 64 64h320c35.3 0 64-28.7 64-64v-32c0-35.3-28.7-64-64-64h-46.9l-56.6 56.6c-31.2 31.2-81.9 31.2-113.1 0L110.9 320zm304 56a24 24 0 1 1 0 48 24 24 0 1 1 0-48"/></svg></span> Download Python source code: plot_cqr_tutorial.py</a></p>

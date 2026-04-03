@@ -1,5 +1,6 @@
 """
-# Calibrating binary classifier with Venn-ABERS
+Calibrating binary classifier with Venn-ABERS
+=============================================
 
 This example shows how to calibrate a binary classifier with
 `VennAbersCalibrator` and visualize the

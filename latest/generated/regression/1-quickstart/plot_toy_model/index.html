@@ -24,7 +24,7 @@
         
       
       
-      <link rel="icon" href="../../../../assets/images/mapie_logo_nobg_cut.png">
+      <link rel="icon" href="../../../../images/mapie_logo_nobg_cut.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
@@ -114,7 +114,7 @@
   <nav class="md-header__inner md-grid" aria-label="Header">
     <a href="../../../.." title="MAPIE" class="md-header__button md-logo" aria-label="MAPIE" data-md-component="logo">
       
-  <img src="../../../../assets/images/mapie_logo_nobg_cut.png" alt="logo">
+  <img src="../../../../images/mapie_logo_nobg_cut.png" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -481,7 +481,7 @@
   <label class="md-nav__title" for="__drawer">
     <a href="../../../.." title="MAPIE" class="md-nav__button md-logo" aria-label="MAPIE" data-md-component="logo">
       
-  <img src="../../../../assets/images/mapie_logo_nobg_cut.png" alt="logo">
+  <img src="../../../../images/mapie_logo_nobg_cut.png" alt="logo">
 
     </a>
     MAPIE
@@ -4210,11 +4210,11 @@ to download the full example code</p>
 <h1 id="plot-prediction-intervals">Plot prediction intervals<a class="headerlink" href="#plot-prediction-intervals" title="Permanent link">&para;</a></h1>
 <p>An example plot of <code>SplitConformalRegressor</code> used
 in the Quickstart.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 9-11 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 10-12 -->
 
 <p>We will use MAPIE to estimate prediction intervals on a one-dimensional,
 non-linear regression problem.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 11-23 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 12-24 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
@@ -4227,10 +4227,10 @@ non-linear regression problem.</p>
 </span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>
 </span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="n">RANDOM_STATE</span> <span class="o">=</span> <span class="mi">1</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 24-25 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 25-26 -->
 
 <p>Firstly, let us create our dataset:</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 25-49 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 26-50 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">:</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Polynomial function used to generate one-dimensional data.&quot;&quot;&quot;</span>
@@ -4254,7 +4254,7 @@ non-linear regression problem.</p>
 </span><span id="__span-1-20"><a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>    <span class="p">)</span>
 </span><span id="__span-1-21"><a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a><span class="p">)</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 50-56 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 51-57 -->
 
 <p>We fit our training data with a MLPRegressor.
 Then, we initialize a <code>SplitConformalRegressor</code>
@@ -4262,7 +4262,7 @@ using our estimator, indicating that it has already been fitted with
 <code>prefit=True</code>.
 Lastly, we compute the prediction intervals with the desired confidence level using
 the <code>conformalize</code> and <code>predict_interval</code> methods.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 56-67 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 57-68 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">regressor</span> <span class="o">=</span> <span class="n">MLPRegressor</span><span class="p">(</span><span class="n">activation</span><span class="o">=</span><span class="s2">&quot;relu&quot;</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="n">RANDOM_STATE</span><span class="p">)</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">regressor</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
@@ -4274,17 +4274,17 @@ the <code>conformalize</code> and <code>predict_interval</code> methods.</p>
 </span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="n">mapie_regressor</span><span class="o">.</span><span class="n">conformalize</span><span class="p">(</span><span class="n">X_conformalize</span><span class="p">,</span> <span class="n">y_conformalize</span><span class="p">)</span>
 </span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="n">y_pred</span><span class="p">,</span> <span class="n">y_pred_interval</span> <span class="o">=</span> <span class="n">mapie_regressor</span><span class="o">.</span><span class="n">predict_interval</span><span class="p">(</span><span class="n">X_test</span><span class="p">)</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 68-72 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 69-73 -->
 
 <p><code>y_pred</code> represents the point predictions as a <code>np.ndarray</code> of shape
 <code>(n_samples)</code>.
 <code>y_pred_interval</code> corresponds to the prediction intervals as a <code>np.ndarray</code> of
 shape <code>(n_samples, 2, 1)</code>, giving the lower and upper bounds of the intervals.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 74-76 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 75-77 -->
 
 <p>Finally, we can easily compute the coverage score (i.e., the proportion of times the
 true labels fall within the predicted intervals).</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 76-84 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 77-85 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">coverage_score</span> <span class="o">=</span> <span class="n">regression_coverage_score</span><span class="p">(</span><span class="n">y_test</span><span class="p">,</span> <span class="n">y_pred_interval</span><span class="p">)</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="nb">print</span><span class="p">(</span>
@@ -4296,16 +4296,16 @@ true labels fall within the predicted intervals).</p>
 <p class="mkd-glr-script-out">Out:</p>
 <div class="mkd-glr-script-out-disp highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>For<span class="w"> </span>a<span class="w"> </span>confidence<span class="w"> </span>level<span class="w"> </span>of<span class="w"> </span><span class="m">0</span>.95,<span class="w"> </span>the<span class="w"> </span>target<span class="w"> </span>coverage<span class="w"> </span>is<span class="w"> </span><span class="m">0</span>.950,<span class="w"> </span>and<span class="w"> </span>the<span class="w"> </span>effective<span class="w"> </span>coverage<span class="w"> </span>is<span class="w"> </span><span class="m">0</span>.951.
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 85-89 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 86-90 -->
 
 <p>In this example, the effective coverage is slightly above the target coverage
 (i.e., 0.95), indicating that the confidence level we set has been reached.
 Therefore, we can confirm that the prediction intervals effectively contain the
 true label more than 95% of the time.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 91-92 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 92-93 -->
 
 <p>Now, let us plot the estimated prediction intervals.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 92-110 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 93-111 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;x&quot;</span><span class="p">)</span>
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;y&quot;</span><span class="p">)</span>
@@ -4325,11 +4325,11 @@ true label more than 95% of the time.</p>
 </span><span id="__span-5-16"><a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </span></code></pre></div>
 <p><img alt="Estimated prediction intervals with MLPRegressor" class="mkd-glr-single-img" src="../images/mkd_glr_plot_toy_model_001.png" srcset="../images/mkd_glr_plot_toy_model_001.png" /></p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 111-113 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 112-114 -->
 
 <p>On the plot above, the dots represent the samples from our dataset, while the
 orange area corresponds to the estimated prediction intervals for each <code>x</code> value.</p>
-<p><strong>Total running time of the script:</strong> ( 0 minutes  0.574 seconds)</p>
+<p><strong>Total running time of the script:</strong> ( 0 minutes  0.594 seconds)</p>
 <div id="download_links"></div>
 
 <p><a class="md-button center" href="../plot_toy_model.py"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M256 32c0-17.7-14.3-32-32-32s-32 14.3-32 32v210.7l-41.4-41.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l96 96c12.5 12.5 32.8 12.5 45.3 0l96-96c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 242.7zM64 320c-35.3 0-64 28.7-64 64v32c0 35.3 28.7 64 64 64h320c35.3 0 64-28.7 64-64v-32c0-35.3-28.7-64-64-64h-46.9l-56.6 56.6c-31.2 31.2-81.9 31.2-113.1 0L110.9 320zm304 56a24 24 0 1 1 0 48 24 24 0 1 1 0-48"/></svg></span> Download Python source code: plot_toy_model.py</a></p>

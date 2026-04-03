@@ -24,7 +24,7 @@
         
       
       
-      <link rel="icon" href="../../../../assets/images/mapie_logo_nobg_cut.png">
+      <link rel="icon" href="../../../../images/mapie_logo_nobg_cut.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
@@ -114,7 +114,7 @@
   <nav class="md-header__inner md-grid" aria-label="Header">
     <a href="../../../.." title="MAPIE" class="md-header__button md-logo" aria-label="MAPIE" data-md-component="logo">
       
-  <img src="../../../../assets/images/mapie_logo_nobg_cut.png" alt="logo">
+  <img src="../../../../images/mapie_logo_nobg_cut.png" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -481,7 +481,7 @@
   <label class="md-nav__title" for="__drawer">
     <a href="../../../.." title="MAPIE" class="md-nav__button md-logo" aria-label="MAPIE" data-md-component="logo">
       
-  <img src="../../../../assets/images/mapie_logo_nobg_cut.png" alt="logo">
+  <img src="../../../../images/mapie_logo_nobg_cut.png" alt="logo">
 
     </a>
     MAPIE
@@ -4382,7 +4382,7 @@ the size of the intervals will grow.
 Conversely, if the real values are in the coverage,
 the size of the intervals will decrease.
 You can use a gamma coefficient to adjust the strength of the correction.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 55-78 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 56-79 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># sphinx_gallery_thumbnail_number = 2</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
@@ -4405,14 +4405,14 @@ You can use a gamma coefficient to adjust the strength of the correction.</p>
 </span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>
 </span><span id="__span-0-20"><a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">)</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 79-86 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 80-87 -->
 
 <h2 id="1-load-input-data-and-dataset-preparation">1. Load input data and dataset preparation<a class="headerlink" href="#1-load-input-data-and-dataset-preparation" title="Permanent link">&para;</a></h2>
 <p>The Victoria electricity demand dataset can be downloaded directly on the
 MAPIE github repository. It consists in hourly electricity demand (in GW)
 of the Victoria state in Australia together with the temperature
 (in Celsius degrees). We extract temporal features out of the date and hour.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 86-103 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 87-104 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">num_val_steps</span> <span class="o">=</span> <span class="mi">24</span> <span class="o">*</span> <span class="mi">7</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="n">num_test_steps</span> <span class="o">=</span> <span class="mi">24</span> <span class="o">*</span> <span class="mi">7</span>
@@ -4430,21 +4430,21 @@ of the Victoria state in Australia together with the temperature
 </span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="k">for</span> <span class="n">hour</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_lags</span><span class="p">):</span>
 </span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>    <span class="n">demand_df</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;Lag_</span><span class="si">{</span><span class="n">hour</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">demand_df</span><span class="p">[</span><span class="s2">&quot;Demand&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="n">hour</span><span class="p">)</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 104-108 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 105-109 -->
 
 <p>We now introduce a brutal changepoint in the test set by decreasing the
 electricity demand by 2 GW on February 22.
 It aims at simulating an effect, such as blackout or lockdown due to a
 pandemic, that was not taken into account by the model during its training.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 108-111 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 109-112 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">demand_df</span><span class="o">.</span><span class="n">Demand</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="o">-</span><span class="nb">int</span><span class="p">(</span><span class="n">num_test_steps</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="p">:]</span> <span class="o">-=</span> <span class="mi">2</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 112-114 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 113-115 -->
 
 <p>The last week of the dataset is considered as test set, the remaining data
 is used as training set.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 114-128 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 115-129 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">demand_train</span> <span class="o">=</span> <span class="n">demand_df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:</span> <span class="o">-</span><span class="n">num_val_steps</span> <span class="o">-</span> <span class="n">num_test_steps</span><span class="p">,</span> <span class="p">:]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">demand_val</span> <span class="o">=</span> <span class="n">demand_df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="o">-</span><span class="n">num_val_steps</span> <span class="o">-</span> <span class="n">num_test_steps</span> <span class="p">:</span> <span class="o">-</span><span class="n">num_test_steps</span><span class="p">,</span> <span class="p">:]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
@@ -4459,10 +4459,10 @@ is used as training set.</p>
 </span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="n">X_test</span> <span class="o">=</span> <span class="n">demand_test</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="n">features</span><span class="p">]</span>
 </span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a><span class="n">y_test</span> <span class="o">=</span> <span class="n">demand_test</span><span class="p">[</span><span class="s2">&quot;Demand&quot;</span><span class="p">]</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 129-130 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 130-131 -->
 
 <p>Let's now visualize the training and test sets with the changepoint.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 130-140 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 131-141 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">y_train</span><span class="p">)</span>
@@ -4473,14 +4473,14 @@ is used as training set.</p>
 </span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </span></code></pre></div>
 <p><img alt="plot ts tutorial" class="mkd-glr-single-img" src="../images/mkd_glr_plot_ts-tutorial_001.png" srcset="../images/mkd_glr_plot_ts-tutorial_001.png" /></p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 141-148 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 142-149 -->
 
 <h2 id="2-optimize-the-base-estimator">2. Optimize the base estimator<a class="headerlink" href="#2-optimize-the-base-estimator" title="Permanent link">&para;</a></h2>
 <p>Before estimating the prediction intervals with MAPIE, let's optimize the
 base model, here a <code>RandomForestRegressor</code> through a
 <code>RandomizedSearchCV</code> with a fixed validation set.
 For the sake of computational time, the best parameters are already tuned.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 148-176 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 149-177 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">model_params_fit_not_done</span> <span class="o">=</span> <span class="kc">False</span>
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="k">if</span> <span class="n">model_params_fit_not_done</span><span class="p">:</span>
@@ -4509,7 +4509,7 @@ For the sake of computational time, the best parameters are already tuned.</p>
 </span><span id="__span-5-25"><a id="__codelineno-5-25" name="__codelineno-5-25" href="#__codelineno-5-25"></a>    <span class="c1"># Model: Random Forest previously optimized</span>
 </span><span id="__span-5-26"><a id="__codelineno-5-26" name="__codelineno-5-26" href="#__codelineno-5-26"></a>    <span class="n">model</span> <span class="o">=</span> <span class="n">RandomForestRegressor</span><span class="p">(</span><span class="n">max_depth</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span> <span class="n">n_estimators</span><span class="o">=</span><span class="mi">31</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">59</span><span class="p">)</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 177-205 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 178-206 -->
 
 <h2 id="3-estimate-prediction-intervals-on-the-test-set">3. Estimate prediction intervals on the test set<a class="headerlink" href="#3-estimate-prediction-intervals-on-the-test-set" title="Permanent link">&para;</a></h2>
 <p>We now use <code>TimeSeriesRegressor</code> to build prediction intervals
@@ -4539,7 +4539,7 @@ during training.</p>
 method instead of the traditional bootstrap strategy for training the model
 since the former is more suited for time series data.
 Here, we choose to perform 10 resamplings with 10 blocks.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 205-219 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 206-220 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">alpha</span> <span class="o">=</span> <span class="mf">0.05</span>
 </span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="n">gap</span> <span class="o">=</span> <span class="mi">1</span>
@@ -4553,10 +4553,10 @@ Here, we choose to perform 10 resamplings with 10 blocks.</p>
 </span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>    <span class="n">model</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;aci&quot;</span><span class="p">,</span> <span class="n">cv</span><span class="o">=</span><span class="n">cv_mapiets</span><span class="p">,</span> <span class="n">agg_function</span><span class="o">=</span><span class="s2">&quot;mean&quot;</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=-</span><span class="mi">1</span>
 </span><span id="__span-6-11"><a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a><span class="p">)</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 220-221 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 221-222 -->
 
 <p>Let's start by estimating prediction intervals without partial update of the residuals.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 221-280 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 222-281 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1"># For EnbPI</span>
 </span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="n">mapie_enbpi</span> <span class="o">=</span> <span class="n">mapie_enbpi</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
@@ -4615,12 +4615,12 @@ Here, we choose to perform 10 resamplings with 10 blocks.</p>
 </span><span id="__span-7-55"><a id="__codelineno-7-55" name="__codelineno-7-55" href="#__codelineno-7-55"></a>    <span class="n">confidence_level</span><span class="o">=</span><span class="mf">0.95</span><span class="p">,</span>
 </span><span id="__span-7-56"><a id="__codelineno-7-56" name="__codelineno-7-56" href="#__codelineno-7-56"></a><span class="p">)</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 281-284 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 282-285 -->
 
 <p>Let's now estimate prediction intervals with updated residuals. As discussed
 previously, the update of the residuals and the one-step ahead predictions
 are performed sequentially in a loop.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 284-327 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 285-328 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="n">mapie_enbpi</span> <span class="o">=</span> <span class="n">TimeSeriesRegressor</span><span class="p">(</span>
 </span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>    <span class="n">model</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;enbpi&quot;</span><span class="p">,</span> <span class="n">cv</span><span class="o">=</span><span class="n">cv_mapiets</span><span class="p">,</span> <span class="n">agg_function</span><span class="o">=</span><span class="s2">&quot;mean&quot;</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=-</span><span class="mi">1</span>
@@ -4663,12 +4663,12 @@ are performed sequentially in a loop.</p>
 </span><span id="__span-8-39"><a id="__codelineno-8-39" name="__codelineno-8-39" href="#__codelineno-8-39"></a>    <span class="n">confidence_level</span><span class="o">=</span><span class="mf">0.95</span><span class="p">,</span>
 </span><span id="__span-8-40"><a id="__codelineno-8-40" name="__codelineno-8-40" href="#__codelineno-8-40"></a><span class="p">)</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 328-331 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 329-332 -->
 
 <p>Let's now estimate prediction intervals with adapt_conformal_inference.
 As discussed previously, the update of the current alpha and the one-step
 ahead predictions are performed sequentially in a loop.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 331-379 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 332-380 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="n">mapie_aci</span> <span class="o">=</span> <span class="n">TimeSeriesRegressor</span><span class="p">(</span>
 </span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>    <span class="n">model</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;aci&quot;</span><span class="p">,</span> <span class="n">cv</span><span class="o">=</span><span class="n">cv_mapiets</span><span class="p">,</span> <span class="n">agg_function</span><span class="o">=</span><span class="s2">&quot;mean&quot;</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=-</span><span class="mi">1</span>
@@ -4717,12 +4717,12 @@ ahead predictions are performed sequentially in a loop.</p>
 </span><span id="__span-9-45"><a id="__codelineno-9-45" name="__codelineno-9-45" href="#__codelineno-9-45"></a>    <span class="n">confidence_level</span><span class="o">=</span><span class="mf">0.95</span><span class="p">,</span>
 </span><span id="__span-9-46"><a id="__codelineno-9-46" name="__codelineno-9-46" href="#__codelineno-9-46"></a><span class="p">)</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 380-385 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 381-386 -->
 
 <h2 id="4-plot-estimated-prediction-intervals-on-one-step-ahead-forecast">4. Plot estimated prediction intervals on one-step ahead forecast<a class="headerlink" href="#4-plot-estimated-prediction-intervals-on-one-step-ahead-forecast" title="Permanent link">&para;</a></h2>
 <p>Let's now compare the prediction intervals estimated by MAPIE with and
 without update of the residuals.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 385-441 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 386-442 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="n">y_enbpi_preds</span> <span class="o">=</span> <span class="p">[</span><span class="n">y_pred_enbpi_npfit</span><span class="p">,</span> <span class="n">y_pred_enbpi_pfit</span><span class="p">]</span>
 </span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="n">y_enbpi_pis</span> <span class="o">=</span> <span class="p">[</span><span class="n">y_pis_enbpi_npfit</span><span class="p">,</span> <span class="n">y_pis_enbpi_pfit</span><span class="p">]</span>
@@ -4782,11 +4782,11 @@ without update of the residuals.</p>
 <img alt="EnbPI, without update of residuals. Coverage:0.500 and Width:0.712, EnbPI, with update of residuals. Coverage:0.714 and Width:1.323" src="../images/mkd_glr_plot_ts-tutorial_002.png" srcset="../images/mkd_glr_plot_ts-tutorial_002.png", class="sphx-glr-single-img" /><img alt="ACI, without update of residuals. Coverage:0.732 and Width:2.782, ACI, with update of residuals. Coverage:0.917 and Width:1.885" src="../images/mkd_glr_plot_ts-tutorial_003.png" srcset="../images/mkd_glr_plot_ts-tutorial_003.png", class="sphx-glr-single-img" />
 </ul>
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 442-444 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 443-445 -->
 
 <p>Let's now compare the coverages obtained by MAPIE with and without update
 of the residuals on a 24-hour rolling window of prediction intervals.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 444-513 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 445-514 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="n">rolling_coverage_aci_pfit</span><span class="p">,</span> <span class="n">rolling_coverage_aci_npfit</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
 </span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="n">rolling_coverage_enbpi_pfit</span><span class="p">,</span> <span class="n">rolling_coverage_enbpi_npfit</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
@@ -4857,7 +4857,7 @@ of the residuals on a 24-hour rolling window of prediction intervals.</p>
 </span><span id="__span-11-67"><a id="__codelineno-11-67" name="__codelineno-11-67" href="#__codelineno-11-67"></a><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </span></code></pre></div>
 <p><img alt="plot ts tutorial" class="mkd-glr-single-img" src="../images/mkd_glr_plot_ts-tutorial_004.png" srcset="../images/mkd_glr_plot_ts-tutorial_004.png" /></p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 514-525 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 515-526 -->
 
 <p>The training data do not contain a change point, hence the base model cannot
 anticipate it.
@@ -4870,7 +4870,7 @@ increase of uncertainties of the model predictions.
 One can notice that the uncertainty's explosion happens about one day late.
 This is because enough new residuals are needed to change the quantiles
 obtained from the residuals distribution.</p>
-<p><strong>Total running time of the script:</strong> ( 0 minutes  39.601 seconds)</p>
+<p><strong>Total running time of the script:</strong> ( 0 minutes  39.622 seconds)</p>
 <div id="download_links"></div>
 
 <p><a class="md-button center" href="../plot_ts-tutorial.py"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M256 32c0-17.7-14.3-32-32-32s-32 14.3-32 32v210.7l-41.4-41.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l96 96c12.5 12.5 32.8 12.5 45.3 0l96-96c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 242.7zM64 320c-35.3 0-64 28.7-64 64v32c0 35.3 28.7 64 64 64h320c35.3 0 64-28.7 64-64v-32c0-35.3-28.7-64-64-64h-46.9l-56.6 56.6c-31.2 31.2-81.9 31.2-113.1 0L110.9 320zm304 56a24 24 0 1 1 0 48 24 24 0 1 1 0-48"/></svg></span> Download Python source code: plot_ts-tutorial.py</a></p>
