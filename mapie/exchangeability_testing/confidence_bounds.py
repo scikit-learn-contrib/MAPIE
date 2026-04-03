@@ -146,9 +146,10 @@ def hoeffding_bound(
         Lower or upper risk bound.
     """
 
-    num_observations = len(empirical_risk_sequence)
+    risk_sequence = np.asarray(empirical_risk_sequence, dtype=np.float64)
+    num_observations = risk_sequence.shape[0]
 
-    empirical_mean = np.mean(empirical_risk_sequence)
+    empirical_mean = float(np.mean(risk_sequence))
 
     radius = np.sqrt(np.log(1 / delta) / (2 * num_observations))
 
@@ -189,12 +190,12 @@ def conjugate_mixture_empirical_bernstein_bound(
     bound, array-like of reals
         Lower or upper confidence bound sequence.
     """
-    empirical_risk_sequence = np.array(empirical_risk_sequence)
-    t = np.arange(1, len(empirical_risk_sequence) + 1)
-    S_t = np.cumsum(empirical_risk_sequence)
+    risk_sequence = np.asarray(empirical_risk_sequence, dtype=np.float64)
+    t = np.arange(1, len(risk_sequence) + 1)
+    S_t = np.cumsum(risk_sequence)
     mu_hat_t = S_t / t
     mu_hat_tminus1 = np.append(1 / 2, mu_hat_t[0 : (len(mu_hat_t) - 1)])
-    V_t = np.cumsum(np.power(empirical_risk_sequence - mu_hat_tminus1, 2))
+    V_t = np.cumsum(np.power(risk_sequence - mu_hat_tminus1, 2))
     mixture_bound = GammaExponentialMixtureBound(v_opt=v_opt, c=1, alpha_opt=alpha / 2)
     boundary = (
         np.array([mixture_bound(v=float(v_t), alpha=alpha / 2) for v_t in V_t]) / t
@@ -210,4 +211,4 @@ def conjugate_mixture_empirical_bernstein_bound(
     else:
         raise ValueError("bound_side must be either 'upper' or 'lower'.")
 
-    return bound
+    return np.asarray(bound, dtype=np.float64)
