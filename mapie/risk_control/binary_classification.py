@@ -17,33 +17,11 @@ from mapie.utils import check_valid_ltt_params_index
 from .methods import compute_hoeffding_bentkus_p_value, ltt_procedure
 from .risks import (
     BinaryClassificationRisk,
-    abstention_rate,
-    accuracy,
-    false_positive_rate,
-    negative_predictive_value,
-    positive_predictive_value,
-    precision,
-    predicted_positive_fraction,
-    recall,
+    RiskLike,
+    RiskNameLiteral,
+    _best_predict_param_choice_map,
+    risk_choice_map,
 )
-
-Risk_str = Literal[
-    "precision",
-    "recall",
-    "accuracy",
-    "fpr",
-    "predicted_positive_fraction",
-    "positive_predictive_value",
-    "negative_predictive_value",
-    "abstention_rate",
-]
-Risk = Union[
-    BinaryClassificationRisk,
-    Risk_str,
-    List[BinaryClassificationRisk],
-    List[Risk_str],
-    List[Union[BinaryClassificationRisk, Risk_str]],
-]
 
 
 class BinaryClassificationController:
@@ -188,32 +166,14 @@ class BinaryClassificationController:
     "Learn Then Test: Calibrating Predictive Algorithms to Achieve Risk Control." (2022)
     """
 
-    _best_predict_param_choice_map = {
-        precision: recall,
-        recall: precision,
-        accuracy: accuracy,
-        false_positive_rate: recall,
-    }
-
-    risk_choice_map = {
-        "precision": precision,
-        "recall": recall,
-        "accuracy": accuracy,
-        "fpr": false_positive_rate,
-        "predicted_positive_fraction": predicted_positive_fraction,
-        "positive_predictive_value": positive_predictive_value,
-        "negative_predictive_value": negative_predictive_value,
-        "abstention_rate": abstention_rate,
-    }
-
     def __init__(
         self,
         predict_function: Callable[[ArrayLike], NDArray],
-        risk: Risk,
+        risk: RiskLike,
         target_level: Union[float, List[float]],
         confidence_level: float = 0.9,
         best_predict_param_choice: Union[
-            Literal["auto"], Risk_str, BinaryClassificationRisk
+            Literal["auto"], RiskNameLiteral, BinaryClassificationRisk
         ] = "auto",
         list_predict_params: NDArray = np.linspace(0, 0.99, 100),
         fwer_method: Union[FWER_METHODS, FWERProcedure] = "bonferroni",
@@ -223,15 +183,13 @@ class BinaryClassificationController:
         risk_list = risk if isinstance(risk, list) else [risk]
         try:
             self._risk = [
-                BinaryClassificationController.risk_choice_map[risk]
-                if isinstance(risk, str)
-                else risk
+                risk_choice_map[risk] if isinstance(risk, str) else risk
                 for risk in risk_list
             ]
         except KeyError as e:
             raise ValueError(
                 "When risk is provided as a string, it must be one of: "
-                f"{list(BinaryClassificationController.risk_choice_map.keys())}"
+                f"{list(risk_choice_map.keys())}"
             ) from e
         target_level_list = (
             target_level if isinstance(target_level, list) else [target_level]
@@ -488,7 +446,7 @@ class BinaryClassificationController:
     def _set_best_predict_param_choice(
         self,
         best_predict_param_choice: Union[
-            Literal["auto"], Risk_str, BinaryClassificationRisk
+            Literal["auto"], RiskNameLiteral, BinaryClassificationRisk
         ] = "auto",
     ) -> BinaryClassificationRisk:
         if best_predict_param_choice == "auto":
@@ -497,7 +455,7 @@ class BinaryClassificationController:
                 return self._risk[0]
             else:
                 try:
-                    return self._best_predict_param_choice_map[self._risk[0]]
+                    return _best_predict_param_choice_map[self._risk[0]]
                 except KeyError:
                     raise ValueError(
                         "When best_predict_param_choice is 'auto', "
@@ -505,9 +463,7 @@ class BinaryClassificationController:
                         "(e.g. precision, accuracy, false_positive_rate)."
                     )
         if isinstance(best_predict_param_choice, str):
-            return BinaryClassificationController.risk_choice_map[
-                best_predict_param_choice
-            ]
+            return risk_choice_map[best_predict_param_choice]
         if isinstance(best_predict_param_choice, BinaryClassificationRisk):
             return best_predict_param_choice
 
@@ -616,7 +572,7 @@ class BinaryClassificationController:
 
     @staticmethod
     def _check_if_multi_risk_control(
-        risk: Risk,
+        risk: RiskLike,
         target_level: Union[float, List[float]],
     ) -> bool:
         """

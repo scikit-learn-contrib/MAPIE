@@ -21,8 +21,8 @@ from mapie.risk_control import (
     precision,
     recall,
 )
-from mapie.risk_control.binary_classification import Risk
 from mapie.risk_control.fwer_control import FWERFixedSequenceTesting
+from mapie.risk_control.risks import RiskLike, risk_choice_map
 
 random_state = 42
 dummy_single_param = np.array([0.5])
@@ -147,6 +147,58 @@ def test_binary_classification_risk(
     assert n == expected_n
 
 
+@pytest.mark.parametrize(
+    "risk_instance, y_true, y_pred, expected_sequence",
+    [
+        (
+            precision,
+            np.array([1, 0, 1, 0]),
+            np.array([1, 1, 0, 0]),
+            np.array([0, 1]),
+        ),
+        (
+            accuracy,
+            np.array([1, 0, 1, 0]),
+            np.array([1, 1, 0, 0]),
+            np.array([0, 1, 1, 0]),
+        ),
+        (
+            recall,
+            np.array([1, 0, 1, 0]),
+            np.array([1, 1, 0, 0]),
+            np.array([0, 1]),
+        ),
+        (
+            false_positive_rate,
+            np.array([1, 0, 1, 0]),
+            np.array([1, 1, 0, 0]),
+            np.array([1, 0]),
+        ),
+        (
+            positive_predictive_value,
+            np.array([1, 0, 1, 0]),
+            np.array([1, 1, 0, 0]),
+            np.array([0, 1]),
+        ),
+        (
+            precision,
+            np.array([1, 0, 1, 0]),
+            np.array([0, 0, 0, 0]),
+            np.array([], dtype=int),
+        ),
+    ],
+)
+def test_binary_classification_risk_sequence(
+    risk_instance: BinaryClassificationRisk,
+    y_true: NDArray,
+    y_pred: NDArray,
+    expected_sequence: NDArray,
+) -> None:
+    risk_sequence = risk_instance.get_risk_sequence(y_true, y_pred)
+
+    np.testing.assert_array_equal(risk_sequence, expected_sequence)
+
+
 class TestBinaryClassificationControllerBestPredictParamChoice:
     @pytest.mark.parametrize(
         "risk_instance, expected",
@@ -180,7 +232,7 @@ class TestBinaryClassificationControllerBestPredictParamChoice:
         )
 
         result = controller._set_best_predict_param_choice(str_risk)
-        assert result is BinaryClassificationController.risk_choice_map[str_risk]
+        assert result is risk_choice_map[str_risk]
 
     def test_custom(self):
         """Test _set_best_predict_param_choice with a custom risk instance."""
@@ -541,7 +593,7 @@ class TestCheckIfMultiRiskControl:
         [precision, "precision"],
     )
     def test_mono_risk(
-        self, bcc_deterministic: BinaryClassificationController, risk: Risk
+        self, bcc_deterministic: BinaryClassificationController, risk: RiskLike
     ):
         is_multi_risk = bcc_deterministic._check_if_multi_risk_control(
             risk, dummy_target
@@ -553,7 +605,7 @@ class TestCheckIfMultiRiskControl:
         [[precision], ["precision"]],
     )
     def test_mono_risk_list(
-        self, bcc_deterministic: BinaryClassificationController, risk: Risk
+        self, bcc_deterministic: BinaryClassificationController, risk: RiskLike
     ):
         is_multi_risk = bcc_deterministic._check_if_multi_risk_control(
             risk, [dummy_target]
@@ -569,7 +621,7 @@ class TestCheckIfMultiRiskControl:
         ],
     )
     def test_multi_risk(
-        self, bcc_deterministic: BinaryClassificationController, risk: Risk
+        self, bcc_deterministic: BinaryClassificationController, risk: RiskLike
     ):
         is_multi_risk = bcc_deterministic._check_if_multi_risk_control(
             risk, [dummy_target, dummy_target]
@@ -585,7 +637,7 @@ class TestCheckIfMultiRiskControl:
             ([recall, false_positive_rate], [0.6, 0.8, 0.7]),
         ],
     )
-    def test_error_cases(self, risk: Risk, target_level: Union[List[float], float]):
+    def test_error_cases(self, risk: RiskLike, target_level: Union[List[float], float]):
         with pytest.raises(ValueError, match="If you provide a list of risks,"):
             BinaryClassificationController._check_if_multi_risk_control(
                 risk, target_level
@@ -601,7 +653,7 @@ class TestCheckIfMultiRiskControl:
     ],
 )
 def test_invalid_risk_str_raises_error(
-    risk: Risk, target_level: Union[List[float], float]
+    risk: RiskLike, target_level: Union[List[float], float]
 ):
     with pytest.raises(ValueError, match="When risk is provided as a string,"):
         BinaryClassificationController(
