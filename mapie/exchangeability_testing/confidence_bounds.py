@@ -148,6 +148,10 @@ def hoeffding_bound(
 
     risk_sequence = np.asarray(empirical_risk_sequence, dtype=np.float64)
     num_observations = risk_sequence.shape[0]
+    if num_observations == 0:
+        raise ValueError("empirical_risk_sequence must contain at least one value.")
+    if not (0.0 < delta < 1.0):
+        raise ValueError("delta must be in (0, 1).")
 
     empirical_mean = float(np.mean(risk_sequence))
 
@@ -191,6 +195,8 @@ def conjugate_mixture_empirical_bernstein_bound(
         Lower or upper confidence bound sequence.
     """
     risk_sequence = np.asarray(empirical_risk_sequence, dtype=np.float64)
+    if risk_sequence.size == 0:
+        raise ValueError("empirical_risk_sequence must contain at least one value.")
     t = np.arange(1, len(risk_sequence) + 1)
     S_t = np.cumsum(risk_sequence)
     mu_hat_t = S_t / t

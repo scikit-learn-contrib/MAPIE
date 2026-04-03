@@ -115,6 +115,8 @@ class RiskMonitoring:
         self.threshold = threshold
         self.reference_risk = reference_risk
 
+        if not (0.0 < confidence_level < 1.0):
+            raise ValueError("confidence_level must be in (0, 1).")
         delta = 1 - confidence_level
         self.delta_reference = delta / 2
         self.delta_online = delta / 2
@@ -162,6 +164,10 @@ class RiskMonitoring:
             raise ValueError("Threshold is already computed.")
 
         reference_risk_sequence = self.risk.get_risk_sequence(y_true, y_pred)
+        if reference_risk_sequence.size == 0:
+            raise ValueError(
+                "Reference risk is undefined because no samples satisfy the risk condition."
+            )
 
         self.reference_risk_upper_bound = hoeffding_bound(
             reference_risk_sequence, self.delta_reference, bound_side="upper"
@@ -200,6 +206,8 @@ class RiskMonitoring:
             )
 
         new_risk_sequence = self.risk.get_risk_sequence(y_true, y_pred)
+        if new_risk_sequence.size == 0:
+            return self
         self.online_risk_sequence_history = np.concatenate(
             [self.online_risk_sequence_history, new_risk_sequence]
         )
@@ -212,12 +220,8 @@ class RiskMonitoring:
             bound_side="lower",
         )
 
-        self.online_risk_lower_bound_sequence_history = np.concatenate(
-            [
-                self.online_risk_lower_bound_sequence_history,
-                new_risk_lower_bound_sequence,
-            ],
-            axis=0,
+        self.online_risk_lower_bound_sequence_history = np.asarray(
+            new_risk_lower_bound_sequence, dtype=float
         )
         self.online_risk_lower_bound_latest = (
             self.online_risk_lower_bound_sequence_history[-1]

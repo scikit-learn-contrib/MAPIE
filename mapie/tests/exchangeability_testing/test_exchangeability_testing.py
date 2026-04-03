@@ -93,6 +93,16 @@ class TestHoeffdingBound:
         ):
             hoeffding_bound(np.array([0.0, 1.0]), delta=0.1, bound_side="invalid")  # type: ignore[arg-type]
 
+    def test_rejects_empty_sequence(self) -> None:
+        with pytest.raises(
+            ValueError, match="empirical_risk_sequence must contain at least one value"
+        ):
+            hoeffding_bound(np.array([]), delta=0.1)
+
+    def test_rejects_invalid_delta(self) -> None:
+        with pytest.raises(ValueError, match="delta must be in"):
+            hoeffding_bound(np.array([0.0, 1.0]), delta=1.0)
+
 
 class TestConjugateMixtureEmpiricalBernsteinBound:
     def test_returns_lower_bound_with_running_intersection(self) -> None:
@@ -164,6 +174,16 @@ class TestConjugateMixtureEmpiricalBernsteinBound:
                 bound_side="invalid",  # type: ignore[arg-type]
             )
 
+    def test_rejects_empty_sequence(self) -> None:
+        with pytest.raises(
+            ValueError, match="empirical_risk_sequence must contain at least one value"
+        ):
+            conjugate_mixture_empirical_bernstein_bound(
+                np.array([]),
+                v_opt=1.0,
+                alpha=0.1,
+            )
+
 
 class TestRiskMonitoring:
     @staticmethod
@@ -186,6 +206,10 @@ class TestRiskMonitoring:
             TypeError, match="risk must be a single BinaryClassificationRisk"
         ):
             RiskMonitoring(risk=invalid_risk)
+
+    def test_init_rejects_invalid_confidence_level(self) -> None:
+        with pytest.raises(ValueError, match="confidence_level must be in"):
+            RiskMonitoring(risk="accuracy", confidence_level=1.0)
 
     def test_harmful_shift_detected_requires_online_bound(self) -> None:
         monitor = RiskMonitoring(risk="accuracy")
@@ -244,6 +268,16 @@ class TestRiskMonitoring:
         with pytest.raises(ValueError, match="Threshold is already computed"):
             monitor.compute_threshold(y_true, y_pred)
 
+    def test_compute_threshold_rejects_empty_effective_sample(self) -> None:
+        y_true: NDArray[np.int_] = np.array([1, 0, 1, 0])
+        y_pred: NDArray[np.int_] = np.array([0, 0, 0, 0])
+        monitor = RiskMonitoring(risk="precision", warn=False)
+
+        with pytest.raises(
+            ValueError, match="Reference risk is undefined because no samples"
+        ):
+            monitor.compute_threshold(y_true, y_pred)
+
     def test_update_online_risk_requires_threshold(self) -> None:
         monitor = RiskMonitoring(risk="accuracy")
         y_true, y_pred = self._binary_data()
@@ -272,6 +306,36 @@ class TestRiskMonitoring:
             monitor.update_online_risk(y_true, y_pred)
 
         assert monitor.harmful_shift_detected is True
+
+    def test_update_online_risk_keeps_history_aligned_across_calls(self) -> None:
+        y_true, y_pred = self._binary_data()
+        monitor = RiskMonitoring(risk="accuracy", threshold=1.0, warn=False)
+
+        monitor.update_online_risk(y_true, y_pred)
+        first_history = monitor.online_risk_lower_bound_sequence_history.copy()
+        monitor.update_online_risk(y_true, y_pred)
+
+        assert monitor.online_risk_sequence_history.size == 2 * y_true.size
+        assert (
+            monitor.online_risk_lower_bound_sequence_history.size
+            == monitor.online_risk_sequence_history.size
+        )
+        np.testing.assert_array_equal(
+            first_history,
+            monitor.online_risk_lower_bound_sequence_history[: first_history.size],
+        )
+
+    def test_update_online_risk_ignores_empty_effective_sample_batch(self) -> None:
+        y_true: NDArray[np.int_] = np.array([1, 0, 1, 0])
+        y_pred: NDArray[np.int_] = np.array([0, 0, 0, 0])
+        monitor = RiskMonitoring(risk="precision", threshold=0.5, warn=False)
+
+        returned = monitor.update_online_risk(y_true, y_pred)
+
+        assert returned is monitor
+        assert monitor.online_risk_sequence_history.size == 0
+        assert monitor.online_risk_lower_bound_sequence_history.size == 0
+        assert monitor.online_risk_lower_bound_latest is None
 
     def test_summary_can_be_called(self) -> None:
         monitor = RiskMonitoring(risk="accuracy")
