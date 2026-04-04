@@ -817,11 +817,12 @@ class _MapieClassifier(ClassifierMixin, BaseEstimator):
         X, y = indexable(X, y)
         y = _check_y(y)
 
-        sample_weight = cast(Optional[NDArray], sample_weight)
-        groups = cast(Optional[NDArray], groups)
         sample_weight, X, y = _check_null_weight(sample_weight, X, y)
-
-        y = cast(NDArray, y)
+        if sample_weight is not None:
+            sample_weight = np.asarray(sample_weight)
+        if groups is not None:
+            groups = np.asarray(groups)
+        y = np.asarray(y)
 
         estimator = _check_estimator_classification(X, y, cv, self.estimator)
         self.n_features_in_ = _check_n_features_in(X, cv, estimator)
@@ -843,10 +844,13 @@ class _MapieClassifier(ClassifierMixin, BaseEstimator):
                 "RAPS conformity score can only be used with SplitConformalClassifier."
             )
 
-        # Cast
-        X, y_enc, y = cast(NDArray, X), cast(NDArray, y_enc), cast(NDArray, y)
-        sample_weight = cast(NDArray, sample_weight)
-        groups = cast(NDArray, groups)
+        X = np.asarray(X)
+        y_enc = np.asarray(y_enc)
+        y = np.asarray(y)
+        if sample_weight is not None:
+            sample_weight = np.asarray(sample_weight)
+        if groups is not None:
+            groups = np.asarray(groups)
 
         X, y, y_enc, sample_weight, groups = cs_estimator.split_data(
             X, y, y_enc, sample_weight, groups
@@ -919,11 +923,6 @@ class _MapieClassifier(ClassifierMixin, BaseEstimator):
             groups,
         ) = self._check_fit_parameter(X, y, sample_weight, groups)
 
-        # Cast
-        X, y_enc, y = cast(NDArray, X), cast(NDArray, y_enc), cast(NDArray, y)
-        sample_weight = cast(NDArray, sample_weight)
-        groups = cast(NDArray, groups)
-
         # Work
         self.estimator_ = EnsembleClassifier(
             estimator,
@@ -939,7 +938,11 @@ class _MapieClassifier(ClassifierMixin, BaseEstimator):
 
         # Predict on calibration data
         y_pred_proba, y, y_enc = self.estimator_.predict_proba_calib(
-            X, y, y_enc, groups, **predict_params
+            np.asarray(X),
+            np.asarray(y),
+            np.asarray(y_enc),
+            np.asarray(groups) if groups is not None else None,
+            **predict_params,
         )
 
         # Compute the conformity scores
@@ -1037,7 +1040,7 @@ class _MapieClassifier(ClassifierMixin, BaseEstimator):
             _check_predict_params(self._predict_params, predict_params, self.cv)
 
         check_is_fitted(self)
-        alpha = cast(Optional[NDArray], _check_alpha(alpha))
+        alpha = _check_alpha(alpha)
 
         # Estimate predictions
         y_pred_proba = self.estimator_.single_estimator_.predict_proba(
@@ -1052,7 +1055,7 @@ class _MapieClassifier(ClassifierMixin, BaseEstimator):
         # In all cases: len(y_pred_proba.shape) == 3
         # with  (n_test, n_classes, n_alpha or n_train_samples)
         n = len(self.conformity_scores_)
-        alpha_np = cast(NDArray, alpha)
+        alpha_np = alpha
         _check_alpha_and_n_samples(alpha_np, n)
 
         # Estimate prediction sets

@@ -3,6 +3,8 @@ import numpy as np
 from numpy.typing import ArrayLike, NDArray
 from sklearn.utils import check_random_state
 from mapie._machine_precision import EPSILON
+from sklearn.utils.validation import column_or_1d
+
 from mapie.utils import (
     _check_array_inf,
     _check_array_nan,
@@ -10,13 +12,11 @@ from mapie.utils import (
     _check_binary_zero_one,
     _check_number_bins,
     _check_split_strategy,
+    _column_or_1d_ndarray,
 )
 
 
-from sklearn.utils.validation import column_or_1d
-
-
-from typing import Tuple, cast, Optional, Union
+from typing import Optional, Tuple, Union, cast
 
 
 def _get_binning_groups(
@@ -137,7 +137,7 @@ def expected_calibration_error(
     split_strategy = _check_split_strategy(split_strategy)
     num_bins = _check_number_bins(num_bins)
     y_true_ = _check_binary_zero_one(y_true)
-    y_scores = cast(NDArray, y_scores)
+    y_scores = np.asarray(y_scores)
 
     _check_arrays_length(y_true_, y_scores)
     _check_array_nan(y_true_)
@@ -146,9 +146,9 @@ def expected_calibration_error(
     _check_array_inf(y_scores)
 
     if np.size(y_scores.shape) == 2:
-        y_score = cast(NDArray, column_or_1d(np.nanmax(y_scores, axis=1)))
+        y_score = _column_or_1d_ndarray(np.nanmax(y_scores, axis=1))
     else:
-        y_score = cast(NDArray, column_or_1d(y_scores))
+        y_score = _column_or_1d_ndarray(y_scores)
 
     _, bin_accs, bin_confs, bin_sizes = _calc_bins(
         y_true_, y_score, num_bins, split_strategy
@@ -203,8 +203,8 @@ def top_label_ece(
     float
         The ECE score adapted in the top label setting.
     """
-    y_scores = cast(NDArray, y_scores)
-    y_true = cast(NDArray, y_true)
+    y_scores = np.asarray(y_scores)
+    y_true = np.asarray(y_true)
     _check_array_nan(y_true)
     _check_array_inf(y_true)
     _check_array_nan(y_scores)
@@ -213,7 +213,7 @@ def top_label_ece(
     if y_score_arg is None:
         _check_arrays_length(y_true, y_scores)
     else:
-        y_score_arg = cast(NDArray, y_score_arg)
+        y_score_arg = np.asarray(y_score_arg)
         _check_array_nan(y_score_arg)
         _check_array_inf(y_score_arg)
         _check_arrays_length(y_true, y_scores, y_score_arg)
@@ -221,19 +221,17 @@ def top_label_ece(
     ece = float(0.0)
     split_strategy = _check_split_strategy(split_strategy)
     num_bins = _check_number_bins(num_bins)
-    y_true = cast(NDArray, column_or_1d(y_true))
+    y_true = _column_or_1d_ndarray(y_true)
     if y_score_arg is None:
-        y_score = cast(NDArray, column_or_1d(np.nanmax(y_scores, axis=1)))
+        y_score = _column_or_1d_ndarray(np.nanmax(y_scores, axis=1))
         if classes is None:
-            y_score_arg = cast(NDArray, column_or_1d(np.nanargmax(y_scores, axis=1)))
+            y_score_arg = _column_or_1d_ndarray(np.nanargmax(y_scores, axis=1))
         else:
-            classes = cast(NDArray, classes)
-            y_score_arg = cast(
-                NDArray, column_or_1d(classes[np.nanargmax(y_scores, axis=1)])
-            )
+            classes = np.asarray(classes)
+            y_score_arg = _column_or_1d_ndarray(classes[np.nanargmax(y_scores, axis=1)])
     else:
-        y_score = cast(NDArray, column_or_1d(y_scores))
-        y_score_arg = cast(NDArray, column_or_1d(y_score_arg))
+        y_score = _column_or_1d_ndarray(y_scores)
+        y_score_arg = _column_or_1d_ndarray(y_score_arg)
     labels = np.unique(y_score_arg)
 
     for label in labels:

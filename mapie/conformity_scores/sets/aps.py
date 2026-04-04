@@ -144,8 +144,8 @@ class APSConformityScore(NaiveConformityScore):
             Conformity scores.
         """
         # Casting
-        y_enc = cast(NDArray, y_enc)
-        classes = cast(NDArray, self.classes)
+        y_enc = np.asarray(y_enc)
+        classes = np.asarray(self.classes)
 
         # Conformity scores
         conformity_scores, self.cutoff = self.get_true_label_cumsum_proba(

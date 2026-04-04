@@ -153,9 +153,9 @@ class ResidualNormalisedScore(BaseRegressionScore):
         random_state = check_random_state(self.random_state)
         X_, y_, y_pred_ = indexable(X, y, y_pred)
         return (
-            cast(NDArray, X_),
-            cast(NDArray, y_),
-            cast(NDArray, y_pred_),
+            np.asarray(X_),
+            np.asarray(y_),
+            np.asarray(y_pred_),
             residual_estimator,
             random_state,
         )
@@ -244,7 +244,6 @@ class ResidualNormalisedScore(BaseRegressionScore):
                 "Additional parameters must be provided for the method to "
                 + "work (here `X` is missing)."
             )
-        X = cast(ArrayLike, X)
 
         (X, y, y_pred, self.residual_estimator_, random_state) = self._check_parameters(
             X, y, y_pred
@@ -313,7 +312,6 @@ class ResidualNormalisedScore(BaseRegressionScore):
                 "Additional parameters must be provided for the method to "
                 + "work (here `X` is missing)."
             )
-        X = cast(ArrayLike, X)
 
         r_pred = self._predict_residual_estimator(X).reshape((-1, 1))
         if not self.prefit:

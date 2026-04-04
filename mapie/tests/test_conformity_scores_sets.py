@@ -5,7 +5,6 @@ import numpy as np
 from sklearn.datasets import make_classification
 from sklearn.linear_model import LogisticRegression
 
-from numpy.typing import NDArray
 from mapie.classification import _MapieClassifier
 from mapie.conformity_scores import BaseClassificationScore
 from mapie.conformity_scores.sets import (
@@ -159,7 +158,7 @@ def test_get_last_included_proba_shape(k_lambda, include_last_label):
         thresholds = 0.2
     else:
         thresholds = np.random.rand(len(k))
-    thresholds = cast(NDArray, _check_alpha(thresholds))
+    thresholds = cast(np.ndarray, _check_alpha(thresholds))
     clf = LogisticRegression()
     clf.fit(X, y)
     y_pred_proba = clf.predict_proba(X)

@@ -2,7 +2,6 @@ from typing import Union, cast
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
-from sklearn.utils import column_or_1d
 
 from mapie.utils import (
     _check_array_inf,
@@ -11,6 +10,7 @@ from mapie.utils import (
     _check_arrays_length,
     _check_nb_sets_sizes,
     _check_number_bins,
+    _column_or_1d_ndarray,
 )
 
 
@@ -115,7 +115,7 @@ def classification_coverage_score(y_true: NDArray, y_pred_set: NDArray) -> NDArr
 
     y_pred_set = _check_array_shape_classification(y_true, y_pred_set)
     if len(y_true.shape) != 2:
-        y_true = cast(NDArray, column_or_1d(y_true))
+        y_true = _column_or_1d_ndarray(y_true)
         y_true = np.expand_dims(y_true, axis=1)
     y_true = np.expand_dims(y_true, axis=1)
     coverage = np.nanmean(np.take_along_axis(y_pred_set, y_true, axis=1), axis=0)
@@ -165,7 +165,7 @@ def classification_ssc(
     >>> print(classification_ssc(y_true, y_pred_set, num_bins=2))
     [[1.         0.66666667]]
     """
-    y_true = cast(NDArray, column_or_1d(y_true))
+    y_true = _column_or_1d_ndarray(y_true)
     y_pred_set = _check_array_shape_classification(y_true, y_pred_set)
 
     _check_arrays_length(y_true, y_pred_set)

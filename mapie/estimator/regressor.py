@@ -221,7 +221,7 @@ class EnsembleRegressor:
         y_train = _safe_indexing(y, train_index)
         if sample_weight is not None:
             sample_weight = _safe_indexing(sample_weight, train_index)
-            sample_weight = cast(NDArray, sample_weight)
+            sample_weight = np.asarray(sample_weight)
 
         estimator = _fit_estimator(
             estimator, X_train, y_train, sample_weight=sample_weight, **fit_params

@@ -899,7 +899,7 @@ class _MapieQuantileRegressor(_MapieRegressor):
         if self.cv == "prefit":
             self._initialize_and_check_prefit_estimators()
 
-        X_calib, y_calib = cast(ArrayLike, X), cast(ArrayLike, y)
+        X_calib, y_calib = np.asarray(X), np.asarray(y)
         X_calib, y_calib = indexable(X_calib, y_calib)
         y_calib = _check_y(y_calib)
 

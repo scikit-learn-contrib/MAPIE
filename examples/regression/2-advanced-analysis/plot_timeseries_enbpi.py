@@ -31,12 +31,10 @@ to the target, along with narrower PIs.
 """
 
 import warnings
-from typing import cast
 
 import numpy as np
 import pandas as pd
 from matplotlib import pylab as plt
-from numpy.typing import NDArray
 from scipy.stats import randint
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import PredefinedSplit, RandomizedSearchCV
@@ -210,7 +208,7 @@ for i, (ax, w, result) in enumerate(
         label="Predictions",
     )
 
-    y_pis = cast(NDArray, result["y_pis"])
+    y_pis = np.asarray(result["y_pis"])
 
     ax.fill_between(
         demand_test.index,

@@ -1,4 +1,4 @@
-from typing import Optional, cast, Union
+from typing import Optional, Union, cast
 
 import numpy as np
 
@@ -61,8 +61,7 @@ class LACConformityScore(BaseClassificationScore):
         NDArray of shape (n_samples,)
             Conformity scores.
         """
-        # Casting
-        y_enc = cast(NDArray, y_enc)
+        y_enc = np.asarray(y_enc)
 
         # Conformity scores
         conformity_scores = np.take_along_axis(1 - y_pred, y_enc.reshape(-1, 1), axis=1)
