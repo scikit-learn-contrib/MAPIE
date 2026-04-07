@@ -91,8 +91,9 @@ class OnlineMartingaleTest:
     ... )
     >>> y_true = np.array([0.0, 1.0, 2.0])
     >>> y_pred = np.array([0.05, 0.95, 1.95])
-    >>> omt.update(y_true, y_pred)
+    >>> omt = omt.update(y_true, y_pred)
     >>> omt.is_exchangeable is True
+    True
 
     >>> def classification_score(y_true, y_pred, X=None):
     ...     y_true = np.asarray(y_true, dtype=int).reshape(-1)
@@ -110,8 +111,9 @@ class OnlineMartingaleTest:
     ...     [0.95, 0.05],
     ...     [0.05, 0.95],
     ... ])
-    >>> omt.update(y_true, y_pred)
+    >>> omt = omt.update(y_true, y_pred)
     >>> omt.is_exchangeable is True
+    True
 
     Notes
     -----
