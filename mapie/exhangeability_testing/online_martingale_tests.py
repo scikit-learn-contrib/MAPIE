@@ -237,7 +237,9 @@ class OnlineMartingaleTest:
         self._warning_already_raised = False
 
         self._jumper_expert_grid = np.array([-1.0, 0.0, 1.0], dtype=float)
-        self._jumper_wealth_by_expert = np.full(3, 1.0 / 3.0, dtype=float)
+        self._jumper_wealth_by_expert: NDArray[np.floating] = np.full(
+            3, 1.0 / 3.0, dtype=float
+        )
 
     @property
     def alpha_level(self) -> float:
