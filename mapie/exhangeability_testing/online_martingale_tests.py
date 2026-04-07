@@ -5,6 +5,7 @@ from typing import Callable, Literal, Optional
 
 import numpy as np
 from numpy.typing import NDArray
+from scipy.integrate import trapezoid
 from scipy.stats import gaussian_kde
 
 
@@ -311,11 +312,7 @@ class OnlineMartingaleTest:
             or self.current_martingale_value > self.reject_threshold
         ):
             return False
-
-        if (
-            len([x for x in self.martingale_value_history if x > self.reject_threshold])
-            == 0
-        ):
+        else:
             return True
 
     def compute_p_value(
@@ -374,8 +371,8 @@ class OnlineMartingaleTest:
         if n == 0:
             return float(self.rng.uniform())
 
-        n_greater: int = np.sum(history > current_non_conformity_score)
-        n_equal: int = np.sum(history == current_non_conformity_score)
+        n_greater: int = int(np.sum(history > current_non_conformity_score))
+        n_equal: int = int(np.sum(history == current_non_conformity_score))
 
         return float((1.0 + n_greater + u * n_equal) / (n + 1.0))
 
@@ -434,7 +431,7 @@ class OnlineMartingaleTest:
 
         grid = np.linspace(0.0, 1.0, 200)
         density_vals = kde(grid)
-        normalization_val = np.trapezoid(density_vals, grid)
+        normalization_val = trapezoid(density_vals, grid)
 
         if normalization_val <= 0 or not np.isfinite(normalization_val):
             return 1.0
