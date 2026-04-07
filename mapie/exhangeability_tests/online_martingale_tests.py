@@ -95,12 +95,14 @@ class OnlineMartingaleTest:
     References
     ----------
     .. [1] Angelopoulos, Barber, Bates (2026).
-        "Theoretical Foundations of Conformal Prediction". Definition 3.8.
+        "Theoretical Foundations of Conformal Prediction".
+        arXiv preprint arXiv:2411.11824.
     .. [2] Vovk, Gammerman, Shafer (2005).
-        "Algorithmic Learning in a Random World". Section 7.1, page 169.
+        "Algorithmic Learning in a Random World".
+        Boston, MA: Springer US. Section 7.1, page 169.
     .. [3] Fedorova, Gammerman, Nouretdinov, Vovk (2012).
         "Plug-in Martingales for Testing Exchangeability on-line".
-        In Proceedings of the 29th ICML, 2012. Algorithm 1, page 3.
+        In Proceedings of the 29th ICML. Algorithm 1, page 3.
     """
 
     def __init__(
@@ -114,7 +116,6 @@ class OnlineMartingaleTest:
         confidence_level: float = 0.95,
         raise_warning: bool = True,
         jump_size: float = 0.01,
-        kde_min_sample_size: int = 50,
         min_history_to_decide: int = 100,
         random_state: Optional[int] = None,
     ):
@@ -170,12 +171,14 @@ class OnlineMartingaleTest:
         References
         ----------
         .. [1] Angelopoulos, Barber, Bates (2026).
-           "Theoretical Foundations of Conformal Prediction". Definition 3.8.
+            "Theoretical Foundations of Conformal Prediction".
+            arXiv preprint arXiv:2411.11824.
         .. [2] Vovk, Gammerman, Shafer (2005).
-           "Algorithmic Learning in a Random World". Section 7.1, page 169.
+            "Algorithmic Learning in a Random World".
+            Boston, MA: Springer US. Section 7.1, page 169.
         .. [3] Fedorova, Gammerman, Nouretdinov, Vovk (2012).
-           "Plug-in Martingales for Testing Exchangeability on-line".
-           In Proceedings of the 29th ICML, 2012. Algorithm 1, page 3.
+            "Plug-in Martingales for Testing Exchangeability on-line".
+            In Proceedings of the 29th ICML. Algorithm 1, page 3.
         """
         if not 0.0 < confidence_level < 1.0:
             raise ValueError("confidence_level must lie in (0, 1).")
@@ -194,7 +197,6 @@ class OnlineMartingaleTest:
         self.raise_warning = raise_warning
 
         self.jump_size = jump_size
-        self.kde_min_sample_size = kde_min_sample_size
         self.min_history_to_decide = min_history_to_decide
         self.rng = np.random.default_rng(random_state)
 
@@ -329,9 +331,12 @@ class OnlineMartingaleTest:
 
         References
         ----------
-        .. [1] Angelopoulos, Barber, Bates (2026),
-           "Theoretical Foundations of Conformal Prediction",
-           Definition 3.8.
+        .. [1] Angelopoulos, Barber, Bates (2026).
+            "Theoretical Foundations of Conformal Prediction".
+            arXiv preprint arXiv:2411.11824.
+        .. [3] Fedorova, Gammerman, Nouretdinov, Vovk (2012).
+            "Plug-in Martingales for Testing Exchangeability on-line".
+            In Proceedings of the 29th ICML. Algorithm 1, page 3.
         """
         history = np.asarray(non_conformity_score_history, dtype=float)
         n = len(history)
@@ -395,9 +400,9 @@ class OnlineMartingaleTest:
 
         References
         ----------
-        .. [1] Fedorova, V., Gammerman, A., Nouretdinov, I., & Vovk, V. (2012).
-        "Plug-in Martingales for Testing Exchangeability On-line."
-        In Proceedings of the 29th International Conference on Machine Learning (ICML).
+        .. [3] Fedorova, Gammerman, Nouretdinov, Vovk (2012).
+            "Plug-in Martingales for Testing Exchangeability on-line".
+            In Proceedings of the 29th ICML. Algorithm 1, page 3.
         """
         if not 0.0 <= pvalue <= 1.0:
             return 0.0
@@ -468,9 +473,9 @@ class OnlineMartingaleTest:
 
         References
         ----------
-        Vovk, Gammerman, Shafer (2005),
-        "Algorithmic Learning in a Random World",
-        Section 7.1, page 169.
+        .. [2] Vovk, Gammerman, Shafer (2005).
+            "Algorithmic Learning in a Random World".
+            Boston, MA: Springer US. Section 7.1, page 169.
         """
         if not (0.0 <= pvalue <= 1.0):
             raise ValueError("pvalue must lie in [0, 1].")
@@ -518,10 +523,9 @@ class OnlineMartingaleTest:
 
         References
         ----------
-        Fedorova, Gammerman, Nouretdinov, Vovk (2012),
-        "Plug-in Martingales for Testing Exchangeability on-line",
-        In precedings of the 29th International Conference on Machine Learning (ICML 2012),
-        Algorithm 1, page 3.
+        .. [3] Fedorova, Gammerman, Nouretdinov, Vovk (2012).
+            "Plug-in Martingales for Testing Exchangeability on-line".
+            In Proceedings of the 29th ICML. Algorithm 1, page 3.
         """
         if not (0.0 <= pvalue <= 1.0):
             raise ValueError("pvalue must lie in [0, 1].")
