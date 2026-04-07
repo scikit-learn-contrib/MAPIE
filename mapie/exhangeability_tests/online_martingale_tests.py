@@ -376,11 +376,6 @@ class OnlineMartingaleTest:
 
         Notes
         -----
-        - When the p-value history contains fewer samples than `kde_min_sample_size`,
-          a neutral density of 1.0 is returned (corresponding to the uniform
-          distribution on [0, 1]).
-        - If all p-values in history are identical, returns 1.0 to avoid singular
-          covariance in KDE.
         - The method applies Silverman's bandwidth selector for kernel density
           estimation.
         - A regularization factor that decreases with sample size is applied to
@@ -395,17 +390,7 @@ class OnlineMartingaleTest:
             "Plug-in Martingales for Testing Exchangeability on-line".
             In Proceedings of the 29th ICML. Algorithm 1, page 3.
         """
-        if not 0.0 <= pvalue <= 1.0:
-            return 0.0
-
-        if len(self.pvalue_history) < self.kde_min_sample_size:
-            return 1.0
-
         p_array = np.asarray(self.pvalue_history, dtype=float)
-
-        if np.allclose(p_array, p_array[0]):
-            return 1.0
-
         reflected = np.concatenate([-p_array, p_array, 2.0 - p_array])
 
         try:
@@ -427,7 +412,7 @@ class OnlineMartingaleTest:
 
         # Sample-size dependent regularization towards uniform density to control against estimation errors in small samples
         regularization_strength = min(
-            1.0, self.kde_min_sample_size / len(self.pvalue_history)
+            1.0, self.min_history_to_decide / len(self.pvalue_history)
         )
         density = (
             1.0 - regularization_strength
