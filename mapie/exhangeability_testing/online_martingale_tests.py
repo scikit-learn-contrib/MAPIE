@@ -112,7 +112,7 @@ class OnlineMartingaleTest:
         warn: bool = True,
         jump_size: float = 0.01,
         min_sample_size_to_decide: int = 100,
-        random_state: Optional[int] = None,
+        random_state: Optional[np.int_] = None,
     ):
         """
         Initialize the online martingale test.
@@ -279,6 +279,8 @@ class OnlineMartingaleTest:
         ):
             return True
 
+        return None
+
     def compute_p_value(
         self,
         current_non_conformity_score: float,
@@ -335,9 +337,8 @@ class OnlineMartingaleTest:
         if n == 0:
             return float(self.rng.uniform())
 
-        n_greater = np.sum(history > current_non_conformity_score)
-        n_equal = np.sum(history == current_non_conformity_score)
-        u = self.rng.uniform()
+        n_greater: int = np.sum(history > current_non_conformity_score)
+        n_equal: int = np.sum(history == current_non_conformity_score)
 
         return float((1.0 + n_greater + u * n_equal) / (n + 1.0))
 
@@ -639,11 +640,15 @@ class OnlineMartingaleTest:
                 "first_acceptance_index": None,
             }
 
-        quantiles = np.quantile(
-            martingale_values, [0.0, 0.025, 0.25, 0.5, 0.75, 0.975, 1.0]
+        quantiles = np.asarray(
+            np.quantile(
+                martingale_values,
+                [0.0, 0.025, 0.25, 0.5, 0.75, 0.975, 1.0],
+            ),
+            dtype=float,
         )
 
-        first_rejection_index = next(
+        first_rejection_index: Optional[int] = next(
             (
                 i + 1
                 for i, value in enumerate(martingale_values)
@@ -651,7 +656,7 @@ class OnlineMartingaleTest:
             ),
             None,
         )
-        first_acceptance_index = next(
+        first_acceptance_index: Optional[int] = next(
             (
                 i + 1
                 for i, value in enumerate(martingale_values)
@@ -660,6 +665,7 @@ class OnlineMartingaleTest:
             None,
         )
 
+        stopping_time: Optional[int]
         if first_rejection_index is not None and first_acceptance_index is not None:
             stopping_time = min(first_rejection_index, first_acceptance_index)
         else:
