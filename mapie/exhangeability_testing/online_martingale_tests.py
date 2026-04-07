@@ -292,10 +292,10 @@ class OnlineMartingaleTest:
 
         .. math::
 
-            p_t = \frac{1 + \#\{i : s_i > s_t\} + U \cdot \#\{i : s_i = s_t\}}{n + 1}
+            p_t = {1 + #{i : s_i > s_t} + U x #{i : s_i = s_t}} / {n + 1}
 
         where :math:`s_t` is the current non-conformity score, :math:`s_i` are past
-        scores, :math:`U \sim \text{Uniform}(0, 1)` is a random tie-breaker, and
+        scores, :math:`U ~ Uniform(0, 1)` is a random tie-breaker, and
         :math:`n` is the number of past observations.
 
         Parameters
