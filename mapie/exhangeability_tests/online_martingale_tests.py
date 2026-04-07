@@ -49,7 +49,7 @@ class OnlineMartingaleTest:
         Must lie in ``(0, 1)``.
         The corresponding test level is ``alpha_level = 1 - confidence_level``.
 
-    raise_warning : bool, default=True
+    warn : bool, default=True
         Whether to raise a warning when exchangeability is rejected.
 
     jump_size : float, default=0.01
@@ -109,7 +109,7 @@ class OnlineMartingaleTest:
             "jumper_martingale", "plugin_martingale"
         ] = "jumper_martingale",
         confidence_level: float = 0.95,
-        raise_warning: bool = True,
+        warn: bool = True,
         jump_size: float = 0.01,
         min_history_to_decide: int = 100,
         random_state: Optional[int] = None,
@@ -133,7 +133,7 @@ class OnlineMartingaleTest:
             Confidence level used to define the rejection threshold.
             Must lie in (0, 1). The test level is alpha = 1 - confidence_level.
 
-        raise_warning : bool, default=True
+        warn : bool, default=True
             Whether to raise a warning when exchangeability is rejected.
 
         jump_size : float, default=0.01
@@ -185,7 +185,7 @@ class OnlineMartingaleTest:
         self.non_conformity_score_function = non_conformity_score_function
         self.test_method = test_method
         self.confidence_level = confidence_level
-        self.raise_warning = raise_warning
+        self.warn = warn
 
         self.jump_size = jump_size
         self.min_history_to_decide = min_history_to_decide
@@ -561,7 +561,7 @@ class OnlineMartingaleTest:
         Warns
         -----
         UserWarning
-            If exchangeability is rejected and ``raise_warning=True``.
+            If exchangeability is rejected and ``warn=True``.
 
         Notes
         -----
@@ -591,7 +591,7 @@ class OnlineMartingaleTest:
 
         if (
             self.is_exchangeable is False
-            and self.raise_warning
+            and self.warn
             and not self._warning_already_raised
         ):
             warnings.warn(
