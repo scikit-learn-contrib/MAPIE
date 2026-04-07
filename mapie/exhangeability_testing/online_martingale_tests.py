@@ -51,6 +51,7 @@ class OnlineMartingaleTest:
 
     warn : bool, default=True
         Whether to raise a warning when exchangeability is rejected.
+        The warning is issued at most once per instance.
 
     jump_size : float, default=0.01
         Mixing parameter used by the jumper martingale.
@@ -59,6 +60,9 @@ class OnlineMartingaleTest:
     min_sample_size_to_decide : int, default=100
         Minimum sample size required before the ``is_exchangeable``
         property is allowed to return a non-``None`` decision.
+
+    random_state : Optional[int], default=None
+        Random seed used for random tie-breaking and density estimation.
 
     Attributes
     ----------
@@ -76,7 +80,38 @@ class OnlineMartingaleTest:
 
     Examples
     --------
-    # TODO: add example usage of the class with a simple non-conformity score function and simulated data.
+    >>> def regression_score(y_true, y_pred, X=None):
+    ...     y_true = np.asarray(y_true, dtype=float).reshape(-1)
+    ...     y_pred = np.asarray(y_pred, dtype=float).reshape(-1)
+    ...     return np.abs(y_true - y_pred)
+    >>> omt = OnlineMartingaleTest(
+    ...     regression_score,
+    ...     random_state=0,
+    ...     min_sample_size_to_decide=1,
+    ... )
+    >>> y_true = np.array([0.0, 1.0, 2.0])
+    >>> y_pred = np.array([0.05, 0.95, 1.95])
+    >>> omt.update(y_true, y_pred)
+    >>> omt.is_exchangeable is True
+
+    >>> def classification_score(y_true, y_pred, X=None):
+    ...     y_true = np.asarray(y_true, dtype=int).reshape(-1)
+    ...     y_pred = np.asarray(y_pred, dtype=float)
+    ...     return 1.0 - y_pred[np.arange(len(y_true)), y_true]
+    >>> omt = OnlineMartingaleTest(
+    ...     classification_score,
+    ...     random_state=0,
+    ...     min_sample_size_to_decide=1,
+    ... )
+    >>> y_true = np.array([0, 1, 0, 1])
+    >>> y_pred = np.array([
+    ...     [0.95, 0.05],
+    ...     [0.05, 0.95],
+    ...     [0.95, 0.05],
+    ...     [0.05, 0.95],
+    ... ])
+    >>> omt.update(y_true, y_pred)
+    >>> omt.is_exchangeable is True
 
     Notes
     -----
@@ -286,7 +321,7 @@ class OnlineMartingaleTest:
         current_non_conformity_score: float,
         non_conformity_score_history: NDArray,
     ) -> float:
-        """
+        r"""
         Compute the conformal p-value associated with a new non-conformity score.
 
         The p-value is computed using only the past non-conformity scores, according
@@ -294,10 +329,10 @@ class OnlineMartingaleTest:
 
         .. math::
 
-            p_t = {1 + #{i : s_i > s_t} + U x #{i : s_i = s_t}} / {n + 1}
+            p_t = \frac{1 + \#\{i : s_i > s_t\} + U \cdot \#\{i : s_i = s_t\}}{n + 1}
 
         where :math:`s_t` is the current non-conformity score, :math:`s_i` are past
-        scores, :math:`U ~ Uniform(0, 1)` is a random tie-breaker, and
+        scores, :math:`U \sim \mathrm{Uniform}(0, 1)` is a random tie-breaker, and
         :math:`n` is the number of past observations.
 
         Parameters
@@ -347,22 +382,17 @@ class OnlineMartingaleTest:
         Estimate the density of p-values on the unit interval using reflected KDE.
 
         This method computes a probability density estimate for p-values using
-        reflected kernel density estimation (KDE) to mitigate boundary bias effects
-        near 0 and 1. The density is normalized over the interval [0, 1] and
+        reflected kernel density estimation (KDE) with reflection at the boundaries
+        to reduce edge bias. The density is normalized over ``[0, 1]`` and
         regularized toward the uniform distribution to account for estimation
         uncertainty in small samples.
 
-        This density estimate is utilized by the plug-in martingale for
-        exchangeability testing.
-
-            Evaluation point in [0, 1] at which to estimate the density.
-
-            Estimated density value at the given pvalue. Returns a value in [1e-3, 10.0].
+        This density estimate is used by the plug-in martingale update.
 
         Raises
         ------
         ValueError
-            If pvalue is not in [0, 1].
+            If ``pvalue`` is not in ``[0, 1]``.
 
         Parameters
         ----------
@@ -455,6 +485,9 @@ class OnlineMartingaleTest:
             "Algorithmic Learning in a Random World".
             Boston, MA: Springer US. Section 7.1, page 169.
         """
+        if not (0.0 <= pvalue <= 1.0):
+            raise ValueError("pvalue must lie in [0, 1].")
+
         m_prev = float(np.sum(self._jumper_wealth_by_expert))
 
         mixed_wealth = (1.0 - self.jump_size) * self._jumper_wealth_by_expert + (
@@ -614,14 +647,18 @@ class OnlineMartingaleTest:
         -------
         dict
             Dictionary containing the current martingale value, exchangeability
-            decision, number of processed observations, rejection threshold,
-            summary statistics of the martingale trajectory, and stopping-time
-            information when available.
+            decision, rejection threshold, summary statistics of the martingale
+            trajectory, and stopping-time information.
 
         Notes
         -----
         The returned summary is intended for diagnostics and monitoring.
         It does not modify the internal state of the test.
+
+        The reported ``stopping_time`` is the first index at which the martingale
+        enters a sustained rejection regime (above the rejection threshold for
+        six consecutive values). If no sustained rejection occurs, it is the
+        index of the last martingale value.
         """
         martingale_values = np.asarray(self.martingale_value_history, dtype=float)
 
