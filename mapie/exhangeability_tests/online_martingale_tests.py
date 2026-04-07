@@ -388,6 +388,8 @@ class OnlineMartingaleTest:
             "Plug-in Martingales for Testing Exchangeability on-line".
             In Proceedings of the 29th ICML. Algorithm 1, page 3.
         """
+        if not (isinstance(pvalue, float) and 0.0 <= pvalue <= 1.0):
+            raise ValueError("pvalue must lie in [0, 1].")
         p_array = np.asarray(self.pvalue_history, dtype=float)
         reflected = np.concatenate([-p_array, p_array, 2.0 - p_array])
 
@@ -416,7 +418,7 @@ class OnlineMartingaleTest:
             1.0 - regularization_strength
         ) * density + regularization_strength * 1.0
 
-        return float(np.clip(density, 1e-3, 10.0))
+        return density
 
     def update_simple_jumper_martingale(self, pvalue: float) -> float:
         """
