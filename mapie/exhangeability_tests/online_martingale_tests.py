@@ -524,9 +524,6 @@ class OnlineMartingaleTest:
             "Plug-in Martingales for Testing Exchangeability on-line".
             In Proceedings of the 29th ICML. Algorithm 1, page 3.
         """
-        if not (0.0 <= pvalue <= 1.0):
-            raise ValueError("pvalue must lie in [0, 1].")
-
         rho_hat = self._estimate_pvalues_density(pvalue)
         self.current_martingale_value *= rho_hat
         self.martingale_value_history.append(self.current_martingale_value)
