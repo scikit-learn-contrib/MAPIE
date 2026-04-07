@@ -175,7 +175,7 @@ class OnlineMartingaleTest:
 
         jump_size : float, default=0.01
             Mixing parameter for the jumper martingale, controlling expert diversity.
-            Must lie in [0, 1]. Ignored when test_method="plugin_martingale".
+            Must lie in (0, 1). Ignored when test_method="plugin_martingale".
 
         min_sample_size_to_decide : int, default=100
             Minimum number of observations required before is_exchangeable returns
@@ -188,7 +188,7 @@ class OnlineMartingaleTest:
         ------
         ValueError
             If confidence_level is not in (0, 1), if test_method is not supported,
-            or if jump_size is not in [0, 1].
+            or if jump_size is not in (0, 1).
 
         See Also
         --------
@@ -216,8 +216,8 @@ class OnlineMartingaleTest:
                 "test_method must be one of {'jumper_martingale', 'plugin_martingale'}."
             )
 
-        if not 0.0 <= jump_size <= 1.0:
-            raise ValueError("jump_size must lie in [0, 1].")
+        if not 0.0 < jump_size < 1.0:
+            raise ValueError("jump_size must lie in (0, 1).")
 
         self.non_conformity_score_function = non_conformity_score_function
         self.test_method = test_method
