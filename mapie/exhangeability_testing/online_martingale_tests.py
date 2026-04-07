@@ -628,16 +628,22 @@ class OnlineMartingaleTest:
         if martingale_values.size == 0:
             return {
                 "test_method": self.test_method,
-                "confidence_level": self.confidence_level,
-                "alpha_level": self.alpha_level,
-                "reject_threshold": self.reject_threshold,
-                "current_martingale_value": float(self.current_martingale_value),
+                "min_sample_size_to_decide": self.min_sample_size_to_decide,
+                "test_level": self.alpha_level,
                 "is_exchangeable": self.is_exchangeable,
-                "n_non_conformity_scores": len(self.non_conformity_score_history),
-                "n_pvalues": len(self.pvalue_history),
                 "stopping_time": None,
-                "first_rejection_index": None,
-                "first_acceptance_index": None,
+                "martingale_value_at_decision": None,
+                "last_martingale_value": float(self.current_martingale_value),
+                "martingale_statistics": {
+                    "min": None,
+                    "q025": None,
+                    "q25": None,
+                    "median": None,
+                    "mean": None,
+                    "q75": None,
+                    "q975": None,
+                    "max": None,
+                },
             }
 
         quantiles = np.asarray(
@@ -648,38 +654,30 @@ class OnlineMartingaleTest:
             dtype=float,
         )
 
-        first_rejection_index: Optional[int] = next(
-            (
-                i + 1
-                for i, value in enumerate(martingale_values)
-                if value > self.reject_threshold
-            ),
-            None,
-        )
-        first_acceptance_index: Optional[int] = next(
-            (
-                i + 1
-                for i, value in enumerate(martingale_values)
-                if value < self.alpha_level
-            ),
-            None,
-        )
+        above_threshold = martingale_values > self.reject_threshold
+        sustained_rejection_start: Optional[int] = None
 
-        stopping_time: Optional[int]
-        if first_rejection_index is not None and first_acceptance_index is not None:
-            stopping_time = min(first_rejection_index, first_acceptance_index)
+        if martingale_values.size >= 6:
+            sustained_block = np.convolve(
+                above_threshold.astype(int), np.ones(6, dtype=int), mode="valid"
+            )
+            sustained_indices = np.flatnonzero(sustained_block == 6)
+            if sustained_indices.size > 0:
+                sustained_rejection_start = int(sustained_indices[0]) + 1
+
+        if sustained_rejection_start is not None:
+            stopping_time = sustained_rejection_start
         else:
-            stopping_time = first_rejection_index or first_acceptance_index
+            stopping_time = int(martingale_values.size)
 
         return {
             "test_method": self.test_method,
-            "confidence_level": self.confidence_level,
-            "alpha_level": self.alpha_level,
-            "reject_threshold": self.reject_threshold,
-            "current_martingale_value": float(self.current_martingale_value),
+            "min_sample_size_to_decide": self.min_sample_size_to_decide,
+            "test_level": self.alpha_level,
             "is_exchangeable": self.is_exchangeable,
-            "n_non_conformity_scores": len(self.non_conformity_score_history),
-            "n_pvalues": len(self.pvalue_history),
+            "stopping_time": stopping_time,
+            "martingale_value_at_decision": float(martingale_values[stopping_time - 1]),
+            "last_martingale_value": float(self.current_martingale_value),
             "martingale_statistics": {
                 "min": float(quantiles[0]),
                 "q025": float(quantiles[1]),
@@ -690,8 +688,4 @@ class OnlineMartingaleTest:
                 "q975": float(quantiles[5]),
                 "max": float(quantiles[6]),
             },
-            "stopping_time": stopping_time,
-            "first_rejection_index": first_rejection_index,
-            "first_acceptance_index": first_acceptance_index,
-            "last_observation_index": int(martingale_values.size),
         }

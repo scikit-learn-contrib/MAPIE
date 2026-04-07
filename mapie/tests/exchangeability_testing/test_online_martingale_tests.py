@@ -53,7 +53,6 @@ def test_compute_p_value_with_history_and_ties():
     history = np.array([1.0, 2.0, 2.0, 3.0])
 
     rng = np.random.default_rng(1234)
-    rng.uniform()
     expected = float((1.0 + 1 + rng.uniform() * 2) / 5.0)
 
     actual = omt.compute_p_value(
@@ -151,27 +150,43 @@ def test_summary_without_values():
     omt = OnlineMartingaleTest(dummy_score)
     summary = omt.summary()
 
-    assert summary["n_non_conformity_scores"] == 0
-    assert summary["n_pvalues"] == 0
+    assert summary["test_method"] == "jumper_martingale"
+    assert summary["min_sample_size_to_decide"] == 100
+    assert summary["test_level"] == pytest.approx(0.05)
     assert summary["is_exchangeable"] is None
     assert summary["stopping_time"] is None
-    assert "last_observation_index" not in summary
+    assert summary["martingale_value_at_decision"] is None
+    assert summary["last_martingale_value"] == pytest.approx(1.0)
+    assert summary["martingale_statistics"]["min"] is None
 
 
-def test_summary_with_values():
+def test_summary_last_index_when_non_rejection():
     omt = OnlineMartingaleTest(
-        dummy_score, confidence_level=0.5, min_sample_size_to_decide=1
+        dummy_score, confidence_level=0.95, min_sample_size_to_decide=1
     )
-    omt.martingale_value_history = [1.1, 2.2, 3.0]
+    omt.martingale_value_history = [1.0, 2.0, 3.0]
     omt.current_martingale_value = 3.0
-    omt.non_conformity_score_history = [0.1, 0.2, 0.3]
-    omt.pvalue_history = [0.1, 0.1, 0.1]
+    omt.pvalue_history = [0.1, 0.2, 0.3]
 
     summary = omt.summary()
 
-    assert summary["first_rejection_index"] == 2
-    assert summary["first_acceptance_index"] is None
-    assert summary["stopping_time"] == 2
-    assert summary["last_observation_index"] == 3
-    assert summary["martingale_statistics"]["max"] == pytest.approx(3.0)
+    assert summary["stopping_time"] == 3
+    assert summary["martingale_value_at_decision"] == pytest.approx(3.0)
+    assert summary["last_martingale_value"] == pytest.approx(3.0)
+    assert summary["is_exchangeable"] is True
+
+
+def test_summary_rejection_requires_sustained_block():
+    omt = OnlineMartingaleTest(
+        dummy_score, confidence_level=0.9, min_sample_size_to_decide=1
+    )
+    omt.martingale_value_history = [1.0, 5.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0]
+    omt.current_martingale_value = 16.0
+    omt.pvalue_history = [0.1] * len(omt.martingale_value_history)
+
+    summary = omt.summary()
+
+    assert summary["stopping_time"] == 3
+    assert summary["martingale_value_at_decision"] == pytest.approx(11.0)
+    assert summary["last_martingale_value"] == pytest.approx(16.0)
     assert summary["is_exchangeable"] is False
