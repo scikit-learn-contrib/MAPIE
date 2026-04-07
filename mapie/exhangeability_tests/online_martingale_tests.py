@@ -477,9 +477,6 @@ class OnlineMartingaleTest:
             "Algorithmic Learning in a Random World".
             Boston, MA: Springer US. Section 7.1, page 169.
         """
-        if not (0.0 <= pvalue <= 1.0):
-            raise ValueError("pvalue must lie in [0, 1].")
-
         m_prev = float(np.sum(self._jumper_wealth_by_expert))
 
         mixed_wealth = (1.0 - self.jump_size) * self._jumper_wealth_by_expert + (
