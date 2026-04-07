@@ -56,12 +56,7 @@ class OnlineMartingaleTest:
         Mixing parameter used by the jumper martingale.
         Ignored when ``test_method="plugin_martingale"``.
 
-    kde_min_sample_size : int, default=50
-        Minimum number of past p-values required before estimating a p-value
-        density for the plug-in martingale.
-        Before this threshold, a neutral density is used.
-
-    min_history_to_decide : int, default=200
+    min_history_to_decide : int, default=100
         Minimum number of p-values required before the ``is_exchangeable``
         property is allowed to return a non-``None`` decision.
 
@@ -144,10 +139,6 @@ class OnlineMartingaleTest:
         jump_size : float, default=0.01
             Mixing parameter for the jumper martingale, controlling expert diversity.
             Must lie in [0, 1]. Ignored when test_method="plugin_martingale".
-
-        kde_min_sample_size : int, default=50
-            Minimum number of p-values required before estimating density for the
-            plug-in martingale. Before this, a neutral (uniform) density is used.
 
         min_history_to_decide : int, default=100
             Minimum number of observations required before is_exchangeable returns
