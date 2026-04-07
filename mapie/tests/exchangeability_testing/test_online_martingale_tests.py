@@ -206,6 +206,7 @@ def test_update_unsupported_method_raises():
 
 def test_update_appends_scores_and_pvalues():
     """Test that update appends scores and p-values to history."""
+
     def score_function(_, y_pred, __):
         return np.asarray(y_pred)
 
