@@ -275,10 +275,9 @@ class OnlineMartingaleTest:
           rejection threshold on multiple occasions or the current value exceeds it.
         - ``True``: Failure to reject exchangeability when the martingale remains
           below the significance level (``alpha_level``) throughout the history.
-        - ``None``: The test is currently inconclusive, either because:
-          - Insufficient observations have been processed (fewer than
-            ``min_sample_size_to_decide``), or
-          - The martingale trajectory shows mixed signals.
+        - ``None``: The test is currently inconclusive because insufficient
+          observations have been processed (fewer than
+          ``min_sample_size_to_decide``).
 
         Returns
         -------
@@ -302,10 +301,13 @@ class OnlineMartingaleTest:
         """
         if len(self.pvalue_history) < self.min_sample_size_to_decide:
             return None
-
+        # The value 1 is arbitrary
+        # The idea is to reject if there are some values above the rejection threshold, cf. [1], Figure 8.2, page 153.
+        # Here, we choose we reject if there are 1 or more values above the rejection threshold
+        # This can be tuned to be more or less conservative.
         if (
             len([x for x in self.martingale_value_history if x > self.reject_threshold])
-            > 5
+            >= 1
             or self.current_martingale_value > self.reject_threshold
         ):
             return False
@@ -315,8 +317,6 @@ class OnlineMartingaleTest:
             == 0
         ):
             return True
-
-        return None
 
     def compute_p_value(
         self,
