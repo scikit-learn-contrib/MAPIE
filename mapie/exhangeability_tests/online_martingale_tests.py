@@ -275,10 +275,8 @@ class OnlineMartingaleTest:
         ):
             return False
 
-        if len([x for x in self.martingale_value_history if x > self.alpha_level]) == 0:
+        if len([x for x in self.martingale_value_history if x > self.reject_threshold]) == 0:
             return True
-
-        return None
 
     def compute_p_value(
         self,
