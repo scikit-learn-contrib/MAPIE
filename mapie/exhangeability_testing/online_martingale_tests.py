@@ -658,9 +658,8 @@ class OnlineMartingaleTest:
         It does not modify the internal state of the test.
 
         The reported ``stopping_time`` is the first index at which the martingale
-        enters a sustained rejection regime (above the rejection threshold for
-        six consecutive values). If no sustained rejection occurs, it is the
-        index of the last martingale value.
+        exceeds the rejection threshold. If the martingale never exceeds the
+        threshold, stopping_time is the index of the last martingale value.
         """
         martingale_values = np.asarray(self.martingale_value_history, dtype=float)
 
@@ -694,18 +693,12 @@ class OnlineMartingaleTest:
         )
 
         above_threshold = martingale_values > self.reject_threshold
-        sustained_rejection_start: Optional[int] = None
 
-        if martingale_values.size >= 6:
-            sustained_block = np.convolve(
-                above_threshold.astype(int), np.ones(6, dtype=int), mode="valid"
-            )
-            sustained_indices = np.flatnonzero(sustained_block == 6)
-            if sustained_indices.size > 0:
-                sustained_rejection_start = int(sustained_indices[0]) + 1
+        # Find the first index where a value exceeds the rejection threshold
+        threshold_crossing_indices = np.flatnonzero(above_threshold)
 
-        if sustained_rejection_start is not None:
-            stopping_time = sustained_rejection_start
+        if threshold_crossing_indices.size > 0:
+            stopping_time = int(threshold_crossing_indices[0]) + 1
         else:
             stopping_time = int(martingale_values.size)
 
