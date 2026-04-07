@@ -56,8 +56,8 @@ class OnlineMartingaleTest:
         Mixing parameter used by the jumper martingale.
         Ignored when ``test_method="plugin_martingale"``.
 
-    min_history_to_decide : int, default=100
-        Minimum number of p-values required before the ``is_exchangeable``
+    min_sample_size_to_decide : int, default=100
+        Minimum sample size required before the ``is_exchangeable``
         property is allowed to return a non-``None`` decision.
 
     Attributes
@@ -111,7 +111,7 @@ class OnlineMartingaleTest:
         confidence_level: float = 0.95,
         warn: bool = True,
         jump_size: float = 0.01,
-        min_history_to_decide: int = 100,
+        min_sample_size_to_decide: int = 100,
         random_state: Optional[int] = None,
     ):
         """
@@ -140,7 +140,7 @@ class OnlineMartingaleTest:
             Mixing parameter for the jumper martingale, controlling expert diversity.
             Must lie in [0, 1]. Ignored when test_method="plugin_martingale".
 
-        min_history_to_decide : int, default=100
+        min_sample_size_to_decide : int, default=100
             Minimum number of observations required before is_exchangeable returns
             a non-None decision.
 
@@ -188,7 +188,7 @@ class OnlineMartingaleTest:
         self.warn = warn
 
         self.jump_size = jump_size
-        self.min_history_to_decide = min_history_to_decide
+        self.min_sample_size_to_decide = min_sample_size_to_decide
         self.rng = np.random.default_rng(random_state)
 
         self.pvalue_history: list[float] = []
@@ -240,7 +240,7 @@ class OnlineMartingaleTest:
           below the significance level (``alpha_level``) throughout the history.
         - ``None``: The test is currently inconclusive, either because:
           - Insufficient observations have been processed (fewer than
-            ``min_history_to_decide``), or
+            ``min_sample_size_to_decide``), or
           - The martingale trajectory shows mixed signals.
 
         Returns
@@ -250,10 +250,8 @@ class OnlineMartingaleTest:
 
         Notes
         -----
-        This property requires at least ``min_history_to_decide`` observations before
-        returning a non-``None`` decision. The decision logic is conservative: a
-        single threshold excursion may not trigger rejection, but consistent
-        evidence above the threshold does.
+        This property requires at least ``min_sample_size_to_decide`` observations before
+        returning a non-``None`` decision.
 
         This property is based solely on the martingale value and does not constitute
         evidence in favor of exchangeability in a strict hypothesis-testing sense.
@@ -265,7 +263,7 @@ class OnlineMartingaleTest:
         reject_threshold : The rejection threshold for the martingale.
         alpha_level : The test significance level.
         """
-        if len(self.pvalue_history) < self.min_history_to_decide:
+        if len(self.pvalue_history) < self.min_sample_size_to_decide:
             return None
 
         if (
@@ -412,7 +410,7 @@ class OnlineMartingaleTest:
 
         # Sample-size dependent regularization towards uniform density to control against estimation errors in small samples
         regularization_strength = min(
-            1.0, self.min_history_to_decide / len(self.pvalue_history)
+            1.0, self.min_sample_size_to_decide / len(self.pvalue_history)
         )
         density = (
             1.0 - regularization_strength
