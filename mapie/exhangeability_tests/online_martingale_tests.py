@@ -91,6 +91,16 @@ class OnlineMartingaleTest:
 
     The martingale provides a valid sequential test against exchangeability when
     the p-values are valid under the null hypothesis.
+
+    References
+    ----------
+    .. [1] Angelopoulos, Barber, Bates (2026).
+        "Theoretical Foundations of Conformal Prediction". Definition 3.8.
+    .. [2] Vovk, Gammerman, Shafer (2005).
+        "Algorithmic Learning in a Random World". Section 7.1, page 169.
+    .. [3] Fedorova, Gammerman, Nouretdinov, Vovk (2012).
+        "Plug-in Martingales for Testing Exchangeability on-line".
+        In Proceedings of the 29th ICML, 2012. Algorithm 1, page 3.
     """
 
     def __init__(
