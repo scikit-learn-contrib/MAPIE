@@ -123,10 +123,12 @@ def make_classification_subtle_shift_stream(n_samples=600, random_state=45):
 
     # Subtle shift: rotation + anisotropic scaling in the second half
     theta = np.deg2rad(25)
-    rotation = np.array([
-        [np.cos(theta), -np.sin(theta)],
-        [np.sin(theta),  np.cos(theta)],
-    ])
+    rotation = np.array(
+        [
+            [np.cos(theta), -np.sin(theta)],
+            [np.sin(theta), np.cos(theta)],
+        ]
+    )
     X[midpoint:] = X[midpoint:] @ rotation.T
     X[midpoint:, 0] *= 1.8
     X[midpoint:, 1] *= 0.7
@@ -247,16 +249,16 @@ y_proba_abrupt = clf.predict_proba(X_abrupt)
 y_proba_subtle = clf.predict_proba(X_subtle)
 
 for i in range(len(y_exch)):
-    omt_jumper_1.update(y_exch[i:i + 1], y_proba_exch[i:i + 1])
-    omt_plugin_1.update(y_exch[i:i + 1], y_proba_exch[i:i + 1])
+    omt_jumper_1.update(y_exch[i : i + 1], y_proba_exch[i : i + 1])
+    omt_plugin_1.update(y_exch[i : i + 1], y_proba_exch[i : i + 1])
 
 for i in range(len(y_abrupt)):
-    omt_jumper_2.update(y_abrupt[i:i + 1], y_proba_abrupt[i:i + 1])
-    omt_plugin_2.update(y_abrupt[i:i + 1], y_proba_abrupt[i:i + 1])
+    omt_jumper_2.update(y_abrupt[i : i + 1], y_proba_abrupt[i : i + 1])
+    omt_plugin_2.update(y_abrupt[i : i + 1], y_proba_abrupt[i : i + 1])
 
 for i in range(len(y_subtle)):
-    omt_jumper_3.update(y_subtle[i:i + 1], y_proba_subtle[i:i + 1])
-    omt_plugin_3.update(y_subtle[i:i + 1], y_proba_subtle[i:i + 1])
+    omt_jumper_3.update(y_subtle[i : i + 1], y_proba_subtle[i : i + 1])
+    omt_plugin_3.update(y_subtle[i : i + 1], y_proba_subtle[i : i + 1])
 
 
 ##############################################################################
