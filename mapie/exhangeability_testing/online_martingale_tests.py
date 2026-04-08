@@ -275,7 +275,7 @@ class OnlineMartingaleTest:
         rejection threshold (``1 / alpha_level``). The interpretation is:
 
         - ``False``: Exchangeability is rejected when the martingale exceeds the
-          rejection threshold on multiple occasions or the current value exceeds it.
+          rejection threshold at least once.
         - ``True``: Failure to reject exchangeability when the martingale remains
           below the significance level (``alpha_level``) throughout the history.
         - ``None``: The test is currently inconclusive because insufficient
@@ -289,13 +289,12 @@ class OnlineMartingaleTest:
 
         Notes
         -----
-        This property requires at least ``min_sample_size_to_decide`` observations before
-        returning a non-``None`` decision.
+        This implementation uses a persistent stopping-rule interpretation:
+        once the martingale has crossed the rejection threshold at any time,
+        the decision remains ``False`` thereafter, even if the martingale later decreases.
 
-        This property is based solely on the martingale value and does not constitute
-        evidence in favor of exchangeability in a strict hypothesis-testing sense.
-        Therefore, ``True`` should be interpreted as "failure to reject
-        exchangeability", not as proof of exchangeability.
+        Therefore, ``True`` should be interpreted as "no rejection so far",
+        not as evidence in favor of exchangeability.
 
         See Also
         --------
@@ -630,10 +629,15 @@ class OnlineMartingaleTest:
             and self.warn
             and not self._warning_already_raised
         ):
+            n_crossings = int(
+                np.sum(
+                    np.asarray(self.martingale_value_history) > self.reject_threshold
+                )
+            )
             warnings.warn(
                 "The online martingale test has rejected exchangeability. "
-                f"Martingale value = {self.current_martingale_value:.3g} "
-                f"exceeds threshold = {self.reject_threshold:.3g}.",
+                f"The martingale exceeded the rejection threshold "
+                f"{n_crossings} time(s), with threshold = {self.reject_threshold:.3g}.",
                 UserWarning,
             )
             self._warning_already_raised = True
