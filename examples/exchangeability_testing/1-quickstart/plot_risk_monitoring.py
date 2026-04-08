@@ -9,19 +9,19 @@ the online lower confidence bound is updated as new labeled data arrives.
 Instead of directly comparing risk estimations, computing confidence bounds
 gives statistical guarantees to take evaluation uncertainty into account [1].
 
-A limitation of the current implememted approach is that (at least some) 
+A limitation of the current implememted approach is that (at least some)
 labeled data is necessary to update online risk estimation. For cases with
 scarce or no labels, please refer to these extensions, [2] and [3] respectively.
 
-For more details, see the following references:  
+For more details, see the following references:
 [1] Aleksandr Podkopaev and Aaditya Ramdas. Tracking the risk of a deployed
 model and detecting harmful distribution shifts.
-International Conference on Learning Representations, 2022.  
-[2] Zhang, Guangyi, Cai, Yunlong, Yu, Guanding, et al. Prediction-Powered 
-Risk Monitoring of Deployed Models for Detecting Harmful Distribution Shifts. 
-arXiv preprint arXiv:2602.02229, 2026.  
-[3] Amoukou, Salim I., Bewley, Tom, Mishra, Saumitra, et al. Sequential 
-harmful shift detection without labels. 
+International Conference on Learning Representations, 2022.
+[2] Zhang, Guangyi, Cai, Yunlong, Yu, Guanding, et al. Prediction-Powered
+Risk Monitoring of Deployed Models for Detecting Harmful Distribution Shifts.
+arXiv preprint arXiv:2602.02229, 2026.
+[3] Amoukou, Salim I., Bewley, Tom, Mishra, Saumitra, et al. Sequential
+harmful shift detection without labels.
 Advances in Neural Information Processing Systems, 2024.
 """
 
