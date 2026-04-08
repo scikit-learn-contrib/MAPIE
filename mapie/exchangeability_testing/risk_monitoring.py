@@ -213,15 +213,14 @@ class RiskMonitoring:
         )
 
         # in the current implementation, the bound is recomputed from scratch with the full history
-        new_risk_lower_bound_sequence = conjugate_mixture_empirical_bernstein_bound(
-            self.online_risk_sequence_history,
-            v_opt=1,
-            alpha=self.delta_online,
-            bound_side="lower",
-        )
-
         self.online_risk_lower_bound_sequence_history = np.asarray(
-            new_risk_lower_bound_sequence, dtype=float
+            conjugate_mixture_empirical_bernstein_bound(
+                self.online_risk_sequence_history,
+                v_opt=1,
+                alpha=self.delta_online,
+                bound_side="lower",
+            ),
+            dtype=float,
         )
         self.online_risk_lower_bound_latest = (
             self.online_risk_lower_bound_sequence_history[-1]

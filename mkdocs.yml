@@ -75,12 +75,14 @@ plugins:
         - examples/classification
         - examples/calibration
         - examples/risk_control
+        - examples/exchangeability_testing
         - examples/mondrian
       gallery_dirs:
         - doc/generated/regression
         - doc/generated/classification
         - doc/generated/calibration
         - doc/generated/risk_control
+        - doc/generated/exchangeability_testing
         - doc/generated/mondrian
       within_subsection_order: FileNameSortKey
       plot_gallery: true
@@ -166,6 +168,7 @@ nav:
     - Classification: generated/classification
     - Calibration: generated/calibration
     - Risk Control: generated/risk_control
+    - Exchangeability Testing: generated/exchangeability_testing
     - Mondrian: generated/mondrian
   - Q&A:
     - Metrics: theory/metrics.md
