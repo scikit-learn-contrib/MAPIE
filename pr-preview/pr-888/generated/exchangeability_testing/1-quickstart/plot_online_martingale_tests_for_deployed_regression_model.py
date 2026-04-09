@@ -1,10 +1,7 @@
 """
-======================================================================
-Online Martingale Exchangeability tests for deployed regression models
-======================================================================
+# Online Martingale Exchangeability tests for deployed regression models
 
-In this example, we show how to use
-:class:`~mapie.exhangeability_testing.OnlineMartingaleTest` to monitor exchangeability
+In this example, we show how to use `OnlineMartingaleTest` to monitor exchangeability
 online after deployment of a model trained on a reference environment.
 We illustrate the workflow with a regression task,
 but the same principles apply to classification and other settings.
@@ -25,8 +22,8 @@ details and guarantees.
 In the following, we implement a complete workflow for online exchangeability testing for stream data, including:
 
 1. **Exchangeable**: same environment as the training data.
-2. **Subtle shift**: heteroscedasticity and weak nonlinearity halfway through.
-3. **Abrupt shift**: sudden shift in the conditional mean halfway through.
+2. **Subtle shift**: departure from linearity toward a right-side quadratic shape.
+3. **Abrupt shift**: sudden change-point in the conditional mean halfway through.
 
 For each stream, we:
 
@@ -38,19 +35,19 @@ For each stream, we:
 
 References
 ----------
-.. [1] Angelopoulos, Barber, Bates (2026).
+- [1] Angelopoulos, Barber, Bates (2026).
     "Theoretical Foundations of Conformal Prediction".
     arXiv preprint arXiv:2411.11824.
-.. [2] Vovk, Gammerman, Shafer (2005).
+- [2] Vovk, Gammerman, Shafer (2005).
     "Algorithmic Learning in a Random World".
     Boston, MA: Springer US. Section 7.1, page 169.
-.. [3] Fedorova, Gammerman, Nouretdinov, Vovk (2012).
+- [3] Fedorova, Gammerman, Nouretdinov, Vovk (2012).
     "Plug-in Martingales for Testing Exchangeability on-line".
     In Proceedings of the 29th ICML. Algorithm 1, page 3.
 """
 
-# sphinx_gallery_thumbnail_number = 2
-#%%
+# sphinx_gallery_thumbnail_number = 7
+
 import warnings
 
 import matplotlib.pyplot as plt
@@ -346,10 +343,17 @@ def make_regression_subtle_shift_stream(n_samples=600, random_state=54):
     )
     midpoint = n_samples // 2
 
-    # Subtle shift: heteroscedasticity + weak nonlinearity after midpoint
+    # Subtle shift: strictly linear relation before midpoint and strictly
+    # right-side quadratic relation after midpoint.
     rng = np.random.default_rng(random_state)
-    y[midpoint:] += 12.0 * np.sin(X[midpoint:, 0])
-    y[midpoint:] += rng.normal(0.0, 18.0, size=n_samples - midpoint)
+    x_first_half = X[:midpoint, 0]
+    y[:midpoint] = 60.0 * x_first_half + rng.normal(0.0, 6.0, size=midpoint)
+
+    X[midpoint:, 0] = np.abs(X[midpoint:, 0]) + 0.15
+    x_second_half = X[midpoint:, 0]
+    y[midpoint:] = 85.0 * x_second_half**2 + rng.normal(
+        0.0, 7.0, size=n_samples - midpoint
+    )
 
     return X, y
 
@@ -402,8 +406,9 @@ plot_results_one_scenario(
 )
 
 ##############################################################################
-# With the current synthetic shift, both martingales remain below the rejection threshold,
-# so exchangeability is not rejected on this stream.
+# With this piecewise linear-to-quadratic departure, the plug-in martingale
+# exceeds the rejection threshold and rejects exchangeability, while the
+# jumper martingale stays below threshold on this stream.
 #
 
 ###############################################################################
@@ -421,8 +426,9 @@ def make_regression_abrupt_shift_stream(n_samples=600, random_state=53):
     )
     midpoint = n_samples // 2
 
-    # Abrupt shift in conditional mean after midpoint
-    y[midpoint:] += 35.0
+    # Abrupt shift: explicit change-point applied directly on the target.
+    change_point = midpoint
+    y[change_point:] += 45.0
     return X, y
 
 
@@ -474,10 +480,10 @@ plot_results_one_scenario(
 )
 
 ##############################################################################
-# Even with this abrupt shift in the conditional mean, both martingales remain below
-# the rejection threshold on this synthetic example.
-# This shows that, in regression, the detection performance depends strongly on the model,
-# the residual-based non-conformity score, and the magnitude of the shift.
+# With this change-point shift in the conditional mean, both martingales eventually
+# exceed the rejection threshold and reject exchangeability.
+# This illustrates how a clear mean jump can create a detectable departure in
+# the p-value distribution.
 #
 
 ##############################################################################
@@ -531,14 +537,12 @@ print_result_summary(regression_results)
 # data is continuously received. The online martingale tests allow us to detect shifts in the
 # data distribution and assess whether the model's predictions remain reliable over time.
 #
-# The results show how the martingales remain stable in the exchangeable case and, with the
-# current synthetic shifts, also remain below the rejection threshold on the shifted streams.
-# This illustrates that, in regression, shifts may need to be stronger or differently structured
-# to produce a clear departure in the p-value distribution.
+# The results show how the martingales remain stable in the exchangeable case, while the
+# abrupt change-point stream is detected and rejected by both methods.
+# For the subtle nonlinear departure, the plug-in martingale rejects while the
+# jumper martingale remains conservative in this setup.
 #
 # Finally, the model and the choice of non-conformity score are important for the performance of the tests,
 # as they determine the p-values and the martingale updates. In practice, it is recommended to use
 # a well-performing model and a non-conformity score that captures the model's prediction errors.
 #
-
-# %%
