@@ -3,10 +3,26 @@
 Online Martingale Exchangeability tests for binary classification models
 ========================================================================
 
-This example demonstrates a standard MAPIE monitoring workflow for online
-exchangeability testing in binary classification.
+In this example, we show how to use
+:class:`~mapie.exhangeability_testing.OnlineMartingaleTest` to monitor exchangeability
+on line after deployment of a model trained on a reference environment.
+We illustrate the workflow with a binary classification task,
+but the same principles apply to regression and other settings.
 
-We compare three streams:
+The tests consider the practical scenario where a model is trained on a reference environment
+where there is no reason to expect exchangeability violations, then deployed in a monitoring environment where
+a stream of labeled observations is received and the goal is to check if they are exchangeable with the training data.
+
+Online martingale tests are a powerful tool for this problem, as they provide a lightweight,
+model-agnostic way to monitor exchangeability over time.
+They work by converting each new observation into a conformal p-value based on a non-conformity score,
+then accumulating evidence against exchangeability with a martingale that bets against small p-values.
+When the martingale value exceeds a threshold, exchangeability is rejected
+with a user-chosen confidence level. See [1]_, [2]_, and [3]_ for theoretical
+details and guarantees.
+
+
+In the following, we implement a complete workflow for online exchangeability testing for stream data, including:
 
 1. **Exchangeable**: same environment as the training data.
 2. **Abrupt shift**: sudden covariate and label shift halfway through.
@@ -14,16 +30,25 @@ We compare three streams:
 
 For each stream, we:
 
-1. compute non-conformity scores,
-2. transform them into conformal p-values online,
-3. accumulate evidence with two martingales:
-   - **jumper martingale** (simple and robust),
-   - **plug-in martingale** (adaptive to p-value density).
+1. We train a logistic regression model on a separate reference dataset,
+2. Define a non-conformity score based on the model's predicted probabilities,
+3. Initialize two online martingale tests (jumper and plug-in),
+4. Process the stream sequentially, updating both martingales with each new observation,
+5. Inspect martingale paths and p-value histograms to interpret the exchangeability decision.
 
-We then inspect martingale paths and p-value histograms to interpret the
-exchangeability decision.
+References
+----------
+.. [1] Angelopoulos, Barber, Bates (2026).
+    "Theoretical Foundations of Conformal Prediction".
+    arXiv preprint arXiv:2411.11824.
+.. [2] Vovk, Gammerman, Shafer (2005).
+    "Algorithmic Learning in a Random World".
+    Boston, MA: Springer US. Section 7.1, page 169.
+.. [3] Fedorova, Gammerman, Nouretdinov, Vovk (2012).
+    "Plug-in Martingales for Testing Exchangeability on-line".
+    In Proceedings of the 29th ICML. Algorithm 1, page 3.
 """
-
+# %%
 # sphinx_gallery_thumbnail_number = 2
 
 import warnings
@@ -434,3 +459,5 @@ plot_results_grid(
 # Final takeaway: these outcomes depend on several design choices, including
 # the predictive model, the non-conformity score, the stream shift mechanism,
 # and martingale settings (method, confidence level, warm-up size).
+
+# %%
