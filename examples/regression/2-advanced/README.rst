@@ -2,7 +2,7 @@
 
 -----
 
-2. Advanced analysis
---------------------
+2. Advanced
+-----------
 
 The following examples use MAPIE for discussing more complex MAPIE problems.

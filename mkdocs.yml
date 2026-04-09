@@ -152,18 +152,22 @@ nav:
     - Conformalization Set: getting-started/split-cross-conformal.md
     - Choosing the Right Algorithm: getting-started/choosing-algorithm.md
     - v1 Release Notes: getting-started/v1-release-notes.md
-  - Uncertainty Quantification:
+  - Conformal Prediction:
     - Regression:
       - Theoretical Description: theory/regression.md
+      - Examples: generated/regression
       - Conformity Scores: theory/conformity-scores.md
     - Classification:
       - Theoretical Description: theory/classification.md
+      - Examples: generated/classification
   - Risk Control:
     - Getting Started: theory/risk-control.md
+    - Examples: generated/risk_control
   - Calibration:
     - Theoretical Description: theory/calibration.md
+    - Examples: generated/calibration
     - Notebooks: calibration/notebooks.md
-  - Examples:
+  - All Examples:
     - Regression: generated/regression
     - Classification: generated/classification
     - Calibration: generated/calibration

@@ -1,3 +1,3 @@
-# Advanced Analysis
+# Advanced
 
 Advanced risk control examples.
