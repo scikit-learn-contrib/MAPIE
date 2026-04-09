@@ -1,10 +1,7 @@
 """
-========================================================================
-Online Martingale Exchangeability tests for binary classification models
-========================================================================
+# Online Martingale Exchangeability tests for binary classification models
 
-In this example, we show how to use
-:class:`~mapie.exhangeability_testing.OnlineMartingaleTest` to monitor exchangeability
+In this example, we show how to use `OnlineMartingaleTest` to monitor exchangeability
 online after deployment of a model trained on a reference environment.
 We illustrate the workflow with a binary classification task,
 but the same principles apply to regression and other settings.
@@ -38,18 +35,18 @@ For each stream, we:
 
 References
 ----------
-.. [1] Angelopoulos, Barber, Bates (2026).
+ - [1] Angelopoulos, Barber, Bates (2026).
     "Theoretical Foundations of Conformal Prediction".
     arXiv preprint arXiv:2411.11824.
-.. [2] Vovk, Gammerman, Shafer (2005).
+ - [2] Vovk, Gammerman, Shafer (2005).
     "Algorithmic Learning in a Random World".
     Boston, MA: Springer US. Section 7.1, page 169.
-.. [3] Fedorova, Gammerman, Nouretdinov, Vovk (2012).
+ - [3] Fedorova, Gammerman, Nouretdinov, Vovk (2012).
     "Plug-in Martingales for Testing Exchangeability on-line".
     In Proceedings of the 29th ICML. Algorithm 1, page 3.
 """
 
-# sphinx_gallery_thumbnail_number = 2
+# sphinx_gallery_thumbnail_number = 5
 
 import warnings
 
