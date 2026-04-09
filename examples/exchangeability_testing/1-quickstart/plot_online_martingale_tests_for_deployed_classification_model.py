@@ -283,10 +283,10 @@ def plot_results_one_scenario(omt_jumper, omt_plugin, scenario_name):
         color="tab:red",
         label="Reject threshold",
     )
-    ax.set_title(f"{scenario_name} - Jumper")
-    ax.set_xlabel("Time", fontsize=10)
-    ax.set_ylabel("Martingale value", fontsize=10)
-    ax.tick_params(axis="both", labelsize=9)
+    ax.set_title(f"{scenario_name} - Jumper", fontsize=18)
+    ax.set_xlabel("Time", fontsize=16)
+    ax.set_ylabel("Martingale value", fontsize=16)
+    ax.tick_params(axis="both", labelsize=14)
     ax.set_yscale("log")
     summary_jumper = omt_jumper.summary()
     if summary_jumper["is_exchangeable"] is False:
@@ -296,7 +296,7 @@ def plot_results_one_scenario(omt_jumper, omt_plugin, scenario_name):
             color="black",
             label="Stopping time",
         )
-    ax.legend()
+    ax.legend(fontsize=14)
 
     # Plug-in martingale
     ax = axes[1]
@@ -307,10 +307,10 @@ def plot_results_one_scenario(omt_jumper, omt_plugin, scenario_name):
         color="tab:red",
         label="Reject threshold",
     )
-    ax.set_title(f"{scenario_name} - Plug-in")
-    ax.set_xlabel("Time", fontsize=10)
-    ax.set_ylabel("Martingale value", fontsize=10)
-    ax.tick_params(axis="both", labelsize=9)
+    ax.set_title(f"{scenario_name} - Plug-in", fontsize=18)
+    ax.set_xlabel("Time", fontsize=16)
+    ax.set_ylabel("Martingale value", fontsize=16)
+    ax.tick_params(axis="both", labelsize=14)
     ax.set_yscale("log")
     summary_plugin = omt_plugin.summary()
     if summary_plugin["is_exchangeable"] is False:
@@ -320,19 +320,19 @@ def plot_results_one_scenario(omt_jumper, omt_plugin, scenario_name):
             color="black",
             label="Stopping time",
         )
-    ax.legend()
+    ax.legend(fontsize=14)
 
     # P-value histogram
     ax = axes[2]
     ax.hist(omt_plugin.pvalue_history, bins=20, density=True, alpha=0.7)
     ax.axhline(1.0, linestyle="--", color="tab:gray", label="Uniform density")
-    ax.set_title(f"{scenario_name} - P-values")
-    ax.set_xlabel("P-value", fontsize=10)
-    ax.set_ylabel("Density", fontsize=10)
-    ax.tick_params(axis="both", labelsize=9)
-    ax.legend()
+    ax.set_title(f"{scenario_name} - P-values", fontsize=18)
+    ax.set_xlabel("P-value", fontsize=16)
+    ax.set_ylabel("Density", fontsize=16)
+    ax.tick_params(axis="both", labelsize=14)
+    ax.legend(fontsize=14)
 
-    plt.suptitle(f"Online martingale tests - {scenario_name}", fontsize=16)
+    plt.suptitle(f"Online martingale tests - {scenario_name}", fontsize=22)
     plt.tight_layout()
     plt.show()
 
