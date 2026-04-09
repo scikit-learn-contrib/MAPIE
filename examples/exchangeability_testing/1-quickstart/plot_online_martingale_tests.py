@@ -5,7 +5,7 @@ Online Martingale Exchangeability tests for binary classification models
 
 In this example, we show how to use
 :class:`~mapie.exhangeability_testing.OnlineMartingaleTest` to monitor exchangeability
-on line after deployment of a model trained on a reference environment.
+online after deployment of a model trained on a reference environment.
 We illustrate the workflow with a binary classification task,
 but the same principles apply to regression and other settings.
 
@@ -48,7 +48,7 @@ References
     "Plug-in Martingales for Testing Exchangeability on-line".
     In Proceedings of the 29th ICML. Algorithm 1, page 3.
 """
-# %%
+
 # sphinx_gallery_thumbnail_number = 2
 
 import warnings
@@ -124,7 +124,6 @@ def nonconformity_score(y_true, y_pred, X=None):
     return 1.0 - y_pred[np.arange(len(y_true)), y_true]
 
 
-# %%
 ###############################################################################
 # Below, we plot the training data on the left and the associated non-conformity scores on the right.
 #
@@ -203,7 +202,6 @@ plot_data_and_score_histogram(
     figure_title="Reference training data and non-conformity scores",
 )
 
-# %%
 ##############################################################################
 # First, we consider the case where the model is deployed and a stream of labeled
 # exchangeable observations is received sequentially.
@@ -230,7 +228,6 @@ plot_data_and_score_histogram(
     figure_title="Exchangeable stream and non-conformity scores",
 )
 
-# %%
 #################################################################################
 # We next, we initialize a `:class:~mapie.exhangeability_testing.OnlineMartingaleTest`
 # for each method and process the exchangeable stream sequentially to update the martingales.
@@ -349,7 +346,6 @@ plot_results_one_scenario(omt_jumper_exch, omt_plugin_exch, "Exchangeable")
 # Both martingales remain stable and do not exceed the rejection threshold,
 # so exchangeability is not rejected.
 #
-
 
 ##############################################################################
 # Second, we consider the case where the model is deployed and a stream of
@@ -577,4 +573,3 @@ print_result_summary(classification_results)
 # as they determine the p-values and the martingale updates. In practice, it is recommended to use
 # a well-performing model and a non-conformity score that captures the model's confidence in its predictions.
 #
-# %%
