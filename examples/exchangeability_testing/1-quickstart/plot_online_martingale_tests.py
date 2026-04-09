@@ -25,12 +25,12 @@ details and guarantees.
 In the following, we implement a complete workflow for online exchangeability testing for stream data, including:
 
 1. **Exchangeable**: same environment as the training data.
-2. **Subtle shift**: sudden covariate and label shift halfway through.
-3. **Abrupt shift**: smoother geometric drift halfway through.
+2. **Subtle shift**: smoother geometric drift halfway through.
+3. **Abrupt shift**: sudden covariate and label shift halfway through.
 
 For each stream, we:
 
-1. We train a logistic regression model on a separate reference dataset,
+1. Train a logistic regression model on a separate reference dataset,
 2. Define a non-conformity score based on the model's predicted probabilities,
 3. Initialize two online martingale tests (jumper and plug-in),
 4. Process the stream sequentially, updating both martingales with each new observation,
@@ -96,7 +96,7 @@ def make_classification_reference_data(n_samples=1500, random_state=42):
 
 
 ##############################################################################
-# We next, generate a training dataset and fit a logistic regression model on it.
+# We next generate a training dataset and fit a logistic regression model on it.
 #
 
 X_train, y_train = make_classification_reference_data(n_samples=2000, random_state=10)
@@ -229,7 +229,7 @@ plot_data_and_score_histogram(
 )
 
 #################################################################################
-# We next, we initialize a `:class:~mapie.exhangeability_testing.OnlineMartingaleTest`
+# We next initialize a `:class:~mapie.exhangeability_testing.OnlineMartingaleTest`
 # for each method and process the exchangeable stream sequentially to update the martingales.
 # We compare the "jumper_martingale" and "plugin_martingale" methods, passed as the ``test_method``
 # argument to the constructor. These methods implement different betting strategies.
@@ -349,7 +349,7 @@ plot_results_one_scenario(omt_jumper_exch, omt_plugin_exch, "Exchangeable")
 
 ##############################################################################
 # Second, we consider the case where the model is deployed and a stream of
-# labeled observations is received sequentially, but there is an subtle shift
+# labeled observations is received sequentially, but there is a subtle shift
 # in the data distribution halfway through the stream.
 # We want to monitor whether these observations are exchangeable with the training data.
 #
@@ -502,7 +502,7 @@ plot_results_one_scenario(
 )
 
 ##############################################################################
-# The plugin martingale reacts very quickly to the abrupt shift,
+# The plug-in martingale reacts very quickly to the abrupt shift,
 # while the jumper martingale does not react and does not reject exchangeability,
 # which illustrates the different betting strategies of the two methods.
 # In fact, the jumper bets against small p-values and in this scenario, the p-values
