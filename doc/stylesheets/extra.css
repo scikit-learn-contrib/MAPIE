@@ -1,3 +1,8 @@
+/* Increase the global documentation width. */
+.md-grid {
+  max-width: 82rem;
+}
+
 /* Hero section */
 .md-typeset .hero {
   text-align: center;

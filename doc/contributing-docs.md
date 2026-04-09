@@ -77,7 +77,7 @@ Edit `mkdocs.yml` and add your page to the `nav` section:
 
 ```yaml
 nav:
-  - Uncertainty Quantification:
+  - Conformal Prediction:
     - Regression:
       - Theoretical Description: theory/regression.md
       - My New Topic: theory/my-new-topic.md   # ← add here
@@ -186,7 +186,7 @@ To add an entirely new gallery section (e.g., `examples/time_series/`):
 3. Add navigation entry:
    ```yaml
    nav:
-     - Examples:
+     - All Examples:
        - Time Series: generated/time_series  # ← add here
    ```
 
