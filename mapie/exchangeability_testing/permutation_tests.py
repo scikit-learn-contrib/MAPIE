@@ -1,5 +1,4 @@
-from ast import Tuple
-from typing import Callable, Literal, Optional
+from typing import Callable, Literal, Optional, Tuple
 
 import numpy as np
 from numpy.typing import NDArray
@@ -67,6 +66,9 @@ class PermutationTest:
     ):
         self.method = method
         self.delta = 1 - confidence_level
+        self.mapie_estimator = mapie_estimator
+        self.reference_dataset = reference_dataset
+        self.reference_non_conformity_scores = reference_non_conformity_scores
 
     def _compute_non_conformity_scores(
         self, X: NDArray, y: NDArray, y_pred: Optional[NDArray]
@@ -105,6 +107,47 @@ class PermutationTest:
 
 
 class PValuePermutationTest(PermutationTest):
+    """
+    Permutation test based on p-values computed from conformity scores.
+
+    Parameters
+    ----------
+    random_state : Optional[int]
+        Controls the randomness of the permutations.
+
+        By default `None`.
+
+    num_permutations : int
+        Number of permutations used to estimate the p-value.
+
+        By default `1000`.
+
+    *args : tuple
+        Additional positional arguments forwarded to `PermutationTest`.
+
+    **kwargs : dict
+        Additional keyword arguments forwarded to `PermutationTest`.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from mapie.exchangeability_testing.permutation_tests import (
+    ...     PValuePermutationTest,
+    ... )
+    >>> X = np.arange(20, dtype=float).reshape(-1, 1)
+    >>> y = 2 * X.ravel() + np.array([0.0, 0.1] * 10)
+    >>> test = PValuePermutationTest(
+    ...     method="p-value permutation",
+    ...     confidence_level=0.8,
+    ...     random_state=0,
+    ...     num_permutations=10,
+    ... )
+    >>> test.run(X, y)
+    0
+    >>> test.p_values.shape
+    (11,)
+    """
+
     def __init__(self, random_state=None, num_permutations=1000, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.test_statistic = TestStatisticOnNonConformityScores()
