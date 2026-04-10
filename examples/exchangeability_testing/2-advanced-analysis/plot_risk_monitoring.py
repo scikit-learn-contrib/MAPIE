@@ -27,15 +27,9 @@ Advances in Neural Information Processing Systems, 2024.
 
 import matplotlib.pyplot as plt
 import numpy as np
-import sys
-from pathlib import Path
 from sklearn.linear_model import LogisticRegression
 
 from mapie.exchangeability_testing import RiskMonitoring
-
-EXAMPLE_ROOT = Path(__file__).resolve().parents[1]
-if str(EXAMPLE_ROOT) not in sys.path:
-    sys.path.insert(0, str(EXAMPLE_ROOT))
 from utils import generate_gaussian_stream, sample_two_gaussians
 
 
