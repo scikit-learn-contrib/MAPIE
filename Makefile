@@ -13,7 +13,9 @@ type-check:
 	mypy mapie
 
 coverage:
-	pytest -vsx \
+	pytest -vx \
+		-n auto \
+		--dist=loadfile \
 		--doctest-modules \
 		--pyargs mapie \
 		--cov-branch \
