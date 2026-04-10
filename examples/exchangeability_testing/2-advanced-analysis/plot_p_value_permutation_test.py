@@ -13,7 +13,10 @@ import numpy as np
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 
-from mapie.exchangeability_testing.permutation_tests import PValuePermutationTest
+from mapie.exchangeability_testing.permutation_tests import (
+    PValuePermutationTest,
+    SequentialMonteCarloTest,
+)
 from mapie.regression import SplitConformalRegressor
 
 ##############################################################################
@@ -54,59 +57,192 @@ y_shifted = y_exchangeable.copy()
 y_shifted[len(y_shifted) // 2 :] += 0.8
 
 ##############################################################################
-# 3. Run the permutation test
-# ---------------------------
+# 3. Exchangeable case: run all methods and plot
+# -----------------------------------------------
 #
-# We track the p-value after each permutation. The shifted dataset should end
-# up with a much smaller p-value than the exchangeable one.
+# We start with a dataset that should satisfy exchangeability.
 
-exchangeable_test = PValuePermutationTest(
+confidence_level = 0.9
+num_permutations = 200
+
+exchangeable_pvalue_test = PValuePermutationTest(
     method="p-value permutation",
-    confidence_level=0.9,
+    confidence_level=confidence_level,
     random_state=7,
-    num_permutations=200,
+    num_permutations=num_permutations,
     mapie_estimator=mapie_regressor,
 )
-shifted_test = PValuePermutationTest(
-    method="p-value permutation",
-    confidence_level=0.9,
+exchangeable_aggressive_test = SequentialMonteCarloTest(
+    strategy="aggressive",
+    method="Monte Carlo",
+    confidence_level=confidence_level,
     random_state=7,
-    num_permutations=200,
+    num_permutations=num_permutations,
+    mapie_estimator=mapie_regressor,
+)
+exchangeable_binomial_test = SequentialMonteCarloTest(
+    strategy="binomial",
+    method="Monte Carlo",
+    confidence_level=confidence_level,
+    random_state=7,
+    num_permutations=num_permutations,
+    mapie_estimator=mapie_regressor,
+)
+exchangeable_binomial_mixture_test = SequentialMonteCarloTest(
+    strategy="binomial_mixture",
+    method="Monte Carlo",
+    confidence_level=confidence_level,
+    random_state=7,
+    num_permutations=num_permutations,
     mapie_estimator=mapie_regressor,
 )
 
-exchangeable_decision = exchangeable_test.run(X_eval, y_exchangeable, y_pred=y_pred)
-shifted_decision = shifted_test.run(X_eval, y_shifted, y_pred=y_pred)
-
-print(
-    "Exchangeable residuals:",
-    f"decision={exchangeable_decision}",
-    f"final p-value={exchangeable_test.p_values[-1]:.3f}",
-)
-print(
-    "Shifted residuals:",
-    f"decision={shifted_decision}",
-    f"final p-value={shifted_test.p_values[-1]:.3f}",
+exchangeable_pvalue_detected = exchangeable_pvalue_test.run(
+    X_eval, y_exchangeable, y_pred=y_pred
 )
 
-##############################################################################
-# 4. Visualize the running p-values
-# ---------------------------------
-#
-# The horizontal line marks `delta = 1 - confidence_level`. A final p-value
-# below this threshold leads to a rejection of exchangeability.
+exchangeable_aggressive_detected = exchangeable_aggressive_test.run(
+    X_eval, y_exchangeable, y_pred=y_pred
+)
 
-steps = np.arange(exchangeable_test.num_permutations + 1)
-delta = exchangeable_test.delta
+exchangeable_binomial_detected = exchangeable_binomial_test.run(
+    X_eval, y_exchangeable, y_pred=y_pred
+)
 
+exchangeable_binomial_mixture_detected = exchangeable_binomial_mixture_test.run(
+    X_eval, y_exchangeable, y_pred=y_pred
+)
+
+print("\nExchangeable dataset")
+print("--------------------")
+print(f"PValuePermutationTest: detected={exchangeable_pvalue_detected}")
+print(
+    f"SequentialMonteCarloTest (aggressive): detected={exchangeable_aggressive_detected}"
+)
+print(f"SequentialMonteCarloTest (binomial): detected={exchangeable_binomial_detected}")
+print(
+    "SequentialMonteCarloTest (binomial_mixture): "
+    f"detected={exchangeable_binomial_mixture_detected}"
+)
+
+delta = exchangeable_pvalue_test.delta
 plt.figure(figsize=(8, 4))
-plt.plot(steps, exchangeable_test.p_values, label="Exchangeable residuals")
-plt.plot(steps, shifted_test.p_values, label="Shifted residuals")
+plt.plot(exchangeable_pvalue_test.p_values, label="PValuePermutationTest", zorder=4)
+plt.plot(
+    exchangeable_aggressive_test.p_values,
+    label="SMC aggressive",
+    linestyle="-",
+    linewidth=3.0,
+    zorder=1,
+)
+plt.plot(
+    exchangeable_binomial_test.p_values,
+    label="SMC binomial",
+    linestyle="--",
+    linewidth=2.0,
+    zorder=2,
+)
+plt.plot(
+    exchangeable_binomial_mixture_test.p_values,
+    label="SMC binomial_mixture",
+    linestyle=":",
+    linewidth=2.0,
+    zorder=3,
+)
 plt.axhline(delta, color="black", linestyle="--", label=f"delta = {delta:.2f}")
 plt.xlabel("Number of permutations")
 plt.ylabel("Running p-value")
-plt.title("P-value permutation test for exchangeability")
-plt.legend()
+plt.title("Exchangeable residuals")
 plt.grid(alpha=0.3)
+plt.legend()
+plt.tight_layout()
+plt.show()
+
+##############################################################################
+# 4. Non-exchangeable case: run all methods and plot
+# ---------------------------------------------------
+#
+# We now repeat the same comparison on the shifted dataset.
+
+shifted_pvalue_test = PValuePermutationTest(
+    method="p-value permutation",
+    confidence_level=confidence_level,
+    random_state=7,
+    num_permutations=num_permutations,
+    mapie_estimator=mapie_regressor,
+)
+shifted_aggressive_test = SequentialMonteCarloTest(
+    strategy="aggressive",
+    method="Monte Carlo",
+    confidence_level=confidence_level,
+    random_state=7,
+    num_permutations=num_permutations,
+    mapie_estimator=mapie_regressor,
+)
+shifted_binomial_test = SequentialMonteCarloTest(
+    strategy="binomial",
+    method="Monte Carlo",
+    confidence_level=confidence_level,
+    random_state=7,
+    num_permutations=num_permutations,
+    mapie_estimator=mapie_regressor,
+)
+shifted_binomial_mixture_test = SequentialMonteCarloTest(
+    strategy="binomial_mixture",
+    method="Monte Carlo",
+    confidence_level=confidence_level,
+    random_state=7,
+    num_permutations=num_permutations,
+    mapie_estimator=mapie_regressor,
+)
+
+shifted_pvalue_detected = shifted_pvalue_test.run(X_eval, y_shifted, y_pred=y_pred)
+shifted_aggressive_detected = shifted_aggressive_test.run(
+    X_eval, y_shifted, y_pred=y_pred
+)
+shifted_binomial_detected = shifted_binomial_test.run(X_eval, y_shifted, y_pred=y_pred)
+shifted_binomial_mixture_detected = shifted_binomial_mixture_test.run(
+    X_eval, y_shifted, y_pred=y_pred
+)
+
+print("\nNon-exchangeable dataset")
+print("------------------------")
+print(f"PValuePermutationTest: detected={shifted_pvalue_detected}")
+print(f"SequentialMonteCarloTest (aggressive): detected={shifted_aggressive_detected}")
+print(f"SequentialMonteCarloTest (binomial): detected={shifted_binomial_detected}")
+print(
+    "SequentialMonteCarloTest (binomial_mixture): "
+    f"detected={shifted_binomial_mixture_detected}"
+)
+
+plt.figure(figsize=(8, 4))
+plt.plot(shifted_pvalue_test.p_values, label="PValuePermutationTest", zorder=4)
+plt.plot(
+    shifted_aggressive_test.p_values,
+    label="SMC aggressive",
+    linestyle="-",
+    linewidth=3.0,
+    zorder=1,
+)
+plt.plot(
+    shifted_binomial_test.p_values,
+    label="SMC binomial",
+    linestyle="--",
+    linewidth=2.0,
+    zorder=2,
+)
+plt.plot(
+    shifted_binomial_mixture_test.p_values,
+    label="SMC binomial_mixture",
+    linestyle=":",
+    linewidth=2.0,
+    zorder=3,
+)
+plt.axhline(delta, color="black", linestyle="--", label=f"delta = {delta:.2f}")
+plt.xlabel("Number of permutations")
+plt.ylabel("Running p-value")
+plt.title("Non-exchangeable residuals")
+plt.grid(alpha=0.3)
+plt.legend()
 plt.tight_layout()
 plt.show()
