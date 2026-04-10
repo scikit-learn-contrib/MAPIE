@@ -28,8 +28,6 @@ class RiskMonitoring:
     confidence_level : float, default=0.95
         Confidence level used to split the error budget equally between the
         reference threshold estimation and the online monitoring step.
-    reference_risk : Optional[float], default=None
-        Reserved for future use.
     tolerance : float, default=0.05
         Margin applied to the reference upper confidence bound to define the
         monitoring threshold.
@@ -90,7 +88,6 @@ class RiskMonitoring:
         self,
         risk: RiskLike,
         confidence_level: float = 0.95,
-        reference_risk: Optional[float] = None,
         tolerance: float = 0.05,
         tolerance_type: Literal["absolute", "relative"] = "absolute",
         threshold: Optional[float] = None,
@@ -113,7 +110,6 @@ class RiskMonitoring:
         self.tolerance_type = tolerance_type
         self.warn = warn
         self.threshold = threshold
-        self.reference_risk = reference_risk
 
         if not (0.0 < confidence_level < 1.0):
             raise ValueError("confidence_level must be in (0, 1).")
@@ -161,7 +157,10 @@ class RiskMonitoring:
             The fitted instance.
         """
         if self.threshold is not None:
-            raise ValueError("Threshold is already computed.")
+            warnings.warn(
+                "Threshold is already computed and will be replaced.",
+                UserWarning,
+            )
 
         reference_risk_sequence = self.risk.get_risk_sequence(y_true, y_pred)
         if reference_risk_sequence.size == 0:

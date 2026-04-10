@@ -261,12 +261,19 @@ class TestRiskMonitoring:
         with pytest.raises(ValueError, match="Invalid tolerance type"):
             monitor.compute_threshold(y_true, y_pred)
 
-    def test_compute_threshold_rejects_second_call(self) -> None:
+    def test_compute_threshold_warns_and_replaces_existing_threshold(self) -> None:
         monitor = RiskMonitoring(risk="accuracy", threshold=0.1)
         y_true, y_pred = self._binary_data()
 
-        with pytest.raises(ValueError, match="Threshold is already computed"):
+        with pytest.warns(
+            UserWarning, match="Threshold is already computed and will be replaced"
+        ):
             monitor.compute_threshold(y_true, y_pred)
+
+        assert monitor.reference_risk_upper_bound is not None
+        assert monitor.threshold == pytest.approx(
+            monitor.reference_risk_upper_bound + monitor.tolerance
+        )
 
     def test_compute_threshold_rejects_empty_effective_sample(self) -> None:
         y_true: NDArray[np.int_] = np.array([1, 0, 1, 0])
