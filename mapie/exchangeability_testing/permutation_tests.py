@@ -1,4 +1,5 @@
-from typing import Callable, Literal, Optional
+from abc import ABC, abstractmethod
+from typing import Literal, Optional
 
 import numpy as np
 from numpy.typing import NDArray
@@ -8,35 +9,53 @@ from sklearn.model_selection import train_test_split
 from mapie.regression import SplitConformalRegressor
 
 
-class TestStatistic:
-    def __init__(self):
-        pass
+class TestStatistic(ABC):
+    """Base class for test statistics used in exchangeability tests."""
 
-    def compute(self):
-        pass
-
-
-class TestStatisticOnLabeledDataset(TestStatistic):
-    def __init__(self):
-        pass
-
-    def compute(self, X, y):
-        pass
+    @abstractmethod
+    def compute(self) -> float:
+        """Compute the test statistic value."""
+        raise NotImplementedError
 
 
-class TestStatisticOnUnlabeledDataset(TestStatistic):
-    def __init__(self):
-        pass
+class TestStatisticOnLabeledDataset(TestStatistic, ABC):
+    """Base class for test statistics computed from labeled datasets."""
 
-    def compute(self, X):
-        pass
+    @abstractmethod
+    def compute(self, X: NDArray, y: NDArray) -> float:
+        """Compute the statistic from features and labels."""
+        raise NotImplementedError
+
+
+class TestStatisticOnUnlabeledDataset(TestStatistic, ABC):
+    """Base class for test statistics computed from unlabeled datasets."""
+
+    @abstractmethod
+    def compute(self, X: NDArray) -> float:
+        """Compute the statistic from feature values only."""
+        raise NotImplementedError
 
 
 class TestStatisticOnNonConformityScores(TestStatistic):
-    def __init__(self):
-        pass
+    """Mean-shift statistic on two score halves.
 
-    def compute(self, scores):
+    The statistic is the absolute difference between the mean score of
+    the first half and the mean score of the second half.
+    """
+
+    def compute(self, scores: NDArray) -> float:
+        """Compute the absolute mean difference between score halves.
+
+        Parameters
+        ----------
+        scores : NDArray
+            One-dimensional non-conformity scores.
+
+        Returns
+        -------
+        float
+            Absolute difference between the means of both score halves.
+        """
         middle_idx = len(scores) // 2
 
         mean_left = np.mean(scores[:middle_idx])
@@ -46,26 +65,57 @@ class TestStatisticOnNonConformityScores(TestStatistic):
 
         return diff
 
-    def __call__(self, scores):
+    def __call__(self, scores: NDArray) -> float:
+        """Alias to :meth:`compute`."""
         return self.compute(scores)
 
 
-class PermutationTest:
+class PermutationTest(ABC):
+    """Base class for exchangeability tests based on permutations.
+
+    Parameters
+    ----------
+    method : Literal["p-value permutation", "Monte Carlo"]
+        Permutation test variant.
+    confidence_level : float, default=0.95
+        Confidence level used to derive the decision threshold ``delta``.
+    mapie_estimator : Optional[SplitConformalRegressor], default=None
+        MAPIE estimator used to compute predictions and non-conformity scores. If ``None``,
+        a default :class:`SplitConformalRegressor` is built when needed.
+    """
+
     def __init__(
         self,
         method: Literal["p-value permutation", "Monte Carlo"],
-        confidence_level=0.95,
-        mapie_estimator: Optional[
-            Callable
-        ] = None,  # to get predictions and score function
-    ):
+        confidence_level: float = 0.95,
+        mapie_estimator: Optional[SplitConformalRegressor] = None,
+    ) -> None:
         self.method = method
         self.delta = 1 - confidence_level
         self.mapie_estimator = mapie_estimator
 
     def _compute_non_conformity_scores(
         self, X: NDArray, y: NDArray, y_pred: Optional[NDArray]
-    ):
+    ) -> NDArray:
+        """Compute non-conformity scores from inputs and predictions.
+
+        Parameters
+        ----------
+        X : NDArray
+            Feature matrix.
+        y : NDArray
+            Target values.
+        y_pred : Optional[NDArray]
+            Predicted values. If ``None``, predictions are computed from
+            the provided mapie_estimator if it is not None, otherwise a
+            default SplitConformalRegressor is built and used
+            to compute predictions.
+
+        Returns
+        -------
+        NDArray
+            Non-conformity scores associated with ``(X, y)``.
+        """
         if y_pred is None:
             if self.mapie_estimator is None:
                 X_train, X, y_train, y = train_test_split(
@@ -88,13 +138,10 @@ class PermutationTest:
 
         return scores
 
-    def run(self, X: NDArray, y: NDArray, y_pred: Optional[NDArray] = None):
-        # 1. Transform the dataset (X, y) into a suitable non-conformity score preserving the exchangeability property
-        # scores = self._compute_non_conformity_scores(X, y, y_pred)
-
-        # 2. Compute the test statistic for the non-conformity scores of the original dataset (X_test, y_test)
-
-        pass
+    @abstractmethod
+    def run(self, X: NDArray, y: NDArray, y_pred: Optional[NDArray] = None) -> bool:
+        """Run a permutation-based exchangeability test."""
+        raise NotImplementedError
 
 
 class PValuePermutationTest(PermutationTest):
@@ -113,11 +160,12 @@ class PValuePermutationTest(PermutationTest):
 
         By default `1000`.
 
-    *args : tuple
-        Additional positional arguments forwarded to `PermutationTest`.
-
-    **kwargs : dict
-        Additional keyword arguments forwarded to `PermutationTest`.
+    method : Literal["p-value permutation", "Monte Carlo"], default="p-value permutation"
+        Permutation test variant forwarded to `PermutationTest`.
+    confidence_level : float, default=0.95
+        Confidence level forwarded to `PermutationTest`.
+    mapie_estimator : Optional[SplitConformalRegressor], default=None
+        MAPIE estimator forwarded to `PermutationTest`.
 
     Examples
     --------
@@ -139,14 +187,42 @@ class PValuePermutationTest(PermutationTest):
     (11,)
     """
 
-    def __init__(self, random_state=None, num_permutations=1000, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(
+        self,
+        random_state: Optional[int] = None,
+        num_permutations: int = 1000,
+        method: Literal["p-value permutation", "Monte Carlo"] = "p-value permutation",
+        confidence_level: float = 0.95,
+        mapie_estimator: Optional[SplitConformalRegressor] = None,
+    ) -> None:
+        super().__init__(
+            method=method,
+            confidence_level=confidence_level,
+            mapie_estimator=mapie_estimator,
+        )
         self.rng = np.random.RandomState(random_state)
         self.num_permutations = num_permutations
+        self.p_values: NDArray = np.array([])
 
         self.test_statistic = TestStatisticOnNonConformityScores()
 
-    def run(self, X: NDArray, y: NDArray, y_pred: Optional[NDArray] = None):
+    def run(self, X: NDArray, y: NDArray, y_pred: Optional[NDArray] = None) -> bool:
+        """Run a p-value permutation test.
+
+        Parameters
+        ----------
+        X : NDArray
+            Feature matrix.
+        y : NDArray
+            Target values.
+        y_pred : Optional[NDArray], default=None
+            Predicted values. If ``None``, predictions are computed.
+
+        Returns
+        -------
+        bool
+            Whether the dataset is deemed exchangeable.
+        """
         scores = self._compute_non_conformity_scores(X, y, y_pred)
 
         test_statistic_reference = self.test_statistic(scores)
@@ -170,13 +246,42 @@ class PValuePermutationTest(PermutationTest):
 
 
 class SequentialMonteCarloTest(PermutationTest):
+    """Sequential Monte Carlo exchangeability test.
+
+    Parameters
+    ----------
+    strategy : {"aggressive", "binomial", "binomial_mixture"}
+        Wealth update strategy for the sequential test.
+    num_permutations : int, default=1000
+        Maximum number of permutations.
+    random_state : Optional[int], default=None
+        Seed for permutation randomness.
+    method : Literal["p-value permutation", "Monte Carlo"], default="Monte Carlo"
+        Permutation test variant forwarded to `PermutationTest`.
+    confidence_level : float, default=0.95
+        Confidence level forwarded to `PermutationTest`.
+    mapie_estimator : Optional[SplitConformalRegressor], default=None
+        MAPIE estimator forwarded to `PermutationTest`.
+    """
+
     def __init__(
-        self, strategy, num_permutations=1000, random_state=None, *args, **kwargs
-    ):
-        super().__init__(*args, **kwargs)
+        self,
+        strategy: Literal["aggressive", "binomial", "binomial_mixture"],
+        num_permutations: int = 1000,
+        random_state: Optional[int] = None,
+        method: Literal["p-value permutation", "Monte Carlo"] = "Monte Carlo",
+        confidence_level: float = 0.95,
+        mapie_estimator: Optional[SplitConformalRegressor] = None,
+    ) -> None:
+        super().__init__(
+            method=method,
+            confidence_level=confidence_level,
+            mapie_estimator=mapie_estimator,
+        )
         self.strategy = strategy
         self.rng = np.random.RandomState(random_state)
         self.num_permutations = num_permutations
+        self.p_values: NDArray = np.array([])
 
         valid_strategies = {"aggressive", "binomial", "binomial_mixture"}
         if self.strategy not in valid_strategies:
@@ -186,7 +291,23 @@ class SequentialMonteCarloTest(PermutationTest):
 
         self.test_statistic = TestStatisticOnNonConformityScores()
 
-    def run(self, X: NDArray, y: NDArray, y_pred: Optional[NDArray] = None):
+    def run(self, X: NDArray, y: NDArray, y_pred: Optional[NDArray] = None) -> bool:
+        """Run a sequential Monte Carlo permutation test.
+
+        Parameters
+        ----------
+        X : NDArray
+            Feature matrix.
+        y : NDArray
+            Target values.
+        y_pred : Optional[NDArray], default=None
+            Predicted values. If ``None``, predictions are computed.
+
+        Returns
+        -------
+        bool
+            Whether the dataset is deemed exchangeable.
+        """
         scores = self._compute_non_conformity_scores(X, y, y_pred)
 
         test_statistic_reference = self.test_statistic(scores)
