@@ -25,9 +25,9 @@ class RiskMonitoring:
     risk : RiskLike
         Risk to monitor. If a string is provided, it must be one of the keys in
         :data:`mapie.risk_control.risks.risk_choice_map`.
-    confidence_level : float, default=0.95
-        Confidence level used to split the error budget equally between the
-        reference threshold estimation and the online monitoring step.
+    test_level : float, default=0.05
+        Level used to test the hypothesis that the online risk is greater than the reference risk.
+        The probability that the test gives a false positive is at most test_level (type I error).
     tolerance : float, default=0.05
         Margin applied to the reference upper confidence bound to define the
         monitoring threshold.
@@ -87,7 +87,7 @@ class RiskMonitoring:
     def __init__(
         self,
         risk: RiskLike,
-        confidence_level: float = 0.95,
+        test_level: float = 0.05,
         tolerance: float = 0.05,
         tolerance_type: Literal["absolute", "relative"] = "absolute",
         threshold: Optional[float] = None,
@@ -111,9 +111,9 @@ class RiskMonitoring:
         self.warn = warn
         self.threshold = threshold
 
-        if not (0.0 < confidence_level < 1.0):
-            raise ValueError("confidence_level must be in (0, 1).")
-        delta = 1 - confidence_level
+        if not (0.0 < test_level < 1.0):
+            raise ValueError("test_level must be in (0, 1).")
+        delta = test_level
         self.delta_reference = delta / 2
         self.delta_online = delta / 2
 

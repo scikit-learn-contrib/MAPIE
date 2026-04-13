@@ -207,9 +207,12 @@ class TestRiskMonitoring:
         ):
             RiskMonitoring(risk=invalid_risk)
 
-    def test_init_rejects_invalid_confidence_level(self) -> None:
-        with pytest.raises(ValueError, match="confidence_level must be in"):
-            RiskMonitoring(risk="accuracy", confidence_level=1.0)
+    def test_init_rejects_invalid_test_level(self) -> None:
+        with pytest.raises(ValueError, match="test_level must be in"):
+            RiskMonitoring(risk="accuracy", test_level=1.0)
+            RiskMonitoring(risk="accuracy", test_level=0.0)
+            RiskMonitoring(risk="accuracy", test_level=-0.1)
+            RiskMonitoring(risk="accuracy", test_level=1.1)
 
     def test_harmful_shift_detected_requires_online_bound(self) -> None:
         monitor = RiskMonitoring(risk="accuracy")
