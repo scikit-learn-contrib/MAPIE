@@ -84,6 +84,8 @@ plugins:
         - doc/generated/mondrian
       within_subsection_order: FileNameSortKey
       plot_gallery: true
+      # Reuse gallery caches to skip unchanged examples when possible.
+      run_stale_examples: true
       download_all_examples: false
       abort_on_example_error: false
       only_warn_on_example_error: true
