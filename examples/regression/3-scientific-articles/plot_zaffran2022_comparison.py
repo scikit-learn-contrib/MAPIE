@@ -1,5 +1,6 @@
 """
-# Adaptive conformal predictions for time series, Zaffran et al. (2022)
+Adaptive conformal predictions for time series, Zaffran et al. (2022)
+=====================================================================
 
 
 Note: in this example, we use the following terms employed in the scientific literature:

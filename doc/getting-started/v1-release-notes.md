@@ -31,7 +31,7 @@ The classification and regression APIs have been thoroughly revamped (except for
 - The v1 `.fit` method has been **split** into `.fit` and `.conformalize` for split conformal techniques, and replaced by `.fit_conformalize` for cross-conformal techniques.
 - The `alpha` parameter has been replaced with **`confidence_level`** (`confidence_level = 1 - alpha`).
 
-![v1 git diff](../assets/images/v1_release_notes_gitdiff.png){ style="display: block; margin: 0 auto;" }
+![v1 git diff](../images/v1_release_notes_gitdiff.png){ style="display: block; margin: 0 auto;" }
 
 !!! warning "Functional Regressions"
     - The `MondrianCP` class is temporarily unavailable in MAPIE v1. Mondrian can still easily be implemented manually (tutorial provided).

@@ -25,11 +25,9 @@ class RiskMonitoring:
     risk : RiskLike
         Risk to monitor. If a string is provided, it must be one of the keys in
         :data:`mapie.risk_control.risks.risk_choice_map`.
-    confidence_level : float, default=0.95
-        Confidence level used to split the error budget equally between the
-        reference threshold estimation and the online monitoring step.
-    reference_risk : Optional[float], default=None
-        Reserved for future use.
+    test_level : float, default=0.05
+        Level used to test the hypothesis that the online risk is greater than the reference risk.
+        The probability that the test gives a false positive is at most test_level (type I error).
     tolerance : float, default=0.05
         Margin applied to the reference upper confidence bound to define the
         monitoring threshold.
@@ -89,8 +87,7 @@ class RiskMonitoring:
     def __init__(
         self,
         risk: RiskLike,
-        confidence_level: float = 0.95,
-        reference_risk: Optional[float] = None,
+        test_level: float = 0.05,
         tolerance: float = 0.05,
         tolerance_type: Literal["absolute", "relative"] = "absolute",
         threshold: Optional[float] = None,
@@ -113,11 +110,10 @@ class RiskMonitoring:
         self.tolerance_type = tolerance_type
         self.warn = warn
         self.threshold = threshold
-        self.reference_risk = reference_risk
 
-        if not (0.0 < confidence_level < 1.0):
-            raise ValueError("confidence_level must be in (0, 1).")
-        delta = 1 - confidence_level
+        if not (0.0 < test_level < 1.0):
+            raise ValueError("test_level must be in (0, 1).")
+        delta = test_level
         self.delta_reference = delta / 2
         self.delta_online = delta / 2
 
@@ -161,7 +157,10 @@ class RiskMonitoring:
             The fitted instance.
         """
         if self.threshold is not None:
-            raise ValueError("Threshold is already computed.")
+            warnings.warn(
+                "Threshold is already computed and will be replaced.",
+                UserWarning,
+            )
 
         reference_risk_sequence = self.risk.get_risk_sequence(y_true, y_pred)
         if reference_risk_sequence.size == 0:
@@ -213,14 +212,15 @@ class RiskMonitoring:
         )
 
         # in the current implementation, the bound is recomputed from scratch with the full history
+        new_risk_lower_bound_sequence = conjugate_mixture_empirical_bernstein_bound(
+            self.online_risk_sequence_history,
+            v_opt=1,
+            alpha=self.delta_online,
+            bound_side="lower",
+        )
+
         self.online_risk_lower_bound_sequence_history = np.asarray(
-            conjugate_mixture_empirical_bernstein_bound(
-                self.online_risk_sequence_history,
-                v_opt=1,
-                alpha=self.delta_online,
-                bound_side="lower",
-            ),
-            dtype=float,
+            new_risk_lower_bound_sequence, dtype=float
         )
         self.online_risk_lower_bound_latest = (
             self.online_risk_lower_bound_sequence_history[-1]

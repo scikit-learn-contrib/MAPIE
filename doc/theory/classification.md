@@ -11,7 +11,7 @@
 Three methods for multi-class uncertainty quantification have been implemented in MAPIE: **LAC** (Least Ambiguous set-valued Classifier) [^1], **APS** (Adaptive Prediction Sets) [^2] [^3], and **Top-K** [^3].
 
 <figure markdown>
-  ![Classification methods](../assets/images/classification_methods.png){ width="600" }
+  ![Classification methods](../images/classification_methods.png){ width="600" }
   <figcaption>Illustration of the three methods implemented in MAPIE.</figcaption>
 </figure>
 

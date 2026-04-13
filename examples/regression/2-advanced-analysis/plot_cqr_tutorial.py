@@ -1,5 +1,6 @@
 """
-# Conformalized quantile regression on gamma distributed data
+Conformalized quantile regression on gamma distributed data
+===========================================================
 
 
 

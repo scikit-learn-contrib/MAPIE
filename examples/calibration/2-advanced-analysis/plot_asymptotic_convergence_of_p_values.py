@@ -1,5 +1,6 @@
 """
-# Evaluating the asymptotic convergence of p-values
+Evaluating the asymptotic convergence of p-values
+=================================================
 
 This example uses `kolmogorov_smirnov_pvalue`,
 `kuiper_pvalue` and

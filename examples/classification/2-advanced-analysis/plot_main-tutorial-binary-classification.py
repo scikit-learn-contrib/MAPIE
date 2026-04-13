@@ -1,5 +1,6 @@
 """
-# Set prediction example in the binary classification setting
+Set prediction example in the binary classification setting
+===========================================================
 
 
 In this example, we propose set prediction for binary classification

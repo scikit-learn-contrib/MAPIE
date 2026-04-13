@@ -1,5 +1,6 @@
 """
-# Plot prediction sets
+Plot prediction sets
+====================
 
 
 In this example, we explain how to use MAPIE on a basic classification setting.

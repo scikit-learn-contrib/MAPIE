@@ -1,5 +1,6 @@
 """
-# Testing for calibration in binary classification settings
+Testing for calibration in binary classification settings
+=========================================================
 
 This example uses `kolmogorov_smirnov_pvalue`
 to test for calibration of scores output by binary classifiers.

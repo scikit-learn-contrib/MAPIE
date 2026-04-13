@@ -1,5 +1,6 @@
 """
-# LAC and APS methods explained
+LAC and APS methods explained
+=============================
 
 
 In this tutorial, we compare the prediction sets estimated by

@@ -6,7 +6,7 @@ hide:
 
 <div class="hero" markdown>
 
-![MAPIE Logo](assets/images/mapie_logo_nobg_cut.png){ width="400" }
+![MAPIE Logo](images/mapie_logo_nobg_cut.png){ width="400" }
 
 # MAPIE — Model Agnostic Prediction Interval Estimator
 
@@ -35,7 +35,7 @@ hide:
 
 ---
 
-![Educational Visual](assets/images/educational_visual.png){ width="500", style="display: block; margin: 0 auto;" }
+![Educational Visual](images/educational_visual.png){ width="500", style="display: block; margin: 0 auto;" }
 
 ## What can MAPIE do?
 
@@ -189,7 +189,7 @@ MAPIE has been developed through a collaboration between Capgemini Invent, Inria
 
 [![Capgemini Invent](https://www.capgemini.com/wp-content/themes/capgemini2020/assets/images/capgemini-invent.svg){ height="35px" }](https://www.capgemini.com/about-us/who-we-are/our-brands/capgemini-invent/)
 [![Inria](https://www.inria.fr/themes/custom/inria/logo/logo.svg){ height="35px" }](https://www.inria.fr/)
-[![Projet P16](assets/images/logo_P16.png){ height="45px" }](https://p16.inria.fr/fr/)
+[![Projet P16](images/logo_P16.png){ height="45px" }](https://p16.inria.fr/fr/)
 [![Michelin](https://agngnconpm.cloudimg.io/v7/https://dgaddcosprod.blob.core.windows.net/corporate-production/attachments/cls05tqdd9e0o0tkdghwi9m7n-clooe1x0c3k3x0tlu4cxi6dpn-bibendum-salut.full.png){ height="50px" }](https://www.michelin.com/en/)
 [![ENS Paris-Saclay](https://ens-paris-saclay.fr/sites/default/files/ENSPS_UPSAY_logo_couleur_2.png){ height="35px" }](https://ens-paris-saclay.fr/en)
 [![Confiance.ai](https://pbs.twimg.com/profile_images/1443838558549258264/EvWlv1Vq_400x400.jpg){ height="45px" }](https://www.confiance.ai/)

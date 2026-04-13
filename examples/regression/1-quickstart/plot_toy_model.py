@@ -1,5 +1,6 @@
 """
-# Plot prediction intervals
+Plot prediction intervals
+=========================
 
 An example plot of `SplitConformalRegressor` used
 in the Quickstart.

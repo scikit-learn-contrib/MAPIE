@@ -3,7 +3,7 @@
 Following is a simple decision tree to help you get started quickly with MAPIE. Reality is of course a bit more complex, so feel free to browse the documentation for nuanced explanations.
 
 <figure markdown>
-  ![Decision Tree](../assets/images/decision_tree.png)
+  ![Decision Tree](../images/decision_tree.png)
   <figcaption>Decision tree for choosing the right MAPIE algorithm.</figcaption>
 </figure>
 

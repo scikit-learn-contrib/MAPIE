@@ -1,5 +1,6 @@
 """
-# Control risk of a binary classifier with multiple prediction parameters
+Control risk of a binary classifier with multiple prediction parameters
+=======================================================================
 
 
 AI is a powerful tool for email sorting (for example between spam and urgent emails).
