@@ -45,10 +45,9 @@ class OnlineMartingaleTest:
     test_method : {"jumper_martingale", "plugin_martingale"}, default="jumper_martingale"
         Martingale construction used to aggregate evidence across p-values.
 
-    confidence_level : float, default=0.95
-        Confidence level used to define the rejection threshold.
+    test_level : float, default=0.05
+        Test level used to define the rejection threshold.
         Must lie in ``(0, 1)``.
-        The corresponding test level is ``alpha_level = 1 - confidence_level``.
 
     warn : bool, default=True
         Whether to raise a warning when exchangeability is rejected.
@@ -146,7 +145,7 @@ class OnlineMartingaleTest:
         test_method: Literal[
             "jumper_martingale", "plugin_martingale"
         ] = "jumper_martingale",
-        confidence_level: float = 0.95,
+        test_level: float = 0.05,
         warn: bool = True,
         jump_size: float = 0.01,
         min_sample_size_to_decide: int = 100,
@@ -167,9 +166,9 @@ class OnlineMartingaleTest:
             "jumper_martingale" is more stable and less tuning-sensitive.
             "plugin_martingale" is more adaptive but sensitive to density estimation.
 
-        confidence_level : float, default=0.95
-            Confidence level used to define the rejection threshold.
-            Must lie in (0, 1). The test level is alpha = 1 - confidence_level.
+        test_level : float, default=0.05
+            Test level used to define the rejection threshold.
+            Must lie in (0, 1). The rejection threshold is 1 / test_level.
 
         warn : bool, default=True
             Whether to raise a warning when exchangeability is rejected.
@@ -188,7 +187,7 @@ class OnlineMartingaleTest:
         Raises
         ------
         ValueError
-            If confidence_level is not in (0, 1), if test_method is not supported,
+            If test_level is not in (0, 1), if test_method is not supported,
             or if jump_size is not in (0, 1).
 
         See Also
@@ -209,8 +208,8 @@ class OnlineMartingaleTest:
             "Plug-in Martingales for Testing Exchangeability on-line".
             In Proceedings of the 29th ICML. Algorithm 1, page 3.
         """
-        if not 0.0 < confidence_level < 1.0:
-            raise ValueError("confidence_level must lie in (0, 1).")
+        if not 0.0 < test_level < 1.0:
+            raise ValueError("test_level must lie in (0, 1).")
 
         if test_method not in {"jumper_martingale", "plugin_martingale"}:
             raise ValueError(
@@ -222,7 +221,7 @@ class OnlineMartingaleTest:
 
         self.non_conformity_score_function = non_conformity_score_function
         self.test_method = test_method
-        self.confidence_level = confidence_level
+        self.test_level = test_level
         self.warn = warn
 
         self.jump_size = jump_size
@@ -242,18 +241,6 @@ class OnlineMartingaleTest:
         )
 
     @property
-    def alpha_level(self) -> float:
-        """
-        Return the test level associated with the confidence level.
-
-        Returns
-        -------
-        float
-            Test level ``alpha_level = 1 - confidence_level``.
-        """
-        return 1.0 - self.confidence_level
-
-    @property
     def reject_threshold(self) -> float:
         """
         Return the martingale rejection threshold.
@@ -261,10 +248,10 @@ class OnlineMartingaleTest:
         Returns
         -------
         float
-            Rejection threshold equal to ``1 / alpha_level``.
+            Rejection threshold equal to ``1 / test_level``.
             Exchangeability is rejected when the martingale exceeds this threshold.
         """
-        return 1.0 / self.alpha_level
+        return 1.0 / self.test_level
 
     @property
     def is_exchangeable(self) -> Optional[bool]:
@@ -272,12 +259,12 @@ class OnlineMartingaleTest:
         Return the current exchangeability decision based on the martingale process.
 
         The decision is based on the trajectory of martingale values compared to the
-        rejection threshold (``1 / alpha_level``). The interpretation is:
+        rejection threshold (``1 / test_level``). The interpretation is:
 
         - ``False``: Exchangeability is rejected when the martingale exceeds the
           rejection threshold at least once.
         - ``True``: Failure to reject exchangeability when the martingale remains
-          below the significance level (``alpha_level``) throughout the history.
+          below the significance level (``test_level``) throughout the history.
         - ``None``: The test is currently inconclusive because insufficient
           observations have been processed (fewer than
           ``min_sample_size_to_decide``).
@@ -299,7 +286,6 @@ class OnlineMartingaleTest:
         See Also
         --------
         reject_threshold : The rejection threshold for the martingale.
-        alpha_level : The test significance level.
         """
         if len(self.pvalue_history) < self.min_sample_size_to_decide:
             return None
@@ -670,7 +656,7 @@ class OnlineMartingaleTest:
             return {
                 "test_method": self.test_method,
                 "min_sample_size_to_decide": self.min_sample_size_to_decide,
-                "test_level": self.alpha_level,
+                "test_level": self.test_level,
                 "is_exchangeable": self.is_exchangeable,
                 "stopping_time": None,
                 "martingale_value_at_decision": None,
@@ -708,7 +694,7 @@ class OnlineMartingaleTest:
         return {
             "test_method": self.test_method,
             "min_sample_size_to_decide": self.min_sample_size_to_decide,
-            "test_level": self.alpha_level,
+            "test_level": self.test_level,
             "is_exchangeable": self.is_exchangeable,
             "stopping_time": stopping_time,
             "martingale_value_at_decision": float(martingale_values[stopping_time - 1]),
