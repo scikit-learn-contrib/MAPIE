@@ -219,17 +219,17 @@ plot_data_and_score_histogram(
 # while the plug-in martingale estimates the p-value density and
 # can react to richer departures from uniformity.
 #
-# We use a confidence level of 0.95 (test level 0.05), so the rejection threshold is ``1 / 0.05 = 20``.
+# We use a test level of 0.05, so the rejection threshold is ``1 / 0.05 = 20``.
 # We also set ``min_sample_size_to_decide=100`` to avoid unstable early decisions.
 #
 
-confidence_level = 0.95
+test_level = 0.05
 min_sample_size_to_decide = 100
 
 omt_jumper_exch = OnlineMartingaleTest(
     non_conformity_score_function=nonconformity_score,
     test_method="jumper_martingale",
-    confidence_level=confidence_level,
+    test_level=test_level,
     min_sample_size_to_decide=min_sample_size_to_decide,
     random_state=RANDOM_STATE,
     warn=False,
@@ -237,7 +237,7 @@ omt_jumper_exch = OnlineMartingaleTest(
 omt_plugin_exch = OnlineMartingaleTest(
     non_conformity_score_function=nonconformity_score,
     test_method="plugin_martingale",
-    confidence_level=confidence_level,
+    test_level=test_level,
     min_sample_size_to_decide=min_sample_size_to_decide,
     random_state=RANDOM_STATE,
     warn=False,
@@ -378,7 +378,7 @@ plot_data_and_score_histogram(
 omt_jumper_subtle_shift = OnlineMartingaleTest(
     non_conformity_score_function=nonconformity_score,
     test_method="jumper_martingale",
-    confidence_level=confidence_level,
+    test_level=test_level,
     min_sample_size_to_decide=min_sample_size_to_decide,
     random_state=RANDOM_STATE,
     warn=False,
@@ -386,7 +386,7 @@ omt_jumper_subtle_shift = OnlineMartingaleTest(
 omt_plugin_subtle_shift = OnlineMartingaleTest(
     non_conformity_score_function=nonconformity_score,
     test_method="plugin_martingale",
-    confidence_level=confidence_level,
+    test_level=test_level,
     min_sample_size_to_decide=min_sample_size_to_decide,
     random_state=RANDOM_STATE,
     warn=False,
@@ -453,7 +453,7 @@ plot_data_and_score_histogram(
 omt_jumper_abrupt_shift = OnlineMartingaleTest(
     non_conformity_score_function=nonconformity_score,
     test_method="jumper_martingale",
-    confidence_level=confidence_level,
+    test_level=test_level,
     min_sample_size_to_decide=min_sample_size_to_decide,
     random_state=RANDOM_STATE,
     warn=False,
@@ -461,7 +461,7 @@ omt_jumper_abrupt_shift = OnlineMartingaleTest(
 omt_plugin_abrupt_shift = OnlineMartingaleTest(
     non_conformity_score_function=nonconformity_score,
     test_method="plugin_martingale",
-    confidence_level=confidence_level,
+    test_level=test_level,
     min_sample_size_to_decide=min_sample_size_to_decide,
     random_state=RANDOM_STATE,
     warn=False,
@@ -499,7 +499,7 @@ regression_results = {
 
 def print_result_summary(results):
     """Print compact diagnostics for each stream and method."""
-    print("\nSummary at confidence_level = 0.95 (threshold = 20):")
+    print("\nSummary at test_level = 0.05 (threshold = 20):")
     print(
         "Scenario        | Method  | Decision     | Stopping time | "
         "Value at decision | Final value"
