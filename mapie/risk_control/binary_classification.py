@@ -98,17 +98,17 @@ class BinaryClassificationController:
         the shape is (n_params, params_dim).
         Note that performance is degraded when `len(predict_params)` is large as it is used by the Bonferroni correction [1].
 
-    fwer_method : {"bonferroni", "bonferroni_holm", "fixed_sequence", "split_fixed_sequence"} or FWERProcedure instance, default="bonferroni"
+    fwer_method : {"bonferroni", "bonferroni_holm", "fixed_sequence", "split_fixed_sequence"} or FWERProcedure instance, default="bonferroni_holm"
         Method used to control the family-wise error rate (FWER).
 
         Supported methods:
-        - `"bonferroni"` : Classical Bonferroni correction. This is the default method.
+        - `"bonferroni"` : Classical Bonferroni correction.
         It is valid in all settings but can be conservative, especially when the number of tested parameters is large.
         - `"fixed_sequence"` : Fixed Sequence Testing (FST) with a single start.
         However, users can use multi-start by instantiating `FWERFixedSequenceTesting` with any desired number
         of starts and passing the instance to control_fwer.
         - `"bonferroni_holm"` : Sequential Graphical Testing corresponding
-        to the Bonferroni–Holm procedure. Suitable for general settings.
+        to the Bonferroni–Holm procedure. This is the default method and is suitable for general settings.
         - `"split_fixed_sequence"` : Split Fixed Sequence Testing (SFST).
 
     Attributes
@@ -176,7 +176,7 @@ class BinaryClassificationController:
             Literal["auto"], RiskNameLiteral, BinaryClassificationRisk
         ] = "auto",
         list_predict_params: NDArray = np.linspace(0, 0.99, 100),
-        fwer_method: Union[FWER_METHODS, FWERProcedure] = "bonferroni",
+        fwer_method: Union[FWER_METHODS, FWERProcedure] = "bonferroni_holm",
     ):
         self.is_multi_risk = self._check_if_multi_risk_control(risk, target_level)
         self._predict_function = predict_function

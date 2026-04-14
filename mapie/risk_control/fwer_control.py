@@ -260,7 +260,7 @@ class FWERFixedSequenceTesting(FWERProcedure):
 def control_fwer(
     p_values: NDArray,
     delta: float,
-    fwer_method: Union[FWER_METHODS, FWERProcedure] = "bonferroni",
+    fwer_method: Union[FWER_METHODS, FWERProcedure] = "bonferroni_holm",
 ) -> NDArray:
     """
     Apply a Family-Wise Error Rate (FWER) control procedure.
@@ -286,7 +286,7 @@ def control_fwer(
         P-values associated with each tested hypothesis.
     delta : float
         Target family-wise error rate. Must be in (0, 1].
-    fwer_method : {"bonferroni", "bonferroni_holm", "fixed_sequence", "split_fixed_sequence"} or FWERProcedure instance, default="bonferroni"
+    fwer_method : {"bonferroni", "bonferroni_holm", "fixed_sequence", "split_fixed_sequence"} or FWERProcedure instance, default="bonferroni_holm"
         FWER control strategy.
 
     Returns
