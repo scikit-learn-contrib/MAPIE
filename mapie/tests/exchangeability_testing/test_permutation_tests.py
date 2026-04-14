@@ -4,13 +4,14 @@ from typing import Any, cast
 
 import numpy as np
 import pytest
-
 from mapie.exchangeability_testing.permutation_tests import (
     MapieEstimator,
     PValuePermutationTest,
     SequentialMonteCarloTest,
     TestStatisticOnNonConformityScores,
 )
+from mapie.classification import CrossConformalClassifier
+from mapie.regression import CrossConformalRegressor, JackknifeAfterBootstrapRegressor
 
 
 class DummyConformityScoreFunction:
@@ -28,6 +29,7 @@ class DummyMapieRegressor:
 class DummyMapieEstimator:
     def __init__(self):
         self._mapie_regressor = DummyMapieRegressor()
+        self._is_fitted = True
         self._is_conformalized = False
         self._predict_params = {"stale": True}
         self.conformity_scores_ = np.array([42.0])
@@ -37,6 +39,7 @@ class DummyMapieEstimator:
         return np.zeros(len(X))
 
     def fit(self, X, y):
+        self._is_fitted = True
         return self
 
     def conformalize(self, X, y):
@@ -104,6 +107,21 @@ class TestPValuePermutationTest:
 
         np.testing.assert_allclose(scores, y)
 
+    def test_run_fits_provided_unfitted_estimator(self, toy_exchangeability_data) -> None:
+        X, y = toy_exchangeability_data
+        estimator = DummyMapieEstimator()
+        estimator._is_fitted = False
+        test = PValuePermutationTest(
+            random_state=123,
+            num_permutations=10,
+            mapie_estimator=cast(MapieEstimator, estimator),
+        )
+
+        is_exchangeable = test.run(X, y)
+
+        assert isinstance(is_exchangeable, bool)
+        assert test.mapie_estimator._is_fitted is True
+
     def test_run_is_reproducible_with_fixed_random_state(
         self, toy_exchangeability_data
     ) -> None:
@@ -143,6 +161,25 @@ class TestPValuePermutationTest:
         assert test.p_values[0] == 1.0
         assert np.all((test.p_values >= 0.0) & (test.p_values <= 1.0))
         assert is_exchangeable == bool(test.p_values[-1] > test.delta)
+
+    @pytest.mark.parametrize(
+        "estimator",
+        [
+            CrossConformalRegressor(cv=3),
+            CrossConformalClassifier(cv=3),
+            JackknifeAfterBootstrapRegressor(),
+        ],
+    )
+    def test_init_rejects_order_agnostic_estimators(self, estimator) -> None:
+        with pytest.raises(
+            ValueError,
+            match="are not supported in permutation tests",
+        ):
+            PValuePermutationTest(
+                random_state=123,
+                num_permutations=10,
+                mapie_estimator=cast(Any, estimator),
+            )
 
 class TestSequentialMonteCarloTest:
     def test_invalid_strategy_raises(self) -> None:

@@ -17,10 +17,7 @@ from mapie.regression import (
 
 MapieEstimator = Union[
     SplitConformalClassifier,
-    CrossConformalClassifier,
     SplitConformalRegressor,
-    CrossConformalRegressor,
-    JackknifeAfterBootstrapRegressor,
 ]
 
 
@@ -98,10 +95,7 @@ class PermutationTest(ABC):
         MAPIE estimator used to compute predictions and non-conformity
         scores. Supported estimators are
         :class:`SplitConformalClassifier`,
-        :class:`CrossConformalClassifier`,
-        :class:`SplitConformalRegressor`,
-        :class:`CrossConformalRegressor`, and
-        :class:`JackknifeAfterBootstrapRegressor`.
+        and :class:`SplitConformalRegressor`.
         If ``None``, a default
         :class:`SplitConformalClassifier` or
         :class:`SplitConformalRegressor` is built
@@ -116,6 +110,19 @@ class PermutationTest(ABC):
         and clear conformalization state to allow calling conformalize method."""
         if mapie_estimator is None:
             return None
+
+        if isinstance(
+            mapie_estimator,
+            (
+                CrossConformalClassifier,
+                CrossConformalRegressor,
+                JackknifeAfterBootstrapRegressor,
+            ),
+        ):
+            raise ValueError(
+                "Cross conformal and jackknife-after-bootstrap estimators are not "
+                "supported in permutation tests because they mix the data."
+            )
 
         estimator_copy = deepcopy(mapie_estimator)
 
