@@ -4,13 +4,18 @@ from typing import Any, cast
 
 import numpy as np
 import pytest
+
+from mapie.classification import CrossConformalClassifier
 from mapie.exchangeability_testing.permutation_tests import (
     MapieEstimator,
+    PermutationTest,
     PValuePermutationTest,
     SequentialMonteCarloTest,
+    TestStatistic,
+    TestStatisticOnLabeledDataset,
     TestStatisticOnNonConformityScores,
+    TestStatisticOnUnlabeledDataset,
 )
-from mapie.classification import CrossConformalClassifier
 from mapie.regression import CrossConformalRegressor, JackknifeAfterBootstrapRegressor
 
 
@@ -52,6 +57,41 @@ class DummyMapieEstimator:
         return self
 
 
+class DummyMapieClassifier:
+    def __init__(self):
+        self.conformity_scores_ = np.array([99.0])
+
+
+class DummyClassificationEstimator:
+    def __init__(self, prefit=True):
+        self._mapie_classifier = DummyMapieClassifier()
+        self._is_fitted = prefit
+
+    def fit(self, X, y):
+        self._is_fitted = True
+        return self
+
+    def conformalize(self, X, y):
+        self._mapie_classifier.conformity_scores_ = np.arange(len(y), dtype=float)
+        return self
+
+
+class DummyUnknownEstimator:
+    def __init__(self):
+        self._is_fitted = True
+
+    def fit(self, X, y):
+        return self
+
+    def conformalize(self, X, y):
+        return self
+
+
+class ConstantStatistic:
+    def __call__(self, scores):
+        return 1.0
+
+
 class TestStatisticOnNonConformityScoresClass:
     def test_compute(self) -> None:
         statistic = TestStatisticOnNonConformityScores()
@@ -63,6 +103,16 @@ class TestStatisticOnNonConformityScoresClass:
         scores = np.array([0.0, 0.0, 1.0, 1.0])
         assert statistic(scores) == statistic.compute(scores)
 
+    def test_abstract_base_methods_raise(self) -> None:
+        with pytest.raises(NotImplementedError):
+            TestStatistic.compute(object())
+        with pytest.raises(NotImplementedError):
+            TestStatisticOnLabeledDataset.compute(object())
+        with pytest.raises(NotImplementedError):
+            TestStatisticOnUnlabeledDataset.compute(object())
+        with pytest.raises(NotImplementedError):
+            PermutationTest.run(object(), np.array([[0.0]]), np.array([0.0]))
+
 
 @pytest.fixture
 def toy_exchangeability_data():
@@ -72,6 +122,14 @@ def toy_exchangeability_data():
 
 
 class TestPValuePermutationTest:
+    def test_dummy_conformity_score_function(self) -> None:
+        score_function = DummyConformityScoreFunction()
+        scores = score_function.get_conformity_scores(
+            np.array([1.0, 2.0]),
+            np.array([0.0, 1.5]),
+        )
+        np.testing.assert_allclose(scores, np.array([1.0, 0.5]))
+
     def test_init_rejects_invalid_test_level(self) -> None:
         with pytest.raises(ValueError, match="test_level must be in"):
             PValuePermutationTest(test_level=1.0)
@@ -100,6 +158,24 @@ class TestPValuePermutationTest:
         assert estimator._predict_params == {"stale": True}
         assert hasattr(estimator, "conformity_scores_")
         assert hasattr(estimator._mapie_regressor, "conformity_scores_")
+
+    def test_init_copies_classifier_estimator_without_optional_attrs(self) -> None:
+        estimator = DummyClassificationEstimator()
+
+        test = PValuePermutationTest(
+            random_state=123,
+            num_permutations=10,
+            mapie_estimator=cast(Any, estimator),
+        )
+        estimator_copy = cast(DummyClassificationEstimator, test.mapie_estimator)
+
+        assert estimator_copy is not estimator
+        assert not hasattr(estimator_copy, "_is_conformalized")
+        assert not hasattr(estimator_copy, "_predict_params")
+        assert not hasattr(estimator_copy, "conformity_scores_")
+        assert not hasattr(estimator_copy, "quantiles_")
+        assert not hasattr(estimator_copy._mapie_classifier, "conformity_scores_")
+        assert not hasattr(estimator_copy._mapie_classifier, "quantiles_")
 
     def test_compute_scores_uses_predict_if_y_pred_is_none(self) -> None:
         X = np.arange(8, dtype=float).reshape(-1, 1)
@@ -131,6 +207,67 @@ class TestPValuePermutationTest:
 
         assert isinstance(is_exchangeable, bool)
         assert estimator_copy._is_fitted is True
+
+    def test_infer_task_from_estimator_and_target_type(self) -> None:
+        classification_test = PValuePermutationTest(
+            mapie_estimator=cast(Any, DummyClassificationEstimator())
+        )
+        regression_test = PValuePermutationTest(
+            mapie_estimator=cast(MapieEstimator, DummyMapieEstimator())
+        )
+        default_test = PValuePermutationTest()
+
+        assert classification_test._infer_task(np.array([0, 1])) == "classification"
+        assert regression_test._infer_task(np.array([0.1, 0.2])) == "regression"
+        assert default_test._infer_task(np.array([0, 1, 0, 1])) == "classification"
+        assert default_test._infer_task(np.array([0.1, 0.2, 0.3])) == "regression"
+
+    def test_infer_task_raises_for_unknown_estimator_or_target(self) -> None:
+        test_with_unknown_estimator = PValuePermutationTest(
+            mapie_estimator=cast(Any, DummyUnknownEstimator())
+        )
+        default_test = PValuePermutationTest()
+
+        with pytest.raises(ValueError, match="Unable to infer the task"):
+            test_with_unknown_estimator._infer_task(np.array([0, 1]))
+        with pytest.raises(ValueError, match="Unknown type of target"):
+            default_test._infer_task(np.array([[[1.0]], [[2.0]]]))
+
+    def test_unknown_estimator_methods_return_self(self) -> None:
+        estimator = DummyUnknownEstimator()
+
+        assert estimator.fit(np.array([[0.0]]), np.array([0.0])) is estimator
+        assert estimator.conformalize(np.array([[0.0]]), np.array([0.0])) is estimator
+
+    def test_compute_scores_with_default_classification_estimator(
+        self, monkeypatch
+    ) -> None:
+        from mapie.exchangeability_testing import permutation_tests
+
+        monkeypatch.setattr(
+            permutation_tests,
+            "SplitConformalClassifier",
+            DummyClassificationEstimator,
+        )
+        test = PValuePermutationTest()
+        test.task = "classification"
+
+        scores = test._compute_non_conformity_scores(
+            np.arange(6, dtype=float).reshape(-1, 1),
+            np.array([0, 1, 0, 1, 0, 1]),
+        )
+
+        np.testing.assert_allclose(scores, np.arange(5, dtype=float))
+
+    def test_compute_scores_raises_for_unknown_task(self) -> None:
+        test = PValuePermutationTest()
+        test.task = cast(Any, "unknown")
+
+        with pytest.raises(ValueError, match="Unknown task type"):
+            test._compute_non_conformity_scores(
+                np.arange(6, dtype=float).reshape(-1, 1),
+                np.array([0.0, 1.0, 0.0, 1.0, 0.0, 1.0]),
+            )
 
     def test_run_is_reproducible_with_fixed_random_state(
         self, toy_exchangeability_data
@@ -245,3 +382,21 @@ class TestSequentialMonteCarloTest:
 
         assert is_exchangeable_1 == is_exchangeable_2
         np.testing.assert_allclose(test_1.p_values, test_2.p_values)
+
+    def test_run_without_early_stopping_and_with_rank_update(
+        self, toy_exchangeability_data
+    ) -> None:
+        X, y = toy_exchangeability_data
+        test = SequentialMonteCarloTest(
+            strategy="binomial_mixture",
+            random_state=123,
+            num_permutations=3,
+            mapie_estimator=cast(MapieEstimator, DummyMapieEstimator()),
+        )
+        test.test_statistic = ConstantStatistic()
+
+        is_exchangeable = test.run(X, y)
+
+        assert isinstance(is_exchangeable, bool)
+        assert len(test.p_values) == 4
+        assert np.all((test.p_values >= 0.0) & (test.p_values <= 1.0))
