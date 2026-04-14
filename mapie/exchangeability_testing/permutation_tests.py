@@ -269,12 +269,11 @@ class PValuePermutationTest(PermutationTest):
     >>> from mapie.exchangeability_testing.permutation_tests import (
     ...     PValuePermutationTest,
     ... )
-    >>> X = np.arange(20, dtype=float).reshape(-1, 1)
-    >>> y = 2 * X.ravel() + np.array([0.0, 0.1] * 10)
+    >>> X = np.arange(100, dtype=float).reshape(-1, 1)
+    >>> y = 2 * X.ravel() + np.array([0.0, 0.1] * 50)
     >>> test = PValuePermutationTest(
     ...     method="p-value permutation",
     ...     test_level=0.2,
-    ...     num_permutations=100,
     ... )
     >>> test.run(X, y)
     True
