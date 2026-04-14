@@ -8,7 +8,7 @@ from scipy.stats import binom
 from sklearn.model_selection import train_test_split
 from sklearn.utils.multiclass import type_of_target
 
-from mapie.classification import SplitConformalClassifier
+from mapie.classification import CrossConformalClassifier, SplitConformalClassifier
 from mapie.regression import (
     CrossConformalRegressor,
     JackknifeAfterBootstrapRegressor,
@@ -16,6 +16,8 @@ from mapie.regression import (
 )
 
 MapieEstimator = Union[
+    SplitConformalClassifier,
+    CrossConformalClassifier,
     SplitConformalRegressor,
     CrossConformalRegressor,
     JackknifeAfterBootstrapRegressor,
@@ -93,12 +95,16 @@ class PermutationTest(ABC):
     confidence_level : float, default=0.95
         Confidence level used to derive the decision threshold ``delta``.
     mapie_estimator : Optional[MapieEstimator], default=None
-        MAPIE regression estimator used to compute predictions and
-        non-conformity scores. Supported estimators are
+        MAPIE estimator used to compute predictions and non-conformity
+        scores. Supported estimators are
+        :class:`SplitConformalClassifier`,
+        :class:`CrossConformalClassifier`,
         :class:`SplitConformalRegressor`,
         :class:`CrossConformalRegressor`, and
         :class:`JackknifeAfterBootstrapRegressor`.
-        If ``None``, a default :class:`SplitConformalRegressor` is built
+        If ``None``, a default
+        :class:`SplitConformalClassifier` or
+        :class:`SplitConformalRegressor` is built
         when needed.
     """
 
@@ -180,16 +186,18 @@ class PermutationTest(ABC):
             self.task = self._infer_task(y)
 
         if self.mapie_estimator is None:
+            if self.task == "classification":
+                self.mapie_estimator = SplitConformalClassifier(prefit=False)
+            elif self.task == "regression":
+                self.mapie_estimator = SplitConformalRegressor(prefit=False)
+
+        if not self.mapie_estimator._is_fitted:
             X_train, X, y_train, y = train_test_split(
                 X,
                 y,
                 test_size=0.7,
                 shuffle=False,
             )
-            if self.task == "classification":
-                self.mapie_estimator = SplitConformalClassifier(prefit=False)
-            elif self.task == "regression":
-                self.mapie_estimator = SplitConformalRegressor(prefit=False)
             self.mapie_estimator.fit(X_train, y_train)
 
         self.mapie_estimator.conformalize(X, y)  # compute scores internally
