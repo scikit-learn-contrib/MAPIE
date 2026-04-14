@@ -1,6 +1,6 @@
-/* Increase the global documentation width. */
+/* Keep docs responsive but avoid over-wide reading columns. */
 .md-grid {
-  max-width: 82rem;
+  max-width: 68rem;
 }
 
 /* Hero section */
