@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+from typing import Any, cast
+
 import numpy as np
 import pytest
 
 from mapie.exchangeability_testing.permutation_tests import (
+    MapieEstimator,
     PValuePermutationTest,
     SequentialMonteCarloTest,
     TestStatisticOnNonConformityScores,
@@ -58,7 +61,7 @@ class TestPValuePermutationTest:
         test = PValuePermutationTest(
             random_state=123,
             num_permutations=10,
-            mapie_estimator=DummyMapieEstimator(),
+            mapie_estimator=cast(MapieEstimator, DummyMapieEstimator()),
         )
 
         scores = test._compute_non_conformity_scores(X, y, y_pred=None)
@@ -73,10 +76,14 @@ class TestPValuePermutationTest:
         estimator_2 = DummyMapieEstimator()
 
         test_1 = PValuePermutationTest(
-            random_state=42, num_permutations=50, mapie_estimator=estimator_1
+            random_state=42,
+            num_permutations=50,
+            mapie_estimator=cast(MapieEstimator, estimator_1),
         )
         test_2 = PValuePermutationTest(
-            random_state=42, num_permutations=50, mapie_estimator=estimator_2
+            random_state=42,
+            num_permutations=50,
+            mapie_estimator=cast(MapieEstimator, estimator_2),
         )
 
         is_exchangeable_1 = test_1.run(X, y, y_pred=y_pred)
@@ -88,7 +95,9 @@ class TestPValuePermutationTest:
     def test_run_sets_expected_outputs(self, toy_exchangeability_data) -> None:
         X, y, y_pred = toy_exchangeability_data
         test = PValuePermutationTest(
-            random_state=7, num_permutations=30, mapie_estimator=DummyMapieEstimator()
+            random_state=7,
+            num_permutations=30,
+            mapie_estimator=cast(MapieEstimator, DummyMapieEstimator()),
         )
 
         is_exchangeable = test.run(X, y, y_pred=y_pred)
@@ -103,16 +112,18 @@ class TestPValuePermutationTest:
 class TestSequentialMonteCarloTest:
     def test_invalid_strategy_raises(self) -> None:
         with pytest.raises(ValueError, match=r"Unknown strategy"):
-            SequentialMonteCarloTest(strategy="unknown")
+            SequentialMonteCarloTest(strategy=cast(Any, "unknown"))
 
     @pytest.mark.parametrize("strategy", ["aggressive", "binomial", "binomial_mixture"])
-    def test_run_sets_expected_outputs(self, strategy, toy_exchangeability_data) -> None:
+    def test_run_sets_expected_outputs(
+        self, strategy, toy_exchangeability_data
+    ) -> None:
         X, y, y_pred = toy_exchangeability_data
         test = SequentialMonteCarloTest(
             strategy=strategy,
             random_state=7,
             num_permutations=80,
-            mapie_estimator=DummyMapieEstimator(),
+            mapie_estimator=cast(MapieEstimator, DummyMapieEstimator()),
         )
 
         is_exchangeable = test.run(X, y, y_pred=y_pred)
@@ -131,13 +142,13 @@ class TestSequentialMonteCarloTest:
             strategy="binomial",
             random_state=123,
             num_permutations=60,
-            mapie_estimator=DummyMapieEstimator(),
+            mapie_estimator=cast(MapieEstimator, DummyMapieEstimator()),
         )
         test_2 = SequentialMonteCarloTest(
             strategy="binomial",
             random_state=123,
             num_permutations=60,
-            mapie_estimator=DummyMapieEstimator(),
+            mapie_estimator=cast(MapieEstimator, DummyMapieEstimator()),
         )
 
         is_exchangeable_1 = test_1.run(X, y, y_pred=y_pred)

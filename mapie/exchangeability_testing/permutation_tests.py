@@ -1,19 +1,29 @@
 from abc import ABC, abstractmethod
-from typing import Literal, Optional
+from typing import Any, Literal, Optional, Union
 
 import numpy as np
 from numpy.typing import NDArray
 from scipy.stats import binom
 from sklearn.model_selection import train_test_split
 
-from mapie.regression import SplitConformalRegressor
+from mapie.regression import (
+    CrossConformalRegressor,
+    JackknifeAfterBootstrapRegressor,
+    SplitConformalRegressor,
+)
+
+MapieEstimator = Union[
+    SplitConformalRegressor,
+    CrossConformalRegressor,
+    JackknifeAfterBootstrapRegressor,
+]
 
 
 class TestStatistic(ABC):
     """Base class for test statistics used in exchangeability tests."""
 
     @abstractmethod
-    def compute(self) -> float:
+    def compute(self, *args: Any, **kwargs: Any) -> float:
         """Compute the test statistic value."""
         raise NotImplementedError
 
@@ -22,7 +32,7 @@ class TestStatisticOnLabeledDataset(TestStatistic, ABC):
     """Base class for test statistics computed from labeled datasets."""
 
     @abstractmethod
-    def compute(self, X: NDArray, y: NDArray) -> float:
+    def compute(self, *args: Any, **kwargs: Any) -> float:
         """Compute the statistic from features and labels."""
         raise NotImplementedError
 
@@ -31,7 +41,7 @@ class TestStatisticOnUnlabeledDataset(TestStatistic, ABC):
     """Base class for test statistics computed from unlabeled datasets."""
 
     @abstractmethod
-    def compute(self, X: NDArray) -> float:
+    def compute(self, *args: Any, **kwargs: Any) -> float:
         """Compute the statistic from feature values only."""
         raise NotImplementedError
 
@@ -43,7 +53,7 @@ class TestStatisticOnNonConformityScores(TestStatistic):
     the first half and the mean score of the second half.
     """
 
-    def compute(self, scores: NDArray) -> float:
+    def compute(self, *args: Any, **kwargs: Any) -> float:
         """Compute the absolute mean difference between score halves.
 
         Parameters
@@ -56,14 +66,14 @@ class TestStatisticOnNonConformityScores(TestStatistic):
         float
             Absolute difference between the means of both score halves.
         """
+        scores: NDArray = args[0]
         middle_idx = len(scores) // 2
 
         mean_left = np.mean(scores[:middle_idx])
         mean_right = np.mean(scores[middle_idx:])
 
         diff = np.abs(mean_left - mean_right)
-
-        return diff
+        return float(diff)
 
     def __call__(self, scores: NDArray) -> float:
         """Alias to :meth:`compute`."""
@@ -79,16 +89,21 @@ class PermutationTest(ABC):
         Permutation test variant.
     confidence_level : float, default=0.95
         Confidence level used to derive the decision threshold ``delta``.
-    mapie_estimator : Optional[SplitConformalRegressor], default=None
-        MAPIE estimator used to compute predictions and non-conformity scores. If ``None``,
-        a default :class:`SplitConformalRegressor` is built when needed.
+    mapie_estimator : Optional[MapieEstimator], default=None
+        MAPIE regression estimator used to compute predictions and
+        non-conformity scores. Supported estimators are
+        :class:`SplitConformalRegressor`,
+        :class:`CrossConformalRegressor`, and
+        :class:`JackknifeAfterBootstrapRegressor`.
+        If ``None``, a default :class:`SplitConformalRegressor` is built
+        when needed.
     """
 
     def __init__(
         self,
         method: Literal["p-value permutation", "Monte Carlo"],
         confidence_level: float = 0.95,
-        mapie_estimator: Optional[SplitConformalRegressor] = None,
+        mapie_estimator: Optional[MapieEstimator] = None,
     ) -> None:
         self.method = method
         self.delta = 1 - confidence_level
@@ -164,7 +179,7 @@ class PValuePermutationTest(PermutationTest):
         Permutation test variant forwarded to `PermutationTest`.
     confidence_level : float, default=0.95
         Confidence level forwarded to `PermutationTest`.
-    mapie_estimator : Optional[SplitConformalRegressor], default=None
+    mapie_estimator : Optional[MapieEstimator], default=None
         MAPIE estimator forwarded to `PermutationTest`.
 
     Examples
@@ -193,7 +208,7 @@ class PValuePermutationTest(PermutationTest):
         num_permutations: int = 1000,
         method: Literal["p-value permutation", "Monte Carlo"] = "p-value permutation",
         confidence_level: float = 0.95,
-        mapie_estimator: Optional[SplitConformalRegressor] = None,
+        mapie_estimator: Optional[MapieEstimator] = None,
     ) -> None:
         super().__init__(
             method=method,
@@ -260,7 +275,7 @@ class SequentialMonteCarloTest(PermutationTest):
         Permutation test variant forwarded to `PermutationTest`.
     confidence_level : float, default=0.95
         Confidence level forwarded to `PermutationTest`.
-    mapie_estimator : Optional[SplitConformalRegressor], default=None
+    mapie_estimator : Optional[MapieEstimator], default=None
         MAPIE estimator forwarded to `PermutationTest`.
     """
 
@@ -271,7 +286,7 @@ class SequentialMonteCarloTest(PermutationTest):
         random_state: Optional[int] = None,
         method: Literal["p-value permutation", "Monte Carlo"] = "Monte Carlo",
         confidence_level: float = 0.95,
-        mapie_estimator: Optional[SplitConformalRegressor] = None,
+        mapie_estimator: Optional[MapieEstimator] = None,
     ) -> None:
         super().__init__(
             method=method,
