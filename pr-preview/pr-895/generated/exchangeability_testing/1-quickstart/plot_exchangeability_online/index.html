@@ -4527,10 +4527,10 @@ to download the full example code</p>
 </span></code></pre></div>
 <!-- GENERATED FROM PYTHON SOURCE LINES 18-22 -->
 
-<p>We first fit a classifier on clean training data. Then, in the same workflow,
-we estimate the monitoring threshold on a clean reference set and update the
-monitor on a stable online stream. Here, <code>risk="accuracy"</code> means that
-<code>RiskMonitoring</code> tracks the misclassification risk <code>1 - accuracy</code>.</p>
+<p>We first fit a classifier on reference training data. Then, in the same
+workflow, we estimate the monitoring threshold on a reference test set and
+update the monitor on a stable online stream. Here, <code>risk="accuracy"</code> means
+that <code>RiskMonitoring</code> tracks the misclassification risk <code>1 - accuracy</code>.</p>
 <!-- GENERATED FROM PYTHON SOURCE LINES 22-56 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">random_state</span> <span class="o">=</span> <span class="mi">42</span>

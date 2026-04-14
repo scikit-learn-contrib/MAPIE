@@ -3,7 +3,7 @@
 
 In this example, we show how to use `RiskMonitoring` to track the
 misclassification risk of a deployed binary classifier on an online stream.
-The monitoring threshold is first estimated on a clean reference set, then
+The monitoring threshold is first estimated on a reference test set, then
 the online lower confidence bound is updated as new labeled data arrives.
 
 Instead of directly comparing risk estimations, computing confidence bounds
