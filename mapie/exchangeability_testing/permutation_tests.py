@@ -274,7 +274,7 @@ class PValuePermutationTest(PermutationTest):
     >>> test = PValuePermutationTest(
     ...     method="p-value permutation",
     ...     test_level=0.2,
-    ...     num_permutations=10,
+    ...     num_permutations=100,
     ... )
     >>> test.run(X, y)
     True
