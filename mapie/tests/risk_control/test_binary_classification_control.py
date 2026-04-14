@@ -322,6 +322,7 @@ def test_binary_classification_controller_sklearn_pipeline_with_dataframe() -> N
         risk=precision,
         target_level=0.1,
         confidence_level=0.1,
+        fwer_method="bonferroni",
     )
 
     controller.calibrate(X_df, y).predict(X_df)
@@ -885,6 +886,7 @@ def test_functional_multi_dimensional_params():
         risk=precision,
         target_level=0.6,
         list_predict_params=grid_param_multi_dim,
+        fwer_method="bonferroni",
     )
     bcc_multi_dim.calibrate(realistic_X_calib, realistic_y_calib)
 
@@ -912,6 +914,7 @@ def test_functional_multi_dimensional_params_multi_risk():
         risk=[precision, recall],
         target_level=[0.65, 0.6],
         list_predict_params=grid_param_multi_dim,
+        fwer_method="bonferroni",
     )
     bcc_multi_dim.calibrate(realistic_X_calib, realistic_y_calib)
 
@@ -920,6 +923,15 @@ def test_functional_multi_dimensional_params_multi_risk():
     assert bcc_multi_dim.best_predict_param is not None
     assert isinstance(bcc_multi_dim.best_predict_param, tuple)
     assert len(bcc_multi_dim.best_predict_param) == 2
+
+
+def test_default_fwer_method_is_bonferroni_holm():
+    controller = BinaryClassificationController(
+        predict_function=dummy_predict,
+        risk=precision,
+        target_level=dummy_target,
+    )
+    assert controller.fwer_method == "bonferroni_holm"
 
 
 def test_check_fwer_method_invalid_method():
