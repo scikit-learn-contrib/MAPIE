@@ -1,11 +1,14 @@
 from abc import ABC, abstractmethod
+from copy import deepcopy
 from typing import Any, Literal, Optional, Union
 
 import numpy as np
 from numpy.typing import NDArray
 from scipy.stats import binom
 from sklearn.model_selection import train_test_split
+from sklearn.utils.multiclass import type_of_target
 
+from mapie.classification import SplitConformalClassifier
 from mapie.regression import (
     CrossConformalRegressor,
     JackknifeAfterBootstrapRegressor,
@@ -99,19 +102,66 @@ class PermutationTest(ABC):
         when needed.
     """
 
+    @staticmethod
+    def _prepare_estimator(
+        mapie_estimator: Optional[MapieEstimator],
+    ) -> Optional[MapieEstimator]:
+        """Copy an estimator to avoid modifying the original estimator
+        and clear conformalization state to allow calling conformalize method."""
+        if mapie_estimator is None:
+            return None
+
+        estimator_copy = deepcopy(mapie_estimator)
+
+        if hasattr(estimator_copy, "_is_conformalized"):
+            estimator_copy._is_conformalized = False
+        if hasattr(estimator_copy, "_predict_params"):
+            estimator_copy._predict_params = {}
+
+        for attr_name in ("conformity_scores_", "quantiles_"):
+            if hasattr(estimator_copy, attr_name):
+                delattr(estimator_copy, attr_name)
+
+        for inner_estimator_name in ("_mapie_regressor", "_mapie_classifier"):
+            if hasattr(estimator_copy, inner_estimator_name):
+                inner_estimator = getattr(estimator_copy, inner_estimator_name)
+                for attr_name in ("conformity_scores_", "quantiles_"):
+                    if hasattr(inner_estimator, attr_name):
+                        delattr(inner_estimator, attr_name)
+
+        return estimator_copy
+
     def __init__(
         self,
         method: Literal["p-value permutation", "Monte Carlo"],
         confidence_level: float = 0.95,
         mapie_estimator: Optional[MapieEstimator] = None,
+        task: Optional[Literal["classification", "regression"]] = None,
     ) -> None:
         self.method = method
         self.delta = 1 - confidence_level
-        self.mapie_estimator = mapie_estimator
+        self.mapie_estimator = self._prepare_estimator(mapie_estimator)
+        self.task = task
 
-    def _compute_non_conformity_scores(
-        self, X: NDArray, y: NDArray, y_pred: Optional[NDArray]
-    ) -> NDArray:
+    def _infer_task(self, y: NDArray) -> Literal["classification", "regression"]:
+        """Infer whether the current data should use classification scores."""
+        if self.mapie_estimator is not None:
+            if hasattr(self.mapie_estimator, "_mapie_classifier"):
+                return "classification"
+            if hasattr(self.mapie_estimator, "_mapie_regressor"):
+                return "regression"
+        else:
+            type_of_target_y = type_of_target(y)
+            if "multiclass" in type_of_target_y or "binary" in type_of_target_y:
+                return "classification"
+            elif "continuous" in type_of_target_y:
+                return "regression"
+            else:
+                raise ValueError(
+                    "Unknown type of target, please manually set the task type."
+                )
+
+    def _compute_non_conformity_scores(self, X: NDArray, y: NDArray) -> NDArray:
         """Compute non-conformity scores from inputs and predictions.
 
         Parameters
@@ -120,41 +170,39 @@ class PermutationTest(ABC):
             Feature matrix.
         y : NDArray
             Target values.
-        y_pred : Optional[NDArray]
-            Predicted values. If ``None``, predictions are computed from
-            the provided mapie_estimator if it is not None, otherwise a
-            default SplitConformalRegressor is built and used
-            to compute predictions.
-
         Returns
         -------
         NDArray
             Non-conformity scores associated with ``(X, y)``.
         """
-        if y_pred is None:
-            if self.mapie_estimator is None:
-                X_train, X, y_train, y = train_test_split(
-                    X, y, test_size=0.8, shuffle=False
-                )
-                self.mapie_estimator = SplitConformalRegressor(
-                    prefit=False
-                )  # TODO: handle classif
-                self.mapie_estimator.fit(X_train, y_train)
-            y_pred = self.mapie_estimator.predict(X)
-        else:
-            if self.mapie_estimator is None:
-                self.mapie_estimator = SplitConformalRegressor()  # dummy estimator used to compute scores (no need to compute y_pred). TODO: handle classif
 
-        scores = self.mapie_estimator._mapie_regressor.conformity_score_function_.get_conformity_scores(
-            y,
-            y_pred,
-            X=X,  # TODO: check les kwargs possibles (X, ...)
-        )
+        if self.task is None:
+            self.task = self._infer_task(y)
+
+        if self.mapie_estimator is None:
+            X_train, X, y_train, y = train_test_split(
+                X,
+                y,
+                test_size=0.7,
+                shuffle=False,
+            )
+            if self.task == "classification":
+                self.mapie_estimator = SplitConformalClassifier(prefit=False)
+            elif self.task == "regression":
+                self.mapie_estimator = SplitConformalRegressor(prefit=False)
+            self.mapie_estimator.fit(X_train, y_train)
+
+        self.mapie_estimator.conformalize(X, y)  # compute scores internally
+
+        if self.task == "classification":
+            scores = self.mapie_estimator._mapie_classifier.conformity_scores_
+        elif self.task == "regression":
+            scores = self.mapie_estimator._mapie_regressor.conformity_scores_
 
         return scores
 
     @abstractmethod
-    def run(self, X: NDArray, y: NDArray, y_pred: Optional[NDArray] = None) -> bool:
+    def run(self, X: NDArray, y: NDArray) -> bool:
         """Run a permutation-based exchangeability test."""
         raise NotImplementedError
 
@@ -221,7 +269,7 @@ class PValuePermutationTest(PermutationTest):
 
         self.test_statistic = TestStatisticOnNonConformityScores()
 
-    def run(self, X: NDArray, y: NDArray, y_pred: Optional[NDArray] = None) -> bool:
+    def run(self, X: NDArray, y: NDArray) -> bool:
         """Run a p-value permutation test.
 
         Parameters
@@ -230,15 +278,12 @@ class PValuePermutationTest(PermutationTest):
             Feature matrix.
         y : NDArray
             Target values.
-        y_pred : Optional[NDArray], default=None
-            Predicted values. If ``None``, predictions are computed.
-
         Returns
         -------
         bool
             Whether the dataset is deemed exchangeable.
         """
-        scores = self._compute_non_conformity_scores(X, y, y_pred)
+        scores = self._compute_non_conformity_scores(X, y)
 
         test_statistic_reference = self.test_statistic(scores)
 
@@ -306,7 +351,7 @@ class SequentialMonteCarloTest(PermutationTest):
 
         self.test_statistic = TestStatisticOnNonConformityScores()
 
-    def run(self, X: NDArray, y: NDArray, y_pred: Optional[NDArray] = None) -> bool:
+    def run(self, X: NDArray, y: NDArray) -> bool:
         """Run a sequential Monte Carlo permutation test.
 
         Parameters
@@ -315,15 +360,12 @@ class SequentialMonteCarloTest(PermutationTest):
             Feature matrix.
         y : NDArray
             Target values.
-        y_pred : Optional[NDArray], default=None
-            Predicted values. If ``None``, predictions are computed.
-
         Returns
         -------
         bool
             Whether the dataset is deemed exchangeable.
         """
-        scores = self._compute_non_conformity_scores(X, y, y_pred)
+        scores = self._compute_non_conformity_scores(X, y)
 
         test_statistic_reference = self.test_statistic(scores)
 

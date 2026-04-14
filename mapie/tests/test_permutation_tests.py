@@ -21,16 +21,31 @@ class DummyConformityScoreFunction:
 class DummyMapieRegressor:
     def __init__(self):
         self.conformity_score_function_ = DummyConformityScoreFunction()
+        self.conformity_scores_ = np.array([99.0])
+        self.quantiles_ = np.array([0.9])
 
 
 class DummyMapieEstimator:
     def __init__(self):
         self._mapie_regressor = DummyMapieRegressor()
+        self._is_conformalized = False
+        self._predict_params = {"stale": True}
+        self.conformity_scores_ = np.array([42.0])
+        self.quantiles_ = np.array([0.5])
 
     def predict(self, X):
         return np.zeros(len(X))
 
     def fit(self, X, y):
+        return self
+
+    def conformalize(self, X, y):
+        if self._is_conformalized:
+            raise ValueError("conformalize method already called")
+        self._is_conformalized = True
+        self._predict_params = {}
+        self.conformity_scores_ = np.abs(y - self.predict(X))
+        self._mapie_regressor.conformity_scores_ = np.abs(y - self.predict(X))
         return self
 
 
@@ -50,11 +65,32 @@ class TestStatisticOnNonConformityScoresClass:
 def toy_exchangeability_data():
     X = np.arange(20, dtype=float).reshape(-1, 1)
     y = np.concatenate((np.zeros(10), np.ones(10)))
-    y_pred = np.zeros_like(y)
-    return X, y, y_pred
+    return X, y
 
 
 class TestPValuePermutationTest:
+    def test_init_copies_provided_estimator(self) -> None:
+        estimator = DummyMapieEstimator()
+        estimator._is_conformalized = True
+
+        test = PValuePermutationTest(
+            random_state=123,
+            num_permutations=10,
+            mapie_estimator=cast(MapieEstimator, estimator),
+        )
+
+        assert test.mapie_estimator is not estimator
+        assert test.mapie_estimator._is_conformalized is False
+        assert test.mapie_estimator._predict_params == {}
+        assert not hasattr(test.mapie_estimator, "conformity_scores_")
+        assert not hasattr(test.mapie_estimator, "quantiles_")
+        assert not hasattr(test.mapie_estimator._mapie_regressor, "conformity_scores_")
+        assert not hasattr(test.mapie_estimator._mapie_regressor, "quantiles_")
+        assert estimator._is_conformalized is True
+        assert estimator._predict_params == {"stale": True}
+        assert hasattr(estimator, "conformity_scores_")
+        assert hasattr(estimator._mapie_regressor, "conformity_scores_")
+
     def test_compute_scores_uses_predict_if_y_pred_is_none(self) -> None:
         X = np.arange(8, dtype=float).reshape(-1, 1)
         y = np.array([0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0])
@@ -64,14 +100,14 @@ class TestPValuePermutationTest:
             mapie_estimator=cast(MapieEstimator, DummyMapieEstimator()),
         )
 
-        scores = test._compute_non_conformity_scores(X, y, y_pred=None)
+        scores = test._compute_non_conformity_scores(X, y)
 
         np.testing.assert_allclose(scores, y)
 
     def test_run_is_reproducible_with_fixed_random_state(
         self, toy_exchangeability_data
     ) -> None:
-        X, y, y_pred = toy_exchangeability_data
+        X, y = toy_exchangeability_data
         estimator_1 = DummyMapieEstimator()
         estimator_2 = DummyMapieEstimator()
 
@@ -86,28 +122,27 @@ class TestPValuePermutationTest:
             mapie_estimator=cast(MapieEstimator, estimator_2),
         )
 
-        is_exchangeable_1 = test_1.run(X, y, y_pred=y_pred)
-        is_exchangeable_2 = test_2.run(X, y, y_pred=y_pred)
+        is_exchangeable_1 = test_1.run(X, y)
+        is_exchangeable_2 = test_2.run(X, y)
 
         assert is_exchangeable_1 == is_exchangeable_2
         np.testing.assert_allclose(test_1.p_values, test_2.p_values)
 
     def test_run_sets_expected_outputs(self, toy_exchangeability_data) -> None:
-        X, y, y_pred = toy_exchangeability_data
+        X, y = toy_exchangeability_data
         test = PValuePermutationTest(
             random_state=7,
             num_permutations=30,
             mapie_estimator=cast(MapieEstimator, DummyMapieEstimator()),
         )
 
-        is_exchangeable = test.run(X, y, y_pred=y_pred)
+        is_exchangeable = test.run(X, y)
 
         assert isinstance(is_exchangeable, bool)
         assert test.p_values.shape == (31,)
         assert test.p_values[0] == 1.0
         assert np.all((test.p_values >= 0.0) & (test.p_values <= 1.0))
         assert is_exchangeable == bool(test.p_values[-1] > test.delta)
-
 
 class TestSequentialMonteCarloTest:
     def test_invalid_strategy_raises(self) -> None:
@@ -118,7 +153,7 @@ class TestSequentialMonteCarloTest:
     def test_run_sets_expected_outputs(
         self, strategy, toy_exchangeability_data
     ) -> None:
-        X, y, y_pred = toy_exchangeability_data
+        X, y = toy_exchangeability_data
         test = SequentialMonteCarloTest(
             strategy=strategy,
             random_state=7,
@@ -126,7 +161,7 @@ class TestSequentialMonteCarloTest:
             mapie_estimator=cast(MapieEstimator, DummyMapieEstimator()),
         )
 
-        is_exchangeable = test.run(X, y, y_pred=y_pred)
+        is_exchangeable = test.run(X, y)
 
         assert isinstance(is_exchangeable, bool)
         assert test.p_values.ndim == 1
@@ -137,7 +172,7 @@ class TestSequentialMonteCarloTest:
     def test_run_is_reproducible_with_fixed_random_state(
         self, toy_exchangeability_data
     ) -> None:
-        X, y, y_pred = toy_exchangeability_data
+        X, y = toy_exchangeability_data
         test_1 = SequentialMonteCarloTest(
             strategy="binomial",
             random_state=123,
@@ -151,8 +186,8 @@ class TestSequentialMonteCarloTest:
             mapie_estimator=cast(MapieEstimator, DummyMapieEstimator()),
         )
 
-        is_exchangeable_1 = test_1.run(X, y, y_pred=y_pred)
-        is_exchangeable_2 = test_2.run(X, y, y_pred=y_pred)
+        is_exchangeable_1 = test_1.run(X, y)
+        is_exchangeable_2 = test_2.run(X, y)
 
         assert is_exchangeable_1 == is_exchangeable_2
         np.testing.assert_allclose(test_1.p_values, test_2.p_values)
