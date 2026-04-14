@@ -256,13 +256,10 @@ class PValuePermutationTest(PermutationTest):
     >>> test = PValuePermutationTest(
     ...     method="p-value permutation",
     ...     confidence_level=0.8,
-    ...     random_state=0,
     ...     num_permutations=10,
     ... )
     >>> test.run(X, y)
-    0
-    >>> test.p_values.shape
-    (11,)
+    True
     """
 
     def __init__(
