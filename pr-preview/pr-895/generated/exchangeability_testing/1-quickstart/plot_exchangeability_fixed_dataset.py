@@ -18,10 +18,10 @@ from mapie.exchangeability_testing import RiskMonitoring
 from utils import generate_gaussian_stream, sample_two_gaussians
 
 ##############################################################################
-# We first fit a classifier on clean training data. Then, in the same workflow,
-# we estimate the monitoring threshold on a clean reference set and update the
-# monitor on a stable online stream. Here, `risk="accuracy"` means that
-# `RiskMonitoring` tracks the misclassification risk `1 - accuracy`.
+# We first fit a classifier on reference training data. Then, in the same
+# workflow, we estimate the monitoring threshold on a reference test set and
+# update the monitor on a stable online stream. Here, `risk="accuracy"` means
+#  that `RiskMonitoring` tracks the misclassification risk `1 - accuracy`.
 
 random_state = 42
 prop_shift = 0.5
