@@ -76,9 +76,7 @@ exchangeable_binomial_mixture_test = SequentialMonteCarloTest(
 
 exchangeable_pvalue_detected = exchangeable_pvalue_test.run(X, y_exchangeable)
 
-exchangeable_aggressive_detected = exchangeable_aggressive_test.run(
-    X, y_exchangeable
-)
+exchangeable_aggressive_detected = exchangeable_aggressive_test.run(X, y_exchangeable)
 
 exchangeable_binomial_detected = exchangeable_binomial_test.run(X, y_exchangeable)
 

@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from copy import deepcopy
-from typing import Any, Literal, Optional, Union
+from typing import Any, Literal, Optional, Union, cast
 
 import numpy as np
 from numpy.typing import NDArray
@@ -167,16 +167,16 @@ class PermutationTest(ABC):
                 return "classification"
             if hasattr(self.mapie_estimator, "_mapie_regressor"):
                 return "regression"
-        else:
-            type_of_target_y = type_of_target(y)
-            if "multiclass" in type_of_target_y or "binary" in type_of_target_y:
-                return "classification"
-            elif "continuous" in type_of_target_y:
-                return "regression"
-            else:
-                raise ValueError(
-                    "Unknown type of target, please manually set the task type."
-                )
+            raise ValueError(
+                "Unable to infer the task from the provided MAPIE estimator."
+            )
+
+        type_of_target_y = type_of_target(y)
+        if "multiclass" in type_of_target_y or "binary" in type_of_target_y:
+            return "classification"
+        if "continuous" in type_of_target_y:
+            return "regression"
+        raise ValueError("Unknown type of target, please manually set the task type.")
 
     def _compute_non_conformity_scores(self, X: NDArray, y: NDArray) -> NDArray:
         """Compute non-conformity scores from inputs and predictions.
@@ -201,22 +201,35 @@ class PermutationTest(ABC):
                 self.mapie_estimator = SplitConformalClassifier(prefit=False)
             elif self.task == "regression":
                 self.mapie_estimator = SplitConformalRegressor(prefit=False)
+            else:
+                raise ValueError("Unknown task type.")
 
-        if not self.mapie_estimator._is_fitted:
+        estimator = self.mapie_estimator
+        assert estimator is not None
+
+        if not estimator._is_fitted:
             X_train, X, y_train, y = train_test_split(
                 X,
                 y,
                 test_size=0.7,
                 shuffle=False,
             )
-            self.mapie_estimator.fit(X_train, y_train)
+            estimator.fit(X_train, y_train)
 
-        self.mapie_estimator.conformalize(X, y)  # compute scores internally
+        estimator.conformalize(X, y)  # compute scores internally
 
         if self.task == "classification":
-            scores = self.mapie_estimator._mapie_classifier.conformity_scores_
-        elif self.task == "regression":
-            scores = self.mapie_estimator._mapie_regressor.conformity_scores_
+            estimator = cast(SplitConformalClassifier, estimator)
+            scores = cast(
+                NDArray,
+                estimator._mapie_classifier.conformity_scores_,
+            )
+        else:
+            estimator = cast(SplitConformalRegressor, estimator)
+            scores = cast(
+                NDArray,
+                estimator._mapie_regressor.conformity_scores_,
+            )
 
         return scores
 

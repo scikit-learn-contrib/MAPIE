@@ -87,14 +87,15 @@ class TestPValuePermutationTest:
             num_permutations=10,
             mapie_estimator=cast(MapieEstimator, estimator),
         )
+        estimator_copy = cast(DummyMapieEstimator, test.mapie_estimator)
 
         assert test.mapie_estimator is not estimator
-        assert test.mapie_estimator._is_conformalized is False
-        assert test.mapie_estimator._predict_params == {}
-        assert not hasattr(test.mapie_estimator, "conformity_scores_")
-        assert not hasattr(test.mapie_estimator, "quantiles_")
-        assert not hasattr(test.mapie_estimator._mapie_regressor, "conformity_scores_")
-        assert not hasattr(test.mapie_estimator._mapie_regressor, "quantiles_")
+        assert estimator_copy._is_conformalized is False
+        assert estimator_copy._predict_params == {}
+        assert not hasattr(estimator_copy, "conformity_scores_")
+        assert not hasattr(estimator_copy, "quantiles_")
+        assert not hasattr(estimator_copy._mapie_regressor, "conformity_scores_")
+        assert not hasattr(estimator_copy._mapie_regressor, "quantiles_")
         assert estimator._is_conformalized is True
         assert estimator._predict_params == {"stale": True}
         assert hasattr(estimator, "conformity_scores_")
@@ -113,7 +114,9 @@ class TestPValuePermutationTest:
 
         np.testing.assert_allclose(scores, y)
 
-    def test_run_fits_provided_unfitted_estimator(self, toy_exchangeability_data) -> None:
+    def test_run_fits_provided_unfitted_estimator(
+        self, toy_exchangeability_data
+    ) -> None:
         X, y = toy_exchangeability_data
         estimator = DummyMapieEstimator()
         estimator._is_fitted = False
@@ -124,9 +127,10 @@ class TestPValuePermutationTest:
         )
 
         is_exchangeable = test.run(X, y)
+        estimator_copy = cast(DummyMapieEstimator, test.mapie_estimator)
 
         assert isinstance(is_exchangeable, bool)
-        assert test.mapie_estimator._is_fitted is True
+        assert estimator_copy._is_fitted is True
 
     def test_run_is_reproducible_with_fixed_random_state(
         self, toy_exchangeability_data
@@ -186,6 +190,7 @@ class TestPValuePermutationTest:
                 num_permutations=10,
                 mapie_estimator=cast(Any, estimator),
             )
+
 
 class TestSequentialMonteCarloTest:
     def test_invalid_strategy_raises(self) -> None:
