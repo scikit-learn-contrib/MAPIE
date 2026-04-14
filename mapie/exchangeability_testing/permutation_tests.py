@@ -89,8 +89,10 @@ class PermutationTest(ABC):
     ----------
     method : Literal["p-value permutation", "Monte Carlo"]
         Permutation test variant.
-    confidence_level : float, default=0.95
-        Confidence level used to derive the decision threshold ``delta``.
+    test_level : float, default=0.05
+        Level used to test the hypothesis that the dataset is exchangeable.
+        The probability that the test gives a false positive is at most
+        `test_level` (type I error).
     mapie_estimator : Optional[MapieEstimator], default=None
         MAPIE estimator used to compute predictions and non-conformity
         scores. Supported estimators are
@@ -147,12 +149,14 @@ class PermutationTest(ABC):
     def __init__(
         self,
         method: Literal["p-value permutation", "Monte Carlo"],
-        confidence_level: float = 0.95,
+        test_level: float = 0.05,
         mapie_estimator: Optional[MapieEstimator] = None,
         task: Optional[Literal["classification", "regression"]] = None,
     ) -> None:
+        if not (0.0 < test_level < 1.0):
+            raise ValueError("test_level must be in (0, 1).")
         self.method = method
-        self.delta = 1 - confidence_level
+        self.delta = test_level
         self.mapie_estimator = self._prepare_estimator(mapie_estimator)
         self.task = task
 
@@ -237,11 +241,12 @@ class PValuePermutationTest(PermutationTest):
         Number of permutations used to estimate the p-value.
 
         By default `1000`.
-
     method : Literal["p-value permutation", "Monte Carlo"], default="p-value permutation"
         Permutation test variant forwarded to `PermutationTest`.
-    confidence_level : float, default=0.95
-        Confidence level forwarded to `PermutationTest`.
+    test_level : float, default=0.05
+        Level used to test the hypothesis that the dataset is exchangeable.
+        The probability that the test gives a false positive is at most
+        `test_level` (type I error).
     mapie_estimator : Optional[MapieEstimator], default=None
         MAPIE estimator forwarded to `PermutationTest`.
 
@@ -255,7 +260,7 @@ class PValuePermutationTest(PermutationTest):
     >>> y = 2 * X.ravel() + np.array([0.0, 0.1] * 10)
     >>> test = PValuePermutationTest(
     ...     method="p-value permutation",
-    ...     confidence_level=0.8,
+    ...     test_level=0.2,
     ...     num_permutations=10,
     ... )
     >>> test.run(X, y)
@@ -267,12 +272,12 @@ class PValuePermutationTest(PermutationTest):
         random_state: Optional[int] = None,
         num_permutations: int = 1000,
         method: Literal["p-value permutation", "Monte Carlo"] = "p-value permutation",
-        confidence_level: float = 0.95,
+        test_level: float = 0.05,
         mapie_estimator: Optional[MapieEstimator] = None,
     ) -> None:
         super().__init__(
             method=method,
-            confidence_level=confidence_level,
+            test_level=test_level,
             mapie_estimator=mapie_estimator,
         )
         self.rng = np.random.RandomState(random_state)
@@ -330,8 +335,10 @@ class SequentialMonteCarloTest(PermutationTest):
         Seed for permutation randomness.
     method : Literal["p-value permutation", "Monte Carlo"], default="Monte Carlo"
         Permutation test variant forwarded to `PermutationTest`.
-    confidence_level : float, default=0.95
-        Confidence level forwarded to `PermutationTest`.
+    test_level : float, default=0.05
+        Level used to test the hypothesis that the dataset is exchangeable.
+        The probability that the test gives a false positive is at most
+        `test_level` (type I error).
     mapie_estimator : Optional[MapieEstimator], default=None
         MAPIE estimator forwarded to `PermutationTest`.
     """
@@ -342,12 +349,12 @@ class SequentialMonteCarloTest(PermutationTest):
         num_permutations: int = 1000,
         random_state: Optional[int] = None,
         method: Literal["p-value permutation", "Monte Carlo"] = "Monte Carlo",
-        confidence_level: float = 0.95,
+        test_level: float = 0.05,
         mapie_estimator: Optional[MapieEstimator] = None,
     ) -> None:
         super().__init__(
             method=method,
-            confidence_level=confidence_level,
+            test_level=test_level,
             mapie_estimator=mapie_estimator,
         )
         self.strategy = strategy

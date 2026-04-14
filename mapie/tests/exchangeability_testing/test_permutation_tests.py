@@ -72,6 +72,12 @@ def toy_exchangeability_data():
 
 
 class TestPValuePermutationTest:
+    def test_init_rejects_invalid_test_level(self) -> None:
+        with pytest.raises(ValueError, match="test_level must be in"):
+            PValuePermutationTest(test_level=1.0)
+        with pytest.raises(ValueError, match="test_level must be in"):
+            PValuePermutationTest(test_level=0.0)
+
     def test_init_copies_provided_estimator(self) -> None:
         estimator = DummyMapieEstimator()
         estimator._is_conformalized = True
@@ -185,6 +191,12 @@ class TestSequentialMonteCarloTest:
     def test_invalid_strategy_raises(self) -> None:
         with pytest.raises(ValueError, match=r"Unknown strategy"):
             SequentialMonteCarloTest(strategy=cast(Any, "unknown"))
+
+    def test_init_rejects_invalid_test_level(self) -> None:
+        with pytest.raises(ValueError, match="test_level must be in"):
+            SequentialMonteCarloTest(strategy="binomial", test_level=1.0)
+        with pytest.raises(ValueError, match="test_level must be in"):
+            SequentialMonteCarloTest(strategy="binomial", test_level=0.0)
 
     @pytest.mark.parametrize("strategy", ["aggressive", "binomial", "binomial_mixture"])
     def test_run_sets_expected_outputs(

@@ -43,33 +43,33 @@ y_shifted[len(y_shifted) // 2 :] += 0.8
 #
 # We start with a dataset that should satisfy exchangeability.
 
-confidence_level = 0.9
+test_level = 0.1
 num_permutations = 200
 
 exchangeable_pvalue_test = PValuePermutationTest(
     method="p-value permutation",
-    confidence_level=confidence_level,
+    test_level=test_level,
     random_state=7,
     num_permutations=num_permutations,
 )
 exchangeable_aggressive_test = SequentialMonteCarloTest(
     strategy="aggressive",
     method="Monte Carlo",
-    confidence_level=confidence_level,
+    test_level=test_level,
     random_state=7,
     num_permutations=num_permutations,
 )
 exchangeable_binomial_test = SequentialMonteCarloTest(
     strategy="binomial",
     method="Monte Carlo",
-    confidence_level=confidence_level,
+    test_level=test_level,
     random_state=7,
     num_permutations=num_permutations,
 )
 exchangeable_binomial_mixture_test = SequentialMonteCarloTest(
     strategy="binomial_mixture",
     method="Monte Carlo",
-    confidence_level=confidence_level,
+    test_level=test_level,
     random_state=7,
     num_permutations=num_permutations,
 )
@@ -139,28 +139,28 @@ plt.show()
 
 shifted_pvalue_test = PValuePermutationTest(
     method="p-value permutation",
-    confidence_level=confidence_level,
+    test_level=test_level,
     random_state=7,
     num_permutations=num_permutations,
 )
 shifted_aggressive_test = SequentialMonteCarloTest(
     strategy="aggressive",
     method="Monte Carlo",
-    confidence_level=confidence_level,
+    test_level=test_level,
     random_state=7,
     num_permutations=num_permutations,
 )
 shifted_binomial_test = SequentialMonteCarloTest(
     strategy="binomial",
     method="Monte Carlo",
-    confidence_level=confidence_level,
+    test_level=test_level,
     random_state=7,
     num_permutations=num_permutations,
 )
 shifted_binomial_mixture_test = SequentialMonteCarloTest(
     strategy="binomial_mixture",
     method="Monte Carlo",
-    confidence_level=confidence_level,
+    test_level=test_level,
     random_state=7,
     num_permutations=num_permutations,
 )

@@ -81,11 +81,11 @@ y_exchangeable = np.concatenate([y_conformalize, y_test], axis=0)
 # 3. Run the permutation test
 # ---------------------------
 
-confidence_level = 0.9
+test_level = 0.1
 num_permutations = 200
 
 exchangeability_test = PValuePermutationTest(
-    confidence_level=confidence_level,
+    test_level=test_level,
     random_state=RANDOM_STATE,
     num_permutations=num_permutations,
     mapie_estimator=mapie_classifier,
