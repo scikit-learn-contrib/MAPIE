@@ -101,10 +101,15 @@ print(f"PValuePermutationTest: data exchangeability={exchangeability_detected}")
 # 4. Plot the running p-values
 # ----------------------------
 
-delta = exchangeability_test.delta
+test_level = exchangeability_test.test_level
 plt.figure(figsize=(8, 4))
 plt.plot(exchangeability_test.p_values, label="Exchangeable dataset")
-plt.axhline(delta, color="black", linestyle="--", label=f"delta = {delta:.2f}")
+plt.axhline(
+    test_level,
+    color="black",
+    linestyle="--",
+    label=f"test_level = {test_level:.2f}",
+)
 plt.xlabel("Number of permutations")
 plt.ylabel("Running p-value")
 plt.title("Permutation test with a fitted top-k classifier")
