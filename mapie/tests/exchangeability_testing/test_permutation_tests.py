@@ -54,8 +54,8 @@ class DummyUnknownEstimator:
         return self
 
 
-class ConstantStatistic:
-    def __call__(self, scores):
+class ConstantStatistic(TestStatisticOnNonConformityScores):
+    def compute(self, *args: Any, **kwargs: Any) -> float:
         return 1.0
 
 
@@ -95,14 +95,19 @@ class TestStatisticOnNonConformityScoresClass:
         assert statistic(scores) == statistic.compute(scores)
 
     def test_abstract_base_methods_raise(self) -> None:
+        test_statistic = cast(TestStatistic, object())
+        labeled_statistic = cast(TestStatisticOnLabeledDataset, object())
+        unlabeled_statistic = cast(TestStatisticOnUnlabeledDataset, object())
+        permutation_test = cast(PermutationTest, object())
+
         with pytest.raises(NotImplementedError):
-            TestStatistic.compute(object())
+            TestStatistic.compute(test_statistic)
         with pytest.raises(NotImplementedError):
-            TestStatisticOnLabeledDataset.compute(object())
+            TestStatisticOnLabeledDataset.compute(labeled_statistic)
         with pytest.raises(NotImplementedError):
-            TestStatisticOnUnlabeledDataset.compute(object())
+            TestStatisticOnUnlabeledDataset.compute(unlabeled_statistic)
         with pytest.raises(NotImplementedError):
-            PermutationTest.run(object(), np.array([[0.0]]), np.array([0.0]))
+            PermutationTest.run(permutation_test, np.array([[0.0]]), np.array([0.0]))
 
 
 @pytest.fixture
@@ -193,7 +198,9 @@ class TestPValuePermutationTest:
         scores = test._compute_non_conformity_scores(X, y)
         estimator = cast(SplitConformalRegressor, test.mapie_estimator)
 
-        np.testing.assert_allclose(scores, estimator._mapie_regressor.conformity_scores_)
+        np.testing.assert_allclose(
+            scores, estimator._mapie_regressor.conformity_scores_
+        )
 
     def test_run_fits_provided_unfitted_estimator(
         self, toy_exchangeability_data, split_conformal_regressor
