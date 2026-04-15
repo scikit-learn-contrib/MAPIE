@@ -259,8 +259,6 @@ def ltt_procedure(
         Contains the different alphas control level.
         The empirical risk should be less than alpha with
         probability 1-delta.
-        Note: MAPIE 1.2 does not support multiple risks and multiple alphas
-        simultaneously.
         For MultiLabelClassificationController, the shape should be (1, n_alpha).
         For BinaryClassificationController, the shape should be (n_risks, 1).
 
