@@ -448,7 +448,7 @@ class SequentialMonteCarloTest(PermutationTest):
                 break
             if (
                 self.strategy == "binomial_mixture"
-                and (wealth_agg[-1] < self.delta or wealth_agg[-1] >= 1 / self.delta)
+                and (wealth_bm[-1] < self.delta or wealth_bm[-1] >= 1 / self.delta)
                 and (i > 50)
             ):
                 break
