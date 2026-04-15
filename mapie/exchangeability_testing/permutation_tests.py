@@ -156,7 +156,7 @@ class PermutationTest(ABC):
         if not (0.0 < test_level < 1.0):
             raise ValueError("test_level must be in (0, 1).")
         self.method = method
-        self.delta = test_level
+        self.test_level = test_level
         self.mapie_estimator = self._prepare_estimator(mapie_estimator)
         self.task = task
 
@@ -329,7 +329,7 @@ class PValuePermutationTest(PermutationTest):
                 rank += 1
             self.p_values[t] = rank / (t + 1)
 
-        is_exchangeable = bool(self.p_values[-1] > self.delta)
+        is_exchangeable = bool(self.p_values[-1] > self.test_level)
 
         return is_exchangeable
 
@@ -400,8 +400,8 @@ class SequentialMonteCarloTest(PermutationTest):
 
         test_statistic_reference = self.test_statistic(scores)
 
-        c = self.delta * 0.90
-        p_zero = 1 / np.ceil(np.sqrt(2 * np.pi * np.exp(1 / 6)) / self.delta)
+        c = self.test_level * 0.90
+        p_zero = 1 / np.ceil(np.sqrt(2 * np.pi * np.exp(1 / 6)) / self.test_level)
 
         rank = 1
         wealth_bin = np.array([1.0])
@@ -415,7 +415,7 @@ class SequentialMonteCarloTest(PermutationTest):
             scores_permuted = scores[permuted]
             test_statistic_permutation = self.test_statistic(scores_permuted)
 
-            if wealth_bin[-1] * p_zero * (i + 1) / rank < self.delta:
+            if wealth_bin[-1] * p_zero * (i + 1) / rank < self.test_level:
                 pt = 0
             else:
                 pt = p_zero
@@ -436,19 +436,28 @@ class SequentialMonteCarloTest(PermutationTest):
             # early stopping if possible
             if (
                 self.strategy == "aggressive"
-                and (wealth_agg[-1] < self.delta or wealth_agg[-1] >= 1 / self.delta)
+                and (
+                    wealth_agg[-1] < self.test_level
+                    or wealth_agg[-1] >= 1 / self.test_level
+                )
                 and (i > 50)
             ):
                 break
             if (
                 self.strategy == "binomial"
-                and (wealth_bin[-1] < self.delta or wealth_bin[-1] >= 1 / self.delta)
+                and (
+                    wealth_bin[-1] < self.test_level
+                    or wealth_bin[-1] >= 1 / self.test_level
+                )
                 and (i > 50)
             ):
                 break
             if (
                 self.strategy == "binomial_mixture"
-                and (wealth_bm[-1] < self.delta or wealth_bm[-1] >= 1 / self.delta)
+                and (
+                    wealth_bm[-1] < self.test_level
+                    or wealth_bm[-1] >= 1 / self.test_level
+                )
                 and (i > 50)
             ):
                 break
@@ -460,6 +469,6 @@ class SequentialMonteCarloTest(PermutationTest):
         }
         self.p_values = np.minimum(1 / strategy_to_wealth[self.strategy], 1)
 
-        is_exchangeable = bool(self.p_values[-1] < self.delta)
+        is_exchangeable = bool(self.p_values[-1] < self.test_level)
 
         return is_exchangeable

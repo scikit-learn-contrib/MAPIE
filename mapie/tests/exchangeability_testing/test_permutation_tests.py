@@ -328,7 +328,7 @@ class TestPValuePermutationTest:
         assert test.p_values.shape == (31,)
         assert test.p_values[0] == 1.0
         assert np.all((test.p_values >= 0.0) & (test.p_values <= 1.0))
-        assert is_exchangeable == bool(test.p_values[-1] > test.delta)
+        assert is_exchangeable == bool(test.p_values[-1] > test.test_level)
 
     @pytest.mark.parametrize(
         "estimator",
@@ -382,7 +382,7 @@ class TestSequentialMonteCarloTest:
         assert test.p_values.ndim == 1
         assert 1 <= len(test.p_values) <= 81
         assert np.all((test.p_values >= 0.0) & (test.p_values <= 1.0))
-        assert is_exchangeable == bool(test.p_values[-1] < test.delta)
+        assert is_exchangeable == bool(test.p_values[-1] < test.test_level)
 
     def test_run_is_reproducible_with_fixed_random_state(
         self, toy_exchangeability_data, split_conformal_regressor

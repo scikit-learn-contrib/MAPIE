@@ -113,9 +113,8 @@ class RiskMonitoring:
 
         if not (0.0 < test_level < 1.0):
             raise ValueError("test_level must be in (0, 1).")
-        delta = test_level
-        self.delta_reference = delta / 2
-        self.delta_online = delta / 2
+        self.test_level_reference = test_level / 2
+        self.test_level_online = test_level / 2
 
         self.reference_risk_upper_bound: Optional[float] = None
         self.online_risk_sequence_history: NDArray[np.float64] = np.array(
@@ -169,7 +168,9 @@ class RiskMonitoring:
             )
 
         self.reference_risk_upper_bound = hoeffding_bound(
-            reference_risk_sequence, self.delta_reference, bound_side="upper"
+            reference_risk_sequence,
+            self.test_level_reference,
+            bound_side="upper",
         )
 
         if self.tolerance_type == "absolute":
@@ -215,7 +216,7 @@ class RiskMonitoring:
         new_risk_lower_bound_sequence = conjugate_mixture_empirical_bernstein_bound(
             self.online_risk_sequence_history,
             v_opt=1,
-            alpha=self.delta_online,
+            alpha=self.test_level_online,
             bound_side="lower",
         )
 
