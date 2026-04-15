@@ -2,8 +2,9 @@
 Permutation test for exchangeability
 ====================================
 
-This example illustrates how to run `PValuePermutationTest` on a toy
-regression problem. We compare a dataset with exchangeable residuals to a
+This example illustrates how to run `PValuePermutationTest`  and
+`SequentialMonteCarloTest` on a toy regression problem.
+We compare a dataset with exchangeable residuals to a
 dataset where the second half of the residuals is shifted, which breaks the
 exchangeability assumption used by conformal methods.
 """
