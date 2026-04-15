@@ -1,8 +1,3 @@
-/* Keep docs responsive but avoid over-wide reading columns. */
-.md-grid {
-  max-width: 68rem;
-}
-
 /* Hero section */
 .md-typeset .hero {
   text-align: center;
