@@ -453,12 +453,12 @@ class SequentialMonteCarloTest(PermutationTest):
             ):
                 break
 
-        if self.strategy == "binomial":
-            self.p_values = np.minimum(1 / wealth_bin, 1)
-        elif self.strategy == "aggressive":
-            self.p_values = np.minimum(1 / wealth_agg, 1)
-        elif self.strategy == "binomial_mixture":
-            self.p_values = np.minimum(1 / wealth_bm, 1)
+        strategy_to_wealth = {
+            "binomial": wealth_bin,
+            "aggressive": wealth_agg,
+            "binomial_mixture": wealth_bm,
+        }
+        self.p_values = np.minimum(1 / strategy_to_wealth[self.strategy], 1)
 
         is_exchangeable = bool(self.p_values[-1] < self.delta)
 

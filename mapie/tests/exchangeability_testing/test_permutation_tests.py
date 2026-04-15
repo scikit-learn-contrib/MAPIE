@@ -4,6 +4,7 @@ from typing import Any, cast
 
 import numpy as np
 import pytest
+from sklearn.linear_model import LinearRegression
 
 from mapie.classification import CrossConformalClassifier
 from mapie.exchangeability_testing.permutation_tests import (
@@ -16,45 +17,11 @@ from mapie.exchangeability_testing.permutation_tests import (
     TestStatisticOnNonConformityScores,
     TestStatisticOnUnlabeledDataset,
 )
-from mapie.regression import CrossConformalRegressor, JackknifeAfterBootstrapRegressor
-
-
-class DummyConformityScoreFunction:
-    def get_conformity_scores(self, y, y_pred, X=None):
-        return np.abs(y - y_pred)
-
-
-class DummyMapieRegressor:
-    def __init__(self):
-        self.conformity_score_function_ = DummyConformityScoreFunction()
-        self.conformity_scores_ = np.array([99.0])
-        self.quantiles_ = np.array([0.9])
-
-
-class DummyMapieEstimator:
-    def __init__(self):
-        self._mapie_regressor = DummyMapieRegressor()
-        self._is_fitted = True
-        self._is_conformalized = False
-        self._predict_params = {"stale": True}
-        self.conformity_scores_ = np.array([42.0])
-        self.quantiles_ = np.array([0.5])
-
-    def predict(self, X):
-        return np.zeros(len(X))
-
-    def fit(self, X, y):
-        self._is_fitted = True
-        return self
-
-    def conformalize(self, X, y):
-        if self._is_conformalized:
-            raise ValueError("conformalize method already called")
-        self._is_conformalized = True
-        self._predict_params = {}
-        self.conformity_scores_ = np.abs(y - self.predict(X))
-        self._mapie_regressor.conformity_scores_ = np.abs(y - self.predict(X))
-        return self
+from mapie.regression import (
+    CrossConformalRegressor,
+    JackknifeAfterBootstrapRegressor,
+    SplitConformalRegressor,
+)
 
 
 class DummyMapieClassifier:
@@ -92,6 +59,30 @@ class ConstantStatistic:
         return 1.0
 
 
+@pytest.fixture
+def split_conformal_regressor():
+    return SplitConformalRegressor(
+        estimator=LinearRegression(),
+        prefit=False,
+    )
+
+
+@pytest.fixture
+def fitted_split_conformal_regressor(split_conformal_regressor):
+    X = np.arange(30, dtype=float).reshape(-1, 1)
+    y = 2 * X.ravel() + 1.0
+    split_conformal_regressor.fit(X[:10], y[:10])
+    return split_conformal_regressor
+
+
+@pytest.fixture
+def conformalized_split_conformal_regressor(fitted_split_conformal_regressor):
+    X = np.arange(30, dtype=float).reshape(-1, 1)
+    y = 2 * X.ravel() + 1.0
+    fitted_split_conformal_regressor.conformalize(X[10:20], y[10:20])
+    return fitted_split_conformal_regressor
+
+
 class TestStatisticOnNonConformityScoresClass:
     def test_compute(self) -> None:
         statistic = TestStatisticOnNonConformityScores()
@@ -122,13 +113,14 @@ def toy_exchangeability_data():
 
 
 class TestPValuePermutationTest:
-    def test_dummy_conformity_score_function(self) -> None:
-        score_function = DummyConformityScoreFunction()
-        scores = score_function.get_conformity_scores(
-            np.array([1.0, 2.0]),
-            np.array([0.0, 1.5]),
-        )
-        np.testing.assert_allclose(scores, np.array([1.0, 0.5]))
+    def test_split_conformal_regressor_conformalize_raises_if_already_conformalized(
+        self,
+        conformalized_split_conformal_regressor,
+    ) -> None:
+        estimator = conformalized_split_conformal_regressor
+
+        with pytest.raises(ValueError, match="already called"):
+            estimator.conformalize(np.array([[0.0]]), np.array([0.0]))
 
     def test_init_rejects_invalid_test_level(self) -> None:
         with pytest.raises(ValueError, match="test_level must be in"):
@@ -136,16 +128,22 @@ class TestPValuePermutationTest:
         with pytest.raises(ValueError, match="test_level must be in"):
             PValuePermutationTest(test_level=0.0)
 
-    def test_init_copies_provided_estimator(self) -> None:
-        estimator = DummyMapieEstimator()
-        estimator._is_conformalized = True
+    def test_init_copies_provided_estimator(
+        self,
+        conformalized_split_conformal_regressor,
+    ) -> None:
+        estimator = conformalized_split_conformal_regressor
+        estimator._predict_params = {"stale": True}
+        estimator.conformity_scores_ = np.array([42.0])
+        estimator.quantiles_ = np.array([0.5])
+        estimator._mapie_regressor.quantiles_ = np.array([0.9])
 
         test = PValuePermutationTest(
             random_state=123,
             num_permutations=10,
             mapie_estimator=cast(MapieEstimator, estimator),
         )
-        estimator_copy = cast(DummyMapieEstimator, test.mapie_estimator)
+        estimator_copy = cast(SplitConformalRegressor, test.mapie_estimator)
 
         assert test.mapie_estimator is not estimator
         assert estimator_copy._is_conformalized is False
@@ -177,25 +175,31 @@ class TestPValuePermutationTest:
         assert not hasattr(estimator_copy._mapie_classifier, "conformity_scores_")
         assert not hasattr(estimator_copy._mapie_classifier, "quantiles_")
 
-    def test_compute_scores_uses_predict_if_y_pred_is_none(self) -> None:
+    def test_compute_scores_uses_predict_if_y_pred_is_none(
+        self,
+        fitted_split_conformal_regressor,
+    ) -> None:
         X = np.arange(8, dtype=float).reshape(-1, 1)
         y = np.array([0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0])
         test = PValuePermutationTest(
             random_state=123,
             num_permutations=10,
-            mapie_estimator=cast(MapieEstimator, DummyMapieEstimator()),
+            mapie_estimator=cast(
+                MapieEstimator,
+                fitted_split_conformal_regressor,
+            ),
         )
 
         scores = test._compute_non_conformity_scores(X, y)
+        estimator = cast(SplitConformalRegressor, test.mapie_estimator)
 
-        np.testing.assert_allclose(scores, y)
+        np.testing.assert_allclose(scores, estimator._mapie_regressor.conformity_scores_)
 
     def test_run_fits_provided_unfitted_estimator(
-        self, toy_exchangeability_data
+        self, toy_exchangeability_data, split_conformal_regressor
     ) -> None:
         X, y = toy_exchangeability_data
-        estimator = DummyMapieEstimator()
-        estimator._is_fitted = False
+        estimator = split_conformal_regressor
         test = PValuePermutationTest(
             random_state=123,
             num_permutations=10,
@@ -203,17 +207,20 @@ class TestPValuePermutationTest:
         )
 
         is_exchangeable = test.run(X, y)
-        estimator_copy = cast(DummyMapieEstimator, test.mapie_estimator)
+        estimator_copy = cast(SplitConformalRegressor, test.mapie_estimator)
 
         assert isinstance(is_exchangeable, bool)
         assert estimator_copy._is_fitted is True
 
-    def test_infer_task_from_estimator_and_target_type(self) -> None:
+    def test_infer_task_from_estimator_and_target_type(
+        self,
+        split_conformal_regressor,
+    ) -> None:
         classification_test = PValuePermutationTest(
             mapie_estimator=cast(Any, DummyClassificationEstimator())
         )
         regression_test = PValuePermutationTest(
-            mapie_estimator=cast(MapieEstimator, DummyMapieEstimator())
+            mapie_estimator=cast(MapieEstimator, split_conformal_regressor)
         )
         default_test = PValuePermutationTest()
 
@@ -270,11 +277,14 @@ class TestPValuePermutationTest:
             )
 
     def test_run_is_reproducible_with_fixed_random_state(
-        self, toy_exchangeability_data
+        self, toy_exchangeability_data, split_conformal_regressor
     ) -> None:
         X, y = toy_exchangeability_data
-        estimator_1 = DummyMapieEstimator()
-        estimator_2 = DummyMapieEstimator()
+        estimator_1 = split_conformal_regressor
+        estimator_2 = SplitConformalRegressor(
+            estimator=LinearRegression(),
+            prefit=False,
+        )
 
         test_1 = PValuePermutationTest(
             random_state=42,
@@ -293,12 +303,16 @@ class TestPValuePermutationTest:
         assert is_exchangeable_1 == is_exchangeable_2
         np.testing.assert_allclose(test_1.p_values, test_2.p_values)
 
-    def test_run_sets_expected_outputs(self, toy_exchangeability_data) -> None:
+    def test_run_sets_expected_outputs(
+        self,
+        toy_exchangeability_data,
+        split_conformal_regressor,
+    ) -> None:
         X, y = toy_exchangeability_data
         test = PValuePermutationTest(
             random_state=7,
             num_permutations=30,
-            mapie_estimator=cast(MapieEstimator, DummyMapieEstimator()),
+            mapie_estimator=cast(MapieEstimator, split_conformal_regressor),
         )
 
         is_exchangeable = test.run(X, y)
@@ -342,14 +356,17 @@ class TestSequentialMonteCarloTest:
 
     @pytest.mark.parametrize("strategy", ["aggressive", "binomial", "binomial_mixture"])
     def test_run_sets_expected_outputs(
-        self, strategy, toy_exchangeability_data
+        self,
+        strategy,
+        toy_exchangeability_data,
+        split_conformal_regressor,
     ) -> None:
         X, y = toy_exchangeability_data
         test = SequentialMonteCarloTest(
             strategy=strategy,
             random_state=7,
             num_permutations=80,
-            mapie_estimator=cast(MapieEstimator, DummyMapieEstimator()),
+            mapie_estimator=cast(MapieEstimator, split_conformal_regressor),
         )
 
         is_exchangeable = test.run(X, y)
@@ -361,20 +378,26 @@ class TestSequentialMonteCarloTest:
         assert is_exchangeable == bool(test.p_values[-1] < test.delta)
 
     def test_run_is_reproducible_with_fixed_random_state(
-        self, toy_exchangeability_data
+        self, toy_exchangeability_data, split_conformal_regressor
     ) -> None:
         X, y = toy_exchangeability_data
         test_1 = SequentialMonteCarloTest(
             strategy="binomial",
             random_state=123,
             num_permutations=60,
-            mapie_estimator=cast(MapieEstimator, DummyMapieEstimator()),
+            mapie_estimator=cast(MapieEstimator, split_conformal_regressor),
         )
         test_2 = SequentialMonteCarloTest(
             strategy="binomial",
             random_state=123,
             num_permutations=60,
-            mapie_estimator=cast(MapieEstimator, DummyMapieEstimator()),
+            mapie_estimator=cast(
+                MapieEstimator,
+                SplitConformalRegressor(
+                    estimator=LinearRegression(),
+                    prefit=False,
+                ),
+            ),
         )
 
         is_exchangeable_1 = test_1.run(X, y)
@@ -384,14 +407,14 @@ class TestSequentialMonteCarloTest:
         np.testing.assert_allclose(test_1.p_values, test_2.p_values)
 
     def test_run_without_early_stopping_and_with_rank_update(
-        self, toy_exchangeability_data
+        self, toy_exchangeability_data, split_conformal_regressor
     ) -> None:
         X, y = toy_exchangeability_data
         test = SequentialMonteCarloTest(
             strategy="binomial_mixture",
             random_state=123,
             num_permutations=3,
-            mapie_estimator=cast(MapieEstimator, DummyMapieEstimator()),
+            mapie_estimator=cast(MapieEstimator, split_conformal_regressor),
         )
         test.test_statistic = ConstantStatistic()
 
@@ -400,3 +423,21 @@ class TestSequentialMonteCarloTest:
         assert isinstance(is_exchangeable, bool)
         assert len(test.p_values) == 4
         assert np.all((test.p_values >= 0.0) & (test.p_values <= 1.0))
+
+    def test_run_binomial_triggers_early_stopping(
+        self,
+        toy_exchangeability_data,
+        split_conformal_regressor,
+    ) -> None:
+        X, y = toy_exchangeability_data
+        test = SequentialMonteCarloTest(
+            strategy="binomial",
+            random_state=123,
+            num_permutations=80,
+            mapie_estimator=cast(MapieEstimator, split_conformal_regressor),
+        )
+        test.test_statistic = ConstantStatistic()
+
+        test.run(X, y)
+
+        assert len(test.p_values) < 81
