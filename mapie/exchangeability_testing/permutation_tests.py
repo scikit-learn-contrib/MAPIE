@@ -423,7 +423,7 @@ class SequentialMonteCarloTest(PermutationTest):
             # early stopping if possible
             strategy_to_current_wealth = {
                 "binomial": wealth_bin[-1],
-                "aggressive": wealth_agg[1],
+                "aggressive": wealth_agg[-1],
                 "binomial_mixture": wealth_bm[-1],
             }
             current_wealth = strategy_to_current_wealth[self.strategy]
@@ -438,7 +438,9 @@ class SequentialMonteCarloTest(PermutationTest):
             "aggressive": wealth_agg,
             "binomial_mixture": wealth_bm,
         }
-        self.p_values = np.minimum(1 / strategy_to_wealth[self.strategy], 1)
+        wealth_history = strategy_to_wealth[self.strategy]
+        running_max_wealth = np.maximum.accumulate(wealth_history)
+        self.p_values = np.minimum(1 / running_max_wealth, 1)
 
         is_exchangeable = bool(self.p_values[-1] < self.test_level)
 
