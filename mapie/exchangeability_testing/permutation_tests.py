@@ -427,7 +427,6 @@ class SequentialMonteCarloTest(PermutationTest):
                     wealth_agg[-1] < self.test_level
                     or wealth_agg[-1] >= 1 / self.test_level
                 )
-                and (i > 50)
             ):
                 break
             if (
@@ -436,7 +435,6 @@ class SequentialMonteCarloTest(PermutationTest):
                     wealth_bin[-1] < self.test_level
                     or wealth_bin[-1] >= 1 / self.test_level
                 )
-                and (i > 50)
             ):
                 break
             if (
@@ -445,7 +443,6 @@ class SequentialMonteCarloTest(PermutationTest):
                     wealth_bm[-1] < self.test_level
                     or wealth_bm[-1] >= 1 / self.test_level
                 )
-                and (i > 50)
             ):
                 break
 
