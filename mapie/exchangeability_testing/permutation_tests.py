@@ -87,8 +87,6 @@ class PermutationTest(ABC):
 
     Parameters
     ----------
-    method : Literal["p-value permutation", "Monte Carlo"]
-        Permutation test variant.
     test_level : float, default=0.05
         Level used to test the hypothesis that the dataset is exchangeable.
         The probability that the test gives a false positive is at most
@@ -148,14 +146,12 @@ class PermutationTest(ABC):
 
     def __init__(
         self,
-        method: Literal["p-value permutation", "Monte Carlo"],
         test_level: float = 0.05,
         mapie_estimator: Optional[MapieEstimator] = None,
         task: Optional[Literal["classification", "regression"]] = None,
     ) -> None:
         if not (0.0 < test_level < 1.0):
             raise ValueError("test_level must be in (0, 1).")
-        self.method = method
         self.test_level = test_level
         self.mapie_estimator = self._prepare_estimator(mapie_estimator)
         self.task = task
@@ -254,8 +250,6 @@ class PValuePermutationTest(PermutationTest):
         Number of permutations used to estimate the p-value.
 
         By default `1000`.
-    method : Literal["p-value permutation", "Monte Carlo"], default="p-value permutation"
-        Permutation test variant forwarded to `PermutationTest`.
     test_level : float, default=0.05
         Level used to test the hypothesis that the dataset is exchangeable.
         The probability that the test gives a false positive is at most
@@ -272,7 +266,6 @@ class PValuePermutationTest(PermutationTest):
     >>> X = np.arange(100, dtype=float).reshape(-1, 1)
     >>> y = 2 * X.ravel() + np.array([0.0, 0.1] * 50)
     >>> test = PValuePermutationTest(
-    ...     method="p-value permutation",
     ...     test_level=0.2,
     ... )
     >>> test.run(X, y)
@@ -283,12 +276,10 @@ class PValuePermutationTest(PermutationTest):
         self,
         random_state: Optional[int] = None,
         num_permutations: int = 1000,
-        method: Literal["p-value permutation", "Monte Carlo"] = "p-value permutation",
         test_level: float = 0.05,
         mapie_estimator: Optional[MapieEstimator] = None,
     ) -> None:
         super().__init__(
-            method=method,
             test_level=test_level,
             mapie_estimator=mapie_estimator,
         )
@@ -345,8 +336,6 @@ class SequentialMonteCarloTest(PermutationTest):
         Maximum number of permutations.
     random_state : Optional[int], default=None
         Seed for permutation randomness.
-    method : Literal["p-value permutation", "Monte Carlo"], default="Monte Carlo"
-        Permutation test variant forwarded to `PermutationTest`.
     test_level : float, default=0.05
         Level used to test the hypothesis that the dataset is exchangeable.
         The probability that the test gives a false positive is at most
@@ -360,12 +349,10 @@ class SequentialMonteCarloTest(PermutationTest):
         strategy: Literal["aggressive", "binomial", "binomial_mixture"],
         num_permutations: int = 1000,
         random_state: Optional[int] = None,
-        method: Literal["p-value permutation", "Monte Carlo"] = "Monte Carlo",
         test_level: float = 0.05,
         mapie_estimator: Optional[MapieEstimator] = None,
     ) -> None:
         super().__init__(
-            method=method,
             test_level=test_level,
             mapie_estimator=mapie_estimator,
         )

@@ -47,28 +47,24 @@ test_level = 0.1
 num_permutations = 200
 
 exchangeable_pvalue_test = PValuePermutationTest(
-    method="p-value permutation",
     test_level=test_level,
     random_state=7,
     num_permutations=num_permutations,
 )
 exchangeable_aggressive_test = SequentialMonteCarloTest(
     strategy="aggressive",
-    method="Monte Carlo",
     test_level=test_level,
     random_state=7,
     num_permutations=num_permutations,
 )
 exchangeable_binomial_test = SequentialMonteCarloTest(
     strategy="binomial",
-    method="Monte Carlo",
     test_level=test_level,
     random_state=7,
     num_permutations=num_permutations,
 )
 exchangeable_binomial_mixture_test = SequentialMonteCarloTest(
     strategy="binomial_mixture",
-    method="Monte Carlo",
     test_level=test_level,
     random_state=7,
     num_permutations=num_permutations,
@@ -96,7 +92,7 @@ print(
     f"detected={exchangeable_binomial_mixture_detected}"
 )
 
-delta = exchangeable_pvalue_test.delta
+test_level = exchangeable_pvalue_test.test_level
 plt.figure(figsize=(8, 4))
 plt.plot(exchangeable_pvalue_test.p_values, label="PValuePermutationTest", zorder=4)
 plt.plot(
@@ -120,7 +116,12 @@ plt.plot(
     linewidth=2.0,
     zorder=3,
 )
-plt.axhline(delta, color="black", linestyle="--", label=f"delta = {delta:.2f}")
+plt.axhline(
+    test_level,
+    color="black",
+    linestyle="--",
+    label=f"test_level = {test_level:.2f}",
+)
 plt.xlabel("Number of permutations")
 plt.ylabel("Running p-value")
 plt.title("Exchangeable residuals")
@@ -136,28 +137,24 @@ plt.show()
 # We now repeat the same comparison on the shifted dataset.
 
 shifted_pvalue_test = PValuePermutationTest(
-    method="p-value permutation",
     test_level=test_level,
     random_state=7,
     num_permutations=num_permutations,
 )
 shifted_aggressive_test = SequentialMonteCarloTest(
     strategy="aggressive",
-    method="Monte Carlo",
     test_level=test_level,
     random_state=7,
     num_permutations=num_permutations,
 )
 shifted_binomial_test = SequentialMonteCarloTest(
     strategy="binomial",
-    method="Monte Carlo",
     test_level=test_level,
     random_state=7,
     num_permutations=num_permutations,
 )
 shifted_binomial_mixture_test = SequentialMonteCarloTest(
     strategy="binomial_mixture",
-    method="Monte Carlo",
     test_level=test_level,
     random_state=7,
     num_permutations=num_permutations,
@@ -201,7 +198,12 @@ plt.plot(
     linewidth=2.0,
     zorder=3,
 )
-plt.axhline(delta, color="black", linestyle="--", label=f"delta = {delta:.2f}")
+plt.axhline(
+    test_level,
+    color="black",
+    linestyle="--",
+    label=f"test_level = {test_level:.2f}",
+)
 plt.xlabel("Number of permutations")
 plt.ylabel("Running p-value")
 plt.title("Non-exchangeable residuals")
