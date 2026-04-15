@@ -421,28 +421,15 @@ class SequentialMonteCarloTest(PermutationTest):
             wealth_bm = np.append(wealth_bm, wealth_bm_i)
 
             # early stopping if possible
+            strategy_to_current_wealth = {
+                "binomial": wealth_bin[-1],
+                "aggressive": wealth_agg[1],
+                "binomial_mixture": wealth_bm[-1],
+            }
+            current_wealth = strategy_to_current_wealth[self.strategy]
             if (
-                self.strategy == "aggressive"
-                and (
-                    wealth_agg[-1] < self.test_level
-                    or wealth_agg[-1] >= 1 / self.test_level
-                )
-            ):
-                break
-            if (
-                self.strategy == "binomial"
-                and (
-                    wealth_bin[-1] < self.test_level
-                    or wealth_bin[-1] >= 1 / self.test_level
-                )
-            ):
-                break
-            if (
-                self.strategy == "binomial_mixture"
-                and (
-                    wealth_bm[-1] < self.test_level
-                    or wealth_bm[-1] >= 1 / self.test_level
-                )
+                current_wealth < self.test_level
+                or current_wealth >= 1 / self.test_level
             ):
                 break
 
