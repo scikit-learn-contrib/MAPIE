@@ -6912,7 +6912,7 @@ risks.</p>
 </span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    <span class="p">),</span>
 </span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    <span class="n">fwer_method</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span>
 </span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>        <span class="n">FWER_METHODS</span><span class="p">,</span> <span class="n">FWERProcedure</span>
-</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>    <span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;bonferroni&quot;</span><span class="p">,</span>
+</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>    <span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;bonferroni_holm&quot;</span><span class="p">,</span>
 </span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="p">)</span>
 </span></code></pre></div>
 
@@ -7094,13 +7094,13 @@ Note that performance is degraded when <code>len(predict_params)</code> is large
               <div class="doc-md-description">
                 <p>Method used to control the family-wise error rate (FWER).</p>
 <p>Supported methods:
-- <code>"bonferroni"</code> : Classical Bonferroni correction. This is the default method.
+- <code>"bonferroni"</code> : Classical Bonferroni correction.
 It is valid in all settings but can be conservative, especially when the number of tested parameters is large.
 - <code>"fixed_sequence"</code> : Fixed Sequence Testing (FST) with a single start.
 However, users can use multi-start by instantiating <code>FWERFixedSequenceTesting</code> with any desired number
 of starts and passing the instance to control_fwer.
 - <code>"bonferroni_holm"</code> : Sequential Graphical Testing corresponding
-to the Bonferroni–Holm procedure. Suitable for general settings.
+to the Bonferroni–Holm procedure. This is the default method and is suitable for general settings.
 - <code>"split_fixed_sequence"</code> : Split Fixed Sequence Testing (SFST).</p>
               </div>
               <p>
@@ -7280,7 +7280,7 @@ In the multi-risk setting, the value corresponds to the maximum over the tested 
 </span><span id="__span-0-176"><a id="__codelineno-0-176" name="__codelineno-0-176"></a>        <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;auto&quot;</span><span class="p">],</span> <span class="n">RiskNameLiteral</span><span class="p">,</span> <span class="n">BinaryClassificationRisk</span>
 </span><span id="__span-0-177"><a id="__codelineno-0-177" name="__codelineno-0-177"></a>    <span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;auto&quot;</span><span class="p">,</span>
 </span><span id="__span-0-178"><a id="__codelineno-0-178" name="__codelineno-0-178"></a>    <span class="n">list_predict_params</span><span class="p">:</span> <span class="n">NDArray</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.99</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span>
-</span><span id="__span-0-179"><a id="__codelineno-0-179" name="__codelineno-0-179"></a>    <span class="n">fwer_method</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">FWER_METHODS</span><span class="p">,</span> <span class="n">FWERProcedure</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;bonferroni&quot;</span><span class="p">,</span>
+</span><span id="__span-0-179"><a id="__codelineno-0-179" name="__codelineno-0-179"></a>    <span class="n">fwer_method</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">FWER_METHODS</span><span class="p">,</span> <span class="n">FWERProcedure</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;bonferroni_holm&quot;</span><span class="p">,</span>
 </span><span id="__span-0-180"><a id="__codelineno-0-180" name="__codelineno-0-180"></a><span class="p">):</span>
 </span><span id="__span-0-181"><a id="__codelineno-0-181" name="__codelineno-0-181"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">is_multi_risk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_if_multi_risk_control</span><span class="p">(</span><span class="n">risk</span><span class="p">,</span> <span class="n">target_level</span><span class="p">)</span>
 </span><span id="__span-0-182"><a id="__codelineno-0-182" name="__codelineno-0-182"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_predict_function</span> <span class="o">=</span> <span class="n">predict_function</span>
@@ -9499,7 +9499,7 @@ to p-values and does not redistribute error budget after rejections.</p>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">delta</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
 </span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n">fwer_method</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span>
 </span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>        <span class="n">FWER_METHODS</span><span class="p">,</span> <span class="n">FWERProcedure</span>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;bonferroni&quot;</span><span class="p">,</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;bonferroni_holm&quot;</span><span class="p">,</span>
 </span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span>
 </span></code></pre></div>
 
@@ -9697,7 +9697,7 @@ of hypotheses may have been learned from separate data.</p>
 <span class="normal"><a href="#__codelineno-0-330">330</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-260"><a id="__codelineno-0-260" name="__codelineno-0-260"></a><span class="k">def</span><span class="w"> </span><span class="nf">control_fwer</span><span class="p">(</span>
 </span><span id="__span-0-261"><a id="__codelineno-0-261" name="__codelineno-0-261"></a>    <span class="n">p_values</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">,</span>
 </span><span id="__span-0-262"><a id="__codelineno-0-262" name="__codelineno-0-262"></a>    <span class="n">delta</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
-</span><span id="__span-0-263"><a id="__codelineno-0-263" name="__codelineno-0-263"></a>    <span class="n">fwer_method</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">FWER_METHODS</span><span class="p">,</span> <span class="n">FWERProcedure</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;bonferroni&quot;</span><span class="p">,</span>
+</span><span id="__span-0-263"><a id="__codelineno-0-263" name="__codelineno-0-263"></a>    <span class="n">fwer_method</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">FWER_METHODS</span><span class="p">,</span> <span class="n">FWERProcedure</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;bonferroni_holm&quot;</span><span class="p">,</span>
 </span><span id="__span-0-264"><a id="__codelineno-0-264" name="__codelineno-0-264"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">:</span>
 </span><span id="__span-0-265"><a id="__codelineno-0-265" name="__codelineno-0-265"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 </span><span id="__span-0-266"><a id="__codelineno-0-266" name="__codelineno-0-266"></a><span class="sd">    Apply a Family-Wise Error Rate (FWER) control procedure.</span>
@@ -9723,7 +9723,7 @@ of hypotheses may have been learned from separate data.</p>
 </span><span id="__span-0-286"><a id="__codelineno-0-286" name="__codelineno-0-286"></a><span class="sd">        P-values associated with each tested hypothesis.</span>
 </span><span id="__span-0-287"><a id="__codelineno-0-287" name="__codelineno-0-287"></a><span class="sd">    delta : float</span>
 </span><span id="__span-0-288"><a id="__codelineno-0-288" name="__codelineno-0-288"></a><span class="sd">        Target family-wise error rate. Must be in (0, 1].</span>
-</span><span id="__span-0-289"><a id="__codelineno-0-289" name="__codelineno-0-289"></a><span class="sd">    fwer_method : {&quot;bonferroni&quot;, &quot;bonferroni_holm&quot;, &quot;fixed_sequence&quot;, &quot;split_fixed_sequence&quot;} or FWERProcedure instance, default=&quot;bonferroni&quot;</span>
+</span><span id="__span-0-289"><a id="__codelineno-0-289" name="__codelineno-0-289"></a><span class="sd">    fwer_method : {&quot;bonferroni&quot;, &quot;bonferroni_holm&quot;, &quot;fixed_sequence&quot;, &quot;split_fixed_sequence&quot;} or FWERProcedure instance, default=&quot;bonferroni_holm&quot;</span>
 </span><span id="__span-0-290"><a id="__codelineno-0-290" name="__codelineno-0-290"></a><span class="sd">        FWER control strategy.</span>
 </span><span id="__span-0-291"><a id="__codelineno-0-291" name="__codelineno-0-291"></a>
 </span><span id="__span-0-292"><a id="__codelineno-0-292" name="__codelineno-0-292"></a><span class="sd">    Returns</span>
