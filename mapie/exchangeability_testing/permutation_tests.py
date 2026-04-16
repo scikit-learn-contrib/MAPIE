@@ -30,24 +30,6 @@ class TestStatistic(ABC):
         raise NotImplementedError
 
 
-class TestStatisticOnLabeledDataset(TestStatistic, ABC):
-    """Base class for test statistics computed from labeled datasets."""
-
-    @abstractmethod
-    def compute(self, *args: Any, **kwargs: Any) -> float:
-        """Compute the statistic from features and labels."""
-        raise NotImplementedError
-
-
-class TestStatisticOnUnlabeledDataset(TestStatistic, ABC):
-    """Base class for test statistics computed from unlabeled datasets."""
-
-    @abstractmethod
-    def compute(self, *args: Any, **kwargs: Any) -> float:
-        """Compute the statistic from feature values only."""
-        raise NotImplementedError
-
-
 class TestStatisticOnNonConformityScores(TestStatistic):
     """Mean-shift statistic on two score halves.
 
@@ -55,7 +37,7 @@ class TestStatisticOnNonConformityScores(TestStatistic):
     the first half and the mean score of the second half.
     """
 
-    def compute(self, *args: Any, **kwargs: Any) -> float:
+    def compute(self, scores: NDArray) -> float:
         """Compute the absolute mean difference between score halves.
 
         Parameters
@@ -68,7 +50,6 @@ class TestStatisticOnNonConformityScores(TestStatistic):
         float
             Absolute difference between the means of both score halves.
         """
-        scores: NDArray = args[0]
         middle_idx = len(scores) // 2
 
         mean_left = np.mean(scores[:middle_idx])
