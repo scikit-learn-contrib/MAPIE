@@ -12,7 +12,7 @@ a stream of labeled observations is received and the goal is to check if they ar
 
 Online martingale tests are a powerful tool for this problem, as they provide a lightweight,
 model-agnostic way to monitor exchangeability over time.
-They work by converting each new observation into a conformal p-value based on a non-conformity score,
+They work by converting each new observation into a conformal p-value based on a conformity score,
 then accumulating evidence against exchangeability with a martingale that bets against small p-values.
 When the martingale value exceeds a threshold, exchangeability is rejected
 with a user-chosen confidence level. See [1]_, [2]_, and [3]_ for theoretical
@@ -28,7 +28,7 @@ In the following, we implement a complete workflow for online exchangeability te
 For each stream, we:
 
 1. Train a linear regression model on a separate reference dataset,
-2. Define a non-conformity score based on the model's prediction residuals,
+2. Define a conformity score based on the model's prediction residuals,
 3. Initialize two online martingale tests (jumper and plug-in),
 4. Process the stream sequentially, updating both martingales with each new observation,
 5. Inspect martingale paths and p-value histograms to interpret the exchangeability decision.
@@ -100,7 +100,7 @@ clf.fit(X_train, y_train)
 
 
 ###############################################################################
-# Throughout the example, we use the same non-conformity score for both martingale tests.
+# Throughout the example, we use the same conformity score for both martingale tests.
 # For regression, we use the absolute residual:
 #
 # .. math::
@@ -112,14 +112,14 @@ clf.fit(X_train, y_train)
 #
 
 
-def nonconformity_score(y_true, y_pred, X=None):
+def conformity_score(y_true, y_pred, X=None):
     y_true = np.asarray(y_true, dtype=float).reshape(-1)
     y_pred = np.asarray(y_pred, dtype=float).reshape(-1)
     return np.abs(y_true - y_pred)
 
 
 ###############################################################################
-# Below, we plot the training data on the left and the associated non-conformity scores on the right.
+# Below, we plot the training data on the left and the associated conformity scores on the right.
 #
 
 
@@ -128,8 +128,8 @@ def plot_data_and_score_histogram(
     y,
     scores,
     left_title="Training data",
-    right_title="Histogram of non-conformity scores",
-    figure_title="Reference training data and non-conformity scores",
+    right_title="Histogram of conformity scores",
+    figure_title="Reference training data and conformity scores",
 ):
     """Plot regression data (left) and score histogram (right)."""
     score_quantile = np.quantile(scores, 0.975)
@@ -161,7 +161,7 @@ def plot_data_and_score_histogram(
         label="0.975 quantile",
     )
     axes[1].set_title(right_title, fontsize=18)
-    axes[1].set_xlabel("Non-conformity score", fontsize=16)
+    axes[1].set_xlabel("Conformity score", fontsize=16)
     axes[1].set_ylabel("Count", fontsize=16)
     axes[1].tick_params(axis="both", labelsize=14)
 
@@ -173,14 +173,14 @@ def plot_data_and_score_histogram(
 
 
 y_pred_train = clf.predict(X_train)
-train_scores = nonconformity_score(y_train, y_pred_train)
+train_scores = conformity_score(y_train, y_pred_train)
 plot_data_and_score_histogram(
     X_train,
     y_train,
     train_scores,
     left_title="Training data",
-    right_title="Histogram of non-conformity scores",
-    figure_title="Reference training data and non-conformity scores",
+    right_title="Histogram of conformity scores",
+    figure_title="Reference training data and conformity scores",
 )
 
 ##############################################################################
@@ -198,15 +198,15 @@ def make_regression_exchangeable_stream(n_samples=600, random_state=52):
 
 
 X_exch, y_exch = make_regression_exchangeable_stream()
-test_exch_scores = nonconformity_score(y_exch, clf.predict(X_exch))
+test_exch_scores = conformity_score(y_exch, clf.predict(X_exch))
 
 plot_data_and_score_histogram(
     X_exch,
     y_exch,
     test_exch_scores,
     left_title="Exchangeable stream",
-    right_title="Histogram of non-conformity scores",
-    figure_title="Exchangeable stream and non-conformity scores",
+    right_title="Histogram of conformity scores",
+    figure_title="Exchangeable stream and conformity scores",
 )
 
 #################################################################################
@@ -227,7 +227,7 @@ test_level = 0.05
 min_sample_size_to_decide = 100
 
 omt_jumper_exch = OnlineMartingaleTest(
-    non_conformity_score_function=nonconformity_score,
+    conformity_score_function=conformity_score,
     test_method="jumper_martingale",
     test_level=test_level,
     min_sample_size_to_decide=min_sample_size_to_decide,
@@ -235,7 +235,7 @@ omt_jumper_exch = OnlineMartingaleTest(
     warn=False,
 )
 omt_plugin_exch = OnlineMartingaleTest(
-    non_conformity_score_function=nonconformity_score,
+    conformity_score_function=conformity_score,
     test_method="plugin_martingale",
     test_level=test_level,
     min_sample_size_to_decide=min_sample_size_to_decide,
@@ -359,15 +359,15 @@ def make_regression_subtle_shift_stream(n_samples=600, random_state=54):
 
 
 X_subtle, y_subtle = make_regression_subtle_shift_stream()
-test_subtle_scores = nonconformity_score(y_subtle, clf.predict(X_subtle))
+test_subtle_scores = conformity_score(y_subtle, clf.predict(X_subtle))
 
 plot_data_and_score_histogram(
     X_subtle,
     y_subtle,
     test_subtle_scores,
     left_title="Subtle shift stream",
-    right_title="Histogram of non-conformity scores",
-    figure_title="Subtle shift stream and non-conformity scores",
+    right_title="Histogram of conformity scores",
+    figure_title="Subtle shift stream and conformity scores",
 )
 
 ##############################################################################
@@ -376,7 +376,7 @@ plot_data_and_score_histogram(
 #
 
 omt_jumper_subtle_shift = OnlineMartingaleTest(
-    non_conformity_score_function=nonconformity_score,
+    conformity_score_function=conformity_score,
     test_method="jumper_martingale",
     test_level=test_level,
     min_sample_size_to_decide=min_sample_size_to_decide,
@@ -384,7 +384,7 @@ omt_jumper_subtle_shift = OnlineMartingaleTest(
     warn=False,
 )
 omt_plugin_subtle_shift = OnlineMartingaleTest(
-    non_conformity_score_function=nonconformity_score,
+    conformity_score_function=conformity_score,
     test_method="plugin_martingale",
     test_level=test_level,
     min_sample_size_to_decide=min_sample_size_to_decide,
@@ -433,15 +433,15 @@ def make_regression_abrupt_shift_stream(n_samples=600, random_state=53):
 
 
 X_abrupt, y_abrupt = make_regression_abrupt_shift_stream()
-test_abrupt_scores = nonconformity_score(y_abrupt, clf.predict(X_abrupt))
+test_abrupt_scores = conformity_score(y_abrupt, clf.predict(X_abrupt))
 
 plot_data_and_score_histogram(
     X_abrupt,
     y_abrupt,
     test_abrupt_scores,
     left_title="Abrupt shift stream",
-    right_title="Histogram of non-conformity scores",
-    figure_title="Abrupt shift stream and non-conformity scores",
+    right_title="Histogram of conformity scores",
+    figure_title="Abrupt shift stream and conformity scores",
 )
 
 
@@ -451,7 +451,7 @@ plot_data_and_score_histogram(
 #
 
 omt_jumper_abrupt_shift = OnlineMartingaleTest(
-    non_conformity_score_function=nonconformity_score,
+    conformity_score_function=conformity_score,
     test_method="jumper_martingale",
     test_level=test_level,
     min_sample_size_to_decide=min_sample_size_to_decide,
@@ -459,7 +459,7 @@ omt_jumper_abrupt_shift = OnlineMartingaleTest(
     warn=False,
 )
 omt_plugin_abrupt_shift = OnlineMartingaleTest(
-    non_conformity_score_function=nonconformity_score,
+    conformity_score_function=conformity_score,
     test_method="plugin_martingale",
     test_level=test_level,
     min_sample_size_to_decide=min_sample_size_to_decide,
@@ -542,7 +542,7 @@ print_result_summary(regression_results)
 # For the subtle nonlinear departure, the plug-in martingale rejects while the
 # jumper martingale remains conservative in this setup.
 #
-# Finally, the model and the choice of non-conformity score are important for the performance of the tests,
+# Finally, the model and the choice of conformity score are important for the performance of the tests,
 # as they determine the p-values and the martingale updates. In practice, it is recommended to use
-# a well-performing model and a non-conformity score that captures the model's prediction errors.
+# a well-performing model and a conformity score that captures the model's prediction errors.
 #

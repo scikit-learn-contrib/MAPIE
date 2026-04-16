@@ -51,7 +51,7 @@ def test_compute_p_value_without_history_is_reproducible():
     expected = float(rng.uniform())
 
     actual = omt.compute_p_value(
-        current_non_conformity_score=0.5, non_conformity_score_history=np.asarray([])
+        current_conformity_score=0.5, conformity_score_history=np.asarray([])
     )
 
     assert actual == pytest.approx(expected)
@@ -66,7 +66,7 @@ def test_compute_p_value_with_history_and_ties():
     expected = float((1.0 + 1 + rng.uniform() * 2) / 5.0)
 
     actual = omt.compute_p_value(
-        current_non_conformity_score=2.0, non_conformity_score_history=history
+        current_conformity_score=2.0, conformity_score_history=history
     )
 
     assert actual == pytest.approx(expected)
@@ -186,7 +186,7 @@ def test_update_warns_on_rejection():
     )
     omt.current_martingale_value = 100.0
     omt.pvalue_history = [0.1, 0.2, 0.3]
-    omt.non_conformity_score_history = [0.1, 0.2, 0.3]
+    omt.conformity_score_history = [0.1, 0.2, 0.3]
 
     with pytest.warns(
         UserWarning,
@@ -217,7 +217,7 @@ def test_update_appends_scores_and_pvalues():
     )
     omt.update(np.array([1.0, 2.0]), np.array([0.1, 0.2]))
 
-    assert len(omt.non_conformity_score_history) == 2
+    assert len(omt.conformity_score_history) == 2
     assert len(omt.pvalue_history) == 2
     assert omt.current_martingale_value == pytest.approx(1.0)
 
@@ -310,7 +310,7 @@ def test_update_without_warn():
     )
     omt.current_martingale_value = 100.0
     omt.pvalue_history = [0.1, 0.2, 0.3]
-    omt.non_conformity_score_history = [0.1, 0.2, 0.3]
+    omt.conformity_score_history = [0.1, 0.2, 0.3]
 
     with warnings.catch_warnings(record=True) as w:
         warnings.simplefilter("always")
@@ -374,7 +374,7 @@ def test_compute_p_value_with_strict_greater_than():
     history = np.array([0.5, 1.0, 1.5, 2.0])
 
     pvalue = omt.compute_p_value(
-        current_non_conformity_score=1.2, non_conformity_score_history=history
+        current_conformity_score=1.2, conformity_score_history=history
     )
 
     assert 0.0 <= pvalue <= 1.0

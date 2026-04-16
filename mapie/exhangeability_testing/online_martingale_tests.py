@@ -14,12 +14,12 @@ class OnlineMartingaleTest:
     Online test of exchangeability based on conformal p-values and test martingales.
 
     OnlineMartingaleTest sequentially monitors whether newly observed labeled data
-    remain exchangeable with respect to a reference stream, using non-conformity
+    remain exchangeable with respect to a reference stream, using conformity
     scores, conformal p-values, and a martingale-based evidence process.
 
     At each update, the class:
 
-    1. computes non-conformity scores from observed labels and model predictions,
+    1. computes conformity scores from observed labels and model predictions,
     2. converts these scores into conformal p-values using past scores,
     3. updates a martingale statistic from the p-values,
     4. monitors whether the observed stream provides evidence against exchangeability.
@@ -36,11 +36,11 @@ class OnlineMartingaleTest:
 
     Parameters
     ----------
-    non_conformity_score_function : Callable[[NDArray, NDArray, Optional[NDArray]], NDArray]
-        Function used to compute non-conformity scores from observed labels,
+    conformity_score_function : Callable[[NDArray, NDArray, Optional[NDArray]], NDArray]
+        Function used to compute conformity scores from observed labels,
         model predictions, and optionally covariates.
         It must accept ``(y_true, y_pred, X)`` and return an array-like of
-        non-conformity scores of shape ``(n_samples,)``.
+        conformity scores of shape ``(n_samples,)``.
 
     test_method : {"jumper_martingale", "plugin_martingale"}, default="jumper_martingale"
         Martingale construction used to aggregate evidence across p-values.
@@ -69,8 +69,8 @@ class OnlineMartingaleTest:
     pvalue_history : list of float
         History of conformal p-values observed so far.
 
-    non_conformity_score_history : list of float
-        History of non-conformity scores observed so far.
+    conformity_score_history : list of float
+        History of conformity scores observed so far.
 
     martingale_value_history : list of float
         History of martingale values after each update.
@@ -139,7 +139,7 @@ class OnlineMartingaleTest:
 
     def __init__(
         self,
-        non_conformity_score_function: Callable[
+        conformity_score_function: Callable[
             [NDArray, NDArray, Optional[NDArray]], NDArray
         ],
         test_method: Literal[
@@ -156,8 +156,8 @@ class OnlineMartingaleTest:
 
         Parameters
         ----------
-        non_conformity_score_function : Callable[[NDArray, NDArray, Optional[NDArray]], NDArray]
-            Function that computes non-conformity scores from observed labels,
+        conformity_score_function : Callable[[NDArray, NDArray, Optional[NDArray]], NDArray]
+            Function that computes conformity scores from observed labels,
             predictions, and optionally features. Must have signature
             ``(y_true, y_pred, X) -> NDArray`` where X can be None.
 
@@ -219,7 +219,7 @@ class OnlineMartingaleTest:
         if not 0.0 < jump_size < 1.0:
             raise ValueError("jump_size must lie in (0, 1).")
 
-        self.non_conformity_score_function = non_conformity_score_function
+        self.conformity_score_function = conformity_score_function
         self.test_method = test_method
         self.test_level = test_level
         self.warn = warn
@@ -229,7 +229,7 @@ class OnlineMartingaleTest:
         self.rng = np.random.default_rng(random_state)
 
         self.pvalue_history: list[float] = []
-        self.non_conformity_score_history: list[float] = []
+        self.conformity_score_history: list[float] = []
         self.martingale_value_history: list[float] = []
         self.current_martingale_value = 1.0
 
@@ -304,30 +304,30 @@ class OnlineMartingaleTest:
 
     def compute_p_value(
         self,
-        current_non_conformity_score: float,
-        non_conformity_score_history: NDArray,
+        current_conformity_score: float,
+        conformity_score_history: NDArray,
     ) -> float:
         r"""
-        Compute the conformal p-value associated with a new non-conformity score.
+        Compute the conformal p-value associated with a new conformity score.
 
-        The p-value is computed using only the past non-conformity scores, according
+        The p-value is computed using only the past conformity scores, according
         to the empirical conformal formula:
 
         .. math::
 
             p_t = \frac{1 + \#\{i : s_i > s_t\} + U \cdot \#\{i : s_i = s_t\}}{n + 1}
 
-        where :math:`s_t` is the current non-conformity score, :math:`s_i` are past
+        where :math:`s_t` is the current conformity score, :math:`s_i` are past
         scores, :math:`U \sim \mathrm{Uniform}(0, 1)` is a random tie-breaker, and
         :math:`n` is the number of past observations.
 
         Parameters
         ----------
-        current_non_conformity_score : float
-            Non-conformity score of the current observation.
+        current_conformity_score : float
+            Conformity score of the current observation.
 
-        non_conformity_score_history : NDArray
-            Array of past non-conformity scores used as reference.
+        conformity_score_history : NDArray
+            Array of past conformity scores used as reference.
 
         Returns
         -------
@@ -340,7 +340,7 @@ class OnlineMartingaleTest:
         -----
         When no past observations are available, a uniform random p-value is returned.
         Tie-breaking via random uniform sampling ensures valid p-values even when
-        non-conformity scores have ties.
+        conformity scores have ties.
 
         References
         ----------
@@ -351,15 +351,15 @@ class OnlineMartingaleTest:
             "Plug-in Martingales for Testing Exchangeability on-line".
             In Proceedings of the 29th ICML. Algorithm 1, page 3.
         """
-        history = np.asarray(non_conformity_score_history, dtype=float)
+        history = np.asarray(conformity_score_history, dtype=float)
         n = len(history)
         u = self.rng.uniform()
 
         if n == 0:
             return float(self.rng.uniform())
 
-        n_greater: int = int(np.sum(history > current_non_conformity_score))
-        n_equal: int = int(np.sum(history == current_non_conformity_score))
+        n_greater: int = int(np.sum(history > current_conformity_score))
+        n_equal: int = int(np.sum(history == current_conformity_score))
 
         return float((1.0 + n_greater + u * n_equal) / (n + 1.0))
 
@@ -555,7 +555,7 @@ class OnlineMartingaleTest:
         """
         Update the online martingale test with newly labeled observations.
 
-        This method computes non-conformity scores from the provided labels and
+        This method computes conformity scores from the provided labels and
         predictions, converts them into conformal p-values using past history,
         updates the selected martingale, and appends the new observations to the
         internal state.
@@ -572,7 +572,7 @@ class OnlineMartingaleTest:
 
         X : Optional[NDArray], default=None
             Optional features associated with the new observations.
-            Used only if required by the non-conformity score function.
+            Used only if required by the conformity score function.
 
         Returns
         -------
@@ -589,14 +589,14 @@ class OnlineMartingaleTest:
         This method can be used both to initialize the test on a labeled reference
         set and to update it online as new labels become available.
         """
-        scores = self.non_conformity_score_function(y_true, y_pred, X)
+        scores = self.conformity_score_function(y_true, y_pred, X)
         scores = self._to_1d_array(scores).astype(float)
 
         for current_score in scores:
             pvalue = self.compute_p_value(
-                current_non_conformity_score=current_score,
-                non_conformity_score_history=np.asarray(
-                    self.non_conformity_score_history, dtype=float
+                current_conformity_score=current_score,
+                conformity_score_history=np.asarray(
+                    self.conformity_score_history, dtype=float
                 ),
             )
 
@@ -607,7 +607,7 @@ class OnlineMartingaleTest:
             else:
                 raise ValueError(f"Unsupported test method: {self.test_method}")
 
-            self.non_conformity_score_history.append(float(current_score))
+            self.conformity_score_history.append(float(current_score))
             self.pvalue_history.append(float(pvalue))
 
         if (
