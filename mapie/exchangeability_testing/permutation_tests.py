@@ -442,6 +442,6 @@ class SequentialMonteCarloTest(PermutationTest):
         running_max_wealth = np.maximum.accumulate(wealth_history)
         self.p_values = np.minimum(1 / running_max_wealth, 1)
 
-        is_exchangeable = bool(self.p_values[-1] < self.test_level)
+        is_exchangeable = bool(self.p_values[-1] > self.test_level)
 
         return is_exchangeable
