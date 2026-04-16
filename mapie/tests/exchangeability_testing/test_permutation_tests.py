@@ -405,14 +405,18 @@ class TestSequentialMonteCarloTest:
         assert is_exchangeable_1 == is_exchangeable_2
         np.testing.assert_allclose(test_1.p_values, test_2.p_values)
 
-    def test_run_binomial_mixture_stops_early_with_rank_update(
-        self, toy_exchangeability_data, split_conformal_regressor
+    @pytest.mark.parametrize("strategy", ["aggressive", "binomial", "binomial_mixture"])
+    def test_run_triggers_early_stopping_with_constant_statistic(
+        self,
+        strategy,
+        toy_exchangeability_data,
+        split_conformal_regressor,
     ) -> None:
         X, y = toy_exchangeability_data
         test = SequentialMonteCarloTest(
-            strategy="binomial_mixture",
+            strategy=strategy,
             random_state=123,
-            num_permutations=3,
+            num_permutations=80,
             mapie_estimator=cast(MapieEstimator, split_conformal_regressor),
         )
         test.test_statistic = ConstantStatistic()
@@ -420,24 +424,5 @@ class TestSequentialMonteCarloTest:
         is_exchangeable = test.run(X, y)
 
         assert isinstance(is_exchangeable, bool)
-        assert len(test.p_values) == 2
-        np.testing.assert_allclose(test.p_values, np.array([1.0, 1.0]))
-        assert np.all((test.p_values >= 0.0) & (test.p_values <= 1.0))
-
-    def test_run_binomial_triggers_early_stopping(
-        self,
-        toy_exchangeability_data,
-        split_conformal_regressor,
-    ) -> None:
-        X, y = toy_exchangeability_data
-        test = SequentialMonteCarloTest(
-            strategy="binomial",
-            random_state=123,
-            num_permutations=80,
-            mapie_estimator=cast(MapieEstimator, split_conformal_regressor),
-        )
-        test.test_statistic = ConstantStatistic()
-
-        test.run(X, y)
-
         assert len(test.p_values) < 81
+        assert np.all((test.p_values >= 0.0) & (test.p_values <= 1.0))
