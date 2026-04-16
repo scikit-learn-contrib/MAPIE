@@ -3,8 +3,8 @@ import warnings
 import numpy as np
 import pytest
 
-import mapie.exhangeability_testing.online_martingale_tests as omt_module
-from mapie.exhangeability_testing.online_martingale_tests import OnlineMartingaleTest
+import mapie.exhangeability_testing.online as omt_module
+from mapie.exhangeability_testing.online import OnlineMartingaleTest
 
 
 def dummy_score(y_true, y_pred, X=None):

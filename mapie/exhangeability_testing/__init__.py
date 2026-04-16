@@ -1,3 +1,3 @@
-from .online_martingale_tests import OnlineMartingaleTest
+from .online import OnlineMartingaleTest
 
 __all__ = ["OnlineMartingaleTest"]
