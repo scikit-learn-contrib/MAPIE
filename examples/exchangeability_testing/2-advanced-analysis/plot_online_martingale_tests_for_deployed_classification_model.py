@@ -70,9 +70,10 @@ warnings.filterwarnings(
 # on a reference dataset where there is no reason to expect exchangeability violations.
 # Therefore, we generate simple synthetic data using :func:`sklearn.datasets.make_classification`
 # with two informative features and some label noise and use it as a reference environment
-# for training the model. For stream monitoring, we generate three separate datasets with
-# the same process but different random seeds and with different shift mechanisms to illustrate
-# the behavior of online martingale tests under various scenarios.
+# for training the model. For stream monitoring, we generate one exchangeable stream
+# (same data-generating mechanism) and two deliberately shifted streams.
+# The shifted streams are intentionally different from training data to create
+# clear and interpretable examples of exchangeability violations.
 #
 # The reference data generation function is defined as follows.
 #
@@ -133,42 +134,75 @@ def plot_data_and_score_histogram(
     left_title="Training data",
     right_title="Histogram of conformity scores",
     figure_title="Reference training data and conformity scores",
+    split_index=None,
+    split_labels=("Before shift", "After shift"),
 ):
-    """Plot feature scatter (left) and class-wise score histogram (right)."""
+    """Plot feature scatter (left) and score histogram (right)."""
     score_quantile = np.quantile(scores, 0.975)
 
     fig, axes = plt.subplots(1, 2, figsize=(12, 5.8))
-    axes[0].scatter(
-        X[y == 0, 0],
-        X[y == 0, 1],
-        alpha=0.65,
-        s=20,
-        label="Class 0",
-    )
-    axes[0].scatter(
-        X[y == 1, 0],
-        X[y == 1, 1],
-        alpha=0.65,
-        s=20,
-        label="Class 1",
-    )
+    if split_index is None:
+        axes[0].scatter(
+            X[y == 0, 0],
+            X[y == 0, 1],
+            alpha=0.65,
+            s=20,
+            label="Class 0",
+        )
+        axes[0].scatter(
+            X[y == 1, 0],
+            X[y == 1, 1],
+            alpha=0.65,
+            s=20,
+            label="Class 1",
+        )
+        axes[1].hist(
+            scores[y == 0],
+            bins=25,
+            alpha=0.65,
+            label="Class 0",
+        )
+        axes[1].hist(
+            scores[y == 1],
+            bins=25,
+            alpha=0.65,
+            label="Class 1",
+        )
+    else:
+        split_index = int(split_index)
+        before_slice = slice(0, split_index)
+        after_slice = slice(split_index, len(y))
+        axes[0].scatter(
+            X[before_slice, 0],
+            X[before_slice, 1],
+            alpha=0.65,
+            s=20,
+            label=split_labels[0],
+        )
+        axes[0].scatter(
+            X[after_slice, 0],
+            X[after_slice, 1],
+            alpha=0.65,
+            s=20,
+            label=split_labels[1],
+        )
+        axes[1].hist(
+            scores[before_slice],
+            bins=25,
+            alpha=0.65,
+            label=split_labels[0],
+        )
+        axes[1].hist(
+            scores[after_slice],
+            bins=25,
+            alpha=0.65,
+            label=split_labels[1],
+        )
     axes[0].set_title(left_title, fontsize=18)
     axes[0].set_xlabel("Feature 1", fontsize=16)
     axes[0].set_ylabel("Feature 2", fontsize=16)
     axes[0].tick_params(axis="both", labelsize=14)
 
-    axes[1].hist(
-        scores[y == 0],
-        bins=25,
-        alpha=0.65,
-        label="Class 0",
-    )
-    axes[1].hist(
-        scores[y == 1],
-        bins=25,
-        alpha=0.65,
-        label="Class 1",
-    )
     axes[1].axvline(
         score_quantile,
         color="tab:red",
@@ -385,6 +419,7 @@ plot_data_and_score_histogram(
     left_title="Subtle shift stream",
     right_title="Histogram of conformity scores",
     figure_title="Subtle shift stream and conformity scores",
+    split_index=len(y_subtle) // 2,
 )
 
 ##############################################################################
@@ -461,6 +496,7 @@ plot_data_and_score_histogram(
     left_title="Abrupt shift stream",
     right_title="Histogram of conformity scores",
     figure_title="Abrupt shift stream and conformity scores",
+    split_index=len(y_abrupt) // 2,
 )
 
 
@@ -483,14 +519,19 @@ omt_plugin_abrupt_shift = OnlineMartingaleTest(
     test_level=test_level,
     burn_in=burn_in,
     random_state=RANDOM_STATE,
-    warn=False,
+    warn=True,
 )
 
 y_proba_abrupt = clf.predict_proba(X_abrupt)
 
 for i in range(len(y_abrupt)):
     omt_jumper_abrupt_shift.update(y_abrupt[i : i + 1], y_proba_abrupt[i : i + 1])
-    omt_plugin_abrupt_shift.update(y_abrupt[i : i + 1], y_proba_abrupt[i : i + 1])
+with warnings.catch_warnings(record=True) as raised_warnings:
+    warnings.simplefilter("always")
+    for i in range(len(y_abrupt)):
+        omt_plugin_abrupt_shift.update(y_abrupt[i : i + 1], y_proba_abrupt[i : i + 1])
+if raised_warnings:
+    print(f"Raised warning: {raised_warnings[0].message}")
 
 plot_results_one_scenario(
     omt_jumper_abrupt_shift,
@@ -508,6 +549,50 @@ plot_results_one_scenario(
 # However, the plug-in martingale estimates the p-value density and can react to
 # this departure from uniformity, which is why it reacts quickly and rejects exchangeability.
 #
+
+##############################################################################
+# In contrast, the next controlled p-value stream illustrates a setting where
+# the jumper can react earlier than the plug-in method.
+# The stream starts with many very small p-values (strong one-sided signal),
+# then transitions to moderate p-values.
+#
+
+omt_jumper_controlled = OnlineMartingaleTest(
+    conformity_score_function=conformity_score,
+    test_method="jumper_martingale",
+    test_level=test_level,
+    burn_in=burn_in,
+    random_state=RANDOM_STATE,
+    warn=False,
+)
+omt_plugin_controlled = OnlineMartingaleTest(
+    conformity_score_function=conformity_score,
+    test_method="plugin_martingale",
+    test_level=test_level,
+    burn_in=burn_in,
+    random_state=RANDOM_STATE,
+    warn=False,
+)
+
+controlled_pvalues = np.concatenate(
+    [
+        np.full(140, 0.02),
+        np.linspace(0.1, 0.9, 260),
+    ]
+)
+for pvalue in controlled_pvalues:
+    omt_jumper_controlled.update_simple_jumper_martingale(float(pvalue))
+    omt_plugin_controlled.update_plugin_martingale(float(pvalue))
+    omt_jumper_controlled.pvalue_history.append(float(pvalue))
+    omt_plugin_controlled.pvalue_history.append(float(pvalue))
+
+print(
+    "Controlled p-value stream stopping times:",
+    {
+        "jumper": omt_jumper_controlled.summary()["stopping_time"],
+        "plugin": omt_plugin_controlled.summary()["stopping_time"],
+    },
+)
 
 ##############################################################################
 # Finally, we collect results and print summary.

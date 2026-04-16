@@ -44,6 +44,9 @@ class OnlineMartingaleTest:
 
     test_method : {"jumper_martingale", "plugin_martingale"}, default="jumper_martingale"
         Martingale construction used to aggregate evidence across p-values.
+        To compare both methods in parallel, instantiate two
+        ``OnlineMartingaleTest`` objects with different ``test_method`` values
+        and update them on the same stream.
 
     test_level : float, default=0.05
         Test level used to define the rejection threshold.
@@ -165,6 +168,7 @@ class OnlineMartingaleTest:
             Martingale construction used to aggregate evidence from conformal p-values.
             "jumper_martingale" is more stable and less tuning-sensitive.
             "plugin_martingale" is more adaptive but sensitive to density estimation.
+            To monitor both methods, use two instances and update both online.
 
         test_level : float, default=0.05
             Test level used to define the rejection threshold.
@@ -429,9 +433,7 @@ class OnlineMartingaleTest:
             return 1.0
 
         # Sample-size dependent regularization towards uniform density to control against estimation errors in small samples
-        regularization_strength = min(
-            1.0, self.burn_in / len(self.pvalue_history)
-        )
+        regularization_strength = min(1.0, self.burn_in / len(self.pvalue_history))
         density = (
             1.0 - regularization_strength
         ) * density + regularization_strength * 1.0
