@@ -81,6 +81,10 @@ class PermutationTest(ABC):
         :class:`SplitConformalClassifier` or
         :class:`SplitConformalRegressor` is built
         when needed.
+    random_state : Optional[int], default=None
+        Seed controlling the randomness of permutations.
+    num_permutations : int, default=1000
+        Number of permutations used by permutation-based tests.
     """
 
     def __init__(
@@ -88,12 +92,18 @@ class PermutationTest(ABC):
         test_level: float = 0.05,
         mapie_estimator: Optional[MapieEstimator] = None,
         task: Optional[Literal["classification", "regression"]] = None,
+        random_state: Optional[int] = None,
+        num_permutations: int = 1000,
     ) -> None:
         if not (0.0 < test_level < 1.0):
             raise ValueError("test_level must be in (0, 1).")
         self.test_level = test_level
         self.mapie_estimator = self._prepare_estimator(mapie_estimator)
         self.task = task
+        self.rng = np.random.RandomState(random_state)
+        self.num_permutations = num_permutations
+        self.p_values: NDArray = np.array([])
+        self.test_statistic = TestStatisticOnNonConformityScores()
 
     @staticmethod
     def _prepare_estimator(
@@ -222,21 +232,19 @@ class PValuePermutationTest(PermutationTest):
 
     Parameters
     ----------
-    random_state : Optional[int]
-        Controls the randomness of the permutations.
-
-        By default `None`.
-
-    num_permutations : int
-        Number of permutations used to estimate the p-value.
-
-        By default `1000`.
     test_level : float, default=0.05
         Level used to test the hypothesis that the dataset is exchangeable.
         The probability that the test gives a false positive is at most
         `test_level` (type I error).
     mapie_estimator : Optional[MapieEstimator], default=None
-        MAPIE estimator forwarded to `PermutationTest`.
+        MAPIE estimator used to compute predictions and non-conformity
+        scores.
+    task : Optional[Literal["classification", "regression"]], default=None
+        Task type. If ``None``, the task is inferred from `y`.
+    random_state : Optional[int], default=None
+        Seed controlling the randomness of permutations.
+    num_permutations : int, default=1000
+        Number of permutations used to estimate the p-value.
 
     Examples
     --------
@@ -255,20 +263,19 @@ class PValuePermutationTest(PermutationTest):
 
     def __init__(
         self,
-        random_state: Optional[int] = None,
-        num_permutations: int = 1000,
         test_level: float = 0.05,
         mapie_estimator: Optional[MapieEstimator] = None,
+        task: Optional[Literal["classification", "regression"]] = None,
+        random_state: Optional[int] = None,
+        num_permutations: int = 1000,
     ) -> None:
         super().__init__(
             test_level=test_level,
             mapie_estimator=mapie_estimator,
+            task=task,
+            random_state=random_state,
+            num_permutations=num_permutations,
         )
-        self.rng = np.random.RandomState(random_state)
-        self.num_permutations = num_permutations
-        self.p_values: NDArray = np.array([])
-
-        self.test_statistic = TestStatisticOnNonConformityScores()
 
     def run(self, X: NDArray, y: NDArray) -> bool:
         """Run a p-value permutation test.
@@ -313,42 +320,44 @@ class SequentialMonteCarloTest(PermutationTest):
     ----------
     strategy : {"aggressive", "binomial", "binomial_mixture"}
         Wealth update strategy for the sequential test.
-    num_permutations : int, default=1000
-        Maximum number of permutations.
-    random_state : Optional[int], default=None
-        Seed for permutation randomness.
     test_level : float, default=0.05
         Level used to test the hypothesis that the dataset is exchangeable.
         The probability that the test gives a false positive is at most
         `test_level` (type I error).
     mapie_estimator : Optional[MapieEstimator], default=None
-        MAPIE estimator forwarded to `PermutationTest`.
+        MAPIE estimator used to compute predictions and non-conformity
+        scores.
+    task : Optional[Literal["classification", "regression"]], default=None
+        Task type. If ``None``, the task is inferred from `y`.
+    random_state : Optional[int], default=None
+        Seed controlling the randomness of permutations.
+    num_permutations : int, default=1000
+        Maximum number of permutations.
     """
 
     def __init__(
         self,
         strategy: Literal["aggressive", "binomial", "binomial_mixture"],
-        num_permutations: int = 1000,
-        random_state: Optional[int] = None,
         test_level: float = 0.05,
         mapie_estimator: Optional[MapieEstimator] = None,
+        task: Optional[Literal["classification", "regression"]] = None,
+        random_state: Optional[int] = None,
+        num_permutations: int = 1000,
     ) -> None:
         super().__init__(
             test_level=test_level,
             mapie_estimator=mapie_estimator,
+            task=task,
+            random_state=random_state,
+            num_permutations=num_permutations,
         )
         self.strategy = strategy
-        self.rng = np.random.RandomState(random_state)
-        self.num_permutations = num_permutations
-        self.p_values: NDArray = np.array([])
 
         valid_strategies = {"aggressive", "binomial", "binomial_mixture"}
         if self.strategy not in valid_strategies:
             raise ValueError(
                 f"Unknown strategy '{self.strategy}'. Expected one of {valid_strategies}."
             )
-
-        self.test_statistic = TestStatisticOnNonConformityScores()
 
     def run(self, X: NDArray, y: NDArray) -> bool:
         """Run a sequential Monte Carlo permutation test.
