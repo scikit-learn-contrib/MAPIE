@@ -13,9 +13,7 @@ from mapie.exchangeability_testing.permutation_tests import (
     PValuePermutationTest,
     SequentialMonteCarloTest,
     TestStatistic,
-    TestStatisticOnLabeledDataset,
     TestStatisticOnNonConformityScores,
-    TestStatisticOnUnlabeledDataset,
 )
 from mapie.regression import (
     CrossConformalRegressor,
@@ -96,16 +94,10 @@ class TestStatisticOnNonConformityScoresClass:
 
     def test_abstract_base_methods_raise(self) -> None:
         test_statistic = cast(TestStatistic, object())
-        labeled_statistic = cast(TestStatisticOnLabeledDataset, object())
-        unlabeled_statistic = cast(TestStatisticOnUnlabeledDataset, object())
         permutation_test = cast(PermutationTest, object())
 
         with pytest.raises(NotImplementedError):
             TestStatistic.compute(test_statistic)
-        with pytest.raises(NotImplementedError):
-            TestStatisticOnLabeledDataset.compute(labeled_statistic)
-        with pytest.raises(NotImplementedError):
-            TestStatisticOnUnlabeledDataset.compute(unlabeled_statistic)
         with pytest.raises(NotImplementedError):
             PermutationTest.run(permutation_test, np.array([[0.0]]), np.array([0.0]))
 
