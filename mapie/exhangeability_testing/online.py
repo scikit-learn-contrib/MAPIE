@@ -57,7 +57,7 @@ class OnlineMartingaleTest:
         Mixing parameter used by the jumper martingale.
         Ignored when ``test_method="plugin_martingale"``.
 
-    min_sample_size_to_decide : int, default=100
+    burn_in : int, default=100
         Minimum sample size required before the ``is_exchangeable``
         property is allowed to return a non-``None`` decision.
 
@@ -87,7 +87,7 @@ class OnlineMartingaleTest:
     >>> omt = OnlineMartingaleTest(
     ...     regression_score,
     ...     random_state=0,
-    ...     min_sample_size_to_decide=1,
+    ...     burn_in=1,
     ... )
     >>> y_true = np.array([0.0, 1.0, 2.0])
     >>> y_pred = np.array([0.05, 0.95, 1.95])
@@ -102,7 +102,7 @@ class OnlineMartingaleTest:
     >>> omt = OnlineMartingaleTest(
     ...     classification_score,
     ...     random_state=0,
-    ...     min_sample_size_to_decide=1,
+    ...     burn_in=1,
     ... )
     >>> y_true = np.array([0, 1, 0, 1])
     >>> y_pred = np.array([
@@ -148,7 +148,7 @@ class OnlineMartingaleTest:
         test_level: float = 0.05,
         warn: bool = True,
         jump_size: float = 0.01,
-        min_sample_size_to_decide: int = 100,
+        burn_in: int = 100,
         random_state: Optional[np.int_] = None,
     ):
         """
@@ -177,7 +177,7 @@ class OnlineMartingaleTest:
             Mixing parameter for the jumper martingale, controlling expert diversity.
             Must lie in (0, 1). Ignored when test_method="plugin_martingale".
 
-        min_sample_size_to_decide : int, default=100
+        burn_in : int, default=100
             Minimum number of observations required before is_exchangeable returns
             a non-None decision.
 
@@ -225,7 +225,7 @@ class OnlineMartingaleTest:
         self.warn = warn
 
         self.jump_size = jump_size
-        self.min_sample_size_to_decide = min_sample_size_to_decide
+        self.burn_in = burn_in
         self.rng = np.random.default_rng(random_state)
 
         self.pvalue_history: list[float] = []
@@ -267,7 +267,7 @@ class OnlineMartingaleTest:
           below the significance level (``test_level``) throughout the history.
         - ``None``: The test is currently inconclusive because insufficient
           observations have been processed (fewer than
-          ``min_sample_size_to_decide``).
+          ``burn_in``).
 
         Returns
         -------
@@ -287,7 +287,7 @@ class OnlineMartingaleTest:
         --------
         reject_threshold : The rejection threshold for the martingale.
         """
-        if len(self.pvalue_history) < self.min_sample_size_to_decide:
+        if len(self.pvalue_history) < self.burn_in:
             return None
         # The value 1 is arbitrary
         # The idea is to reject if there are some values above the rejection threshold, cf. [1], Figure 8.2, page 153.
@@ -430,7 +430,7 @@ class OnlineMartingaleTest:
 
         # Sample-size dependent regularization towards uniform density to control against estimation errors in small samples
         regularization_strength = min(
-            1.0, self.min_sample_size_to_decide / len(self.pvalue_history)
+            1.0, self.burn_in / len(self.pvalue_history)
         )
         density = (
             1.0 - regularization_strength
@@ -655,7 +655,7 @@ class OnlineMartingaleTest:
         if martingale_values.size == 0:
             return {
                 "test_method": self.test_method,
-                "min_sample_size_to_decide": self.min_sample_size_to_decide,
+                "burn_in": self.burn_in,
                 "test_level": self.test_level,
                 "is_exchangeable": self.is_exchangeable,
                 "stopping_time": None,
@@ -693,7 +693,7 @@ class OnlineMartingaleTest:
 
         return {
             "test_method": self.test_method,
-            "min_sample_size_to_decide": self.min_sample_size_to_decide,
+            "burn_in": self.burn_in,
             "test_level": self.test_level,
             "is_exchangeable": self.is_exchangeable,
             "stopping_time": stopping_time,

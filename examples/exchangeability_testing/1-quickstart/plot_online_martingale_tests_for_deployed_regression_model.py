@@ -220,17 +220,17 @@ plot_data_and_score_histogram(
 # can react to richer departures from uniformity.
 #
 # We use a test level of 0.05, so the rejection threshold is ``1 / 0.05 = 20``.
-# We also set ``min_sample_size_to_decide=100`` to avoid unstable early decisions.
+# We also set ``burn_in=100`` to avoid unstable early decisions.
 #
 
 test_level = 0.05
-min_sample_size_to_decide = 100
+burn_in = 100
 
 omt_jumper_exch = OnlineMartingaleTest(
     conformity_score_function=conformity_score,
     test_method="jumper_martingale",
     test_level=test_level,
-    min_sample_size_to_decide=min_sample_size_to_decide,
+    burn_in=burn_in,
     random_state=RANDOM_STATE,
     warn=False,
 )
@@ -238,7 +238,7 @@ omt_plugin_exch = OnlineMartingaleTest(
     conformity_score_function=conformity_score,
     test_method="plugin_martingale",
     test_level=test_level,
-    min_sample_size_to_decide=min_sample_size_to_decide,
+    burn_in=burn_in,
     random_state=RANDOM_STATE,
     warn=False,
 )
@@ -379,7 +379,7 @@ omt_jumper_subtle_shift = OnlineMartingaleTest(
     conformity_score_function=conformity_score,
     test_method="jumper_martingale",
     test_level=test_level,
-    min_sample_size_to_decide=min_sample_size_to_decide,
+    burn_in=burn_in,
     random_state=RANDOM_STATE,
     warn=False,
 )
@@ -387,7 +387,7 @@ omt_plugin_subtle_shift = OnlineMartingaleTest(
     conformity_score_function=conformity_score,
     test_method="plugin_martingale",
     test_level=test_level,
-    min_sample_size_to_decide=min_sample_size_to_decide,
+    burn_in=burn_in,
     random_state=RANDOM_STATE,
     warn=False,
 )
@@ -454,7 +454,7 @@ omt_jumper_abrupt_shift = OnlineMartingaleTest(
     conformity_score_function=conformity_score,
     test_method="jumper_martingale",
     test_level=test_level,
-    min_sample_size_to_decide=min_sample_size_to_decide,
+    burn_in=burn_in,
     random_state=RANDOM_STATE,
     warn=False,
 )
@@ -462,7 +462,7 @@ omt_plugin_abrupt_shift = OnlineMartingaleTest(
     conformity_score_function=conformity_score,
     test_method="plugin_martingale",
     test_level=test_level,
-    min_sample_size_to_decide=min_sample_size_to_decide,
+    burn_in=burn_in,
     random_state=RANDOM_STATE,
     warn=False,
 )

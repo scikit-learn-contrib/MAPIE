@@ -75,7 +75,7 @@ def test_compute_p_value_with_history_and_ties():
 
 def test_is_exchangeable_returns_false_for_one_value_above_threshold():
     """Test is_exchangeable returns False when at least one value is above threshold."""
-    omt = OnlineMartingaleTest(dummy_score, min_sample_size_to_decide=1)
+    omt = OnlineMartingaleTest(dummy_score, burn_in=1)
     omt.pvalue_history = [0.1]  # 1 pvalue
     omt.martingale_value_history = [21.0]  # One value above threshold (20.0)
     omt.current_martingale_value = 1.0  # Current value below threshold
@@ -161,7 +161,7 @@ def test_update_plugin_martingale_uses_density_estimate():
     omt = OnlineMartingaleTest(
         dummy_score,
         test_method="plugin_martingale",
-        min_sample_size_to_decide=1,
+        burn_in=1,
         random_state=0,
     )
     omt.pvalue_history = [0.1, 0.5, 0.9]
@@ -180,7 +180,7 @@ def test_update_warns_on_rejection():
         dummy_score,
         test_method="plugin_martingale",
         test_level=0.5,
-        min_sample_size_to_decide=1,
+        burn_in=1,
         warn=True,
         random_state=0,
     )
@@ -213,7 +213,7 @@ def test_update_appends_scores_and_pvalues():
         return np.asarray(y_pred)
 
     omt = OnlineMartingaleTest(
-        score_function, min_sample_size_to_decide=1, random_state=1234
+        score_function, burn_in=1, random_state=1234
     )
     omt.update(np.array([1.0, 2.0]), np.array([0.1, 0.2]))
 
@@ -228,7 +228,7 @@ def test_summary_without_values():
     summary = omt.summary()
 
     assert summary["test_method"] == "jumper_martingale"
-    assert summary["min_sample_size_to_decide"] == 100
+    assert summary["burn_in"] == 100
     assert summary["test_level"] == pytest.approx(0.05)
     assert summary["is_exchangeable"] is None
     assert summary["stopping_time"] is None
@@ -240,7 +240,7 @@ def test_summary_without_values():
 def test_summary_last_index_when_non_rejection():
     """Test that summary stopping_time is last index when no threshold crossing."""
     omt = OnlineMartingaleTest(
-        dummy_score, test_level=0.05, min_sample_size_to_decide=1
+        dummy_score, test_level=0.05, burn_in=1
     )
     omt.martingale_value_history = [1.0, 2.0, 3.0]
     omt.current_martingale_value = 3.0
@@ -256,7 +256,7 @@ def test_summary_last_index_when_non_rejection():
 
 def test_summary_rejection_requires_sustained_block():
     """Test that summary detects first threshold crossing for both rejection cases."""
-    omt = OnlineMartingaleTest(dummy_score, test_level=0.1, min_sample_size_to_decide=1)
+    omt = OnlineMartingaleTest(dummy_score, test_level=0.1, burn_in=1)
     omt.martingale_value_history = [1.0, 5.0, 11.0, 9.5, 9.0, 8.0, 7.0]
     omt.current_martingale_value = 7.0
     omt.pvalue_history = [0.1] * len(omt.martingale_value_history)
@@ -271,7 +271,7 @@ def test_summary_rejection_requires_sustained_block():
 
 def test_summary_non_rejection_no_threshold_crossing():
     """Test that summary with no threshold crossing indicates non-rejection."""
-    omt = OnlineMartingaleTest(dummy_score, test_level=0.1, min_sample_size_to_decide=1)
+    omt = OnlineMartingaleTest(dummy_score, test_level=0.1, burn_in=1)
     omt.martingale_value_history = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]
     omt.current_martingale_value = 9.0
     omt.pvalue_history = [0.1] * len(omt.martingale_value_history)
@@ -286,7 +286,7 @@ def test_summary_non_rejection_no_threshold_crossing():
 
 def test_summary_detects_sustained_rejection_start():
     """Test that summary detects sustained rejection when all values exceed threshold."""
-    omt = OnlineMartingaleTest(dummy_score, test_level=0.1, min_sample_size_to_decide=1)
+    omt = OnlineMartingaleTest(dummy_score, test_level=0.1, burn_in=1)
     omt.martingale_value_history = [11.0] * 6
     omt.current_martingale_value = 11.0
     omt.pvalue_history = [0.1] * 6
@@ -304,7 +304,7 @@ def test_update_without_warn():
         dummy_score,
         test_method="plugin_martingale",
         test_level=0.5,
-        min_sample_size_to_decide=1,
+        burn_in=1,
         warn=False,
         random_state=0,
     )
@@ -324,7 +324,7 @@ def test_update_without_warn():
 def test_is_exchangeable_with_exactly_one_value_above_threshold():
     """Test that exactly one value above threshold returns False."""
     omt = OnlineMartingaleTest(
-        dummy_score, test_level=0.05, min_sample_size_to_decide=1
+        dummy_score, test_level=0.05, burn_in=1
     )
     omt.pvalue_history = [0.1]  # Above threshold (20.0)
     omt.martingale_value_history = [21.0]  # One value above threshold
@@ -336,7 +336,7 @@ def test_is_exchangeable_with_exactly_one_value_above_threshold():
 def test_is_exchangeable_with_two_values_above_threshold():
     """Test that two or more values above threshold returns False."""
     omt = OnlineMartingaleTest(
-        dummy_score, test_level=0.05, min_sample_size_to_decide=1
+        dummy_score, test_level=0.05, burn_in=1
     )
     omt.pvalue_history = [0.1, 0.2]  # At least 2 pvalues
     omt.martingale_value_history = [21.0, 22.0]  # Two values above threshold (20.0)
@@ -348,7 +348,7 @@ def test_is_exchangeable_with_two_values_above_threshold():
 def test_summary_martingale_statistics_completeness():
     """Test that all martingale statistics are returned with values."""
     omt = OnlineMartingaleTest(
-        dummy_score, test_level=0.05, min_sample_size_to_decide=1
+        dummy_score, test_level=0.05, burn_in=1
     )
     omt.martingale_value_history = [1.0, 2.0, 3.0, 4.0, 5.0]
     omt.current_martingale_value = 5.0
