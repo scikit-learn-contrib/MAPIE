@@ -413,7 +413,7 @@ class TestSequentialMonteCarloTest:
         assert is_exchangeable_1 == is_exchangeable_2
         np.testing.assert_allclose(test_1.p_values, test_2.p_values)
 
-    def test_run_without_early_stopping_and_with_rank_update(
+    def test_run_binomial_mixture_stops_early_with_rank_update(
         self, toy_exchangeability_data, split_conformal_regressor
     ) -> None:
         X, y = toy_exchangeability_data
@@ -428,7 +428,8 @@ class TestSequentialMonteCarloTest:
         is_exchangeable = test.run(X, y)
 
         assert isinstance(is_exchangeable, bool)
-        assert len(test.p_values) == 4
+        assert len(test.p_values) == 2
+        np.testing.assert_allclose(test.p_values, np.array([1.0, 1.0]))
         assert np.all((test.p_values >= 0.0) & (test.p_values <= 1.0))
 
     def test_run_binomial_triggers_early_stopping(
