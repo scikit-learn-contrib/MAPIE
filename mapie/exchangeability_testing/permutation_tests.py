@@ -83,6 +83,18 @@ class PermutationTest(ABC):
         when needed.
     """
 
+    def __init__(
+        self,
+        test_level: float = 0.05,
+        mapie_estimator: Optional[MapieEstimator] = None,
+        task: Optional[Literal["classification", "regression"]] = None,
+    ) -> None:
+        if not (0.0 < test_level < 1.0):
+            raise ValueError("test_level must be in (0, 1).")
+        self.test_level = test_level
+        self.mapie_estimator = self._prepare_estimator(mapie_estimator)
+        self.task = task
+
     @staticmethod
     def _prepare_estimator(
         mapie_estimator: Optional[MapieEstimator],
@@ -124,18 +136,6 @@ class PermutationTest(ABC):
                         delattr(inner_estimator, attr_name)
 
         return estimator_copy
-
-    def __init__(
-        self,
-        test_level: float = 0.05,
-        mapie_estimator: Optional[MapieEstimator] = None,
-        task: Optional[Literal["classification", "regression"]] = None,
-    ) -> None:
-        if not (0.0 < test_level < 1.0):
-            raise ValueError("test_level must be in (0, 1).")
-        self.test_level = test_level
-        self.mapie_estimator = self._prepare_estimator(mapie_estimator)
-        self.task = task
 
     def _infer_task(self, y: NDArray) -> Literal["classification", "regression"]:
         """Infer whether the current data should use classification scores."""
