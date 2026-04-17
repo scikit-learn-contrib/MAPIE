@@ -81,6 +81,8 @@ class PermutationTest(ABC):
         :class:`SplitConformalClassifier` or
         :class:`SplitConformalRegressor` is built
         when needed.
+        If the estimator is not fitted or not provided, it will be fitted on a
+        slice of the data in order to compute non-conformity scores.
     random_state : Optional[int], default=None
         Seed controlling the randomness of permutations.
     num_permutations : int, default=1000
