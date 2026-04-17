@@ -3,8 +3,8 @@ import warnings
 import numpy as np
 import pytest
 
-import mapie.exhangeability_testing.online as omt_module
-from mapie.exhangeability_testing.online import OnlineMartingaleTest
+import mapie.exhangeability_testing.online_tests as omt_module
+from mapie.exhangeability_testing.online_tests import OnlineMartingaleTest
 
 
 def test_init_validation_errors():

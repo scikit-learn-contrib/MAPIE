@@ -1,3 +1,3 @@
-from mapie.exhangeability_testing.online import OnlineMartingaleTest
+from mapie.exhangeability_testing.online_tests import OnlineMartingaleTest
 
 __all__ = ["OnlineMartingaleTest"]
