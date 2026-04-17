@@ -253,8 +253,8 @@ class OnlineMartingaleTest:
             3, 1.0 / 3.0, dtype=float
         )
 
+    @staticmethod
     def _prepare_estimator(
-        self,
         mapie_estimator: Optional[MapieEstimator],
     ) -> Optional[MapieEstimator]:
         """Copy an estimator to avoid modifying the original estimator
