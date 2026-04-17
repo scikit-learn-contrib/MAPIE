@@ -30,7 +30,7 @@ class TestStatistic(ABC):
         raise NotImplementedError
 
 
-class TestStatisticOnNonConformityScores(TestStatistic):
+class MeanShiftTestStatistic(TestStatistic):
     """Mean-shift statistic on two score halves.
 
     The statistic is the absolute difference between the mean score of
@@ -105,7 +105,7 @@ class PermutationTest(ABC):
         self.rng = np.random.RandomState(random_state)
         self.num_permutations = num_permutations
         self.p_values: NDArray = np.array([])
-        self.test_statistic = TestStatisticOnNonConformityScores()
+        self.test_statistic = MeanShiftTestStatistic()
 
     @staticmethod
     def _prepare_estimator(
@@ -193,31 +193,28 @@ class PermutationTest(ABC):
             else:
                 raise ValueError("Unknown task type.")
 
-        estimator = self.mapie_estimator
-        assert estimator is not None
-
-        if not estimator._is_fitted:
+        if not self.mapie_estimator._is_fitted:
             X_train, X, y_train, y = train_test_split(
                 X,
                 y,
                 test_size=0.7,
                 shuffle=False,
             )
-            estimator.fit(X_train, y_train)
+            self.mapie_estimator.fit(X_train, y_train)
 
-        estimator.conformalize(X, y)  # compute scores internally
+        self.mapie_estimator.conformalize(X, y)  # compute scores internally
 
         if self.task == "classification":
-            estimator = cast(SplitConformalClassifier, estimator)
+            self.mapie_estimator = cast(SplitConformalClassifier, self.mapie_estimator)
             scores = cast(
                 NDArray,
-                estimator._mapie_classifier.conformity_scores_,
+                self.mapie_estimator._mapie_classifier.conformity_scores_,
             )
         else:
-            estimator = cast(SplitConformalRegressor, estimator)
+            self.mapie_estimator = cast(SplitConformalRegressor, self.mapie_estimator)
             scores = cast(
                 NDArray,
-                estimator._mapie_regressor.conformity_scores_,
+                self.mapie_estimator._mapie_regressor.conformity_scores_,
             )
 
         return scores
@@ -240,7 +237,15 @@ class PValuePermutationTest(PermutationTest):
         `test_level` (type I error).
     mapie_estimator : Optional[MapieEstimator], default=None
         MAPIE estimator used to compute predictions and non-conformity
-        scores.
+        scores. Supported estimators are
+        :class:`SplitConformalClassifier`,
+        and :class:`SplitConformalRegressor`.
+        If ``None``, a default
+        :class:`SplitConformalClassifier` or
+        :class:`SplitConformalRegressor` is built
+        when needed.
+        If the estimator is not fitted or not provided, it will be fitted on a
+        slice of the data in order to compute non-conformity scores.
     task : Optional[Literal["classification", "regression"]], default=None
         Task type. If ``None``, the task is inferred from `y`.
     random_state : Optional[int], default=None
@@ -328,7 +333,15 @@ class SequentialMonteCarloTest(PermutationTest):
         `test_level` (type I error).
     mapie_estimator : Optional[MapieEstimator], default=None
         MAPIE estimator used to compute predictions and non-conformity
-        scores.
+        scores. Supported estimators are
+        :class:`SplitConformalClassifier`,
+        and :class:`SplitConformalRegressor`.
+        If ``None``, a default
+        :class:`SplitConformalClassifier` or
+        :class:`SplitConformalRegressor` is built
+        when needed.
+        If the estimator is not fitted or not provided, it will be fitted on a
+        slice of the data in order to compute non-conformity scores.
     task : Optional[Literal["classification", "regression"]], default=None
         Task type. If ``None``, the task is inferred from `y`.
     random_state : Optional[int], default=None

@@ -69,17 +69,13 @@ mapie_classifier = SplitConformalClassifier(
 # 2. Test exchangeability on the held-out dataset
 # -----------------------------------------------
 #
-# To assess whether conformalization is appropriate for the downstream test
-# block, we run the permutation test on the concatenation of the future
-# conformalization and test datasets. The permutation test internally copies the
-# provided MAPIE estimator, then fits its own conformity scores on this dataset.
+# To assess whether conformalization guarantees provided by MAPIE are valid,
+# we have to test the exchangeability of the conformalization and test datasets.
+# If the datasets are exchangeable, the conformalization guarantees are valid.
+# If the datasets are not exchangeable, the conformalization guarantees are not valid.
 
 X_eval = np.concatenate([X_conformalize, X_test], axis=0)
 y_exchangeable = np.concatenate([y_conformalize, y_test], axis=0)
-
-##############################################################################
-# 3. Run the permutation test
-# ---------------------------
 
 test_level = 0.1
 num_permutations = 200
@@ -98,7 +94,7 @@ print("----------------------------------")
 print(f"PValuePermutationTest: data exchangeability={exchangeability_detected}")
 
 ##############################################################################
-# 4. Plot the running p-values
+# 3. Plot the running p-values
 # ----------------------------
 
 test_level = exchangeability_test.test_level
@@ -119,7 +115,7 @@ plt.tight_layout()
 plt.show()
 
 ##############################################################################
-# 5. Continue with the standard MAPIE pipeline
+# 4. Continue with the standard MAPIE pipeline
 # --------------------------------------------
 #
 # Once exchangeability has been checked, we continue with the standard MAPIE

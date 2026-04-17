@@ -29,10 +29,19 @@ from mapie.exchangeability_testing.permutation_tests import (
 #   exchangeability
 #
 # No estimator is provided explicitly in this example. The permutation tests
-# internally build and fit a default `SplitConformalRegressor` on the data
-# passed to `run`.
+# internally build and fit a default `SplitConformalRegressor` on a split of the data
+# passed to `run`. This is necessary to be able to compute non-conformity scores
+# which measure some sort of model prediction error. Permutation tests then test
+# the exchangeability of the non-conformity scores. This approach allows more flexibility
+# as complex dataset are reduced to a list of values. As non-conformity scores are
+# exchangeability preserving transformations, the exchangeability test result is
+# valid for the original dataset.
 
-rng = np.random.RandomState(7)
+# If an estimator fitted on some training data is provided, the permutation tests
+# should be run on the test data. Results would be better as no split would be needed
+# to fit a model internally.
+
+rng = np.random.RandomState(0)
 X = np.linspace(0.1, 0.9, 100).reshape(-1, 1)
 y_exchangeable = 3 * X.ravel() + rng.normal(scale=0.1, size=X.shape[0])
 y_shifted = y_exchangeable.copy()
