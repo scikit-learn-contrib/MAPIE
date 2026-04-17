@@ -378,6 +378,58 @@ def test_prepare_estimator_raises_on_forbidden_estimators(monkeypatch):
         omt._prepare_estimator(ForbiddenEstimator())
 
 
+def test_prepare_estimator_with_partial_inner_estimators_and_missing_attrs():
+    """Test _prepare_estimator when inner estimators/attrs are only partially present."""
+
+    class DummyInnerEstimator:
+        def __init__(self):
+            # Keep only one attribute to trigger both hasattr True/False branches.
+            self.conformity_scores_ = np.array([1.0])
+
+    class DummyEstimator:
+        def __init__(self):
+            self._is_conformalized = True
+            self._predict_params = {"alpha": 0.1}
+            # Keep top-level attribute absent and present combinations.
+            self.quantiles_ = np.array([0.5])
+            # Provide only one inner estimator to exercise missing-branch path.
+            self._mapie_regressor = DummyInnerEstimator()
+
+    omt = OnlineMartingaleTest()
+    estimator = DummyEstimator()
+
+    prepared = omt._prepare_estimator(estimator)
+
+    assert prepared is not estimator
+    assert prepared._is_conformalized is False
+    assert prepared._predict_params == {}
+    assert not hasattr(prepared, "quantiles_")
+    assert not hasattr(prepared, "conformity_scores_")
+    assert hasattr(prepared, "_mapie_regressor")
+    assert not hasattr(prepared._mapie_regressor, "conformity_scores_")
+    # quantiles_ was never present in inner estimator: ensure branch with missing attr is covered.
+    assert not hasattr(prepared._mapie_regressor, "quantiles_")
+    # _mapie_classifier does not exist: ensure missing inner-estimator branch is exercised.
+    assert not hasattr(prepared, "_mapie_classifier")
+
+
+def test_prepare_estimator_without_optional_state_attrs():
+    """Test _prepare_estimator when optional top-level attrs are missing."""
+
+    class DummyEstimator:
+        # Intentionally do not define _is_conformalized or _predict_params.
+        pass
+
+    omt = OnlineMartingaleTest()
+    estimator = DummyEstimator()
+
+    prepared = omt._prepare_estimator(estimator)
+
+    assert prepared is not estimator
+    assert not hasattr(prepared, "_is_conformalized")
+    assert not hasattr(prepared, "_predict_params")
+
+
 def test_infer_task_from_estimator_and_target_type():
     """Test task inference from estimator attributes and from y type."""
 
@@ -490,6 +542,32 @@ def test_compute_non_conformity_scores_regression_branch(monkeypatch):
 
     assert np.array_equal(scores, np.array([1.1, 2.2]))
     assert estimator.conformalize_calls == 1
+
+
+def test_compute_non_conformity_scores_uses_provided_estimator_without_creation():
+    """Test branch where a provided mapie_estimator is reused as-is."""
+
+    class DummyProvidedRegressor:
+        def __init__(self):
+            self._is_fitted = True
+            self._mapie_regressor = type("ScoreHolder", (), {})()
+            self.conformalize_calls = 0
+
+        def conformalize(self, X, y):
+            self.conformalize_calls += 1
+            self._mapie_regressor.conformity_scores_ = np.array([0.9, 1.1])
+
+    provided = DummyProvidedRegressor()
+    omt = OnlineMartingaleTest(mapie_estimator=provided, task="regression")
+
+    scores = omt._compute_non_conformity_scores(
+        np.array([[0.0], [1.0]]),
+        np.array([0.2, 0.4]),
+    )
+
+    assert omt.mapie_estimator is not provided
+    assert np.array_equal(scores, np.array([0.9, 1.1]))
+    assert omt.mapie_estimator.conformalize_calls == 1
 
 
 def test_compute_non_conformity_scores_raises_on_unknown_task():
