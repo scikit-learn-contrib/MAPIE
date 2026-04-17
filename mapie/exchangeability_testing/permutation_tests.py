@@ -27,7 +27,7 @@ class TestStatistic(ABC):
     @abstractmethod
     def compute(self, *args: Any, **kwargs: Any) -> float:
         """Compute the test statistic value."""
-        raise NotImplementedError
+        raise NotImplementedError  # pragma: no cover
 
 
 class MeanShiftTestStatistic(TestStatistic):
@@ -222,7 +222,7 @@ class PermutationTest(ABC):
     @abstractmethod
     def run(self, X: NDArray, y: NDArray) -> bool:
         """Run a permutation-based exchangeability test."""
-        raise NotImplementedError
+        raise NotImplementedError  # pragma: no cover
 
 
 class PValuePermutationTest(PermutationTest):

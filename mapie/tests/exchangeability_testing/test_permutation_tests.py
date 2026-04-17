@@ -81,7 +81,7 @@ def conformalized_split_conformal_regressor(fitted_split_conformal_regressor):
     return fitted_split_conformal_regressor
 
 
-class MeanShiftTestStatisticClass:
+class TestMeanShiftTestStatistic:
     def test_compute(self) -> None:
         statistic = MeanShiftTestStatistic()
         scores = np.array([1.0, 3.0, 2.0, 2.0])
