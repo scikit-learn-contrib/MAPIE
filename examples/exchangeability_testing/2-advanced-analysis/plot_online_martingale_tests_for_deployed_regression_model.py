@@ -1,305 +1,184 @@
 """
-# Online Martingale Exchangeability tests for deployed regression models
+# Online martingale exchangeability tests for a deployed regressor
 
-In this example, we show how to use `OnlineMartingaleTest` to monitor exchangeability
-online after deployment of a model trained on a reference environment.
-We illustrate the workflow with a regression task,
-but the same principles apply to classification and other settings.
+When a predictive model is deployed in production, a common question arises:
+*are newly arriving labeled observations still exchangeable with the data used
+for model development?*
 
-The tests consider the practical scenario where a model is trained on a reference environment
-where there is no reason to expect exchangeability violations, then deployed in a monitoring environment where
-a stream of labeled observations is received and the goal is to check if they are exchangeable with the training data.
+This example answers that question with
+:class:`~mapie.exchangeability_testing.OnlineMartingaleTest`,
+a lightweight sequential test that converts each new observation into a
+conformal p-value and accumulates evidence against exchangeability through a
+martingale process.
+When the martingale exceeds ``1 / test_level``, exchangeability is rejected
+with false-alarm probability controlled by ``test_level``.
+See [1]_, [2]_, and [3]_ for details and guarantees.
 
-Online martingale tests are a powerful tool for this problem, as they provide a lightweight,
-model-agnostic way to monitor exchangeability over time.
-They work by converting each new observation into a conformal p-value based on a conformity score,
-then accumulating evidence against exchangeability with a martingale that bets against small p-values.
-When the martingale value exceeds a threshold, exchangeability is rejected
-with a user-chosen confidence level. See [1]_, [2]_, and [3]_ for theoretical
-details and guarantees.
+**MAPIE-style workflow.**
+Following standard MAPIE practice, we generate one dataset and split it into:
 
+1. **Train set** (30 %): fit the predictive model.
+2. **Conformalization set** (20 %): held-out data used to calibrate conformity scores.
+3. **Test set** (50 %): future monitoring data, never seen during training.
 
-In the following, we implement a complete workflow for online exchangeability testing for stream data, including:
+The monitoring stream given to
+:class:`~mapie.exchangeability_testing.OnlineMartingaleTest`
+is the concatenation of conformalization and test partitions.
+This reflects the practical recommendation:
+*run exchangeability diagnostics on held-out data only.*
 
-1. **Exchangeable**: same environment as the training data.
-2. **Subtle shift**: departure from linearity toward a right-side quadratic shape.
-3. **Abrupt shift**: sudden change-point in the conditional mean halfway through.
+**Three monitoring scenarios.**
+We compare three test-set variants:
 
-For each stream, we:
+1. **Exchangeable**: same distribution as training.
+2. **Subtle shift**: mild noisy location shift in the second half of test targets.
+3. **Abrupt shift**: larger noisy location shift in the second half of test targets.
 
-1. Train a linear regression model on a separate reference dataset,
-2. Define a conformity score based on the model's prediction residuals,
-3. Initialize two online martingale tests (jumper and plug-in),
-4. Process the stream sequentially, updating both martingales with each new observation,
-5. Inspect martingale paths and p-value histograms to interpret the exchangeability decision.
+**Two martingale strategies.**
+For each scenario we run:
+
+- ``"jumper_martingale"``: bets against an excess of small p-values.
+- ``"plugin_martingale"``: estimates p-value density and can react to broader
+  departures from uniformity.
 
 References
 ----------
-- [1] Angelopoulos, Barber, Bates (2026).
-    "Theoretical Foundations of Conformal Prediction".
-    arXiv preprint arXiv:2411.11824.
-- [2] Vovk, Gammerman, Shafer (2005).
-    "Algorithmic Learning in a Random World".
-    Boston, MA: Springer US. Section 7.1, page 169.
-- [3] Fedorova, Gammerman, Nouretdinov, Vovk (2012).
-    "Plug-in Martingales for Testing Exchangeability on-line".
-    In Proceedings of the 29th ICML. Algorithm 1, page 3.
+ - [1] Angelopoulos, Barber, Bates (2026).
+     "Theoretical Foundations of Conformal Prediction".
+     arXiv preprint arXiv:2411.11824.
+ - [2] Vovk, Gammerman, Shafer (2005).
+     "Algorithmic Learning in a Random World".
+     Boston, MA: Springer US. Section 7.1, page 169.
+ - [3] Fedorova, Gammerman, Nouretdinov, Vovk (2012).
+     "Plug-in Martingales for Testing Exchangeability on-line".
+     In Proceedings of the 29th ICML. Algorithm 1, page 3.
 """
-
-# sphinx_gallery_thumbnail_number = 7
+# %%
+# sphinx_gallery_thumbnail_number = 4
 
 import warnings
 
 import matplotlib.pyplot as plt
 import numpy as np
-from sklearn.datasets import make_regression
 from sklearn.linear_model import LinearRegression
 
-from mapie.exhangeability_testing import OnlineMartingaleTest
+from mapie.exchangeability_testing import OnlineMartingaleTest
+from mapie.regression import SplitConformalRegressor
+from mapie.utils import train_conformalize_test_split
 
-RANDOM_STATE = 42
+RANDOM_STATE = 7
 
 warnings.filterwarnings(
     "ignore",
     message="FigureCanvasAgg is non-interactive, and thus cannot be shown",
 )
 
-
 ##############################################################################
-# In this example, we consider that the deployed model is a linear regression trained
-# on a reference dataset where there is no reason to expect exchangeability violations.
-# Therefore, we generate simple synthetic data using :func:`sklearn.datasets.make_regression`
-# with one informative feature and additive noise and use it as a reference environment
-# for training the model. For stream monitoring, we generate one exchangeable stream
-# (same data-generating mechanism) and two deliberately shifted streams.
-# The shifted streams are intentionally different from training data to create
-# clear and interpretable examples of exchangeability violations.
+# Data preparation
+# ----------------
 #
-# The reference data generation function is defined as follows.
+# We generate one simple linear regression dataset and apply the standard
+# MAPIE train, conformalize, and test split. The linear regressor is fitted on
+# the train partition only, then wrapped in
+# :class:`~mapie.regression.SplitConformalRegressor` in prefit mode.
 #
 
+rng = np.random.default_rng(RANDOM_STATE)
+X_full = np.linspace(0.1, 0.9, 2400).reshape(-1, 1)
+y_full = 3.0 * X_full.ravel() + rng.normal(scale=0.1, size=X_full.shape[0])
 
-def make_regression_reference_data(n_samples=1500, random_state=42):
-    X, y = make_regression(
-        n_samples=n_samples,
-        n_features=1,
-        n_informative=1,
-        noise=8.0,
-        random_state=random_state,
-    )
-    return X, y
-
-
-##############################################################################
-# We next generate a training dataset and fit a linear regression model on it.
-#
-
-X_train, y_train = make_regression_reference_data(n_samples=2000, random_state=10)
-
-clf = LinearRegression()
-clf.fit(X_train, y_train)
-
-
-###############################################################################
-# Throughout the example, we use the same conformity score for both martingale tests.
-# For regression, we use the absolute residual:
-#
-# .. math::
-#
-#    s_i = |y_i - \hat{y}_i|
-#
-# so that well-predicted observations have small scores and surprising
-# observations have large scores.
-#
-
-
-def conformity_score(y_true, y_pred, X=None):
-    y_true = np.asarray(y_true, dtype=float).reshape(-1)
-    y_pred = np.asarray(y_pred, dtype=float).reshape(-1)
-    return np.abs(y_true - y_pred)
-
-
-###############################################################################
-# Below, we plot the training data on the left and the associated conformity scores on the right.
-#
-
-
-def plot_data_and_score_histogram(
-    X,
-    y,
-    scores,
-    left_title="Training data",
-    right_title="Histogram of conformity scores",
-    figure_title="Reference training data and conformity scores",
-    split_index=None,
-    split_labels=("Before shift", "After shift"),
-):
-    """Plot regression data (left) and score histogram (right)."""
-    score_quantile = np.quantile(scores, 0.975)
-
-    fig, axes = plt.subplots(1, 2, figsize=(12, 5.8))
-    if split_index is None:
-        axes[0].scatter(
-            X[:, 0],
-            y,
-            alpha=0.65,
-            s=20,
-            label="Observations",
-        )
-        axes[1].hist(
-            scores,
-            bins=25,
-            alpha=0.65,
-            label="Absolute residuals",
-        )
-    else:
-        split_index = int(split_index)
-        before_slice = slice(0, split_index)
-        after_slice = slice(split_index, len(y))
-        axes[0].scatter(
-            X[before_slice, 0],
-            y[before_slice],
-            alpha=0.65,
-            s=20,
-            label=split_labels[0],
-        )
-        axes[0].scatter(
-            X[after_slice, 0],
-            y[after_slice],
-            alpha=0.65,
-            s=20,
-            label=split_labels[1],
-        )
-        axes[1].hist(
-            scores[before_slice],
-            bins=25,
-            alpha=0.65,
-            label=split_labels[0],
-        )
-        axes[1].hist(
-            scores[after_slice],
-            bins=25,
-            alpha=0.65,
-            label=split_labels[1],
-        )
-    axes[0].set_title(left_title, fontsize=18)
-    axes[0].set_xlabel("Feature 1", fontsize=16)
-    axes[0].set_ylabel("Target", fontsize=16)
-    axes[0].tick_params(axis="both", labelsize=14)
-
-    axes[1].axvline(
-        score_quantile,
-        color="tab:red",
-        linestyle="--",
-        linewidth=2,
-        label="0.975 quantile",
-    )
-    axes[1].set_title(right_title, fontsize=18)
-    axes[1].set_xlabel("Conformity score", fontsize=16)
-    axes[1].set_ylabel("Count", fontsize=16)
-    axes[1].tick_params(axis="both", labelsize=14)
-
-    handles, labels = axes[1].get_legend_handles_labels()
-    fig.legend(handles, labels, loc="lower center", ncol=2, frameon=False, fontsize=14)
-    plt.suptitle(figure_title, fontsize=22)
-    plt.tight_layout(rect=(0, 0.07, 1, 1))
-    plt.show()
-
-
-y_pred_train = clf.predict(X_train)
-train_scores = conformity_score(y_train, y_pred_train)
-plot_data_and_score_histogram(
+(
     X_train,
+    X_conformalize,
+    X_test,
     y_train,
-    train_scores,
-    left_title="Training data",
-    right_title="Histogram of conformity scores",
-    figure_title="Reference training data and conformity scores",
+    y_conformalize,
+    y_test,
+) = train_conformalize_test_split(
+    X_full,
+    y_full,
+    train_size=0.3,
+    conformalize_size=0.2,
+    test_size=0.5,
+    shuffle=False,
+)
+
+regressor = LinearRegression()
+regressor.fit(X_train, y_train)
+
+mapie_regressor = SplitConformalRegressor(
+    estimator=regressor,
+    prefit=True,
 )
 
 ##############################################################################
-# First, we consider the case where the model is deployed and a stream of labeled
-# exchangeable observations is received sequentially.
-# We want to monitor whether these observations are exchangeable with the training data.
+# We build three monitoring streams. The first half of each stream is the
+# unchanged conformalization set. The second half (test set) is either left
+# unchanged (exchangeable), mildly shifted with noise (subtle), or strongly
+# shifted with noise (abrupt).
 #
 
+X_test_exch, y_test_exch = X_test.copy(), y_test.copy()
+X_test_subtle, y_test_subtle = X_test.copy(), y_test.copy()
+X_test_abrupt, y_test_abrupt = X_test.copy(), y_test.copy()
 
-def make_regression_exchangeable_stream(n_samples=600, random_state=52):
-    return make_regression_reference_data(
-        n_samples=n_samples,
-        random_state=random_state,
-    )
+midpoint = len(y_test) // 2
 
+# Subtle shift: mild noisy location shift in second half
+y_test_subtle[midpoint:] += rng.normal(loc=0.1, scale=0.2, size=len(y_test) - midpoint)
 
-X_exch, y_exch = make_regression_exchangeable_stream()
-test_exch_scores = conformity_score(y_exch, clf.predict(X_exch))
+# Abrupt shift: stronger noisy location shift in second half
+y_test_abrupt[midpoint:] += rng.normal(loc=0.4, scale=0.2, size=len(y_test) - midpoint)
 
-plot_data_and_score_histogram(
-    X_exch,
-    y_exch,
-    test_exch_scores,
-    left_title="Exchangeable stream",
-    right_title="Histogram of conformity scores",
-    figure_title="Exchangeable stream and conformity scores",
-)
+# Each monitoring stream = conformalize partition (clean) + test partition (scenario-specific)
+X_exch = np.vstack([X_conformalize, X_test_exch])
+y_exch = np.concatenate([y_conformalize, y_test_exch])
+X_subtle = np.vstack([X_conformalize, X_test_subtle])
+y_subtle = np.concatenate([y_conformalize, y_test_subtle])
+X_abrupt = np.vstack([X_conformalize, X_test_abrupt])
+y_abrupt = np.concatenate([y_conformalize, y_test_abrupt])
 
-#################################################################################
-# We next initialize a `:class:~mapie.exhangeability_testing.OnlineMartingaleTest`
-# for each method and process the exchangeable stream sequentially to update the martingales.
-# We compare the "jumper_martingale" and "plugin_martingale" methods, passed as the ``test_method``
-# argument to the constructor. These methods implement different betting strategies.
-# The jumper martingale bets against small p-values with a simple,
-# robust strategy that does not require density estimation,
-# while the plug-in martingale estimates the p-value density and
-# can react to richer departures from uniformity.
+##############################################################################
+# The figure below shows (Feature 1, target) for each test scenario before
+# running online martingale monitoring.
 #
-# We use a test level of 0.05, so the rejection threshold is ``1 / 0.05 = 20``.
-# We also set ``burn_in=100`` to avoid unstable early decisions.
+
+fig, axes = plt.subplots(1, 3, figsize=(18, 5.8), sharex=True, sharey=True)
+for ax, title, X_data, y_data in zip(
+    axes,
+    ["Exchangeable test", "Subtle shift test", "Abrupt shift test"],
+    [X_test_exch, X_test_subtle, X_test_abrupt],
+    [y_test_exch, y_test_subtle, y_test_abrupt],
+):
+    ax.scatter(X_data[:, 0], y_data, s=16, alpha=0.65, label="Observations")
+    ax.set_title(title, fontsize=18)
+    ax.set_xlabel("Feature 1", fontsize=16)
+    ax.tick_params(axis="both", labelsize=14)
+axes[0].set_ylabel("Target", fontsize=16)
+handles, labels = axes[-1].get_legend_handles_labels()
+fig.legend(handles, labels, loc="lower center", ncol=1, frameon=False, fontsize=14)
+plt.suptitle("Held-out test scenarios for exchangeability monitoring", fontsize=22)
+plt.tight_layout(rect=(0, 0.08, 1, 1))
+plt.show()
+
+##############################################################################
+# We define one helper to visualize martingale trajectories and the plug-in
+# p-value histogram for each scenario.
 #
 
 test_level = 0.05
 burn_in = 100
 
-omt_jumper_exch = OnlineMartingaleTest(
-    task="regression",
-    test_method="jumper_martingale",
-    test_level=test_level,
-    burn_in=burn_in,
-    random_state=RANDOM_STATE,
-    warn=False,
-)
-omt_plugin_exch = OnlineMartingaleTest(
-    task="regression",
-    test_method="plugin_martingale",
-    test_level=test_level,
-    burn_in=burn_in,
-    random_state=RANDOM_STATE,
-    warn=False,
-)
-
-for i in range(len(y_exch)):
-    omt_jumper_exch.update(y_exch[i : i + 1], X_exch[i : i + 1])
-    omt_plugin_exch.update(y_exch[i : i + 1], X_exch[i : i + 1])
-
-##############################################################################
-# Visualize martingale trajectories and p-value distributions.
-#
-
 
 def plot_results_one_scenario(omt_jumper, omt_plugin, scenario_name):
-    """Plot martingales and p-values for one monitoring scenario."""
+    """Plot martingales and p-value histogram for one monitoring scenario."""
     fig, axes = plt.subplots(1, 3, figsize=(18, 5.8))
     threshold = omt_jumper.reject_threshold
 
     # Jumper martingale
     ax = axes[0]
     ax.plot(omt_jumper.martingale_value_history, label="Jumper martingale")
-    ax.axhline(
-        threshold,
-        linestyle="--",
-        color="tab:red",
-        label="Reject threshold",
-    )
+    ax.axhline(threshold, linestyle="--", color="tab:red", label="Reject threshold")
     ax.set_title(f"{scenario_name} - Jumper", fontsize=18)
     ax.set_xlabel("Time", fontsize=16)
     ax.set_ylabel("Martingale value", fontsize=16)
@@ -318,12 +197,7 @@ def plot_results_one_scenario(omt_jumper, omt_plugin, scenario_name):
     # Plug-in martingale
     ax = axes[1]
     ax.plot(omt_plugin.martingale_value_history, label="Plug-in martingale")
-    ax.axhline(
-        threshold,
-        linestyle="--",
-        color="tab:red",
-        label="Reject threshold",
-    )
+    ax.axhline(threshold, linestyle="--", color="tab:red", label="Reject threshold")
     ax.set_title(f"{scenario_name} - Plug-in", fontsize=18)
     ax.set_xlabel("Time", fontsize=16)
     ax.set_ylabel("Martingale value", fontsize=16)
@@ -339,7 +213,7 @@ def plot_results_one_scenario(omt_jumper, omt_plugin, scenario_name):
         )
     ax.legend(fontsize=14)
 
-    # P-value histogram
+    # P-value histogram (plug-in)
     ax = axes[2]
     ax.hist(omt_plugin.pvalue_history, bins=20, density=True, alpha=0.7)
     ax.axhline(1.0, linestyle="--", color="tab:gray", label="Uniform density")
@@ -354,62 +228,51 @@ def plot_results_one_scenario(omt_jumper, omt_plugin, scenario_name):
     plt.show()
 
 
+##############################################################################
+# Scenario 1 - Exchangeable test set
+# ----------------------------------
+#
+# The test set follows the same distribution as training data.
+# Both martingales should stay below the rejection threshold.
+#
+
+omt_jumper_exch = OnlineMartingaleTest(
+    mapie_estimator=mapie_regressor,
+    task="regression",
+    test_method="jumper_martingale",
+    test_level=test_level,
+    burn_in=burn_in,
+    random_state=RANDOM_STATE,
+    warn=False,
+)
+omt_plugin_exch = OnlineMartingaleTest(
+    mapie_estimator=mapie_regressor,
+    task="regression",
+    test_method="plugin_martingale",
+    test_level=test_level,
+    burn_in=burn_in,
+    random_state=RANDOM_STATE,
+    warn=False,
+)
+
+omt_jumper_exch.update(X_exch, y_exch)
+omt_plugin_exch.update(X_exch, y_exch)
+
 plot_results_one_scenario(omt_jumper_exch, omt_plugin_exch, "Exchangeable")
 
 ##############################################################################
-# Both martingales remain stable and do not exceed the rejection threshold,
-# so exchangeability is not rejected.
+# Neither method should reject in this reference scenario.
 #
 
 ##############################################################################
-# Second, we consider the case where the model is deployed and a stream of
-# labeled observations is received sequentially, but there is a subtle shift
-# in the data distribution halfway through the stream.
-# We want to monitor whether these observations are exchangeable with the training data.
+# Scenario 2 - Subtle shift
+# -------------------------
 #
-
-
-def make_regression_subtle_shift_stream(n_samples=600, random_state=54):
-    X, y = make_regression_reference_data(
-        n_samples=n_samples,
-        random_state=random_state,
-    )
-    midpoint = n_samples // 2
-
-    # Subtle shift: strictly linear relation before midpoint and strictly
-    # right-side quadratic relation after midpoint.
-    rng = np.random.default_rng(random_state)
-    x_first_half = X[:midpoint, 0]
-    y[:midpoint] = 60.0 * x_first_half + rng.normal(0.0, 6.0, size=midpoint)
-
-    X[midpoint:, 0] = np.abs(X[midpoint:, 0]) + 0.15
-    x_second_half = X[midpoint:, 0]
-    y[midpoint:] = 85.0 * x_second_half**2 + rng.normal(
-        0.0, 7.0, size=n_samples - midpoint
-    )
-
-    return X, y
-
-
-X_subtle, y_subtle = make_regression_subtle_shift_stream()
-test_subtle_scores = conformity_score(y_subtle, clf.predict(X_subtle))
-
-plot_data_and_score_histogram(
-    X_subtle,
-    y_subtle,
-    test_subtle_scores,
-    left_title="Subtle shift stream",
-    right_title="Histogram of conformity scores",
-    figure_title="Subtle shift stream and conformity scores",
-    split_index=len(y_subtle) // 2,
-)
-
-##############################################################################
-# Using the same settings as before, we initialize two online martingale tests
-# for the subtle-shift stream and process it sequentially to update the martingales.
+# The second half of the test set receives a mild noisy target location shift.
 #
 
 omt_jumper_subtle_shift = OnlineMartingaleTest(
+    mapie_estimator=mapie_regressor,
     task="regression",
     test_method="jumper_martingale",
     test_level=test_level,
@@ -418,6 +281,7 @@ omt_jumper_subtle_shift = OnlineMartingaleTest(
     warn=False,
 )
 omt_plugin_subtle_shift = OnlineMartingaleTest(
+    mapie_estimator=mapie_regressor,
     task="regression",
     test_method="plugin_martingale",
     test_level=test_level,
@@ -426,10 +290,8 @@ omt_plugin_subtle_shift = OnlineMartingaleTest(
     warn=False,
 )
 
-for i in range(len(y_subtle)):
-    omt_jumper_subtle_shift.update(y_subtle[i : i + 1], X_subtle[i : i + 1])
-    omt_plugin_subtle_shift.update(y_subtle[i : i + 1], X_subtle[i : i + 1])
-
+omt_jumper_subtle_shift.update(X_subtle, y_subtle)
+omt_plugin_subtle_shift.update(X_subtle, y_subtle)
 
 plot_results_one_scenario(
     omt_jumper_subtle_shift,
@@ -438,52 +300,20 @@ plot_results_one_scenario(
 )
 
 ##############################################################################
-# With this piecewise linear-to-quadratic departure, the plug-in martingale
-# exceeds the rejection threshold and rejects exchangeability, while the
-# jumper martingale stays below threshold on this stream.
+# For this synthetic stream, both martingales are expected to accumulate
+# evidence and can eventually reject exchangeability.
 #
-
-###############################################################################
-# Third, we consider the case where the model is deployed and a stream of
-# labeled observations is received sequentially, but there is an abrupt shift
-# in the data distribution halfway through the stream.
-# We want to monitor whether these observations are exchangeable with the training data.
-#
-
-
-def make_regression_abrupt_shift_stream(n_samples=600, random_state=53):
-    X, y = make_regression_reference_data(
-        n_samples=n_samples,
-        random_state=random_state,
-    )
-    midpoint = n_samples // 2
-
-    # Abrupt shift: explicit change-point applied directly on the target.
-    change_point = midpoint
-    y[change_point:] += 45.0
-    return X, y
-
-
-X_abrupt, y_abrupt = make_regression_abrupt_shift_stream()
-test_abrupt_scores = conformity_score(y_abrupt, clf.predict(X_abrupt))
-
-plot_data_and_score_histogram(
-    X_abrupt,
-    y_abrupt,
-    test_abrupt_scores,
-    left_title="Abrupt shift stream",
-    right_title="Histogram of conformity scores",
-    figure_title="Abrupt shift stream and conformity scores",
-    split_index=len(y_abrupt) // 2,
-)
-
 
 ##############################################################################
-# Using the same settings as before, we initialize two online martingale tests
-# for the abrupt-shift stream and process it sequentially to update the martingales.
+# Scenario 3 - Abrupt shift
+# -------------------------
+#
+# The second half of the test set receives a stronger noisy target location
+# shift, creating a more obvious exchangeability violation.
 #
 
 omt_jumper_abrupt_shift = OnlineMartingaleTest(
+    mapie_estimator=mapie_regressor,
     task="regression",
     test_method="jumper_martingale",
     test_level=test_level,
@@ -492,6 +322,7 @@ omt_jumper_abrupt_shift = OnlineMartingaleTest(
     warn=False,
 )
 omt_plugin_abrupt_shift = OnlineMartingaleTest(
+    mapie_estimator=mapie_regressor,
     task="regression",
     test_method="plugin_martingale",
     test_level=test_level,
@@ -500,12 +331,10 @@ omt_plugin_abrupt_shift = OnlineMartingaleTest(
     warn=True,
 )
 
-for i in range(len(y_abrupt)):
-    omt_jumper_abrupt_shift.update(y_abrupt[i : i + 1], X_abrupt[i : i + 1])
+omt_jumper_abrupt_shift.update(X_abrupt, y_abrupt)
 with warnings.catch_warnings(record=True) as raised_warnings:
     warnings.simplefilter("always")
-    for i in range(len(y_abrupt)):
-        omt_plugin_abrupt_shift.update(y_abrupt[i : i + 1], X_abrupt[i : i + 1])
+    omt_plugin_abrupt_shift.update(X_abrupt, y_abrupt)
 if raised_warnings:
     print(f"Raised warning: {raised_warnings[0].message}")
 
@@ -516,14 +345,14 @@ plot_results_one_scenario(
 )
 
 ##############################################################################
-# With this change-point shift in the conditional mean, both martingales eventually
-# exceed the rejection threshold and reject exchangeability.
-# This illustrates how a clear mean jump can create a detectable departure in
-# the p-value distribution.
+# Both methods should reject quickly in this stronger-shift regime.
 #
 
 ##############################################################################
-# Finally, we collect results and print summary.
+# Summary
+# -------
+#
+# We collect and print diagnostics for each scenario and martingale method.
 #
 
 regression_results = {
@@ -566,19 +395,10 @@ def print_result_summary(results):
 
 print_result_summary(regression_results)
 
-
 ##############################################################################
-# In this example, we illustrated how to use online martingale tests to monitor exchangeability
-# for a deployed regression model in a monitoring environment where a stream of labeled
-# data is continuously received. The online martingale tests allow us to detect shifts in the
-# data distribution and assess whether the model's predictions remain reliable over time.
+# The key takeaway is that online martingale tests integrate naturally into a
+# standard MAPIE regression workflow and provide sequential exchangeability
+# monitoring on held-out data without changing the predictive model itself.
 #
-# The results show how the martingales remain stable in the exchangeable case, while the
-# abrupt change-point stream is detected and rejected by both methods.
-# For the subtle nonlinear departure, the plug-in martingale rejects while the
-# jumper martingale remains conservative in this setup.
-#
-# Finally, the model and the choice of conformity score are important for the performance of the tests,
-# as they determine the p-values and the martingale updates. In practice, it is recommended to use
-# a well-performing model and a conformity score that captures the model's prediction errors.
-#
+
+# %%
