@@ -320,6 +320,194 @@ def test_is_exchangeable_with_exactly_one_value_above_threshold():
     assert omt.is_exchangeable is False
 
 
+def test_prepare_estimator_resets_and_clears_state_on_copy():
+    """Test that estimator state is reset on a deep-copied estimator."""
+
+    class DummyInnerEstimator:
+        def __init__(self):
+            self.conformity_scores_ = np.array([1.0])
+            self.quantiles_ = np.array([0.5])
+
+    class DummyEstimator:
+        def __init__(self):
+            self._is_conformalized = True
+            self._predict_params = {"alpha": 0.1}
+            self.conformity_scores_ = np.array([1.0])
+            self.quantiles_ = np.array([0.5])
+            self._mapie_regressor = DummyInnerEstimator()
+            self._mapie_classifier = DummyInnerEstimator()
+
+    omt = OnlineMartingaleTest()
+    estimator = DummyEstimator()
+
+    prepared = omt._prepare_estimator(estimator)
+
+    assert prepared is not estimator
+    assert prepared._is_conformalized is False
+    assert prepared._predict_params == {}
+    assert not hasattr(prepared, "conformity_scores_")
+    assert not hasattr(prepared, "quantiles_")
+    assert not hasattr(prepared._mapie_regressor, "conformity_scores_")
+    assert not hasattr(prepared._mapie_regressor, "quantiles_")
+    assert not hasattr(prepared._mapie_classifier, "conformity_scores_")
+    assert not hasattr(prepared._mapie_classifier, "quantiles_")
+
+    # Ensure the original object is not modified.
+    assert estimator._is_conformalized is True
+    assert estimator._predict_params == {"alpha": 0.1}
+    assert hasattr(estimator, "conformity_scores_")
+    assert hasattr(estimator, "quantiles_")
+
+
+def test_prepare_estimator_raises_on_forbidden_estimators(monkeypatch):
+    """Test forbidden estimators raise a ValueError."""
+
+    class ForbiddenEstimator:
+        pass
+
+    monkeypatch.setattr(omt_module, "CrossConformalClassifier", ForbiddenEstimator)
+    monkeypatch.setattr(omt_module, "CrossConformalRegressor", ForbiddenEstimator)
+    monkeypatch.setattr(
+        omt_module,
+        "JackknifeAfterBootstrapRegressor",
+        ForbiddenEstimator,
+    )
+
+    omt = OnlineMartingaleTest()
+    with pytest.raises(ValueError, match=r"supported in permutation tests"):
+        omt._prepare_estimator(ForbiddenEstimator())
+
+
+def test_infer_task_from_estimator_and_target_type():
+    """Test task inference from estimator attributes and from y type."""
+
+    class DummyEstimator:
+        pass
+
+    omt = OnlineMartingaleTest()
+
+    cls_estimator = DummyEstimator()
+    cls_estimator._mapie_classifier = object()
+    omt.mapie_estimator = cls_estimator
+    assert omt._infer_task(np.array([0, 1])) == "classification"
+
+    reg_estimator = DummyEstimator()
+    reg_estimator._mapie_regressor = object()
+    omt.mapie_estimator = reg_estimator
+    assert omt._infer_task(np.array([0.1, 0.2])) == "regression"
+
+    omt.mapie_estimator = DummyEstimator()
+    with pytest.raises(ValueError, match=r"Unable to infer the task"):
+        omt._infer_task(np.array([0, 1]))
+
+    omt.mapie_estimator = None
+    assert omt._infer_task(np.array([0, 1, 0])) == "classification"
+    assert omt._infer_task(np.array([0.1, 0.2, 0.3])) == "regression"
+
+    with pytest.raises(ValueError, match=r"Unknown type of target"):
+        omt._infer_task(np.array([[1, 0], [0, 1]]))
+
+
+def test_compute_non_conformity_scores_classification_branch(monkeypatch):
+    """Test classification path, including estimator initialization and fitting."""
+
+    class DummyMapieClassifier:
+        def __init__(self):
+            self._is_fitted = False
+            self._mapie_classifier = type("ScoreHolder", (), {})()
+            self._mapie_classifier.conformity_scores_ = np.array([0.3, 0.7])
+            self.fit_calls = 0
+            self.conformalize_calls = 0
+
+        def fit(self, X, y):
+            self.fit_calls += 1
+            self._is_fitted = True
+            self._fit_X = np.asarray(X)
+            self._fit_y = np.asarray(y)
+
+        def conformalize(self, X, y):
+            self.conformalize_calls += 1
+            self._conformalize_X = np.asarray(X)
+            self._conformalize_y = np.asarray(y)
+
+    estimator = DummyMapieClassifier()
+
+    def fake_train_test_split(X, y, test_size, shuffle):
+        assert test_size == pytest.approx(0.7)
+        assert shuffle is False
+        return X[:1], X[1:], y[:1], y[1:]
+
+    monkeypatch.setattr(
+        omt_module,
+        "SplitConformalClassifier",
+        lambda prefit=False: estimator,
+    )
+    monkeypatch.setattr(omt_module, "train_test_split", fake_train_test_split)
+
+    omt = OnlineMartingaleTest(task=None)
+    X = np.array([[0.0], [1.0], [2.0]])
+    y = np.array([0, 1, 0])
+
+    scores = omt._compute_non_conformity_scores(X, y)
+
+    assert np.array_equal(scores, np.array([0.3, 0.7]))
+    assert omt.task == "classification"
+    assert estimator.fit_calls == 1
+    assert estimator.conformalize_calls == 1
+    assert np.array_equal(estimator._fit_X, np.array([[0.0]]))
+    assert np.array_equal(estimator._fit_y, np.array([0]))
+    assert np.array_equal(estimator._conformalize_X, np.array([[1.0], [2.0]]))
+    assert np.array_equal(estimator._conformalize_y, np.array([1, 0]))
+
+
+def test_compute_non_conformity_scores_regression_branch(monkeypatch):
+    """Test regression path and returned score extraction from regressor."""
+
+    class DummyMapieRegressor:
+        def __init__(self):
+            self._is_fitted = True
+            self._mapie_regressor = type("ScoreHolder", (), {})()
+            self._mapie_regressor.conformity_scores_ = np.array([1.1, 2.2])
+            self.conformalize_calls = 0
+
+        def conformalize(self, X, y):
+            self.conformalize_calls += 1
+
+    estimator = DummyMapieRegressor()
+
+    monkeypatch.setattr(
+        omt_module,
+        "SplitConformalRegressor",
+        lambda prefit=False: estimator,
+    )
+
+    omt = OnlineMartingaleTest(task="regression")
+
+    scores = omt._compute_non_conformity_scores(
+        np.array([[0.0], [1.0]]),
+        np.array([0.2, 0.4]),
+    )
+
+    assert np.array_equal(scores, np.array([1.1, 2.2]))
+    assert estimator.conformalize_calls == 1
+
+
+def test_compute_non_conformity_scores_raises_on_unknown_task():
+    """Test unknown task raises ValueError when estimator must be created."""
+    omt = OnlineMartingaleTest(task="not-a-task")
+
+    with pytest.raises(ValueError, match=r"Unknown task type"):
+        omt._compute_non_conformity_scores(np.array([[1.0]]), np.array([1.0]))
+
+
+def test_update_raises_on_mismatched_number_of_rows():
+    """Test update validates that X and y have matching row counts."""
+    omt = OnlineMartingaleTest()
+
+    with pytest.raises(ValueError, match=r"X and y must have the same number of rows"):
+        omt.update(np.array([[1.0], [2.0]]), np.array([1.0]))
+
+
 def test_is_exchangeable_with_two_values_above_threshold():
     """Test that two or more values above threshold returns False."""
     omt = OnlineMartingaleTest(test_level=0.05, burn_in=1)
