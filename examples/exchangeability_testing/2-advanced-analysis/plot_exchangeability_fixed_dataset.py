@@ -13,9 +13,9 @@ Currently, only `RiskMonitoring` is shown.
 """
 
 from sklearn.linear_model import LogisticRegression
-
-from mapie.exchangeability_testing import RiskMonitoring
 from utils import generate_gaussian_stream, sample_two_gaussians
+
+from mapie.exchangeability_testing import FixedDatasetExchangeabilityTest
 
 ##############################################################################
 # We first fit a classifier on reference training data. Then, in the same
@@ -25,13 +25,13 @@ from utils import generate_gaussian_stream, sample_two_gaussians
 
 random_state = 42
 prop_shift = 0.5
-method_name = "RiskMonitoring"
 
 X_train, y_train = sample_two_gaussians(random_state=random_state)
 X_reference, y_reference = sample_two_gaussians(random_state=random_state + 1)
 
 clf = LogisticRegression(random_state=random_state)
 clf.fit(X_train, y_train)
+y_pred_reference = clf.predict(X_reference)
 
 X_fixed_no_shift, y_fixed_no_shift = generate_gaussian_stream(
     shift_type="stable",
@@ -39,20 +39,28 @@ X_fixed_no_shift, y_fixed_no_shift = generate_gaussian_stream(
     random_state=random_state + 2,
 )
 
-monitor_no_shift = RiskMonitoring(risk="accuracy")
-monitor_no_shift.compute_threshold(y_reference, clf.predict(X_reference))
-threshold = monitor_no_shift.threshold
+fixed_test_no_shift = FixedDatasetExchangeabilityTest(
+    method_names="all",
+    method_params={
+        "Risk Monitoring": {
+            "risk": "accuracy",
+            "reference_data": (y_reference, y_pred_reference),
+        }
+    },
+)
+threshold = fixed_test_no_shift.test_methods[0].threshold
 
 print(
-    f"Reference upper bound on the misclassification risk: {monitor_no_shift.reference_risk_upper_bound:.3f}"
+    "Reference upper bound on the misclassification risk: "
+    f"{fixed_test_no_shift.test_methods[0].reference_risk_upper_bound:.3f}"
 )
 print(f"Monitoring threshold: {threshold:.3f}")
 
 # Offline/fixed-dataset usage: update in one call with the full dataset.
 y_pred_no_shift = clf.predict(X_fixed_no_shift)
-monitor_no_shift.update_online_risk(y_fixed_no_shift, y_pred_no_shift)
+fixed_test_no_shift.run(y_fixed_no_shift, y_pred_no_shift)
 
-is_exchangeable_no_shift = not monitor_no_shift.harmful_shift_detected
+is_exchangeable_no_shift = fixed_test_no_shift.is_exchangeable["Risk Monitoring"]
 
 ##############################################################################
 # Non-exchangeable fixed dataset: abrupt shift in the second part.
@@ -63,13 +71,20 @@ X_fixed_abrupt, y_fixed_abrupt = generate_gaussian_stream(
     random_state=random_state + 3,
 )
 
-monitor_abrupt = RiskMonitoring(risk="accuracy", threshold=threshold)
+fixed_test_abrupt = FixedDatasetExchangeabilityTest(
+    method_names="all",
+    method_params={
+        "Risk Monitoring": {
+            "risk": "accuracy",
+            "reference_data": (y_reference, y_pred_reference),
+        }
+    },
+)
 y_pred_abrupt = clf.predict(X_fixed_abrupt)
-monitor_abrupt.update_online_risk(y_fixed_abrupt, y_pred_abrupt)
+fixed_test_abrupt.run(y_fixed_abrupt, y_pred_abrupt)
 
-is_exchangeable_abrupt = not monitor_abrupt.harmful_shift_detected
+is_exchangeable_abrupt = fixed_test_abrupt.is_exchangeable["Risk Monitoring"]
 
 print("\nExchangeability summary (fixed dataset setting):")
-print(f"- Method: {method_name}")
 print(f"- Exchangeable fixed dataset: is_exchangeable={is_exchangeable_no_shift}")
 print(f"- Abrupt-shift fixed dataset: is_exchangeable={is_exchangeable_abrupt}")

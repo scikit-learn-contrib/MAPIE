@@ -10,9 +10,9 @@ Currently, only `RiskMonitoring` is shown.
 """
 
 from sklearn.linear_model import LogisticRegression
-
-from mapie.exchangeability_testing import RiskMonitoring
 from utils import generate_gaussian_stream, sample_two_gaussians
+
+from mapie.exchangeability_testing import OnlineExchangeabilityTest
 
 ##############################################################################
 # We first fit a classifier on reference training data. Then, in the same
@@ -23,13 +23,13 @@ from utils import generate_gaussian_stream, sample_two_gaussians
 random_state = 42
 batch_size = 25
 prop_shift = 0.5
-method_name = "RiskMonitoring"
 
 X_train, y_train = sample_two_gaussians(random_state=random_state)
 X_reference, y_reference = sample_two_gaussians(random_state=random_state + 1)
 
 clf = LogisticRegression(random_state=random_state)
 clf.fit(X_train, y_train)
+y_pred_reference = clf.predict(X_reference)
 
 X_online_no_shift, y_online_no_shift = generate_gaussian_stream(
     shift_type="stable",
@@ -37,21 +37,29 @@ X_online_no_shift, y_online_no_shift = generate_gaussian_stream(
     random_state=random_state + 2,
 )
 
-monitor_no_shift = RiskMonitoring(risk="accuracy")
-monitor_no_shift.compute_threshold(y_reference, clf.predict(X_reference))
-threshold = monitor_no_shift.threshold
+online_test_no_shift = OnlineExchangeabilityTest(
+    method_names="all",
+    method_params={
+        "Risk Monitoring": {
+            "risk": "accuracy",
+            "reference_data": (y_reference, y_pred_reference),
+        }
+    },
+)
+threshold = online_test_no_shift.test_methods[0].threshold
 
 print(
-    f"Reference upper bound on the misclassification risk: {monitor_no_shift.reference_risk_upper_bound:.3f}"
+    "Reference upper bound on the misclassification risk: "
+    f"{online_test_no_shift.test_methods[0].reference_risk_upper_bound:.3f}"
 )
 print(f"Monitoring threshold: {threshold:.3f}")
 
 for start in range(0, len(X_online_no_shift), batch_size):
     stop = start + batch_size
     y_pred_batch = clf.predict(X_online_no_shift[start:stop])
-    monitor_no_shift.update_online_risk(y_online_no_shift[start:stop], y_pred_batch)
+    online_test_no_shift.update(y_online_no_shift[start:stop], y_pred_batch)
 
-is_exchangeable_no_shift = not monitor_no_shift.harmful_shift_detected
+is_exchangeable_no_shift = online_test_no_shift.is_exchangeable["Risk Monitoring"]
 
 ##############################################################################
 # Non-exchangeable case: abrupt distribution shift in the stream.
@@ -62,15 +70,22 @@ X_online_abrupt, y_online_abrupt = generate_gaussian_stream(
     random_state=random_state + 3,
 )
 
-monitor_abrupt = RiskMonitoring(risk="accuracy", threshold=threshold)
+online_test_abrupt = OnlineExchangeabilityTest(
+    method_names="all",
+    method_params={
+        "Risk Monitoring": {
+            "risk": "accuracy",
+            "reference_data": (y_reference, y_pred_reference),
+        }
+    },
+)
 for start in range(0, len(X_online_abrupt), batch_size):
     stop = start + batch_size
     y_pred_batch = clf.predict(X_online_abrupt[start:stop])
-    monitor_abrupt.update_online_risk(y_online_abrupt[start:stop], y_pred_batch)
+    online_test_abrupt.update(y_online_abrupt[start:stop], y_pred_batch)
 
-is_exchangeable_abrupt = not monitor_abrupt.harmful_shift_detected
+is_exchangeable_abrupt = online_test_abrupt.is_exchangeable["Risk Monitoring"]
 
 print("\nExchangeability summary (online setting):")
-print(f"- Method: {method_name}")
 print(f"- Exchangeable stream: is_exchangeable={is_exchangeable_no_shift}")
 print(f"- Abrupt-shift stream: is_exchangeable={is_exchangeable_abrupt}")

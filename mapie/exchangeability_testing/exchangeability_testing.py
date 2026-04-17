@@ -1,20 +1,20 @@
-from typing import List, Literal, Union
+from typing import Any, Dict, List, Literal, Optional, Union
 
 from numpy.typing import NDArray
 
 from mapie.exchangeability_testing.risk_monitoring import RiskMonitoring
 
 online_test_method_choice_map = {
-    "Plug-in Martingale": None,
-    "Jumper Martingale": None,
+    # "Plug-in Martingale": None,
+    # "Jumper Martingale": None,
     "Risk Monitoring": RiskMonitoring,
 }
 
 fixed_dataset_test_method_choice_map = {
-    "p-value Permutation": None,
-    "Monte-Carlo Permutation Binomial": None,
-    "Monte-Carlo Permutation Mixture Binomial": None,
-    "Monte-Carlo Permutation Aggressive": None,
+    # "p-value Permutation": None,
+    # "Monte-Carlo Permutation Binomial": None,
+    # "Monte-Carlo Permutation Mixture Binomial": None,
+    # "Monte-Carlo Permutation Aggressive": None,
     **online_test_method_choice_map,
 }
 
@@ -28,6 +28,7 @@ class FixedDatasetExchangeabilityTest:
         method_names: Union[
             FixedDatasetTestMethods, Literal["all"], List[FixedDatasetTestMethods]
         ] = "all",
+        method_params: Optional[Dict[str, Dict[str, Any]]] = None,
         test_level=0.05,
         warn=True,
     ):
@@ -48,26 +49,33 @@ class FixedDatasetExchangeabilityTest:
                     f"Invalid method name: {method_name}. Valid methods are: {list(fixed_dataset_test_method_choice_map.keys())}"
                 )
 
-        self.test_methods = [
-            fixed_dataset_test_method_choice_map[method_name]
-            for method_name in self.method_names
-        ]
-
         self.test_level = test_level
         self.warn = warn
+        self.method_params = method_params or {}
+        self.test_methods = [
+            self._init_test_method(method_name) for method_name in self.method_names
+        ]
+
+    def _init_test_method(self, method_name: str):
+        method_class = fixed_dataset_test_method_choice_map[method_name]
+        if method_name == "Risk Monitoring":
+            params = {"risk": "accuracy", **self.method_params.get(method_name, {})}
+            return method_class(test_level=self.test_level, warn=self.warn, **params)
+        return None
 
     @property
     def is_exchangeable(self):
-        if self.method_name == "Risk Monitoring":
-            return not self.test_method.harmful_shift_detected
-
-    def run(self, X_test: NDArray, y_test: NDArray):
         results = {}
         for test_method, method_name in zip(self.test_methods, self.method_names):
             if method_name == "Risk Monitoring":
-                results[method_name] = test_method.update_online_risk(y_test, y_pred)
-            else:
-                results[method_name] = test_method.run(X_test, y_test)
+                results[method_name] = not test_method.harmful_shift_detected
+        return results
+
+    def run(self, y_test: NDArray, y_pred: NDArray, X_test: Optional[NDArray] = None):
+        results = {}
+        for test_method, method_name in zip(self.test_methods, self.method_names):
+            results[method_name] = test_method.update(y_test, y_pred)
+
         return results
 
 
@@ -77,6 +85,7 @@ class OnlineExchangeabilityTest:
         method_names: Union[
             OnlineTestMethods, Literal["all"], List[OnlineTestMethods]
         ] = "all",
+        method_params: Optional[Dict[str, Dict[str, Any]]] = None,
         test_level=0.05,
         warn=True,
     ):
@@ -97,13 +106,19 @@ class OnlineExchangeabilityTest:
                     f"Invalid method name: {method_name}. Valid methods are: {list(online_test_method_choice_map.keys())}"
                 )
 
-        self.test_methods = [
-            online_test_method_choice_map[method_name]
-            for method_name in self.method_names
-        ]
-
         self.test_level = test_level
         self.warn = warn
+        self.method_params = method_params or {}
+        self.test_methods = [
+            self._init_test_method(method_name) for method_name in self.method_names
+        ]
+
+    def _init_test_method(self, method_name: str):
+        method_class = online_test_method_choice_map[method_name]
+        if method_name == "Risk Monitoring":
+            params = {"risk": "accuracy", **self.method_params.get(method_name, {})}
+            return method_class(test_level=self.test_level, warn=self.warn, **params)
+        return None
 
     @property
     def is_exchangeable(self):
@@ -113,9 +128,10 @@ class OnlineExchangeabilityTest:
                 results[method_name] = not test_method.harmful_shift_detected
         return results
 
-    def update(self, X_test: NDArray, y_test: NDArray, y_pred: NDArray):
+    def update(
+        self, y_test: NDArray, y_pred: NDArray, X_test: Optional[NDArray] = None
+    ):
         results = {}
         for test_method, method_name in zip(self.test_methods, self.method_names):
-            if method_name == "Risk Monitoring":
-                results[method_name] = test_method.update_online_risk(y_test, y_pred)
+            results[method_name] = test_method.update(y_test, y_pred)
         return results

@@ -289,18 +289,18 @@ class TestRiskMonitoring:
         ):
             monitor.compute_threshold(y_true, y_pred)
 
-    def test_update_online_risk_requires_threshold(self) -> None:
+    def test_update_requires_threshold(self) -> None:
         monitor = RiskMonitoring(risk="accuracy")
         y_true, y_pred = self._binary_data()
 
         with pytest.raises(ValueError, match="Threshold must be computed"):
-            monitor.update_online_risk(y_true, y_pred)
+            monitor.update(y_true, y_pred)
 
-    def test_update_online_risk_updates_histories_without_warning(self) -> None:
+    def test_update_updates_histories_without_warning(self) -> None:
         y_true, y_pred = self._binary_data()
         monitor = RiskMonitoring(risk="accuracy", threshold=1.0, warn=False)
 
-        returned = monitor.update_online_risk(y_true, y_pred)
+        returned = monitor.update(y_true, y_pred)
 
         assert returned is monitor
         assert monitor.online_risk_sequence_history.size > 0
@@ -308,23 +308,23 @@ class TestRiskMonitoring:
         assert monitor.online_risk_lower_bound_latest is not None
         assert monitor.harmful_shift_detected is False
 
-    def test_update_online_risk_warns_when_harmful_shift_detected(self) -> None:
+    def test_update_warns_when_harmful_shift_detected(self) -> None:
         y_true: NDArray[np.int_] = np.zeros(20, dtype=int)
         y_pred: NDArray[np.int_] = np.ones(20, dtype=int)
         monitor = RiskMonitoring(risk="accuracy", threshold=-0.1, warn=True)
 
         with pytest.warns(UserWarning, match="Harmful shift detected"):
-            monitor.update_online_risk(y_true, y_pred)
+            monitor.update(y_true, y_pred)
 
         assert monitor.harmful_shift_detected is True
 
-    def test_update_online_risk_keeps_history_aligned_across_calls(self) -> None:
+    def test_update_keeps_history_aligned_across_calls(self) -> None:
         y_true, y_pred = self._binary_data()
         monitor = RiskMonitoring(risk="accuracy", threshold=1.0, warn=False)
 
-        monitor.update_online_risk(y_true, y_pred)
+        monitor.update(y_true, y_pred)
         first_history = monitor.online_risk_lower_bound_sequence_history.copy()
-        monitor.update_online_risk(y_true, y_pred)
+        monitor.update(y_true, y_pred)
 
         assert monitor.online_risk_sequence_history.size == 2 * y_true.size
         assert (
@@ -336,12 +336,12 @@ class TestRiskMonitoring:
             monitor.online_risk_lower_bound_sequence_history[: first_history.size],
         )
 
-    def test_update_online_risk_ignores_empty_effective_sample_batch(self) -> None:
+    def test_update_ignores_empty_effective_sample_batch(self) -> None:
         y_true: NDArray[np.int_] = np.array([1, 0, 1, 0])
         y_pred: NDArray[np.int_] = np.array([0, 0, 0, 0])
         monitor = RiskMonitoring(risk="precision", threshold=0.5, warn=False)
 
-        returned = monitor.update_online_risk(y_true, y_pred)
+        returned = monitor.update(y_true, y_pred)
 
         assert returned is monitor
         assert monitor.online_risk_sequence_history.size == 0
