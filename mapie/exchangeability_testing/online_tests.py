@@ -53,7 +53,16 @@ class OnlineMartingaleTest:
     ----------
     mapie_estimator : Optional[MapieEstimator], default=None
         MAPIE estimator used to compute predictions and non-conformity
-        scores.
+        scores. Supported estimators are
+        :class:`SplitConformalClassifier`,
+        and :class:`SplitConformalRegressor`.
+        If ``None``, a default
+        :class:`SplitConformalClassifier` or
+        :class:`SplitConformalRegressor` is built
+        when needed.
+        If the estimator is not fitted or not provided, it will be fitted on a
+        slice of the data in order to compute non-conformity scores.
+
     task : Optional[Literal["classification", "regression"]], default=None
         Task type. If ``None``, the task is inferred from `y`.
 
@@ -167,7 +176,16 @@ class OnlineMartingaleTest:
         ----------
         mapie_estimator : Optional[MapieEstimator], default=None
             MAPIE estimator used to compute predictions and non-conformity
-            scores.
+            scores. Supported estimators are
+            :class:`SplitConformalClassifier`,
+            and :class:`SplitConformalRegressor`.
+            If ``None``, a default
+            :class:`SplitConformalClassifier` or
+            :class:`SplitConformalRegressor` is built
+            when needed.
+            If the estimator is not fitted or not provided, it will be fitted on a
+            slice of the data in order to compute non-conformity scores.
+
         task : Optional[Literal["classification", "regression"]], default=None
             Task type. If ``None``, the task is inferred from `y`.
 
