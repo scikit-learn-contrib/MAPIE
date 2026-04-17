@@ -1,5 +1,5 @@
 import warnings
-from typing import Literal, Optional
+from typing import Literal, Optional, Tuple
 
 import numpy as np
 from numpy.typing import NDArray
@@ -45,6 +45,10 @@ class RiskMonitoring:
     threshold : Optional[float], default=None
         Precomputed monitoring threshold. If provided, `compute_threshold` must
         not be called.
+    reference_data : Optional[Tuple[NDArray, NDArray]], default=None
+        Optional reference labels and predictions `(y_true, y_pred)` used to
+        compute the threshold at initialization time. This is ignored if
+        `threshold` is also provided.
     warn : bool, default=True
         Whether to emit a warning when a harmful shift is detected.
 
@@ -81,7 +85,7 @@ class RiskMonitoring:
     >>> _ = monitor.compute_threshold(y_test, y_pred)
     >>> X_online, y_online = make_classification(n_samples=200, n_features=2, n_redundant=0, n_informative=2, random_state=42, class_sep=0.3)
     >>> y_pred_online = clf.predict(X_online)
-    >>> _ = monitor.update_online_risk(y_online, y_pred_online)
+    >>> _ = monitor.update(y_online, y_pred_online)
     >>> print(monitor.harmful_shift_detected)
     True
 
@@ -99,6 +103,7 @@ class RiskMonitoring:
         tolerance: float = 0.05,
         tolerance_type: Literal["absolute", "relative"] = "absolute",
         threshold: Optional[float] = None,
+        reference_data: Optional[Tuple[NDArray, NDArray]] = None,
         warn: bool = True,
     ) -> None:
         try:
@@ -132,12 +137,20 @@ class RiskMonitoring:
         )
         self.online_risk_lower_bound_latest: Optional[float] = None
 
+        if reference_data is not None and threshold is None:
+            self.compute_threshold(reference_data[0], reference_data[1])
+        elif reference_data is not None and threshold is not None:
+            warnings.warn(
+                "reference_data and threshold are both provided. The threshold will be used and the reference data will be ignored.",
+                UserWarning,
+            )
+
     @property
     def harmful_shift_detected(self) -> bool:
         """Whether the latest online lower bound exceeds the threshold."""
         if self.online_risk_lower_bound_latest is None:
             raise ValueError(
-                "Online risk lower bound must be computed with update_online_risk before checking for harmful shift."
+                "Online risk lower bound must be computed with update before checking for harmful shift."
             )
         if self.threshold is None:
             raise ValueError(
@@ -191,9 +204,10 @@ class RiskMonitoring:
 
         return self
 
-    def update_online_risk(self, y_true: NDArray, y_pred: NDArray) -> "RiskMonitoring":
+    def update(self, y_true: NDArray, y_pred: NDArray) -> "RiskMonitoring":
         """
         Update the online risk history and its lower confidence bound.
+        Raises a warning when a harmful shift is detected.
 
         Parameters
         ----------

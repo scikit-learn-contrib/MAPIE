@@ -28,9 +28,9 @@ Advances in Neural Information Processing Systems, 2024.
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.linear_model import LogisticRegression
+from utils import generate_gaussian_stream, sample_two_gaussians
 
 from mapie.exchangeability_testing import RiskMonitoring
-from utils import generate_gaussian_stream, sample_two_gaussians
 
 
 def plot_dataset(ax, X_online, y_online, title, shift_start=None):
@@ -153,7 +153,7 @@ print(f"Monitoring threshold: {threshold:.3f}")
 for start in range(0, len(X_online_no_shift), batch_size):
     stop = start + batch_size
     y_pred_batch = clf.predict(X_online_no_shift[start:stop])
-    monitor_no_shift.update_online_risk(y_online_no_shift[start:stop], y_pred_batch)
+    monitor_no_shift.update(y_online_no_shift[start:stop], y_pred_batch)
 
 print("\nNo shift scenario")
 print(f"Harmful shift detected: {monitor_no_shift.harmful_shift_detected}")
@@ -185,7 +185,7 @@ monitor_abrupt = RiskMonitoring(risk="accuracy", threshold=threshold)
 for start in range(0, len(X_online_abrupt), batch_size):
     stop = start + batch_size
     y_pred_batch = clf.predict(X_online_abrupt[start:stop])
-    monitor_abrupt.update_online_risk(y_online_abrupt[start:stop], y_pred_batch)
+    monitor_abrupt.update(y_online_abrupt[start:stop], y_pred_batch)
 
 print("\nAbrupt shift scenario")
 print(f"Harmful shift detected: {monitor_abrupt.harmful_shift_detected}")
@@ -215,7 +215,7 @@ monitor_slow = RiskMonitoring(risk="accuracy", threshold=threshold)
 for start in range(0, len(X_online_slow), batch_size):
     stop = start + batch_size
     y_pred_batch = clf.predict(X_online_slow[start:stop])
-    monitor_slow.update_online_risk(y_online_slow[start:stop], y_pred_batch)
+    monitor_slow.update(y_online_slow[start:stop], y_pred_batch)
 
 print("\nSlow shift scenario")
 print(f"Harmful shift detected: {monitor_slow.harmful_shift_detected}")
@@ -234,4 +234,6 @@ plot_monitoring_results(
 #
 # 1. estimate an acceptable risk level on clean reference data,
 # 2. update the online risk as new labeled observations become available,
+# 3. flag a harmful shift once the lower confidence bound exceeds the threshold.
+# 3. flag a harmful shift once the lower confidence bound exceeds the threshold.
 # 3. flag a harmful shift once the lower confidence bound exceeds the threshold.
