@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Literal, Optional, Union
+from typing import Any, Dict, List, Literal, Optional, Union, cast
 
 from numpy.typing import NDArray
 
@@ -18,8 +18,20 @@ fixed_dataset_test_method_choice_map = {
     **online_test_method_choice_map,
 }
 
-OnlineTestMethods = Literal[tuple(online_test_method_choice_map.keys())]
-FixedDatasetTestMethods = Literal[tuple(fixed_dataset_test_method_choice_map.keys())]
+OnlineTestMethods = Literal[
+    "Plug-in Martingale",
+    "Jumper Martingale",
+    "Risk Monitoring",
+]
+FixedDatasetTestMethods = Literal[
+    "p-value Permutation",
+    "Monte-Carlo Permutation Binomial",
+    "Monte-Carlo Permutation Mixture Binomial",
+    "Monte-Carlo Permutation Aggressive",
+    "Plug-in Martingale",
+    "Jumper Martingale",
+    "Risk Monitoring",
+]
 
 
 class FixedDatasetExchangeabilityTest:
@@ -37,7 +49,7 @@ class FixedDatasetExchangeabilityTest:
         elif isinstance(method_names, str):
             self.method_names = [method_names]
         elif isinstance(method_names, list):
-            self.method_names = method_names
+            self.method_names = cast(List[str], method_names)
         else:
             raise ValueError(
                 f"Invalid method_names type: {type(method_names)}. Must be a string, list, or 'all'."
@@ -94,7 +106,7 @@ class OnlineExchangeabilityTest:
         elif isinstance(method_names, str):
             self.method_names = [method_names]
         elif isinstance(method_names, list):
-            self.method_names = method_names
+            self.method_names = cast(List[str], method_names)
         else:
             raise ValueError(
                 f"Invalid method_names type: {type(method_names)}. Must be a string, list, or 'all'."
