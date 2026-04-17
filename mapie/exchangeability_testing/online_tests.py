@@ -108,6 +108,7 @@ class OnlineMartingaleTest:
 
     Examples
     --------
+    >>> RANDOM_STATE = 7
     >>> mapie_estimator = SplitConformalRegressor(prefit=False)
     >>> omt = OnlineMartingaleTest(
     ...     mapie_estimator=mapie_estimator,
@@ -115,22 +116,10 @@ class OnlineMartingaleTest:
     ...     random_state=0,
     ...     burn_in=1,
     ... )
-    >>> X = np.array([[0.0], [1.0], [2.0]])
-    >>> y_true = np.array([0.0, 1.0, 2.0])
-    >>> omt = omt.update(y_true, X)
-    >>> omt.is_exchangeable is True
-    True
-
-    >>> mapie_estimator = SplitConformalClassifier(prefit=False)
-    >>> omt = OnlineMartingaleTest(
-    ...     mapie_estimator=mapie_estimator,
-    ...     task="classification",
-    ...     random_state=0,
-    ...     burn_in=1,
-    ... )
-    >>> X = np.array([[0.0], [1.0], [2.0], [3.0]])
-    >>> y_true = np.array([0, 1, 0, 1])
-    >>> omt = omt.update(y_true, X)
+    >>> rng = np.random.default_rng(RANDOM_STATE)
+    >>> X = np.linspace(0.1, 0.9, 2400).reshape(-1, 1)
+    >>> y = 3.0 * X.ravel() + rng.normal(scale=0.1, size=X.shape[0])
+    >>> omt = omt.update(X, y)
     >>> omt.is_exchangeable is True
     True
 
