@@ -1,12 +1,27 @@
 from __future__ import annotations
 
 import warnings
-from typing import Callable, Literal, Optional
+from copy import deepcopy
+from typing import Literal, Optional, Union, cast
 
 import numpy as np
 from numpy.typing import NDArray
 from scipy.integrate import trapezoid
 from scipy.stats import gaussian_kde
+from sklearn.model_selection import train_test_split
+from sklearn.utils.multiclass import type_of_target
+
+from mapie.classification import CrossConformalClassifier, SplitConformalClassifier
+from mapie.regression import (
+    CrossConformalRegressor,
+    JackknifeAfterBootstrapRegressor,
+    SplitConformalRegressor,
+)
+
+MapieEstimator = Union[
+    SplitConformalClassifier,
+    SplitConformalRegressor,
+]
 
 
 class OnlineMartingaleTest:
@@ -19,7 +34,7 @@ class OnlineMartingaleTest:
 
     At each update, the class:
 
-    1. computes conformity scores from observed labels and model predictions,
+    1. computes conformity scores from observed features and labels,
     2. converts these scores into conformal p-values using past scores,
     3. updates a martingale statistic from the p-values,
     4. monitors whether the observed stream provides evidence against exchangeability.
@@ -36,11 +51,11 @@ class OnlineMartingaleTest:
 
     Parameters
     ----------
-    conformity_score_function : Callable[[NDArray, NDArray, Optional[NDArray]], NDArray]
-        Function used to compute conformity scores from observed labels,
-        model predictions, and optionally covariates.
-        It must accept ``(y_true, y_pred, X)`` and return an array-like of
-        conformity scores of shape ``(n_samples,)``.
+    mapie_estimator : Optional[MapieEstimator], default=None
+        MAPIE estimator used to compute predictions and non-conformity
+        scores.
+    task : Optional[Literal["classification", "regression"]], default=None
+        Task type. If ``None``, the task is inferred from `y`.
 
     test_method : {"jumper_martingale", "plugin_martingale"}, default="jumper_martingale"
         Martingale construction used to aggregate evidence across p-values.
@@ -49,8 +64,9 @@ class OnlineMartingaleTest:
         and update them on the same stream.
 
     test_level : float, default=0.05
-        Test level used to define the rejection threshold.
-        Must lie in ``(0, 1)``.
+        Level used to test the hypothesis that the dataset is exchangeable.
+        The probability that the test gives a false positive is at most
+        `test_level` (type I error).
 
     warn : bool, default=True
         Whether to raise a warning when exchangeability is rejected.
@@ -83,38 +99,29 @@ class OnlineMartingaleTest:
 
     Examples
     --------
-    >>> def regression_score(y_true, y_pred, X=None):
-    ...     y_true = np.asarray(y_true, dtype=float).reshape(-1)
-    ...     y_pred = np.asarray(y_pred, dtype=float).reshape(-1)
-    ...     return np.abs(y_true - y_pred)
+    >>> mapie_estimator = SplitConformalRegressor(prefit=False)
     >>> omt = OnlineMartingaleTest(
-    ...     regression_score,
+    ...     mapie_estimator=mapie_estimator,
+    ...     task="regression",
     ...     random_state=0,
     ...     burn_in=1,
     ... )
+    >>> X = np.array([[0.0], [1.0], [2.0]])
     >>> y_true = np.array([0.0, 1.0, 2.0])
-    >>> y_pred = np.array([0.05, 0.95, 1.95])
-    >>> omt = omt.update(y_true, y_pred)
+    >>> omt = omt.update(y_true, X)
     >>> omt.is_exchangeable is True
     True
 
-    >>> def classification_score(y_true, y_pred, X=None):
-    ...     y_true = np.asarray(y_true, dtype=int).reshape(-1)
-    ...     y_pred = np.asarray(y_pred, dtype=float)
-    ...     return 1.0 - y_pred[np.arange(len(y_true)), y_true]
+    >>> mapie_estimator = SplitConformalClassifier(prefit=False)
     >>> omt = OnlineMartingaleTest(
-    ...     classification_score,
+    ...     mapie_estimator=mapie_estimator,
+    ...     task="classification",
     ...     random_state=0,
     ...     burn_in=1,
     ... )
+    >>> X = np.array([[0.0], [1.0], [2.0], [3.0]])
     >>> y_true = np.array([0, 1, 0, 1])
-    >>> y_pred = np.array([
-    ...     [0.95, 0.05],
-    ...     [0.05, 0.95],
-    ...     [0.95, 0.05],
-    ...     [0.05, 0.95],
-    ... ])
-    >>> omt = omt.update(y_true, y_pred)
+    >>> omt = omt.update(y_true, X)
     >>> omt.is_exchangeable is True
     True
 
@@ -142,9 +149,8 @@ class OnlineMartingaleTest:
 
     def __init__(
         self,
-        conformity_score_function: Callable[
-            [NDArray, NDArray, Optional[NDArray]], NDArray
-        ],
+        mapie_estimator: Optional[MapieEstimator] = None,
+        task: Optional[Literal["classification", "regression"]] = None,
         test_method: Literal[
             "jumper_martingale", "plugin_martingale"
         ] = "jumper_martingale",
@@ -159,10 +165,11 @@ class OnlineMartingaleTest:
 
         Parameters
         ----------
-        conformity_score_function : Callable[[NDArray, NDArray, Optional[NDArray]], NDArray]
-            Function that computes conformity scores from observed labels,
-            predictions, and optionally features. Must have signature
-            ``(y_true, y_pred, X) -> NDArray`` where X can be None.
+        mapie_estimator : Optional[MapieEstimator], default=None
+            MAPIE estimator used to compute predictions and non-conformity
+            scores.
+        task : Optional[Literal["classification", "regression"]], default=None
+            Task type. If ``None``, the task is inferred from `y`.
 
         test_method : {"jumper_martingale", "plugin_martingale"}, default="jumper_martingale"
             Martingale construction used to aggregate evidence from conformal p-values.
@@ -171,8 +178,9 @@ class OnlineMartingaleTest:
             To monitor both methods, use two instances and update both online.
 
         test_level : float, default=0.05
-            Test level used to define the rejection threshold.
-            Must lie in (0, 1). The rejection threshold is 1 / test_level.
+            Level used to test the hypothesis that the dataset is exchangeable.
+            The probability that the test gives a false positive is at most
+            `test_level` (type I error).
 
         warn : bool, default=True
             Whether to raise a warning when exchangeability is rejected.
@@ -223,7 +231,8 @@ class OnlineMartingaleTest:
         if not 0.0 < jump_size < 1.0:
             raise ValueError("jump_size must lie in (0, 1).")
 
-        self.conformity_score_function = conformity_score_function
+        self.mapie_estimator = self._prepare_estimator(mapie_estimator)
+        self.task = task
         self.test_method = test_method
         self.test_level = test_level
         self.warn = warn
@@ -243,6 +252,121 @@ class OnlineMartingaleTest:
         self._jumper_wealth_by_expert: NDArray[np.floating] = np.full(
             3, 1.0 / 3.0, dtype=float
         )
+
+    def _prepare_estimator(
+        self,
+        mapie_estimator: Optional[MapieEstimator],
+    ) -> Optional[MapieEstimator]:
+        """Copy an estimator to avoid modifying the original estimator
+        and clear conformalization state to allow calling conformalize method."""
+        if mapie_estimator is None:
+            return None
+
+        if isinstance(
+            mapie_estimator,
+            (
+                CrossConformalClassifier,
+                CrossConformalRegressor,
+                JackknifeAfterBootstrapRegressor,
+            ),
+        ):
+            raise ValueError(
+                "Cross conformal and jackknife-after-bootstrap estimators are not "
+                "supported in permutation tests because they mix the data."
+            )
+
+        estimator_copy = deepcopy(mapie_estimator)
+
+        if hasattr(estimator_copy, "_is_conformalized"):
+            estimator_copy._is_conformalized = False
+        if hasattr(estimator_copy, "_predict_params"):
+            estimator_copy._predict_params = {}
+
+        for attr_name in ("conformity_scores_", "quantiles_"):
+            if hasattr(estimator_copy, attr_name):
+                delattr(estimator_copy, attr_name)
+
+        for inner_estimator_name in ("_mapie_regressor", "_mapie_classifier"):
+            if hasattr(estimator_copy, inner_estimator_name):
+                inner_estimator = getattr(estimator_copy, inner_estimator_name)
+                for attr_name in ("conformity_scores_", "quantiles_"):
+                    if hasattr(inner_estimator, attr_name):
+                        delattr(inner_estimator, attr_name)
+
+        return estimator_copy
+
+    def _infer_task(self, y: NDArray) -> Literal["classification", "regression"]:
+        """Infer whether the current data should use classification scores."""
+        if self.mapie_estimator is not None:
+            if hasattr(self.mapie_estimator, "_mapie_classifier"):
+                return "classification"
+            if hasattr(self.mapie_estimator, "_mapie_regressor"):
+                return "regression"
+            raise ValueError(
+                "Unable to infer the task from the provided MAPIE estimator."
+            )
+
+        type_of_target_y = type_of_target(y)
+        if "multiclass" in type_of_target_y or "binary" in type_of_target_y:
+            return "classification"
+        if "continuous" in type_of_target_y:
+            return "regression"
+        raise ValueError("Unknown type of target, please manually set the task type.")
+
+    def _compute_non_conformity_scores(self, X: NDArray, y: NDArray) -> NDArray:
+        """Compute non-conformity scores from features and labels.
+
+        Parameters
+        ----------
+        X : NDArray
+            Feature matrix.
+        y : NDArray
+            Target values.
+        Returns
+        -------
+        NDArray
+            Non-conformity scores associated with ``(X, y)``.
+        """
+
+        if self.task is None:
+            self.task = self._infer_task(y)
+
+        if self.mapie_estimator is None:
+            if self.task == "classification":
+                self.mapie_estimator = SplitConformalClassifier(prefit=False)
+            elif self.task == "regression":
+                self.mapie_estimator = SplitConformalRegressor(prefit=False)
+            else:
+                raise ValueError("Unknown task type.")
+
+        estimator = self.mapie_estimator
+        assert estimator is not None
+
+        if not estimator._is_fitted:
+            X_train, X, y_train, y = train_test_split(
+                X,
+                y,
+                test_size=0.7,
+                shuffle=False,
+            )
+            estimator.fit(X_train, y_train)
+
+        estimator.conformalize(X, y)  # compute scores internally
+
+        if self.task == "classification":
+            estimator = cast(SplitConformalClassifier, estimator)
+            scores = cast(
+                NDArray,
+                estimator._mapie_classifier.conformity_scores_,
+            )
+        else:
+            estimator = cast(SplitConformalRegressor, estimator)
+            scores = cast(
+                NDArray,
+                estimator._mapie_regressor.conformity_scores_,
+            )
+
+        return scores
 
     @property
     def reject_threshold(self) -> float:
@@ -550,31 +674,24 @@ class OnlineMartingaleTest:
 
     def update(
         self,
-        y_true: NDArray,
-        y_pred: NDArray,
-        X: Optional[NDArray] = None,
+        X: NDArray,
+        y: NDArray,
     ) -> OnlineMartingaleTest:
         """
         Update the online martingale test with newly labeled observations.
 
-        This method computes conformity scores from the provided labels and
-        predictions, converts them into conformal p-values using past history,
-        updates the selected martingale, and appends the new observations to the
-        internal state.
+        This method computes conformity scores from the provided features and
+        labels using the MAPIE conformalizer, converts them into conformal
+        p-values using past history, updates the selected martingale, and
+        appends the new observations to the internal state.
 
         Parameters
         ----------
-        y_true : NDArray
+        X : NDArray
+            Feature matrix associated with the new observations.
+
+        y : NDArray
             True labels associated with the new observations.
-
-        y_pred : NDArray
-            Model predictions associated with the new observations.
-            For binary classification, this is typically the predicted probability
-            of the positive class.
-
-        X : Optional[NDArray], default=None
-            Optional features associated with the new observations.
-            Used only if required by the conformity score function.
 
         Returns
         -------
@@ -591,7 +708,18 @@ class OnlineMartingaleTest:
         This method can be used both to initialize the test on a labeled reference
         set and to update it online as new labels become available.
         """
-        scores = self.conformity_score_function(y_true, y_pred, X)
+        y = self._to_1d_array(y)
+        X = np.asarray(X)
+        if X.ndim == 1:
+            X = X.reshape(-1, 1)
+
+        if X.shape[0] != y.shape[0]:
+            raise ValueError(
+                "X and y must have the same number of rows. "
+                f"Got X.shape[0]={X.shape[0]} and y.shape[0]={y.shape[0]}."
+            )
+
+        scores = self._compute_non_conformity_scores(X, y)
         scores = self._to_1d_array(scores).astype(float)
 
         for current_score in scores:

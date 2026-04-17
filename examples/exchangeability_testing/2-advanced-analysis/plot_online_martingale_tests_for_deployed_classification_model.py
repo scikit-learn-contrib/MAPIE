@@ -277,7 +277,7 @@ test_level = 0.05
 burn_in = 100
 
 omt_jumper_exch = OnlineMartingaleTest(
-    conformity_score_function=conformity_score,
+    task="classification",
     test_method="jumper_martingale",
     test_level=test_level,
     burn_in=burn_in,
@@ -285,7 +285,7 @@ omt_jumper_exch = OnlineMartingaleTest(
     warn=False,
 )
 omt_plugin_exch = OnlineMartingaleTest(
-    conformity_score_function=conformity_score,
+    task="classification",
     test_method="plugin_martingale",
     test_level=test_level,
     burn_in=burn_in,
@@ -293,10 +293,9 @@ omt_plugin_exch = OnlineMartingaleTest(
     warn=False,
 )
 
-y_proba_exch = clf.predict_proba(X_exch)
 for i in range(len(y_exch)):
-    omt_jumper_exch.update(y_exch[i : i + 1], y_proba_exch[i : i + 1])
-    omt_plugin_exch.update(y_exch[i : i + 1], y_proba_exch[i : i + 1])
+    omt_jumper_exch.update(y_exch[i : i + 1], X_exch[i : i + 1])
+    omt_plugin_exch.update(y_exch[i : i + 1], X_exch[i : i + 1])
 
 ##############################################################################
 # Visualize martingale trajectories and p-value distributions.
@@ -428,7 +427,7 @@ plot_data_and_score_histogram(
 #
 
 omt_jumper_subtle_shift = OnlineMartingaleTest(
-    conformity_score_function=conformity_score,
+    task="classification",
     test_method="jumper_martingale",
     test_level=test_level,
     burn_in=burn_in,
@@ -436,7 +435,7 @@ omt_jumper_subtle_shift = OnlineMartingaleTest(
     warn=False,
 )
 omt_plugin_subtle_shift = OnlineMartingaleTest(
-    conformity_score_function=conformity_score,
+    task="classification",
     test_method="plugin_martingale",
     test_level=test_level,
     burn_in=burn_in,
@@ -444,11 +443,9 @@ omt_plugin_subtle_shift = OnlineMartingaleTest(
     warn=False,
 )
 
-y_proba_subtle = clf.predict_proba(X_subtle)
-
 for i in range(len(y_subtle)):
-    omt_jumper_subtle_shift.update(y_subtle[i : i + 1], y_proba_subtle[i : i + 1])
-    omt_plugin_subtle_shift.update(y_subtle[i : i + 1], y_proba_subtle[i : i + 1])
+    omt_jumper_subtle_shift.update(y_subtle[i : i + 1], X_subtle[i : i + 1])
+    omt_plugin_subtle_shift.update(y_subtle[i : i + 1], X_subtle[i : i + 1])
 
 
 plot_results_one_scenario(
@@ -506,7 +503,7 @@ plot_data_and_score_histogram(
 #
 
 omt_jumper_abrupt_shift = OnlineMartingaleTest(
-    conformity_score_function=conformity_score,
+    task="classification",
     test_method="jumper_martingale",
     test_level=test_level,
     burn_in=burn_in,
@@ -514,7 +511,7 @@ omt_jumper_abrupt_shift = OnlineMartingaleTest(
     warn=False,
 )
 omt_plugin_abrupt_shift = OnlineMartingaleTest(
-    conformity_score_function=conformity_score,
+    task="classification",
     test_method="plugin_martingale",
     test_level=test_level,
     burn_in=burn_in,
@@ -522,14 +519,12 @@ omt_plugin_abrupt_shift = OnlineMartingaleTest(
     warn=True,
 )
 
-y_proba_abrupt = clf.predict_proba(X_abrupt)
-
 for i in range(len(y_abrupt)):
-    omt_jumper_abrupt_shift.update(y_abrupt[i : i + 1], y_proba_abrupt[i : i + 1])
+    omt_jumper_abrupt_shift.update(y_abrupt[i : i + 1], X_abrupt[i : i + 1])
 with warnings.catch_warnings(record=True) as raised_warnings:
     warnings.simplefilter("always")
     for i in range(len(y_abrupt)):
-        omt_plugin_abrupt_shift.update(y_abrupt[i : i + 1], y_proba_abrupt[i : i + 1])
+        omt_plugin_abrupt_shift.update(y_abrupt[i : i + 1], X_abrupt[i : i + 1])
 if raised_warnings:
     print(f"Raised warning: {raised_warnings[0].message}")
 
@@ -558,7 +553,7 @@ plot_results_one_scenario(
 #
 
 omt_jumper_controlled = OnlineMartingaleTest(
-    conformity_score_function=conformity_score,
+    task="classification",
     test_method="jumper_martingale",
     test_level=test_level,
     burn_in=burn_in,
@@ -566,7 +561,7 @@ omt_jumper_controlled = OnlineMartingaleTest(
     warn=False,
 )
 omt_plugin_controlled = OnlineMartingaleTest(
-    conformity_score_function=conformity_score,
+    task="classification",
     test_method="plugin_martingale",
     test_level=test_level,
     burn_in=burn_in,
