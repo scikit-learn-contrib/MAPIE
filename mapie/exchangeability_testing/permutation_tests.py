@@ -398,9 +398,7 @@ class SequentialMonteCarloTest(PermutationTest):
         rank = 1
         wealth_bin = np.array([1.0])
         wealth_agg = np.array([1.0])
-        wealth_bm = np.array(
-            [1.0]
-        )  # TODO: check why it was [] before. I also removed the concat at the end.
+        wealth_bm = np.array([1.0])
         n = len(scores)
         for i in range(1, self.num_permutations + 1):
             permuted = self.rng.permutation(n)
