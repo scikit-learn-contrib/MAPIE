@@ -8,6 +8,7 @@ from .fwer_control import (
 )
 from .multi_label_classification import MultiLabelClassificationController
 from .risks import (
+    BinaryRisk,
     BinaryClassificationRisk,
     abstention_rate,
     accuracy,
@@ -24,6 +25,7 @@ __all__ = [
     "MultiLabelClassificationController",
     "SemanticSegmentationController",
     "BinaryClassificationController",
+    "BinaryRisk",
     "BinaryClassificationRisk",
     "accuracy",
     "false_positive_rate",

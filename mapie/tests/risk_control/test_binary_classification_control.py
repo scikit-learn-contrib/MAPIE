@@ -14,6 +14,7 @@ from sklearn.pipeline import Pipeline
 
 from mapie.risk_control import (
     BinaryClassificationController,
+    BinaryRisk,
     BinaryClassificationRisk,
     accuracy,
     false_positive_rate,
@@ -125,7 +126,7 @@ def bcc_deterministic():
     ],
 )
 def test_binary_classification_risk(
-    risk_instance: BinaryClassificationRisk,
+    risk_instance: BinaryRisk,
     metric_func,
     effective_sample_func,
     y_true,
@@ -189,7 +190,7 @@ def test_binary_classification_risk(
     ],
 )
 def test_binary_classification_risk_sequence(
-    risk_instance: BinaryClassificationRisk,
+    risk_instance: BinaryRisk,
     y_true: NDArray,
     y_pred: NDArray,
     expected_sequence: NDArray,
@@ -197,6 +198,19 @@ def test_binary_classification_risk_sequence(
     risk_sequence = risk_instance.get_risk_sequence(y_true, y_pred)
 
     np.testing.assert_array_equal(risk_sequence, expected_sequence)
+
+
+def test_binary_classification_risk_deprecated_alias_warns() -> None:
+    with pytest.warns(
+        FutureWarning,
+        match="BinaryClassificationRisk.*deprecated.*BinaryRisk",
+    ):
+        risk = BinaryClassificationRisk(
+            risk_occurrence=lambda y_true, y_pred: y_pred == y_true,
+            risk_condition=lambda y_true, y_pred: np.repeat(True, len(y_true)),
+            higher_is_better=True,
+        )
+    assert isinstance(risk, BinaryRisk)
 
 
 class TestBinaryClassificationControllerBestPredictParamChoice:
@@ -209,7 +223,7 @@ class TestBinaryClassificationControllerBestPredictParamChoice:
             (false_positive_rate, recall),
         ],
     )
-    def test_auto(self, risk_instance: BinaryClassificationRisk, expected):
+    def test_auto(self, risk_instance: BinaryRisk, expected):
         controller = BinaryClassificationController(
             predict_function=dummy_predict,
             risk=risk_instance,
@@ -298,7 +312,7 @@ class TestBinaryClassificationControllerBestPredictParamChoice:
     ],
 )
 def test_binary_classification__convert_target_level_to_alpha(
-    risk_instance: BinaryClassificationRisk,
+    risk_instance: BinaryRisk,
     target_level: float,
     expected_alpha: float,
 ) -> None:
@@ -732,7 +746,7 @@ def test_get_risk_values_and_eff_sample_sizes(y_true: NDArray, y_pred: NDArray):
             0.7,
         ),
         # Lists of multiple risks and targets
-        # which mix str and BinaryClassificationRisk.
+        # which mix str and BinaryRisk.
         (
             ["precision", "recall"],
             [0.65, 0.6],
@@ -742,9 +756,9 @@ def test_get_risk_values_and_eff_sample_sizes(y_true: NDArray, y_pred: NDArray):
     ],
 )
 def test_functional_multi_risk(
-    risks_1: List[BinaryClassificationRisk],
+    risks_1: List[BinaryRisk],
     targets_1: List[float],
-    risks_2: Union[List[BinaryClassificationRisk], BinaryClassificationRisk],
+    risks_2: Union[List[BinaryRisk], BinaryRisk],
     targets_2: Union[List[float], float],
 ):
     """

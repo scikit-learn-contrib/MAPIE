@@ -1,12 +1,13 @@
 from __future__ import annotations
 
+import warnings
 from typing import Callable, List, Literal, Tuple, Union, cast
 
 import numpy as np
 from numpy.typing import NDArray
 
 
-class BinaryClassificationRisk:
+class BinaryRisk:
     """
     Define a risk (or a performance metric) to be used with the
     BinaryClassificationController. Predefined instances are implemented,
@@ -43,7 +44,7 @@ class BinaryClassificationRisk:
         Must take y_true and y_pred as input and return a boolean.
 
     higher_is_better : bool
-        Whether this BinaryClassificationRisk instance is a risk
+        Whether this BinaryRisk instance is a risk
         (higher_is_better=False) or a performance metric (higher_is_better=True).
 
     Attributes
@@ -156,6 +157,32 @@ class BinaryClassificationRisk:
         return risk_sequence
 
 
+class BinaryClassificationRisk(BinaryRisk):
+    """
+    Deprecated alias for :class:`BinaryRisk`.
+
+    Use ``BinaryRisk`` instead.
+    """
+
+    def __init__(
+        self,
+        risk_occurrence: Callable[
+            [NDArray[np.integer], NDArray[np.integer]], NDArray[np.bool_]
+        ],
+        risk_condition: Callable[
+            [NDArray[np.integer], NDArray[np.integer]], NDArray[np.bool_]
+        ],
+        higher_is_better: bool,
+    ):
+        warnings.warn(
+            "`BinaryClassificationRisk` is deprecated and will be removed in a "
+            "future release. Use `BinaryRisk` instead.",
+            FutureWarning,
+            stacklevel=2,
+        )
+        super().__init__(risk_occurrence, risk_condition, higher_is_better)
+
+
 RiskNameLiteral = Literal[
     "precision",
     "recall",
@@ -167,39 +194,39 @@ RiskNameLiteral = Literal[
     "abstention_rate",
 ]
 RiskLike = Union[
-    BinaryClassificationRisk,
+    BinaryRisk,
     RiskNameLiteral,
-    List[BinaryClassificationRisk],
+    List[BinaryRisk],
     List[RiskNameLiteral],
-    List[Union[BinaryClassificationRisk, RiskNameLiteral]],
+    List[Union[BinaryRisk, RiskNameLiteral]],
 ]
 
 
-precision = BinaryClassificationRisk(
+precision = BinaryRisk(
     risk_occurrence=lambda y_true, y_pred: y_pred.ravel() == y_true.ravel(),
     risk_condition=lambda y_true, y_pred: y_pred.ravel() == 1,
     higher_is_better=True,
 )
 
-accuracy = BinaryClassificationRisk(
+accuracy = BinaryRisk(
     risk_occurrence=lambda y_true, y_pred: y_pred == y_true,
     risk_condition=lambda y_true, y_pred: np.repeat(True, len(y_true)),
     higher_is_better=True,
 )
 
-recall = BinaryClassificationRisk(
+recall = BinaryRisk(
     risk_occurrence=lambda y_true, y_pred: y_pred.ravel() == y_true.ravel(),
     risk_condition=lambda y_true, y_pred: y_true.ravel() == 1,
     higher_is_better=True,
 )
 
-false_positive_rate = BinaryClassificationRisk(
+false_positive_rate = BinaryRisk(
     risk_occurrence=lambda y_true, y_pred: y_pred == 1,
     risk_condition=lambda y_true, y_pred: y_true == 0,
     higher_is_better=False,
 )
 
-predicted_positive_fraction = BinaryClassificationRisk(
+predicted_positive_fraction = BinaryRisk(
     risk_occurrence=lambda y_true, y_pred: y_pred == 1,
     risk_condition=lambda y_true, y_pred: np.repeat(True, len(y_true)),
     higher_is_better=False,
@@ -208,7 +235,7 @@ predicted_positive_fraction = BinaryClassificationRisk(
 positive_predictive_value = precision
 ppv = positive_predictive_value
 
-negative_predictive_value = BinaryClassificationRisk(
+negative_predictive_value = BinaryRisk(
     risk_occurrence=lambda y_true, y_pred: y_pred == y_true,
     risk_condition=lambda y_true, y_pred: y_pred == 0,
     higher_is_better=True,
@@ -216,7 +243,7 @@ negative_predictive_value = BinaryClassificationRisk(
 
 npv = negative_predictive_value
 
-abstention_rate = BinaryClassificationRisk(
+abstention_rate = BinaryRisk(
     risk_occurrence=lambda y_true, y_pred: np.isnan(y_pred),
     risk_condition=lambda y_true, y_pred: np.repeat(True, len(y_true)),
     higher_is_better=False,

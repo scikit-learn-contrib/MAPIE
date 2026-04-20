@@ -8,7 +8,7 @@ from mapie.exchangeability_testing.confidence_bounds import (
     conjugate_mixture_empirical_bernstein_bound,
     hoeffding_bound,
 )
-from mapie.risk_control.risks import BinaryClassificationRisk, RiskLike, risk_choice_map
+from mapie.risk_control.risks import BinaryRisk, RiskLike, risk_choice_map
 
 
 class RiskMonitoring:
@@ -42,7 +42,7 @@ class RiskMonitoring:
 
     Attributes
     ----------
-    risk : BinaryClassificationRisk
+    risk : BinaryRisk
         Resolved risk object used internally.
     threshold : Optional[float]
         Monitoring threshold used to flag harmful shifts.
@@ -100,12 +100,12 @@ class RiskMonitoring:
                 "When risk is provided as a string, it must be one of: "
                 f"{list(risk_choice_map.keys())}"
             ) from e
-        if not isinstance(resolved_risk, BinaryClassificationRisk):
+        if not isinstance(resolved_risk, BinaryRisk):
             raise TypeError(
-                "risk must be a single BinaryClassificationRisk instance or a "
+                "risk must be a single BinaryRisk instance or a "
                 "supported risk name."
             )
-        self.risk: BinaryClassificationRisk = resolved_risk
+        self.risk: BinaryRisk = resolved_risk
         self.tolerance = tolerance
         self.tolerance_type = tolerance_type
         self.warn = warn

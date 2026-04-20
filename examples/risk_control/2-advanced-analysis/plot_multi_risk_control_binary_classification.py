@@ -99,7 +99,7 @@ clf.fit(X_train, y_train)
 #
 # Different risks or performance metrics have been implemented, such as precision,
 # recall and accuracy, but you can also implement your own custom functions using
-# `BinaryClassificationRisk` and choose your own
+# `BinaryRisk` and choose your own
 # secondary objective (passed in `best_predict_param_choice`)
 #
 # Note that if the secondary objective is not specified, the first risk in the list is used

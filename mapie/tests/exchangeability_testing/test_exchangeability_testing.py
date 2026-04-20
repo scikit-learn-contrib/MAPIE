@@ -202,9 +202,7 @@ class TestRiskMonitoring:
 
     def test_init_rejects_non_scalar_risk(self) -> None:
         invalid_risk: list[RiskNameLiteral] = ["accuracy"]
-        with pytest.raises(
-            TypeError, match="risk must be a single BinaryClassificationRisk"
-        ):
+        with pytest.raises(TypeError, match="risk must be a single BinaryRisk"):
             RiskMonitoring(risk=invalid_risk)
 
     def test_init_rejects_invalid_test_level(self) -> None:
