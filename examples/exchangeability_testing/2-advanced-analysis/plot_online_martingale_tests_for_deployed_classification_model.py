@@ -57,7 +57,7 @@ References
      "Plug-in Martingales for Testing Exchangeability on-line".
      In Proceedings of the 29th ICML. Algorithm 1, page 3.
 """
-
+# %%
 # sphinx_gallery_thumbnail_number = 4
 
 import warnings
@@ -158,6 +158,8 @@ y_abrupt = np.concatenate([y_conformalize, y_test_abrupt])
 ##############################################################################
 # The figure below shows the first two features of each test-set variant so
 # that the nature of each shift is visible before running the martingale tests.
+# Colors encode class labels. For shifted scenarios only, marker style encodes
+# temporal segment (dot = before shift, cross = after shift).
 #
 
 fig, axes = plt.subplots(1, 3, figsize=(18, 5.8), sharex=True, sharey=True)
@@ -167,16 +169,48 @@ for ax, title, X_data, y_data in zip(
     [X_test_exch, X_test_subtle, X_test_abrupt],
     [y_test_exch, y_test_subtle, y_test_abrupt],
 ):
-    for label in np.unique(y_data):
-        mask = y_data == label
-        ax.scatter(
-            X_data[mask, 0], X_data[mask, 1], s=16, alpha=0.65, label=f"Class {label}"
-        )
+    if title == "Exchangeable test":
+        for label, color in zip([0, 1], ["tab:blue", "tab:orange"]):
+            class_mask = y_data == label
+            ax.scatter(
+                X_data[class_mask, 0],
+                X_data[class_mask, 1],
+                s=18,
+                alpha=0.7,
+                color=color,
+                marker="o",
+                label=f"Class {label}",
+            )
+    else:
+        before_mask = np.arange(len(y_data)) < midpoint
+        after_mask = ~before_mask
+        for label, color in zip([0, 1], ["tab:blue", "tab:orange"]):
+            class_mask = y_data == label
+            mask_before = class_mask & before_mask
+            mask_after = class_mask & after_mask
+            ax.scatter(
+                X_data[mask_before, 0],
+                X_data[mask_before, 1],
+                s=18,
+                alpha=0.7,
+                color=color,
+                marker="o",
+                label=f"Class {label} - Before shift",
+            )
+            ax.scatter(
+                X_data[mask_after, 0],
+                X_data[mask_after, 1],
+                s=28,
+                alpha=0.8,
+                color=color,
+                marker="x",
+                label=f"Class {label} - After shift",
+            )
     ax.set_title(title, fontsize=18)
     ax.set_xlabel("Feature 1", fontsize=16)
     ax.tick_params(axis="both", labelsize=14)
 axes[0].set_ylabel("Feature 2", fontsize=16)
-handles, labels = axes[-1].get_legend_handles_labels()
+handles, labels = axes[1].get_legend_handles_labels()
 fig.legend(handles, labels, loc="lower center", ncol=2, frameon=False, fontsize=14)
 plt.suptitle("Held-out test scenarios for exchangeability monitoring", fontsize=22)
 plt.tight_layout(rect=(0, 0.08, 1, 1))
@@ -479,3 +513,5 @@ print_result_summary(classification_results)
 # into a standard MAPIE workflow to provide continuous exchangeability
 # monitoring on held-out data, without any modification to the model itself.
 #
+
+# %%
