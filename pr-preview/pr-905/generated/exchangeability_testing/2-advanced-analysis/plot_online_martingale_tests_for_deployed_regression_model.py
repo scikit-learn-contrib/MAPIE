@@ -12,7 +12,7 @@ conformal p-value and accumulates evidence against exchangeability through a
 martingale process.
 When the martingale exceeds ``1 / test_level``, exchangeability is rejected
 with false-alarm probability controlled by ``test_level``.
-See [1]_, [2]_, and [3]_ for details and guarantees.
+See [1], [2], and [3] for details and guarantees.
 
 **MAPIE-style workflow.**
 Following standard MAPIE practice, we generate one dataset and split it into:

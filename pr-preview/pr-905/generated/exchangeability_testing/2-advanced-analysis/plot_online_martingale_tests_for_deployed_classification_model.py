@@ -11,7 +11,7 @@ into a conformal p-value and accumulates evidence against exchangeability throug
 a martingale process.
 When the martingale exceeds a threshold ``1 / test_level``, exchangeability is
 rejected with at most ``test_level`` probability of a false alarm.
-See [1]_, [2]_, and [3]_ for theoretical details and guarantees.
+See [1], [2], and [3] for theoretical details and guarantees.
 
 **MAPIE-style workflow.**
 Following standard MAPIE practice, we generate a single dataset and split it into:
