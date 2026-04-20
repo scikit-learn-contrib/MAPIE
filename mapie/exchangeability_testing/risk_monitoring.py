@@ -102,8 +102,7 @@ class RiskMonitoring:
             ) from e
         if not isinstance(resolved_risk, BinaryRisk):
             raise TypeError(
-                "risk must be a single BinaryRisk instance or a "
-                "supported risk name."
+                "risk must be a single BinaryRisk instance or a supported risk name."
             )
         self.risk: BinaryRisk = resolved_risk
         self.tolerance = tolerance

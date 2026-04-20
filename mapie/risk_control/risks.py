@@ -201,6 +201,8 @@ BinaryRiskLike = Union[
     List[Union[BinaryRisk, BinaryRiskNames]],
 ]
 
+RiskLike = BinaryRiskLike  # TODO: add ContinuousRiskLike
+
 
 precision = BinaryRisk(
     risk_occurrence=lambda y_true, y_pred: y_pred.ravel() == y_true.ravel(),
