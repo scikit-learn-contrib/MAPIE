@@ -17,8 +17,7 @@ from mapie.utils import check_valid_ltt_params_index
 from .methods import compute_hoeffding_bentkus_p_value, ltt_procedure
 from .risks import (
     BinaryRisk,
-    RiskLike,
-    RiskNameLiteral,
+    BinaryRiskNames,
     _best_predict_param_choice_map,
     risk_choice_map,
 )
@@ -169,11 +168,11 @@ class BinaryClassificationController:
     def __init__(
         self,
         predict_function: Callable[[ArrayLike], NDArray],
-        risk: RiskLike,
+        risk: BinaryRiskLike,
         target_level: Union[float, List[float]],
         confidence_level: float = 0.9,
         best_predict_param_choice: Union[
-            Literal["auto"], RiskNameLiteral, BinaryRisk
+            Literal["auto"], BinaryRiskNames, BinaryRisk
         ] = "auto",
         list_predict_params: NDArray = np.linspace(0, 0.99, 100),
         fwer_method: Union[FWER_METHODS, FWERProcedure] = "bonferroni_holm",
@@ -446,7 +445,7 @@ class BinaryClassificationController:
     def _set_best_predict_param_choice(
         self,
         best_predict_param_choice: Union[
-            Literal["auto"], RiskNameLiteral, BinaryRisk
+            Literal["auto"], BinaryRiskNames, BinaryRisk
         ] = "auto",
     ) -> BinaryRisk:
         if best_predict_param_choice == "auto":
@@ -572,7 +571,7 @@ class BinaryClassificationController:
 
     @staticmethod
     def _check_if_multi_risk_control(
-        risk: RiskLike,
+        risk: BinaryRiskLike,
         target_level: Union[float, List[float]],
     ) -> bool:
         """
@@ -588,9 +587,9 @@ class BinaryClassificationController:
                 return False
             else:
                 return True
-        elif (
-            isinstance(risk, BinaryRisk) or isinstance(risk, str)
-        ) and isinstance(target_level, float):
+        elif (isinstance(risk, BinaryRisk) or isinstance(risk, str)) and isinstance(
+            target_level, float
+        ):
             return False
         else:
             raise ValueError(

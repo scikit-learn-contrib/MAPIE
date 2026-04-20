@@ -10,7 +10,7 @@ from mapie.exchangeability_testing.confidence_bounds import (
     conjugate_mixture_empirical_bernstein_bound,
     hoeffding_bound,
 )
-from mapie.risk_control.risks import RiskNameLiteral
+from mapie.risk_control.risks import BinaryRiskNames
 
 
 class TestGammaExponentialMixtureBound:
@@ -201,7 +201,7 @@ class TestRiskMonitoring:
             RiskMonitoring(risk="unknown_risk")  # type: ignore[arg-type]
 
     def test_init_rejects_non_scalar_risk(self) -> None:
-        invalid_risk: list[RiskNameLiteral] = ["accuracy"]
+        invalid_risk: list[BinaryRiskNames] = ["accuracy"]
         with pytest.raises(TypeError, match="risk must be a single BinaryRisk"):
             RiskMonitoring(risk=invalid_risk)
 

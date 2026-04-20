@@ -14,8 +14,8 @@ from sklearn.pipeline import Pipeline
 
 from mapie.risk_control import (
     BinaryClassificationController,
-    BinaryRisk,
     BinaryClassificationRisk,
+    BinaryRisk,
     accuracy,
     false_positive_rate,
     positive_predictive_value,
@@ -23,7 +23,7 @@ from mapie.risk_control import (
     recall,
 )
 from mapie.risk_control.fwer_control import FWERFixedSequenceTesting
-from mapie.risk_control.risks import RiskLike, risk_choice_map
+from mapie.risk_control.risks import BinaryRiskLike, risk_choice_map
 
 random_state = 42
 dummy_single_param = np.array([0.5])
@@ -608,7 +608,7 @@ class TestCheckIfMultiRiskControl:
         [precision, "precision"],
     )
     def test_mono_risk(
-        self, bcc_deterministic: BinaryClassificationController, risk: RiskLike
+        self, bcc_deterministic: BinaryClassificationController, risk: BinaryRiskLike
     ):
         is_multi_risk = bcc_deterministic._check_if_multi_risk_control(
             risk, dummy_target
@@ -620,7 +620,7 @@ class TestCheckIfMultiRiskControl:
         [[precision], ["precision"]],
     )
     def test_mono_risk_list(
-        self, bcc_deterministic: BinaryClassificationController, risk: RiskLike
+        self, bcc_deterministic: BinaryClassificationController, risk: BinaryRiskLike
     ):
         is_multi_risk = bcc_deterministic._check_if_multi_risk_control(
             risk, [dummy_target]
@@ -636,7 +636,7 @@ class TestCheckIfMultiRiskControl:
         ],
     )
     def test_multi_risk(
-        self, bcc_deterministic: BinaryClassificationController, risk: RiskLike
+        self, bcc_deterministic: BinaryClassificationController, risk: BinaryRiskLike
     ):
         is_multi_risk = bcc_deterministic._check_if_multi_risk_control(
             risk, [dummy_target, dummy_target]
@@ -652,7 +652,9 @@ class TestCheckIfMultiRiskControl:
             ([recall, false_positive_rate], [0.6, 0.8, 0.7]),
         ],
     )
-    def test_error_cases(self, risk: RiskLike, target_level: Union[List[float], float]):
+    def test_error_cases(
+        self, risk: BinaryRiskLike, target_level: Union[List[float], float]
+    ):
         with pytest.raises(ValueError, match="If you provide a list of risks,"):
             BinaryClassificationController._check_if_multi_risk_control(
                 risk, target_level
@@ -668,7 +670,7 @@ class TestCheckIfMultiRiskControl:
     ],
 )
 def test_invalid_risk_str_raises_error(
-    risk: RiskLike, target_level: Union[List[float], float]
+    risk: BinaryRiskLike, target_level: Union[List[float], float]
 ):
     with pytest.raises(ValueError, match="When risk is provided as a string,"):
         BinaryClassificationController(

@@ -183,7 +183,7 @@ class BinaryClassificationRisk(BinaryRisk):
         super().__init__(risk_occurrence, risk_condition, higher_is_better)
 
 
-RiskNameLiteral = Literal[
+BinaryRiskNames = Literal[
     "precision",
     "recall",
     "accuracy",
@@ -193,12 +193,12 @@ RiskNameLiteral = Literal[
     "negative_predictive_value",
     "abstention_rate",
 ]
-RiskLike = Union[
+BinaryRiskLike = Union[
     BinaryRisk,
-    RiskNameLiteral,
+    BinaryRiskNames,
     List[BinaryRisk],
-    List[RiskNameLiteral],
-    List[Union[BinaryRisk, RiskNameLiteral]],
+    List[BinaryRiskNames],
+    List[Union[BinaryRisk, BinaryRiskNames]],
 ]
 
 
