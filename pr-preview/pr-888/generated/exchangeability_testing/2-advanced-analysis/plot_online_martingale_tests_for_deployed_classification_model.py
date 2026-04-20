@@ -158,6 +158,8 @@ y_abrupt = np.concatenate([y_conformalize, y_test_abrupt])
 ##############################################################################
 # The figure below shows the first two features of each test-set variant so
 # that the nature of each shift is visible before running the martingale tests.
+# Colors encode class labels. For shifted scenarios only, marker style encodes
+# temporal segment (dot = before shift, cross = after shift).
 #
 
 fig, axes = plt.subplots(1, 3, figsize=(18, 5.8), sharex=True, sharey=True)
@@ -167,16 +169,48 @@ for ax, title, X_data, y_data in zip(
     [X_test_exch, X_test_subtle, X_test_abrupt],
     [y_test_exch, y_test_subtle, y_test_abrupt],
 ):
-    for label in np.unique(y_data):
-        mask = y_data == label
-        ax.scatter(
-            X_data[mask, 0], X_data[mask, 1], s=16, alpha=0.65, label=f"Class {label}"
-        )
+    if title == "Exchangeable test":
+        for label, color in zip([0, 1], ["tab:blue", "tab:orange"]):
+            class_mask = y_data == label
+            ax.scatter(
+                X_data[class_mask, 0],
+                X_data[class_mask, 1],
+                s=18,
+                alpha=0.7,
+                color=color,
+                marker="o",
+                label=f"Class {label}",
+            )
+    else:
+        before_mask = np.arange(len(y_data)) < midpoint
+        after_mask = ~before_mask
+        for label, color in zip([0, 1], ["tab:blue", "tab:orange"]):
+            class_mask = y_data == label
+            mask_before = class_mask & before_mask
+            mask_after = class_mask & after_mask
+            ax.scatter(
+                X_data[mask_before, 0],
+                X_data[mask_before, 1],
+                s=18,
+                alpha=0.7,
+                color=color,
+                marker="o",
+                label=f"Class {label} - Before shift",
+            )
+            ax.scatter(
+                X_data[mask_after, 0],
+                X_data[mask_after, 1],
+                s=28,
+                alpha=0.8,
+                color=color,
+                marker="x",
+                label=f"Class {label} - After shift",
+            )
     ax.set_title(title, fontsize=18)
     ax.set_xlabel("Feature 1", fontsize=16)
     ax.tick_params(axis="both", labelsize=14)
 axes[0].set_ylabel("Feature 2", fontsize=16)
-handles, labels = axes[-1].get_legend_handles_labels()
+handles, labels = axes[1].get_legend_handles_labels()
 fig.legend(handles, labels, loc="lower center", ncol=2, frameon=False, fontsize=14)
 plt.suptitle("Held-out test scenarios for exchangeability monitoring", fontsize=22)
 plt.tight_layout(rect=(0, 0.08, 1, 1))
@@ -189,9 +223,15 @@ plt.show()
 
 test_level = 0.05
 burn_in = 100
+shift_start_time = len(y_conformalize) + midpoint
 
 
-def plot_results_one_scenario(omt_jumper, omt_plugin, scenario_name):
+def plot_results_one_scenario(
+    omt_jumper,
+    omt_plugin,
+    scenario_name,
+    shift_start_time=None,
+):
     """Plot martingales and p-value histogram for one monitoring scenario."""
     fig, axes = plt.subplots(1, 3, figsize=(18, 5.8))
     threshold = omt_jumper.reject_threshold
@@ -200,6 +240,13 @@ def plot_results_one_scenario(omt_jumper, omt_plugin, scenario_name):
     ax = axes[0]
     ax.plot(omt_jumper.martingale_value_history, label="Jumper martingale")
     ax.axhline(threshold, linestyle="--", color="tab:red", label="Reject threshold")
+    if shift_start_time is not None:
+        ax.axvline(
+            shift_start_time,
+            linestyle="--",
+            color="black",
+            label="Shift start",
+        )
     ax.set_title(f"{scenario_name} - Jumper", fontsize=18)
     ax.set_xlabel("Time", fontsize=16)
     ax.set_ylabel("Martingale value", fontsize=16)
@@ -210,7 +257,7 @@ def plot_results_one_scenario(omt_jumper, omt_plugin, scenario_name):
         ax.axvline(
             summary_jumper["stopping_time"],
             linestyle=":",
-            color="black",
+            color="red",
             label="Stopping time",
         )
     ax.legend(fontsize=14)
@@ -219,6 +266,13 @@ def plot_results_one_scenario(omt_jumper, omt_plugin, scenario_name):
     ax = axes[1]
     ax.plot(omt_plugin.martingale_value_history, label="Plug-in martingale")
     ax.axhline(threshold, linestyle="--", color="tab:red", label="Reject threshold")
+    if shift_start_time is not None:
+        ax.axvline(
+            shift_start_time,
+            linestyle="--",
+            color="black",
+            label="Shift start",
+        )
     ax.set_title(f"{scenario_name} - Plug-in", fontsize=18)
     ax.set_xlabel("Time", fontsize=16)
     ax.set_ylabel("Martingale value", fontsize=16)
@@ -229,7 +283,7 @@ def plot_results_one_scenario(omt_jumper, omt_plugin, scenario_name):
         ax.axvline(
             summary_plugin["stopping_time"],
             linestyle=":",
-            color="black",
+            color="red",
             label="Stopping time",
         )
     ax.legend(fontsize=14)
@@ -279,7 +333,12 @@ omt_plugin_exch = OnlineMartingaleTest(
 omt_jumper_exch.update(X_exch, y_exch)
 omt_plugin_exch.update(X_exch, y_exch)
 
-plot_results_one_scenario(omt_jumper_exch, omt_plugin_exch, "Exchangeable")
+plot_results_one_scenario(
+    omt_jumper_exch,
+    omt_plugin_exch,
+    "Exchangeable",
+    shift_start_time=None,
+)
 
 ##############################################################################
 # Both martingales remain stable and do not exceed the rejection threshold,
@@ -318,7 +377,10 @@ omt_jumper_subtle_shift.update(X_subtle, y_subtle)
 omt_plugin_subtle_shift.update(X_subtle, y_subtle)
 
 plot_results_one_scenario(
-    omt_jumper_subtle_shift, omt_plugin_subtle_shift, "Subtle shift"
+    omt_jumper_subtle_shift,
+    omt_plugin_subtle_shift,
+    "Subtle shift",
+    shift_start_time=shift_start_time,
 )
 
 ##############################################################################
@@ -364,7 +426,10 @@ if raised_warnings:
     print(f"Raised warning: {raised_warnings[0].message}")
 
 plot_results_one_scenario(
-    omt_jumper_abrupt_shift, omt_plugin_abrupt_shift, "Abrupt shift"
+    omt_jumper_abrupt_shift,
+    omt_plugin_abrupt_shift,
+    "Abrupt shift",
+    shift_start_time=shift_start_time,
 )
 
 ##############################################################################
