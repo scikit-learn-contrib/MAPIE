@@ -1,7 +1,7 @@
 import numpy as np
 
 from numpy.typing import ArrayLike, NDArray
-from mapie.conformity_scores import BaseRegressionScore
+from mapie.conformity_scores.regression import BaseRegressionScore
 
 
 class GammaConformityScore(BaseRegressionScore):

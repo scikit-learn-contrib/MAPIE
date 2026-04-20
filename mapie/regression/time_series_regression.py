@@ -8,7 +8,7 @@ from numpy.typing import ArrayLike, NDArray
 from sklearn.base import RegressorMixin
 from sklearn.model_selection import BaseCrossValidator
 
-from mapie.conformity_scores import BaseRegressionScore
+from mapie.conformity_scores.regression import BaseRegressionScore
 from mapie.regression.regression import _MapieRegressor
 from mapie.utils import (
     _check_alpha,
