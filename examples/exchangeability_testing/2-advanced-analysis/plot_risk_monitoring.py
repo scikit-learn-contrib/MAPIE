@@ -235,5 +235,3 @@ plot_monitoring_results(
 # 1. estimate an acceptable risk level on clean reference data,
 # 2. update the online risk as new labeled observations become available,
 # 3. flag a harmful shift once the lower confidence bound exceeds the threshold.
-# 3. flag a harmful shift once the lower confidence bound exceeds the threshold.
-# 3. flag a harmful shift once the lower confidence bound exceeds the threshold.
