@@ -57,7 +57,7 @@ References
      "Plug-in Martingales for Testing Exchangeability on-line".
      In Proceedings of the 29th ICML. Algorithm 1, page 3.
 """
-# %%
+
 # sphinx_gallery_thumbnail_number = 4
 
 import warnings
@@ -223,9 +223,15 @@ plt.show()
 
 test_level = 0.05
 burn_in = 100
+shift_start_time = len(y_conformalize) + midpoint
 
 
-def plot_results_one_scenario(omt_jumper, omt_plugin, scenario_name):
+def plot_results_one_scenario(
+    omt_jumper,
+    omt_plugin,
+    scenario_name,
+    shift_start_time=None,
+):
     """Plot martingales and p-value histogram for one monitoring scenario."""
     fig, axes = plt.subplots(1, 3, figsize=(18, 5.8))
     threshold = omt_jumper.reject_threshold
@@ -234,6 +240,13 @@ def plot_results_one_scenario(omt_jumper, omt_plugin, scenario_name):
     ax = axes[0]
     ax.plot(omt_jumper.martingale_value_history, label="Jumper martingale")
     ax.axhline(threshold, linestyle="--", color="tab:red", label="Reject threshold")
+    if shift_start_time is not None:
+        ax.axvline(
+            shift_start_time,
+            linestyle="--",
+            color="black",
+            label="Shift start",
+        )
     ax.set_title(f"{scenario_name} - Jumper", fontsize=18)
     ax.set_xlabel("Time", fontsize=16)
     ax.set_ylabel("Martingale value", fontsize=16)
@@ -244,7 +257,7 @@ def plot_results_one_scenario(omt_jumper, omt_plugin, scenario_name):
         ax.axvline(
             summary_jumper["stopping_time"],
             linestyle=":",
-            color="black",
+            color="red",
             label="Stopping time",
         )
     ax.legend(fontsize=14)
@@ -253,6 +266,13 @@ def plot_results_one_scenario(omt_jumper, omt_plugin, scenario_name):
     ax = axes[1]
     ax.plot(omt_plugin.martingale_value_history, label="Plug-in martingale")
     ax.axhline(threshold, linestyle="--", color="tab:red", label="Reject threshold")
+    if shift_start_time is not None:
+        ax.axvline(
+            shift_start_time,
+            linestyle="--",
+            color="black",
+            label="Shift start",
+        )
     ax.set_title(f"{scenario_name} - Plug-in", fontsize=18)
     ax.set_xlabel("Time", fontsize=16)
     ax.set_ylabel("Martingale value", fontsize=16)
@@ -263,7 +283,7 @@ def plot_results_one_scenario(omt_jumper, omt_plugin, scenario_name):
         ax.axvline(
             summary_plugin["stopping_time"],
             linestyle=":",
-            color="black",
+            color="red",
             label="Stopping time",
         )
     ax.legend(fontsize=14)
@@ -313,7 +333,12 @@ omt_plugin_exch = OnlineMartingaleTest(
 omt_jumper_exch.update(X_exch, y_exch)
 omt_plugin_exch.update(X_exch, y_exch)
 
-plot_results_one_scenario(omt_jumper_exch, omt_plugin_exch, "Exchangeable")
+plot_results_one_scenario(
+    omt_jumper_exch,
+    omt_plugin_exch,
+    "Exchangeable",
+    shift_start_time=None,
+)
 
 ##############################################################################
 # Both martingales remain stable and do not exceed the rejection threshold,
@@ -352,7 +377,10 @@ omt_jumper_subtle_shift.update(X_subtle, y_subtle)
 omt_plugin_subtle_shift.update(X_subtle, y_subtle)
 
 plot_results_one_scenario(
-    omt_jumper_subtle_shift, omt_plugin_subtle_shift, "Subtle shift"
+    omt_jumper_subtle_shift,
+    omt_plugin_subtle_shift,
+    "Subtle shift",
+    shift_start_time=shift_start_time,
 )
 
 ##############################################################################
@@ -398,7 +426,10 @@ if raised_warnings:
     print(f"Raised warning: {raised_warnings[0].message}")
 
 plot_results_one_scenario(
-    omt_jumper_abrupt_shift, omt_plugin_abrupt_shift, "Abrupt shift"
+    omt_jumper_abrupt_shift,
+    omt_plugin_abrupt_shift,
+    "Abrupt shift",
+    shift_start_time=shift_start_time,
 )
 
 ##############################################################################
@@ -513,5 +544,3 @@ print_result_summary(classification_results)
 # into a standard MAPIE workflow to provide continuous exchangeability
 # monitoring on held-out data, without any modification to the model itself.
 #
-
-# %%
