@@ -645,8 +645,8 @@ def test_fit_estimator_calls_estimator_fit():
     # Call fit_estimator
     result = omt.fit_estimator(X, y)
 
-    # Verify that the fit method was called with the correct arguments
-    mock_estimator.fit.assert_called_once_with(X, y)
+    # Assert that the fit method was called once with the correct arguments
+    omt.mapie_estimator.fit.assert_called_once_with(X, y)
 
     # Verify that fit_estimator returns self for method chaining
     assert result is omt
@@ -661,7 +661,9 @@ def test_fit_estimator_raises_when_estimator_is_none():
     X = np.array([[1.0, 2.0], [3.0, 4.0]])
     y = np.array([1.0, 2.0])
 
-    with patch.object(omt, "_initiate_estimator", wraps=omt._initiate_estimator) as mock_initiate:
+    with patch.object(
+        omt, "_initiate_estimator", wraps=omt._initiate_estimator
+    ) as mock_initiate:
         result = omt.fit_estimator(X, y)
 
         # Verify that _initiate_estimator was called once
