@@ -351,6 +351,7 @@ class OnlineMartingaleTest:
         if self.mapie_estimator is None:
             self._initiate_estimator()
 
+        assert self.mapie_estimator is not None
         estimator = self.mapie_estimator
 
         if not estimator._is_fitted:
@@ -813,6 +814,7 @@ class OnlineMartingaleTest:
         """
         if self.mapie_estimator is None:
             self._initiate_estimator()
+        assert self.mapie_estimator is not None
         self.mapie_estimator.fit(X, y, **(predict_params or {}))
         return self
 
