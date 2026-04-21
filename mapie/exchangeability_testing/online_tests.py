@@ -320,6 +320,16 @@ class OnlineMartingaleTest:
             return "regression"
         raise ValueError("Unknown type of target, please manually set the task type.")
 
+    def _initiate_estimator(self) -> OnlineMartingaleTest:
+        """Initiate a default MAPIE estimator based on the task type."""
+        if self.task == "classification":
+            self.mapie_estimator = SplitConformalClassifier(prefit=False)
+        elif self.task == "regression":
+            self.mapie_estimator = SplitConformalRegressor(prefit=False)
+        else:
+            raise ValueError("Unknown task type.")
+        return self
+
     def _compute_non_conformity_scores(self, X: NDArray, y: NDArray) -> NDArray:
         """Compute non-conformity scores from features and labels.
 
@@ -347,7 +357,6 @@ class OnlineMartingaleTest:
                 raise ValueError("Unknown task type.")
 
         estimator = self.mapie_estimator
-        assert estimator is not None
 
         if not estimator._is_fitted:
             X_train, X, y_train, y = train_test_split(
@@ -356,7 +365,12 @@ class OnlineMartingaleTest:
                 test_size=0.7,
                 shuffle=False,
             )
-            estimator.fit(X_train, y_train)
+            warnings.warn(
+                "The provided MAPIE estimator is not fitted."
+                "Fitting it on a slice of the data to compute non-conformity scores."
+                f"{X_train.shape[0]} observations will be used to fit the estimator."
+            )
+            self.fit_estimator(X_train, y_train)
 
         estimator.conformalize(X, y)  # compute scores internally
 
@@ -765,6 +779,46 @@ class OnlineMartingaleTest:
             )
             self._warning_already_raised = True
 
+        return self
+
+    def fit_estimator(
+        self, X: NDArray, y: NDArray, predict_params: Optional[dict] = None
+    ) -> OnlineMartingaleTest:
+        """
+                Fit the underlying MAPIE estimator on the provided data.
+
+                This method calls the fit method of the estimator attribute and returns
+                self for method chaining.
+
+                Parameters
+                ----------
+                X : NDArray
+                    Feature matrix to fit the estimator on.
+
+                y : NDArray
+                    Target values to fit the estimator on.
+
+                predict_params : Optional[dict], default=None
+                    Optional dictionary of parameters to pass to the estimator's predict method
+
+                Returns
+                -------
+                OnlineMartingaleTest
+                    Updated instance with fitted estimator.
+
+                Raises
+                ------
+                ValueError
+                    If the estimator is None.
+
+                Notes
+                -----
+                This method is useful when you want to fit the underlying estimator
+                independently from the online martingale test update process.
+        """
+        if self.mapie_estimator is None:
+            self._initiate_estimator()
+        self.mapie_estimator.fit(X, y, **(predict_params or {}))
         return self
 
     def summary(self) -> dict:
