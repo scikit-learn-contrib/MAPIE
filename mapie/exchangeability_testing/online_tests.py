@@ -349,12 +349,7 @@ class OnlineMartingaleTest:
             self.task = self._infer_task(y)
 
         if self.mapie_estimator is None:
-            if self.task == "classification":
-                self.mapie_estimator = SplitConformalClassifier(prefit=False)
-            elif self.task == "regression":
-                self.mapie_estimator = SplitConformalRegressor(prefit=False)
-            else:
-                raise ValueError("Unknown task type.")
+            self._initiate_estimator()
 
         estimator = self.mapie_estimator
 
@@ -785,36 +780,36 @@ class OnlineMartingaleTest:
         self, X: NDArray, y: NDArray, predict_params: Optional[dict] = None
     ) -> OnlineMartingaleTest:
         """
-                Fit the underlying MAPIE estimator on the provided data.
+        Fit the underlying MAPIE estimator on the provided data.
 
-                This method calls the fit method of the estimator attribute and returns
-                self for method chaining.
+        This method calls the fit method of the estimator attribute and returns
+        self for method chaining.
 
-                Parameters
-                ----------
-                X : NDArray
-                    Feature matrix to fit the estimator on.
+        Parameters
+        ----------
+        X : NDArray
+            Feature matrix to fit the estimator on.
 
-                y : NDArray
-                    Target values to fit the estimator on.
+        y : NDArray
+            Target values to fit the estimator on.
 
-                predict_params : Optional[dict], default=None
-                    Optional dictionary of parameters to pass to the estimator's predict method
+        predict_params : Optional[dict], default=None
+            Optional dictionary of parameters to pass to the estimator's predict method
 
-                Returns
-                -------
-                OnlineMartingaleTest
-                    Updated instance with fitted estimator.
+        Returns
+        -------
+        OnlineMartingaleTest
+            Updated instance with fitted estimator.
 
-                Raises
-                ------
-                ValueError
-                    If the estimator is None.
+        Raises
+        ------
+        ValueError
+            If the estimator is None.
 
-                Notes
-                -----
-                This method is useful when you want to fit the underlying estimator
-                independently from the online martingale test update process.
+        Notes
+        -----
+        This method is useful when you want to fit the underlying estimator
+        independently from the online martingale test update process.
         """
         if self.mapie_estimator is None:
             self._initiate_estimator()
