@@ -571,6 +571,48 @@ def test_compute_non_conformity_scores_uses_provided_estimator_without_creation(
     assert omt.mapie_estimator.conformalize_calls == 1
 
 
+def test_compute_non_conformity_scores_warns_when_estimator_not_fitted(monkeypatch):
+    """Test warning is raised when estimator is not fitted."""
+
+    class DummyProvidedRegressor:
+        def __init__(self):
+            self._is_fitted = False
+            self._mapie_regressor = type("ScoreHolder", (), {})()
+            self._mapie_regressor.conformity_scores_ = np.array([0.4, 0.6])
+            self.fit_calls = 0
+
+        def fit(self, X, y):
+            self.fit_calls += 1
+            self._is_fitted = True
+
+        def conformalize(self, X, y):
+            self._mapie_regressor.conformity_scores_ = np.array([0.4, 0.6])
+
+    def fake_train_test_split(X, y, test_size, shuffle):
+        assert test_size == pytest.approx(0.7)
+        assert shuffle is False
+        return X[:1], X[1:], y[:1], y[1:]
+
+    monkeypatch.setattr(omt_module, "train_test_split", fake_train_test_split)
+
+    omt = OnlineMartingaleTest(
+        mapie_estimator=DummyProvidedRegressor(),
+        task="regression",
+    )
+
+    with pytest.warns(
+        UserWarning,
+        match=r"The provided MAPIE estimator is not fitted\.",
+    ):
+        scores = omt._compute_non_conformity_scores(
+            np.array([[0.0], [1.0], [2.0]]),
+            np.array([0.1, 0.2, 0.3]),
+        )
+
+    assert np.array_equal(scores, np.array([0.4, 0.6]))
+    assert omt.mapie_estimator.fit_calls == 1
+
+
 def test_compute_non_conformity_scores_raises_on_unknown_task():
     """Test unknown task raises ValueError when estimator must be created."""
     omt = OnlineMartingaleTest(task="not-a-task")
