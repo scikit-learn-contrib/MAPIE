@@ -2,354 +2,354 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/contributing-docs/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/api/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/api/calibration/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/api/classification/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/api/conformity-scores/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/api/metrics/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/api/regression/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/api/risk-control/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/api/utils/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/calibration/notebooks/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/generated/calibration/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/generated/calibration/1-quickstart/mg_execution_times/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/generated/calibration/1-quickstart/plot_calibration_hypothesis_testing/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/generated/calibration/1-quickstart/plot_calibration_venn_abers_binary/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/generated/calibration/1-quickstart/plot_calibration_venn_abers_multiclass/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/generated/calibration/2-advanced-analysis/mg_execution_times/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/generated/calibration/2-advanced-analysis/plot_asymptotic_convergence_of_p_values/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/generated/classification/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/generated/classification/1-quickstart/mg_execution_times/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/generated/classification/1-quickstart/plot_quickstart_classification/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/generated/classification/2-advanced-analysis/mg_execution_times/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/generated/classification/2-advanced-analysis/plot_comp_methods_on_2d_dataset/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/generated/classification/2-advanced-analysis/plot_crossconformal/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/generated/classification/2-advanced-analysis/plot_main-tutorial-binary-classification/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/generated/classification/3-scientific-articles/mg_execution_times/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/generated/classification/3-scientific-articles/plot_sadinle2019_example/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/generated/exchangeability_testing/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/generated/exchangeability_testing/2-advanced-analysis/mg_execution_times/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/generated/exchangeability_testing/2-advanced-analysis/plot_exchangeability_fixed_dataset/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/generated/exchangeability_testing/2-advanced-analysis/plot_exchangeability_online/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/generated/exchangeability_testing/2-advanced-analysis/plot_online_martingale_tests_for_deployed_classification_model/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/generated/exchangeability_testing/2-advanced-analysis/plot_online_martingale_tests_for_deployed_regression_model/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/generated/exchangeability_testing/2-advanced-analysis/plot_p_value_permutation_test/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/generated/exchangeability_testing/2-advanced-analysis/plot_permutation_test_with_fitted_classifier/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/generated/exchangeability_testing/2-advanced-analysis/plot_risk_monitoring/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/generated/mondrian/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/generated/mondrian/1-quickstart/mg_execution_times/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/generated/mondrian/1-quickstart/plot_main-tutorial-mondrian-regression/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/generated/regression/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/generated/regression/1-quickstart/mg_execution_times/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/generated/regression/1-quickstart/plot_compare_conformity_scores/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/generated/regression/1-quickstart/plot_heteroscedastic_1d_data/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/generated/regression/1-quickstart/plot_homoscedastic_1d_data/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/generated/regression/1-quickstart/plot_prefit/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/generated/regression/1-quickstart/plot_toy_model/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/generated/regression/1-quickstart/plot_ts-tutorial/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/generated/regression/2-advanced-analysis/mg_execution_times/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/generated/regression/2-advanced-analysis/plot-coverage-width-based-criterion/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/generated/regression/2-advanced-analysis/plot_ResidualNormalisedScore_tutorial/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/generated/regression/2-advanced-analysis/plot_both_uncertainties/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/generated/regression/2-advanced-analysis/plot_conditional_coverage/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/generated/regression/2-advanced-analysis/plot_conformal_predictive_distribution/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/generated/regression/2-advanced-analysis/plot_coverage_validity/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/generated/regression/2-advanced-analysis/plot_cqr_symmetry_difference/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/generated/regression/2-advanced-analysis/plot_cqr_tutorial/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/generated/regression/2-advanced-analysis/plot_main-tutorial-regression/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/generated/regression/2-advanced-analysis/plot_nested-cv/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/generated/regression/2-advanced-analysis/plot_timeseries_enbpi/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/generated/regression/3-scientific-articles/mg_execution_times/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/generated/regression/3-scientific-articles/plot_barber2020_simulations/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/generated/regression/3-scientific-articles/plot_kim2020_simulations/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/generated/regression/3-scientific-articles/plot_zaffran2022_comparison/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/generated/risk_control/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/generated/risk_control/1-quickstart/mg_execution_times/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/generated/risk_control/1-quickstart/plot_risk_control_binary_classification/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/generated/risk_control/2-advanced-analysis/mg_execution_times/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/generated/risk_control/2-advanced-analysis/plot_fwer_method_comparison_for_recall_guarantees/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/generated/risk_control/2-advanced-analysis/plot_multi_risk_control_binary_classification/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/generated/risk_control/2-advanced-analysis/plot_risk_control_llm_as_a_judge/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/generated/risk_control/2-advanced-analysis/plot_risk_control_multi-label_classification/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/generated/risk_control/2-advanced-analysis/plot_risk_control_multi_parameter_binary_classification/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/generated/risk_control/2-advanced-analysis/plot_semantic_segmentation_precision_control/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/generated/risk_control/2-advanced-analysis/plot_semantic_segmentation_recall_control/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/generated/risk_control/2-advanced-analysis/plot_split_fixed_sequence_testing_fwer_method_for_precision_control/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/getting-started/choosing-algorithm/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/getting-started/quick-start/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/getting-started/split-cross-conformal/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/getting-started/v1-release-notes/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/theory/binary-classification/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/theory/calibration/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/theory/classification/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/theory/conformity-scores/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/theory/llm-risk-control/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/theory/metrics/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/theory/mondrian/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/theory/regression/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
     <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/latest/theory/risk-control/</loc>
-         <lastmod>2026-04-21</lastmod>
+         <lastmod>2026-04-22</lastmod>
     </url>
 </urlset>
