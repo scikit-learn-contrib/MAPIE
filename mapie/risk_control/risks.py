@@ -55,7 +55,7 @@ class _BaseRisk:
         The aggregated risk is
         ``sum(values[effective_mask]) / sum(effective_mask)``.
         """
-        raise NotImplementedError
+        raise NotImplementedError  # pragma: no cover
 
     def get_value_and_effective_sample_size(
         self,
