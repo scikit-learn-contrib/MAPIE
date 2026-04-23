@@ -10,7 +10,7 @@ Currently, only `RiskMonitoring` is shown.
 """
 
 from sklearn.linear_model import LogisticRegression
-from utils import generate_gaussian_stream, sample_two_gaussians
+from utils import generate_gaussian_stream
 
 from mapie.exchangeability_testing import OnlineExchangeabilityTest
 
@@ -24,8 +24,14 @@ random_state = 42
 batch_size = 25
 prop_shift = 0.5
 
-X_train, y_train = sample_two_gaussians(random_state=random_state)
-X_reference, y_reference = sample_two_gaussians(random_state=random_state + 1)
+X_train, y_train = generate_gaussian_stream(
+    shift_type="stable",
+    random_state=random_state,
+)
+X_reference, y_reference = generate_gaussian_stream(
+    shift_type="stable",
+    random_state=random_state + 1,
+)
 
 clf = LogisticRegression(random_state=random_state)
 clf.fit(X_train, y_train)

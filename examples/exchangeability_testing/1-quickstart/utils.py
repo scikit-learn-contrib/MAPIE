@@ -2,7 +2,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-def plot_dataset(ax, X_online, y_online, title, shift_start=None):
+def plot_dataset(X_online, y_online, title, shift_start=None, ax=None):
+    created_ax = ax is None
+    if created_ax:
+        _, ax = plt.subplots(figsize=(6, 4.5))
+
     colors = {0: "tab:blue", 1: "tab:orange"}
 
     if shift_start is None:
@@ -42,6 +46,11 @@ def plot_dataset(ax, X_online, y_online, title, shift_start=None):
     ax.set_title(title)
     ax.set_xlabel("Feature 1")
     ax.set_ylabel("Feature 2")
+    ax.legend()
+
+    if created_ax:
+        plt.tight_layout()
+        plt.show()
 
 
 def plot_monitoring_results(
@@ -55,8 +64,13 @@ def plot_monitoring_results(
     x_axis = np.arange(1, len(monitor.online_risk_lower_bound_sequence_history) + 1)
 
     fig, axes = plt.subplots(1, 2, figsize=(12, 4.5))
-    plot_dataset(axes[0], X_online, y_online, title, shift_start=shift_start)
-    axes[0].legend()
+    plot_dataset(
+        X_online,
+        y_online,
+        title,
+        shift_start=shift_start,
+        ax=axes[0],
+    )
 
     axes[1].plot(
         x_axis,
@@ -86,29 +100,6 @@ def plot_monitoring_results(
     axes[1].legend()
     plt.tight_layout()
     plt.show()
-
-
-def sample_two_gaussians(
-    n_samples=500,
-    mean0=(0.0, 0.0),
-    mean1=(1.8, 1.8),
-    cov=None,
-    random_state=None,
-):
-    if cov is None:
-        cov = np.eye(2) * 0.5
-
-    mean0 = np.asarray(mean0)
-    mean1 = np.asarray(mean1)
-    rng = np.random.RandomState(random_state)
-    y = rng.randint(0, 2, size=n_samples)
-    X = np.empty((n_samples, 2))
-
-    mask0 = y == 0
-    mask1 = ~mask0
-    X[mask0] = rng.multivariate_normal(mean0, cov, size=mask0.sum())
-    X[mask1] = rng.multivariate_normal(mean1, cov, size=mask1.sum())
-    return X, y
 
 
 def generate_gaussian_stream(

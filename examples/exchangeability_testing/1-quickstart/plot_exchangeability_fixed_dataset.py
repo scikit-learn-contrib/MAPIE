@@ -1,90 +1,100 @@
 """
 # Exchangeability testing on a fixed dataset
 
-This quickstart uses `RiskMonitoring` in an **offline setting** where data is
-already available as a fixed dataset (not received batch-by-batch online).
+This quickstart demonstrates how to test exchangeability for a fixed dataset.
 
-It compares exchangeability testing methods on two fixed-dataset cases:
+Guarantees provided by conformal prediction and risk control depend on the
+hypothesis that data is exchangeable. This is why verifying exchangeability
+before applying methods from MAPIE is important.
 
-1. **Exchangeable fixed dataset** (no shift),
-2. **Non-exchangeable fixed dataset** with an abrupt shift.
+Typically, (split) conformal prediction, risk control, and calibration
+require data not seen during training, which might be a split of the test data.
 
-Currently, only `RiskMonitoring` is shown.
+Note that for the exchangeability test to be valid, the order of samples in
+the fixed dataset should be representative of what will happen after
+deployment. Shuffling the data would render the dataset exchangeable.
+
+
+
 """
 
-from sklearn.linear_model import LogisticRegression
-from utils import generate_gaussian_stream, sample_two_gaussians
+##############################################################################
+# We first prepare the data and fit a classifier on the training data.
 
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import train_test_split
+from utils import generate_gaussian_stream, plot_dataset
+
+from mapie.classification import SplitConformalClassifier
 from mapie.exchangeability_testing import FixedDatasetExchangeabilityTest
 
-##############################################################################
-# We first fit a classifier on reference training data. Then, in the same
-# workflow, we estimate the monitoring threshold on a reference test set and
-# update the monitor on a stable online stream. Here, `risk="accuracy"` means
-# that `RiskMonitoring` tracks the misclassification risk `1 - accuracy`.
-
 random_state = 42
-prop_shift = 0.5
 
-X_train, y_train = sample_two_gaussians(random_state=random_state)
-X_reference, y_reference = sample_two_gaussians(random_state=random_state + 1)
-
-clf = LogisticRegression(random_state=random_state)
-clf.fit(X_train, y_train)
-y_pred_reference = clf.predict(X_reference)
-
-X_fixed_no_shift, y_fixed_no_shift = generate_gaussian_stream(
+X, y = generate_gaussian_stream(
     shift_type="stable",
-    prop_shift=prop_shift,
-    random_state=random_state + 2,
+    random_state=random_state,
+)
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=random_state, shuffle=False
 )
 
-fixed_test_no_shift = FixedDatasetExchangeabilityTest(
-    method_names="all",
-    method_params={
-        "risk_monitoring": {
-            "risk": "accuracy",
-            "reference_data": (y_reference, y_pred_reference),
-        }
-    },
+plot_dataset(
+    X_test,
+    y_test,
+    title="Exchangeable fixed dataset",
 )
-threshold = fixed_test_no_shift.test_methods[0].threshold
 
-print(
-    "Reference upper bound on the misclassification risk: "
-    f"{fixed_test_no_shift.test_methods[0].reference_risk_upper_bound:.3f}"
+classifier = LogisticRegression(random_state=random_state)
+classifier.fit(X_train, y_train)
+
+##############################################################################
+# Now we can test the exchangeability of the test dataset.
+# By default, we use all available test methods.
+# Method-specific parameters can be passed as a dictionary.
+
+exchangeability_test = FixedDatasetExchangeabilityTest()
+exchangeability_test.run(X_test, y_test)
+
+print(exchangeability_test.is_exchangeable)
+
+##############################################################################
+# The test dataset is exchangeable. We can continue with MAPIE.
+# Conformalization with a split of the test dataset will provide
+# coverage guarantees on the remaining test data.
+
+X_conformalize, X_test, y_conformalize, y_test = train_test_split(
+    X_test, y_test, test_size=0.5, random_state=random_state
 )
-print(f"Monitoring threshold: {threshold:.3f}")
 
-# Offline/fixed-dataset usage: update in one call with the full dataset.
-y_pred_no_shift = clf.predict(X_fixed_no_shift)
-fixed_test_no_shift.run(y_fixed_no_shift, y_pred_no_shift)
-
-is_exchangeable_no_shift = fixed_test_no_shift.is_exchangeable["risk_monitoring"]
+confidence_level = 0.95
+mapie_classifier = SplitConformalClassifier(
+    estimator=classifier, confidence_level=confidence_level, prefit=True
+)
+mapie_classifier.conformalize(X_conformalize, y_conformalize)
+y_pred, y_pred_set = mapie_classifier.predict_set(X_test)
 
 ##############################################################################
 # Non-exchangeable fixed dataset: abrupt shift in the second part.
 
-X_fixed_abrupt, y_fixed_abrupt = generate_gaussian_stream(
+X_test_abrupt, y_test_abrupt = generate_gaussian_stream(
+    n_samples=len(X_test),
     shift_type="abrupt",
-    prop_shift=prop_shift,
-    random_state=random_state + 3,
+    prop_shift=0.5,
+    random_state=random_state + 1,
+)
+shift_start_abrupt = int(len(y_test_abrupt) * 0.5)
+plot_dataset(
+    X_test_abrupt,
+    y_test_abrupt,
+    title="Non-exchangeable fixed dataset",
+    shift_start=shift_start_abrupt,
 )
 
-fixed_test_abrupt = FixedDatasetExchangeabilityTest(
-    method_names="all",
-    method_params={
-        "risk_monitoring": {
-            "risk": "accuracy",
-            "reference_data": (y_reference, y_pred_reference),
-        }
-    },
-)
-y_pred_abrupt = clf.predict(X_fixed_abrupt)
-fixed_test_abrupt.run(y_fixed_abrupt, y_pred_abrupt)
+exchangeability_test = FixedDatasetExchangeabilityTest()
+exchangeability_test.run(X_test_abrupt, y_test_abrupt)
 
-is_exchangeable_abrupt = fixed_test_abrupt.is_exchangeable["risk_monitoring"]
+print(exchangeability_test.is_exchangeable)
 
-print("\nExchangeability summary (fixed dataset setting):")
-print(f"- Exchangeable fixed dataset: is_exchangeable={is_exchangeable_no_shift}")
-print(f"- Abrupt-shift fixed dataset: is_exchangeable={is_exchangeable_abrupt}")
+##############################################################################
+# The test dataset is not exchangeable. MAPIE cannot provide statistical guarantees.
+# More generally, the classifier itself should not be trusted.

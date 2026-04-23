@@ -88,29 +88,6 @@ def plot_monitoring_results(
     plt.show()
 
 
-def sample_two_gaussians(
-    n_samples=500,
-    mean0=(0.0, 0.0),
-    mean1=(1.8, 1.8),
-    cov=None,
-    random_state=None,
-):
-    if cov is None:
-        cov = np.eye(2) * 0.5
-
-    mean0 = np.asarray(mean0)
-    mean1 = np.asarray(mean1)
-    rng = np.random.RandomState(random_state)
-    y = rng.randint(0, 2, size=n_samples)
-    X = np.empty((n_samples, 2))
-
-    mask0 = y == 0
-    mask1 = ~mask0
-    X[mask0] = rng.multivariate_normal(mean0, cov, size=mask0.sum())
-    X[mask1] = rng.multivariate_normal(mean1, cov, size=mask1.sum())
-    return X, y
-
-
 def generate_gaussian_stream(
     n_samples=800,
     shift_type="stable",
