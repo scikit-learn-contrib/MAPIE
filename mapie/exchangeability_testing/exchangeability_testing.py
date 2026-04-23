@@ -5,16 +5,16 @@ from numpy.typing import NDArray
 from mapie.exchangeability_testing.risk_monitoring import RiskMonitoring
 
 online_test_method_choice_map = {
-    # "Plug-in Martingale": None,
-    # "Jumper Martingale": None,
+    "plugin_martingale": None,
+    "jumper_martingale": None,
     "risk_monitoring": RiskMonitoring,
 }
 
 fixed_dataset_test_method_choice_map = {
-    # "pvalue_permutation": None,
-    # "permutation_binomial": None,
-    # "permutation_mixture_binomial": None,
-    # "permutation_aggressive": None,
+    "pvalue_permutation": None,
+    "permutation_binomial": None,
+    "permutation_mixture_binomial": None,
+    "permutation_aggressive": None,
     **online_test_method_choice_map,
 }
 
