@@ -23,7 +23,7 @@ from mapie.risk_control import (
     recall,
 )
 from mapie.risk_control.fwer_control import FWERFixedSequenceTesting
-from mapie.risk_control.risks import BinaryRiskLike, risk_choice_map
+from mapie.risk_control.risks import BinaryRiskLike, binary_risk_choice_map
 
 random_state = 42
 dummy_single_param = np.array([0.5])
@@ -246,7 +246,7 @@ class TestBinaryClassificationControllerBestPredictParamChoice:
         )
 
         result = controller._set_best_predict_param_choice(str_risk)
-        assert result is risk_choice_map[str_risk]
+        assert result is binary_risk_choice_map[str_risk]
 
     def test_custom(self):
         """Test _set_best_predict_param_choice with a custom risk instance."""

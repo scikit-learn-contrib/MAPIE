@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import warnings
-from typing import Callable, List, Literal, Tuple, Union, cast
+from typing import Callable, List, Literal, Tuple, Union
 
 import numpy as np
 from numpy.typing import NDArray
@@ -85,23 +85,20 @@ class _BaseRisk:
             If the risk is not defined (no effective sample), the value is set
             to 1, and the number of effective samples is set to -1.
         """
-        values, effective_mask = self._compute_values_and_effective_mask(
-            y_true, y_pred
-        )
+        values, effective_mask = self._compute_values_and_effective_mask(y_true, y_pred)
 
-        effective_sample_size = np.sum(effective_mask)
-        # Casting needed for MyPy with Python 3.9
-        effective_sample_size_int = cast(int, int(effective_sample_size))
-        if effective_sample_size_int != 0:
+        effective_sample_size = int(np.sum(effective_mask))
+        if effective_sample_size > 0:
             risk_sum = float(np.sum(values[effective_mask]))
-            risk_value = risk_sum / effective_sample_size_int
+            risk_value = risk_sum / effective_sample_size
             if self.higher_is_better:
                 risk_value = 1 - risk_value
-            return risk_value, effective_sample_size_int
-        # In this case, the corresponding lambda shouldn't be considered valid.
-        # In the current LTT implementation, providing n_obs=-1 will result
-        # in an infinite p_value, effectively invaliding the lambda
-        return 1, -1
+            return risk_value, effective_sample_size
+        else:
+            # In this case, the corresponding lambda shouldn't be considered valid.
+            # In the current LTT implementation, providing n_obs=-1 will result
+            # in an infinite p_value, effectively invaliding the lambda
+            return 1, -1
 
     def get_risk_sequence(
         self,
@@ -125,9 +122,7 @@ class _BaseRisk:
         NDArray
             Per-sample risk values restricted to the effective samples.
         """
-        values, effective_mask = self._compute_values_and_effective_mask(
-            y_true, y_pred
-        )
+        values, effective_mask = self._compute_values_and_effective_mask(y_true, y_pred)
         risk_sequence = values[effective_mask]
         if self.higher_is_better:
             risk_sequence = 1 - risk_sequence
@@ -321,7 +316,7 @@ _best_predict_param_choice_map = {
 }
 
 
-risk_choice_map = {
+binary_risk_choice_map = {
     "precision": precision,
     "recall": recall,
     "accuracy": accuracy,
@@ -388,25 +383,19 @@ class ContinuousRisk(_BaseRisk):
         y_true: NDArray,
         y_pred: NDArray,
     ) -> Tuple[NDArray, NDArray]:
-        values = np.asarray(
-            self._risk_condition(y_true, y_pred), dtype=float
-        ).ravel()
+        values = np.asarray(self._risk_condition(y_true, y_pred), dtype=float).ravel()
         effective_mask = np.ones(values.shape, dtype=bool)
         return values, effective_mask
 
 
 mean_absolute_error = ContinuousRisk(
-    risk_condition=lambda y_true, y_pred: np.abs(
-        y_true.ravel() - y_pred.ravel()
-    ),
+    risk_condition=lambda y_true, y_pred: np.abs(y_true.ravel() - y_pred.ravel()),
     higher_is_better=False,
 )
 mae = mean_absolute_error
 
 mean_squared_error = ContinuousRisk(
-    risk_condition=lambda y_true, y_pred: (
-        y_true.ravel() - y_pred.ravel()
-    ) ** 2,
+    risk_condition=lambda y_true, y_pred: (y_true.ravel() - y_pred.ravel()) ** 2,
     higher_is_better=False,
 )
 mse = mean_squared_error

@@ -20,7 +20,7 @@ from .risks import (
     BinaryRiskLike,
     BinaryRiskNames,
     _best_predict_param_choice_map,
-    risk_choice_map,
+    binary_risk_choice_map,
 )
 
 
@@ -183,13 +183,13 @@ class BinaryClassificationController:
         risk_list = risk if isinstance(risk, list) else [risk]
         try:
             self._risk = [
-                risk_choice_map[risk] if isinstance(risk, str) else risk
+                binary_risk_choice_map[risk] if isinstance(risk, str) else risk
                 for risk in risk_list
             ]
         except KeyError as e:
             raise ValueError(
                 "When risk is provided as a string, it must be one of: "
-                f"{list(risk_choice_map.keys())}"
+                f"{list(binary_risk_choice_map.keys())}"
             ) from e
         target_level_list = (
             target_level if isinstance(target_level, list) else [target_level]
@@ -463,7 +463,7 @@ class BinaryClassificationController:
                         "(e.g. precision, accuracy, false_positive_rate)."
                     )
         if isinstance(best_predict_param_choice, str):
-            return risk_choice_map[best_predict_param_choice]
+            return binary_risk_choice_map[best_predict_param_choice]
         if isinstance(best_predict_param_choice, BinaryRisk):
             return best_predict_param_choice
 

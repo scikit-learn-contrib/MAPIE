@@ -8,7 +8,14 @@ from mapie.exchangeability_testing.confidence_bounds import (
     conjugate_mixture_empirical_bernstein_bound,
     hoeffding_bound,
 )
-from mapie.risk_control.risks import BinaryRisk, RiskLike, risk_choice_map
+from mapie.risk_control.risks import (
+    BinaryRisk,
+    RiskLike,
+    binary_risk_choice_map,
+    continuous_risk_choice_map,
+)
+
+risk_choice_map = {**binary_risk_choice_map, **continuous_risk_choice_map}
 
 
 class RiskMonitoring:
@@ -24,7 +31,8 @@ class RiskMonitoring:
     ----------
     risk : RiskLike
         Risk to monitor. If a string is provided, it must be one of the keys in
-        :data:`mapie.risk_control.risks.risk_choice_map`.
+        :data:`mapie.risk_control.risks.binary_risk_choice_map` or
+        :data:`mapie.risk_control.risks.continuous_risk_choice_map`.
     test_level : float, default=0.05
         Level used to test the hypothesis that the online risk is greater than the reference risk.
         The probability that the test gives a false positive is at most test_level (type I error).
