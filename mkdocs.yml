@@ -178,7 +178,7 @@ nav:
     - Mondrian: theory/mondrian.md
     - LLM Risk Control: theory/llm-risk-control.md
     - Binary Classification: theory/binary-classification.md
-    - Exchangeability Testing: theory/exchangeability-testing.md
+    - Exchangeability Testing: theory/exchangeability.md
   - API Reference:
     - Overview: api/index.md
     - Regression: api/regression.md
