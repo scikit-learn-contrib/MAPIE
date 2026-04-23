@@ -32,6 +32,17 @@ class _BaseRisk:
     def __init__(self, higher_is_better: bool):
         self.higher_is_better = higher_is_better
 
+    @staticmethod
+    def _warn_if_nan_values(values: NDArray) -> None:
+        if np.isnan(values).any():
+            warnings.warn(
+                "NaN values detected in per-sample risk values returned by "
+                "_compute_values_and_effective_mask. The aggregated risk or risk "
+                "sequence may contain NaN values.",
+                UserWarning,
+                stacklevel=3,
+            )
+
     def _compute_values_and_effective_mask(
         self,
         y_true: NDArray,
@@ -86,6 +97,7 @@ class _BaseRisk:
             to 1, and the number of effective samples is set to -1.
         """
         values, effective_mask = self._compute_values_and_effective_mask(y_true, y_pred)
+        self._warn_if_nan_values(values)
 
         effective_sample_size = int(np.sum(effective_mask))
         if effective_sample_size > 0:
@@ -123,6 +135,7 @@ class _BaseRisk:
             Per-sample risk values restricted to the effective samples.
         """
         values, effective_mask = self._compute_values_and_effective_mask(y_true, y_pred)
+        self._warn_if_nan_values(values)
         risk_sequence = values[effective_mask]
         if self.higher_is_better:
             risk_sequence = 1 - risk_sequence

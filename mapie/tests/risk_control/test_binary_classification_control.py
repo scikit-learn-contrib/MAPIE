@@ -220,8 +220,16 @@ def test_continuous_risk_with_nan_values(
     y_true: NDArray,
     y_pred: NDArray,
 ) -> None:
-    value, n = risk_instance.get_value_and_effective_sample_size(y_true, y_pred)
-    risk_sequence = risk_instance.get_risk_sequence(y_true, y_pred)
+    with pytest.warns(
+        UserWarning,
+        match=r"NaN values detected in per-sample risk values",
+    ):
+        value, n = risk_instance.get_value_and_effective_sample_size(y_true, y_pred)
+    with pytest.warns(
+        UserWarning,
+        match=r"NaN values detected in per-sample risk values",
+    ):
+        risk_sequence = risk_instance.get_risk_sequence(y_true, y_pred)
 
     assert np.isnan(value)
     assert n == len(y_true)
