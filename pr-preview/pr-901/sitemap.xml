@@ -117,14 +117,6 @@
          <lastmod>2026-04-23</lastmod>
     </url>
     <url>
-         <loc>https://scikit-learn-contrib.github.io/MAPIE/generated/exchangeability_testing/2-advanced-analysis/plot_exchangeability_fixed_dataset/</loc>
-         <lastmod>2026-04-23</lastmod>
-    </url>
-    <url>
-         <loc>https://scikit-learn-contrib.github.io/MAPIE/generated/exchangeability_testing/2-advanced-analysis/plot_exchangeability_online/</loc>
-         <lastmod>2026-04-23</lastmod>
-    </url>
-    <url>
          <loc>https://scikit-learn-contrib.github.io/MAPIE/generated/exchangeability_testing/2-advanced-analysis/plot_online_martingale_tests_for_deployed_classification_model/</loc>
          <lastmod>2026-04-23</lastmod>
     </url>
