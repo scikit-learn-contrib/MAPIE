@@ -1,5 +1,5 @@
 """
-# Quickstart: online exchangeability testing with RiskMonitoring
+# Online exchangeability testing with RiskMonitoring
 
 This quickstart compares exchangeability testing methods on two online cases:
 
@@ -40,7 +40,7 @@ X_online_no_shift, y_online_no_shift = generate_gaussian_stream(
 online_test_no_shift = OnlineExchangeabilityTest(
     method_names="all",
     method_params={
-        "Risk Monitoring": {
+        "risk_monitoring": {
             "risk": "accuracy",
             "reference_data": (y_reference, y_pred_reference),
         }
@@ -59,7 +59,7 @@ for start in range(0, len(X_online_no_shift), batch_size):
     y_pred_batch = clf.predict(X_online_no_shift[start:stop])
     online_test_no_shift.update(y_online_no_shift[start:stop], y_pred_batch)
 
-is_exchangeable_no_shift = online_test_no_shift.is_exchangeable["Risk Monitoring"]
+is_exchangeable_no_shift = online_test_no_shift.is_exchangeable["risk_monitoring"]
 
 ##############################################################################
 # Non-exchangeable case: abrupt distribution shift in the stream.
@@ -73,7 +73,7 @@ X_online_abrupt, y_online_abrupt = generate_gaussian_stream(
 online_test_abrupt = OnlineExchangeabilityTest(
     method_names="all",
     method_params={
-        "Risk Monitoring": {
+        "risk_monitoring": {
             "risk": "accuracy",
             "reference_data": (y_reference, y_pred_reference),
         }
@@ -84,7 +84,7 @@ for start in range(0, len(X_online_abrupt), batch_size):
     y_pred_batch = clf.predict(X_online_abrupt[start:stop])
     online_test_abrupt.update(y_online_abrupt[start:stop], y_pred_batch)
 
-is_exchangeable_abrupt = online_test_abrupt.is_exchangeable["Risk Monitoring"]
+is_exchangeable_abrupt = online_test_abrupt.is_exchangeable["risk_monitoring"]
 
 print("\nExchangeability summary (online setting):")
 print(f"- Exchangeable stream: is_exchangeable={is_exchangeable_no_shift}")
