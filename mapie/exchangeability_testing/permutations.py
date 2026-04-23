@@ -107,6 +107,20 @@ class PermutationTest(ABC):
         self.p_values: NDArray = np.array([])
         self.test_statistic = MeanShiftTestStatistic()
 
+    @property
+    def is_exchangeable(self) -> Optional[bool]:
+        """Return the latest exchangeability decision.
+
+        Returns
+        -------
+        Optional[bool]
+            ``None`` if the test has not been run yet, otherwise whether the
+            dataset is deemed exchangeable based on the last p-value.
+        """
+        if self.p_values.size == 0:
+            return None
+        return bool(self.p_values[-1] > self.test_level)
+
     @staticmethod
     def _prepare_estimator(
         mapie_estimator: Optional[MapieEstimator],
@@ -220,7 +234,7 @@ class PermutationTest(ABC):
         return scores
 
     @abstractmethod
-    def run(self, X: NDArray, y: NDArray) -> bool:
+    def run(self, X: NDArray, y: NDArray) -> "PermutationTest":
         """Run a permutation-based exchangeability test."""
         raise NotImplementedError  # pragma: no cover
 
@@ -264,7 +278,7 @@ class PValuePermutationTest(PermutationTest):
     >>> test = PValuePermutationTest(
     ...     test_level=0.2,
     ... )
-    >>> test.run(X, y)
+    >>> test.run(X, y).is_exchangeable
     True
     """
 
@@ -284,7 +298,7 @@ class PValuePermutationTest(PermutationTest):
             num_permutations=num_permutations,
         )
 
-    def run(self, X: NDArray, y: NDArray) -> bool:
+    def run(self, X: NDArray, y: NDArray) -> "PValuePermutationTest":
         """Run a p-value permutation test.
 
         Parameters
@@ -295,8 +309,8 @@ class PValuePermutationTest(PermutationTest):
             Target values.
         Returns
         -------
-        bool
-            Whether the dataset is deemed exchangeable.
+        PValuePermutationTest
+            Updated instance.
         """
         scores = self._compute_non_conformity_scores(X, y)
 
@@ -315,9 +329,7 @@ class PValuePermutationTest(PermutationTest):
                 rank += 1
             self.p_values[t] = rank / (t + 1)
 
-        is_exchangeable = bool(self.p_values[-1] > self.test_level)
-
-        return is_exchangeable
+        return self
 
 
 class SequentialMonteCarloTest(PermutationTest):
@@ -374,7 +386,7 @@ class SequentialMonteCarloTest(PermutationTest):
                 f"Unknown strategy '{self.strategy}'. Expected one of {valid_strategies}."
             )
 
-    def run(self, X: NDArray, y: NDArray) -> bool:
+    def run(self, X: NDArray, y: NDArray) -> "SequentialMonteCarloTest":
         """Run a sequential Monte Carlo permutation test.
 
         Parameters
@@ -385,8 +397,8 @@ class SequentialMonteCarloTest(PermutationTest):
             Target values.
         Returns
         -------
-        bool
-            Whether the dataset is deemed exchangeable.
+        SequentialMonteCarloTest
+            Updated instance.
         """
         scores = self._compute_non_conformity_scores(X, y)
 
@@ -445,6 +457,4 @@ class SequentialMonteCarloTest(PermutationTest):
         running_max_wealth = np.maximum.accumulate(wealth_history)
         self.p_values = np.minimum(1 / running_max_wealth, 1)
 
-        is_exchangeable = bool(self.p_values[-1] > self.test_level)
-
-        return is_exchangeable
+        return self
