@@ -15,6 +15,10 @@
         <link rel="canonical" href="https://scikit-learn-contrib.github.io/MAPIE/theory/exchangeability/">
       
       
+        <link rel="prev" href="../binary-classification/">
+      
+      
+        <link rel="next" href="../../api/">
       
       
         
@@ -25,7 +29,7 @@
     
     
       
-        <title>Exchangeability Tests - MAPIE</title>
+        <title>Exchangeability Testing - MAPIE</title>
       
     
     
@@ -127,7 +131,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Exchangeability Tests
+              Exchangeability Testing
             
           </span>
         </div>
@@ -381,10 +385,12 @@
   
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
+      <li class="md-tabs__item md-tabs__item--active">
         <a href="../metrics/" class="md-tabs__link">
           
   
@@ -3917,8 +3923,10 @@
       
   
   
+    
   
   
+  
     
     
       
@@ -3930,25 +3938,28 @@
       
         
       
+        
+      
     
     
     
+      
+        
+        
       
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" checked>
         
           
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7" >
-        
-          
-          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
             
   
   
@@ -3966,7 +3977,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_7">
             <span class="md-nav__icon md-icon"></span>
             
@@ -4084,6 +4095,314 @@
   
 
       </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Exchangeability Testing
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Exchangeability Testing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#why-exchangeability-matters-for-conformal-prediction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why Exchangeability Matters for Conformal Prediction
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-is-exchangeability" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What is Exchangeability?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#operations-that-preserve-exchangeability" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Operations That Preserve Exchangeability
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#impossibility-of-complete-detection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Impossibility of Complete Detection
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#introduction-to-martingales" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Introduction to Martingales
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Introduction to Martingales">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#intuitive-definition-of-martingales" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Intuitive definition of martingales
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sequential-testing-without-error-inflation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sequential Testing Without Error Inflation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#offline-tests-permutation-tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Offline Tests: Permutation Tests
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Offline Tests: Permutation Tests">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-basic-idea-all-orderings-are-equal" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Basic Idea: All Orderings Are Equal
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#how-permutation-tests-work" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How Permutation Tests Work
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#when-to-stop-shuffling-early-stopping-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        When to Stop Shuffling: Early Stopping Rules
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#online-tests-conformal-p-values-and-alternative-approaches" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Online Tests: Conformal P-Values and Alternative Approaches
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Online Tests: Conformal P-Values and Alternative Approaches">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#conformal-p-values-a-sequential-solution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Conformal P-Values: A Sequential Solution
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#two-practical-approaches-jumper-vs-plug-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Two Practical Approaches: Jumper vs. Plug-in
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-burn-in-period-starting-with-a-reliable-baseline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Burn-in Period: Starting with a Reliable Baseline
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#performance-tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Performance Tests
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Performance Tests">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#general-principle" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        General Principle
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#statistical-framing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Statistical Framing
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#interpretation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Interpretation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 

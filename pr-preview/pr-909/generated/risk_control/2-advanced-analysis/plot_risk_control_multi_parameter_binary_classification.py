@@ -128,7 +128,7 @@ to_explore = np.array(to_explore)
 
 #############################################################################
 # Because we want to control the proportion of emails to be verified by a human,
-# we use `predicted_positive_fraction`, a specific `BinaryClassificationRisk` which represents
+# we use `predicted_positive_fraction`, a specific `BinaryRisk` which represents
 # the fraction of samples predicted as positive (i.e., sent to human verification).
 #
 # Finally, we initialize a `BinaryClassificationController`
