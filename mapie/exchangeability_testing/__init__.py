@@ -1,14 +1,14 @@
-from .exchangeability_testing import (
+from .exchangeability import (
     FixedDatasetExchangeabilityTest,
     OnlineExchangeabilityTest,
 )
-from .online_tests import OnlineMartingaleTest
-from .risk_monitoring import RiskMonitoring
-from .permutation_tests import (
-    PValuePermutationTest,
+from .martingales import OnlineMartingaleTest
+from .permutations import (
     PermutationTest,
+    PValuePermutationTest,
     SequentialMonteCarloTest,
 )
+from .risk_monitoring import RiskMonitoring
 
 __all__ = [
     "FixedDatasetExchangeabilityTest",

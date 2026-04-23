@@ -4,7 +4,7 @@ from typing import Literal, Optional, Tuple
 import numpy as np
 from numpy.typing import NDArray
 
-from mapie.exchangeability_testing.confidence_bounds import (
+from mapie.exchangeability_testing.bounds import (
     conjugate_mixture_empirical_bernstein_bound,
     hoeffding_bound,
 )

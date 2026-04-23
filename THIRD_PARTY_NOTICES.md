@@ -2,7 +2,7 @@
 
 ## confseq
 
-Parts of `mapie/exchangeability_testing/confidence_bounds.py` are adapted from
+Parts of `mapie/exchangeability_testing/bounds.py` are adapted from
 the `confseq` project:
 
 - Repository: <https://github.com/gostevehoward/confseq>

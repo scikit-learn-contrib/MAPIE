@@ -7,7 +7,7 @@ import pytest
 from sklearn.linear_model import LinearRegression
 
 from mapie.classification import CrossConformalClassifier
-from mapie.exchangeability_testing.permutation_tests import (
+from mapie.exchangeability_testing.permutations import (
     MapieEstimator,
     MeanShiftTestStatistic,
     PermutationTest,
@@ -248,10 +248,10 @@ class TestPValuePermutationTest:
     def test_compute_scores_with_default_classification_estimator(
         self, monkeypatch
     ) -> None:
-        from mapie.exchangeability_testing import permutation_tests
+        from mapie.exchangeability_testing import permutations
 
         monkeypatch.setattr(
-            permutation_tests,
+            permutations,
             "SplitConformalClassifier",
             DummyClassificationEstimator,
         )

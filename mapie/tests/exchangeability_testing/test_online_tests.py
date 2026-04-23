@@ -4,8 +4,8 @@ from unittest.mock import MagicMock
 import numpy as np
 import pytest
 
-import mapie.exchangeability_testing.online_tests as omt_module
-from mapie.exchangeability_testing.online_tests import OnlineMartingaleTest
+import mapie.exchangeability_testing.martingales as omt_module
+from mapie.exchangeability_testing.martingales import OnlineMartingaleTest
 
 
 def test_init_validation_errors():

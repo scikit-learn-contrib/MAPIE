@@ -256,7 +256,7 @@ class PValuePermutationTest(PermutationTest):
     Examples
     --------
     >>> import numpy as np
-    >>> from mapie.exchangeability_testing.permutation_tests import (
+    >>> from mapie.exchangeability_testing.permutations import (
     ...     PValuePermutationTest,
     ... )
     >>> X = np.arange(100, dtype=float).reshape(-1, 1)
