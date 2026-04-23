@@ -18,7 +18,7 @@
         <link rel="prev" href="../plot_p_value_permutation_test/">
       
       
-        <link rel="next" href="../plot_risk_monitoring/">
+        <link rel="next" href="../../../mondrian/">
       
       
         
@@ -59,13 +59,13 @@
     
       <link rel="stylesheet" href="../../../../stylesheets/extra.css">
     
-      <link rel="stylesheet" href="../../../../sg_gallery-binder.css">
-    
-      <link rel="stylesheet" href="../../../../sg_gallery-dataframe.css">
+      <link rel="stylesheet" href="../../../../sg_gallery-rendered-html.css">
     
       <link rel="stylesheet" href="../../../../sg_gallery.css">
     
-      <link rel="stylesheet" href="../../../../sg_gallery-rendered-html.css">
+      <link rel="stylesheet" href="../../../../sg_gallery-dataframe.css">
+    
+      <link rel="stylesheet" href="../../../../sg_gallery-binder.css">
     
     <script>__md_scope=new URL("../../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
@@ -3496,8 +3496,6 @@
       
         
       
-        
-      
     
     
     
@@ -3741,34 +3739,6 @@
   
 </nav>
       
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../plot_risk_monitoring/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Detect harmful shifts with RiskMonitoring
-  
-
-    
-  </span>
-  
-  
-
-      </a>
     </li>
   
 
@@ -4652,7 +4622,7 @@ continue with the usual conformalization and prediction pipeline.</p>
 </span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.neighbors</span><span class="w"> </span><span class="kn">import</span> <span class="n">KNeighborsClassifier</span>
 </span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>
 </span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mapie.classification</span><span class="w"> </span><span class="kn">import</span> <span class="n">SplitConformalClassifier</span>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mapie.exchangeability_testing.permutation_tests</span><span class="w"> </span><span class="kn">import</span> <span class="n">PValuePermutationTest</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mapie.exchangeability_testing.permutations</span><span class="w"> </span><span class="kn">import</span> <span class="n">PValuePermutationTest</span>
 </span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mapie.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">train_conformalize_test_split</span>
 </span></code></pre></div>
 <!-- GENERATED FROM PYTHON SOURCE LINES 22-30 -->
@@ -4778,7 +4748,7 @@ pipeline on the predefined conformalization and test subsets.</p>
 </span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>------------------------
 </span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>Average<span class="w"> </span>prediction-set<span class="w"> </span>size:<span class="w"> </span><span class="m">1</span>.03
 </span></code></pre></div>
-<p><strong>Total running time of the script:</strong> ( 0 minutes  0.124 seconds)</p>
+<p><strong>Total running time of the script:</strong> ( 0 minutes  0.123 seconds)</p>
 <div id="download_links"></div>
 
 <p><a class="md-button center" href="../plot_permutation_test_with_fitted_classifier.py"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M256 32c0-17.7-14.3-32-32-32s-32 14.3-32 32v210.7l-41.4-41.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l96 96c12.5 12.5 32.8 12.5 45.3 0l96-96c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 242.7zM64 320c-35.3 0-64 28.7-64 64v32c0 35.3 28.7 64 64 64h320c35.3 0 64-28.7 64-64v-32c0-35.3-28.7-64-64-64h-46.9l-56.6 56.6c-31.2 31.2-81.9 31.2-113.1 0L110.9 320zm304 56a24 24 0 1 1 0 48 24 24 0 1 1 0-48"/></svg></span> Download Python source code: plot_permutation_test_with_fitted_classifier.py</a></p>
