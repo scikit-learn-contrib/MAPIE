@@ -33,7 +33,6 @@ from mapie.utils import (
     _check_predict_params,
     _check_verbose,
     _fit_estimator,
-    _prepare_fit_params_and_sample_weight,
     _prepare_params,
     _raise_error_if_fit_called_in_prefit_mode,
     _raise_error_if_method_already_called,
@@ -179,8 +178,8 @@ class SplitConformalRegressor:
         _raise_error_if_method_already_called("fit", self._is_fitted)
 
         cloned_estimator = clone(self._estimator)
-        fit_params_, sample_weight = _prepare_fit_params_and_sample_weight(fit_params)
-        _fit_estimator(cloned_estimator, X_train, y_train, sample_weight, **fit_params_)
+        fit_params_ = _prepare_params(fit_params)
+        _fit_estimator(cloned_estimator, X_train, y_train, **fit_params_)
         self._mapie_regressor.estimator = cloned_estimator
 
         self._is_fitted = True
@@ -469,13 +468,12 @@ class CrossConformalRegressor:
             self.is_fitted_and_conformalized,
         )
 
-        fit_params_, sample_weight = _prepare_fit_params_and_sample_weight(fit_params)
+        fit_params_ = _prepare_params(fit_params)
         self._predict_params = _prepare_params(predict_params)
         self._mapie_regressor.fit(
             X,
             y,
-            sample_weight,
-            groups,
+            groups=groups,
             fit_params=fit_params_,
             predict_params=self._predict_params,
         )
@@ -776,12 +774,11 @@ class JackknifeAfterBootstrapRegressor:
             self.is_fitted_and_conformalized,
         )
 
-        fit_params_, sample_weight = _prepare_fit_params_and_sample_weight(fit_params)
+        fit_params_ = _prepare_params(fit_params)
         self._predict_params = _prepare_params(predict_params)
         self._mapie_regressor.fit(
             X,
             y,
-            sample_weight,
             fit_params=fit_params_,
             predict_params=self._predict_params,
         )
@@ -1278,7 +1275,6 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
         self,
         X: ArrayLike,
         y: ArrayLike,
-        sample_weight: Optional[ArrayLike] = None,
         groups: Optional[ArrayLike] = None,
     ):
         """
@@ -1291,9 +1287,6 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
 
         y: ArrayLike
             Target values.
-
-        sample_weight: Optional[NDArray] of shape (n_samples,)
-            Non-null sample weights.
 
         groups: Optional[ArrayLike] of shape (n_samples,)
             Group labels for the samples used while splitting the dataset into
@@ -1337,7 +1330,13 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
 
         X, y = indexable(X, y)
         y = _check_y(y)
+
+        # Handle sample_weight from fit_params
+        sample_weight = self._fit_params.pop("sample_weight", None)
         sample_weight, X, y = _check_null_weight(sample_weight, X, y)
+        if sample_weight is not None:
+            self._fit_params["sample_weight"] = sample_weight
+
         self.n_features_in_ = _check_n_features_in(X)
 
         # Casting
@@ -1347,16 +1346,14 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
         agg_function = cast(Optional[str], agg_function)
         X = cast(NDArray, X)
         y = cast(NDArray, y)
-        sample_weight = cast(Optional[NDArray], sample_weight)
         groups = cast(Optional[NDArray], groups)
 
-        return (estimator, cs_estimator, agg_function, cv, X, y, sample_weight, groups)
+        return (estimator, cs_estimator, agg_function, cv, X, y, groups)
 
     def fit(
         self,
         X: ArrayLike,
         y: ArrayLike,
-        sample_weight: Optional[ArrayLike] = None,
         groups: Optional[ArrayLike] = None,
         **kwargs: Any,
     ) -> _MapieRegressor:
@@ -1375,17 +1372,6 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
         y: ArrayLike of shape (n_samples,)
             Training labels.
 
-        sample_weight: Optional[ArrayLike] of shape (n_samples,)
-            Sample weights for fitting the out-of-fold models.
-            If `None`, then samples are equally weighted.
-            If some weights are null,
-            their corresponding observations are removed
-            before the fitting process and hence have no conformity scores.
-            If weights are non-uniform,
-            conformity scores are still uniformly weighted.
-
-            By default `None`.
-
         groups: Optional[ArrayLike] of shape (n_samples,)
             Group labels for the samples used while splitting the dataset into
             train/test set.
@@ -1393,6 +1379,7 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
 
         kwargs : dict
             Additional fit and predict parameters.
+            Sample weights can be passed in ``fit_params={"sample_weight": ...}``.
 
         Returns
         -------
@@ -1400,12 +1387,10 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
             The model itself.
         """
 
-        X, y, sample_weight, groups = self.init_fit(
-            X, y, sample_weight, groups, **kwargs
-        )
+        X, y, groups = self.init_fit(X, y, groups, **kwargs)
 
-        self.fit_estimator(X, y, sample_weight, groups)
-        self.conformalize(X, y, sample_weight, groups, **kwargs)
+        self.fit_estimator(X, y, groups)
+        self.conformalize(X, y, groups, **kwargs)
 
         self._is_fitted = True
 
@@ -1415,11 +1400,10 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
         self,
         X: ArrayLike,
         y: ArrayLike,
-        sample_weight: Optional[ArrayLike] = None,
         groups: Optional[ArrayLike] = None,
         **kwargs: Any,
     ):
-        self._fit_params = kwargs.pop("fit_params", {})
+        self._fit_params = _prepare_params(kwargs.pop("fit_params", {}))
 
         # Checks
         (
@@ -1429,9 +1413,8 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
             cv,
             X,
             y,
-            sample_weight,
             groups,
-        ) = self._check_fit_parameters(X, y, sample_weight, groups)
+        ) = self._check_fit_parameters(X, y, groups)
 
         self.estimator_ = EnsembleRegressor(
             estimator,
@@ -1443,18 +1426,15 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
             self.verbose,
         )
 
-        return (X, y, sample_weight, groups)
+        return (X, y, groups)
 
     def fit_estimator(
         self,
         X: ArrayLike,
         y: ArrayLike,
-        sample_weight: Optional[ArrayLike] = None,
         groups: Optional[ArrayLike] = None,
     ) -> _MapieRegressor:
-        self.estimator_.fit_single_estimator(
-            X, y, sample_weight=sample_weight, groups=groups, **self._fit_params
-        )
+        self.estimator_.fit_single_estimator(X, y, groups=groups, **self._fit_params)
 
         return self
 
@@ -1462,16 +1442,13 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
         self,
         X: ArrayLike,
         y: ArrayLike,
-        sample_weight: Optional[ArrayLike] = None,
         groups: Optional[ArrayLike] = None,
         **kwargs: Any,
     ) -> _MapieRegressor:
         predict_params = kwargs.pop("predict_params", {})
         self._predict_params = len(predict_params) > 0
 
-        self.estimator_.fit_multi_estimators(
-            X, y, sample_weight, groups, **self._fit_params
-        )
+        self.estimator_.fit_multi_estimators(X, y, groups=groups, **self._fit_params)
 
         # Predict on calibration data
         y_pred = self.estimator_.predict_calib(X, y=y, groups=groups, **predict_params)

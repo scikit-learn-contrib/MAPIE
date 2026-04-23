@@ -684,7 +684,7 @@ class _MapieQuantileRegressor(_MapieRegressor):
                 "in the following order [alpha/2, 1 - alpha/2, 0.5]."
             )
 
-    def fit(
+    def fit(  # type: ignore[override]
         self,
         X: ArrayLike,
         y: ArrayLike,
@@ -887,7 +887,7 @@ class _MapieQuantileRegressor(_MapieRegressor):
 
         self.single_estimator_ = self.estimators_[2]
 
-    def conformalize(
+    def conformalize(  # type: ignore[override]
         self,
         X: ArrayLike,
         y: ArrayLike,
