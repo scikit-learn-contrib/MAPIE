@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 import numpy as np
 import pytest
 
+from mapie.exchangeability_testing.exchangeability import FixedDatasetExchangeabilityTest
 import mapie.exchangeability_testing.martingales as omt_module
 from mapie.exchangeability_testing.martingales import OnlineMartingaleTest
 
@@ -18,6 +19,45 @@ def test_init_validation_errors():
 
     with pytest.raises(ValueError, match=r"jump_size must lie in \(0, 1\)"):
         OnlineMartingaleTest(jump_size=-0.1)
+
+
+def test_fixed_dataset_exchangeability_injects_martingale_test_method():
+    """Test fixed-dataset wrapper injects test_method for martingales."""
+    plugin_test = FixedDatasetExchangeabilityTest(method_names="plugin_martingale")
+    jumper_test = FixedDatasetExchangeabilityTest(method_names="jumper_martingale")
+    assert plugin_test.test_methods[0].test_method == "plugin_martingale"
+    assert jumper_test.test_methods[0].test_method == "jumper_martingale"
+
+
+def test_fixed_dataset_exchangeability_method_params_override_injected_default():
+    """Test explicit method_params take precedence over injected test_method."""
+    wrapper = FixedDatasetExchangeabilityTest(
+        method_names="plugin_martingale",
+        method_params={"plugin_martingale": {"test_method": "jumper_martingale"}},
+    )
+    assert wrapper.test_methods[0].test_method == "jumper_martingale"
+
+
+def test_fixed_dataset_exchangeability_injects_sequential_mc_strategy():
+    """Test fixed-dataset wrapper injects strategy for SMC methods."""
+    bin_test = FixedDatasetExchangeabilityTest(method_names="permutation_binomial")
+    mix_test = FixedDatasetExchangeabilityTest(
+        method_names="permutation_binomial_mixture"
+    )
+    agg_test = FixedDatasetExchangeabilityTest(method_names="permutation_aggressive")
+
+    assert bin_test.test_methods[0].strategy == "binomial"
+    assert mix_test.test_methods[0].strategy == "binomial_mixture"
+    assert agg_test.test_methods[0].strategy == "aggressive"
+
+
+def test_fixed_dataset_exchangeability_override_injected_smc_strategy():
+    """Test explicit method_params override injected SMC strategy."""
+    wrapper = FixedDatasetExchangeabilityTest(
+        method_names="permutation_binomial",
+        method_params={"permutation_binomial": {"strategy": "aggressive"}},
+    )
+    assert wrapper.test_methods[0].strategy == "aggressive"
 
 
 def test_reject_threshold_computation():

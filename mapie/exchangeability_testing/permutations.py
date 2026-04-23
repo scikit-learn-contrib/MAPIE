@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from copy import deepcopy
 from typing import Any, Literal, Optional, Union, cast
+import warnings
 
 import numpy as np
 from numpy.typing import NDArray
@@ -87,6 +88,9 @@ class PermutationTest(ABC):
         Seed controlling the randomness of permutations.
     num_permutations : int, default=1000
         Number of permutations used by permutation-based tests.
+    warn : bool, default=True
+        Whether to raise a warning when the exchangeability test fails at the
+        end of :meth:`run`.
     """
 
     def __init__(
@@ -96,6 +100,7 @@ class PermutationTest(ABC):
         task: Optional[Literal["classification", "regression"]] = None,
         random_state: Optional[int] = None,
         num_permutations: int = 1000,
+        warn: bool = True,
     ) -> None:
         if not (0.0 < test_level < 1.0):
             raise ValueError("test_level must be in (0, 1).")
@@ -104,6 +109,7 @@ class PermutationTest(ABC):
         self.task = task
         self.rng = np.random.RandomState(random_state)
         self.num_permutations = num_permutations
+        self.warn = warn
         self.p_values: NDArray = np.array([])
         self.test_statistic = MeanShiftTestStatistic()
 
@@ -238,6 +244,16 @@ class PermutationTest(ABC):
         """Run a permutation-based exchangeability test."""
         raise NotImplementedError  # pragma: no cover
 
+    def _warn_if_not_exchangeable(self) -> None:
+        """Raise a warning when exchangeability is rejected."""
+        if self.warn and self.is_exchangeable is False:
+            warnings.warn(
+                "Exchangeability test rejected the null hypothesis at "
+                f"test_level={self.test_level}.",
+                UserWarning,
+                stacklevel=2,
+            )
+
 
 class PValuePermutationTest(PermutationTest):
     """
@@ -266,6 +282,9 @@ class PValuePermutationTest(PermutationTest):
         Seed controlling the randomness of permutations.
     num_permutations : int, default=1000
         Number of permutations used to estimate the p-value.
+    warn : bool, default=True
+        Whether to raise a warning when the exchangeability test fails at the
+        end of :meth:`run`.
 
     Examples
     --------
@@ -289,6 +308,7 @@ class PValuePermutationTest(PermutationTest):
         task: Optional[Literal["classification", "regression"]] = None,
         random_state: Optional[int] = None,
         num_permutations: int = 1000,
+        warn: bool = True,
     ) -> None:
         super().__init__(
             test_level=test_level,
@@ -296,6 +316,7 @@ class PValuePermutationTest(PermutationTest):
             task=task,
             random_state=random_state,
             num_permutations=num_permutations,
+            warn=warn,
         )
 
     def run(self, X: NDArray, y: NDArray) -> "PValuePermutationTest":
@@ -329,6 +350,7 @@ class PValuePermutationTest(PermutationTest):
                 rank += 1
             self.p_values[t] = rank / (t + 1)
 
+        self._warn_if_not_exchangeable()
         return self
 
 
@@ -360,6 +382,9 @@ class SequentialMonteCarloTest(PermutationTest):
         Seed controlling the randomness of permutations.
     num_permutations : int, default=1000
         Maximum number of permutations.
+    warn : bool, default=True
+        Whether to raise a warning when the exchangeability test fails at the
+        end of :meth:`run`.
     """
 
     def __init__(
@@ -370,6 +395,7 @@ class SequentialMonteCarloTest(PermutationTest):
         task: Optional[Literal["classification", "regression"]] = None,
         random_state: Optional[int] = None,
         num_permutations: int = 1000,
+        warn: bool = True,
     ) -> None:
         super().__init__(
             test_level=test_level,
@@ -377,6 +403,7 @@ class SequentialMonteCarloTest(PermutationTest):
             task=task,
             random_state=random_state,
             num_permutations=num_permutations,
+            warn=warn,
         )
         self.strategy = strategy
 
@@ -457,4 +484,5 @@ class SequentialMonteCarloTest(PermutationTest):
         running_max_wealth = np.maximum.accumulate(wealth_history)
         self.p_values = np.minimum(1 / running_max_wealth, 1)
 
+        self._warn_if_not_exchangeable()
         return self
