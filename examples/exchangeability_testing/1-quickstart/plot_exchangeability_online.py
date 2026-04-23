@@ -1,97 +1,83 @@
 """
-# Online exchangeability testing with RiskMonitoring
+# Online exchangeability testing
 
-This quickstart compares exchangeability testing methods on two online cases:
+This quickstart demonstrates how to test exchangeability on a labeled online
+stream. Note that only labeled samples can be used to test exchangeability.
+In practice, a sample of online data can be labeled from time to time in
+order to test exchangeability and assess performance.
 
-1. **Exchangeable stream** (no harmful shift expected),
-2. **Non-exchangeable stream** with an **abrupt shift** (harmful shift expected).
+Guarantees provided by conformal prediction and risk control depend on the
+hypothesis that future data is exchangeable with the data used for calibration
+and monitoring. This is why verifying exchangeability before applying methods
+from MAPIE is important.
 
-Currently, only `RiskMonitoring` is shown.
+Here, we process the stream batch by batch and update the online
+exchangeability test as new labeled data arrives.
 """
 
-from sklearn.linear_model import LogisticRegression
-from utils import generate_gaussian_stream
+##############################################################################
+# We first prepare an exchangeable online stream.
+
+from utils import generate_gaussian_stream, plot_dataset
 
 from mapie.exchangeability_testing import OnlineExchangeabilityTest
 
-##############################################################################
-# We first fit a classifier on reference training data. Then, in the same
-# workflow, we estimate the monitoring threshold on a reference test set and
-# update the monitor on a stable online stream. Here, `risk="accuracy"` means
-# that `RiskMonitoring` tracks the misclassification risk `1 - accuracy`.
-
 random_state = 42
-batch_size = 25
-prop_shift = 0.5
+batch_size = 20
 
-X_train, y_train = generate_gaussian_stream(
+X_online, y_online = generate_gaussian_stream(
     shift_type="stable",
     random_state=random_state,
 )
-X_reference, y_reference = generate_gaussian_stream(
-    shift_type="stable",
-    random_state=random_state + 1,
+
+plot_dataset(
+    X_online,
+    y_online,
+    title="Exchangeable online stream",
 )
-
-clf = LogisticRegression(random_state=random_state)
-clf.fit(X_train, y_train)
-y_pred_reference = clf.predict(X_reference)
-
-X_online_no_shift, y_online_no_shift = generate_gaussian_stream(
-    shift_type="stable",
-    prop_shift=prop_shift,
-    random_state=random_state + 2,
-)
-
-online_test_no_shift = OnlineExchangeabilityTest(
-    method_names="all",
-    method_params={
-        "risk_monitoring": {
-            "risk": "accuracy",
-            "reference_data": (y_reference, y_pred_reference),
-        }
-    },
-)
-threshold = online_test_no_shift.test_methods[0].threshold
-
-print(
-    "Reference upper bound on the misclassification risk: "
-    f"{online_test_no_shift.test_methods[0].reference_risk_upper_bound:.3f}"
-)
-print(f"Monitoring threshold: {threshold:.3f}")
-
-for start in range(0, len(X_online_no_shift), batch_size):
-    stop = start + batch_size
-    y_pred_batch = clf.predict(X_online_no_shift[start:stop])
-    online_test_no_shift.update(y_online_no_shift[start:stop], y_pred_batch)
-
-is_exchangeable_no_shift = online_test_no_shift.is_exchangeable["risk_monitoring"]
 
 ##############################################################################
-# Non-exchangeable case: abrupt distribution shift in the stream.
+# Now we can test exchangeability on the online stream.
+# The test is updated batch by batch as labels become available.
 
+online_test = OnlineExchangeabilityTest()
+for start in range(0, len(X_online), batch_size):
+    stop = start + batch_size
+    online_test.update(X_online[start:stop], y_online[start:stop])
+
+print(online_test.is_exchangeable)
+
+##############################################################################
+# The online stream is exchangeable. We can continue monitoring future data
+# with MAPIE's online methods.
+
+##############################################################################
+# Non-exchangeable online stream: abrupt shift in the second part.
+
+prop_shift = 0.5
 X_online_abrupt, y_online_abrupt = generate_gaussian_stream(
     shift_type="abrupt",
     prop_shift=prop_shift,
-    random_state=random_state + 3,
+    random_state=random_state + 1,
+)
+shift_start_abrupt = int(len(y_online_abrupt) * (1 - prop_shift))
+plot_dataset(
+    X_online_abrupt,
+    y_online_abrupt,
+    title="Non-exchangeable online stream",
+    shift_start=shift_start_abrupt,
 )
 
-online_test_abrupt = OnlineExchangeabilityTest(
-    method_names="all",
-    method_params={
-        "risk_monitoring": {
-            "risk": "accuracy",
-            "reference_data": (y_reference, y_pred_reference),
-        }
-    },
-)
+online_test_abrupt = OnlineExchangeabilityTest()
 for start in range(0, len(X_online_abrupt), batch_size):
     stop = start + batch_size
-    y_pred_batch = clf.predict(X_online_abrupt[start:stop])
-    online_test_abrupt.update(y_online_abrupt[start:stop], y_pred_batch)
+    online_test_abrupt.update(
+        X_online_abrupt[start:stop],
+        y_online_abrupt[start:stop],
+    )
 
-is_exchangeable_abrupt = online_test_abrupt.is_exchangeable["risk_monitoring"]
+print(online_test_abrupt.is_exchangeable)
 
-print("\nExchangeability summary (online setting):")
-print(f"- Exchangeable stream: is_exchangeable={is_exchangeable_no_shift}")
-print(f"- Abrupt-shift stream: is_exchangeable={is_exchangeable_abrupt}")
+##############################################################################
+# The online stream is not exchangeable anymore. MAPIE cannot provide
+# statistical guarantees on future data from this shifted stream.
