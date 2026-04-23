@@ -43,7 +43,7 @@ class FixedDatasetExchangeabilityTest:
         ] = "all",
         method_params: Optional[Dict[str, Dict[str, Any]]] = None,
         test_level=0.05,
-        warn=True,
+        warn=False,
     ):
         if method_names == "all":
             self.method_names = list(fixed_dataset_test_method_choice_map.keys())
@@ -90,7 +90,11 @@ class FixedDatasetExchangeabilityTest:
             results[method_name] = test_method.is_exchangeable
         return results
 
-    def run(self, y_test: NDArray, y_pred: NDArray, X_test: Optional[NDArray] = None):
+    def run(
+        self,
+        X_test: NDArray,
+        y_test: NDArray,
+    ):
         results = {}
         for test_method, method_name in zip(self.test_methods, self.method_names):
             if callable(getattr(test_method, "update", None)):

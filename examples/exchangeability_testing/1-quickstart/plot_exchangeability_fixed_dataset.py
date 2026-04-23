@@ -35,7 +35,7 @@ X, y = generate_gaussian_stream(
     random_state=random_state,
 )
 X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.2, random_state=random_state, shuffle=False
+    X, y, test_size=0.3, random_state=random_state, shuffle=False
 )
 
 plot_dataset(
@@ -62,7 +62,7 @@ print(exchangeability_test.is_exchangeable)
 # Conformalization with a split of the test dataset will provide
 # coverage guarantees on the remaining test data.
 
-X_conformalize, X_test, y_conformalize, y_test = train_test_split(
+X_conformalize, X_test_new, y_conformalize, y_test_new = train_test_split(
     X_test, y_test, test_size=0.5, random_state=random_state
 )
 
@@ -71,7 +71,7 @@ mapie_classifier = SplitConformalClassifier(
     estimator=classifier, confidence_level=confidence_level, prefit=True
 )
 mapie_classifier.conformalize(X_conformalize, y_conformalize)
-y_pred, y_pred_set = mapie_classifier.predict_set(X_test)
+y_pred, y_pred_set = mapie_classifier.predict_set(X_test_new)
 
 ##############################################################################
 # Non-exchangeable fixed dataset: abrupt shift in the second part.

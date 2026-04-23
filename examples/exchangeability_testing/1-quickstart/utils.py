@@ -103,7 +103,7 @@ def plot_monitoring_results(
 
 
 def generate_gaussian_stream(
-    n_samples=800,
+    n_samples=1000,
     shift_type="stable",
     mean0_before=(0.0, 0.0),
     mean0_after=(0.0, -7.5),
