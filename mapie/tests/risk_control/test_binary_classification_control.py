@@ -9,6 +9,7 @@ from sklearn.datasets import make_classification
 from sklearn.dummy import DummyClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, precision_score, recall_score
+from sklearn.metrics import mean_absolute_error, mean_squared_error
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 
@@ -16,8 +17,11 @@ from mapie.risk_control import (
     BinaryClassificationController,
     BinaryClassificationRisk,
     BinaryRisk,
+    ContinuousRisk,
     accuracy,
     false_positive_rate,
+    mae,
+    mse,
     positive_predictive_value,
     precision,
     recall,
@@ -146,6 +150,83 @@ def test_binary_classification_risk(
 
     assert np.isclose(value, expected_value)
     assert n == expected_n
+
+
+@pytest.mark.parametrize(
+    "risk_instance, metric_func",
+    [
+        (mae, mean_absolute_error),
+        (mse, mean_squared_error),
+    ],
+)
+@pytest.mark.parametrize(
+    "y_true, y_pred",
+    [
+        (np.array([0.0, 1.0, 2.0, 3.0]), np.array([0.2, 1.3, 1.8, 3.1])),
+        (np.array([-1.0, 0.0, 1.0, 2.0]), np.array([-0.8, 0.1, 0.7, 2.4])),
+        (np.array([2.0, 2.0, 2.0, 2.0]), np.array([1.0, 2.0, 3.0, 4.0])),
+    ],
+)
+def test_continuous_risk(
+    risk_instance: ContinuousRisk,
+    metric_func,
+    y_true: NDArray,
+    y_pred: NDArray,
+):
+    value, n = risk_instance.get_value_and_effective_sample_size(y_true, y_pred)
+    expected_value = metric_func(y_true, y_pred)
+    expected_n = len(y_true)
+
+    assert np.isclose(value, expected_value)
+    assert n == expected_n
+
+
+@pytest.mark.parametrize(
+    "risk_instance, expected_sequence",
+    [
+        (
+            mae,
+            np.array([0.2, 0.1, 0.2, 0.4]),
+        ),
+        (
+            mse,
+            np.array([0.04, 0.01, 0.04, 0.16]),
+        ),
+    ],
+)
+def test_continuous_risk_sequence(
+    risk_instance: ContinuousRisk,
+    expected_sequence: NDArray,
+) -> None:
+    y_true = np.array([0.0, 1.0, 2.0, 3.0])
+    y_pred = np.array([0.2, 1.1, 1.8, 3.4])
+    risk_sequence = risk_instance.get_risk_sequence(y_true, y_pred)
+    np.testing.assert_allclose(risk_sequence, expected_sequence)
+
+
+@pytest.mark.parametrize(
+    "risk_instance",
+    [mae, mse],
+)
+@pytest.mark.parametrize(
+    "y_true, y_pred",
+    [
+        (np.array([0.0, 1.0, 2.0]), np.array([0.1, np.nan, 2.1])),
+        (np.array([0.0, np.nan, 2.0]), np.array([0.1, 1.2, 2.1])),
+    ],
+)
+def test_continuous_risk_with_nan_values(
+    risk_instance: ContinuousRisk,
+    y_true: NDArray,
+    y_pred: NDArray,
+) -> None:
+    value, n = risk_instance.get_value_and_effective_sample_size(y_true, y_pred)
+    risk_sequence = risk_instance.get_risk_sequence(y_true, y_pred)
+
+    assert np.isnan(value)
+    assert n == len(y_true)
+    assert risk_sequence.shape == y_true.shape
+    assert np.isnan(risk_sequence).any()
 
 
 @pytest.mark.parametrize(
