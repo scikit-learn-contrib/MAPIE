@@ -4,7 +4,10 @@ from unittest.mock import MagicMock
 import numpy as np
 import pytest
 
-from mapie.exchangeability_testing.exchangeability import FixedDatasetExchangeabilityTest
+from mapie.exchangeability_testing.exchangeability import (
+    FixedDatasetExchangeabilityTest,
+    OnlineExchangeabilityTest,
+)
 import mapie.exchangeability_testing.martingales as omt_module
 from mapie.exchangeability_testing.martingales import OnlineMartingaleTest
 
@@ -58,6 +61,64 @@ def test_fixed_dataset_exchangeability_override_injected_smc_strategy():
         method_params={"permutation_binomial": {"strategy": "aggressive"}},
     )
     assert wrapper.test_methods[0].strategy == "aggressive"
+
+
+def test_online_exchangeability_injects_martingale_test_method():
+    """Test online wrapper injects test_method for martingales."""
+    plugin_test = OnlineExchangeabilityTest(method_names="plugin_martingale")
+    jumper_test = OnlineExchangeabilityTest(method_names="jumper_martingale")
+
+    assert plugin_test.test_methods[0].test_method == "plugin_martingale"
+    assert jumper_test.test_methods[0].test_method == "jumper_martingale"
+
+
+def test_online_exchangeability_method_params_override_injected_default():
+    """Test explicit method_params take precedence over injected test_method."""
+    wrapper = OnlineExchangeabilityTest(
+        method_names="plugin_martingale",
+        method_params={"plugin_martingale": {"test_method": "jumper_martingale"}},
+    )
+
+    assert wrapper.test_methods[0].test_method == "jumper_martingale"
+
+
+def test_online_exchangeability_is_exchangeable_returns_by_method():
+    """Test online wrapper exposes each method exchangeability decision."""
+    wrapper = OnlineExchangeabilityTest(method_names="all")
+    wrapper.test_methods[0].pvalue_history = [0.1]
+    wrapper.test_methods[0].martingale_value_history = [1.0]
+    wrapper.test_methods[0].current_martingale_value = 1.0
+    wrapper.test_methods[0].burn_in = 1
+    wrapper.test_methods[1].pvalue_history = [0.1]
+    wrapper.test_methods[1].martingale_value_history = [100.0]
+    wrapper.test_methods[1].current_martingale_value = 100.0
+    wrapper.test_methods[1].burn_in = 1
+
+    assert wrapper.is_exchangeable == {
+        "plugin_martingale": True,
+        "jumper_martingale": False,
+    }
+
+
+def test_online_exchangeability_update_calls_test_method_update():
+    """Test online wrapper forwards update arguments to each test method."""
+    wrapper = OnlineExchangeabilityTest(method_names="all")
+    X = np.array([[1.0], [2.0]])
+    y = np.array([0.0, 1.0])
+
+    first_result = object()
+    second_result = object()
+    wrapper.test_methods[0].update = MagicMock(return_value=first_result)
+    wrapper.test_methods[1].update = MagicMock(return_value=second_result)
+
+    results = wrapper.update(X, y)
+
+    wrapper.test_methods[0].update.assert_called_once_with(X, y)
+    wrapper.test_methods[1].update.assert_called_once_with(X, y)
+    assert results == {
+        "plugin_martingale": first_result,
+        "jumper_martingale": second_result,
+    }
 
 
 def test_reject_threshold_computation():

@@ -145,23 +145,29 @@ class OnlineExchangeabilityTest:
 
     def _init_test_method(self, method_name: str):
         method_class = online_test_method_choice_map[method_name]
-        if method_name == "risk_monitoring":
-            params = {"risk": "accuracy", **self.method_params.get(method_name, {})}
-            return method_class(test_level=self.test_level, warn=self.warn, **params)
-        return None
+        params = {**self.method_params.get(method_name, {})}
+        if method_class is OnlineMartingaleTest:
+            params = {"test_method": method_name, **params}
+        return method_class(
+            test_level=self.test_level,
+            warn=self.warn,
+            **params,
+        )
 
     @property
     def is_exchangeable(self):
         results = {}
         for test_method, method_name in zip(self.test_methods, self.method_names):
-            if method_name == "risk_monitoring":
-                results[method_name] = not test_method.harmful_shift_detected
+            results[method_name] = test_method.is_exchangeable
         return results
 
-    def update(
-        self, y_test: NDArray, y_pred: NDArray, X_test: Optional[NDArray] = None
-    ):
+    def update(self, X_test: NDArray, y_test: NDArray):
         results = {}
         for test_method, method_name in zip(self.test_methods, self.method_names):
-            results[method_name] = test_method.update(y_test, y_pred)
+            if callable(getattr(test_method, "update", None)):
+                results[method_name] = test_method.update(X_test, y_test)
+            else:
+                raise AttributeError(
+                    f"Test method '{method_name}' must define an 'update' method."
+                )
         return results
