@@ -5382,7 +5382,7 @@ initialized but not conformalized yet.</p>
 we have to test the exchangeability of the conformalization and test datasets.
 If the datasets are exchangeable, the conformalization guarantees are valid.
 If the datasets are not exchangeable, the conformalization guarantees are not valid.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 76-96 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 76-97 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">X_eval</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">X_conformalize</span><span class="p">,</span> <span class="n">X_test</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">y_exchangeable</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">y_conformalize</span><span class="p">,</span> <span class="n">y_test</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
@@ -5397,21 +5397,22 @@ If the datasets are not exchangeable, the conformalization guarantees are not va
 </span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>    <span class="n">mapie_estimator</span><span class="o">=</span><span class="n">mapie_classifier</span><span class="p">,</span>
 </span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="p">)</span>
 </span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>
-</span><span id="__span-2-14"><a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="n">exchangeability_detected</span> <span class="o">=</span> <span class="n">exchangeability_test</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">X_eval</span><span class="p">,</span> <span class="n">y_exchangeable</span><span class="p">)</span>
-</span><span id="__span-2-15"><a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>
-</span><span id="__span-2-16"><a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Exchangeable classification dataset&quot;</span><span class="p">)</span>
-</span><span id="__span-2-17"><a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;----------------------------------&quot;</span><span class="p">)</span>
-</span><span id="__span-2-18"><a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;PValuePermutationTest: data exchangeability=</span><span class="si">{</span><span class="n">exchangeability_detected</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="__span-2-14"><a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="n">exchangeability_test</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">X_eval</span><span class="p">,</span> <span class="n">y_exchangeable</span><span class="p">)</span>
+</span><span id="__span-2-15"><a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a><span class="n">exchangeability_detected</span> <span class="o">=</span> <span class="n">exchangeability_test</span><span class="o">.</span><span class="n">is_exchangeable</span>
+</span><span id="__span-2-16"><a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>
+</span><span id="__span-2-17"><a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Exchangeable classification dataset&quot;</span><span class="p">)</span>
+</span><span id="__span-2-18"><a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;----------------------------------&quot;</span><span class="p">)</span>
+</span><span id="__span-2-19"><a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;PValuePermutationTest: data exchangeability=</span><span class="si">{</span><span class="n">exchangeability_detected</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </span></code></pre></div>
 <p class="mkd-glr-script-out">Out:</p>
 <div class="mkd-glr-script-out-disp highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>Exchangeable<span class="w"> </span>classification<span class="w"> </span>dataset
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>----------------------------------
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>PValuePermutationTest:<span class="w"> </span>data<span class="w"> </span><span class="nv">exchangeability</span><span class="o">=</span>&lt;mapie.exchangeability_testing.permutations.PValuePermutationTest<span class="w"> </span>object<span class="w"> </span>at<span class="w"> </span>0x7f2afd6e6f00&gt;
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>PValuePermutationTest:<span class="w"> </span>data<span class="w"> </span><span class="nv">exchangeability</span><span class="o">=</span>True
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 97-99 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 98-100 -->
 
 <h2 id="3-plot-the-running-p-values">3. Plot the running p-values<a class="headerlink" href="#3-plot-the-running-p-values" title="Permanent link">&para;</a></h2>
-<!-- GENERATED FROM PYTHON SOURCE LINES 99-117 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 100-118 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">test_level</span> <span class="o">=</span> <span class="n">exchangeability_test</span><span class="o">.</span><span class="n">test_level</span>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
@@ -5431,12 +5432,12 @@ If the datasets are not exchangeable, the conformalization guarantees are not va
 </span><span id="__span-4-16"><a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </span></code></pre></div>
 <p><img alt="Permutation test with a fitted top-k classifier" class="mkd-glr-single-img" src="../images/mkd_glr_plot_permutation_test_with_fitted_classifier_001.png" srcset="../images/mkd_glr_plot_permutation_test_with_fitted_classifier_001.png" /></p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 118-123 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 119-124 -->
 
 <h2 id="4-continue-with-the-standard-mapie-pipeline">4. Continue with the standard MAPIE pipeline<a class="headerlink" href="#4-continue-with-the-standard-mapie-pipeline" title="Permanent link">&para;</a></h2>
 <p>Once exchangeability has been checked, we continue with the standard MAPIE
 pipeline on the predefined conformalization and test subsets.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 123-131 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 124-132 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">mapie_classifier</span><span class="o">.</span><span class="n">conformalize</span><span class="p">(</span><span class="n">X_conformalize</span><span class="p">,</span> <span class="n">y_conformalize</span><span class="p">)</span>
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="n">y_pred</span><span class="p">,</span> <span class="n">y_pred_set</span> <span class="o">=</span> <span class="n">mapie_classifier</span><span class="o">.</span><span class="n">predict_set</span><span class="p">(</span><span class="n">X_test</span><span class="p">)</span>
@@ -5451,7 +5452,7 @@ pipeline on the predefined conformalization and test subsets.</p>
 </span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>------------------------
 </span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>Average<span class="w"> </span>prediction-set<span class="w"> </span>size:<span class="w"> </span><span class="m">1</span>.03
 </span></code></pre></div>
-<p><strong>Total running time of the script:</strong> ( 0 minutes  0.123 seconds)</p>
+<p><strong>Total running time of the script:</strong> ( 0 minutes  0.125 seconds)</p>
 <div id="download_links"></div>
 
 <p><a class="md-button center" href="../plot_permutation_test_with_fitted_classifier.py"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M256 32c0-17.7-14.3-32-32-32s-32 14.3-32 32v210.7l-41.4-41.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l96 96c12.5 12.5 32.8 12.5 45.3 0l96-96c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 242.7zM64 320c-35.3 0-64 28.7-64 64v32c0 35.3 28.7 64 64 64h320c35.3 0 64-28.7 64-64v-32c0-35.3-28.7-64-64-64h-46.9l-56.6 56.6c-31.2 31.2-81.9 31.2-113.1 0L110.9 320zm304 56a24 24 0 1 1 0 48 24 24 0 1 1 0-48"/></svg></span> Download Python source code: plot_permutation_test_with_fitted_classifier.py</a></p>

@@ -6075,10 +6075,11 @@ coverage guarantees on the remaining test data.</p>
 </span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="n">mapie_classifier</span><span class="o">.</span><span class="n">conformalize</span><span class="p">(</span><span class="n">X_conformalize</span><span class="p">,</span> <span class="n">y_conformalize</span><span class="p">)</span>
 </span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="n">y_pred</span><span class="p">,</span> <span class="n">y_pred_set</span> <span class="o">=</span> <span class="n">mapie_classifier</span><span class="o">.</span><span class="n">predict_set</span><span class="p">(</span><span class="n">X_test_new</span><span class="p">)</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 77-78 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 77-79 -->
 
-<p>Non-exchangeable fixed dataset: abrupt shift in the second part.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 78-98 -->
+<p>Now let us see what happens for a non-exchangeable fixed dataset.
+Here, an abrupt shift happens in the second part of the dataset.</p>
+<!-- GENERATED FROM PYTHON SOURCE LINES 79-99 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">X_test_abrupt</span><span class="p">,</span> <span class="n">y_test_abrupt</span> <span class="o">=</span> <span class="n">generate_gaussian_stream</span><span class="p">(</span>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>    <span class="n">n_samples</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">X_test</span><span class="p">),</span>
@@ -6103,11 +6104,11 @@ coverage guarantees on the remaining test data.</p>
 <p class="mkd-glr-script-out">Out:</p>
 <div class="mkd-glr-script-out-disp highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="o">{</span><span class="s1">&#39;pvalue_permutation&#39;</span>:<span class="w"> </span>False,<span class="w"> </span><span class="s1">&#39;permutation_binomial&#39;</span>:<span class="w"> </span>False,<span class="w"> </span><span class="s1">&#39;permutation_binomial_mixture&#39;</span>:<span class="w"> </span>False,<span class="w"> </span><span class="s1">&#39;permutation_aggressive&#39;</span>:<span class="w"> </span>False,<span class="w"> </span><span class="s1">&#39;plugin_martingale&#39;</span>:<span class="w"> </span>False,<span class="w"> </span><span class="s1">&#39;jumper_martingale&#39;</span>:<span class="w"> </span>True<span class="o">}</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 99-101 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 100-102 -->
 
 <p>The test dataset is not exchangeable. MAPIE cannot provide statistical guarantees.
 More generally, the classifier itself should not be trusted.</p>
-<p><strong>Total running time of the script:</strong> ( 0 minutes  1.194 seconds)</p>
+<p><strong>Total running time of the script:</strong> ( 0 minutes  1.353 seconds)</p>
 <div id="download_links"></div>
 
 <p><a class="md-button center" href="../plot_exchangeability_fixed_dataset.py"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M256 32c0-17.7-14.3-32-32-32s-32 14.3-32 32v210.7l-41.4-41.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l96 96c12.5 12.5 32.8 12.5 45.3 0l96-96c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 242.7zM64 320c-35.3 0-64 28.7-64 64v32c0 35.3 28.7 64 64 64h320c35.3 0 64-28.7 64-64v-32c0-35.3-28.7-64-64-64h-46.9l-56.6 56.6c-31.2 31.2-81.9 31.2-113.1 0L110.9 320zm304 56a24 24 0 1 1 0 48 24 24 0 1 1 0-48"/></svg></span> Download Python source code: plot_exchangeability_fixed_dataset.py</a></p>

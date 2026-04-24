@@ -87,7 +87,8 @@ exchangeability_test = PValuePermutationTest(
     mapie_estimator=mapie_classifier,
 )
 
-exchangeability_detected = exchangeability_test.run(X_eval, y_exchangeable)
+exchangeability_test.run(X_eval, y_exchangeable)
+exchangeability_detected = exchangeability_test.is_exchangeable
 
 print("\nExchangeable classification dataset")
 print("----------------------------------")
