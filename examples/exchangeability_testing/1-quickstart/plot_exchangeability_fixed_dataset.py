@@ -74,7 +74,8 @@ mapie_classifier.conformalize(X_conformalize, y_conformalize)
 y_pred, y_pred_set = mapie_classifier.predict_set(X_test_new)
 
 ##############################################################################
-# Non-exchangeable fixed dataset: abrupt shift in the second part.
+# Now let us see what happens for a non-exchangeable fixed dataset.
+# Here, an abrupt shift happens in the second part of the dataset.
 
 X_test_abrupt, y_test_abrupt = generate_gaussian_stream(
     n_samples=len(X_test),
