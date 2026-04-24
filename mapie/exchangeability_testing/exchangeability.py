@@ -8,6 +8,15 @@ from mapie.exchangeability_testing.permutations import (
     SequentialMonteCarloTest,
 )
 
+FixedDatasetTestMethod = Union[
+    PValuePermutationTest,
+    SequentialMonteCarloTest,
+    OnlineMartingaleTest,
+]
+OnlineTestMethod = OnlineMartingaleTest
+ExchangeabilityDecision = Optional[bool]
+MethodParams = Dict[str, Dict[str, Any]]
+
 online_test_method_choice_map = {
     "plugin_martingale": OnlineMartingaleTest,
     "jumper_martingale": OnlineMartingaleTest,
@@ -36,15 +45,51 @@ FixedDatasetTestMethods = Literal[
 
 
 class FixedDatasetExchangeabilityTest:
+    """
+    Run one or several exchangeability tests on a labeled dataset.
+
+    This wrapper provides a high-level interface around the exchangeability
+    testing methods implemented in MAPIE. It can instantiate permutation-based
+    tests as well as online martingale tests and run them through a shared API.
+
+    Parameters
+    ----------
+    method_names : Union[FixedDatasetTestMethods, Literal["all"], \
+List[FixedDatasetTestMethods]], default="all"
+        Name of the test method to run, a list of method names, or ``"all"``
+        to run every available fixed-dataset method.
+
+    method_params : Optional[MethodParams], default=None
+        Additional keyword arguments passed to each method constructor. Keys are
+        method names and values are dictionaries of keyword arguments.
+
+    test_level : float, default=0.05
+        Significance level passed to each underlying test.
+
+    warn : bool, default=False
+        Whether underlying methods should raise warnings when they reject
+        exchangeability.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> X = np.arange(20, dtype=float).reshape(-1, 1)
+    >>> y = 2 * X.ravel()
+    >>> test = FixedDatasetExchangeabilityTest(
+    ...     method_names="pvalue_permutation", warn=False
+    ... )
+    >>> _ = test.run(X, y)
+    """
+
     def __init__(
         self,
         method_names: Union[
             FixedDatasetTestMethods, Literal["all"], List[FixedDatasetTestMethods]
         ] = "all",
-        method_params: Optional[Dict[str, Dict[str, Any]]] = None,
-        test_level=0.05,
-        warn=False,
-    ):
+        method_params: Optional[MethodParams] = None,
+        test_level: float = 0.05,
+        warn: bool = False,
+    ) -> None:
         if method_names == "all":
             self.method_names = list(fixed_dataset_test_method_choice_map.keys())
         elif isinstance(method_names, str):
@@ -69,7 +114,8 @@ class FixedDatasetExchangeabilityTest:
             self._init_test_method(method_name) for method_name in self.method_names
         ]
 
-    def _init_test_method(self, method_name: str):
+    def _init_test_method(self, method_name: str) -> FixedDatasetTestMethod:
+        """Instantiate one fixed-dataset exchangeability test."""
         method_class = fixed_dataset_test_method_choice_map[method_name]
         params = {**self.method_params.get(method_name, {})}
         if method_class is OnlineMartingaleTest:
@@ -84,7 +130,17 @@ class FixedDatasetExchangeabilityTest:
         )
 
     @property
-    def is_exchangeable(self):
+    def is_exchangeable(self) -> Dict[str, ExchangeabilityDecision]:
+        """
+        Return the current exchangeability decision for each configured method.
+
+        Returns
+        -------
+        Dict[str, Optional[bool]]
+            A dictionary mapping each method name to its current decision.
+            Values are typically ``True``, ``False``, or ``None`` when the
+            underlying test is still inconclusive.
+        """
         results = {}
         for test_method, method_name in zip(self.test_methods, self.method_names):
             results[method_name] = test_method.is_exchangeable
@@ -94,7 +150,30 @@ class FixedDatasetExchangeabilityTest:
         self,
         X_test: NDArray,
         y_test: NDArray,
-    ):
+    ) -> Dict[str, FixedDatasetTestMethod]:
+        """
+        Run all configured exchangeability tests on the provided dataset.
+
+        Parameters
+        ----------
+        X_test : NDArray
+            Feature matrix of the labeled dataset.
+
+        y_test : NDArray
+            Labels or targets associated with ``X_test``.
+
+        Returns
+        -------
+        Dict[str, FixedDatasetTestMethod]
+            A dictionary mapping each method name to the updated underlying
+            test instance.
+
+        Raises
+        ------
+        AttributeError
+            If one of the configured test methods defines neither ``update``
+            nor ``run``.
+        """
         results = {}
         for test_method, method_name in zip(self.test_methods, self.method_names):
             if callable(getattr(test_method, "update", None)):
@@ -110,15 +189,52 @@ class FixedDatasetExchangeabilityTest:
 
 
 class OnlineExchangeabilityTest:
+    """
+    Monitor exchangeability online with one or several martingale tests.
+
+    This wrapper exposes a shared interface for the online exchangeability
+    testing methods available in MAPIE. Each configured method is updated on
+    the same labeled stream, allowing side-by-side monitoring of different
+    martingale constructions.
+
+    Parameters
+    ----------
+    method_names : Union[OnlineTestMethods, Literal["all"], \
+List[OnlineTestMethods]], default="all"
+        Name of the online method to use, a list of method names, or ``"all"``
+        to instantiate every available online method.
+
+    method_params : Optional[MethodParams], default=None
+        Additional keyword arguments passed to each method constructor. Keys are
+        method names and values are dictionaries of keyword arguments.
+
+    test_level : float, default=0.05
+        Significance level passed to each underlying online test.
+
+    warn : bool, default=True
+        Whether underlying methods should raise warnings when they reject
+        exchangeability.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> X = np.arange(120, dtype=float).reshape(-1, 1)
+    >>> y = 2 * X.ravel()
+    >>> online_test = OnlineExchangeabilityTest(
+    ...     method_names="plugin_martingale", warn=False
+    ... )
+    >>> _ = online_test.update(X, y)
+    """
+
     def __init__(
         self,
         method_names: Union[
             OnlineTestMethods, Literal["all"], List[OnlineTestMethods]
         ] = "all",
-        method_params: Optional[Dict[str, Dict[str, Any]]] = None,
-        test_level=0.05,
-        warn=True,
-    ):
+        method_params: Optional[MethodParams] = None,
+        test_level: float = 0.05,
+        warn: bool = True,
+    ) -> None:
         if method_names == "all":
             self.method_names = list(online_test_method_choice_map.keys())
         elif isinstance(method_names, str):
@@ -143,7 +259,8 @@ class OnlineExchangeabilityTest:
             self._init_test_method(method_name) for method_name in self.method_names
         ]
 
-    def _init_test_method(self, method_name: str):
+    def _init_test_method(self, method_name: str) -> OnlineTestMethod:
+        """Instantiate one online exchangeability test."""
         method_class = online_test_method_choice_map[method_name]
         params = {**self.method_params.get(method_name, {})}
         if method_class is OnlineMartingaleTest:
@@ -155,13 +272,48 @@ class OnlineExchangeabilityTest:
         )
 
     @property
-    def is_exchangeable(self):
+    def is_exchangeable(self) -> Dict[str, ExchangeabilityDecision]:
+        """
+        Return the current exchangeability decision for each online method.
+
+        Returns
+        -------
+        Dict[str, Optional[bool]]
+            A dictionary mapping each method name to its current online
+            decision. Values may be ``None`` during the burn-in phase.
+        """
         results = {}
         for test_method, method_name in zip(self.test_methods, self.method_names):
             results[method_name] = test_method.is_exchangeable
         return results
 
-    def update(self, X_test: NDArray, y_test: NDArray):
+    def update(
+        self,
+        X_test: NDArray,
+        y_test: NDArray,
+    ) -> Dict[str, OnlineTestMethod]:
+        """
+        Update all configured online tests with newly labeled observations.
+
+        Parameters
+        ----------
+        X_test : NDArray
+            Feature matrix for the newly observed batch.
+
+        y_test : NDArray
+            Labels or targets associated with ``X_test``.
+
+        Returns
+        -------
+        Dict[str, OnlineMartingaleTest]
+            A dictionary mapping each method name to the updated underlying
+            test instance.
+
+        Raises
+        ------
+        AttributeError
+            If one of the configured methods does not define ``update``.
+        """
         results = {}
         for test_method, method_name in zip(self.test_methods, self.method_names):
             if callable(getattr(test_method, "update", None)):
