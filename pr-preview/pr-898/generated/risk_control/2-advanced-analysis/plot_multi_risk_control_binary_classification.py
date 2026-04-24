@@ -99,7 +99,7 @@ clf.fit(X_train, y_train)
 #
 # Different risks or performance metrics have been implemented, such as precision,
 # recall and accuracy, but you can also implement your own custom functions using
-# `BinaryClassificationRisk` and choose your own
+# `BinaryRisk` and choose your own
 # secondary objective (passed in `best_predict_param_choice`)
 #
 # Note that if the secondary objective is not specified, the first risk in the list is used
@@ -112,17 +112,12 @@ clf.fit(X_train, y_train)
 ##############################################################################
 # The following table summarizes the configuration of both scenarios:
 #
-# +-------------------------------+------------------------+------------------------+
-# | **Parameter**                 | **Scenario 1**         | **Scenario 2**         |
-# +-------------------------------+------------------------+------------------------+
-# | **List of risks**             | ["precision", "recall"]| ["precision", "recall"]|
-# +-------------------------------+------------------------+------------------------+
-# | **List of target levels**     | [0.75, 0.70]           | [0.85, 0.80]           |
-# +-------------------------------+------------------------+------------------------+
-# | **Confidence level**          | 0.9                    | 0.9                    |
-# +-------------------------------+------------------------+------------------------+
-# | **Best predict param choice** | "recall"               | "recall"               |
-# +-------------------------------+------------------------+------------------------+
+# | **Parameter**                 | **Scenario 1**          | **Scenario 2**          |
+# |-------------------------------|-------------------------|-------------------------|
+# | **List of risks**             | `["precision", "recall"]` | `["precision", "recall"]` |
+# | **List of target levels**     | `[0.75, 0.70]`            | `[0.85, 0.80]`            |
+# | **Confidence level**          | `0.9`                     | `0.9`                     |
+# | **Best predict param choice** | `"recall"`                | `"recall"`                |
 #
 # Both scenarios use the same list of risks and best parameter choice,
 # but with different target levels for precision and recall.
