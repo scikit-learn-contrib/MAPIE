@@ -1,22 +1,22 @@
 """
-# Online exchangeability testing
+# Exchangeability testing on an online stream
 
 This quickstart demonstrates how to test exchangeability on a labeled online
-stream. Note that only labeled samples can be used to test exchangeability.
-In practice, a sample of online data can be labeled from time to time in
-order to test exchangeability and assess performance.
+stream, i.e. data arriving sequentially in batches.
 
 Guarantees provided by conformal prediction and risk control depend on the
 hypothesis that future data is exchangeable with the data used for calibration
-and monitoring. This is why verifying exchangeability before applying methods
-from MAPIE is important.
+and monitoring. Verifying exchangeability before and during deployment is
+therefore important.
 
-Here, we process the stream batch by batch and update the online
-exchangeability test as new labeled data arrives.
+Note that only labeled samples can be used to test exchangeability. In
+practice, a fraction of the online stream can be labeled from time to time to
+run the test and assess performance.
 """
 
 ##############################################################################
-# We first prepare an exchangeable online stream.
+# We first prepare an exchangeable online stream. The stream is processed
+# batch by batch, as new labeled data would arrive in deployment.
 
 from utils import generate_gaussian_stream, plot_dataset
 
@@ -38,21 +38,22 @@ plot_dataset(
 
 ##############################################################################
 # Now we can test exchangeability on the online stream.
-# The test is updated batch by batch as labels become available.
+# The test is updated batch by batch as new labels become available.
 
 online_test = OnlineExchangeabilityTest()
 for start in range(0, len(X_online), batch_size):
     stop = start + batch_size
     online_test.update(X_online[start:stop], y_online[start:stop])
 
-print(online_test.is_exchangeable)
+print(f"Is the online stream exchangeable? {online_test.is_exchangeable}")
 
 ##############################################################################
-# The online stream is exchangeable. We can continue monitoring future data
-# with MAPIE's online methods.
+# The online stream is exchangeable. We can confidently continue monitoring
+# future data with MAPIE's online methods.
 
 ##############################################################################
-# Non-exchangeable online stream: abrupt shift in the second part.
+# Now let us see what happens for a non-exchangeable online stream.
+# Here, an abrupt shift happens in the second part of the stream.
 
 prop_shift = 0.5
 X_online_abrupt, y_online_abrupt = generate_gaussian_stream(
@@ -76,8 +77,11 @@ for start in range(0, len(X_online_abrupt), batch_size):
         y_online_abrupt[start:stop],
     )
 
-print(online_test_abrupt.is_exchangeable)
+print(
+    f"Is the shifted online stream exchangeable? {online_test_abrupt.is_exchangeable}"
+)
 
 ##############################################################################
-# The online stream is not exchangeable anymore. MAPIE cannot provide
-# statistical guarantees on future data from this shifted stream.
+# The shifted online stream is not exchangeable: MAPIE cannot provide
+# statistical guarantees on future data from this stream, and the underlying
+# predictive model should not be trusted without further investigation.

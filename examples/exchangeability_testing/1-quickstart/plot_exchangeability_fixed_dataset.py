@@ -1,21 +1,18 @@
 """
 # Exchangeability testing on a fixed dataset
 
-This quickstart demonstrates how to test exchangeability for a fixed dataset.
+This quickstart demonstrates how to test exchangeability on a fixed dataset.
 
 Guarantees provided by conformal prediction and risk control depend on the
-hypothesis that data is exchangeable. This is why verifying exchangeability
-before applying methods from MAPIE is important.
-
-Typically, (split) conformal prediction, risk control, and calibration
-require data not seen during training, which might be a split of the test data.
+hypothesis that data is exchangeable. Verifying exchangeability before
+applying methods from MAPIE is therefore important. Typically, (split)
+conformal prediction, risk control, and calibration require data not seen
+during training, such as a split of the test data.
 
 Note that for the exchangeability test to be valid, the order of samples in
-the fixed dataset should be representative of what will happen after
-deployment. Shuffling the data would render the dataset exchangeable.
-
-
-
+the fixed dataset must be representative of what will happen after deployment.
+Shuffling the data beforehand would trivially render the dataset exchangeable
+and hide any potential distribution shift.
 """
 
 ##############################################################################
@@ -55,7 +52,7 @@ classifier.fit(X_train, y_train)
 exchangeability_test = FixedDatasetExchangeabilityTest()
 exchangeability_test.run(X_test, y_test)
 
-print(exchangeability_test.is_exchangeable)
+print(f"Is the test dataset exchangeable? {exchangeability_test.is_exchangeable}")
 
 ##############################################################################
 # The test dataset is exchangeable. We can continue with MAPIE.
@@ -94,8 +91,9 @@ plot_dataset(
 exchangeability_test = FixedDatasetExchangeabilityTest()
 exchangeability_test.run(X_test_abrupt, y_test_abrupt)
 
-print(exchangeability_test.is_exchangeable)
+print(f"Is the shifted dataset exchangeable? {exchangeability_test.is_exchangeable}")
 
 ##############################################################################
-# The test dataset is not exchangeable. MAPIE cannot provide statistical guarantees.
-# More generally, the classifier itself should not be trusted.
+# The shifted test dataset is not exchangeable: MAPIE cannot provide
+# statistical guarantees on it, and more generally the classifier itself
+# should not be trusted without further investigation.
