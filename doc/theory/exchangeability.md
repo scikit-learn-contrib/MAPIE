@@ -2,17 +2,18 @@
 
 ## Why Exchangeability Matters for Conformal Prediction
 
-In practice, conformal prediction methods assume that pairs of features and labels $(X_i, Y_i)$ are drawn in an exchangeable way. This enables these methods to provide **empirical coverage guarantees**: you can be confident that your prediction intervals cover the true value at a specified rate, regardless of your model's specific structure. This is powerful because it doesn't require strong assumptions about how the data was generated.
+Conformal prediction methods assume that pairs of features and labels $(X_i, Y_i)$ are drawn in an exchangeable way. This enables these methods to provide **empirical coverage guarantees**: you can be confident that your prediction intervals cover the true value at a specified rate, regardless of your model's specific structure. This is powerful because it doesn't require strong assumptions about how the data was generated.
 Exchangeability testing helps us verify this crucial assumption, which underpins the reliability guarantees of conformal prediction.
 
 ## What is Exchangeability?
 
 Imagine you have a deck of cards: if the deck is "fair," shuffling it doesn't change anything fundamental about what you should expect. Similarly, exchangeability means that the order in which we collect our data doesn't matter. Thus the underlying patterns remain the same whether we see examples in one order or another.
 
-Exchangeability is a formal way of expressing the idea that "order doesn't matter." More precisely, an infinite sequence of random variables $(X_1, X_2, \ldots)$ is said to be **exchangeable** if any finite subset of these variables has the same probability distribution regardless of their positions in the sequence.
+Exchangeability is a formal way of expressing the idea that "order doesn't matter." More precisely, random variables are said to be **exchangeable** if for any finite subset, any reordering (permutation) of that subset preserves the joint distribution.
 
-In mathematical terms:
-$$P(X_{i_1}, \ldots, X_{i_n} \in A) = P(X_{j_1}, \ldots, X_{j_n} \in A)$$
+In mathematical terms, for any permutation $\sigma$ of indices:
+
+$$P(X_1, \ldots, X_n) = P(X_{\sigma(1)}, \ldots, X_{\sigma(n)})$$
 
 This simply means: if you pick any $n$ observations from different positions in your sequence and measure them, you get the same statistical properties no matter which positions you picked. This assumption allows conformal prediction methods to provide formal guarantees about prediction coverage.
 
@@ -158,7 +159,7 @@ Therefore, when this bound-based gap becomes too large, it constitutes an alert 
 
 ### Interpretation
 
-- **Compatible risks**: $\hat{R}_{\mathrm{prod}}$ remains in the zone compatible with $\hat{R}_{\mathrm{ref}}$ → no strong signal of distributional break.
-- **Significant risk gap**: $\hat{R}_{\mathrm{prod}}$ exceeds expected bounds → suspicion of drift, non-exchangeability, or regime change.
+- **No alert** ($\Delta_t = L_{\mathrm{prod},t} - U_{\mathrm{ref}} \leq \epsilon$): the production lower bound remains compatible with the reference upper bound, meaning no strong signal of harmful drift or exchangeability violation.
+- **Alert triggered** ($\Delta_t > \epsilon$): the production lower bound exceeds the reference upper bound by more than the tolerated gap, meaning suspicion of harmful drift, non-exchangeability, or regime change.
 
-This risk-based perspective is often more operational in practice: it allows direct monitoring of potential performance degradation between a reference setting and production.
+This bound-based approach controls the false-alert probability at level $\delta$.
