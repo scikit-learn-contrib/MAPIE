@@ -1,7 +1,7 @@
+import warnings
 from abc import ABC, abstractmethod
 from copy import deepcopy
 from typing import Any, Literal, Optional, Union, cast
-import warnings
 
 import numpy as np
 from numpy.typing import NDArray
@@ -385,6 +385,8 @@ class SequentialMonteCarloTest(PermutationTest):
     warn : bool, default=True
         Whether to raise a warning when the exchangeability test fails at the
         end of :meth:`run`.
+    burn_in : int, default=100
+        Minimum number of permutations before considering early stopping.
     """
 
     def __init__(
@@ -396,6 +398,7 @@ class SequentialMonteCarloTest(PermutationTest):
         random_state: Optional[int] = None,
         num_permutations: int = 1000,
         warn: bool = True,
+        burn_in: int = 100,
     ) -> None:
         super().__init__(
             test_level=test_level,
@@ -406,6 +409,7 @@ class SequentialMonteCarloTest(PermutationTest):
             warn=warn,
         )
         self.strategy = strategy
+        self.burn_in = burn_in
 
         valid_strategies = {"aggressive", "binomial", "binomial_mixture"}
         if self.strategy not in valid_strategies:
@@ -472,7 +476,7 @@ class SequentialMonteCarloTest(PermutationTest):
             if (
                 current_wealth < self.test_level
                 or current_wealth >= 1 / self.test_level
-            ):
+            ) and i > self.burn_in:
                 break
 
         strategy_to_wealth = {
