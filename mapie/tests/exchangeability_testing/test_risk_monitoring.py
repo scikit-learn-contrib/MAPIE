@@ -219,7 +219,9 @@ class TestRiskMonitoring:
         self,
     ) -> None:
         y_true, y_pred = self._binary_data()
-        with pytest.warns(UserWarning, match="reference_data and threshold are both provided"):
+        with pytest.warns(
+            UserWarning, match="reference_data and threshold are both provided"
+        ):
             monitor = RiskMonitoring(
                 risk="accuracy",
                 reference_data=(y_true, y_pred),

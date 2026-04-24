@@ -208,7 +208,7 @@ def test_online_exchangeability_does_not_inject_test_method_for_other_classes(
     )
 
     wrapper = OnlineExchangeabilityTest(
-        method_names="dummy_online",
+        method_names="dummy_online",  # type: ignore[arg-type]
         method_params={"dummy_online": {"extra_flag": True}},
     )
     method = wrapper.test_methods[0]
