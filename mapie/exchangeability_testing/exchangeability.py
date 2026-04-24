@@ -88,7 +88,7 @@ List[FixedDatasetTestMethods]], default="all"
     --------
     >>> import numpy as np
     >>> X = np.arange(20, dtype=float).reshape(-1, 1)
-    >>> y = 2 * X.ravel()
+    >>> y = 2 * X.ravel() + np.linspace(0.0, 0.1, X.shape[0])
     >>> test = FixedDatasetExchangeabilityTest(
     ...     method_names="pvalue_permutation", warn=False
     ... )
@@ -240,7 +240,7 @@ List[OnlineTestMethods]], default="all"
     --------
     >>> import numpy as np
     >>> X = np.arange(120, dtype=float).reshape(-1, 1)
-    >>> y = 2 * X.ravel()
+    >>> y = 2 * X.ravel() + np.linspace(0.0, 0.1, X.shape[0])
     >>> online_test = OnlineExchangeabilityTest(
     ...     method_names="plugin_martingale", warn=False
     ... )

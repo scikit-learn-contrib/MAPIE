@@ -110,6 +110,10 @@ def toy_exchangeability_data():
 
 
 class TestPValuePermutationTest:
+    def test_is_exchangeable_is_none_before_running_test(self) -> None:
+        test = PValuePermutationTest()
+        assert test.is_exchangeable is None
+
     def test_split_conformal_regressor_conformalize_raises_if_already_conformalized(
         self,
         conformalized_split_conformal_regressor,
@@ -420,6 +424,7 @@ class TestSequentialMonteCarloTest:
             strategy=strategy,
             random_state=123,
             num_permutations=80,
+            burn_in=0,
             mapie_estimator=cast(MapieEstimator, split_conformal_regressor),
         )
         test.test_statistic = ConstantStatistic()

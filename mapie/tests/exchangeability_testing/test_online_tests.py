@@ -8,6 +8,7 @@ from mapie.exchangeability_testing.exchangeability import (
     FixedDatasetExchangeabilityTest,
     OnlineExchangeabilityTest,
 )
+import mapie.exchangeability_testing.exchangeability as et_module
 import mapie.exchangeability_testing.martingales as omt_module
 from mapie.exchangeability_testing.martingales import OnlineMartingaleTest
 
@@ -187,6 +188,32 @@ def test_online_exchangeability_method_params_override_injected_default():
     )
 
     assert wrapper.test_methods[0].test_method == "jumper_martingale"
+
+
+def test_online_exchangeability_does_not_inject_test_method_for_other_classes(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    """Test _init_test_method path when class is not OnlineMartingaleTest."""
+
+    class DummyOnlineMethod:
+        def __init__(self, test_level, warn, extra_flag=False):  # noqa: ANN001
+            self.test_level = test_level
+            self.warn = warn
+            self.extra_flag = extra_flag
+
+    monkeypatch.setitem(
+        et_module.online_test_method_choice_map,
+        "dummy_online",
+        DummyOnlineMethod,
+    )
+
+    wrapper = OnlineExchangeabilityTest(
+        method_names="dummy_online",
+        method_params={"dummy_online": {"extra_flag": True}},
+    )
+    method = wrapper.test_methods[0]
+    assert isinstance(method, DummyOnlineMethod)
+    assert method.extra_flag is True
 
 
 def test_online_exchangeability_is_exchangeable_returns_by_method():

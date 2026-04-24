@@ -215,6 +215,27 @@ class TestRiskMonitoring:
         with pytest.raises(ValueError, match="test_level must be in"):
             RiskMonitoring(risk="accuracy", test_level=1.1)
 
+    def test_init_warns_when_reference_data_and_threshold_are_both_provided(
+        self,
+    ) -> None:
+        y_true, y_pred = self._binary_data()
+        with pytest.warns(UserWarning, match="reference_data and threshold are both provided"):
+            monitor = RiskMonitoring(
+                risk="accuracy",
+                reference_data=(y_true, y_pred),
+                threshold=0.25,
+            )
+
+        assert monitor.threshold == 0.25
+
+    def test_init_computes_threshold_when_reference_data_is_provided(self) -> None:
+        y_true, y_pred = self._binary_data()
+        monitor = RiskMonitoring(
+            risk="accuracy",
+            reference_data=(y_true, y_pred),
+        )
+        assert monitor.threshold is not None
+
     def test_harmful_shift_detected_requires_online_bound(self) -> None:
         monitor = RiskMonitoring(risk="accuracy")
 
