@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Literal, Optional, Union, cast
+from typing import Any, Dict, List, Literal, Optional, Protocol, Union, cast
 
 from numpy.typing import NDArray
 
@@ -16,6 +16,20 @@ FixedDatasetTestMethod = Union[
 OnlineTestMethod = OnlineMartingaleTest
 ExchangeabilityDecision = Optional[bool]
 MethodParams = Dict[str, Dict[str, Any]]
+
+
+class ExchangeabilityTestProtocol(Protocol):
+    @property
+    def is_exchangeable(self) -> ExchangeabilityDecision: ...
+
+
+class RunnableExchangeabilityTestProtocol(ExchangeabilityTestProtocol, Protocol):
+    def run(self, X: NDArray, y: NDArray) -> FixedDatasetTestMethod: ...
+
+
+class UpdatableExchangeabilityTestProtocol(ExchangeabilityTestProtocol, Protocol):
+    def update(self, X: NDArray, y: NDArray) -> FixedDatasetTestMethod: ...
+
 
 online_test_method_choice_map = {
     "plugin_martingale": OnlineMartingaleTest,
@@ -123,10 +137,13 @@ List[FixedDatasetTestMethods]], default="all"
         if method_class is SequentialMonteCarloTest:
             strategy = method_name.removeprefix("permutation_")
             params = {"strategy": strategy, **params}
-        return method_class(
-            test_level=self.test_level,
-            warn=self.warn,
-            **params,
+        return cast(
+            FixedDatasetTestMethod,
+            method_class(
+                test_level=self.test_level,
+                warn=self.warn,
+                **params,
+            ),
         )
 
     @property
@@ -177,9 +194,13 @@ List[FixedDatasetTestMethods]], default="all"
         results = {}
         for test_method, method_name in zip(self.test_methods, self.method_names):
             if callable(getattr(test_method, "update", None)):
-                results[method_name] = test_method.update(X_test, y_test)
+                results[method_name] = cast(
+                    UpdatableExchangeabilityTestProtocol, test_method
+                ).update(X_test, y_test)
             elif callable(getattr(test_method, "run", None)):
-                results[method_name] = test_method.run(X_test, y_test)
+                results[method_name] = cast(
+                    RunnableExchangeabilityTestProtocol, test_method
+                ).run(X_test, y_test)
             else:
                 raise AttributeError(
                     f"Test method '{method_name}' must define either 'update' or 'run'."
