@@ -163,16 +163,15 @@ Examples reproducing results from scientific papers.
 To add an entirely new gallery section (e.g., `examples/time_series/`):
 
 1. Create the directory with subdirectories:
-   ```
+  ```
    examples/time_series/
    examples/time_series/README.md
    examples/time_series/1-quickstart/
    examples/time_series/1-quickstart/README.md
    examples/time_series/1-quickstart/plot_example.py
-   ```
-
+  ```
 2. Register it in `mkdocs.yml` under the `gallery` plugin:
-   ```yaml
+  ```yaml
    plugins:
      - gallery:
          examples_dirs:
@@ -181,14 +180,13 @@ To add an entirely new gallery section (e.g., `examples/time_series/`):
          gallery_dirs:
            - doc/generated/regression
            - doc/generated/time_series  # ← add here
-   ```
-
+  ```
 3. Add navigation entry:
-   ```yaml
+  ```yaml
    nav:
      - All Examples:
        - Time Series: generated/time_series  # ← add here
-   ```
+  ```
 
 ## Editing API Documentation
 
@@ -208,15 +206,15 @@ This renders the class documentation directly from the source code docstrings.
 
 1. Open the relevant API file (e.g., `doc/api/regression.md`).
 2. Add a mkdocstrings directive:
-   ```markdown
+  ```markdown
    ::: mapie.my_module.MyNewClass
-   ```
+  ```
 3. For pages with subsections (like conformity-scores, metrics), use `heading_level: 3`:
-   ```markdown
+  ```markdown
    ::: mapie.my_module.MyNewClass
        options:
          heading_level: 3
-   ```
+  ```
 
 ### Docstring Format
 

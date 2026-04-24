@@ -8,7 +8,7 @@ edit_uri: edit/master/doc/
 
 theme:
   name: material
-  logo: images/mapie_logo_nobg_cut.png
+  logo: images/mapie_logo_white_cut.png
   favicon: images/mapie_logo_nobg_cut.png
   icon:
     repo: fontawesome/brands/github
@@ -153,8 +153,8 @@ nav:
   - Conformal Prediction:
     - Regression:
       - Theoretical Description: theory/regression.md
-      - Examples: generated/regression
       - Conformity Scores: theory/conformity-scores.md
+      - Examples: generated/regression
     - Classification:
       - Theoretical Description: theory/classification.md
       - Examples: generated/classification
@@ -166,11 +166,11 @@ nav:
     - Examples: generated/calibration
     - Notebooks: calibration/notebooks.md
   - All Examples:
-    - Regression: generated/regression
-    - Classification: generated/classification
-    - Calibration: generated/calibration
-    - Risk Control: generated/risk_control
-    - Mondrian: generated/mondrian
+    - Regression: all-examples/regression.md
+    - Classification: all-examples/classification.md
+    - Calibration: all-examples/calibration.md
+    - Risk Control: all-examples/risk-control.md
+    - Mondrian: all-examples/mondrian.md
   - Q&A:
     - Metrics: theory/metrics.md
     - Mondrian: theory/mondrian.md
