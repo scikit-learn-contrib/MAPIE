@@ -119,6 +119,13 @@ Calibrate and evaluate probabilistic predictions.
 [Browse examples →](generated/calibration/index.md)
 </div>
 
+<div class="card" markdown>
+### :material-swap-horizontal: Exchangeability Testing
+Test distribution shifts and monitor exchangeability assumptions.
+
+[Browse examples →](generated/exchangeability_testing/index.md)
+</div>
+
 </div>
 
 ---

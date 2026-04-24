@@ -166,6 +166,8 @@ nav:
   - Calibration:
     - Theoretical Description: theory/calibration.md
     - Notebooks: calibration/notebooks.md
+  - Exchangeability Testing:
+    - Examples: generated/exchangeability_testing
   - Examples:
     - Regression: generated/regression
     - Classification: generated/classification
