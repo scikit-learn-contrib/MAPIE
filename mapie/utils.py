@@ -3,7 +3,6 @@ import logging
 import warnings
 from collections.abc import Iterable as IterableType
 from decimal import Decimal
-from inspect import signature
 from math import isclose
 from typing import Any, Iterable, List, Optional, Tuple, Union, cast
 
@@ -242,22 +241,23 @@ def _check_null_weight(
 # TODO back-end: this will be useless in v1 because we'll not distinguish
 # sample_weight from other fit_params
 def _fit_estimator(
-    estimator: Union[RegressorMixin, ClassifierMixin],
+    estimator: Union[RegressorMixin, ClassifierMixin, Pipeline],
     X: ArrayLike,
     y: ArrayLike,
-    sample_weight: Optional[NDArray] = None,
+    sample_weight: Optional[ArrayLike] = None,
     **fit_params,
-) -> Union[RegressorMixin, ClassifierMixin]:
+) -> Union[RegressorMixin, ClassifierMixin, Pipeline]:
     """
-    Fit an estimator on training data by distinguishing two cases:
-    - the estimator supports sample weights and sample weights are provided.
-    - the estimator does not support samples weights or
-      samples weights are not provided.
+    Fit an estimator on training data and optionally pass ``sample_weight``.
+
+    When the estimator is a sklearn ``Pipeline``, the weight is routed to the
+    final step using sklearn's ``stepname__sample_weight`` convention.
 
     Parameters
     ----------
-    estimator: Union[RegressorMixin, ClassifierMixin]
-        Estimator to train.
+    estimator: Union[RegressorMixin, ClassifierMixin, Pipeline]
+        Estimator to train. May be a single estimator or a sklearn
+        ``Pipeline``.
 
     X: ArrayLike of shape (n_samples, n_features)
         Input data.
@@ -274,7 +274,7 @@ def _fit_estimator(
 
     Returns
     -------
-    RegressorMixin
+    Union[RegressorMixin, ClassifierMixin, Pipeline]
         Fitted estimator.
 
     Examples
@@ -289,12 +289,14 @@ def _fit_estimator(
     >>> check_sklearn_user_model_is_fitted(estimator)
     True
     """
-    fit_parameters = signature(estimator.fit).parameters
-    supports_sw = "sample_weight" in fit_parameters
-    if supports_sw and sample_weight is not None:
-        estimator.fit(X, y, sample_weight=sample_weight, **fit_params)
-    else:
-        estimator.fit(X, y, **fit_params)
+    if sample_weight is not None:
+        if isinstance(estimator, Pipeline):
+            final_step_name = estimator.steps[-1][0]
+            sw_key = f"{final_step_name}__sample_weight"
+        else:
+            sw_key = "sample_weight"
+        fit_params[sw_key] = sample_weight
+    estimator.fit(X, y, **fit_params)
     return estimator
 
 

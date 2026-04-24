@@ -315,6 +315,7 @@ sphinx_gallery_conf = {
         "../examples/classification",
         "../examples/risk_control",
         "../examples/calibration",
+        "../examples/exchangeability_testing",
         "../examples/mondrian",
     ],
     "gallery_dirs": [
@@ -322,11 +323,13 @@ sphinx_gallery_conf = {
         "examples_classification",
         "examples_risk_control",
         "examples_calibration",
+        "examples_exchangeability_testing",
         "examples_mondrian",
     ],
     "doc_module": "mapie",
     "backreferences_dir": os.path.join("generated"),
     "reference_url": {"mapie": None},
+    "ignore_pattern": r"utils\.py$",
     "parallel": -1,  # for parallel execution of examples
 }
 

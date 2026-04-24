@@ -233,7 +233,7 @@ def ltt_procedure(
     delta: float,
     n_obs: NDArray,
     binary: bool = False,
-    fwer_method: Union[FWER_METHODS, FWERProcedure] = "bonferroni",
+    fwer_method: Union[FWER_METHODS, FWERProcedure] = "bonferroni_holm",
 ) -> Tuple[List[List[Any]], NDArray]:
     """
     Apply the Learn-Then-Test procedure for risk control.
@@ -259,8 +259,6 @@ def ltt_procedure(
         Contains the different alphas control level.
         The empirical risk should be less than alpha with
         probability 1-delta.
-        Note: MAPIE 1.2 does not support multiple risks and multiple alphas
-        simultaneously.
         For MultiLabelClassificationController, the shape should be (1, n_alpha).
         For BinaryClassificationController, the shape should be (n_risks, 1).
 
@@ -278,7 +276,7 @@ def ltt_procedure(
     binary: bool, default=False
         Must be True if the loss associated to the risk is binary.
 
-    fwer_method : {"bonferroni", "bonferroni_holm", "fixed_sequence", "split_fixed_sequence"} or FWERProcedure instance, default="bonferroni"
+    fwer_method : {"bonferroni", "bonferroni_holm", "fixed_sequence", "split_fixed_sequence"} or FWERProcedure instance, default="bonferroni_holm"
         FWER control strategy.
 
     Returns

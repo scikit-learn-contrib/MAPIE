@@ -683,74 +683,80 @@ def test_va_estimator_none_raises_error() -> None:
 @pytest.mark.filterwarnings("ignore:: RuntimeWarning")
 def test_va_sample_weights_constant() -> None:
     """Test that constant sample weights give same results as None."""
-    sklearn.set_config(enable_metadata_routing=True)
-    n_samples = len(X_binary_train)
-    weighted_estimator = GaussianNB().set_fit_request(sample_weight=True)
+    with sklearn.config_context(enable_metadata_routing=True):
+        n_samples = len(X_binary_train)
+        weighted_estimator = GaussianNB().set_fit_request(sample_weight=True)
 
-    va_cal_none = VennAbersCalibrator(
-        estimator=weighted_estimator, inductive=True, random_state=random_state_va
-    )
-    va_cal_none.fit(X_binary_train, y_binary_train, sample_weight=None)
+        va_cal_none = VennAbersCalibrator(
+            estimator=weighted_estimator, inductive=True, random_state=random_state_va
+        )
+        va_cal_none.fit(X_binary_train, y_binary_train, sample_weight=None)
 
-    va_cal_ones = VennAbersCalibrator(
-        estimator=weighted_estimator, inductive=True, random_state=random_state_va
-    )
-    va_cal_ones.fit(X_binary_train, y_binary_train, sample_weight=np.ones(n_samples))
+        va_cal_ones = VennAbersCalibrator(
+            estimator=weighted_estimator, inductive=True, random_state=random_state_va
+        )
+        va_cal_ones.fit(
+            X_binary_train, y_binary_train, sample_weight=np.ones(n_samples)
+        )
 
-    probs_none = va_cal_none.predict_proba(X_binary_test)
-    probs_ones = va_cal_ones.predict_proba(X_binary_test)
-    np.testing.assert_allclose(probs_none, probs_ones, rtol=1e-2, atol=1e-2)
+        probs_none = va_cal_none.predict_proba(X_binary_test)
+        probs_ones = va_cal_ones.predict_proba(X_binary_test)
+        np.testing.assert_allclose(probs_none, probs_ones, rtol=1e-2, atol=1e-2)
 
 
 @pytest.mark.filterwarnings("ignore:: RuntimeWarning")
 def test_va_sample_weights_variable() -> None:
     """Test that variable sample weights affect the results."""
-    sklearn.set_config(enable_metadata_routing=True)
-    n_samples = len(X_binary_train)
+    with sklearn.config_context(enable_metadata_routing=True):
+        n_samples = len(X_binary_train)
 
-    va_cal_uniform = VennAbersCalibrator(
-        estimator=RandomForestClassifier(n_estimators=10, random_state=random_state_va),
-        inductive=True,
-        random_state=random_state_va,
-    )
-    va_cal_uniform.fit(X_binary_train, y_binary_train, sample_weight=None)
+        va_cal_uniform = VennAbersCalibrator(
+            estimator=RandomForestClassifier(
+                n_estimators=10, random_state=random_state_va
+            ),
+            inductive=True,
+            random_state=random_state_va,
+        )
+        va_cal_uniform.fit(X_binary_train, y_binary_train, sample_weight=None)
 
-    sample_weights = np.random.RandomState(random_state_va).uniform(
-        0.1, 2.0, size=n_samples
-    )
-    estimator_weighted = RandomForestClassifier(
-        n_estimators=10, random_state=random_state_va
-    ).set_fit_request(sample_weight=True)
+        sample_weights = np.random.RandomState(random_state_va).uniform(
+            0.1, 2.0, size=n_samples
+        )
+        estimator_weighted = RandomForestClassifier(
+            n_estimators=10, random_state=random_state_va
+        ).set_fit_request(sample_weight=True)
 
-    va_cal_weighted = VennAbersCalibrator(
-        estimator=estimator_weighted, inductive=True, random_state=random_state_va
-    )
-    va_cal_weighted.fit(X_binary_train, y_binary_train, sample_weight=sample_weights)
+        va_cal_weighted = VennAbersCalibrator(
+            estimator=estimator_weighted, inductive=True, random_state=random_state_va
+        )
+        va_cal_weighted.fit(
+            X_binary_train, y_binary_train, sample_weight=sample_weights
+        )
 
-    probs_uniform = va_cal_uniform.predict_proba(X_binary_test)
-    probs_weighted = va_cal_weighted.predict_proba(X_binary_test)
-    assert not np.allclose(probs_uniform, probs_weighted)
+        probs_uniform = va_cal_uniform.predict_proba(X_binary_test)
+        probs_weighted = va_cal_weighted.predict_proba(X_binary_test)
+        assert not np.allclose(probs_uniform, probs_weighted)
 
 
 @pytest.mark.filterwarnings("ignore:: RuntimeWarning")
 def test_va_venn_abers_cv_with_sample_weight() -> None:
     """Test VennAbersCV with sample weights in cross-validation mode."""
-    sklearn.set_config(enable_metadata_routing=True)
-    sample_weight = np.ones(len(y_binary_train))
-    sample_weight[: len(y_binary_train) // 2] = 2.0
+    with sklearn.config_context(enable_metadata_routing=True):
+        sample_weight = np.ones(len(y_binary_train))
+        sample_weight[: len(y_binary_train) // 2] = 2.0
 
-    weighted_estimator = GaussianNB().set_fit_request(sample_weight=True)
-    va_cal = VennAbersCalibrator(
-        estimator=weighted_estimator,
-        inductive=False,
-        n_splits=3,
-        random_state=random_state_va,
-    )
-    va_cal.fit(X_binary_train, y_binary_train, sample_weight=sample_weight)
-    probs = va_cal.predict_proba(X_binary_test)
+        weighted_estimator = GaussianNB().set_fit_request(sample_weight=True)
+        va_cal = VennAbersCalibrator(
+            estimator=weighted_estimator,
+            inductive=False,
+            n_splits=3,
+            random_state=random_state_va,
+        )
+        va_cal.fit(X_binary_train, y_binary_train, sample_weight=sample_weight)
+        probs = va_cal.predict_proba(X_binary_test)
 
-    assert probs.shape == (len(X_binary_test), 2)
-    assert np.allclose(probs.sum(axis=1), 1.0)
+        assert probs.shape == (len(X_binary_test), 2)
+        assert np.allclose(probs.sum(axis=1), 1.0)
 
 
 @pytest.mark.filterwarnings("ignore:: RuntimeWarning")

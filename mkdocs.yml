@@ -75,15 +75,20 @@ plugins:
         - examples/classification
         - examples/calibration
         - examples/risk_control
+        - examples/exchangeability_testing
         - examples/mondrian
+      ignore_pattern: "utils\\.py$"
       gallery_dirs:
         - doc/generated/regression
         - doc/generated/classification
         - doc/generated/calibration
         - doc/generated/risk_control
+        - doc/generated/exchangeability_testing
         - doc/generated/mondrian
       within_subsection_order: FileNameSortKey
       plot_gallery: true
+      # Reuse gallery caches to skip unchanged examples when possible.
+      run_stale_examples: true
       download_all_examples: false
       abort_on_example_error: false
       only_warn_on_example_error: true

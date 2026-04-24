@@ -9,20 +9,25 @@ from sklearn.datasets import make_classification
 from sklearn.dummy import DummyClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, precision_score, recall_score
+from sklearn.metrics import mean_absolute_error, mean_squared_error
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 
 from mapie.risk_control import (
     BinaryClassificationController,
     BinaryClassificationRisk,
+    BinaryRisk,
+    ContinuousRisk,
     accuracy,
     false_positive_rate,
+    mae,
+    mse,
     positive_predictive_value,
     precision,
     recall,
 )
-from mapie.risk_control.binary_classification import Risk
 from mapie.risk_control.fwer_control import FWERFixedSequenceTesting
+from mapie.risk_control.risks import BinaryRiskLike, binary_risk_choice_map
 
 random_state = 42
 dummy_single_param = np.array([0.5])
@@ -125,7 +130,7 @@ def bcc_deterministic():
     ],
 )
 def test_binary_classification_risk(
-    risk_instance: BinaryClassificationRisk,
+    risk_instance: BinaryRisk,
     metric_func,
     effective_sample_func,
     y_true,
@@ -147,6 +152,156 @@ def test_binary_classification_risk(
     assert n == expected_n
 
 
+@pytest.mark.parametrize(
+    "risk_instance, metric_func",
+    [
+        (mae, mean_absolute_error),
+        (mse, mean_squared_error),
+    ],
+)
+@pytest.mark.parametrize(
+    "y_true, y_pred",
+    [
+        (np.array([0.0, 1.0, 2.0, 3.0]), np.array([0.2, 1.3, 1.8, 3.1])),
+        (np.array([-1.0, 0.0, 1.0, 2.0]), np.array([-0.8, 0.1, 0.7, 2.4])),
+        (np.array([2.0, 2.0, 2.0, 2.0]), np.array([1.0, 2.0, 3.0, 4.0])),
+    ],
+)
+def test_continuous_risk(
+    risk_instance: ContinuousRisk,
+    metric_func,
+    y_true: NDArray,
+    y_pred: NDArray,
+):
+    value, n = risk_instance.get_value_and_effective_sample_size(y_true, y_pred)
+    expected_value = metric_func(y_true, y_pred)
+    expected_n = len(y_true)
+
+    assert np.isclose(value, expected_value)
+    assert n == expected_n
+
+
+@pytest.mark.parametrize(
+    "risk_instance, expected_sequence",
+    [
+        (
+            mae,
+            np.array([0.2, 0.1, 0.2, 0.4]),
+        ),
+        (
+            mse,
+            np.array([0.04, 0.01, 0.04, 0.16]),
+        ),
+    ],
+)
+def test_continuous_risk_sequence(
+    risk_instance: ContinuousRisk,
+    expected_sequence: NDArray,
+) -> None:
+    y_true = np.array([0.0, 1.0, 2.0, 3.0])
+    y_pred = np.array([0.2, 1.1, 1.8, 3.4])
+    risk_sequence = risk_instance.get_risk_sequence(y_true, y_pred)
+    np.testing.assert_allclose(risk_sequence, expected_sequence)
+
+
+@pytest.mark.parametrize(
+    "risk_instance",
+    [mae, mse],
+)
+@pytest.mark.parametrize(
+    "y_true, y_pred",
+    [
+        (np.array([0.0, 1.0, 2.0]), np.array([0.1, np.nan, 2.1])),
+        (np.array([0.0, np.nan, 2.0]), np.array([0.1, 1.2, 2.1])),
+    ],
+)
+def test_continuous_risk_with_nan_values(
+    risk_instance: ContinuousRisk,
+    y_true: NDArray,
+    y_pred: NDArray,
+) -> None:
+    with pytest.warns(
+        UserWarning,
+        match=r"NaN values detected in per-sample risk values",
+    ):
+        value, n = risk_instance.get_value_and_effective_sample_size(y_true, y_pred)
+    with pytest.warns(
+        UserWarning,
+        match=r"NaN values detected in per-sample risk values",
+    ):
+        risk_sequence = risk_instance.get_risk_sequence(y_true, y_pred)
+
+    assert np.isnan(value)
+    assert n == len(y_true)
+    assert risk_sequence.shape == y_true.shape
+    assert np.isnan(risk_sequence).any()
+
+
+@pytest.mark.parametrize(
+    "risk_instance, y_true, y_pred, expected_sequence",
+    [
+        (
+            precision,
+            np.array([1, 0, 1, 0]),
+            np.array([1, 1, 0, 0]),
+            np.array([0, 1]),
+        ),
+        (
+            accuracy,
+            np.array([1, 0, 1, 0]),
+            np.array([1, 1, 0, 0]),
+            np.array([0, 1, 1, 0]),
+        ),
+        (
+            recall,
+            np.array([1, 0, 1, 0]),
+            np.array([1, 1, 0, 0]),
+            np.array([0, 1]),
+        ),
+        (
+            false_positive_rate,
+            np.array([1, 0, 1, 0]),
+            np.array([1, 1, 0, 0]),
+            np.array([1, 0]),
+        ),
+        (
+            positive_predictive_value,
+            np.array([1, 0, 1, 0]),
+            np.array([1, 1, 0, 0]),
+            np.array([0, 1]),
+        ),
+        (
+            precision,
+            np.array([1, 0, 1, 0]),
+            np.array([0, 0, 0, 0]),
+            np.array([], dtype=int),
+        ),
+    ],
+)
+def test_binary_classification_risk_sequence(
+    risk_instance: BinaryRisk,
+    y_true: NDArray,
+    y_pred: NDArray,
+    expected_sequence: NDArray,
+) -> None:
+    risk_sequence = risk_instance.get_risk_sequence(y_true, y_pred)
+
+    np.testing.assert_array_equal(risk_sequence, expected_sequence)
+
+
+def test_binary_classification_risk_deprecated_alias_warns() -> None:
+    with pytest.warns(
+        FutureWarning,
+        match="BinaryClassificationRisk.*deprecated.*BinaryRisk",
+    ):
+        risk = BinaryClassificationRisk(
+            risk_occurrence=lambda y_true, y_pred: y_pred == y_true,
+            risk_condition=lambda y_true, y_pred: np.repeat(True, len(y_true)),
+            higher_is_better=True,
+        )
+    assert isinstance(risk, BinaryRisk)
+
+
 class TestBinaryClassificationControllerBestPredictParamChoice:
     @pytest.mark.parametrize(
         "risk_instance, expected",
@@ -157,7 +312,7 @@ class TestBinaryClassificationControllerBestPredictParamChoice:
             (false_positive_rate, recall),
         ],
     )
-    def test_auto(self, risk_instance: BinaryClassificationRisk, expected):
+    def test_auto(self, risk_instance: BinaryRisk, expected):
         controller = BinaryClassificationController(
             predict_function=dummy_predict,
             risk=risk_instance,
@@ -180,7 +335,7 @@ class TestBinaryClassificationControllerBestPredictParamChoice:
         )
 
         result = controller._set_best_predict_param_choice(str_risk)
-        assert result is BinaryClassificationController.risk_choice_map[str_risk]
+        assert result is binary_risk_choice_map[str_risk]
 
     def test_custom(self):
         """Test _set_best_predict_param_choice with a custom risk instance."""
@@ -246,7 +401,7 @@ class TestBinaryClassificationControllerBestPredictParamChoice:
     ],
 )
 def test_binary_classification__convert_target_level_to_alpha(
-    risk_instance: BinaryClassificationRisk,
+    risk_instance: BinaryRisk,
     target_level: float,
     expected_alpha: float,
 ) -> None:
@@ -270,6 +425,7 @@ def test_binary_classification_controller_sklearn_pipeline_with_dataframe() -> N
         risk=precision,
         target_level=0.1,
         confidence_level=0.1,
+        fwer_method="bonferroni",
     )
 
     controller.calibrate(X_df, y).predict(X_df)
@@ -541,7 +697,7 @@ class TestCheckIfMultiRiskControl:
         [precision, "precision"],
     )
     def test_mono_risk(
-        self, bcc_deterministic: BinaryClassificationController, risk: Risk
+        self, bcc_deterministic: BinaryClassificationController, risk: BinaryRiskLike
     ):
         is_multi_risk = bcc_deterministic._check_if_multi_risk_control(
             risk, dummy_target
@@ -553,7 +709,7 @@ class TestCheckIfMultiRiskControl:
         [[precision], ["precision"]],
     )
     def test_mono_risk_list(
-        self, bcc_deterministic: BinaryClassificationController, risk: Risk
+        self, bcc_deterministic: BinaryClassificationController, risk: BinaryRiskLike
     ):
         is_multi_risk = bcc_deterministic._check_if_multi_risk_control(
             risk, [dummy_target]
@@ -569,7 +725,7 @@ class TestCheckIfMultiRiskControl:
         ],
     )
     def test_multi_risk(
-        self, bcc_deterministic: BinaryClassificationController, risk: Risk
+        self, bcc_deterministic: BinaryClassificationController, risk: BinaryRiskLike
     ):
         is_multi_risk = bcc_deterministic._check_if_multi_risk_control(
             risk, [dummy_target, dummy_target]
@@ -585,7 +741,9 @@ class TestCheckIfMultiRiskControl:
             ([recall, false_positive_rate], [0.6, 0.8, 0.7]),
         ],
     )
-    def test_error_cases(self, risk: Risk, target_level: Union[List[float], float]):
+    def test_error_cases(
+        self, risk: BinaryRiskLike, target_level: Union[List[float], float]
+    ):
         with pytest.raises(ValueError, match="If you provide a list of risks,"):
             BinaryClassificationController._check_if_multi_risk_control(
                 risk, target_level
@@ -601,7 +759,7 @@ class TestCheckIfMultiRiskControl:
     ],
 )
 def test_invalid_risk_str_raises_error(
-    risk: Risk, target_level: Union[List[float], float]
+    risk: BinaryRiskLike, target_level: Union[List[float], float]
 ):
     with pytest.raises(ValueError, match="When risk is provided as a string,"):
         BinaryClassificationController(
@@ -679,7 +837,7 @@ def test_get_risk_values_and_eff_sample_sizes(y_true: NDArray, y_pred: NDArray):
             0.7,
         ),
         # Lists of multiple risks and targets
-        # which mix str and BinaryClassificationRisk.
+        # which mix str and BinaryRisk.
         (
             ["precision", "recall"],
             [0.65, 0.6],
@@ -689,9 +847,9 @@ def test_get_risk_values_and_eff_sample_sizes(y_true: NDArray, y_pred: NDArray):
     ],
 )
 def test_functional_multi_risk(
-    risks_1: List[BinaryClassificationRisk],
+    risks_1: List[BinaryRisk],
     targets_1: List[float],
-    risks_2: Union[List[BinaryClassificationRisk], BinaryClassificationRisk],
+    risks_2: Union[List[BinaryRisk], BinaryRisk],
     targets_2: Union[List[float], float],
 ):
     """
@@ -833,6 +991,7 @@ def test_functional_multi_dimensional_params():
         risk=precision,
         target_level=0.6,
         list_predict_params=grid_param_multi_dim,
+        fwer_method="bonferroni",
     )
     bcc_multi_dim.calibrate(realistic_X_calib, realistic_y_calib)
 
@@ -860,6 +1019,7 @@ def test_functional_multi_dimensional_params_multi_risk():
         risk=[precision, recall],
         target_level=[0.65, 0.6],
         list_predict_params=grid_param_multi_dim,
+        fwer_method="bonferroni",
     )
     bcc_multi_dim.calibrate(realistic_X_calib, realistic_y_calib)
 
@@ -868,6 +1028,15 @@ def test_functional_multi_dimensional_params_multi_risk():
     assert bcc_multi_dim.best_predict_param is not None
     assert isinstance(bcc_multi_dim.best_predict_param, tuple)
     assert len(bcc_multi_dim.best_predict_param) == 2
+
+
+def test_default_fwer_method_is_bonferroni_holm():
+    controller = BinaryClassificationController(
+        predict_function=dummy_predict,
+        risk=precision,
+        target_level=dummy_target,
+    )
+    assert controller.fwer_method == "bonferroni_holm"
 
 
 def test_check_fwer_method_invalid_method():

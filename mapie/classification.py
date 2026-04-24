@@ -34,6 +34,7 @@ from mapie.utils import (
     _check_null_weight,
     _check_predict_params,
     _check_verbose,
+    _fit_estimator,
     _prepare_fit_params_and_sample_weight,
     _prepare_params,
     _raise_error_if_fit_called_in_prefit_mode,
@@ -179,8 +180,8 @@ class SplitConformalClassifier:
         _raise_error_if_method_already_called("fit", self._is_fitted)
 
         cloned_estimator = clone(self._estimator)
-        fit_params_ = _prepare_params(fit_params)
-        cloned_estimator.fit(X_train, y_train, **fit_params_)
+        fit_params_, sample_weight = _prepare_fit_params_and_sample_weight(fit_params)
+        _fit_estimator(cloned_estimator, X_train, y_train, sample_weight, **fit_params_)
         self._mapie_classifier.estimator = cloned_estimator
 
         self._is_fitted = True

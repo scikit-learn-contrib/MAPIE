@@ -210,7 +210,7 @@ to_explore = np.array(to_explore)
 ##############################################################################
 # We now initialize a `BinaryClassificationController`
 # using the `abstain_to_answer` prediction function and three specific risks, each
-# represented as an instance of `BinaryClassificationRisk`:
+# represented as an instance of `BinaryRisk`:
 #
 # - `negative_predictive_value`: precision (NPV) on class 0 ("not hallucinated"),
 # - `positive_predictive_value`: precision (PPV) on class 1 ("hallucinated"),

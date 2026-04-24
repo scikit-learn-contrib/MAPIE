@@ -39,12 +39,21 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+          cache: 'pip'
+          cache-dependency-path: 'pyproject.toml'
 
       - name: Install dependencies
         run: |
           pip install -e ".[docs]"
           echo "--- Installed mkdocstrings versions ---"
           pip show mkdocstrings mkdocstrings-python
+
+      - name: Restore gallery cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            doc/generated
+          key: ${{ runner.os }}-docs-gallery-${{ hashFiles('examples/**', 'mapie/**', 'mkdocs.yml', 'pyproject.toml', 'doc/hooks/**') }}
 
       - name: Configure Git
         run: |

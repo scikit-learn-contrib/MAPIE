@@ -8,7 +8,7 @@ from unittest.mock import patch
 import numpy as np
 import pytest
 from numpy.typing import ArrayLike, NDArray
-from sklearn.datasets import make_regression
+from sklearn.datasets import make_classification, make_regression
 from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.model_selection import BaseCrossValidator, KFold, LeaveOneOut, ShuffleSplit
 from sklearn.pipeline import Pipeline
@@ -492,11 +492,16 @@ def test_check_null_weight_with_zeros() -> None:
     "ignore:Estimator exposes fitted-like attributes.*:UserWarning"
 )
 @pytest.mark.parametrize("estimator", [LinearRegression(), DumbEstimator()])
-@pytest.mark.parametrize("sample_weight", [None, np.ones_like(y_toy)])
-def test_fit_estimator(estimator: Any, sample_weight: Optional[NDArray]) -> None:
+def test_fit_estimator(estimator: Any) -> None:
     """Test that the returned estimator is always fitted."""
-    estimator = _fit_estimator(estimator, X_toy, y_toy, sample_weight)
+    estimator = _fit_estimator(estimator, X_toy, y_toy)
     check_sklearn_user_model_is_fitted(estimator)
+
+
+def test_fit_estimator_raises_with_unsupported_sample_weight() -> None:
+    """Test that unsupported sample_weight raises estimator TypeError."""
+    with pytest.raises(TypeError):
+        _fit_estimator(DumbEstimator(), X_toy, y_toy, np.ones_like(y_toy))
 
 
 def test_fit_estimator_sample_weight() -> None:
@@ -510,6 +515,130 @@ def test_fit_estimator_sample_weight() -> None:
     y_pred_2 = estimator_2.predict(X)
     with pytest.raises(AssertionError):
         np.testing.assert_almost_equal(y_pred_1, y_pred_2)
+
+
+def test_fit_estimator_pipeline_sample_weight() -> None:
+    """Test that sample_weight is correctly routed through a Pipeline.
+
+    Regression test for https://github.com/scikit-learn-contrib/MAPIE/issues/798
+    """
+    from sklearn.preprocessing import PolynomialFeatures
+    from sklearn.pipeline import Pipeline
+
+    X = np.array([[1], [2], [3], [4], [5], [6], [7], [8]], dtype=float)
+    y = np.array([2.1, 3.9, 6.2, 7.8, 10.1, 12.3, 14.0, 16.1])
+    sw = np.array([100, 100, 100, 100, 0.01, 0.01, 0.01, 0.01])
+
+    # Plain estimator with sample_weight
+    est_plain = _fit_estimator(LinearRegression(), X, y, sw)
+
+    # Pipeline with sample_weight — should produce identical results
+    pipe = Pipeline(
+        [
+            ("poly", PolynomialFeatures(degree=1, include_bias=False)),
+            ("lr", LinearRegression()),
+        ]
+    )
+    est_pipe = _fit_estimator(pipe, X, y, sw)
+
+    np.testing.assert_allclose(est_plain.coef_, est_pipe[-1].coef_, rtol=1e-10)
+    np.testing.assert_allclose(
+        est_plain.intercept_, est_pipe[-1].intercept_, rtol=1e-10
+    )
+
+    # Verify weights actually affected the result vs unweighted
+    est_unweighted = _fit_estimator(LinearRegression(), X, y)
+    with pytest.raises(AssertionError):
+        np.testing.assert_almost_equal(est_plain.coef_, est_unweighted.coef_)
+
+
+def test_split_conformal_regressor_pipeline_sample_weight() -> None:
+    """Test that SplitConformalRegressor.fit() correctly routes sample_weight
+    through a Pipeline estimator.
+
+    Regression test for https://github.com/scikit-learn-contrib/MAPIE/issues/798
+    """
+    from sklearn.datasets import make_regression
+    from sklearn.preprocessing import PolynomialFeatures
+    from sklearn.pipeline import Pipeline
+    from mapie.regression import SplitConformalRegressor
+    from mapie.utils import train_conformalize_test_split
+
+    X, y = make_regression(n_samples=500, n_features=5, noise=20, random_state=42)
+    (X_train, X_conf, X_test, y_train, y_conf, y_test) = train_conformalize_test_split(
+        X,
+        y,
+        train_size=0.6,
+        conformalize_size=0.2,
+        test_size=0.2,
+        random_state=42,
+    )
+    sw = np.random.RandomState(42).rand(len(X_train))
+
+    pipeline = Pipeline(
+        [
+            ("poly", PolynomialFeatures(degree=1, include_bias=False)),
+            ("lr", LinearRegression()),
+        ]
+    )
+    mapie_reg = SplitConformalRegressor(
+        estimator=pipeline,
+        confidence_level=0.95,
+        prefit=False,
+    )
+    # This should not raise ValueError
+    mapie_reg.fit(X_train, y_train, {"sample_weight": sw})
+    mapie_reg.conformalize(X_conf, y_conf)
+    points, intervals = mapie_reg.predict_interval(X_test)
+    assert points.shape == (len(X_test),)
+    assert intervals.shape[0] == len(X_test)
+
+
+def test_split_conformal_classifier_pipeline_sample_weight() -> None:
+    """Test that SplitConformalClassifier.fit() routes sample_weight in Pipeline.
+
+    Regression test for https://github.com/scikit-learn-contrib/MAPIE/issues/798
+    """
+    from sklearn.pipeline import Pipeline
+    from sklearn.preprocessing import StandardScaler
+
+    from mapie.classification import SplitConformalClassifier
+    from mapie.utils import train_conformalize_test_split
+
+    X, y = make_classification(
+        n_samples=500,
+        n_features=10,
+        n_informative=5,
+        n_redundant=1,
+        random_state=42,
+    )
+    (X_train, X_conf, X_test, y_train, y_conf, y_test) = train_conformalize_test_split(
+        X,
+        y,
+        train_size=0.6,
+        conformalize_size=0.2,
+        test_size=0.2,
+        random_state=42,
+    )
+    sw = np.random.RandomState(42).rand(len(X_train))
+
+    pipeline = Pipeline(
+        [
+            ("scaler", StandardScaler()),
+            ("lr", LogisticRegression(max_iter=1000)),
+        ]
+    )
+    mapie_clf = SplitConformalClassifier(
+        estimator=pipeline,
+        confidence_level=0.95,
+        prefit=False,
+    )
+    # This should not raise ValueError
+    mapie_clf.fit(X_train, y_train, {"sample_weight": sw})
+    mapie_clf.conformalize(X_conf, y_conf)
+    points, pred_sets = mapie_clf.predict_set(X_test)
+    assert points.shape == (len(X_test),)
+    assert pred_sets.shape[0] == len(X_test)
 
 
 @pytest.mark.parametrize("alpha", [-1, 0, 1, 2, 2.5, "a", ["a", "b"]])
