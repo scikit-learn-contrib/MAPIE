@@ -12,6 +12,42 @@ import mapie.exchangeability_testing.martingales as omt_module
 from mapie.exchangeability_testing.martingales import OnlineMartingaleTest
 
 
+def test_fixed_dataset_exchangeability_validation_errors():
+    """Test fixed-dataset wrapper validation on method names."""
+    with pytest.raises(ValueError, match=r"Invalid method_names type"):
+        FixedDatasetExchangeabilityTest(method_names=1)  # type: ignore[arg-type]
+
+    with pytest.raises(ValueError, match=r"Invalid method name: not_a_method"):
+        FixedDatasetExchangeabilityTest(method_names="not_a_method")  # type: ignore[arg-type]
+
+
+def test_fixed_dataset_exchangeability_accepts_list_of_method_names():
+    """Test fixed-dataset wrapper accepts a list of method names."""
+    wrapper = FixedDatasetExchangeabilityTest(
+        method_names=["pvalue_permutation", "jumper_martingale"]
+    )
+
+    assert wrapper.method_names == ["pvalue_permutation", "jumper_martingale"]
+
+
+def test_online_exchangeability_validation_errors():
+    """Test online wrapper validation on method names."""
+    with pytest.raises(ValueError, match=r"Invalid method_names type"):
+        OnlineExchangeabilityTest(method_names=1)  # type: ignore[arg-type]
+
+    with pytest.raises(ValueError, match=r"Invalid method name: not_a_method"):
+        OnlineExchangeabilityTest(method_names="not_a_method")  # type: ignore[arg-type]
+
+
+def test_online_exchangeability_accepts_list_of_method_names():
+    """Test online wrapper accepts a list of method names."""
+    wrapper = OnlineExchangeabilityTest(
+        method_names=["plugin_martingale", "jumper_martingale"]
+    )
+
+    assert wrapper.method_names == ["plugin_martingale", "jumper_martingale"]
+
+
 def test_init_validation_errors():
     """Test that invalid initialization parameters raise ValueError."""
     with pytest.raises(ValueError, match=r"test_level must lie in \(0, 1\)"):
@@ -61,6 +97,77 @@ def test_fixed_dataset_exchangeability_override_injected_smc_strategy():
         method_params={"permutation_binomial": {"strategy": "aggressive"}},
     )
     assert wrapper.test_methods[0].strategy == "aggressive"
+
+
+def test_fixed_dataset_exchangeability_is_exchangeable_returns_by_method():
+    """Test fixed-dataset wrapper exposes each method exchangeability decision."""
+    wrapper = FixedDatasetExchangeabilityTest(method_names="all")
+    wrapper.test_methods = [
+        MagicMock(is_exchangeable=True),
+        MagicMock(is_exchangeable=False),
+        MagicMock(is_exchangeable=None),
+        MagicMock(is_exchangeable=True),
+        MagicMock(is_exchangeable=False),
+        MagicMock(is_exchangeable=None),
+    ]
+
+    assert wrapper.is_exchangeable == {
+        "pvalue_permutation": True,
+        "permutation_binomial": False,
+        "permutation_binomial_mixture": None,
+        "permutation_aggressive": True,
+        "plugin_martingale": False,
+        "jumper_martingale": None,
+    }
+
+
+def test_fixed_dataset_exchangeability_run_calls_update_when_available():
+    """Test fixed-dataset wrapper prefers update when both APIs exist."""
+    wrapper = FixedDatasetExchangeabilityTest(method_names="pvalue_permutation")
+    X = np.array([[1.0], [2.0]])
+    y = np.array([0.0, 1.0])
+    update_result = object()
+    run_result = object()
+    test_method = MagicMock()
+    test_method.update = MagicMock(return_value=update_result)
+    test_method.run = MagicMock(return_value=run_result)
+    wrapper.test_methods = [test_method]
+
+    results = wrapper.run(X, y)
+
+    test_method.update.assert_called_once_with(X, y)
+    test_method.run.assert_not_called()
+    assert results == {"pvalue_permutation": update_result}
+
+
+def test_fixed_dataset_exchangeability_run_calls_run_when_update_missing():
+    """Test fixed-dataset wrapper falls back to run when needed."""
+    wrapper = FixedDatasetExchangeabilityTest(method_names="pvalue_permutation")
+    X = np.array([[1.0], [2.0]])
+    y = np.array([0.0, 1.0])
+    run_result = object()
+
+    class RunOnlyMethod:
+        def __init__(self):
+            self.run = MagicMock(return_value=run_result)
+            self.is_exchangeable = None
+
+    test_method = RunOnlyMethod()
+    wrapper.test_methods = [test_method]
+
+    results = wrapper.run(X, y)
+
+    test_method.run.assert_called_once_with(X, y)
+    assert results == {"pvalue_permutation": run_result}
+
+
+def test_fixed_dataset_exchangeability_run_raises_when_no_supported_api():
+    """Test fixed-dataset wrapper errors on invalid test method API."""
+    wrapper = FixedDatasetExchangeabilityTest(method_names="pvalue_permutation")
+    wrapper.test_methods = [object()]
+
+    with pytest.raises(AttributeError, match=r"must define either 'update' or 'run'"):
+        wrapper.run(np.array([[1.0]]), np.array([1.0]))
 
 
 def test_online_exchangeability_injects_martingale_test_method():
@@ -119,6 +226,15 @@ def test_online_exchangeability_update_calls_test_method_update():
         "plugin_martingale": first_result,
         "jumper_martingale": second_result,
     }
+
+
+def test_online_exchangeability_update_raises_when_update_missing():
+    """Test online wrapper errors when a method does not define update."""
+    wrapper = OnlineExchangeabilityTest(method_names="plugin_martingale")
+    wrapper.test_methods = [object()]
+
+    with pytest.raises(AttributeError, match=r"must define an 'update' method"):
+        wrapper.update(np.array([[1.0]]), np.array([1.0]))
 
 
 def test_reject_threshold_computation():
