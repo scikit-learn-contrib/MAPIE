@@ -368,6 +368,8 @@ class OnlineMartingaleTest:
             )
             self.fit_estimator(X_train, y_train)
 
+        if hasattr(estimator, "_is_conformalized"):
+            estimator._is_conformalized = False
         estimator.conformalize(X, y)  # compute scores internally
 
         if self.task == "classification":

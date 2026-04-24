@@ -815,6 +815,42 @@ def test_compute_non_conformity_scores_uses_provided_estimator_without_creation(
     assert omt.mapie_estimator.conformalize_calls == 1
 
 
+def test_compute_non_conformity_scores_can_reuse_estimator_across_updates():
+    """Test repeated conformalization calls reuse one estimator safely."""
+
+    class DummyProvidedRegressor:
+        def __init__(self):
+            self._is_fitted = True
+            self._is_conformalized = False
+            self._mapie_regressor = type("ScoreHolder", (), {})()
+            self.conformalize_calls = 0
+
+        def conformalize(self, X, y):
+            if self._is_conformalized:
+                raise ValueError("conformalize method already called")
+            self.conformalize_calls += 1
+            self._is_conformalized = True
+            self._mapie_regressor.conformity_scores_ = np.asarray(y, dtype=float)
+
+    omt = OnlineMartingaleTest(
+        mapie_estimator=DummyProvidedRegressor(),
+        task="regression",
+    )
+
+    first_scores = omt._compute_non_conformity_scores(
+        np.array([[0.0], [1.0]]),
+        np.array([0.2, 0.4]),
+    )
+    second_scores = omt._compute_non_conformity_scores(
+        np.array([[2.0], [3.0]]),
+        np.array([0.6, 0.8]),
+    )
+
+    assert np.array_equal(first_scores, np.array([0.2, 0.4]))
+    assert np.array_equal(second_scores, np.array([0.6, 0.8]))
+    assert omt.mapie_estimator.conformalize_calls == 2
+
+
 def test_compute_non_conformity_scores_warns_when_estimator_not_fitted(monkeypatch):
     """Test warning is raised when estimator is not fitted."""
 
