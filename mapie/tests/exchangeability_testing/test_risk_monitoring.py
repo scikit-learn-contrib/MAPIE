@@ -4,12 +4,12 @@ import numpy as np
 import pytest
 from numpy.typing import NDArray
 
-from mapie.exchangeability_testing.risk_monitoring import RiskMonitoring
-from mapie.exchangeability_testing.confidence_bounds import (
+from mapie.exchangeability_testing.bounds import (
     GammaExponentialMixtureBound,
     conjugate_mixture_empirical_bernstein_bound,
     hoeffding_bound,
 )
+from mapie.exchangeability_testing.risk_monitoring import RiskMonitoring
 from mapie.risk_control.risks import BinaryRiskNames
 
 
