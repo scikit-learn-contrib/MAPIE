@@ -5075,13 +5075,13 @@
 
 <h1 id="exchangeability-tests">Exchangeability Tests<a class="headerlink" href="#exchangeability-tests" title="Permanent link">&para;</a></h1>
 <h2 id="why-exchangeability-matters-for-conformal-prediction">Why Exchangeability Matters for Conformal Prediction<a class="headerlink" href="#why-exchangeability-matters-for-conformal-prediction" title="Permanent link">&para;</a></h2>
-<p>In practice, conformal prediction methods assume that pairs of features and labels <span class="arithmatex">\((X_i, Y_i)\)</span> are drawn in an exchangeable way. This enables these methods to provide <strong>empirical coverage guarantees</strong>: you can be confident that your prediction intervals cover the true value at a specified rate, regardless of your model's specific structure. This is powerful because it doesn't require strong assumptions about how the data was generated.
+<p>Conformal prediction methods assume that pairs of features and labels <span class="arithmatex">\((X_i, Y_i)\)</span> are drawn in an exchangeable way. This enables these methods to provide <strong>empirical coverage guarantees</strong>: you can be confident that your prediction intervals cover the true value at a specified rate, regardless of your model's specific structure. This is powerful because it doesn't require strong assumptions about how the data was generated.
 Exchangeability testing helps us verify this crucial assumption, which underpins the reliability guarantees of conformal prediction.</p>
 <h2 id="what-is-exchangeability">What is Exchangeability?<a class="headerlink" href="#what-is-exchangeability" title="Permanent link">&para;</a></h2>
 <p>Imagine you have a deck of cards: if the deck is "fair," shuffling it doesn't change anything fundamental about what you should expect. Similarly, exchangeability means that the order in which we collect our data doesn't matter. Thus the underlying patterns remain the same whether we see examples in one order or another.</p>
-<p>Exchangeability is a formal way of expressing the idea that "order doesn't matter." More precisely, an infinite sequence of random variables <span class="arithmatex">\((X_1, X_2, \ldots)\)</span> is said to be <strong>exchangeable</strong> if any finite subset of these variables has the same probability distribution regardless of their positions in the sequence.</p>
-<p>In mathematical terms:
-$<span class="arithmatex">\(P(X_{i_1}, \ldots, X_{i_n} \in A) = P(X_{j_1}, \ldots, X_{j_n} \in A)\)</span>$</p>
+<p>Exchangeability is a formal way of expressing the idea that "order doesn't matter." More precisely, random variables are said to be <strong>exchangeable</strong> if for any finite subset, any reordering (permutation) of that subset preserves the joint distribution.</p>
+<p>In mathematical terms, for any permutation <span class="arithmatex">\(\sigma\)</span> of indices:</p>
+<div class="arithmatex">\[P(X_1, \ldots, X_n) = P(X_{\sigma(1)}, \ldots, X_{\sigma(n)})\]</div>
 <p>This simply means: if you pick any <span class="arithmatex">\(n\)</span> observations from different positions in your sequence and measure them, you get the same statistical properties no matter which positions you picked. This assumption allows conformal prediction methods to provide formal guarantees about prediction coverage.</p>
 <h2 id="operations-that-preserve-exchangeability">Operations That Preserve Exchangeability<a class="headerlink" href="#operations-that-preserve-exchangeability" title="Permanent link">&para;</a></h2>
 <p>If your data is exchangeable, several natural operations keep it that way:</p>
@@ -5178,10 +5178,10 @@ P\left( |\hat{R}_{\mathrm{prod}} - \hat{R}_{\mathrm{ref}}| \geq \epsilon \right)
 <p>Therefore, when this bound-based gap becomes too large, it constitutes an alert for harmful drift and/or violation of the exchangeability assumption.</p>
 <h3 id="interpretation">Interpretation<a class="headerlink" href="#interpretation" title="Permanent link">&para;</a></h3>
 <ul>
-<li><strong>Compatible risks</strong>: <span class="arithmatex">\(\hat{R}_{\mathrm{prod}}\)</span> remains in the zone compatible with <span class="arithmatex">\(\hat{R}_{\mathrm{ref}}\)</span> → no strong signal of distributional break.</li>
-<li><strong>Significant risk gap</strong>: <span class="arithmatex">\(\hat{R}_{\mathrm{prod}}\)</span> exceeds expected bounds → suspicion of drift, non-exchangeability, or regime change.</li>
+<li><strong>No alert</strong> (<span class="arithmatex">\(\Delta_t = L_{\mathrm{prod},t} - U_{\mathrm{ref}} \leq \epsilon\)</span>): the production lower bound remains compatible with the reference upper bound, meaning no strong signal of harmful drift or exchangeability violation.</li>
+<li><strong>Alert triggered</strong> (<span class="arithmatex">\(\Delta_t &gt; \epsilon\)</span>): the production lower bound exceeds the reference upper bound by more than the tolerated gap, meaning suspicion of harmful drift, non-exchangeability, or regime change.</li>
 </ul>
-<p>This risk-based perspective is often more operational in practice: it allows direct monitoring of potential performance degradation between a reference setting and production.</p>
+<p>This bound-based approach controls the false-alert probability at level <span class="arithmatex">\(\delta\)</span>.</p>
 
 
 
