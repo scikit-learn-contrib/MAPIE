@@ -77,7 +77,7 @@ plugins:
         - examples/risk_control
         - examples/exchangeability_testing
         - examples/mondrian
-      ignore_pattern: "utils\\.py$"
+      ignore_pattern: "(utils\\.py|plot_exchangeability_online\\.py)$"
       gallery_dirs:
         - doc/generated/regression
         - doc/generated/classification
