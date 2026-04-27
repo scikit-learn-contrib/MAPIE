@@ -128,32 +128,14 @@ $$
 
 where $\epsilon$ is the tolerated gap and $\delta$ is the target confidence level (the exact form depends on the chosen bound and the considered loss).
 
-In practice, this overall level is split across the two bounds: $\delta_{\mathrm{ref}}$ for $U_{\mathrm{ref}}$ and $\delta_{\mathrm{prod}}$ for $L_{\mathrm{prod},t}$, with $\delta_{\mathrm{ref}} + \delta_{\mathrm{prod}} = \delta$.
+In practice, this overall level is split across two bounds: $U_{\mathrm{ref}}$ the upper confidence bound for ${\mathrm{ref}$ with confidence level $\delta_{\mathrm{ref}}$ and $L_{\mathrm{prod},t}$ the lowerconfidence bound for ${\mathrm{prod}$ with confidence level $\delta_{\mathrm{prod}}$, with $\delta_{\mathrm{ref}} + \delta_{\mathrm{prod}} = \delta$.
 
 With this notation, define the bound gap as $\Delta_t = L_{\mathrm{prod},t} - U_{\mathrm{ref}}$, i.e., the difference between the production lower bound and the reference upper bound. The inequality above then states that the probability of observing a gap larger than $\epsilon$ is controlled by $\delta$.
 
-```mermaid
-flowchart TD
-	A[Choose a business risk metric]
-	B[Reference data\nEstimate risk and compute upper bound U_ref\nat level δ_ref]
-	C[Production data at time t\nEstimate risk and compute lower bound L_prod,t\nat level δ_prod]
-	D[Set error split\nδ_ref + δ_prod = δ]
-	E[Compute bound gap\nΔ_t = L_prod,t - U_ref]
-	F{Δ_t > ε?}
-	G[Alert: harmful drift]
-	H[No alert]
-	I[Guarantee\nP(Δ_t ≥ ε) ≤ δ]
-
-	A --> B
-	A --> C
-	B --> D
-	C --> D
-	D --> E
-	E --> F
-	E --> I
-	F -->|Yes| G
-	F -->|No| H
-```
+<figure markdown>
+  ![RiskMonitoring](../images/risk_monitoring.png){ width="600" }
+  <figcaption>Illustration of risk monitoring confidence control.</figcaption>
+</figure>
 
 Therefore, when this bound-based gap becomes too large, it constitutes an alert for harmful drift and/or violation of the exchangeability assumption.
 
@@ -162,4 +144,4 @@ Therefore, when this bound-based gap becomes too large, it constitutes an alert 
 - **No alert** ($\Delta_t = L_{\mathrm{prod},t} - U_{\mathrm{ref}} \leq \epsilon$): the production lower bound remains compatible with the reference upper bound, meaning no strong signal of harmful drift or exchangeability violation.
 - **Alert triggered** ($\Delta_t > \epsilon$): the production lower bound exceeds the reference upper bound by more than the tolerated gap, meaning suspicion of harmful drift, non-exchangeability, or regime change.
 
-This bound-based approach controls the false-alert probability at level $\delta$.
+This bound-based approach controls the false-alert probability at level $1 - \delta$.
