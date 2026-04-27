@@ -1489,7 +1489,7 @@
   <span class="md-ellipsis">
     
   
-    Online exchangeability testing
+    Exchangeability testing on an online stream
   
 
     
@@ -1673,7 +1673,7 @@
   <span class="md-ellipsis">
     
   
-    Permutation test for exchangeability
+    Permutation tests for exchangeability
   
 
     
@@ -4119,7 +4119,7 @@
   <span class="md-ellipsis">
     
   
-    Online exchangeability testing
+    Exchangeability testing on an online stream
   
 
     
@@ -4303,7 +4303,7 @@
   <span class="md-ellipsis">
     
   
-    Permutation test for exchangeability
+    Permutation tests for exchangeability
   
 
     
@@ -5158,23 +5158,24 @@
 to download the full example code</p>
 </div>
 <h1 id="exchangeability-testing-on-a-fixed-dataset">Exchangeability testing on a fixed dataset<a class="headerlink" href="#exchangeability-testing-on-a-fixed-dataset" title="Permanent link">&para;</a></h1>
-<p>This quickstart demonstrates how to test exchangeability for a fixed dataset.</p>
+<p>This quickstart demonstrates how to test exchangeability on a fixed dataset.</p>
 <p>Guarantees provided by conformal prediction and risk control depend on the
-hypothesis that data is exchangeable. This is why verifying exchangeability
-before applying methods from MAPIE is important.</p>
-<p>Typically, (split) conformal prediction, risk control, and calibration
-require data not seen during training, which might be a split of the test data.</p>
+hypothesis that data is exchangeable. Verifying exchangeability before
+applying methods from MAPIE is therefore important. Typically, (split)
+conformal prediction, risk control, and calibration require data not seen
+during training, such as a split of the test data.</p>
 <p>Note that for the exchangeability test to be valid, the order of samples in
-the fixed dataset should be representative of what will happen after
-deployment. Shuffling the data would render the dataset exchangeable.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 22-23 -->
+the fixed dataset must be representative of what will happen after deployment.
+Shuffling the data beforehand would trivially render the dataset exchangeable
+and hide any potential distribution shift.</p>
+<!-- GENERATED FROM PYTHON SOURCE LINES 19-20 -->
 
 <p>We first prepare the data and fit a classifier on the training data.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 23-50 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 20-47 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.linear_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">LogisticRegression</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.model_selection</span><span class="w"> </span><span class="kn">import</span> <span class="n">train_test_split</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">generate_gaussian_stream</span><span class="p">,</span> <span class="n">plot_dataset</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mapie._example_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">generate_gaussian_stream</span><span class="p">,</span> <span class="n">plot_dataset</span>
 </span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
 </span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mapie.classification</span><span class="w"> </span><span class="kn">import</span> <span class="n">SplitConformalClassifier</span>
 </span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mapie.exchangeability_testing</span><span class="w"> </span><span class="kn">import</span> <span class="n">FixedDatasetExchangeabilityTest</span>
@@ -6102,27 +6103,27 @@ deployment. Shuffling the data would render the dataset exchangeable.</p>
     forceTheme('sk-container-id-8');</script></body>
 </div>
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 51-54 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 48-51 -->
 
 <p>Now we can test the exchangeability of the test dataset.
 By default, we use all available test methods.
 Method-specific parameters can be passed as a dictionary.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 54-60 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 51-57 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">exchangeability_test</span> <span class="o">=</span> <span class="n">FixedDatasetExchangeabilityTest</span><span class="p">()</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="n">exchangeability_test</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">X_test</span><span class="p">,</span> <span class="n">y_test</span><span class="p">)</span>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="nb">print</span><span class="p">(</span><span class="n">exchangeability_test</span><span class="o">.</span><span class="n">is_exchangeable</span><span class="p">)</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Is the test dataset exchangeable? </span><span class="si">{</span><span class="n">exchangeability_test</span><span class="o">.</span><span class="n">is_exchangeable</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </span></code></pre></div>
 <p class="mkd-glr-script-out">Out:</p>
-<div class="mkd-glr-script-out-disp highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="o">{</span><span class="s1">&#39;pvalue_permutation&#39;</span>:<span class="w"> </span>True,<span class="w"> </span><span class="s1">&#39;permutation_binomial&#39;</span>:<span class="w"> </span>True,<span class="w"> </span><span class="s1">&#39;permutation_binomial_mixture&#39;</span>:<span class="w"> </span>True,<span class="w"> </span><span class="s1">&#39;permutation_aggressive&#39;</span>:<span class="w"> </span>True,<span class="w"> </span><span class="s1">&#39;plugin_martingale&#39;</span>:<span class="w"> </span>True,<span class="w"> </span><span class="s1">&#39;jumper_martingale&#39;</span>:<span class="w"> </span>True<span class="o">}</span>
+<div class="mkd-glr-script-out-disp highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>Is<span class="w"> </span>the<span class="w"> </span><span class="nb">test</span><span class="w"> </span>dataset<span class="w"> </span>exchangeable?<span class="w"> </span><span class="o">{</span><span class="s1">&#39;pvalue_permutation&#39;</span>:<span class="w"> </span>True,<span class="w"> </span><span class="s1">&#39;permutation_binomial&#39;</span>:<span class="w"> </span>True,<span class="w"> </span><span class="s1">&#39;permutation_binomial_mixture&#39;</span>:<span class="w"> </span>True,<span class="w"> </span><span class="s1">&#39;permutation_aggressive&#39;</span>:<span class="w"> </span>True,<span class="w"> </span><span class="s1">&#39;plugin_martingale&#39;</span>:<span class="w"> </span>True,<span class="w"> </span><span class="s1">&#39;jumper_martingale&#39;</span>:<span class="w"> </span>True<span class="o">}</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 61-64 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 58-61 -->
 
 <p>The test dataset is exchangeable. We can continue with MAPIE.
 Conformalization with a split of the test dataset will provide
 coverage guarantees on the remaining test data.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 64-76 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 61-73 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">X_conformalize</span><span class="p">,</span> <span class="n">X_test_new</span><span class="p">,</span> <span class="n">y_conformalize</span><span class="p">,</span> <span class="n">y_test_new</span> <span class="o">=</span> <span class="n">train_test_split</span><span class="p">(</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>    <span class="n">X_test</span><span class="p">,</span> <span class="n">y_test</span><span class="p">,</span> <span class="n">test_size</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="n">random_state</span>
@@ -6135,11 +6136,11 @@ coverage guarantees on the remaining test data.</p>
 </span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="n">mapie_classifier</span><span class="o">.</span><span class="n">conformalize</span><span class="p">(</span><span class="n">X_conformalize</span><span class="p">,</span> <span class="n">y_conformalize</span><span class="p">)</span>
 </span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="n">y_pred</span><span class="p">,</span> <span class="n">y_pred_set</span> <span class="o">=</span> <span class="n">mapie_classifier</span><span class="o">.</span><span class="n">predict_set</span><span class="p">(</span><span class="n">X_test_new</span><span class="p">)</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 77-79 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 74-76 -->
 
 <p>Now let us see what happens for a non-exchangeable fixed dataset.
 Here, an abrupt shift happens in the second part of the dataset.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 79-99 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 76-96 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">X_test_abrupt</span><span class="p">,</span> <span class="n">y_test_abrupt</span> <span class="o">=</span> <span class="n">generate_gaussian_stream</span><span class="p">(</span>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>    <span class="n">n_samples</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">X_test</span><span class="p">),</span>
@@ -6158,17 +6159,18 @@ Here, an abrupt shift happens in the second part of the dataset.</p>
 </span><span id="__span-4-15"><a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a><span class="n">exchangeability_test</span> <span class="o">=</span> <span class="n">FixedDatasetExchangeabilityTest</span><span class="p">()</span>
 </span><span id="__span-4-16"><a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a><span class="n">exchangeability_test</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">X_test_abrupt</span><span class="p">,</span> <span class="n">y_test_abrupt</span><span class="p">)</span>
 </span><span id="__span-4-17"><a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a>
-</span><span id="__span-4-18"><a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a><span class="nb">print</span><span class="p">(</span><span class="n">exchangeability_test</span><span class="o">.</span><span class="n">is_exchangeable</span><span class="p">)</span>
+</span><span id="__span-4-18"><a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Is the shifted dataset exchangeable? </span><span class="si">{</span><span class="n">exchangeability_test</span><span class="o">.</span><span class="n">is_exchangeable</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </span></code></pre></div>
 <p><img alt="Non-exchangeable fixed dataset" class="mkd-glr-single-img" src="../images/mkd_glr_plot_exchangeability_fixed_dataset_002.png" srcset="../images/mkd_glr_plot_exchangeability_fixed_dataset_002.png" /></p>
 <p class="mkd-glr-script-out">Out:</p>
-<div class="mkd-glr-script-out-disp highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="o">{</span><span class="s1">&#39;pvalue_permutation&#39;</span>:<span class="w"> </span>False,<span class="w"> </span><span class="s1">&#39;permutation_binomial&#39;</span>:<span class="w"> </span>False,<span class="w"> </span><span class="s1">&#39;permutation_binomial_mixture&#39;</span>:<span class="w"> </span>False,<span class="w"> </span><span class="s1">&#39;permutation_aggressive&#39;</span>:<span class="w"> </span>False,<span class="w"> </span><span class="s1">&#39;plugin_martingale&#39;</span>:<span class="w"> </span>False,<span class="w"> </span><span class="s1">&#39;jumper_martingale&#39;</span>:<span class="w"> </span>True<span class="o">}</span>
+<div class="mkd-glr-script-out-disp highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>Is<span class="w"> </span>the<span class="w"> </span>shifted<span class="w"> </span>dataset<span class="w"> </span>exchangeable?<span class="w"> </span><span class="o">{</span><span class="s1">&#39;pvalue_permutation&#39;</span>:<span class="w"> </span>False,<span class="w"> </span><span class="s1">&#39;permutation_binomial&#39;</span>:<span class="w"> </span>False,<span class="w"> </span><span class="s1">&#39;permutation_binomial_mixture&#39;</span>:<span class="w"> </span>False,<span class="w"> </span><span class="s1">&#39;permutation_aggressive&#39;</span>:<span class="w"> </span>False,<span class="w"> </span><span class="s1">&#39;plugin_martingale&#39;</span>:<span class="w"> </span>False,<span class="w"> </span><span class="s1">&#39;jumper_martingale&#39;</span>:<span class="w"> </span>True<span class="o">}</span>
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 100-102 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 97-100 -->
 
-<p>The test dataset is not exchangeable. MAPIE cannot provide statistical guarantees.
-More generally, the classifier itself should not be trusted.</p>
-<p><strong>Total running time of the script:</strong> ( 0 minutes  1.363 seconds)</p>
+<p>The shifted test dataset is not exchangeable: MAPIE cannot provide
+statistical guarantees on it, and more generally the classifier itself
+should not be trusted without further investigation.</p>
+<p><strong>Total running time of the script:</strong> ( 0 minutes  1.352 seconds)</p>
 <div id="download_links"></div>
 
 <p><a class="md-button center" href="../plot_exchangeability_fixed_dataset.py"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M256 32c0-17.7-14.3-32-32-32s-32 14.3-32 32v210.7l-41.4-41.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l96 96c12.5 12.5 32.8 12.5 45.3 0l96-96c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 242.7zM64 320c-35.3 0-64 28.7-64 64v32c0 35.3 28.7 64 64 64h320c35.3 0 64-28.7 64-64v-32c0-35.3-28.7-64-64-64h-46.9l-56.6 56.6c-31.2 31.2-81.9 31.2-113.1 0L110.9 320zm304 56a24 24 0 1 1 0 48 24 24 0 1 1 0-48"/></svg></span> Download Python source code: plot_exchangeability_fixed_dataset.py</a></p>
