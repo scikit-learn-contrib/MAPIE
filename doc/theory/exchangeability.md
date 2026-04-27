@@ -128,7 +128,7 @@ $$
 
 where $\epsilon$ is the tolerated gap and $\delta$ is the target confidence level (the exact form depends on the chosen bound and the considered loss).
 
-In practice, this overall level is split across two bounds: $U_{\mathrm{ref}}$ the upper confidence bound for ${\mathrm{ref}$ with confidence level $\delta_{\mathrm{ref}}$ and $L_{\mathrm{prod},t}$ the lowerconfidence bound for ${\mathrm{prod}$ with confidence level $\delta_{\mathrm{prod}}$, with $\delta_{\mathrm{ref}} + \delta_{\mathrm{prod}} = \delta$.
+In practice, this overall level is split across two bounds: $U_{\mathrm{ref}}$ the upper confidence bound for $R_{\mathrm{ref}$ with confidence level $\delta_{\mathrm{ref}}$ and $L_{\mathrm{prod},t}$ the lowerconfidence bound for $R_{\mathrm{prod}$ with confidence level $\delta_{\mathrm{prod}}$, with $\delta_{\mathrm{ref}} + \delta_{\mathrm{prod}} = \delta$.
 
 With this notation, define the bound gap as $\Delta_t = L_{\mathrm{prod},t} - U_{\mathrm{ref}}$, i.e., the difference between the production lower bound and the reference upper bound. The inequality above then states that the probability of observing a gap larger than $\epsilon$ is controlled by $\delta$.
 
