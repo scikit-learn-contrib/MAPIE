@@ -23,6 +23,7 @@ coverage:
 		--cov-report term-missing \
 		--cov-fail-under=100 \
 		--no-cov-on-fail \
+		--ignore=mapie/_example_utils.py \
 		--ignore=mapie/tests/long_tests
 
 long-tests:
@@ -52,6 +53,7 @@ tests:
 	pytest -vs \
 		--doctest-modules \
 		--pyargs mapie \
+		--ignore=mapie/_example_utils.py \
 		--ignore=mapie/tests/long_tests
 
 clean-doc:

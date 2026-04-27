@@ -197,3 +197,6 @@ docstring-code-line-length = "dynamic"
 [tool.ruff.lint.per-file-ignores]
 # Ignores multiple statements on one line, variables never used, import order in notebooks
 "*.ipynb" = ["E702", "F841", "E402"]
+
+[tool.coverage.run]
+omit = ["mapie/_example_utils.py"]

@@ -1,4 +1,4 @@
-"""Private plotting and data helpers used by MAPIE examples."""
+"""Private data and plotting helpers used by MAPIE examples."""
 
 import matplotlib.pyplot as plt
 import numpy as np
