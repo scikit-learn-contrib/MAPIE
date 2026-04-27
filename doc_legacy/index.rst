@@ -52,6 +52,14 @@
 
 .. toctree::
    :maxdepth: 2
+   :titlesonly:
+   :hidden:
+   :caption: Verify exchangeability
+
+   theoretical_description_exchangeability
+
+.. toctree::
+   :maxdepth: 2
    :hidden:
    :caption: API
 
