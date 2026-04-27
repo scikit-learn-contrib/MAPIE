@@ -7,6 +7,7 @@
 * documentation moved to GitHub
 * Change the default FWER control method for risk control from `bonferroni` to `bonferroni_holm`.
 * Add an All Examples overview page linking to the generated example galleries.
+* Clarify the Conformal Prediction navigation labels for regression and classification pages.
 <<<<<<< risk-continuous
 * Rename `BinaryClassificationRisk` to `BinaryRisk` and keep a deprecated alias for backward compatibility.
 =======
