@@ -5152,36 +5152,20 @@ $<span class="arithmatex">\(\text{p-value} = \frac{\#\{\text{shuffles with stati
 P\left( |\hat{R}_{\mathrm{prod}} - \hat{R}_{\mathrm{ref}}| \geq \epsilon \right) \leq \delta
 \]</div>
 <p>where <span class="arithmatex">\(\epsilon\)</span> is the tolerated gap and <span class="arithmatex">\(\delta\)</span> is the target confidence level (the exact form depends on the chosen bound and the considered loss).</p>
-<p>In practice, this overall level is split across the two bounds: <span class="arithmatex">\(\delta_{\mathrm{ref}}\)</span> for <span class="arithmatex">\(U_{\mathrm{ref}}\)</span> and <span class="arithmatex">\(\delta_{\mathrm{prod}}\)</span> for <span class="arithmatex">\(L_{\mathrm{prod},t}\)</span>, with <span class="arithmatex">\(\delta_{\mathrm{ref}} + \delta_{\mathrm{prod}} = \delta\)</span>.</p>
+<p>In practice, this overall level is split across two bounds: <span class="arithmatex">\(U_{\mathrm{ref}}\)</span> the upper confidence bound for <span class="arithmatex">\({\mathrm{ref}\)</span> with confidence level <span class="arithmatex">\(\delta_{\mathrm{ref}}\)</span> and <span class="arithmatex">\(L_{\mathrm{prod},t}\)</span> the lowerconfidence bound for <span class="arithmatex">\({\mathrm{prod}\)</span> with confidence level <span class="arithmatex">\(\delta_{\mathrm{prod}}\)</span>, with <span class="arithmatex">\(\delta_{\mathrm{ref}} + \delta_{\mathrm{prod}} = \delta\)</span>.</p>
 <p>With this notation, define the bound gap as <span class="arithmatex">\(\Delta_t = L_{\mathrm{prod},t} - U_{\mathrm{ref}}\)</span>, i.e., the difference between the production lower bound and the reference upper bound. The inequality above then states that the probability of observing a gap larger than <span class="arithmatex">\(\epsilon\)</span> is controlled by <span class="arithmatex">\(\delta\)</span>.</p>
-<div class="highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>flowchart TD
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    A[Choose a business risk metric]
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    B[Reference data\nEstimate risk and compute upper bound U_ref\nat level δ_ref]
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    C[Production data at time t\nEstimate risk and compute lower bound L_prod,t\nat level δ_prod]
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    D[Set error split\nδ_ref + δ_prod = δ]
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    E[Compute bound gap\nΔ_t = L_prod,t - U_ref]
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    F{Δ_t &gt; ε?}
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    G[Alert: harmful drift]
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    H[No alert]
-</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    I[Guarantee\nP(Δ_t ≥ ε) ≤ δ]
-</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>
-</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    A --&gt; B
-</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    A --&gt; C
-</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    B --&gt; D
-</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    C --&gt; D
-</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>    D --&gt; E
-</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>    E --&gt; F
-</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>    E --&gt; I
-</span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>    F --&gt;|Yes| G
-</span><span id="__span-0-20"><a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>    F --&gt;|No| H
-</span></code></pre></div>
+<figure>
+<p><img alt="RiskMonitoring" src="../../images/risk_monitoring.png" style="background-color: white; padding: 8px;" width="600" />
+  </p>
+<figcaption>Illustration of risk monitoring confidence control.</figcaption>
+</figure>
 <p>Therefore, when this bound-based gap becomes too large, it constitutes an alert for harmful drift and/or violation of the exchangeability assumption.</p>
 <h3 id="interpretation">Interpretation<a class="headerlink" href="#interpretation" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>No alert</strong> (<span class="arithmatex">\(\Delta_t = L_{\mathrm{prod},t} - U_{\mathrm{ref}} \leq \epsilon\)</span>): the production lower bound remains compatible with the reference upper bound, meaning no strong signal of harmful drift or exchangeability violation.</li>
 <li><strong>Alert triggered</strong> (<span class="arithmatex">\(\Delta_t &gt; \epsilon\)</span>): the production lower bound exceeds the reference upper bound by more than the tolerated gap, meaning suspicion of harmful drift, non-exchangeability, or regime change.</li>
 </ul>
-<p>This bound-based approach controls the false-alert probability at level <span class="arithmatex">\(\delta\)</span>.</p>
+<p>This bound-based approach controls the false-alert probability at level <span class="arithmatex">\(1 - \delta\)</span>.</p>
 
 
 
