@@ -64,7 +64,7 @@ import warnings
 
 import matplotlib.pyplot as plt
 import numpy as np
-from examples.exchangeability_testing.utils import (
+from utils import (
     plot_martingale_results_one_scenario,
     print_martingale_summary,
 )

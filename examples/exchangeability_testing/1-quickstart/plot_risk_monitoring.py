@@ -35,7 +35,7 @@ or no labels, please refer to the extensions [2] and [3] respectively.
 # that `RiskMonitoring` tracks the misclassification risk `1 - accuracy`.
 
 from sklearn.linear_model import LogisticRegression
-from examples.exchangeability_testing.utils import generate_gaussian_stream, plot_monitoring_results
+from utils import generate_gaussian_stream, plot_monitoring_results
 
 from mapie.exchangeability_testing import RiskMonitoring
 
