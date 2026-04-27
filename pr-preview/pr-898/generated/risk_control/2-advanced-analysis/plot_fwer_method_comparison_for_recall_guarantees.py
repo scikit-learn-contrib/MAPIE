@@ -46,12 +46,17 @@ a risk in binary classification.
 # Note that Bonferroni-Holm is now the default FWER control method.
 # It remains broadly applicable across problem settings.
 #
-# | **Method**      | **Conservatism level** | **Monotonic risk** | **Non-monotonic risk** | **Multi-risk** | **Multi-parameter** |
-# |-----------------|------------------------|--------------------|------------------------|----------------|---------------------|
-# | Bonferroni      | ➕➕➕➕                | ✅                 | ✅                     | ✅             | ✅                  |
-# | Bonferroni-Holm | ➕➕➕                  | ✅                 | ✅                     | ✅             | ✅                  |
-# | FST             | ➕                      | ✅                 | ❌                     | ❌             | ❌                  |
-# | Split FST       | ➕➕                    | ✅                 | ✅                     | ✅             | ✅                  |
+# +-----------------+--------------------+----------------+--------------------+------------+-----------------+
+# | Method          | Conservatism level | Monotonic risk | Non-monotonic risk | Multi-risk | Multi-parameter |
+# +=================+====================+================+====================+============+=================+
+# | Bonferroni      | ➕➕➕➕             | ✅             | ✅                 | ✅         | ✅              |
+# +-----------------+--------------------+----------------+--------------------+------------+-----------------+
+# | Bonferroni-Holm | ➕➕➕               | ✅             | ✅                 | ✅         | ✅              |
+# +-----------------+--------------------+----------------+--------------------+------------+-----------------+
+# | FST             | ➕                   | ✅             | ❌                 | ❌         | ❌              |
+# +-----------------+--------------------+----------------+--------------------+------------+-----------------+
+# | Split FST       | ➕➕                 | ✅             | ✅                 | ✅         | ✅              |
+# +-----------------+--------------------+----------------+--------------------+------------+-----------------+
 #
 # Here we control **1-recall**, which is monotonic with respect to the decision
 # threshold. We therefore expect FST to be the least conservative, Bonferroni
