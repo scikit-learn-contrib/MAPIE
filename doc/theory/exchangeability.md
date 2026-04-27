@@ -133,7 +133,7 @@ In practice, this overall level is split across two bounds: $U_{\mathrm{ref}}$ t
 With this notation, define the bound gap as $\Delta_t = L_{\mathrm{prod},t} - U_{\mathrm{ref}}$, i.e., the difference between the production lower bound and the reference upper bound. The inequality above then states that the probability of observing a gap larger than $\epsilon$ is controlled by $\delta$.
 
 <figure markdown>
-  ![RiskMonitoring](../images/risk_monitoring.png){ width="600" }
+  ![RiskMonitoring](../images/risk_monitoring.png){ width="600" style="background-color: white; padding: 8px;" }
   <figcaption>Illustration of risk monitoring confidence control.</figcaption>
 </figure>
 
