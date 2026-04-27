@@ -5,14 +5,14 @@ Browse the MAPIE example galleries by topic.
 <div class="grid" markdown>
 
 <div class="card" markdown>
-### :material-chart-line: Regression
+### :material-chart-line: Conformal Prediction for Regression
 Prediction intervals for regression and time series.
 
 [Open Regression examples](../generated/regression/index.md)
 </div>
 
 <div class="card" markdown>
-### :material-shape: Classification
+### :material-shape: Conformal Prediction for Classification
 Prediction sets for single-label and multi-label classification.
 
 [Open Classification examples](../generated/classification/index.md)
