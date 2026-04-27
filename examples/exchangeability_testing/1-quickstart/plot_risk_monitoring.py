@@ -34,7 +34,11 @@ or no labels, please refer to the extensions [2] and [3] respectively.
 # monitoring threshold on a clean reference set. `risk="accuracy"` means
 # that `RiskMonitoring` tracks the misclassification risk `1 - accuracy`.
 
+from pathlib import Path
 from sklearn.linear_model import LogisticRegression
+import sys
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from utils import generate_gaussian_stream, plot_monitoring_results
 
 from mapie.exchangeability_testing import RiskMonitoring

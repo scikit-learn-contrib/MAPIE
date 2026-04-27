@@ -64,9 +64,16 @@ import warnings
 
 import matplotlib.pyplot as plt
 import numpy as np
+from pathlib import Path
+import sys
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from utils import (
+    plot_martingale_results_one_scenario,
+    print_martingale_summary,
+)
 from sklearn.datasets import make_classification
 from sklearn.linear_model import LogisticRegression
-from utils import plot_martingale_results_one_scenario, print_martingale_summary
 
 from mapie.classification import SplitConformalClassifier
 from mapie.exchangeability_testing import OnlineMartingaleTest

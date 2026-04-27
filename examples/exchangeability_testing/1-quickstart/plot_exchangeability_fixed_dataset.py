@@ -18,8 +18,12 @@ and hide any potential distribution shift.
 ##############################################################################
 # We first prepare the data and fit a classifier on the training data.
 
+from pathlib import Path
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
+import sys
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from utils import generate_gaussian_stream, plot_dataset
 
 from mapie.classification import SplitConformalClassifier

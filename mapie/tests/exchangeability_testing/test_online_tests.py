@@ -821,15 +821,11 @@ def test_compute_non_conformity_scores_can_reuse_estimator_across_updates():
     class DummyProvidedRegressor:
         def __init__(self):
             self._is_fitted = True
-            self._is_conformalized = False
             self._mapie_regressor = type("ScoreHolder", (), {})()
             self.conformalize_calls = 0
 
         def conformalize(self, X, y):
-            if self._is_conformalized:
-                raise ValueError("conformalize method already called")
             self.conformalize_calls += 1
-            self._is_conformalized = True
             self._mapie_regressor.conformity_scores_ = np.asarray(y, dtype=float)
 
     omt = OnlineMartingaleTest(

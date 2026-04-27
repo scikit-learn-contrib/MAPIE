@@ -18,6 +18,10 @@ run the test and assess performance.
 # We first prepare an exchangeable online stream. The stream is processed
 # batch by batch, as new labeled data would arrive in deployment.
 
+from pathlib import Path
+import sys
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from utils import generate_gaussian_stream, plot_dataset
 
 from mapie.exchangeability_testing import OnlineExchangeabilityTest
