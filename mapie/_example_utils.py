@@ -1,4 +1,4 @@
-"""Plotting and data helpers shared by exchangeability-testing examples."""
+"""Private plotting and data helpers used by MAPIE examples."""
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -149,19 +149,7 @@ def generate_gaussian_stream(
 
 
 def plot_running_pvalues(tests, labels, test_level, title):
-    """Plot the running p-values of several permutation tests.
-
-    Parameters
-    ----------
-    tests : list
-        Fitted permutation-test instances exposing a ``p_values`` attribute.
-    labels : list of str
-        One label per test, used in the legend.
-    test_level : float
-        Horizontal reference line drawn at this level.
-    title : str
-        Plot title.
-    """
+    """Plot the running p-values of several permutation tests."""
     styles = [
         {"linestyle": "-", "linewidth": 2.0, "zorder": 4},
         {"linestyle": "-", "linewidth": 3.0, "zorder": 1},
@@ -194,18 +182,7 @@ def plot_martingale_results_one_scenario(
     scenario_name,
     shift_start_time=None,
 ):
-    """Plot jumper and plug-in martingales and the plug-in p-value histogram.
-
-    Parameters
-    ----------
-    omt_jumper, omt_plugin : OnlineMartingaleTest
-        Fitted online martingale test instances (jumper and plug-in).
-    scenario_name : str
-        Used in per-axis titles and in the figure suptitle.
-    shift_start_time : int or None, default=None
-        If provided, draw a vertical line at this time index to mark the
-        shift start.
-    """
+    """Plot martingales and the plug-in p-value histogram for one scenario."""
     fig, axes = plt.subplots(1, 3, figsize=(18, 5.8))
     threshold = omt_jumper.reject_threshold
 
@@ -252,15 +229,7 @@ def plot_martingale_results_one_scenario(
 
 
 def print_martingale_summary(results, test_level=0.05):
-    """Print compact diagnostics for each stream and martingale method.
-
-    Parameters
-    ----------
-    results : dict[str, tuple]
-        Mapping ``scenario_name -> (omt_jumper, omt_plugin)``.
-    test_level : float, default=0.05
-        Only used to annotate the header (threshold = ``1 / test_level``).
-    """
+    """Print compact diagnostics for each stream and martingale method."""
     threshold = int(round(1 / test_level))
     print(f"\nSummary at test_level = {test_level} (threshold = {threshold}):")
     print(

@@ -20,7 +20,7 @@ and hide any potential distribution shift.
 
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
-from utils import generate_gaussian_stream, plot_dataset
+from mapie._example_utils import generate_gaussian_stream, plot_dataset
 
 from mapie.classification import SplitConformalClassifier
 from mapie.exchangeability_testing import FixedDatasetExchangeabilityTest

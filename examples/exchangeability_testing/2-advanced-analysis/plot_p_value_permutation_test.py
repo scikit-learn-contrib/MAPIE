@@ -47,7 +47,7 @@ See the companion example for that workflow.
 
 import matplotlib.pyplot as plt
 import numpy as np
-from utils import plot_running_pvalues
+from mapie._example_utils import plot_running_pvalues
 
 from mapie.exchangeability_testing.permutations import (
     PValuePermutationTest,

@@ -58,7 +58,7 @@ import warnings
 
 import matplotlib.pyplot as plt
 import numpy as np
-from utils import (
+from mapie._example_utils import (
     plot_martingale_results_one_scenario,
     print_martingale_summary,
 )
