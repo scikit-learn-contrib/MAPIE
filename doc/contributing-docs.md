@@ -181,11 +181,12 @@ To add an entirely new gallery section (e.g., `examples/time_series/`):
            - doc/generated/regression
            - doc/generated/time_series  # ← add here
   ```
-3. Add navigation entry:
+3. Add a navigation entry in the relevant topic section and add the new
+   gallery link to `doc/all-examples/index.md`:
   ```yaml
    nav:
-     - All Examples:
-       - Time Series: generated/time_series  # ← add here
+     - Time Series:
+       - Examples: generated/time_series  # ← add here
   ```
 
 ## Editing API Documentation

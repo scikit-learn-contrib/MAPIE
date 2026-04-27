@@ -170,12 +170,7 @@ nav:
     - Theoretical Description: theory/calibration.md
     - Examples: generated/calibration
     - Notebooks: calibration/notebooks.md
-  - All Examples:
-    - Regression: all-examples/regression.md
-    - Classification: all-examples/classification.md
-    - Calibration: all-examples/calibration.md
-    - Risk Control: all-examples/risk-control.md
-    - Mondrian: all-examples/mondrian.md
+  - All Examples: all-examples/index.md
   - Q&A:
     - Metrics: theory/metrics.md
     - Mondrian: theory/mondrian.md
