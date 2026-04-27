@@ -18,13 +18,9 @@ Compared to the companion permutation example, the key differences are:
 """
 
 import numpy as np
-from pathlib import Path
 from sklearn.datasets import make_classification
 from sklearn.neighbors import KNeighborsClassifier
-import sys
-
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from utils import plot_running_pvalues
+from examples.exchangeability_testing.utils import plot_running_pvalues
 
 from mapie.classification import SplitConformalClassifier
 from mapie.exchangeability_testing.permutations import PValuePermutationTest

@@ -1,0 +1,1 @@
+"""MAPIE examples."""

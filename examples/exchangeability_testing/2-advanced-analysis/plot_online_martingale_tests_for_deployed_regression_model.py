@@ -58,11 +58,7 @@ import warnings
 
 import matplotlib.pyplot as plt
 import numpy as np
-from pathlib import Path
-import sys
-
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from utils import (
+from examples.exchangeability_testing.utils import (
     plot_martingale_results_one_scenario,
     print_martingale_summary,
 )
