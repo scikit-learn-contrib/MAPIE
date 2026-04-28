@@ -19,13 +19,15 @@ This simply means: if you pick any $n$ observations from different positions in 
 
 ## Operations That Preserve Exchangeability
 
-If your data is exchangeable, several natural operations keep it that way:
+If your data is exchangeable, several natural operations keep it that way ([Kuchibhotla (2020)](https://arxiv.org/abs/2005.06095)):
 
 - **Shuffling the data**: Reordering observations doesn't destroy exchangeability—if the original data respected this property, any reordering will too.
 - **Applying symmetric transformations**: If you transform the data in a way that treats all observations equally (like standardization), exchangeability is preserved.
 - **Adding independent information**: Appending new random variables that are independent of your existing data maintains exchangeability.
 
-**Fitting a machine learning model does NOT automatically preserve exchangeability.** A model can break exchangeability through systematic bias (performing worse on certain subgroups), overfitting patterns, or data leakage. This is why conformal prediction is powerful: it doesn't assume your model preserves exchangeability. Instead, it constructs prediction sets based on residuals or scores, requiring only that the *residuals* (not the predictions) remain exchangeable.
+In particular, in MAPIE we build on the following insight (formalized by Proposition 3 in [Kuchibhotla (2020)](https://arxiv.org/abs/2005.06095)). **Training a real-valued function from a train split of an exchangeable dataset, then applying it to the remaining split preserves exchangeability among those remaining observations.**
+
+In order to test exchangeability of complex data (images, tables, etc.), we first train a model on a split of the data (or use a provided pre-trained MAPIE estimator). Then we compute non-conformity scores (as defined by the MAPIE estimator if provided) on the remaining split. Finally, these real-valued scores are used for the exchangeability test using standard methods. This powerful insight makes exchangeability tests in MAPIE agnostic to the data modality.
 
 ## Impossibility of Complete Detection
 
@@ -75,7 +77,7 @@ $$
 
 <figure markdown>
   ![Permutation](../images/permutations.png){ width="600" style="background-color: white; padding: 8px;" }
-  <figcaption>Illustration of a permutation test. In this example, the test statistic is the difference in means between the group on the left side, and the group on the right side. The group means are shown as dashed lines. For the real data having the original ordering, the test statistic value is much higher than for permuted data. This indicates evidence against exchangeability. From [Angelopoulos et al. (2024)](https://arxiv.org/abs/2411.11824). </figcaption>
+  <figcaption>Illustration of a permutation test. In this example, the test statistic is the difference in means between the group on the left side, and the group on the right side. The group means are shown as dashed lines. For the real data having the original ordering, the test statistic value is much higher than for permuted data. This indicates evidence against exchangeability. From <a href="https://arxiv.org/abs/2411.11824">Angelopoulos et al. (2024)</a>.</figcaption>
 </figure>
 
 ### When to Stop Shuffling: Early Stopping Rules
@@ -84,7 +86,7 @@ Enumerating all possible shuffles becomes computationally infeasible for large d
 
 The idea is to maintain a "wealth" or cumulative evidence measure as you generate permutations. If the wealth becomes very small (indicating strong evidence for exchangeability) or very large (indicating strong evidence against exchangeability), you can stop without computing all $B$ permutations. For example, if a stopping threshold of 0.05 is set, you can stop either when wealth falls below 0.05 or exceeds 20 (i.e., 1/0.05). This approach reduces computation while maintaining statistical validity.
 
-This is implemented in MAPIE for anytime-valid Monte-Carlo tests [Fischer & Ramdas (2025)](https://doi.org/10.1093/jrsssb/qkaf014).
+This is implemented in MAPIE for anytime-valid Monte-Carlo tests ([Fischer & Ramdas (2025)](https://doi.org/10.1093/jrsssb/qkaf014)).
 
 ## Online Tests: Conformal P-Values and Alternative Approaches
 
