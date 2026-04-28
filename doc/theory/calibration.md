@@ -22,13 +22,15 @@ Expected result: predicted scores closer to true probabilities after calibration
 
 ## Binary Calibration
 
-We denote the (h(X), y) pair as the score and ground truth. The model is calibrated if for every output q \in [0, 1]:
+We denote the \((h(X), y)\) pair as the score and ground truth. The model is calibrated if for every output \(q \in [0, 1]\):
 
 
+\[
 \Pr(Y = 1 \mid h(X) = q) = q
+\]
 
 
-where h() is the score predictor.
+where \(h\) is the score predictor.
 
 To apply calibration to a multi-class context, Gupta et al. propose a **multiclass-to-binary (M2B)** framework to reduce multi-class calibration to multiple binary calibrations.
 
@@ -38,10 +40,12 @@ To apply calibration to a multi-class context, Gupta et al. propose a **multicla
 
 **Top-Label calibration** [^1] calibrates the model according to the **highest score and the corresponding class**. It applies binary calibration techniques (such as Platt scaling or isotonic regression) to multi-class calibration.
 
-Let c be the classifier and h be the maximum score from the classifier. The couple (c, h) is calibrated according to Top-Label calibration if:
+Let \(c\) be the classifier and \(h\) be the maximum score from the classifier. The couple \((c, h)\) is calibrated according to Top-Label calibration if:
 
 
+\[
 \Pr(Y = c(X) \mid h(X), c(X)) = h(X)
+\]
 
 
 ---

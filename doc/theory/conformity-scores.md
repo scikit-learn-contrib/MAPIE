@@ -19,7 +19,7 @@ The `BaseRegressionScore` class implements various methods to compute conformity
 
 With conformal predictions, we want to transform a **heuristic notion of uncertainty** from a model into a **rigorous one**. The first step is to choose a conformal score.
 
-The only requirement for the score function s(X, Y) \in \mathbb{R} is that **larger scores encode worse agreement** between X and Y [^1].
+The only requirement for the score function \(s(X, Y) \in \mathbb{R}\) is that **larger scores encode worse agreement** between \(X\) and \(Y\) [^1].
 
 There are two types of scores:
 
@@ -33,16 +33,20 @@ There are two types of scores:
 The **absolute residual score** [^1] (`AbsoluteConformityScore`) is the simplest and most commonly used:
 
 
+\[
 s(X, Y) = |Y - \hat{\mu}(X)|
+\]
 
 
 Prediction interval bounds:
 
 
+\[
 [\hat{\mu}(X) - q(s),  \hat{\mu}(X) + q(s)]
+\]
 
 
-where q(s) is the (1-\alpha) quantile of the conformity scores.
+where \(q(s)\) is the \((1-\alpha)\) quantile of the conformity scores.
 
 !!! info
     With this score, prediction intervals are **constant** across the whole dataset. This score is **symmetric** by default.
@@ -54,13 +58,17 @@ where q(s) is the (1-\alpha) quantile of the conformity scores.
 The **gamma score** [^2] (`GammaConformityScore`) adds **adaptivity** by normalizing residuals by predictions:
 
 
+\[
 s(X, Y) = \frac{|Y - \hat{\mu}(X)|}{\hat{\mu}(X)}
+\]
 
 
 Adaptive prediction intervals:
 
 
+\[
 [\hat{\mu}(X) \cdot (1 - q(s)),  \hat{\mu}(X) \cdot (1 + q(s))]
+\]
 
 
 !!! info
@@ -70,18 +78,22 @@ Adaptive prediction intervals:
 
 ## 3. Residual Normalized Score
 
-The **residual normalized score** [^1] (`ResidualNormalisedScore`) uses an **additional model** \hat{\sigma} that learns to predict the base model's residuals:
+The **residual normalized score** [^1] (`ResidualNormalisedScore`) uses an **additional model** \(\hat{\sigma}\) that learns to predict the base model's residuals:
 
 
+\[
 s(X, Y) = \frac{|Y - \hat{\mu}(X)|}{\hat{\sigma}(X)}
+\]
 
 
-where \hat{\sigma} is trained on (X, |Y - \hat{\mu}(X)|).
+where \(\hat{\sigma}\) is trained on \((X, |Y - \hat{\mu}(X)|)\).
 
 Prediction intervals:
 
 
+\[
 [\hat{\mu}(X) - q(s) \cdot \hat{\sigma}(X),  \hat{\mu}(X) + q(s) \cdot \hat{\sigma}(X)]
+\]
 
 
 !!! info
