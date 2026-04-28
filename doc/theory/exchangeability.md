@@ -51,7 +51,7 @@ This means: knowing everything that happened before, your expected wealth tomorr
 
 Here's why this matters in practice: martingale properties allow to conduct **multiple tests sequentially without inflating error rates**. Normally, running many tests, the probability of finding something wrong by chance increases dramatically. But because martingales maintain certain fairness properties, they sidestep this multiple-testing problem.
 
-This enables online sttings where data arrives continuously, while keeping testing without losing statistical validity ; even when conducting tests without stopping.
+This enables online settings where data arrives continuously, while keeping testing without losing statistical validity; even when conducting tests without stopping.
 
 ## Offline Tests: Permutation Tests
 
@@ -119,7 +119,7 @@ When starting online tests, you generally need a minimum number of observations 
 
 ## Risk Monitoring
 
-While permutation tests and online tests help assess exchangeability of data or conformity scores, **risk monitoring** address a complementary question: *Is the expected model performance actually respected by the model on new data?*
+While permutation tests and online tests help assess exchangeability of data or conformity scores, **risk monitoring** addresses a complementary question: *Is the expected model performance actually respected by the model on new data?*
 
 As formalized in [Podkopaev & Ramdas (2021)](http://arxiv.org/abs/2110.06177), the goal is to monitor whether the deployed model's target risk (a measurement of model errors) remains below an **acceptable level** defined from source (meaning reference) performance (up to a tolerance), and to raise an alert only when there is evidence of a **harmful** increase in risk.
 
@@ -131,7 +131,7 @@ At each update, compare the production risk bound with the acceptable threshold 
 
 In MAPIE's implementation, the threshold can be computed from reference data or set manually.
 
-Note that this approach requires labels during production, but hey do not have to be obtained in real-time nor for all samples. The risk monitoring update can be done independanlty from model use, e.g., by labeling some production samples each month. 
+Note that this approach requires labels during production, but they do not have to be obtained in real-time nor for all samples. The risk monitoring update can be done independently from model use, e.g., by labeling some production samples each month.
 
 ### Statistical Framing
 
@@ -143,7 +143,7 @@ $$
 
 where $\epsilon_{\mathrm{tol}}$ is the tolerance and $\delta$ is the target confidence level (the exact form depends on the chosen bound and the considered loss).
 
-In practice, this overall level is split across two bounds: $U_{\mathrm{ref}}$ the upper confidence bound for $R_{\mathrm{ref}}$ with confidence level $\delta_{\mathrm{ref}}$ and $L_{\mathrm{prod},t}$ the lower confidence bound for $R_{\mathrm{prod}}$ with confidence level $\delta_{\mathrm{prod}}$, with $\delta_{\mathrm{ref}} + \delta_{\mathrm{prod}} = \delta$. Using bounds allows to take into account the uncertainty in the computation empirical risks $\hat{R}_{\mathrm{prod}}$ and $\hat{R}_{\mathrm{ref}}$ as we have no access to the real risks $R_{\mathrm{prod}}$ and $R_{\mathrm{ref}}$.
+In practice, this overall level is split across two bounds: $U_{\mathrm{ref}}$ the upper confidence bound for $R_{\mathrm{ref}}$ with confidence level $\delta_{\mathrm{ref}}$ and $L_{\mathrm{prod},t}$ the lower confidence bound for $R_{\mathrm{prod}}$ with confidence level $\delta_{\mathrm{prod}}$, with $\delta_{\mathrm{ref}} + \delta_{\mathrm{prod}} = \delta$. Using bounds allows to take into account the uncertainty in the computation of empirical risks $\hat{R}_{\mathrm{prod}}$ and $\hat{R}_{\mathrm{ref}}$ as we have no access to the real risks $R_{\mathrm{prod}}$ and $R_{\mathrm{ref}}$.
 
 With this notation, define the bound gap as $\Delta_t = L_{\mathrm{prod},t} - U_{\mathrm{ref}}$, i.e., the difference between the production lower bound and the reference upper bound. The inequality above then states that the probability of observing a gap larger than $\epsilon_{\mathrm{tol}}$ is controlled by $\delta$.
 
