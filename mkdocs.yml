@@ -8,7 +8,7 @@ edit_uri: edit/master/doc/
 
 theme:
   name: material
-  logo: images/mapie_logo_nobg_cut.png
+  logo: images/mapie_logo_white_cut.png
   favicon: images/mapie_logo_nobg_cut.png
   icon:
     repo: fontawesome/brands/github
@@ -33,9 +33,9 @@ theme:
     - navigation.tabs
     - navigation.tabs.sticky
     - navigation.sections
-    - navigation.expand
     - navigation.top
     - navigation.indexes
+    - toc.integrate
     - toc.follow
     - search.suggest
     - search.highlight
@@ -155,31 +155,27 @@ nav:
     - Conformalization Set: getting-started/split-cross-conformal.md
     - Choosing the Right Algorithm: getting-started/choosing-algorithm.md
     - v1 Release Notes: getting-started/v1-release-notes.md
-  - Uncertainty Quantification:
-    - Regression:
-      - Theoretical Description: theory/regression.md
-      - Conformity Scores: theory/conformity-scores.md
-    - Classification:
-      - Theoretical Description: theory/classification.md
+  - Conformal Prediction:
+    - Regression Theory: theory/regression.md
+    - Conformity Scores: theory/conformity-scores.md
+    - Regression Examples: generated/regression
+    - Classification Theory: theory/classification.md
+    - Binary Classification: theory/binary-classification.md
+    - Classification Examples: generated/classification
   - Risk Control:
     - Getting Started: theory/risk-control.md
+    - LLM Risk Control: theory/llm-risk-control.md
+    - Examples: generated/risk_control
   - Calibration:
     - Theoretical Description: theory/calibration.md
+    - Examples: generated/calibration
     - Notebooks: calibration/notebooks.md
   - Exchangeability Testing:
     - Theoretical Description: theory/exchangeability.md
-  - Examples:
-    - Regression: generated/regression
-    - Classification: generated/classification
-    - Calibration: generated/calibration
-    - Risk Control: generated/risk_control
-    - Exchangeability Testing: generated/exchangeability_testing
-    - Mondrian: generated/mondrian
+  - All Examples: all-examples/index.md
   - Q&A:
     - Metrics: theory/metrics.md
     - Mondrian: theory/mondrian.md
-    - LLM Risk Control: theory/llm-risk-control.md
-    - Binary Classification: theory/binary-classification.md
   - API Reference:
     - Overview: api/index.md
     - Regression: api/regression.md

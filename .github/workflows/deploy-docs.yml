@@ -67,7 +67,6 @@ jobs:
         if: github.event_name == 'push' && github.ref == 'refs/heads/master'
         run: |
           mike deploy --push --update-aliases latest
-          mike set-default --push latest
 
       - name: Deploy stable (release)
         if: github.event_name == 'release'
