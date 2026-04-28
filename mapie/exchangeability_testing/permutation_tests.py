@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+import warnings
 from copy import deepcopy
 from typing import Any, Literal, Optional, Union, cast
 
@@ -167,6 +168,26 @@ class PermutationTest(ABC):
             return "regression"
         raise ValueError("Unknown type of target, please manually set the task type.")
 
+    def _initiate_estimator(self) -> "PermutationTest":
+        """Initiate a default MAPIE estimator based on the task type."""
+        if self.task == "classification":
+            self.mapie_estimator = SplitConformalClassifier(prefit=False)
+        elif self.task == "regression":
+            self.mapie_estimator = SplitConformalRegressor(prefit=False)
+        else:
+            raise ValueError("Unknown task type.")
+        return self
+
+    def fit_estimator(
+        self, X: NDArray, y: NDArray, predict_params: Optional[dict] = None
+    ) -> "PermutationTest":
+        """Fit the underlying MAPIE estimator on the provided data."""
+        if self.mapie_estimator is None:
+            self._initiate_estimator()
+        assert self.mapie_estimator is not None
+        self.mapie_estimator.fit(X, y, **(predict_params or {}))
+        return self
+
     def _compute_non_conformity_scores(self, X: NDArray, y: NDArray) -> NDArray:
         """Compute non-conformity scores from inputs and predictions.
 
@@ -186,12 +207,9 @@ class PermutationTest(ABC):
             self.task = self._infer_task(y)
 
         if self.mapie_estimator is None:
-            if self.task == "classification":
-                self.mapie_estimator = SplitConformalClassifier(prefit=False)
-            elif self.task == "regression":
-                self.mapie_estimator = SplitConformalRegressor(prefit=False)
-            else:
-                raise ValueError("Unknown task type.")
+            self._initiate_estimator()
+
+        assert self.mapie_estimator is not None
 
         if not self.mapie_estimator._is_fitted:
             X_train, X, y_train, y = train_test_split(
@@ -200,7 +218,12 @@ class PermutationTest(ABC):
                 test_size=0.7,
                 shuffle=False,
             )
-            self.mapie_estimator.fit(X_train, y_train)
+            warnings.warn(
+                "The provided MAPIE estimator is not fitted."
+                "Fitting it on a slice of the data to compute non-conformity scores."
+                f"{X_train.shape[0]} observations will be used to fit the estimator."
+            )
+            self.fit_estimator(X_train, y_train)
 
         self.mapie_estimator.conformalize(X, y)  # compute scores internally
 

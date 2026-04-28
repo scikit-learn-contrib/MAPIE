@@ -352,9 +352,8 @@ class OnlineMartingaleTest:
             self._initiate_estimator()
 
         assert self.mapie_estimator is not None
-        estimator = self.mapie_estimator
 
-        if not estimator._is_fitted:
+        if not self.mapie_estimator._is_fitted:
             X_train, X, y_train, y = train_test_split(
                 X,
                 y,
@@ -368,19 +367,19 @@ class OnlineMartingaleTest:
             )
             self.fit_estimator(X_train, y_train)
 
-        estimator.conformalize(X, y)  # compute scores internally
+        self.mapie_estimator.conformalize(X, y)  # compute scores internally
 
         if self.task == "classification":
-            estimator = cast(SplitConformalClassifier, estimator)
+            self.mapie_estimator = cast(SplitConformalClassifier, self.mapie_estimator)
             scores = cast(
                 NDArray,
-                estimator._mapie_classifier.conformity_scores_,
+                self.mapie_estimator._mapie_classifier.conformity_scores_,
             )
         else:
-            estimator = cast(SplitConformalRegressor, estimator)
+            self.mapie_estimator = cast(SplitConformalRegressor, self.mapie_estimator)
             scores = cast(
                 NDArray,
-                estimator._mapie_regressor.conformity_scores_,
+                self.mapie_estimator._mapie_regressor.conformity_scores_,
             )
 
         return scores
