@@ -166,6 +166,8 @@ nav:
   - Calibration:
     - Theoretical Description: theory/calibration.md
     - Notebooks: calibration/notebooks.md
+  - Exchangeability Testing:
+    - Theoretical Description: theory/exchangeability.md
   - Examples:
     - Regression: generated/regression
     - Classification: generated/classification
@@ -178,7 +180,6 @@ nav:
     - Mondrian: theory/mondrian.md
     - LLM Risk Control: theory/llm-risk-control.md
     - Binary Classification: theory/binary-classification.md
-    - Exchangeability Testing: theory/exchangeability.md
   - API Reference:
     - Overview: api/index.md
     - Regression: api/regression.md
