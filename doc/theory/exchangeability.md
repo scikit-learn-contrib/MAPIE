@@ -35,7 +35,7 @@ Thus, it is often useful to use **several complementary tests** rather than rely
 
 ## Introduction to Martingales
 
-Under the exchangeability hypothesis, most statistics we implemented in Mapie **naturally form martingales**.
+Under the exchangeability hypothesis, most statistics we implemented in MAPIE **naturally form martingales**.
 
 ### Intuitive definition of martingales
 
@@ -69,17 +69,21 @@ The algorithm is straightforward:
 4. **Compare**: if the observed statistic is unusually extreme compared to the shuffled versions, you have evidence against exchangeability
 
 Formally:
-$$\text{p-value} = \frac{\#\{\text{shuffles with statistic} \geq \text{observed statistic}\}}{B+1}$$
+
+$$
+\text{p-value} =
+\frac{\#\{\text{shuffles with statistic} \geq \text{observed statistic}\}}{B+1}
+$$
 
 ### When to Stop Shuffling: Early Stopping Rules
 
 Enumerating all possible shuffles becomes computationally infeasible for large datasets (there are $n!$ permutations of $n$ observations). Rather than fixing the number of permutations in advance, **sequential stopping rules** allow you to terminate early when the evidence is strong enough.
 
-The idea is to maintain a "wealth" or cumulative evidence measure as you generate permutations. If the wealth becomes very small (indicating strong evidence for exchangeability) or very large (indicating strong evidence against exchangeability), you can stop without computing all $B$ permutations. For example, if a stopping threshold of 0.05 is set, you can stop either when wealth falls below 0.05 or exceeds 20 (i.e., 1/0.05). This approach dramatically reduces computation while maintaining statistical validity.
+The idea is to maintain a "wealth" or cumulative evidence measure as you generate permutations. If the wealth becomes very small (indicating strong evidence for exchangeability) or very large (indicating strong evidence against exchangeability), you can stop without computing all $B$ permutations. For example, if a stopping threshold of 0.05 is set, you can stop either when wealth falls below 0.05 or exceeds 20 (i.e., 1/0.05). This approach reduces computation while maintaining statistical validity.
 
 ## Online Tests: Conformal P-Values and Alternative Approaches
 
-In many scenarios, dataset is not fixed : observations arrive continuously. You want to detect exchangeability violations as soon as they occur, ideally in real time. This is where **online tests** come in.
+In many scenarios, the dataset is not fixed : observations arrive continuously. You want to detect exchangeability violations as soon as they occur, ideally in real time. This is where **online tests** come in.
 
 The challenge: how do you maintain valid statistical guarantees when you're running tests continuously, accumulating evidence over time? This is where conformal p-values and martingales become essential.
 
@@ -106,31 +110,35 @@ In practice, practitioners often choose based on whether they prioritize stabili
 When starting online tests, you generally need a minimum number of observations before obtaining a reasonably reliable estimate of the data distribution. The **burn-in period** specifies how many initial observations you ignore before relying on the test decisions. Typical choices range from 50 to 500 observations, depending on your data volume and the expected behavior.
 
 
-## Performance Tests
+## Risk Monitoring
 
-While permutation tests and online tests help assess exchangeability of data or conformity scores, **performance tests** address a complementary question: *Are the empirical coverage guarantees announced by conformal prediction actually respected by the model on new data?*
+While permutation tests and online tests help assess exchangeability of data or conformity scores, **risk monitoring** address a complementary question: *Is the expected model performance actually respected by the model on new data?*
 
-As formalized in Section 2.1 of [Podkopaev & Ramdas (2021)](http://arxiv.org/abs/2110.06177), the goal is to monitor whether the deployed model's target risk remains below an **acceptable level** defined from source (meaning reference) performance (up to a tolerance), and to raise an alert only when there is evidence of a **harmful** increase in risk.
+As formalized in [Podkopaev & Ramdas (2021)](http://arxiv.org/abs/2110.06177), the goal is to monitor whether the deployed model's target risk (a measurement of model errors) remains below an **acceptable level** defined from source (meaning reference) performance (up to a tolerance), and to raise an alert only when there is evidence of a **harmful** increase in risk.
 
 ### General Principle
 
-In practice, this approach starts by selecting a risk metric that reflects business objectives (e.g., coverage loss, classification error, or a domain-specific cost function). On reference (calibration/validation) data, compute a baseline empirical risk $\hat{R}_{\mathrm{ref}}$ together with an **upper confidence bound** on the reference risk, denoted $U_{\mathrm{ref}}$. Then, in production, compute the empirical risk on newly labeled data and iteratively update a **lower confidence bound** on the production risk, denoted $L_{\mathrm{prod},t}$, as new observations arrive.
+In practice, this approach starts by selecting a risk metric that reflects business objectives (e.g., coverage loss, classification error, or any domain-specific cost function). On reference test data, compute a baseline empirical risk $\hat{R}_{\mathrm{ref}}$ together with an **upper confidence bound** on the reference risk, denoted $U_{\mathrm{ref}}$. Then, in production, compute the empirical risk on newly labeled data and iteratively update a **lower confidence bound** on the production risk, denoted $L_{\mathrm{prod},t}$, as new observations arrive.
 
-At each update, compare the production risk bound with the acceptable level derived from the reference phase (possibly with a tolerance). An alert is raised only when there is statistically significant evidence that production risk has increased beyond that acceptable level.
+At each update, compare the production risk bound with the acceptable threshold derived from the reference phase (possibly with a tolerance). An alert is raised only when there is statistically significant evidence that production risk has increased beyond that acceptable threshold.
+
+In MAPIE's implementation, the threshold can be computed from reference data or set manually.
+
+Note that this approach requires labels during production, but hey do not have to be obtained in real-time nor for all samples. The risk monitoring update can be done independanlty from model use, e.g., by labeling some production samples each month. 
 
 ### Statistical Framing
 
 [Podkopaev & Ramdas (2021)](http://arxiv.org/abs/2110.06177) provides non-asymptotic bounds to control the gap between the two empirical risks, even for finite sample sizes. The idea is to control the probability of observing a gap that is too large between reference and production:
 
 $$
-P\left( |\hat{R}_{\mathrm{prod}} - \hat{R}_{\mathrm{ref}}| \geq \epsilon \right) \leq \delta
+P\left( R_{\mathrm{prod}} \leq R_{\mathrm{ref}} + \epsilon_{\mathrm{tol}} \right) \leq \delta
 $$
 
-where $\epsilon$ is the tolerated gap and $\delta$ is the target confidence level (the exact form depends on the chosen bound and the considered loss).
+where $\epsilon_{\mathrm{tol}}$ is the tolerance and $\delta$ is the target confidence level (the exact form depends on the chosen bound and the considered loss).
 
-In practice, this overall level is split across two bounds: $U_{\mathrm{ref}}$ the upper confidence bound for $R_{\mathrm{ref}$ with confidence level $\delta_{\mathrm{ref}}$ and $L_{\mathrm{prod},t}$ the lowerconfidence bound for $R_{\mathrm{prod}$ with confidence level $\delta_{\mathrm{prod}}$, with $\delta_{\mathrm{ref}} + \delta_{\mathrm{prod}} = \delta$.
+In practice, this overall level is split across two bounds: $U_{\mathrm{ref}}$ the upper confidence bound for $R_{\mathrm{ref}}$ with confidence level $\delta_{\mathrm{ref}}$ and $L_{\mathrm{prod},t}$ the lower confidence bound for $R_{\mathrm{prod}}$ with confidence level $\delta_{\mathrm{prod}}$, with $\delta_{\mathrm{ref}} + \delta_{\mathrm{prod}} = \delta$. Using bounds allows to take into account the uncertainty in the computation empirical risks $\hat{R}_{\mathrm{prod}}$ and $\hat{R}_{\mathrm{ref}}$ as we have no access to the real risks $R_{\mathrm{prod}}$ and $R_{\mathrm{ref}}$.
 
-With this notation, define the bound gap as $\Delta_t = L_{\mathrm{prod},t} - U_{\mathrm{ref}}$, i.e., the difference between the production lower bound and the reference upper bound. The inequality above then states that the probability of observing a gap larger than $\epsilon$ is controlled by $\delta$.
+With this notation, define the bound gap as $\Delta_t = L_{\mathrm{prod},t} - U_{\mathrm{ref}}$, i.e., the difference between the production lower bound and the reference upper bound. The inequality above then states that the probability of observing a gap larger than $\epsilon_{\mathrm{tol}}$ is controlled by $\delta$.
 
 <figure markdown>
   ![RiskMonitoring](../images/risk_monitoring.png){ width="600" style="background-color: white; padding: 8px;" }
@@ -141,7 +149,8 @@ Therefore, when this bound-based gap becomes too large, it constitutes an alert 
 
 ### Interpretation
 
-- **No alert** ($\Delta_t = L_{\mathrm{prod},t} - U_{\mathrm{ref}} \leq \epsilon$): the production lower bound remains compatible with the reference upper bound, meaning no strong signal of harmful drift or exchangeability violation.
-- **Alert triggered** ($\Delta_t > \epsilon$): the production lower bound exceeds the reference upper bound by more than the tolerated gap, meaning suspicion of harmful drift, non-exchangeability, or regime change.
+- **Alert triggered** ($\Delta_t = L_{\mathrm{prod},t} - U_{\mathrm{ref}} > \epsilon_{\mathrm{tol}}$): the production lower bound exceeds the reference upper bound by more than the tolerated gap, meaning suspicion of harmful drift, non-exchangeability, or regime change.
+- **No alert** ($\Delta_t \leq \epsilon_{\mathrm{tol}}$): the production lower bound remains compatible with the reference upper bound, meaning no strong signal of harmful drift or exchangeability violation.
+
 
 This bound-based approach controls the false-alert probability at level $1 - \delta$.
