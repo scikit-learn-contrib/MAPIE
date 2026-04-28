@@ -160,9 +160,11 @@ nav:
     - Conformity Scores: theory/conformity-scores.md
     - Regression Examples: generated/regression
     - Classification Theory: theory/classification.md
+    - Binary Classification: theory/binary-classification.md
     - Classification Examples: generated/classification
   - Risk Control:
     - Getting Started: theory/risk-control.md
+    - LLM Risk Control: theory/llm-risk-control.md
     - Examples: generated/risk_control
   - Calibration:
     - Theoretical Description: theory/calibration.md
@@ -172,8 +174,6 @@ nav:
   - Q&A:
     - Metrics: theory/metrics.md
     - Mondrian: theory/mondrian.md
-    - LLM Risk Control: theory/llm-risk-control.md
-    - Binary Classification: theory/binary-classification.md
   - API Reference:
     - Overview: api/index.md
     - Regression: api/regression.md
