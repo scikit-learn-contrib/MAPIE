@@ -57,8 +57,6 @@ This enables online sttings where data arrives continuously, while keeping testi
 
 Permutation tests rest on an elegant principle: **if your data is truly exchangeable, then every possible reordering of it is equally likely**. This directly allows us to construct a reference distribution for comparison by generating permutations. Recall that if data is exchangeable, the actual observation order isn't special, it's just one of many possible orderings.
 
-As developed in [Fischer & Ramdas (2025)](https://doi.org/10.1093/jrsssb/qkaf014), this principle forms the foundation of permutation testing.
-
 ### How Permutation Tests Work
 
 The algorithm is straightforward:
@@ -75,11 +73,18 @@ $$
 \frac{\#\{\text{shuffles with statistic} \geq \text{observed statistic}\}}{B+1}
 $$
 
+<figure markdown>
+  ![Permutation](../images/permutations.png){ width="600" style="background-color: white; padding: 8px;" }
+  <figcaption>Illustration of a permutation test. In this example, the test statistic is the difference in means between the group on the left side, and the group on the right side. The group means are shown as dashed lines. For the real data having the original ordering, the test statistic value is much higher than for permuted data. This indicates evidence against exchangeability. From [Angelopoulos et al. (2024)](https://arxiv.org/abs/2411.11824). </figcaption>
+</figure>
+
 ### When to Stop Shuffling: Early Stopping Rules
 
 Enumerating all possible shuffles becomes computationally infeasible for large datasets (there are $n!$ permutations of $n$ observations). Rather than fixing the number of permutations in advance, **sequential stopping rules** allow you to terminate early when the evidence is strong enough.
 
 The idea is to maintain a "wealth" or cumulative evidence measure as you generate permutations. If the wealth becomes very small (indicating strong evidence for exchangeability) or very large (indicating strong evidence against exchangeability), you can stop without computing all $B$ permutations. For example, if a stopping threshold of 0.05 is set, you can stop either when wealth falls below 0.05 or exceeds 20 (i.e., 1/0.05). This approach reduces computation while maintaining statistical validity.
+
+This is implemented in MAPIE for anytime-valid Monte-Carlo tests [Fischer & Ramdas (2025)](https://doi.org/10.1093/jrsssb/qkaf014).
 
 ## Online Tests: Conformal P-Values and Alternative Approaches
 
@@ -99,7 +104,7 @@ where $s_i$ represents how "conforming" observation $i$ is (how well it fits the
 
 When using conformal p-values online, you face a choice in how to **convert p-values into e-values** (i.e., in the betting martingale).
 
-- **Jumper approach**: Use a robust, fixed betting construction (a mixture of simple betting experts). It is typically more stable and less sensitive to tuning.
+- **Jumper approach** [Vovk et al. (2021)](https://proceedings.mlr.press/v152/vovk21b/vovk21b.pdf): Use a robust, fixed betting construction (a mixture of simple betting experts). It is typically more stable and less sensitive to tuning.
 
 - **Plug-in approach** [Fedorova et al. (2012)](https://icml.cc/2012/papers/808.pdf): Estimate the betting function from past p-values (for example via density estimation, as in our implementation) and update it over time. It is often more adaptive, but more sensitive to estimation error and implementation choices.
 
