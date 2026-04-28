@@ -3905,22 +3905,30 @@
 <p><img alt="Classification methods" src="../../images/classification_methods.png" width="600" /></p>
 <p>Illustration of the three methods implemented in MAPIE.</p>
 <h2 id="mathematical-setting">Mathematical Setting<a class="headerlink" href="#mathematical-setting" title="Permanent link">&para;</a></h2>
-<p>For a classification problem in a standard i.i.d. case, our training data (X, Y) = (x_1, y_1), \ldots, (x_n, y_n) has an unknown distribution P_{X, Y}.</p>
-<p>For any risk level \alpha \in (0, 1), the methods allow constructing a prediction set \hat{C}<em n_1="n+1">{n, \alpha}(X</em>) with a <strong>marginal coverage guarantee</strong>:</p>
-<p>P Y_{n+1} \in \hat{C}<em n_1="n+1">{n, \alpha}(X</em>)  \geq 1 - \alpha</p>
-<p>For a typical \alpha = 10, we construct prediction sets that contain the true observations for at least 90% of new test data points.</p>
+<p>For a classification problem in a standard i.i.d. case, our training data <span class="arithmatex">\((X, Y) = \{(x_1, y_1), \ldots, (x_n, y_n)\}\)</span> has an unknown distribution <span class="arithmatex">\(P_{X, Y}\)</span>.</p>
+<p>For any risk level <span class="arithmatex">\(\alpha \in (0, 1)\)</span>, the methods allow constructing a prediction set <span class="arithmatex">\(\hat{C}_{n, \alpha}(X_{n+1})\)</span> with a <strong>marginal coverage guarantee</strong>:</p>
+<div class="arithmatex">\[
+P \{Y_{n+1} \in \hat{C}_{n, \alpha}(X_{n+1}) \} \geq 1 - \alpha
+\]</div>
+<p>For a typical <span class="arithmatex">\(\alpha = 10\%\)</span>, we construct prediction sets that contain the true observations for at least 90% of new test data points.</p>
 <div class="admonition info">
 <p class="admonition-title">Info</p>
-<p>The guarantee applies only to <strong>marginal coverage</strong>, not conditional coverage P Y_{n+1} \in \hat{C}<em n_1="n+1">{n, \alpha}(X</em>  which depends on the location of the test point.}) | X_{n+1} = x_{n+1</p>
+<p>The guarantee applies only to <strong>marginal coverage</strong>, not conditional coverage <span class="arithmatex">\(P \{Y_{n+1} \in \hat{C}_{n, \alpha}(X_{n+1}) \mid X_{n+1} = x_{n+1}\}\)</span>, which depends on the location of the test point.</p>
 </div>
 <hr />
 <h2 id="1-lac">1. LAC<a class="headerlink" href="#1-lac" title="Permanent link">&para;</a></h2>
 <p>In the LAC method, the conformity score is <strong>one minus the score of the true label</strong>:</p>
-<p>s_i(X_i, Y_i) = 1 - \hat{\mu}(X_i)_{Y_i}</p>
-<p>The quantile \hat{q} is computed as:</p>
-<p>\hat{q} = \text{Quantile}\left(s_1, \ldots, s_n ; \frac{\lceil(n+1)(1-\alpha)\rceil}{n}\right)</p>
+<div class="arithmatex">\[
+s_i(X_i, Y_i) = 1 - \hat{\mu}(X_i)_{Y_i}
+\]</div>
+<p>The quantile <span class="arithmatex">\(\hat{q}\)</span> is computed as:</p>
+<div class="arithmatex">\[
+\hat{q} = \text{Quantile}\left(s_1, \ldots, s_n ; \frac{\lceil(n+1)(1-\alpha)\rceil}{n}\right)
+\]</div>
 <p>The prediction set includes all labels with score higher than the threshold:</p>
-<p>\hat{C}(X_{\text{test}}) = y : \hat{\mu}(X_{\text{test}})_y \geq 1 - \hat{q}</p>
+<div class="arithmatex">\[
+\hat{C}(X_{\text{test}}) = \{y : \hat{\mu}(X_{\text{test}})_y \geq 1 - \hat{q}\}
+\]</div>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>Although LAC generally results in small prediction sets, it tends to produce <strong>empty sets</strong> when the model is uncertain (e.g., at the border between two classes).</p>
@@ -3928,47 +3936,63 @@
 <hr />
 <h2 id="2-top-k">2. Top-K<a class="headerlink" href="#2-top-k" title="Permanent link">&para;</a></h2>
 <p>Introduced in <sup id="fnref3:3"><a class="footnote-ref" href="#fn:3">3</a></sup>, the <strong>Top-K</strong> method gives the <strong>same prediction set size</strong> for all observations. The conformity score is the rank of the true label:</p>
-<p>s_i(X_i, Y_i) = j \quad \text{where} \quad Y_i = \pi_j \quad \text{and} \quad \hat{\mu}(X_i)<em _pi_n="\pi_n">{\pi_1} &gt; \cdots &gt; \hat{\mu}(X_i)</em></p>
-<p>\hat{q} = \left\lceil \text{Quantile}\left(s_1, \ldots, s_n ; \frac{\lceil(n+1)(1-\alpha)\rceil}{n}\right) \right\rceil</p>
-<p>\hat{C}(X_{\text{test}}) = \pi_1, \ldots, \pi_{\hat{q}}</p>
+<div class="arithmatex">\[
+s_i(X_i, Y_i) = j \quad \text{where} \quad Y_i = \pi_j \quad \text{and} \quad \hat{\mu}(X_i)_{\pi_1} &gt; \cdots &gt; \hat{\mu}(X_i)_{\pi_n}
+\]</div>
+<div class="arithmatex">\[
+\hat{q} = \left\lceil \text{Quantile}\left(s_1, \ldots, s_n ; \frac{\lceil(n+1)(1-\alpha)\rceil}{n}\right) \right\rceil
+\]</div>
+<div class="arithmatex">\[
+\hat{C}(X_{\text{test}}) = \{\pi_1, \ldots, \pi_{\hat{q}}\}
+\]</div>
 <hr />
 <h2 id="3-adaptive-prediction-sets-aps">3. Adaptive Prediction Sets (APS)<a class="headerlink" href="#3-adaptive-prediction-sets-aps" title="Permanent link">&para;</a></h2>
 <p>The APS method overcomes LAC's empty set problem by constructing <strong>non-empty</strong> prediction sets. Conformity scores are computed by <strong>summing ranked scores</strong> until reaching the true label:</p>
-<p>s_i(X_i, Y_i) = \sum^k_{j=1} \hat{\mu}(X_i)_{\pi_j} \quad \text{where} \quad Y_i = \pi_k</p>
+<div class="arithmatex">\[
+s_i(X_i, Y_i) = \sum^k_{j=1} \hat{\mu}(X_i)_{\pi_j} \quad \text{where} \quad Y_i = \pi_k
+\]</div>
 <p>Prediction sets are built similarly:</p>
-<p>\hat{C}(X_{\text{test}}) = \pi_1, \ldots, \pi_k \quad \text{where} \quad k = \inf\leftk : \sum^k_{j=1} \hat{\mu}(X_{\text{test}})_{\pi_j} \geq \hat{q}\right</p>
+<div class="arithmatex">\[
+\hat{C}(X_{\text{test}}) = \{\pi_1, \ldots, \pi_k\} \quad \text{where} \quad k = \inf\left\{k : \sum^k_{j=1} \hat{\mu}(X_{\text{test}})_{\pi_j} \geq \hat{q}\right\}
+\]</div>
 <p>By default, the label whose cumulative score exceeds the quantile is included. Its incorporation can also be randomized for tighter effective coverage <sup id="fnref2:2"><a class="footnote-ref" href="#fn:2">2</a></sup> <sup id="fnref4:3"><a class="footnote-ref" href="#fn:3">3</a></sup>.</p>
 <hr />
 <h2 id="4-regularized-adaptive-prediction-sets-raps">4. Regularized Adaptive Prediction Sets (RAPS)<a class="headerlink" href="#4-regularized-adaptive-prediction-sets-raps" title="Permanent link">&para;</a></h2>
 <p>RAPS <sup id="fnref5:3"><a class="footnote-ref" href="#fn:3">3</a></sup> improves APS by <strong>regularizing</strong> to avoid very large prediction sets:</p>
-<p>s_i(X_i, Y_i) = \sum^k_{j=1} \hat{\mu}(X_i)<em _text_reg="\text{reg">{\pi_j} + \lambda (k - k</em> \quad Y_i = \pi_k}})^+ \quad \text{where</p>
+<div class="arithmatex">\[
+s_i(X_i, Y_i) = \sum^k_{j=1} \hat{\mu}(X_i)_{\pi_j} + \lambda (k - k_{\text{reg}})^+ \quad \text{where} \quad Y_i = \pi_k
+\]</div>
 <p>Where:</p>
 <ul>
-<li>(z)^+ denotes the positive part of z</li>
-<li>k_{\text{reg}} is the optimal set size (determined by the Top-K method on a held-out split)</li>
-<li>\lambda is a regularization parameter (grid search over 0.001, 0.01, 0.1, 0.2, 0.5)</li>
+<li><span class="arithmatex">\((z)^+\)</span> denotes the positive part of <span class="arithmatex">\(z\)</span></li>
+<li><span class="arithmatex">\(k_{\text{reg}}\)</span> is the optimal set size (determined by the Top-K method on a held-out split)</li>
+<li><span class="arithmatex">\(\lambda\)</span> is a regularization parameter (grid search over 0.001, 0.01, 0.1, 0.2, 0.5)</li>
 </ul>
 <p>Prediction set construction:</p>
-<p>\hat{C}(X_{\text{test}}) = \pi_1, \ldots, \pi_k \quad \text{where} \quad k = \inf\leftk : \sum^k_{j=1} \hat{\mu}(X_{\text{test}})<em _text_reg="\text{reg">{\pi_j} + \lambda(k - k</em>\right}})^+ \geq \hat{q</p>
+<div class="arithmatex">\[
+\hat{C}(X_{\text{test}}) = \{\pi_1, \ldots, \pi_k\} \quad \text{where} \quad k = \inf\left\{k : \sum^k_{j=1} \hat{\mu}(X_{\text{test}})_{\pi_j} + \lambda(k - k_{\text{reg}})^+ \geq \hat{q}\right\}
+\]</div>
 <h3 id="exact-coverage-via-randomization">Exact Coverage via Randomization<a class="headerlink" href="#exact-coverage-via-randomization" title="Permanent link">&para;</a></h3>
 <p>To achieve exact coverage, randomization on the last label can be applied:</p>
 <ol>
-<li>Define V_i = \frac{s_i(X_i, Y_i) - \hat{q}<em _pi_k="\pi_k">{1-\alpha}}{\hat{\mu}(X_i)</em>} + \lambda \mathbb{1}(k &gt; k_{\text{reg}})</li>
-<li>Compare each V_i to U \sim \text{Unif}(0, 1)</li>
-<li>If V_i \leq U, the last included label is removed.</li>
+<li>Define <span class="arithmatex">\(V_i = \frac{s_i(X_i, Y_i) - \hat{q}_{1-\alpha}}{\hat{\mu}(X_i)_{\pi_k} + \lambda \mathbb{1}(k &gt; k_{\text{reg}})}\)</span>.</li>
+<li>Compare each <span class="arithmatex">\(V_i\)</span> to <span class="arithmatex">\(U \sim \text{Unif}(0, 1)\)</span>.</li>
+<li>If <span class="arithmatex">\(V_i \leq U\)</span>, the last included label is removed.</li>
 </ol>
 <hr />
 <h2 id="5-split-and-cross-conformal-strategies">5. Split- and Cross-Conformal Strategies<a class="headerlink" href="#5-split-and-cross-conformal-strategies" title="Permanent link">&para;</a></h2>
 <p>MAPIE includes both split- and cross-conformal strategies for LAC and APS, but <strong>only split-conformal for Top-K</strong>.</p>
 <p>The cross-conformal implementation follows Algorithm 2 of <sup id="fnref3:2"><a class="footnote-ref" href="#fn:2">2</a></sup>:</p>
 <ol>
-<li>Split training into K disjoint subsets.</li>
-<li>Fit K classification functions \hat{\mu}_{-S_k}.</li>
+<li>Split training into <span class="arithmatex">\(K\)</span> disjoint subsets.</li>
+<li>Fit <span class="arithmatex">\(K\)</span> classification functions <span class="arithmatex">\(\hat{\mu}_{-S_k}\)</span>.</li>
 <li>Compute out-of-fold conformity scores.</li>
 <li>For new test points, compare conformity scores to decide label inclusion.</li>
 </ol>
 <p>For APS (see eq. 11 of <sup id="fnref4:2"><a class="footnote-ref" href="#fn:2">2</a></sup>):</p>
-<p>C_{n, \alpha}(X_{n+1}) = \Big y \in \mathcal{Y} : \sum_{i=1}^n \mathbf{1} \Big[ E(X_i, Y_i, U_i; \hat{\pi}^{k(i)}) &lt; E(X_{n+1}, y, U_{n+1}; \hat{\pi}^{k(i)}) \Big] &lt; (1-\alpha)(n+1) \Big</p>
+<div class="arithmatex">\[
+C_{n, \alpha}(X_{n+1}) = \Big\{ y \in \mathcal{Y} : \sum_{i=1}^n \mathbf{1} \Big[ E(X_i, Y_i, U_i; \hat{\pi}^{k(i)}) &lt; E(X_{n+1}, y, U_{n+1}; \hat{\pi}^{k(i)}) \Big] &lt; (1-\alpha)(n+1) \Big\}
+\]</div>
 <hr />
 <h2 id="references">References<a class="headerlink" href="#references" title="Permanent link">&para;</a></h2>
 <div class="footnote">

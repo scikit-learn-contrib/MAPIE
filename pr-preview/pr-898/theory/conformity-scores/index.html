@@ -3880,7 +3880,7 @@
 </div>
 <h2 id="mathematical-setting">Mathematical Setting<a class="headerlink" href="#mathematical-setting" title="Permanent link">&para;</a></h2>
 <p>With conformal predictions, we want to transform a <strong>heuristic notion of uncertainty</strong> from a model into a <strong>rigorous one</strong>. The first step is to choose a conformal score.</p>
-<p>The only requirement for the score function s(X, Y) \in \mathbb{R} is that <strong>larger scores encode worse agreement</strong> between X and Y <sup id="fnref:1"><a class="footnote-ref" href="#fn:1">1</a></sup>.</p>
+<p>The only requirement for the score function <span class="arithmatex">\(s(X, Y) \in \mathbb{R}\)</span> is that <strong>larger scores encode worse agreement</strong> between <span class="arithmatex">\(X\)</span> and <span class="arithmatex">\(Y\)</span> <sup id="fnref:1"><a class="footnote-ref" href="#fn:1">1</a></sup>.</p>
 <p>There are two types of scores:</p>
 <ul>
 <li><strong>Symmetric</strong>: Two quantiles are computed (right and left side of the distribution).</li>
@@ -3889,10 +3889,14 @@
 <hr />
 <h2 id="1-absolute-residual-score">1. Absolute Residual Score<a class="headerlink" href="#1-absolute-residual-score" title="Permanent link">&para;</a></h2>
 <p>The <strong>absolute residual score</strong> <sup id="fnref2:1"><a class="footnote-ref" href="#fn:1">1</a></sup> (<code>AbsoluteConformityScore</code>) is the simplest and most commonly used:</p>
-<p>s(X, Y) = |Y - \hat{\mu}(X)|</p>
+<div class="arithmatex">\[
+s(X, Y) = |Y - \hat{\mu}(X)|
+\]</div>
 <p>Prediction interval bounds:</p>
-<p>[\hat{\mu}(X) - q(s),  \hat{\mu}(X) + q(s)]</p>
-<p>where q(s) is the (1-\alpha) quantile of the conformity scores.</p>
+<div class="arithmatex">\[
+[\hat{\mu}(X) - q(s),  \hat{\mu}(X) + q(s)]
+\]</div>
+<p>where <span class="arithmatex">\(q(s)\)</span> is the <span class="arithmatex">\((1-\alpha)\)</span> quantile of the conformity scores.</p>
 <div class="admonition info">
 <p class="admonition-title">Info</p>
 <p>With this score, prediction intervals are <strong>constant</strong> across the whole dataset. This score is <strong>symmetric</strong> by default.</p>
@@ -3900,20 +3904,28 @@
 <hr />
 <h2 id="2-gamma-score">2. Gamma Score<a class="headerlink" href="#2-gamma-score" title="Permanent link">&para;</a></h2>
 <p>The <strong>gamma score</strong> <sup id="fnref:2"><a class="footnote-ref" href="#fn:2">2</a></sup> (<code>GammaConformityScore</code>) adds <strong>adaptivity</strong> by normalizing residuals by predictions:</p>
-<p>s(X, Y) = \frac{|Y - \hat{\mu}(X)|}{\hat{\mu}(X)}</p>
+<div class="arithmatex">\[
+s(X, Y) = \frac{|Y - \hat{\mu}(X)|}{\hat{\mu}(X)}
+\]</div>
 <p>Adaptive prediction intervals:</p>
-<p>[\hat{\mu}(X) \cdot (1 - q(s)),  \hat{\mu}(X) \cdot (1 + q(s))]</p>
+<div class="arithmatex">\[
+[\hat{\mu}(X) \cdot (1 - q(s)),  \hat{\mu}(X) \cdot (1 + q(s))]
+\]</div>
 <div class="admonition info">
 <p class="admonition-title">Info</p>
 <p>This score is <strong>asymmetric</strong> by default. It produces intervals proportional to the magnitude of predictions — useful when you expect greater uncertainty for larger predictions.</p>
 </div>
 <hr />
 <h2 id="3-residual-normalized-score">3. Residual Normalized Score<a class="headerlink" href="#3-residual-normalized-score" title="Permanent link">&para;</a></h2>
-<p>The <strong>residual normalized score</strong> <sup id="fnref3:1"><a class="footnote-ref" href="#fn:1">1</a></sup> (<code>ResidualNormalisedScore</code>) uses an <strong>additional model</strong> \hat{\sigma} that learns to predict the base model's residuals:</p>
-<p>s(X, Y) = \frac{|Y - \hat{\mu}(X)|}{\hat{\sigma}(X)}</p>
-<p>where \hat{\sigma} is trained on (X, |Y - \hat{\mu}(X)|).</p>
+<p>The <strong>residual normalized score</strong> <sup id="fnref3:1"><a class="footnote-ref" href="#fn:1">1</a></sup> (<code>ResidualNormalisedScore</code>) uses an <strong>additional model</strong> <span class="arithmatex">\(\hat{\sigma}\)</span> that learns to predict the base model's residuals:</p>
+<div class="arithmatex">\[
+s(X, Y) = \frac{|Y - \hat{\mu}(X)|}{\hat{\sigma}(X)}
+\]</div>
+<p>where <span class="arithmatex">\(\hat{\sigma}\)</span> is trained on <span class="arithmatex">\((X, |Y - \hat{\mu}(X)|)\)</span>.</p>
 <p>Prediction intervals:</p>
-<p>[\hat{\mu}(X) - q(s) \cdot \hat{\sigma}(X),  \hat{\mu}(X) + q(s) \cdot \hat{\sigma}(X)]</p>
+<div class="arithmatex">\[
+[\hat{\mu}(X) - q(s) \cdot \hat{\sigma}(X),  \hat{\mu}(X) + q(s) \cdot \hat{\sigma}(X)]
+\]</div>
 <div class="admonition info">
 <p class="admonition-title">Info</p>
 <p>This score is <strong>symmetric</strong> by default. Due to the additional model, it can only be used with <strong>split methods</strong>.</p>

@@ -3854,15 +3854,19 @@
 <p><img alt="Calibration basic" src="../../images/calibration_basic.png" width="300" /></p>
 <p>Expected result: predicted scores closer to true probabilities after calibration.</p>
 <h2 id="binary-calibration">Binary Calibration<a class="headerlink" href="#binary-calibration" title="Permanent link">&para;</a></h2>
-<p>We denote the (h(X), y) pair as the score and ground truth. The model is calibrated if for every output q \in [0, 1]:</p>
-<p>\Pr(Y = 1 \mid h(X) = q) = q</p>
-<p>where h() is the score predictor.</p>
+<p>We denote the <span class="arithmatex">\((h(X), y)\)</span> pair as the score and ground truth. The model is calibrated if for every output <span class="arithmatex">\(q \in [0, 1]\)</span>:</p>
+<div class="arithmatex">\[
+\Pr(Y = 1 \mid h(X) = q) = q
+\]</div>
+<p>where <span class="arithmatex">\(h\)</span> is the score predictor.</p>
 <p>To apply calibration to a multi-class context, Gupta et al. propose a <strong>multiclass-to-binary (M2B)</strong> framework to reduce multi-class calibration to multiple binary calibrations.</p>
 <hr />
 <h2 id="top-label-calibration">Top-Label Calibration<a class="headerlink" href="#top-label-calibration" title="Permanent link">&para;</a></h2>
 <p><strong>Top-Label calibration</strong> <sup id="fnref2:1"><a class="footnote-ref" href="#fn:1">1</a></sup> calibrates the model according to the <strong>highest score and the corresponding class</strong>. It applies binary calibration techniques (such as Platt scaling or isotonic regression) to multi-class calibration.</p>
-<p>Let c be the classifier and h be the maximum score from the classifier. The couple (c, h) is calibrated according to Top-Label calibration if:</p>
-<p>\Pr(Y = c(X) \mid h(X), c(X)) = h(X)</p>
+<p>Let <span class="arithmatex">\(c\)</span> be the classifier and <span class="arithmatex">\(h\)</span> be the maximum score from the classifier. The couple <span class="arithmatex">\((c, h)\)</span> is calibrated according to Top-Label calibration if:</p>
+<div class="arithmatex">\[
+\Pr(Y = c(X) \mid h(X), c(X)) = h(X)
+\]</div>
 <hr />
 <h2 id="references">References<a class="headerlink" href="#references" title="Permanent link">&para;</a></h2>
 <div class="footnote">
