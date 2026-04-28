@@ -4350,15 +4350,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#performance-tests" class="md-nav__link">
+  <a href="#risk-monitoring" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Performance Tests
+        Risk Monitoring
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Performance Tests">
+    <nav class="md-nav" aria-label="Risk Monitoring">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -5004,15 +5004,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#performance-tests" class="md-nav__link">
+  <a href="#risk-monitoring" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Performance Tests
+        Risk Monitoring
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Performance Tests">
+    <nav class="md-nav" aria-label="Risk Monitoring">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -5095,7 +5095,7 @@ Exchangeability testing helps us verify this crucial assumption, which underpins
 <p>In practice, <strong>no single test can detect all possible violations of exchangeability</strong>. As discussed in <a href="https://arxiv.org/pdf/2102.00630">Ramdas et al. (2021)</a>, the breadth of alternatives to exchangeability fundamentally prevents any single method from being uniformly powerful (i.e., able to detect all alternatives with equal effectiveness). Any test must make a trade-off: it will be good at detecting some types of violations but weaker at others.</p>
 <p>Thus, it is often useful to use <strong>several complementary tests</strong> rather than relying on a single one. Since different tests are sensitive to different departures from exchangeability, combining them can provide broader and more reliable detection.</p>
 <h2 id="introduction-to-martingales">Introduction to Martingales<a class="headerlink" href="#introduction-to-martingales" title="Permanent link">&para;</a></h2>
-<p>Under the exchangeability hypothesis, most statistics we implemented in Mapie <strong>naturally form martingales</strong>.</p>
+<p>Under the exchangeability hypothesis, most statistics we implemented in MAPIE <strong>naturally form martingales</strong>.</p>
 <h3 id="intuitive-definition-of-martingales">Intuitive definition of martingales<a class="headerlink" href="#intuitive-definition-of-martingales" title="Permanent link">&para;</a></h3>
 <p>A <strong>martingale</strong> is a mathematical object that captures the idea of a "fair game." Imagine a betting game where you have some current wealth <span class="arithmatex">\(M_n\)</span>. Under a martingale property:</p>
 <div class="arithmatex">\[\mathbb{E}[M_{n+1} \mid \text{all past information}] = M_n\]</div>
@@ -5115,13 +5115,16 @@ Exchangeability testing helps us verify this crucial assumption, which underpins
 <li><strong>Recalculate the statistic</strong> for each reshuffled version</li>
 <li><strong>Compare</strong>: if the observed statistic is unusually extreme compared to the shuffled versions, you have evidence against exchangeability</li>
 </ol>
-<p>Formally:
-$<span class="arithmatex">\(\text{p-value} = \frac{\#\{\text{shuffles with statistic} \geq \text{observed statistic}\}}{B+1}\)</span>$</p>
+<p>Formally:</p>
+<div class="arithmatex">\[
+\text{p-value} =
+\frac{\#\{\text{shuffles with statistic} \geq \text{observed statistic}\}}{B+1}
+\]</div>
 <h3 id="when-to-stop-shuffling-early-stopping-rules">When to Stop Shuffling: Early Stopping Rules<a class="headerlink" href="#when-to-stop-shuffling-early-stopping-rules" title="Permanent link">&para;</a></h3>
 <p>Enumerating all possible shuffles becomes computationally infeasible for large datasets (there are <span class="arithmatex">\(n!\)</span> permutations of <span class="arithmatex">\(n\)</span> observations). Rather than fixing the number of permutations in advance, <strong>sequential stopping rules</strong> allow you to terminate early when the evidence is strong enough.</p>
-<p>The idea is to maintain a "wealth" or cumulative evidence measure as you generate permutations. If the wealth becomes very small (indicating strong evidence for exchangeability) or very large (indicating strong evidence against exchangeability), you can stop without computing all <span class="arithmatex">\(B\)</span> permutations. For example, if a stopping threshold of 0.05 is set, you can stop either when wealth falls below 0.05 or exceeds 20 (i.e., 1/0.05). This approach dramatically reduces computation while maintaining statistical validity.</p>
+<p>The idea is to maintain a "wealth" or cumulative evidence measure as you generate permutations. If the wealth becomes very small (indicating strong evidence for exchangeability) or very large (indicating strong evidence against exchangeability), you can stop without computing all <span class="arithmatex">\(B\)</span> permutations. For example, if a stopping threshold of 0.05 is set, you can stop either when wealth falls below 0.05 or exceeds 20 (i.e., 1/0.05). This approach reduces computation while maintaining statistical validity.</p>
 <h2 id="online-tests-conformal-p-values-and-alternative-approaches">Online Tests: Conformal P-Values and Alternative Approaches<a class="headerlink" href="#online-tests-conformal-p-values-and-alternative-approaches" title="Permanent link">&para;</a></h2>
-<p>In many scenarios, dataset is not fixed : observations arrive continuously. You want to detect exchangeability violations as soon as they occur, ideally in real time. This is where <strong>online tests</strong> come in.</p>
+<p>In many scenarios, the dataset is not fixed : observations arrive continuously. You want to detect exchangeability violations as soon as they occur, ideally in real time. This is where <strong>online tests</strong> come in.</p>
 <p>The challenge: how do you maintain valid statistical guarantees when you're running tests continuously, accumulating evidence over time? This is where conformal p-values and martingales become essential.</p>
 <h3 id="conformal-p-values-a-sequential-solution">Conformal P-Values: A Sequential Solution<a class="headerlink" href="#conformal-p-values-a-sequential-solution" title="Permanent link">&para;</a></h3>
 <p>A <strong>conformal p-value</strong> extends the permutation test idea to the online setting. For each new observation that arrives, you compute:</p>
@@ -5140,20 +5143,22 @@ $<span class="arithmatex">\(\text{p-value} = \frac{\#\{\text{shuffles with stati
 <p>In practice, practitioners often choose based on whether they prioritize stability (Jumper) or adaptivity (Plug-in).</p>
 <h3 id="the-burn-in-period-starting-with-a-reliable-baseline">The Burn-in Period: Starting with a Reliable Baseline<a class="headerlink" href="#the-burn-in-period-starting-with-a-reliable-baseline" title="Permanent link">&para;</a></h3>
 <p>When starting online tests, you generally need a minimum number of observations before obtaining a reasonably reliable estimate of the data distribution. The <strong>burn-in period</strong> specifies how many initial observations you ignore before relying on the test decisions. Typical choices range from 50 to 500 observations, depending on your data volume and the expected behavior.</p>
-<h2 id="performance-tests">Performance Tests<a class="headerlink" href="#performance-tests" title="Permanent link">&para;</a></h2>
-<p>While permutation tests and online tests help assess exchangeability of data or conformity scores, <strong>performance tests</strong> address a complementary question: <em>Are the empirical coverage guarantees announced by conformal prediction actually respected by the model on new data?</em></p>
-<p>As formalized in Section 2.1 of <a href="http://arxiv.org/abs/2110.06177">Podkopaev &amp; Ramdas (2021)</a>, the goal is to monitor whether the deployed model's target risk remains below an <strong>acceptable level</strong> defined from source (meaning reference) performance (up to a tolerance), and to raise an alert only when there is evidence of a <strong>harmful</strong> increase in risk.</p>
+<h2 id="risk-monitoring">Risk Monitoring<a class="headerlink" href="#risk-monitoring" title="Permanent link">&para;</a></h2>
+<p>While permutation tests and online tests help assess exchangeability of data or conformity scores, <strong>risk monitoring</strong> address a complementary question: <em>Is the expected model performance actually respected by the model on new data?</em></p>
+<p>As formalized in <a href="http://arxiv.org/abs/2110.06177">Podkopaev &amp; Ramdas (2021)</a>, the goal is to monitor whether the deployed model's target risk (a measurement of model errors) remains below an <strong>acceptable level</strong> defined from source (meaning reference) performance (up to a tolerance), and to raise an alert only when there is evidence of a <strong>harmful</strong> increase in risk.</p>
 <h3 id="general-principle">General Principle<a class="headerlink" href="#general-principle" title="Permanent link">&para;</a></h3>
-<p>In practice, this approach starts by selecting a risk metric that reflects business objectives (e.g., coverage loss, classification error, or a domain-specific cost function). On reference (calibration/validation) data, compute a baseline empirical risk <span class="arithmatex">\(\hat{R}_{\mathrm{ref}}\)</span> together with an <strong>upper confidence bound</strong> on the reference risk, denoted <span class="arithmatex">\(U_{\mathrm{ref}}\)</span>. Then, in production, compute the empirical risk on newly labeled data and iteratively update a <strong>lower confidence bound</strong> on the production risk, denoted <span class="arithmatex">\(L_{\mathrm{prod},t}\)</span>, as new observations arrive.</p>
-<p>At each update, compare the production risk bound with the acceptable level derived from the reference phase (possibly with a tolerance). An alert is raised only when there is statistically significant evidence that production risk has increased beyond that acceptable level.</p>
+<p>In practice, this approach starts by selecting a risk metric that reflects business objectives (e.g., coverage loss, classification error, or any domain-specific cost function). On reference test data, compute a baseline empirical risk <span class="arithmatex">\(\hat{R}_{\mathrm{ref}}\)</span> together with an <strong>upper confidence bound</strong> on the reference risk, denoted <span class="arithmatex">\(U_{\mathrm{ref}}\)</span>. Then, in production, compute the empirical risk on newly labeled data and iteratively update a <strong>lower confidence bound</strong> on the production risk, denoted <span class="arithmatex">\(L_{\mathrm{prod},t}\)</span>, as new observations arrive.</p>
+<p>At each update, compare the production risk bound with the acceptable threshold derived from the reference phase (possibly with a tolerance). An alert is raised only when there is statistically significant evidence that production risk has increased beyond that acceptable threshold.</p>
+<p>In MAPIE's implementation, the threshold can be computed from reference data or set manually.</p>
+<p>Note that this approach requires labels during production, but hey do not have to be obtained in real-time nor for all samples. The risk monitoring update can be done independanlty from model use, e.g., by labeling some production samples each month. </p>
 <h3 id="statistical-framing">Statistical Framing<a class="headerlink" href="#statistical-framing" title="Permanent link">&para;</a></h3>
 <p><a href="http://arxiv.org/abs/2110.06177">Podkopaev &amp; Ramdas (2021)</a> provides non-asymptotic bounds to control the gap between the two empirical risks, even for finite sample sizes. The idea is to control the probability of observing a gap that is too large between reference and production:</p>
 <div class="arithmatex">\[
-P\left( |\hat{R}_{\mathrm{prod}} - \hat{R}_{\mathrm{ref}}| \geq \epsilon \right) \leq \delta
+P\left( R_{\mathrm{prod}} \leq R_{\mathrm{ref}} + \epsilon_{\mathrm{tol}} \right) \leq \delta
 \]</div>
-<p>where <span class="arithmatex">\(\epsilon\)</span> is the tolerated gap and <span class="arithmatex">\(\delta\)</span> is the target confidence level (the exact form depends on the chosen bound and the considered loss).</p>
-<p>In practice, this overall level is split across two bounds: <span class="arithmatex">\(U_{\mathrm{ref}}\)</span> the upper confidence bound for <span class="arithmatex">\(R_{\mathrm{ref}\)</span> with confidence level <span class="arithmatex">\(\delta_{\mathrm{ref}}\)</span> and <span class="arithmatex">\(L_{\mathrm{prod},t}\)</span> the lowerconfidence bound for <span class="arithmatex">\(R_{\mathrm{prod}\)</span> with confidence level <span class="arithmatex">\(\delta_{\mathrm{prod}}\)</span>, with <span class="arithmatex">\(\delta_{\mathrm{ref}} + \delta_{\mathrm{prod}} = \delta\)</span>.</p>
-<p>With this notation, define the bound gap as <span class="arithmatex">\(\Delta_t = L_{\mathrm{prod},t} - U_{\mathrm{ref}}\)</span>, i.e., the difference between the production lower bound and the reference upper bound. The inequality above then states that the probability of observing a gap larger than <span class="arithmatex">\(\epsilon\)</span> is controlled by <span class="arithmatex">\(\delta\)</span>.</p>
+<p>where <span class="arithmatex">\(\epsilon_{\mathrm{tol}}\)</span> is the tolerance and <span class="arithmatex">\(\delta\)</span> is the target confidence level (the exact form depends on the chosen bound and the considered loss).</p>
+<p>In practice, this overall level is split across two bounds: <span class="arithmatex">\(U_{\mathrm{ref}}\)</span> the upper confidence bound for <span class="arithmatex">\(R_{\mathrm{ref}}\)</span> with confidence level <span class="arithmatex">\(\delta_{\mathrm{ref}}\)</span> and <span class="arithmatex">\(L_{\mathrm{prod},t}\)</span> the lower confidence bound for <span class="arithmatex">\(R_{\mathrm{prod}}\)</span> with confidence level <span class="arithmatex">\(\delta_{\mathrm{prod}}\)</span>, with <span class="arithmatex">\(\delta_{\mathrm{ref}} + \delta_{\mathrm{prod}} = \delta\)</span>. Using bounds allows to take into account the uncertainty in the computation empirical risks <span class="arithmatex">\(\hat{R}_{\mathrm{prod}}\)</span> and <span class="arithmatex">\(\hat{R}_{\mathrm{ref}}\)</span> as we have no access to the real risks <span class="arithmatex">\(R_{\mathrm{prod}}\)</span> and <span class="arithmatex">\(R_{\mathrm{ref}}\)</span>.</p>
+<p>With this notation, define the bound gap as <span class="arithmatex">\(\Delta_t = L_{\mathrm{prod},t} - U_{\mathrm{ref}}\)</span>, i.e., the difference between the production lower bound and the reference upper bound. The inequality above then states that the probability of observing a gap larger than <span class="arithmatex">\(\epsilon_{\mathrm{tol}}\)</span> is controlled by <span class="arithmatex">\(\delta\)</span>.</p>
 <figure>
 <p><img alt="RiskMonitoring" src="../../images/risk_monitoring.png" style="background-color: white; padding: 8px;" width="600" />
   </p>
@@ -5162,8 +5167,8 @@ P\left( |\hat{R}_{\mathrm{prod}} - \hat{R}_{\mathrm{ref}}| \geq \epsilon \right)
 <p>Therefore, when this bound-based gap becomes too large, it constitutes an alert for harmful drift and/or violation of the exchangeability assumption.</p>
 <h3 id="interpretation">Interpretation<a class="headerlink" href="#interpretation" title="Permanent link">&para;</a></h3>
 <ul>
-<li><strong>No alert</strong> (<span class="arithmatex">\(\Delta_t = L_{\mathrm{prod},t} - U_{\mathrm{ref}} \leq \epsilon\)</span>): the production lower bound remains compatible with the reference upper bound, meaning no strong signal of harmful drift or exchangeability violation.</li>
-<li><strong>Alert triggered</strong> (<span class="arithmatex">\(\Delta_t &gt; \epsilon\)</span>): the production lower bound exceeds the reference upper bound by more than the tolerated gap, meaning suspicion of harmful drift, non-exchangeability, or regime change.</li>
+<li><strong>Alert triggered</strong> (<span class="arithmatex">\(\Delta_t = L_{\mathrm{prod},t} - U_{\mathrm{ref}} &gt; \epsilon_{\mathrm{tol}}\)</span>): the production lower bound exceeds the reference upper bound by more than the tolerated gap, meaning suspicion of harmful drift, non-exchangeability, or regime change.</li>
+<li><strong>No alert</strong> (<span class="arithmatex">\(\Delta_t \leq \epsilon_{\mathrm{tol}}\)</span>): the production lower bound remains compatible with the reference upper bound, meaning no strong signal of harmful drift or exchangeability violation.</li>
 </ul>
 <p>This bound-based approach controls the false-alert probability at level <span class="arithmatex">\(1 - \delta\)</span>.</p>
 
