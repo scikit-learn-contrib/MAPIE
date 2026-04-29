@@ -11,11 +11,11 @@ and then continue with the usual conformalization and prediction pipeline.
 
 import matplotlib.pyplot as plt
 import numpy as np
-from mapie.exchangeability_testing.permutation_tests import PValuePermutationTest
 from sklearn.datasets import make_classification
 from sklearn.neighbors import KNeighborsClassifier
 
 from mapie.classification import SplitConformalClassifier
+from mapie.exchangeability_testing.permutations import PValuePermutationTest
 from mapie.utils import train_conformalize_test_split
 
 ##############################################################################

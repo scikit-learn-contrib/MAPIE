@@ -11,7 +11,8 @@ exchangeability assumption used by conformal methods.
 
 import matplotlib.pyplot as plt
 import numpy as np
-from mapie.exchangeability_testing.permutation_tests import (
+
+from mapie.exchangeability_testing.permutations import (
     PValuePermutationTest,
     SequentialMonteCarloTest,
 )
