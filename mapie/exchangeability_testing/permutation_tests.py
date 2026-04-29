@@ -111,6 +111,8 @@ class PermutationTest(ABC):
     ) -> None:
         if not (0.0 < test_level < 1.0):
             raise ValueError("test_level must be in (0, 1).")
+        if num_permutations < 1:
+            raise ValueError("num_permutations must be greater than or equal to 1.")
         self.test_level = test_level
         self.mapie_estimator = self._prepare_estimator(mapie_estimator)
         self.task = task
@@ -434,7 +436,7 @@ class SequentialMonteCarloTest(PermutationTest):
         wealth_agg = np.array([1.0])
         wealth_bm = np.array([1.0])
         n = len(scores)
-        for i in range(1, self.num_permutations + 1):
+        for i in range(1, self.num_permutations + 1):  # pragma: no branch
             permuted = self.rng.permutation(n)
             scores_permuted = scores[permuted]
             test_statistic_permutation = self.test_statistic(scores_permuted)
