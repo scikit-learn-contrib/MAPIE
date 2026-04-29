@@ -132,14 +132,14 @@ non_exchangeability_test = PValuePermutationTest(
     mapie_estimator=mapie_classifier,
 )
 
-non_exchangeability_detected = non_exchangeability_test.run(
+exchangeability_detected = non_exchangeability_test.run(
     X_eval,
     y_non_exchangeable,
 )
 
 print("\nNon-exchangeable classification dataset")
 print("--------------------------------------")
-print(f"PValuePermutationTest: data exchangeability={non_exchangeability_detected}")
+print(f"PValuePermutationTest: data exchangeability={exchangeability_detected}")
 
 first_rejection_idx = np.where(non_exchangeability_test.p_values <= test_level)[0]
 if first_rejection_idx.size > 0:
