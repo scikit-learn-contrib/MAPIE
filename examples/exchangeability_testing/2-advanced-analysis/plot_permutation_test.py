@@ -194,3 +194,40 @@ print(
     "SequentialMonteCarloTest (binomial_mixture): "
     f"data exchangeability={shifted_binomial_mixture_detected}. Detection after {len(shifted_binomial_mixture_test.p_values) - 1} permutations."
 )
+
+plt.figure(figsize=(8, 4))
+plt.plot(shifted_pvalue_test.p_values, label="PValuePermutationTest", zorder=4)
+plt.plot(
+    shifted_aggressive_test.p_values,
+    label="SMC aggressive",
+    linestyle="-",
+    linewidth=3.0,
+    zorder=1,
+)
+plt.plot(
+    shifted_binomial_test.p_values,
+    label="SMC binomial",
+    linestyle="--",
+    linewidth=2.0,
+    zorder=2,
+)
+plt.plot(
+    shifted_binomial_mixture_test.p_values,
+    label="SMC binomial_mixture",
+    linestyle=":",
+    linewidth=2.0,
+    zorder=3,
+)
+plt.axhline(
+    test_level,
+    color="black",
+    linestyle="--",
+    label=f"test_level = {test_level:.2f}",
+)
+plt.xlabel("Number of permutations")
+plt.ylabel("Running p-value")
+plt.title("Non-exchangeable residuals")
+plt.grid(alpha=0.3)
+plt.legend()
+plt.tight_layout()
+plt.show()
