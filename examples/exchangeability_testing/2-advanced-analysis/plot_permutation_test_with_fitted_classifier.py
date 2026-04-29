@@ -139,10 +139,20 @@ non_exchangeability_detected = non_exchangeability_test.run(
 
 print("\nNon-exchangeable classification dataset")
 print("--------------------------------------")
-print(
-    "PValuePermutationTest: "
-    f"data exchangeability={non_exchangeability_detected}"
-)
+print(f"PValuePermutationTest: data exchangeability={non_exchangeability_detected}")
+
+first_rejection_idx = np.where(non_exchangeability_test.p_values <= test_level)[0]
+if first_rejection_idx.size > 0:
+    first_detection_permutation = int(first_rejection_idx[0])
+    print(
+        "Non-exchangeability first detected at permutation "
+        f"{first_detection_permutation}."
+    )
+else:
+    print(
+        "Non-exchangeability was not detected during the "
+        f"{num_permutations} permutations."
+    )
 
 plt.figure(figsize=(8, 4))
 plt.plot(exchangeability_test.p_values, label="Exchangeable dataset")
