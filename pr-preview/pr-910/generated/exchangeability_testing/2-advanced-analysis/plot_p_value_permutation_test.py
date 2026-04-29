@@ -195,6 +195,36 @@ print(
     f"data exchangeability={shifted_binomial_mixture_detected}. Detection after {len(shifted_binomial_mixture_test.p_values)} permutations."
 )
 
+##############################################################################
+# 4. Plot non-conformity scores
+# -----------------------------
+#
+# We visualize the non-conformity scores used by permutation tests.
+# In the shifted dataset, the second half should have larger scores.
+
+exchangeable_scores = (
+    exchangeable_pvalue_test.mapie_estimator._mapie_regressor.conformity_scores_
+)
+shifted_scores = shifted_pvalue_test.mapie_estimator._mapie_regressor.conformity_scores_
+middle_idx = len(exchangeable_scores) // 2
+
+plt.figure(figsize=(10, 4))
+plt.plot(exchangeable_scores, label="Exchangeable scores", alpha=0.9)
+plt.plot(shifted_scores, label="Non-exchangeable scores", alpha=0.9)
+plt.axvline(
+    middle_idx,
+    color="black",
+    linestyle=":",
+    label="Split between first/second half",
+)
+plt.xlabel("Sample index")
+plt.ylabel("Non-conformity score")
+plt.title("Non-conformity scores used by permutation tests")
+plt.grid(alpha=0.3)
+plt.legend()
+plt.tight_layout()
+plt.show()
+
 plt.figure(figsize=(8, 4))
 plt.plot(shifted_pvalue_test.p_values, label="PValuePermutationTest", zorder=4)
 plt.plot(
