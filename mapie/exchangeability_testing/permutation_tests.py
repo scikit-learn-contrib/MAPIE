@@ -182,7 +182,7 @@ class PermutationTest(ABC):
         self, X: NDArray, y: NDArray, predict_params: Optional[dict] = None
     ) -> "PermutationTest":
         """Fit the underlying MAPIE estimator on the provided data."""
-        if self.mapie_estimator is None: #pragma: no cover
+        if self.mapie_estimator is None:  # pragma: no cover
             self._initiate_estimator()
         assert self.mapie_estimator is not None
         self.mapie_estimator.fit(X, y, **(predict_params or {}))
