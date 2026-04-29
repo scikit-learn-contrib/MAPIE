@@ -334,7 +334,7 @@ class PValuePermutationTest(PermutationTest):
             scores_permuted = scores[permuted]
             test_statistic_permutation = self.test_statistic(scores_permuted)
 
-            if test_statistic_permutation <= test_statistic_reference:
+            if test_statistic_permutation >= test_statistic_reference:
                 rank += 1
             self.p_values[t] = rank / (t + 1)
 
