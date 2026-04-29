@@ -48,6 +48,8 @@ hide:
 Compute **prediction intervals** (regression, time series) or **prediction sets** (classification) using state-of-the-art conformal prediction methods.
 
 [Learn more →](theory/regression.md)
+<br>
+[Browse examples →](generated/regression/index.md)
 
 </div>
 
@@ -58,6 +60,8 @@ Compute **prediction intervals** (regression, time series) or **prediction sets*
 **Control prediction errors** for complex tasks: multi-label classification, semantic segmentation, with probabilistic guarantees on precision and recall.
 
 [Learn more →](theory/risk-control.md)
+<br>
+[Browse examples →](generated/risk_control/index.md)
 
 </div>
 
@@ -85,7 +89,7 @@ Implements **peer-reviewed** algorithms with **theoretical guarantees** under mi
 
 ---
 
-## :art: Examples
+## :art: All Examples
 
 Explore our gallery of hands-on examples covering all MAPIE use cases:
 

@@ -6,6 +6,7 @@
 * Add optional pre-commit hook (format, lint, type-check) via pre-commit; documented in CONTRIBUTING.
 * documentation moved to GitHub
 * Change the default FWER control method for risk control from `bonferroni` to `bonferroni_holm`.
+* Improve MkDocs navigation, layout, examples overview, and documentation page rendering.
 <<<<<<< risk-continuous
 * Rename `BinaryClassificationRisk` to `BinaryRisk` and keep a deprecated alias for backward compatibility.
 =======
