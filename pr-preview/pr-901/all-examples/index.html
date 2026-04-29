@@ -12,27 +12,31 @@
         <meta name="author" content="MAPIE Team">
       
       
-        <link rel="canonical" href="https://scikit-learn-contrib.github.io/MAPIE/generated/exchangeability_testing/2-advanced-analysis/plot_permutation_test_with_fitted_classifier/">
+        <link rel="canonical" href="https://scikit-learn-contrib.github.io/MAPIE/all-examples/">
       
       
+        <link rel="prev" href="../theory/exchangeability/">
+      
+      
+        <link rel="next" href="../theory/metrics/">
       
       
         
       
       
-      <link rel="icon" href="../../../../images/mapie_logo_nobg_cut.png">
+      <link rel="icon" href="../images/mapie_logo_nobg_cut.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
-        <title>Plot permutation test with fitted classifier - MAPIE</title>
+        <title>All Examples - MAPIE</title>
       
     
     
-      <link rel="stylesheet" href="../../../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
       
         
-        <link rel="stylesheet" href="../../../../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -51,19 +55,19 @@
       
     
     
-      <link rel="stylesheet" href="../../../../assets/_mkdocstrings.css">
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
     
-      <link rel="stylesheet" href="../../../../stylesheets/extra.css">
+      <link rel="stylesheet" href="../stylesheets/extra.css">
     
-      <link rel="stylesheet" href="../../../../sg_gallery-binder.css">
+      <link rel="stylesheet" href="../sg_gallery-binder.css">
     
-      <link rel="stylesheet" href="../../../../sg_gallery-dataframe.css">
+      <link rel="stylesheet" href="../sg_gallery-dataframe.css">
     
-      <link rel="stylesheet" href="../../../../sg_gallery.css">
+      <link rel="stylesheet" href="../sg_gallery.css">
     
-      <link rel="stylesheet" href="../../../../sg_gallery-rendered-html.css">
+      <link rel="stylesheet" href="../sg_gallery-rendered-html.css">
     
-    <script>__md_scope=new URL("../../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -88,7 +92,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#permutation-test-with-a-fitted-classifier" class="md-skip">
+        <a href="#all-examples" class="md-skip">
           Skip to content
         </a>
       
@@ -108,9 +112,9 @@
 
 <header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="../../../.." title="MAPIE" class="md-header__button md-logo" aria-label="MAPIE" data-md-component="logo">
+    <a href=".." title="MAPIE" class="md-header__button md-logo" aria-label="MAPIE" data-md-component="logo">
       
-  <img src="../../../../images/mapie_logo_white_cut.png" alt="logo">
+  <img src="../images/mapie_logo_white_cut.png" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -127,7 +131,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Plot permutation test with fitted classifier
+              All Examples
             
           </span>
         </div>
@@ -234,7 +238,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../../.." class="md-tabs__link">
+      <a href=".." class="md-tabs__link">
         
   
   
@@ -255,7 +259,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../../../getting-started/quick-start/" class="md-tabs__link">
+        <a href="../getting-started/quick-start/" class="md-tabs__link">
           
   
   
@@ -277,7 +281,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../../../theory/regression/" class="md-tabs__link">
+        <a href="../theory/regression/" class="md-tabs__link">
           
   
   
@@ -299,7 +303,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../../../theory/risk-control/" class="md-tabs__link">
+        <a href="../theory/risk-control/" class="md-tabs__link">
           
   
   
@@ -321,7 +325,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../../../theory/calibration/" class="md-tabs__link">
+        <a href="../theory/calibration/" class="md-tabs__link">
           
   
   
@@ -343,7 +347,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../../../theory/exchangeability/" class="md-tabs__link">
+        <a href="../theory/exchangeability/" class="md-tabs__link">
           
   
   
@@ -361,9 +365,11 @@
   
   
   
+    
   
-    <li class="md-tabs__item">
-      <a href="../../../../all-examples/" class="md-tabs__link">
+  
+    <li class="md-tabs__item md-tabs__item--active">
+      <a href="./" class="md-tabs__link">
         
   
   
@@ -384,7 +390,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../../../theory/metrics/" class="md-tabs__link">
+        <a href="../theory/metrics/" class="md-tabs__link">
           
   
   
@@ -406,7 +412,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../../../api/" class="md-tabs__link">
+        <a href="../api/" class="md-tabs__link">
           
   
   
@@ -428,7 +434,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../../../contributing-docs/" class="md-tabs__link">
+        <a href="../contributing-docs/" class="md-tabs__link">
           
   
   
@@ -472,9 +478,9 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../../../.." title="MAPIE" class="md-nav__button md-logo" aria-label="MAPIE" data-md-component="logo">
+    <a href=".." title="MAPIE" class="md-nav__button md-logo" aria-label="MAPIE" data-md-component="logo">
       
-  <img src="../../../../images/mapie_logo_white_cut.png" alt="logo">
+  <img src="../images/mapie_logo_white_cut.png" alt="logo">
 
     </a>
     MAPIE
@@ -501,7 +507,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../.." class="md-nav__link">
+      <a href=".." class="md-nav__link">
         
   
   
@@ -590,7 +596,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../getting-started/quick-start/" class="md-nav__link">
+      <a href="../getting-started/quick-start/" class="md-nav__link">
         
   
   
@@ -618,7 +624,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../getting-started/split-cross-conformal/" class="md-nav__link">
+      <a href="../getting-started/split-cross-conformal/" class="md-nav__link">
         
   
   
@@ -646,7 +652,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../getting-started/choosing-algorithm/" class="md-nav__link">
+      <a href="../getting-started/choosing-algorithm/" class="md-nav__link">
         
   
   
@@ -674,7 +680,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../getting-started/v1-release-notes/" class="md-nav__link">
+      <a href="../getting-started/v1-release-notes/" class="md-nav__link">
         
   
   
@@ -775,7 +781,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../theory/regression/" class="md-nav__link">
+      <a href="../theory/regression/" class="md-nav__link">
         
   
   
@@ -803,7 +809,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../theory/conformity-scores/" class="md-nav__link">
+      <a href="../theory/conformity-scores/" class="md-nav__link">
         
   
   
@@ -860,7 +866,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../../regression/" class="md-nav__link ">
+            <a href="../generated/regression/" class="md-nav__link ">
               
   
   
@@ -970,7 +976,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../regression/1-quickstart/plot_compare_conformity_scores/" class="md-nav__link">
+      <a href="../generated/regression/1-quickstart/plot_compare_conformity_scores/" class="md-nav__link">
         
   
   
@@ -998,7 +1004,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../regression/1-quickstart/plot_heteroscedastic_1d_data/" class="md-nav__link">
+      <a href="../generated/regression/1-quickstart/plot_heteroscedastic_1d_data/" class="md-nav__link">
         
   
   
@@ -1026,7 +1032,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../regression/1-quickstart/plot_homoscedastic_1d_data/" class="md-nav__link">
+      <a href="../generated/regression/1-quickstart/plot_homoscedastic_1d_data/" class="md-nav__link">
         
   
   
@@ -1054,7 +1060,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../regression/1-quickstart/plot_prefit/" class="md-nav__link">
+      <a href="../generated/regression/1-quickstart/plot_prefit/" class="md-nav__link">
         
   
   
@@ -1082,7 +1088,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../regression/1-quickstart/plot_toy_model/" class="md-nav__link">
+      <a href="../generated/regression/1-quickstart/plot_toy_model/" class="md-nav__link">
         
   
   
@@ -1110,7 +1116,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../regression/1-quickstart/plot_ts-tutorial/" class="md-nav__link">
+      <a href="../generated/regression/1-quickstart/plot_ts-tutorial/" class="md-nav__link">
         
   
   
@@ -1222,7 +1228,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../regression/2-advanced-analysis/plot-coverage-width-based-criterion/" class="md-nav__link">
+      <a href="../generated/regression/2-advanced-analysis/plot-coverage-width-based-criterion/" class="md-nav__link">
         
   
   
@@ -1250,7 +1256,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../regression/2-advanced-analysis/plot_ResidualNormalisedScore_tutorial/" class="md-nav__link">
+      <a href="../generated/regression/2-advanced-analysis/plot_ResidualNormalisedScore_tutorial/" class="md-nav__link">
         
   
   
@@ -1278,7 +1284,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../regression/2-advanced-analysis/plot_both_uncertainties/" class="md-nav__link">
+      <a href="../generated/regression/2-advanced-analysis/plot_both_uncertainties/" class="md-nav__link">
         
   
   
@@ -1306,7 +1312,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../regression/2-advanced-analysis/plot_conditional_coverage/" class="md-nav__link">
+      <a href="../generated/regression/2-advanced-analysis/plot_conditional_coverage/" class="md-nav__link">
         
   
   
@@ -1334,7 +1340,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../regression/2-advanced-analysis/plot_conformal_predictive_distribution/" class="md-nav__link">
+      <a href="../generated/regression/2-advanced-analysis/plot_conformal_predictive_distribution/" class="md-nav__link">
         
   
   
@@ -1362,7 +1368,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../regression/2-advanced-analysis/plot_coverage_validity/" class="md-nav__link">
+      <a href="../generated/regression/2-advanced-analysis/plot_coverage_validity/" class="md-nav__link">
         
   
   
@@ -1390,7 +1396,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../regression/2-advanced-analysis/plot_cqr_symmetry_difference/" class="md-nav__link">
+      <a href="../generated/regression/2-advanced-analysis/plot_cqr_symmetry_difference/" class="md-nav__link">
         
   
   
@@ -1418,7 +1424,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../regression/2-advanced-analysis/plot_cqr_tutorial/" class="md-nav__link">
+      <a href="../generated/regression/2-advanced-analysis/plot_cqr_tutorial/" class="md-nav__link">
         
   
   
@@ -1446,7 +1452,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../regression/2-advanced-analysis/plot_main-tutorial-regression/" class="md-nav__link">
+      <a href="../generated/regression/2-advanced-analysis/plot_main-tutorial-regression/" class="md-nav__link">
         
   
   
@@ -1474,7 +1480,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../regression/2-advanced-analysis/plot_nested-cv/" class="md-nav__link">
+      <a href="../generated/regression/2-advanced-analysis/plot_nested-cv/" class="md-nav__link">
         
   
   
@@ -1502,7 +1508,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../regression/2-advanced-analysis/plot_timeseries_enbpi/" class="md-nav__link">
+      <a href="../generated/regression/2-advanced-analysis/plot_timeseries_enbpi/" class="md-nav__link">
         
   
   
@@ -1598,7 +1604,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../regression/3-scientific-articles/plot_barber2020_simulations/" class="md-nav__link">
+      <a href="../generated/regression/3-scientific-articles/plot_barber2020_simulations/" class="md-nav__link">
         
   
   
@@ -1626,7 +1632,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../regression/3-scientific-articles/plot_kim2020_simulations/" class="md-nav__link">
+      <a href="../generated/regression/3-scientific-articles/plot_kim2020_simulations/" class="md-nav__link">
         
   
   
@@ -1654,7 +1660,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../regression/3-scientific-articles/plot_zaffran2022_comparison/" class="md-nav__link">
+      <a href="../generated/regression/3-scientific-articles/plot_zaffran2022_comparison/" class="md-nav__link">
         
   
   
@@ -1698,7 +1704,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../theory/classification/" class="md-nav__link">
+      <a href="../theory/classification/" class="md-nav__link">
         
   
   
@@ -1726,7 +1732,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../theory/binary-classification/" class="md-nav__link">
+      <a href="../theory/binary-classification/" class="md-nav__link">
         
   
   
@@ -1783,7 +1789,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../../classification/" class="md-nav__link ">
+            <a href="../generated/classification/" class="md-nav__link ">
               
   
   
@@ -1883,7 +1889,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../classification/1-quickstart/plot_quickstart_classification/" class="md-nav__link">
+      <a href="../generated/classification/1-quickstart/plot_quickstart_classification/" class="md-nav__link">
         
   
   
@@ -1979,7 +1985,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../classification/2-advanced-analysis/plot_comp_methods_on_2d_dataset/" class="md-nav__link">
+      <a href="../generated/classification/2-advanced-analysis/plot_comp_methods_on_2d_dataset/" class="md-nav__link">
         
   
   
@@ -2007,7 +2013,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../classification/2-advanced-analysis/plot_crossconformal/" class="md-nav__link">
+      <a href="../generated/classification/2-advanced-analysis/plot_crossconformal/" class="md-nav__link">
         
   
   
@@ -2035,7 +2041,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../classification/2-advanced-analysis/plot_main-tutorial-binary-classification/" class="md-nav__link">
+      <a href="../generated/classification/2-advanced-analysis/plot_main-tutorial-binary-classification/" class="md-nav__link">
         
   
   
@@ -2127,7 +2133,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../classification/3-scientific-articles/plot_sadinle2019_example/" class="md-nav__link">
+      <a href="../generated/classification/3-scientific-articles/plot_sadinle2019_example/" class="md-nav__link">
         
   
   
@@ -2238,7 +2244,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../theory/risk-control/" class="md-nav__link">
+      <a href="../theory/risk-control/" class="md-nav__link">
         
   
   
@@ -2266,7 +2272,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../theory/llm-risk-control/" class="md-nav__link">
+      <a href="../theory/llm-risk-control/" class="md-nav__link">
         
   
   
@@ -2321,7 +2327,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../../risk_control/" class="md-nav__link ">
+            <a href="../generated/risk_control/" class="md-nav__link ">
               
   
   
@@ -2421,7 +2427,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../risk_control/1-quickstart/plot_risk_control_binary_classification/" class="md-nav__link">
+      <a href="../generated/risk_control/1-quickstart/plot_risk_control_binary_classification/" class="md-nav__link">
         
   
   
@@ -2527,7 +2533,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../risk_control/2-advanced-analysis/plot_fwer_method_comparison_for_recall_guarantees/" class="md-nav__link">
+      <a href="../generated/risk_control/2-advanced-analysis/plot_fwer_method_comparison_for_recall_guarantees/" class="md-nav__link">
         
   
   
@@ -2555,7 +2561,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../risk_control/2-advanced-analysis/plot_multi_risk_control_binary_classification/" class="md-nav__link">
+      <a href="../generated/risk_control/2-advanced-analysis/plot_multi_risk_control_binary_classification/" class="md-nav__link">
         
   
   
@@ -2583,7 +2589,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../risk_control/2-advanced-analysis/plot_risk_control_llm_as_a_judge/" class="md-nav__link">
+      <a href="../generated/risk_control/2-advanced-analysis/plot_risk_control_llm_as_a_judge/" class="md-nav__link">
         
   
   
@@ -2611,7 +2617,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../risk_control/2-advanced-analysis/plot_risk_control_multi-label_classification/" class="md-nav__link">
+      <a href="../generated/risk_control/2-advanced-analysis/plot_risk_control_multi-label_classification/" class="md-nav__link">
         
   
   
@@ -2639,7 +2645,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../risk_control/2-advanced-analysis/plot_risk_control_multi_parameter_binary_classification/" class="md-nav__link">
+      <a href="../generated/risk_control/2-advanced-analysis/plot_risk_control_multi_parameter_binary_classification/" class="md-nav__link">
         
   
   
@@ -2667,7 +2673,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../risk_control/2-advanced-analysis/plot_semantic_segmentation_precision_control/" class="md-nav__link">
+      <a href="../generated/risk_control/2-advanced-analysis/plot_semantic_segmentation_precision_control/" class="md-nav__link">
         
   
   
@@ -2695,7 +2701,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../risk_control/2-advanced-analysis/plot_semantic_segmentation_recall_control/" class="md-nav__link">
+      <a href="../generated/risk_control/2-advanced-analysis/plot_semantic_segmentation_recall_control/" class="md-nav__link">
         
   
   
@@ -2723,7 +2729,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../risk_control/2-advanced-analysis/plot_split_fixed_sequence_testing_fwer_method_for_precision_control/" class="md-nav__link">
+      <a href="../generated/risk_control/2-advanced-analysis/plot_split_fixed_sequence_testing_fwer_method_for_precision_control/" class="md-nav__link">
         
   
   
@@ -2834,7 +2840,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../theory/calibration/" class="md-nav__link">
+      <a href="../theory/calibration/" class="md-nav__link">
         
   
   
@@ -2889,7 +2895,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../../calibration/" class="md-nav__link ">
+            <a href="../generated/calibration/" class="md-nav__link ">
               
   
   
@@ -2993,7 +2999,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../calibration/1-quickstart/plot_calibration_hypothesis_testing/" class="md-nav__link">
+      <a href="../generated/calibration/1-quickstart/plot_calibration_hypothesis_testing/" class="md-nav__link">
         
   
   
@@ -3021,7 +3027,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../calibration/1-quickstart/plot_calibration_venn_abers_binary/" class="md-nav__link">
+      <a href="../generated/calibration/1-quickstart/plot_calibration_venn_abers_binary/" class="md-nav__link">
         
   
   
@@ -3049,7 +3055,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../calibration/1-quickstart/plot_calibration_venn_abers_multiclass/" class="md-nav__link">
+      <a href="../generated/calibration/1-quickstart/plot_calibration_venn_abers_multiclass/" class="md-nav__link">
         
   
   
@@ -3141,7 +3147,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../calibration/2-advanced-analysis/plot_asymptotic_convergence_of_p_values/" class="md-nav__link">
+      <a href="../generated/calibration/2-advanced-analysis/plot_asymptotic_convergence_of_p_values/" class="md-nav__link">
         
   
   
@@ -3185,7 +3191,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../calibration/notebooks/" class="md-nav__link">
+      <a href="../calibration/notebooks/" class="md-nav__link">
         
   
   
@@ -3276,7 +3282,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../theory/exchangeability/" class="md-nav__link">
+      <a href="../theory/exchangeability/" class="md-nav__link">
         
   
   
@@ -3308,10 +3314,37 @@
       
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../../../../all-examples/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    All Examples
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -3327,6 +3360,92 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#conformal-prediction-for-regression" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Conformal Prediction for Regression
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#conformal-prediction-for-classification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Conformal Prediction for Classification
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#calibration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Calibration
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#risk-control" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Risk Control
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#exchangeability-testing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exchangeability Testing
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mondrian" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mondrian
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -3396,7 +3515,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../theory/metrics/" class="md-nav__link">
+      <a href="../theory/metrics/" class="md-nav__link">
         
   
   
@@ -3424,7 +3543,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../theory/mondrian/" class="md-nav__link">
+      <a href="../theory/mondrian/" class="md-nav__link">
         
   
   
@@ -3496,7 +3615,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../../../api/" class="md-nav__link ">
+            <a href="../api/" class="md-nav__link ">
               
   
   
@@ -3540,7 +3659,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../api/regression/" class="md-nav__link">
+      <a href="../api/regression/" class="md-nav__link">
         
   
   
@@ -3568,7 +3687,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../api/classification/" class="md-nav__link">
+      <a href="../api/classification/" class="md-nav__link">
         
   
   
@@ -3596,7 +3715,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../api/conformity-scores/" class="md-nav__link">
+      <a href="../api/conformity-scores/" class="md-nav__link">
         
   
   
@@ -3624,7 +3743,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../api/risk-control/" class="md-nav__link">
+      <a href="../api/risk-control/" class="md-nav__link">
         
   
   
@@ -3652,7 +3771,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../api/calibration/" class="md-nav__link">
+      <a href="../api/calibration/" class="md-nav__link">
         
   
   
@@ -3680,7 +3799,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../api/metrics/" class="md-nav__link">
+      <a href="../api/metrics/" class="md-nav__link">
         
   
   
@@ -3708,7 +3827,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../api/utils/" class="md-nav__link">
+      <a href="../api/utils/" class="md-nav__link">
         
   
   
@@ -3799,7 +3918,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../contributing-docs/" class="md-nav__link">
+      <a href="../contributing-docs/" class="md-nav__link">
         
   
   
@@ -3847,170 +3966,40 @@
   
 
 
-<!--
- DO NOT EDIT.
- THIS FILE WAS AUTOMATICALLY GENERATED BY mkdocs-gallery.
- TO MAKE CHANGES, EDIT THE SOURCE PYTHON FILE:
- "examples/exchangeability_testing/2-advanced-analysis/plot_permutation_test_with_fitted_classifier.py"
- LINE NUMBERS ARE GIVEN BELOW.
--->
-
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Click <a href="#download_links">here</a>
-to download the full example code</p>
+<h1 id="all-examples">All Examples<a class="headerlink" href="#all-examples" title="Permanent link">&para;</a></h1>
+<p>Browse the MAPIE example galleries by topic.</p>
+<div class="grid">
+<div class="card">
+<h3 id="conformal-prediction-for-regression"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m16 11.78 4.24-7.33 1.73 1-5.23 9.05-6.51-3.75L5.46 19H22v2H2V3h2v14.54L9.5 8z"/></svg></span> Conformal Prediction for Regression<a class="headerlink" href="#conformal-prediction-for-regression" title="Permanent link">&para;</a></h3>
+<p>Prediction intervals for regression and time series.</p>
+<p><a href="../generated/regression/">Open Regression examples</a></p>
 </div>
-<h1 id="permutation-test-with-a-fitted-classifier">Permutation test with a fitted classifier<a class="headerlink" href="#permutation-test-with-a-fitted-classifier" title="Permanent link">&para;</a></h1>
-<p>This example illustrates how to run
-:class:<code>~mapie.exchangeability_testing.permutations.PValuePermutationTest</code>
-on a multiclass classification problem using a user-provided fitted
-:class:<code>~mapie.classification.SplitConformalClassifier</code>.</p>
-<p>Compared to the companion permutation example, the key differences are:</p>
-<ul>
-<li>the estimator is <em>fitted beforehand</em> and passed to the test via the
-  <code>mapie_estimator</code> argument. The permutation test then runs directly
-  on held-out data without any internal refitting, which is cheaper and
-  typically more powerful;</li>
-<li>we use the <code>"top_k"</code> conformity score instead of the default one;</li>
-<li>once exchangeability has been checked, we continue with the usual
-  MAPIE conformalization and prediction pipeline.</li>
-</ul>
-<!-- GENERATED FROM PYTHON SOURCE LINES 19-29 -->
-
-<div class="highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_classification</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.neighbors</span><span class="w"> </span><span class="kn">import</span> <span class="n">KNeighborsClassifier</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mapie._example_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">plot_running_pvalues</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mapie.classification</span><span class="w"> </span><span class="kn">import</span> <span class="n">SplitConformalClassifier</span>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mapie.exchangeability_testing.permutations</span><span class="w"> </span><span class="kn">import</span> <span class="n">PValuePermutationTest</span>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mapie.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">train_conformalize_test_split</span>
-</span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 30-39 -->
-
-<h2 id="fit-a-conformal-classifier-with-a-non-default-conformity-score">Fit a conformal classifier with a non-default conformity score<a class="headerlink" href="#fit-a-conformal-classifier-with-a-non-default-conformity-score" title="Permanent link">&para;</a></h2>
-<p>We split the data into train, conformalization, and test subsets using
-MAPIE's built-in utility. A multiclass :class:<code>KNeighborsClassifier</code> is
-fitted on the training data, then wrapped in a
-:class:<code>~mapie.classification.SplitConformalClassifier</code> with the
-<code>"top_k"</code> conformity score in prefit mode. At this stage, the MAPIE
-classifier is initialized but not conformalized yet.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 39-77 -->
-
-<div class="highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">RANDOM_STATE</span> <span class="o">=</span> <span class="mi">7</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">X_full</span><span class="p">,</span> <span class="n">y_full</span> <span class="o">=</span> <span class="n">make_classification</span><span class="p">(</span>
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    <span class="n">n_samples</span><span class="o">=</span><span class="mi">360</span><span class="p">,</span>
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>    <span class="n">n_features</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
-</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>    <span class="n">n_informative</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
-</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>    <span class="n">n_redundant</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>    <span class="n">n_classes</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
-</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>    <span class="n">n_clusters_per_class</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>    <span class="n">random_state</span><span class="o">=</span><span class="n">RANDOM_STATE</span><span class="p">,</span>
-</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="p">)</span>
-</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>
-</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="p">(</span>
-</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>    <span class="n">X_train</span><span class="p">,</span>
-</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>    <span class="n">X_conformalize</span><span class="p">,</span>
-</span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>    <span class="n">X_test</span><span class="p">,</span>
-</span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>    <span class="n">y_train</span><span class="p">,</span>
-</span><span id="__span-1-18"><a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>    <span class="n">y_conformalize</span><span class="p">,</span>
-</span><span id="__span-1-19"><a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>    <span class="n">y_test</span><span class="p">,</span>
-</span><span id="__span-1-20"><a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a><span class="p">)</span> <span class="o">=</span> <span class="n">train_conformalize_test_split</span><span class="p">(</span>
-</span><span id="__span-1-21"><a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>    <span class="n">X_full</span><span class="p">,</span>
-</span><span id="__span-1-22"><a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>    <span class="n">y_full</span><span class="p">,</span>
-</span><span id="__span-1-23"><a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>    <span class="n">train_size</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
-</span><span id="__span-1-24"><a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>    <span class="n">conformalize_size</span><span class="o">=</span><span class="mf">0.25</span><span class="p">,</span>
-</span><span id="__span-1-25"><a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a>    <span class="n">test_size</span><span class="o">=</span><span class="mf">0.25</span><span class="p">,</span>
-</span><span id="__span-1-26"><a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a>    <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-</span><span id="__span-1-27"><a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a><span class="p">)</span>
-</span><span id="__span-1-28"><a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a>
-</span><span id="__span-1-29"><a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a><span class="n">classifier</span> <span class="o">=</span> <span class="n">KNeighborsClassifier</span><span class="p">(</span><span class="n">n_neighbors</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
-</span><span id="__span-1-30"><a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a><span class="n">classifier</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
-</span><span id="__span-1-31"><a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a>
-</span><span id="__span-1-32"><a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a><span class="n">mapie_classifier</span> <span class="o">=</span> <span class="n">SplitConformalClassifier</span><span class="p">(</span>
-</span><span id="__span-1-33"><a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a>    <span class="n">estimator</span><span class="o">=</span><span class="n">classifier</span><span class="p">,</span>
-</span><span id="__span-1-34"><a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a>    <span class="n">conformity_score</span><span class="o">=</span><span class="s2">&quot;top_k&quot;</span><span class="p">,</span>
-</span><span id="__span-1-35"><a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a>    <span class="n">prefit</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-</span><span id="__span-1-36"><a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a><span class="p">)</span>
-</span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 78-85 -->
-
-<h2 id="test-exchangeability-on-the-held-out-dataset">Test exchangeability on the held-out dataset<a class="headerlink" href="#test-exchangeability-on-the-held-out-dataset" title="Permanent link">&para;</a></h2>
-<p>To assess whether the conformalization guarantees provided by MAPIE are
-valid, we test the exchangeability of the conformalization and test
-datasets. If the datasets are exchangeable, the coverage guarantees hold;
-otherwise they may be violated.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 85-106 -->
-
-<div class="highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">X_eval</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">X_conformalize</span><span class="p">,</span> <span class="n">X_test</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">y_eval</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">y_conformalize</span><span class="p">,</span> <span class="n">y_test</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="n">test_level</span> <span class="o">=</span> <span class="mf">0.1</span>
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="n">num_permutations</span> <span class="o">=</span> <span class="mi">200</span>
-</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>
-</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="n">exchangeability_test</span> <span class="o">=</span> <span class="n">PValuePermutationTest</span><span class="p">(</span>
-</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>    <span class="n">test_level</span><span class="o">=</span><span class="n">test_level</span><span class="p">,</span>
-</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>    <span class="n">random_state</span><span class="o">=</span><span class="n">RANDOM_STATE</span><span class="p">,</span>
-</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>    <span class="n">num_permutations</span><span class="o">=</span><span class="n">num_permutations</span><span class="p">,</span>
-</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>    <span class="n">mapie_estimator</span><span class="o">=</span><span class="n">mapie_classifier</span><span class="p">,</span>
-</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="p">)</span>
-</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>
-</span><span id="__span-2-14"><a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="n">exchangeability_test</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">X_eval</span><span class="p">,</span> <span class="n">y_eval</span><span class="p">)</span>
-</span><span id="__span-2-15"><a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>
-</span><span id="__span-2-16"><a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Exchangeability result&quot;</span><span class="p">)</span>
-</span><span id="__span-2-17"><a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;----------------------&quot;</span><span class="p">)</span>
-</span><span id="__span-2-18"><a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Is the held-out dataset exchangeable? </span><span class="si">{</span><span class="n">exchangeability_test</span><span class="o">.</span><span class="n">is_exchangeable</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span id="__span-2-19"><a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Final running p-value: </span><span class="si">{</span><span class="n">exchangeability_test</span><span class="o">.</span><span class="n">p_values</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span></code></pre></div>
-<p class="mkd-glr-script-out">Out:</p>
-<div class="mkd-glr-script-out-disp highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>Exchangeability<span class="w"> </span>result
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>----------------------
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>Is<span class="w"> </span>the<span class="w"> </span>held-out<span class="w"> </span>dataset<span class="w"> </span>exchangeable?<span class="w"> </span>True
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>Final<span class="w"> </span>running<span class="w"> </span>p-value:<span class="w"> </span><span class="m">0</span>.368
-</span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 107-109 -->
-
-<h2 id="visualize-the-running-p-value">Visualize the running p-value<a class="headerlink" href="#visualize-the-running-p-value" title="Permanent link">&para;</a></h2>
-<!-- GENERATED FROM PYTHON SOURCE LINES 109-117 -->
-
-<div class="highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">plot_running_pvalues</span><span class="p">(</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>    <span class="p">[</span><span class="n">exchangeability_test</span><span class="p">],</span>
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>    <span class="p">[</span><span class="s2">&quot;Running p-value&quot;</span><span class="p">],</span>
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>    <span class="n">test_level</span><span class="p">,</span>
-</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>    <span class="s2">&quot;Permutation test with a fitted top-k classifier&quot;</span><span class="p">,</span>
-</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="p">)</span>
-</span></code></pre></div>
-<p><img alt="Permutation test with a fitted top-k classifier" class="mkd-glr-single-img" src="../images/mkd_glr_plot_permutation_test_with_fitted_classifier_001.png" srcset="../images/mkd_glr_plot_permutation_test_with_fitted_classifier_001.png" /></p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 118-123 -->
-
-<h2 id="continue-with-the-standard-mapie-pipeline">Continue with the standard MAPIE pipeline<a class="headerlink" href="#continue-with-the-standard-mapie-pipeline" title="Permanent link">&para;</a></h2>
-<p>Once exchangeability has been checked, we continue with the standard
-MAPIE pipeline on the predefined conformalization and test subsets.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 123-133 -->
-
-<div class="highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">mapie_classifier</span><span class="o">.</span><span class="n">conformalize</span><span class="p">(</span><span class="n">X_conformalize</span><span class="p">,</span> <span class="n">y_conformalize</span><span class="p">)</span>
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="n">y_pred</span><span class="p">,</span> <span class="n">y_pred_set</span> <span class="o">=</span> <span class="n">mapie_classifier</span><span class="o">.</span><span class="n">predict_set</span><span class="p">(</span><span class="n">X_test</span><span class="p">)</span>
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="n">average_set_size</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">y_pred_set</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)))</span>
-</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="n">empirical_coverage</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">y_pred_set</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">y_test</span><span class="p">)),</span> <span class="n">y_test</span><span class="p">,</span> <span class="mi">0</span><span class="p">]))</span>
-</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>
-</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Classical MAPIE pipeline&quot;</span><span class="p">)</span>
-</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;------------------------&quot;</span><span class="p">)</span>
-</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Average prediction-set size: </span><span class="si">{</span><span class="n">average_set_size</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Empirical coverage:          </span><span class="si">{</span><span class="n">empirical_coverage</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span></code></pre></div>
-<p class="mkd-glr-script-out">Out:</p>
-<div class="mkd-glr-script-out-disp highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>Classical<span class="w"> </span>MAPIE<span class="w"> </span>pipeline
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>------------------------
-</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>Average<span class="w"> </span>prediction-set<span class="w"> </span>size:<span class="w"> </span><span class="m">1</span>.03
-</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>Empirical<span class="w"> </span>coverage:<span class="w">          </span><span class="m">0</span>.87
-</span></code></pre></div>
-<p><strong>Total running time of the script:</strong> ( 0 minutes  0.125 seconds)</p>
-<div id="download_links"></div>
-
-<p><a class="md-button center" href="../plot_permutation_test_with_fitted_classifier.py"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M256 32c0-17.7-14.3-32-32-32s-32 14.3-32 32v210.7l-41.4-41.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l96 96c12.5 12.5 32.8 12.5 45.3 0l96-96c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 242.7zM64 320c-35.3 0-64 28.7-64 64v32c0 35.3 28.7 64 64 64h320c35.3 0 64-28.7 64-64v-32c0-35.3-28.7-64-64-64h-46.9l-56.6 56.6c-31.2 31.2-81.9 31.2-113.1 0L110.9 320zm304 56a24 24 0 1 1 0 48 24 24 0 1 1 0-48"/></svg></span> Download Python source code: plot_permutation_test_with_fitted_classifier.py</a></p>
-<p><a class="md-button center" href="../plot_permutation_test_with_fitted_classifier.ipynb"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M256 32c0-17.7-14.3-32-32-32s-32 14.3-32 32v210.7l-41.4-41.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l96 96c12.5 12.5 32.8 12.5 45.3 0l96-96c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 242.7zM64 320c-35.3 0-64 28.7-64 64v32c0 35.3 28.7 64 64 64h320c35.3 0 64-28.7 64-64v-32c0-35.3-28.7-64-64-64h-46.9l-56.6 56.6c-31.2 31.2-81.9 31.2-113.1 0L110.9 320zm304 56a24 24 0 1 1 0 48 24 24 0 1 1 0-48"/></svg></span> Download Jupyter notebook: plot_permutation_test_with_fitted_classifier.ipynb</a></p>
-<p><a class="mkd-glr-signature" href="https://smarie.github.io/mkdocs-gallery">Gallery generated by mkdocs-gallery</a></p>
+<div class="card">
+<h3 id="conformal-prediction-for-classification"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M11 13.5v8H3v-8zM12 2l5.5 9h-11zm5.5 11c2.5 0 4.5 2 4.5 4.5S20 22 17.5 22 13 20 13 17.5s2-4.5 4.5-4.5"/></svg></span> Conformal Prediction for Classification<a class="headerlink" href="#conformal-prediction-for-classification" title="Permanent link">&para;</a></h3>
+<p>Prediction sets for single-label and multi-label classification.</p>
+<p><a href="../generated/classification/">Open Classification examples</a></p>
+</div>
+<div class="card">
+<h3 id="calibration"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M11 2v2.07A8 8 0 0 0 4.07 11H2v2h2.07A8 8 0 0 0 11 19.93V22h2v-2.07A8 8 0 0 0 19.93 13H22v-2h-2.07A8 8 0 0 0 13 4.07V2m-2 4.08V8h2V6.09c2.5.41 4.5 2.41 4.92 4.91H16v2h1.91c-.41 2.5-2.41 4.5-4.91 4.92V16h-2v1.91C8.5 17.5 6.5 15.5 6.08 13H8v-2H6.09C6.5 8.5 8.5 6.5 11 6.08M12 11a1 1 0 0 0-1 1 1 1 0 0 0 1 1 1 1 0 0 0 1-1 1 1 0 0 0-1-1"/></svg></span> Calibration<a class="headerlink" href="#calibration" title="Permanent link">&para;</a></h3>
+<p>Calibration techniques and probabilistic prediction evaluation.</p>
+<p><a href="../generated/calibration/">Open Calibration examples</a></p>
+</div>
+<div class="card">
+<h3 id="risk-control"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 1 3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5M11 7h2v6h-2m0 2h2v2h-2"/></svg></span> Risk Control<a class="headerlink" href="#risk-control" title="Permanent link">&para;</a></h3>
+<p>Risk control methods for complex machine learning tasks.</p>
+<p><a href="../generated/risk_control/">Open Risk Control examples</a></p>
+</div>
+<div class="card">
+<h3 id="exchangeability-testing"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m21 9-4-4v3h-7v2h7v3M7 11l-4 4 4 4v-3h7v-2H7z"/></svg></span> Exchangeability Testing<a class="headerlink" href="#exchangeability-testing" title="Permanent link">&para;</a></h3>
+<p>Exchangeability testing and deployed-model monitoring examples.</p>
+<p><a href="../generated/exchangeability_testing/">Open Exchangeability Testing examples</a></p>
+</div>
+<div class="card">
+<h3 id="mondrian"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 5.5A3.5 3.5 0 0 1 15.5 9a3.5 3.5 0 0 1-3.5 3.5A3.5 3.5 0 0 1 8.5 9 3.5 3.5 0 0 1 12 5.5M5 8c.56 0 1.08.15 1.53.42-.15 1.43.27 2.85 1.13 3.96C7.16 13.34 6.16 14 5 14a3 3 0 0 1-3-3 3 3 0 0 1 3-3m14 0a3 3 0 0 1 3 3 3 3 0 0 1-3 3c-1.16 0-2.16-.66-2.66-1.62a5.54 5.54 0 0 0 1.13-3.96c.45-.27.97-.42 1.53-.42M5.5 18.25c0-2.07 2.91-3.75 6.5-3.75s6.5 1.68 6.5 3.75V20h-13zM0 20v-1.5c0-1.39 1.89-2.56 4.45-2.9-.59.68-.95 1.62-.95 2.65V20zm24 0h-3.5v-1.75c0-1.03-.36-1.97-.95-2.65 2.56.34 4.45 1.51 4.45 2.9z"/></svg></span> Mondrian<a class="headerlink" href="#mondrian" title="Permanent link">&para;</a></h3>
+<p>Group-conditional conformal prediction examples.</p>
+<p><a href="../generated/mondrian/">Open Mondrian examples</a></p>
+</div>
+</div>
 
 
 
@@ -4094,12 +4083,12 @@ MAPIE pipeline on the predefined conformalization and test subsets.</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.top", "navigation.indexes", "toc.integrate", "toc.follow", "search.suggest", "search.highlight", "content.tabs.link", "content.code.copy", "content.code.annotate"], "search": "../../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.tracking", "navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.top", "navigation.indexes", "toc.integrate", "toc.follow", "search.suggest", "search.highlight", "content.tabs.link", "content.code.copy", "content.code.annotate"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
-      <script src="../../../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
       
-        <script src="../../../../javascripts/mathjax.js"></script>
+        <script src="../javascripts/mathjax.js"></script>
       
         <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
       
