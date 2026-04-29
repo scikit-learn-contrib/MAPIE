@@ -118,7 +118,7 @@ plt.show()
 # 4. Non-exchangeable example
 # ---------------------------
 #
-# We now break exchangeability by shifting all labels of the test split.
+# For illustration purposes, we now break exchangeability by shifting all labels of the test split.
 # This induces a systematic mismatch between the second half of X_eval and
 # the corresponding labels, while keeping the first half unchanged.
 
@@ -178,7 +178,8 @@ plt.show()
 # 5. Continue with the standard MAPIE pipeline
 # --------------------------------------------
 #
-# Once exchangeability has been checked, we continue with the standard MAPIE
+# Because exchangeability of the original conformalization and test sets has
+# been checked, we can continue with the standard MAPIE
 # pipeline on the predefined conformalization and test subsets.
 
 mapie_classifier.conformalize(X_conformalize, y_conformalize)
