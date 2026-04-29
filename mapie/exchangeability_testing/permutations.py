@@ -31,7 +31,7 @@ class TestStatistic(ABC):
         raise NotImplementedError  # pragma: no cover
 
 
-class MeanShiftTestStatistic(TestStatistic):
+class MaxSplitMeanDifferenceTestStatistic(TestStatistic):
     """Maximum CUSUM-scaled mean-shift statistic on a score sequence.
 
     The statistic is the maximum, over all valid split points, of the
@@ -124,7 +124,7 @@ class PermutationTest(ABC):
         self.num_permutations = num_permutations
         self.warn = warn
         self.p_values: NDArray = np.array([])
-        self.test_statistic = MeanShiftTestStatistic()
+        self.test_statistic = MaxSplitMeanDifferenceTestStatistic()
 
     @property
     def is_exchangeable(self) -> Optional[bool]:

@@ -9,7 +9,7 @@ from sklearn.linear_model import LinearRegression
 from mapie.classification import CrossConformalClassifier
 from mapie.exchangeability_testing.permutations import (
     MapieEstimator,
-    MeanShiftTestStatistic,
+    MaxSplitMeanDifferenceTestStatistic,
     PermutationTest,
     PValuePermutationTest,
     SequentialMonteCarloTest,
@@ -52,7 +52,7 @@ class DummyUnknownEstimator:
         return self
 
 
-class ConstantStatistic(MeanShiftTestStatistic):
+class ConstantStatistic(MaxSplitMeanDifferenceTestStatistic):
     def compute(self, *args: Any, **kwargs: Any) -> float:
         return 1.0
 
@@ -81,14 +81,14 @@ def conformalized_split_conformal_regressor(fitted_split_conformal_regressor):
     return fitted_split_conformal_regressor
 
 
-class TestMeanShiftTestStatistic:
+class TestMaxSplitMeanDifferenceTestStatistic:
     def test_compute(self) -> None:
-        statistic = MeanShiftTestStatistic()
+        statistic = MaxSplitMeanDifferenceTestStatistic()
         scores = np.array([1.0, 3.0, 2.0, 2.0])
         assert statistic.compute(scores) == pytest.approx(2 / np.sqrt(3))
 
     def test_call_is_alias_of_compute(self) -> None:
-        statistic = MeanShiftTestStatistic()
+        statistic = MaxSplitMeanDifferenceTestStatistic()
         scores = np.array([0.0, 0.0, 1.0, 1.0])
         assert statistic(scores) == statistic.compute(scores)
 
