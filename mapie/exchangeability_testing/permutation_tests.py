@@ -1,5 +1,5 @@
-from abc import ABC, abstractmethod
 import warnings
+from abc import ABC, abstractmethod
 from copy import deepcopy
 from typing import Any, Literal, Optional, Union, cast
 
@@ -32,14 +32,15 @@ class TestStatistic(ABC):
 
 
 class MeanShiftTestStatistic(TestStatistic):
-    """Mean-shift statistic on two score halves.
+    """Maximum CUSUM-scaled mean-shift statistic on a score sequence.
 
-    The statistic is the absolute difference between the mean score of
-    the first half and the mean score of the second half.
+    The statistic is the maximum, over all valid split points, of the
+    scaled absolute difference between the mean score before and after
+    the split.
     """
 
     def compute(self, scores: NDArray) -> float:
-        """Compute the absolute mean difference between score halves.
+        """Compute the maximum scaled mean difference over all splits.
 
         Parameters
         ----------
@@ -49,15 +50,25 @@ class MeanShiftTestStatistic(TestStatistic):
         Returns
         -------
         float
-            Absolute difference between the means of both score halves.
+            Maximum scaled absolute difference between means on both
+            sides of a split.
         """
-        middle_idx = len(scores) // 2
+        scores = np.asarray(scores).reshape(-1)
+        n = len(scores)
 
-        mean_left = np.mean(scores[:middle_idx])
-        mean_right = np.mean(scores[middle_idx:])
+        max_stat = 0.0
 
-        diff = np.abs(mean_left - mean_right)
-        return float(diff)
+        for k in range(1, n):
+            mean_left = np.mean(scores[:k])
+            mean_right = np.mean(scores[k:])
+            diff = np.abs(mean_left - mean_right)
+            scale = np.sqrt(k * (n - k) / n)
+            stat_k = scale * diff
+
+            if stat_k > max_stat:
+                max_stat = stat_k
+
+        return float(max_stat)
 
     def __call__(self, scores: NDArray) -> float:
         """Alias to :meth:`compute`."""

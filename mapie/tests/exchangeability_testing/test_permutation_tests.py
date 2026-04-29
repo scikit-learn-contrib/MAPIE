@@ -85,7 +85,7 @@ class TestMeanShiftTestStatistic:
     def test_compute(self) -> None:
         statistic = MeanShiftTestStatistic()
         scores = np.array([1.0, 3.0, 2.0, 2.0])
-        assert statistic.compute(scores) == 0.0
+        assert statistic.compute(scores) == pytest.approx(2 / np.sqrt(3))
 
     def test_call_is_alias_of_compute(self) -> None:
         statistic = MeanShiftTestStatistic()
