@@ -12,7 +12,6 @@ import numpy as np
 from sklearn.datasets import make_classification
 from sklearn.neighbors import KNeighborsClassifier
 
-from mapie._example_utils import plot_running_pvalues
 from mapie.classification import SplitConformalClassifier
 from mapie.exchangeability_testing.permutations import PValuePermutationTest
 from mapie.utils import train_conformalize_test_split
@@ -98,12 +97,25 @@ print(f"Final running p-value: {exchangeability_test.p_values[-1]:.3f}")
 # 3. Plot the running p-values (exchangeable case)
 # -----------------------------------------------
 
-plot_running_pvalues(
-    [exchangeability_test],
-    ["Running p-value"],
-    test_level,
-    "Permutation test with a fitted top-k classifier",
+plt.figure(figsize=(8, 4))
+plt.plot(exchangeability_test.p_values, label="Exchangeable dataset")
+plt.plot(
+    non_exchangeability_test.p_values,
+    label="Non-exchangeable dataset",
 )
+plt.axhline(
+    test_level,
+    color="black",
+    linestyle="--",
+    label=f"test_level = {test_level:.2f}",
+)
+plt.xlabel("Number of permutations")
+plt.ylabel("Running p-value")
+plt.title("Permutation test: exchangeable vs non-exchangeable")
+plt.grid(alpha=0.3)
+plt.legend()
+plt.tight_layout()
+plt.show()
 
 ##############################################################################
 # 4. Non-exchangeable example
