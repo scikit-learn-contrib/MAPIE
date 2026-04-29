@@ -42,7 +42,7 @@ from mapie.exchangeability_testing.permutation_tests import (
 # to fit a model internally.
 
 rng = np.random.RandomState(0)
-X = np.linspace(0.1, 0.9, 100).reshape(-1, 1)
+X = np.linspace(0.1, 0.9, 500).reshape(-1, 1)
 y_exchangeable = 3 * X.ravel() + rng.normal(scale=0.1, size=X.shape[0])
 y_shifted = y_exchangeable.copy()
 y_shifted[len(y_shifted) // 2 :] += 0.8
@@ -93,17 +93,17 @@ exchangeable_binomial_mixture_detected = exchangeable_binomial_mixture_test.run(
 print("\nExchangeable dataset")
 print("--------------------")
 print(
-    f"PValuePermutationTest: data exchangeability={exchangeable_pvalue_detected}. Detection after {len(exchangeable_pvalue_test.p_values)} permutations."
+    f"PValuePermutationTest: data exchangeability={exchangeable_pvalue_detected}. Detection after {len(exchangeable_pvalue_test.p_values) - 1} permutations."
 )
 print(
-    f"SequentialMonteCarloTest (aggressive): data exchangeability={exchangeable_aggressive_detected}. Detection after {len(exchangeable_aggressive_test.p_values)} permutations."
+    f"SequentialMonteCarloTest (aggressive): data exchangeability={exchangeable_aggressive_detected}. Detection after {len(exchangeable_aggressive_test.p_values) - 1} permutations."
 )
 print(
-    f"SequentialMonteCarloTest (binomial): data exchangeability={exchangeable_binomial_detected}. Detection after {len(exchangeable_binomial_test.p_values)} permutations."
+    f"SequentialMonteCarloTest (binomial): data exchangeability={exchangeable_binomial_detected}. Detection after {len(exchangeable_binomial_test.p_values) - 1} permutations."
 )
 print(
     "SequentialMonteCarloTest (binomial_mixture): "
-    f"data exchangeability={exchangeable_binomial_mixture_detected}. Detection after {len(exchangeable_binomial_mixture_test.p_values)} permutations."
+    f"data exchangeability={exchangeable_binomial_mixture_detected}. Detection after {len(exchangeable_binomial_mixture_test.p_values) - 1} permutations."
 )
 
 test_level = exchangeable_pvalue_test.test_level
@@ -182,17 +182,17 @@ shifted_binomial_mixture_detected = shifted_binomial_mixture_test.run(X, y_shift
 print("\nNon-exchangeable dataset")
 print("------------------------")
 print(
-    f"PValuePermutationTest: data exchangeability={shifted_pvalue_detected}. Detection after {len(shifted_pvalue_test.p_values)} permutations."
+    f"PValuePermutationTest: data exchangeability={shifted_pvalue_detected}. Detection after {len(shifted_pvalue_test.p_values) - 1} permutations."
 )
 print(
-    f"SequentialMonteCarloTest (aggressive): data exchangeability={shifted_aggressive_detected}. Detection after {len(shifted_aggressive_test.p_values)} permutations."
+    f"SequentialMonteCarloTest (aggressive): data exchangeability={shifted_aggressive_detected}. Detection after {len(shifted_aggressive_test.p_values) - 1} permutations."
 )
 print(
-    f"SequentialMonteCarloTest (binomial): data exchangeability={shifted_binomial_detected}. Detection after {len(shifted_binomial_test.p_values)} permutations."
+    f"SequentialMonteCarloTest (binomial): data exchangeability={shifted_binomial_detected}. Detection after {len(shifted_binomial_test.p_values) - 1} permutations."
 )
 print(
     "SequentialMonteCarloTest (binomial_mixture): "
-    f"data exchangeability={shifted_binomial_mixture_detected}. Detection after {len(shifted_binomial_mixture_test.p_values)} permutations."
+    f"data exchangeability={shifted_binomial_mixture_detected}. Detection after {len(shifted_binomial_mixture_test.p_values) - 1} permutations."
 )
 
 plt.figure(figsize=(8, 4))
