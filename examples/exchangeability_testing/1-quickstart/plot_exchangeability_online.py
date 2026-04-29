@@ -45,7 +45,8 @@ for start in range(0, len(X_online), batch_size):
     stop = start + batch_size
     online_test.update(X_online[start:stop], y_online[start:stop])
 
-print(f"Is the online stream exchangeable? {online_test.is_exchangeable}")
+print("Is the online stream exchangeable?")
+print(online_test.is_exchangeable)
 
 ##############################################################################
 # The online stream is exchangeable. We can confidently continue monitoring
@@ -77,9 +78,8 @@ for start in range(0, len(X_online_abrupt), batch_size):
         y_online_abrupt[start:stop],
     )
 
-print(
-    f"Is the shifted online stream exchangeable? {online_test_abrupt.is_exchangeable}"
-)
+print("Is the shifted online stream exchangeable?")
+print(online_test_abrupt.is_exchangeable)
 
 ##############################################################################
 # The shifted online stream is not exchangeable: MAPIE cannot provide

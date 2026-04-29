@@ -52,7 +52,8 @@ classifier.fit(X_train, y_train)
 exchangeability_test = FixedDatasetExchangeabilityTest()
 exchangeability_test.run(X_test, y_test)
 
-print(f"Is the test dataset exchangeable? {exchangeability_test.is_exchangeable}")
+print("Is the test dataset exchangeable?")
+print(exchangeability_test.is_exchangeable)
 
 ##############################################################################
 # The test dataset is exchangeable. We can continue with MAPIE.
@@ -91,7 +92,8 @@ plot_dataset(
 exchangeability_test = FixedDatasetExchangeabilityTest()
 exchangeability_test.run(X_test_abrupt, y_test_abrupt)
 
-print(f"Is the shifted dataset exchangeable? {exchangeability_test.is_exchangeable}")
+print("Is the shifted dataset exchangeable?")
+print(exchangeability_test.is_exchangeable)
 
 ##############################################################################
 # The shifted test dataset is not exchangeable: MAPIE cannot provide
