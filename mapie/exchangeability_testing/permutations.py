@@ -32,14 +32,15 @@ class TestStatistic(ABC):
 
 
 class MeanShiftTestStatistic(TestStatistic):
-    """Mean-shift statistic on two score halves.
+    """Maximum CUSUM-scaled mean-shift statistic on a score sequence.
 
-    The statistic is the absolute difference between the mean score of
-    the first half and the mean score of the second half.
+    The statistic is the maximum, over all valid split points, of the
+    scaled absolute difference between the mean score before and after
+    the split.
     """
 
     def compute(self, scores: NDArray) -> float:
-        """Compute the absolute mean difference between score halves.
+        """Compute the maximum scaled mean difference over all splits.
 
         Parameters
         ----------
@@ -49,15 +50,25 @@ class MeanShiftTestStatistic(TestStatistic):
         Returns
         -------
         float
-            Absolute difference between the means of both score halves.
+            Maximum scaled absolute difference between means on both
+            sides of a split.
         """
-        middle_idx = len(scores) // 2
+        scores = np.asarray(scores).reshape(-1)
+        n = len(scores)
 
-        mean_left = np.mean(scores[:middle_idx])
-        mean_right = np.mean(scores[middle_idx:])
+        max_stat = 0.0
 
-        diff = np.abs(mean_left - mean_right)
-        return float(diff)
+        for k in range(1, n):
+            mean_left = np.mean(scores[:k])
+            mean_right = np.mean(scores[k:])
+            diff = np.abs(mean_left - mean_right)
+            scale = np.sqrt(k * (n - k) / n)
+            stat_k = scale * diff
+
+            if stat_k > max_stat:
+                max_stat = stat_k
+
+        return float(max_stat)
 
     def __call__(self, scores: NDArray) -> float:
         """Alias to :meth:`compute`."""
@@ -104,6 +115,8 @@ class PermutationTest(ABC):
     ) -> None:
         if not (0.0 < test_level < 1.0):
             raise ValueError("test_level must be in (0, 1).")
+        if num_permutations < 1:
+            raise ValueError("num_permutations must be greater than or equal to 1.")
         self.test_level = test_level
         self.mapie_estimator = self._prepare_estimator(mapie_estimator)
         self.task = task
@@ -187,6 +200,16 @@ class PermutationTest(ABC):
             return "regression"
         raise ValueError("Unknown type of target, please manually set the task type.")
 
+    def _initiate_estimator(self) -> "PermutationTest":
+        """Initiate a default MAPIE estimator based on the task type."""
+        if self.task == "classification":
+            self.mapie_estimator = SplitConformalClassifier(prefit=False)
+        elif self.task == "regression":
+            self.mapie_estimator = SplitConformalRegressor(prefit=False)
+        else:
+            raise ValueError("Unknown task type.")
+        return self
+
     def _compute_non_conformity_scores(self, X: NDArray, y: NDArray) -> NDArray:
         """Compute non-conformity scores from inputs and predictions.
 
@@ -206,12 +229,9 @@ class PermutationTest(ABC):
             self.task = self._infer_task(y)
 
         if self.mapie_estimator is None:
-            if self.task == "classification":
-                self.mapie_estimator = SplitConformalClassifier(prefit=False)
-            elif self.task == "regression":
-                self.mapie_estimator = SplitConformalRegressor(prefit=False)
-            else:
-                raise ValueError("Unknown task type.")
+            self._initiate_estimator()
+
+        assert self.mapie_estimator is not None
 
         if not self.mapie_estimator._is_fitted:
             X_train, X, y_train, y = train_test_split(
@@ -219,6 +239,11 @@ class PermutationTest(ABC):
                 y,
                 test_size=0.7,
                 shuffle=False,
+            )
+            warnings.warn(
+                "The provided MAPIE estimator is not fitted."
+                "Fitting it on a slice of the data to compute non-conformity scores."
+                f"{X_train.shape[0]} observations will be used to fit the estimator."
             )
             self.mapie_estimator.fit(X_train, y_train)
 
@@ -443,7 +468,7 @@ class SequentialMonteCarloTest(PermutationTest):
         wealth_agg = np.array([1.0])
         wealth_bm = np.array([1.0])
         n = len(scores)
-        for i in range(1, self.num_permutations + 1):
+        for i in range(1, self.num_permutations + 1):  # pragma: no branch
             permuted = self.rng.permutation(n)
             scores_permuted = scores[permuted]
             test_statistic_permutation = self.test_statistic(scores_permuted)

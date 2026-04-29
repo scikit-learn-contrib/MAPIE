@@ -85,7 +85,7 @@ class TestMeanShiftTestStatistic:
     def test_compute(self) -> None:
         statistic = MeanShiftTestStatistic()
         scores = np.array([1.0, 3.0, 2.0, 2.0])
-        assert statistic.compute(scores) == 0.0
+        assert statistic.compute(scores) == pytest.approx(2 / np.sqrt(3))
 
     def test_call_is_alias_of_compute(self) -> None:
         statistic = MeanShiftTestStatistic()
@@ -128,6 +128,11 @@ class TestPValuePermutationTest:
             PValuePermutationTest(test_level=1.0)
         with pytest.raises(ValueError, match="test_level must be in"):
             PValuePermutationTest(test_level=0.0)
+
+    @pytest.mark.parametrize("num_permutations", [0, -1])
+    def test_init_rejects_invalid_num_permutations(self, num_permutations) -> None:
+        with pytest.raises(ValueError, match="num_permutations must be"):
+            PValuePermutationTest(num_permutations=num_permutations)
 
     def test_init_copies_provided_estimator(
         self,
@@ -358,6 +363,13 @@ class TestSequentialMonteCarloTest:
             SequentialMonteCarloTest(strategy="binomial", test_level=1.0)
         with pytest.raises(ValueError, match="test_level must be in"):
             SequentialMonteCarloTest(strategy="binomial", test_level=0.0)
+
+    @pytest.mark.parametrize("num_permutations", [0, -1])
+    def test_init_rejects_invalid_num_permutations(self, num_permutations) -> None:
+        with pytest.raises(ValueError, match="num_permutations must be"):
+            SequentialMonteCarloTest(
+                strategy="binomial", num_permutations=num_permutations
+            )
 
     @pytest.mark.parametrize("strategy", ["aggressive", "binomial", "binomial_mixture"])
     def test_run_sets_expected_outputs(

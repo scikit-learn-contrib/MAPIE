@@ -1,27 +1,18 @@
 """
 # Permutation test with a fitted classifier
 
-This example illustrates how to run
-:class:`~mapie.exchangeability_testing.permutations.PValuePermutationTest`
-on a multiclass classification problem using a user-provided fitted
-:class:`~mapie.classification.SplitConformalClassifier`.
-
-Compared to the companion permutation example, the key differences are:
-
-- the estimator is *fitted beforehand* and passed to the test via the
-  ``mapie_estimator`` argument. The permutation test then runs directly
-  on held-out data without any internal refitting, which is cheaper and
-  typically more powerful;
-- we use the ``"top_k"`` conformity score instead of the default one;
-- once exchangeability has been checked, we continue with the usual
-  MAPIE conformalization and prediction pipeline.
+This example illustrates how to run `PValuePermutationTest` on a multiclass
+classification problem using a user-provided fitted
+`SplitConformalClassifier`. We use the `"top_k"` conformity score instead of the
+default one, compare an exchangeable and a non-exchangeable held-out dataset,
+and then continue with the usual conformalization and prediction pipeline.
 """
 
 import numpy as np
 from sklearn.datasets import make_classification
 from sklearn.neighbors import KNeighborsClassifier
-from mapie._example_utils import plot_running_pvalues
 
+from mapie._example_utils import plot_running_pvalues
 from mapie.classification import SplitConformalClassifier
 from mapie.exchangeability_testing.permutations import PValuePermutationTest
 from mapie.utils import train_conformalize_test_split
@@ -104,8 +95,8 @@ print(f"Is the held-out dataset exchangeable? {exchangeability_test.is_exchangea
 print(f"Final running p-value: {exchangeability_test.p_values[-1]:.3f}")
 
 ##############################################################################
-# Visualize the running p-value
-# -----------------------------
+# 3. Plot the running p-values (exchangeable case)
+# -----------------------------------------------
 
 plot_running_pvalues(
     [exchangeability_test],
@@ -115,11 +106,72 @@ plot_running_pvalues(
 )
 
 ##############################################################################
-# Continue with the standard MAPIE pipeline
-# -----------------------------------------
+# 4. Non-exchangeable example
+# ---------------------------
 #
-# Once exchangeability has been checked, we continue with the standard
-# MAPIE pipeline on the predefined conformalization and test subsets.
+# For illustration purposes, we now break exchangeability by shifting all labels of the test split.
+# This induces a systematic mismatch between the second half of X_eval and
+# the corresponding labels, while keeping the first half unchanged.
+
+y_test_shifted = (y_test + 1) % len(np.unique(y_full))
+y_non_exchangeable = np.concatenate([y_conformalize, y_test_shifted], axis=0)
+
+non_exchangeability_test = PValuePermutationTest(
+    test_level=test_level,
+    random_state=RANDOM_STATE,
+    num_permutations=num_permutations,
+    mapie_estimator=mapie_classifier,
+)
+
+exchangeability_detected = non_exchangeability_test.run(
+    X_eval,
+    y_non_exchangeable,
+)
+
+print("\nNon-exchangeable classification dataset")
+print("--------------------------------------")
+print(f"PValuePermutationTest: data exchangeability={exchangeability_detected}")
+
+first_rejection_idx = np.where(non_exchangeability_test.p_values <= test_level)[0]
+if first_rejection_idx.size > 0:
+    first_detection_permutation = int(first_rejection_idx[0])
+    print(
+        "Non-exchangeability first detected at permutation "
+        f"{first_detection_permutation}."
+    )
+else:
+    print(
+        "Non-exchangeability was not detected during the "
+        f"{num_permutations} permutations."
+    )
+
+plt.figure(figsize=(8, 4))
+plt.plot(exchangeability_test.p_values, label="Exchangeable dataset")
+plt.plot(
+    non_exchangeability_test.p_values,
+    label="Non-exchangeable dataset",
+)
+plt.axhline(
+    test_level,
+    color="black",
+    linestyle="--",
+    label=f"test_level = {test_level:.2f}",
+)
+plt.xlabel("Number of permutations")
+plt.ylabel("Running p-value")
+plt.title("Permutation test: exchangeable vs non-exchangeable")
+plt.grid(alpha=0.3)
+plt.legend()
+plt.tight_layout()
+plt.show()
+
+##############################################################################
+# 5. Continue with the standard MAPIE pipeline
+# --------------------------------------------
+#
+# Because exchangeability of the original conformalization and test sets has
+# been checked, we can continue with the standard MAPIE
+# pipeline on the predefined conformalization and test subsets.
 
 mapie_classifier.conformalize(X_conformalize, y_conformalize)
 y_pred, y_pred_set = mapie_classifier.predict_set(X_test)
