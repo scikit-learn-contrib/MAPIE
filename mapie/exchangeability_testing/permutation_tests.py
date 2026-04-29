@@ -191,16 +191,6 @@ class PermutationTest(ABC):
             raise ValueError("Unknown task type.")
         return self
 
-    def fit_estimator(
-        self, X: NDArray, y: NDArray, predict_params: Optional[dict] = None
-    ) -> "PermutationTest":
-        """Fit the underlying MAPIE estimator on the provided data."""
-        if self.mapie_estimator is None:  # pragma: no cover
-            self._initiate_estimator()
-        assert self.mapie_estimator is not None
-        self.mapie_estimator.fit(X, y, **(predict_params or {}))
-        return self
-
     def _compute_non_conformity_scores(self, X: NDArray, y: NDArray) -> NDArray:
         """Compute non-conformity scores from inputs and predictions.
 
@@ -236,7 +226,7 @@ class PermutationTest(ABC):
                 "Fitting it on a slice of the data to compute non-conformity scores."
                 f"{X_train.shape[0]} observations will be used to fit the estimator."
             )
-            self.fit_estimator(X_train, y_train)
+            self.mapie_estimator.fit(X_train, y_train)
 
         self.mapie_estimator.conformalize(X, y)  # compute scores internally
 
