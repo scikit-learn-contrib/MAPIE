@@ -43,6 +43,15 @@
 
 .. toctree::
    :maxdepth: 2
+   :titlesonly:
+   :hidden:
+   :caption: Exchangeability Testing
+
+   theoretical_description_exchangeability
+   examples_exchangeability/index
+
+.. toctree::
+   :maxdepth: 2
    :hidden:
    :caption: Question & Answers
 
@@ -50,13 +59,6 @@
    index_mondrian
    llm_risk_control
 
-.. toctree::
-   :maxdepth: 2
-   :titlesonly:
-   :hidden:
-   :caption: Verify exchangeability
-
-   theoretical_description_exchangeability
 
 .. toctree::
    :maxdepth: 2
