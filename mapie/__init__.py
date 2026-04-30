@@ -12,7 +12,7 @@ from . import (
 
 try:
     __version__ = version("mapie")
-except PackageNotFoundError:
+except PackageNotFoundError:  # pragma: no cover
     # Fallback for source-only usage without installed metadata.
     __version__ = "0+unknown"
 
