@@ -3641,6 +3641,61 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#estimate-the-monitoring-threshold" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Estimate the monitoring threshold
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#monitor-a-stable-stream" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Monitor a stable stream
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#monitor-an-abrupt-shift" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Monitor an abrupt shift
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#monitor-a-slow-drift" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Monitor a slow drift
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#interpret-the-scenarios" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Interpret the scenarios
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -4367,7 +4422,7 @@ provides statistical guarantees that account for evaluation uncertainty [1].</p>
 <p>A limitation of the current approach is that (at least some) labeled data
 is necessary to update the online risk estimate. For scenarios with scarce
 or no labels, please refer to the extensions [2] and [3] respectively.</p>
-<h3 id="references">References<a class="headerlink" href="#references" title="Permanent link">&para;</a></h3>
+<h2 id="references">References<a class="headerlink" href="#references" title="Permanent link">&para;</a></h2>
 <ul>
 <li>[1] Aleksandr Podkopaev and Aaditya Ramdas. Tracking the risk of a
   deployed model and detecting harmful distribution shifts.
@@ -4377,12 +4432,13 @@ or no labels, please refer to the extensions [2] and [3] respectively.</p>
 <li>[3] Amoukou et al. Sequential harmful shift detection without labels.
   Advances in Neural Information Processing Systems, 2024.</li>
 </ul>
-<!-- GENERATED FROM PYTHON SOURCE LINES 33-36 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 35-41 -->
 
+<h2 id="estimate-the-monitoring-threshold">Estimate the monitoring threshold<a class="headerlink" href="#estimate-the-monitoring-threshold" title="Permanent link">&para;</a></h2>
 <p>We first fit a classifier on clean training data, then estimate the
 monitoring threshold on a clean reference set. <code>risk="accuracy"</code> means
 that <code>RiskMonitoring</code> tracks the misclassification risk <code>1 - accuracy</code>.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 36-68 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 41-73 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.linear_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">LogisticRegression</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
@@ -4419,12 +4475,13 @@ that <code>RiskMonitoring</code> tracks the misclassification risk <code>1 - acc
 <div class="mkd-glr-script-out-disp highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>Reference<span class="w"> </span>upper<span class="w"> </span>bound<span class="w"> </span>on<span class="w"> </span>the<span class="w"> </span>misclassification<span class="w"> </span>risk:<span class="w"> </span><span class="m">0</span>.080
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>Monitoring<span class="w"> </span>threshold:<span class="w"> </span><span class="m">0</span>.130
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 69-72 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 74-80 -->
 
+<h2 id="monitor-a-stable-stream">Monitor a stable stream<a class="headerlink" href="#monitor-a-stable-stream" title="Permanent link">&para;</a></h2>
 <p>Now we monitor a stable online stream. Since the data distribution does
 not change, the online lower confidence bound should remain well below
 the monitoring threshold.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 72-97 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 80-105 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">X_online_no_shift</span><span class="p">,</span> <span class="n">y_online_no_shift</span> <span class="o">=</span> <span class="n">generate_gaussian_stream</span><span class="p">(</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>    <span class="n">n_samples</span><span class="o">=</span><span class="mi">800</span><span class="p">,</span>
@@ -4454,15 +4511,16 @@ the monitoring threshold.</p>
 <p class="mkd-glr-script-out">Out:</p>
 <div class="mkd-glr-script-out-disp highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>No-shift<span class="w"> </span>scenario<span class="w"> </span>-<span class="w"> </span>harmful<span class="w"> </span><span class="nb">shift</span><span class="w"> </span>detected?<span class="w"> </span>False
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 98-104 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 106-115 -->
 
+<h2 id="monitor-an-abrupt-shift">Monitor an abrupt shift<a class="headerlink" href="#monitor-an-abrupt-shift" title="Permanent link">&para;</a></h2>
 <p>Now let us see what happens when an abrupt shift occurs in the middle of
 the stream. The data distribution changes suddenly, and the lower
 confidence bound eventually crosses the threshold. Note that there is no
 need to call <code>compute_threshold</code> again: we can reuse the threshold
 computed earlier (this also shows that any custom threshold can be passed
 directly at instantiation).</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 104-133 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 115-144 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">X_online_abrupt</span><span class="p">,</span> <span class="n">y_online_abrupt</span> <span class="o">=</span> <span class="n">generate_gaussian_stream</span><span class="p">(</span>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>    <span class="n">n_samples</span><span class="o">=</span><span class="mi">800</span><span class="p">,</span>
@@ -4496,12 +4554,13 @@ directly at instantiation).</p>
 <p class="mkd-glr-script-out">Out:</p>
 <div class="mkd-glr-script-out-disp highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>Abrupt-shift<span class="w"> </span>scenario<span class="w"> </span>-<span class="w"> </span>harmful<span class="w"> </span><span class="nb">shift</span><span class="w"> </span>detected?<span class="w"> </span>True
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 134-137 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 145-151 -->
 
+<h2 id="monitor-a-slow-drift">Monitor a slow drift<a class="headerlink" href="#monitor-a-slow-drift" title="Permanent link">&para;</a></h2>
 <p>Finally, we create a slow drift. In that case the distribution evolves
 progressively, so the harmful shift is typically detected later than with
 an abrupt change.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 137-166 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 151-180 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">X_online_slow</span><span class="p">,</span> <span class="n">y_online_slow</span> <span class="o">=</span> <span class="n">generate_gaussian_stream</span><span class="p">(</span>
 </span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>    <span class="n">n_samples</span><span class="o">=</span><span class="mi">800</span><span class="p">,</span>
@@ -4535,12 +4594,13 @@ an abrupt change.</p>
 <p class="mkd-glr-script-out">Out:</p>
 <div class="mkd-glr-script-out-disp highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>Slow-shift<span class="w"> </span>scenario<span class="w"> </span>-<span class="w"> </span>harmful<span class="w"> </span><span class="nb">shift</span><span class="w"> </span>detected?<span class="w"> </span>True
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 167-170 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 181-187 -->
 
+<h2 id="interpret-the-scenarios">Interpret the scenarios<a class="headerlink" href="#interpret-the-scenarios" title="Permanent link">&para;</a></h2>
 <p>As expected, <code>RiskMonitoring</code> correctly does not fire any alarm on the
 stable stream, detects the abrupt shift shortly after it occurs, and
 eventually detects the slow drift once enough evidence has accumulated.</p>
-<p><strong>Total running time of the script:</strong> ( 0 minutes  5.373 seconds)</p>
+<p><strong>Total running time of the script:</strong> ( 0 minutes  5.223 seconds)</p>
 <div id="download_links"></div>
 
 <p><a class="md-button center" href="../plot_risk_monitoring.py"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M256 32c0-17.7-14.3-32-32-32s-32 14.3-32 32v210.7l-41.4-41.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l96 96c12.5 12.5 32.8 12.5 45.3 0l96-96c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 242.7zM64 320c-35.3 0-64 28.7-64 64v32c0 35.3 28.7 64 64 64h320c35.3 0 64-28.7 64-64v-32c0-35.3-28.7-64-64-64h-46.9l-56.6 56.6c-31.2 31.2-81.9 31.2-113.1 0L110.9 320zm304 56a24 24 0 1 1 0 48 24 24 0 1 1 0-48"/></svg></span> Download Python source code: plot_risk_monitoring.py</a></p>

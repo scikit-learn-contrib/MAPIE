@@ -1,5 +1,6 @@
 """
-# Online martingale exchangeability tests for a deployed regressor
+Online martingale exchangeability tests for a deployed regressor
+================================================================
 
 When a predictive model is deployed in production, a common question arises:
 *are newly arriving labeled observations still exchangeable with the data used
@@ -114,6 +115,9 @@ mapie_regressor = SplitConformalRegressor(
 )
 
 ##############################################################################
+# Build monitoring streams
+# ------------------------
+#
 # We build three monitoring streams. The first half of each stream is the
 # unchanged conformalization set. The second half (test set) is either left
 # unchanged (exchangeable), mildly shifted with noise (subtle), or strongly
@@ -141,6 +145,9 @@ X_abrupt = np.vstack([X_conformalize, X_test_abrupt])
 y_abrupt = np.concatenate([y_conformalize, y_test_abrupt])
 
 ##############################################################################
+# Visualize test scenarios
+# ------------------------
+#
 # The figure below shows (Feature 1, target) for each test scenario before
 # running online martingale monitoring.
 # Marker style encodes temporal segment for shifted scenarios
@@ -198,8 +205,8 @@ burn_in = 100
 shift_start_time = len(y_conformalize) + midpoint
 
 ##############################################################################
-# Scenario 1 - Exchangeable test set
-# ----------------------------------
+# Exchangeable stream
+# -------------------
 #
 # The test set follows the same distribution as training data.
 # Both martingales should stay below the rejection threshold.
@@ -239,8 +246,8 @@ plot_martingale_results_one_scenario(
 #
 
 ##############################################################################
-# Scenario 2 - Subtle shift
-# -------------------------
+# Subtle shift
+# ------------
 #
 # The second half of the test set receives a mild noisy target location shift.
 #
@@ -280,8 +287,8 @@ plot_martingale_results_one_scenario(
 #
 
 ##############################################################################
-# Scenario 3 - Abrupt shift
-# -------------------------
+# Abrupt shift
+# ------------
 #
 # The second half of the test set receives a stronger noisy target location
 # shift, creating a more obvious exchangeability violation.

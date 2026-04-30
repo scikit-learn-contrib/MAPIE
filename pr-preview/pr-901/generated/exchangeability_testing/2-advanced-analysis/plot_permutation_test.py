@@ -18,8 +18,8 @@ from mapie.exchangeability_testing.permutations import (
 )
 
 ##############################################################################
-# 1. Build two fixed datasets
-# ---------------------------
+# Build two fixed datasets
+# ------------------------
 #
 # We build a toy regression signal and compare two datasets:
 #
@@ -48,8 +48,8 @@ y_shifted = y_exchangeable.copy()
 y_shifted[len(y_shifted) // 2 :] += 0.8
 
 ##############################################################################
-# 2. Exchangeable case: run all methods and plot
-# -----------------------------------------------
+# Run the exchangeable case
+# -------------------------
 #
 # We start with a dataset that should satisfy exchangeability.
 
@@ -149,8 +149,8 @@ plt.tight_layout()
 plt.show()
 
 ##############################################################################
-# 3. Non-exchangeable case: run all methods and plot
-# ---------------------------------------------------
+# Run the non-exchangeable case
+# -----------------------------
 #
 # We now repeat the same comparison on the shifted dataset.
 

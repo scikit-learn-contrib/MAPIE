@@ -3552,6 +3552,24 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Exchangeability testing on an online stream
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         
   
@@ -3568,6 +3586,80 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#prepare-the-online-stream" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Prepare the online stream
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#run-the-exchangeability-test" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run the exchangeability test
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#interpret-the-result" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Interpret the result
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#create-a-non-exchangeable-stream" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Create a non-exchangeable stream
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#interpret-the-shifted-stream" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Interpret the shifted stream
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -4313,11 +4405,12 @@ therefore important.</p>
 <p>Note that only labeled samples can be used to test exchangeability. In
 practice, a fraction of the online stream can be labeled from time to time to
 run the test and assess performance.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 18-20 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 19-24 -->
 
+<h2 id="prepare-the-online-stream">Prepare the online stream<a class="headerlink" href="#prepare-the-online-stream" title="Permanent link">&para;</a></h2>
 <p>We first prepare an exchangeable online stream. The stream is processed
 batch by batch, as new labeled data would arrive in deployment.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 20-39 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 24-43 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mapie._example_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">generate_gaussian_stream</span><span class="p">,</span> <span class="n">plot_dataset</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
@@ -4338,11 +4431,12 @@ batch by batch, as new labeled data would arrive in deployment.</p>
 </span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="p">)</span>
 </span></code></pre></div>
 <p><img alt="Exchangeable online stream" class="mkd-glr-single-img" src="../images/mkd_glr_plot_exchangeability_online_001.png" srcset="../images/mkd_glr_plot_exchangeability_online_001.png" /></p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 40-42 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 44-49 -->
 
+<h2 id="run-the-exchangeability-test">Run the exchangeability test<a class="headerlink" href="#run-the-exchangeability-test" title="Permanent link">&para;</a></h2>
 <p>Now we can test exchangeability on the online stream.
 The test is updated batch by batch as new labels become available.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 42-52 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 49-59 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">online_test</span> <span class="o">=</span> <span class="n">OnlineExchangeabilityTest</span><span class="p">()</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="k">for</span> <span class="n">start</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">X_online</span><span class="p">),</span> <span class="n">batch_size</span><span class="p">):</span>
@@ -4358,15 +4452,17 @@ The test is updated batch by batch as new labels become available.</p>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>plugin_martingale:<span class="w"> </span>True
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>jumper_martingale:<span class="w"> </span>True
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 53-55 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 60-65 -->
 
+<h2 id="interpret-the-result">Interpret the result<a class="headerlink" href="#interpret-the-result" title="Permanent link">&para;</a></h2>
 <p>The online stream is exchangeable. We can confidently continue monitoring
 future data with MAPIE's online methods.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 57-59 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 67-72 -->
 
+<h2 id="create-a-non-exchangeable-stream">Create a non-exchangeable stream<a class="headerlink" href="#create-a-non-exchangeable-stream" title="Permanent link">&para;</a></h2>
 <p>Now let us see what happens for a non-exchangeable online stream.
 Here, an abrupt shift happens in the second part of the stream.</p>
-<!-- GENERATED FROM PYTHON SOURCE LINES 59-86 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 72-99 -->
 
 <div class="highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">prop_shift</span> <span class="o">=</span> <span class="mf">0.5</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">X_online_abrupt</span><span class="p">,</span> <span class="n">y_online_abrupt</span> <span class="o">=</span> <span class="n">generate_gaussian_stream</span><span class="p">(</span>
@@ -4400,12 +4496,13 @@ Here, an abrupt shift happens in the second part of the stream.</p>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>plugin_martingale:<span class="w"> </span>False
 </span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>jumper_martingale:<span class="w"> </span>True
 </span></code></pre></div>
-<!-- GENERATED FROM PYTHON SOURCE LINES 87-90 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 100-106 -->
 
+<h2 id="interpret-the-shifted-stream">Interpret the shifted stream<a class="headerlink" href="#interpret-the-shifted-stream" title="Permanent link">&para;</a></h2>
 <p>The shifted online stream is not exchangeable: MAPIE cannot provide
 statistical guarantees on future data from this stream, and the underlying
 predictive model should not be trusted without further investigation.</p>
-<p><strong>Total running time of the script:</strong> ( 0 minutes  10.835 seconds)</p>
+<p><strong>Total running time of the script:</strong> ( 0 minutes  9.622 seconds)</p>
 <div id="download_links"></div>
 
 <p><a class="md-button center" href="../plot_exchangeability_online.py"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M256 32c0-17.7-14.3-32-32-32s-32 14.3-32 32v210.7l-41.4-41.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l96 96c12.5 12.5 32.8 12.5 45.3 0l96-96c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 242.7zM64 320c-35.3 0-64 28.7-64 64v32c0 35.3 28.7 64 64 64h320c35.3 0 64-28.7 64-64v-32c0-35.3-28.7-64-64-64h-46.9l-56.6 56.6c-31.2 31.2-81.9 31.2-113.1 0L110.9 320zm304 56a24 24 0 1 1 0 48 24 24 0 1 1 0-48"/></svg></span> Download Python source code: plot_exchangeability_online.py</a></p>

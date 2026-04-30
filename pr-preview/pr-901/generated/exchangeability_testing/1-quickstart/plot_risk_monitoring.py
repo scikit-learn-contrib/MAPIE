@@ -1,5 +1,6 @@
 """
-# Detect harmful shifts with RiskMonitoring
+Detect harmful shifts with RiskMonitoring
+=========================================
 
 This quickstart demonstrates how to use `RiskMonitoring` to track the
 misclassification risk of a deployed binary classifier on an online stream.
@@ -19,7 +20,8 @@ A limitation of the current approach is that (at least some) labeled data
 is necessary to update the online risk estimate. For scenarios with scarce
 or no labels, please refer to the extensions [2] and [3] respectively.
 
-### References
+References
+----------
 - [1] Aleksandr Podkopaev and Aaditya Ramdas. Tracking the risk of a
   deployed model and detecting harmful distribution shifts.
   International Conference on Learning Representations, 2022.
@@ -30,6 +32,9 @@ or no labels, please refer to the extensions [2] and [3] respectively.
 """
 
 ##############################################################################
+# Estimate the monitoring threshold
+# ---------------------------------
+#
 # We first fit a classifier on clean training data, then estimate the
 # monitoring threshold on a clean reference set. `risk="accuracy"` means
 # that `RiskMonitoring` tracks the misclassification risk `1 - accuracy`.
@@ -66,6 +71,9 @@ print(
 print(f"Monitoring threshold: {threshold:.3f}")
 
 ##############################################################################
+# Monitor a stable stream
+# -----------------------
+#
 # Now we monitor a stable online stream. Since the data distribution does
 # not change, the online lower confidence bound should remain well below
 # the monitoring threshold.
@@ -95,6 +103,9 @@ plot_monitoring_results(
 )
 
 ##############################################################################
+# Monitor an abrupt shift
+# -----------------------
+#
 # Now let us see what happens when an abrupt shift occurs in the middle of
 # the stream. The data distribution changes suddenly, and the lower
 # confidence bound eventually crosses the threshold. Note that there is no
@@ -131,6 +142,9 @@ plot_monitoring_results(
 )
 
 ##############################################################################
+# Monitor a slow drift
+# --------------------
+#
 # Finally, we create a slow drift. In that case the distribution evolves
 # progressively, so the harmful shift is typically detected later than with
 # an abrupt change.
@@ -164,6 +178,9 @@ plot_monitoring_results(
 )
 
 ##############################################################################
+# Interpret the scenarios
+# -----------------------
+#
 # As expected, `RiskMonitoring` correctly does not fire any alarm on the
 # stable stream, detects the abrupt shift shortly after it occurs, and
 # eventually detects the slow drift once enough evidence has accumulated.
