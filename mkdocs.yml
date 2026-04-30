@@ -158,6 +158,7 @@ nav:
   - Conformal Prediction:
     - Regression Theory: theory/regression.md
     - Conformity Scores: theory/conformity-scores.md
+    - Metrics: theory/metrics-conformal.md
     - Regression Examples: generated/regression
     - Classification Theory: theory/classification.md
     - Binary Classification: theory/binary-classification.md
@@ -168,10 +169,12 @@ nav:
     - Examples: generated/risk_control
   - Calibration:
     - Theoretical Description: theory/calibration.md
+    - Metrics: theory/metrics-calibration.md
     - Examples: generated/calibration
     - Notebooks: calibration/notebooks.md
   - Exchangeability Testing:
     - Theoretical Description: theory/exchangeability.md
+    - Examples: generated/exchangeability_testing
   - All Examples: all-examples/index.md
   - Q&A:
     - Metrics: theory/metrics.md
@@ -183,7 +186,6 @@ nav:
     - Conformity Scores: api/conformity-scores.md
     - Risk Control: api/risk-control.md
     - Calibration: api/calibration.md
-    - Metrics: api/metrics.md
     - Utilities: api/utils.md
   - Contributing:
     - Documentation Guide: contributing-docs.md
