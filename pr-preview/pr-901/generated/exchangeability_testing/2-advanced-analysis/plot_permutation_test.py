@@ -80,14 +80,18 @@ exchangeable_binomial_mixture_test = SequentialMonteCarloTest(
     num_permutations=num_permutations,
 )
 
-exchangeable_pvalue_detected = exchangeable_pvalue_test.run(X, y_exchangeable)
+exchangeable_pvalue_test.run(X, y_exchangeable)
+exchangeable_pvalue_detected = exchangeable_pvalue_test.is_exchangeable
 
-exchangeable_aggressive_detected = exchangeable_aggressive_test.run(X, y_exchangeable)
+exchangeable_aggressive_test.run(X, y_exchangeable)
+exchangeable_aggressive_detected = exchangeable_aggressive_test.is_exchangeable
 
-exchangeable_binomial_detected = exchangeable_binomial_test.run(X, y_exchangeable)
+exchangeable_binomial_test.run(X, y_exchangeable)
+exchangeable_binomial_detected = exchangeable_binomial_test.is_exchangeable
 
-exchangeable_binomial_mixture_detected = exchangeable_binomial_mixture_test.run(
-    X, y_exchangeable
+exchangeable_binomial_mixture_test.run(X, y_exchangeable)
+exchangeable_binomial_mixture_detected = (
+    exchangeable_binomial_mixture_test.is_exchangeable
 )
 
 print("\nExchangeable dataset")
@@ -174,10 +178,14 @@ shifted_binomial_mixture_test = SequentialMonteCarloTest(
     num_permutations=num_permutations,
 )
 
-shifted_pvalue_detected = shifted_pvalue_test.run(X, y_shifted)
-shifted_aggressive_detected = shifted_aggressive_test.run(X, y_shifted)
-shifted_binomial_detected = shifted_binomial_test.run(X, y_shifted)
-shifted_binomial_mixture_detected = shifted_binomial_mixture_test.run(X, y_shifted)
+shifted_pvalue_test.run(X, y_shifted)
+shifted_pvalue_detected = shifted_pvalue_test.is_exchangeable
+shifted_aggressive_test.run(X, y_shifted)
+shifted_aggressive_detected = shifted_aggressive_test.is_exchangeable
+shifted_binomial_test.run(X, y_shifted)
+shifted_binomial_detected = shifted_binomial_test.is_exchangeable
+shifted_binomial_mixture_test.run(X, y_shifted)
+shifted_binomial_mixture_detected = shifted_binomial_mixture_test.is_exchangeable
 
 print("\nNon-exchangeable dataset")
 print("------------------------")

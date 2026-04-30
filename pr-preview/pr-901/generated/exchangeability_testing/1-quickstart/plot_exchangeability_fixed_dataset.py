@@ -53,7 +53,8 @@ exchangeability_test = FixedDatasetExchangeabilityTest()
 exchangeability_test.run(X_test, y_test)
 
 print("Is the test dataset exchangeable?")
-print(exchangeability_test.is_exchangeable)
+for test_name, is_exchangeable in exchangeability_test.is_exchangeable.items():
+    print(f"{test_name}: {is_exchangeable}")
 
 ##############################################################################
 # The test dataset is exchangeable. We can continue with MAPIE.
@@ -93,7 +94,8 @@ exchangeability_test = FixedDatasetExchangeabilityTest()
 exchangeability_test.run(X_test_abrupt, y_test_abrupt)
 
 print("Is the shifted dataset exchangeable?")
-print(exchangeability_test.is_exchangeable)
+for test_name, is_exchangeable in exchangeability_test.is_exchangeable.items():
+    print(f"{test_name}: {is_exchangeable}")
 
 ##############################################################################
 # The shifted test dataset is not exchangeable: MAPIE cannot provide

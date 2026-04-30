@@ -12,13 +12,13 @@
         <meta name="author" content="MAPIE Team">
       
       
-        <link rel="canonical" href="https://scikit-learn-contrib.github.io/MAPIE/theory/mondrian/">
+        <link rel="canonical" href="https://scikit-learn-contrib.github.io/MAPIE/theory/metrics-conformal/">
       
       
-        <link rel="prev" href="../../all-examples/">
+        <link rel="prev" href="../conformity-scores/">
       
       
-        <link rel="next" href="../../api/">
+        <link rel="next" href="../../generated/regression/">
       
       
         
@@ -29,7 +29,7 @@
     
     
       
-        <title>Mondrian - MAPIE</title>
+        <title>Metrics - MAPIE</title>
       
     
     
@@ -92,7 +92,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#mondrian-conformal-prediction-theoretical-description" class="md-skip">
+        <a href="#metrics-for-confromal-prediction-theoretical-description" class="md-skip">
           Skip to content
         </a>
       
@@ -131,7 +131,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Mondrian
+              Metrics
             
           </span>
         </div>
@@ -277,10 +277,12 @@
   
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
+      <li class="md-tabs__item md-tabs__item--active">
         <a href="../regression/" class="md-tabs__link">
           
   
@@ -384,13 +386,11 @@
   
   
   
-    
-  
   
     
     
-      <li class="md-tabs__item md-tabs__item--active">
-        <a href="./" class="md-tabs__link">
+      <li class="md-tabs__item">
+        <a href="../mondrian/" class="md-tabs__link">
           
   
   
@@ -712,8 +712,10 @@
       
   
   
+    
   
   
+  
     
     
       
@@ -735,19 +737,22 @@
     
     
       
+        
+        
+      
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
         
           
-          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
             
   
   
@@ -765,7 +770,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             
@@ -836,10 +841,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../metrics-conformal/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Metrics
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -855,6 +887,125 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#regression-coverage-score-rcs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Regression Coverage Score (RCS)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#regression-mean-width-score-rmws" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Regression Mean Width Score (RMWS)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#classification-coverage-score-ccs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Classification Coverage Score (CCS)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#classification-mean-width-score-cmws" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Classification Mean Width Score (CMWS)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#size-stratified-coverage-ssc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Size-Stratified Coverage (SSC)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#hilbert-schmidt-independence-criterion-hsic" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hilbert-Schmidt Independence Criterion (HSIC)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#coverage-width-based-criterion-cwc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Coverage Width-Based Criterion (CWC)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mean-winkler-interval-score-mwi" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mean Winkler Interval Score (MWI)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#references" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        References
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -885,10 +1036,13 @@
       
       
         
+          
+          
+        
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
@@ -914,7 +1068,7 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_3_4" id="__nav_3_4_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_3_4" id="__nav_3_4_label" tabindex="">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
@@ -1808,10 +1962,13 @@
       
       
         
+          
+          
+        
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
@@ -1837,7 +1994,7 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_3_7" id="__nav_3_7_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_3_7" id="__nav_3_7_label" tabindex="">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
@@ -3816,10 +3973,8 @@
       
   
   
-    
   
   
-  
     
     
       
@@ -3829,22 +3984,19 @@
     
     
       
-        
-        
-      
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
         
           
-          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
             
   
   
@@ -3862,7 +4014,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_8">
             <span class="md-nav__icon md-icon"></span>
             
@@ -3877,37 +4029,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Mondrian
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../mondrian/" class="md-nav__link">
         
   
   
@@ -3923,59 +4048,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#when-to-use-mondrian" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        When to Use Mondrian
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#how-it-works" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        How It Works
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#references" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        References
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -4353,7 +4425,7 @@
   
 
 
-<h1 id="mondrian-conformal-prediction-theoretical-description">Mondrian Conformal Prediction — Theoretical Description<a class="headerlink" href="#mondrian-conformal-prediction-theoretical-description" title="Permanent link">&para;</a></h1>
+<h1 id="metrics-for-confromal-prediction-theoretical-description">Metrics for Confromal Prediction — Theoretical Description<a class="headerlink" href="#metrics-for-confromal-prediction-theoretical-description" title="Permanent link">&para;</a></h1>
 <div class="admonition note">
 <p class="admonition-title">Terminology</p>
 <p>In theoretical parts of the documentation:</p>
@@ -4363,40 +4435,76 @@
 </ul>
 </div>
 <hr />
-<p><strong>Mondrian Conformal Prediction (MCP)</strong> <sup id="fnref:1"><a class="footnote-ref" href="#fn:1">1</a></sup> is a method that builds prediction sets with a <strong>group-conditional coverage guarantee</strong>:</p>
+<p>This document provides detailed descriptions of various metrics used to evaluate the performance of predictive models, particularly focusing on their ability to estimate uncertainties and calibrate predictions accurately.</p>
+<h3 id="regression-coverage-score-rcs">Regression Coverage Score (RCS)<a class="headerlink" href="#regression-coverage-score-rcs" title="Permanent link">&para;</a></h3>
+<p>Calculates the <strong>fraction of true outcomes</strong> that fall within the provided prediction intervals:</p>
 <div class="arithmatex">\[
-P \{Y_{n+1} \in \hat{C}_{n, \alpha}(X_{n+1}) \mid G_{n+1} = g\} \geq 1 - \alpha
+\text{RCS} = \frac{1}{n} \sum_{i=1}^{n} \mathbf{1}(\hat{y}^{\text{low}}_{i} \leq y_{i} \leq \hat{y}^{\text{up}}_{i})
 \]</div>
-<p>where <span class="arithmatex">\(G_{n+1}\)</span> is the group of the new test point.</p>
-<h2 id="when-to-use-mondrian">When to Use Mondrian<a class="headerlink" href="#when-to-use-mondrian" title="Permanent link">&para;</a></h2>
-<p>MCP can be used with <strong>any split conformal predictor</strong> and is particularly useful when you have <strong>prior knowledge about existing groups</strong> — whether the group information is in the features or not.</p>
-<div class="admonition example">
-<p class="admonition-title">Classification Example</p>
-<p>In a classification setting, groups can be defined as the <strong>predicted classes</strong>. This ensures the coverage guarantee is satisfied <strong>for each predicted class</strong>.</p>
-</div>
-<h2 id="how-it-works">How It Works<a class="headerlink" href="#how-it-works" title="Permanent link">&para;</a></h2>
-<p>MCP simply:</p>
-<ol>
-<li><strong>Stratifies</strong> the data by group</li>
-<li><strong>Applies split conformal prediction</strong> to each group separately</li>
-</ol>
-<p>The quantile for each group:</p>
+<h3 id="regression-mean-width-score-rmws">Regression Mean Width Score (RMWS)<a class="headerlink" href="#regression-mean-width-score-rmws" title="Permanent link">&para;</a></h3>
+<p>Assesses the <strong>average width</strong> of the prediction intervals:</p>
 <div class="arithmatex">\[
-\hat{q}^g = \text{Quantile}\left(s_1, \ldots, s_{n^g}, \frac{\lceil(n^{(g)} + 1)(1-\alpha)\rceil}{n^{(g)}}\right)
+\text{RMWS} = \frac{1}{n} \sum_{i=1}^{n} (\hat{y}^{\text{up}}_{i} - \hat{y}^{\text{low}}_{i})
 \]</div>
-<p>where <span class="arithmatex">\(s_1, \ldots, s_{n^g}\)</span> are the conformity scores of training points in group <span class="arithmatex">\(g\)</span>.</p>
-<figure>
-<p><img alt="Mondrian" src="../../images/mondrian.png" width="600" />
-  </p>
-<figcaption>Illustration of Mondrian conformal prediction (from [^1]).</figcaption>
-</figure>
+<h3 id="classification-coverage-score-ccs">Classification Coverage Score (CCS)<a class="headerlink" href="#classification-coverage-score-ccs" title="Permanent link">&para;</a></h3>
+<p>Measures how often the true class labels fall <strong>within the predicted sets</strong>:</p>
+<div class="arithmatex">\[
+\text{CCS} = \frac{1}{n} \sum_{i=1}^{n} \mathbf{1}(y_{i} \in \hat{C}(x_{i}))
+\]</div>
+<h3 id="classification-mean-width-score-cmws">Classification Mean Width Score (CMWS)<a class="headerlink" href="#classification-mean-width-score-cmws" title="Permanent link">&para;</a></h3>
+<p>Average <strong>size of the prediction sets</strong> across all samples:</p>
+<div class="arithmatex">\[
+\text{CMWS} = \frac{1}{n} \sum_{i=1}^{n} |\hat{C}(x_i)|
+\]</div>
+<hr />
+<h3 id="size-stratified-coverage-ssc">Size-Stratified Coverage (SSC)<a class="headerlink" href="#size-stratified-coverage-ssc" title="Permanent link">&para;</a></h3>
+<p>Evaluates how the size of prediction sets or intervals affects their ability to cover true outcomes <sup id="fnref:1"><a class="footnote-ref" href="#fn:1">1</a></sup>:</p>
+<p><strong>Regression:</strong></p>
+<div class="arithmatex">\[
+\text{SSC}_{\text{regression}} = \sum_{k=1}^{K} \left( \frac{1}{|I_k|} \sum_{i \in I_k} \mathbf{1}(\hat{y}^{\text{low}}_{i} \leq y_{i} \leq \hat{y}^{\text{up}}_{i}) \right)
+\]</div>
+<p><strong>Classification:</strong></p>
+<div class="arithmatex">\[
+\text{SSC}_{\text{classification}} = \sum_{k=1}^{K} \left( \frac{1}{|S_k|} \sum_{i \in S_k} \mathbf{1}(y_{i} \in \hat{C}(x_i)) \right)
+\]</div>
+<hr />
+<h3 id="hilbert-schmidt-independence-criterion-hsic">Hilbert-Schmidt Independence Criterion (HSIC)<a class="headerlink" href="#hilbert-schmidt-independence-criterion-hsic" title="Permanent link">&para;</a></h3>
+<p>A <strong>non-parametric</strong> measure of independence between interval sizes and coverage indicators <sup id="fnref:4"><a class="footnote-ref" href="#fn:4">2</a></sup>:</p>
+<div class="arithmatex">\[
+\text{HSIC} = \operatorname{trace}(\mathbf{H} \mathbf{K} \mathbf{H} \mathbf{L})
+\]</div>
+<p>where:</p>
+<ul>
+<li><span class="arithmatex">\(\mathbf{K}\)</span>, <span class="arithmatex">\(\mathbf{L}\)</span> are kernel matrices for interval sizes and coverage indicators</li>
+<li><span class="arithmatex">\(\mathbf{H} = \mathbf{I} - \frac{1}{n}\mathbf{1}\mathbf{1}^\top\)</span> is the centering matrix</li>
+</ul>
+<hr />
+<h3 id="coverage-width-based-criterion-cwc">Coverage Width-Based Criterion (CWC)<a class="headerlink" href="#coverage-width-based-criterion-cwc" title="Permanent link">&para;</a></h3>
+<p>Balances <strong>empirical coverage and width</strong>, rewarding narrow intervals and penalizing poor coverage <sup id="fnref:6"><a class="footnote-ref" href="#fn:6">3</a></sup>:</p>
+<div class="arithmatex">\[
+\text{CWC} = (1 - \text{Mean Width Score}) \times \exp\left(-\eta \times (\text{Coverage Score} - (1-\alpha))^2\right)
+\]</div>
+<h3 id="mean-winkler-interval-score-mwi">Mean Winkler Interval Score (MWI)<a class="headerlink" href="#mean-winkler-interval-score-mwi" title="Permanent link">&para;</a></h3>
+<p>Combines interval width with a <strong>penalty for non-coverage</strong> <sup id="fnref:8"><a class="footnote-ref" href="#fn:8">4</a></sup>:</p>
+<div class="arithmatex">\[
+\text{MWI Score} = \frac{1}{n} \sum_{i=1}^{n} \left[(\hat{y}^{\text{up}}_{i} - \hat{y}^{\text{low}}_{i}) + \frac{2}{\alpha} \max(0, |y_{i} - \hat{y}^{\text{boundary}}_{i}|)\right]
+\]</div>
 <hr />
 <h2 id="references">References<a class="headerlink" href="#references" title="Permanent link">&para;</a></h2>
 <div class="footnote">
 <hr />
 <ol>
 <li id="fn:1">
-<p>Vladimir Vovk, David Lindsay, Ilia Nouretdinov, and Alex Gammerman. "Mondrian confidence machine." Technical report, Royal Holloway University of London, 2003.&#160;<a class="footnote-backref" href="#fnref:1" title="Jump back to footnote 1 in the text">&#8617;</a></p>
+<p>Angelopoulos, A. N., et al. "Uncertainty Sets for Image Classifiers using Conformal Prediction." ICLR 2021.&#160;<a class="footnote-backref" href="#fnref:1" title="Jump back to footnote 1 in the text">&#8617;</a></p>
+</li>
+<li id="fn:4">
+<p>Gretton, A., et al. "A Kernel Two-Sample Test." JMLR, 2012.&#160;<a class="footnote-backref" href="#fnref:4" title="Jump back to footnote 2 in the text">&#8617;</a></p>
+</li>
+<li id="fn:6">
+<p>Khosravi, A., et al. "Comprehensive Review of Neural Network-Based Prediction Intervals." IEEE Trans. Neural Netw., 2011.&#160;<a class="footnote-backref" href="#fnref:6" title="Jump back to footnote 3 in the text">&#8617;</a></p>
+</li>
+<li id="fn:8">
+<p>Winkler, R. L. "A Decision-Theoretic Approach to Interval Estimation." JASA, 1972.&#160;<a class="footnote-backref" href="#fnref:8" title="Jump back to footnote 4 in the text">&#8617;</a></p>
 </li>
 </ol>
 </div>
