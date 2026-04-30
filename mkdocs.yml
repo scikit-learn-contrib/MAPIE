@@ -177,7 +177,6 @@ nav:
     - Examples: generated/exchangeability_testing
   - All Examples: all-examples/index.md
   - Q&A:
-    - Metrics: theory/metrics.md
     - Mondrian: theory/mondrian.md
   - API Reference:
     - Overview: api/index.md
