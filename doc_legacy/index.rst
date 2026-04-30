@@ -48,7 +48,7 @@
    :caption: Exchangeability Testing
 
    theoretical_description_exchangeability
-   examples_exchangeability/index
+   examples_exchangeability_testing/index
 
 .. toctree::
    :maxdepth: 2
