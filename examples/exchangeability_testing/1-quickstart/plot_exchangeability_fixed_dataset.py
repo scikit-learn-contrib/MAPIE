@@ -24,8 +24,8 @@ and hide any potential distribution shift.
 
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
-from mapie._example_utils import generate_gaussian_stream, plot_dataset
 
+from mapie._example_utils import generate_gaussian_stream, plot_dataset
 from mapie.classification import SplitConformalClassifier
 from mapie.exchangeability_testing import FixedDatasetExchangeabilityTest
 
@@ -117,3 +117,11 @@ for test_name, is_exchangeable in exchangeability_test.is_exchangeable.items():
 # The shifted test dataset is not exchangeable: MAPIE cannot provide
 # statistical guarantees on it, and more generally the classifier itself
 # should not be trusted without further investigation.
+#
+# Note that the jumper martingale fails to detect the non-exchangeability in
+# this case. Itmostly reacts to *one-sided* p-value distortions
+# (many consistently small p-values, or many consistently large ones).
+# The shift creates both many very low and many very high p-values,
+# the effects cancel out for the jumper martingale.
+# More generally, this illustrates that no single test is perfect,
+# and that it is important to use multiple tests to get a complete picture.

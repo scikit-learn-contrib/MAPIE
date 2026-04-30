@@ -23,7 +23,6 @@ run the test and assess performance.
 # batch by batch, as new labeled data would arrive in deployment.
 
 from mapie._example_utils import generate_gaussian_stream, plot_dataset
-
 from mapie.exchangeability_testing import OnlineExchangeabilityTest
 
 random_state = 42
@@ -103,3 +102,11 @@ for test_name, is_exchangeable in online_test_abrupt.is_exchangeable.items():
 # The shifted online stream is not exchangeable: MAPIE cannot provide
 # statistical guarantees on future data from this stream, and the underlying
 # predictive model should not be trusted without further investigation.
+#
+# Note that the jumper martingale fails to detect the non-exchangeability in
+# this case. Itmostly reacts to *one-sided* p-value distortions
+# (many consistently small p-values, or many consistently large ones).
+# The shift creates both many very low and many very high p-values,
+# the effects cancel out for the jumper martingale.
+# More generally, this illustrates that no single test is perfect,
+# and that it is important to use multiple tests to get a complete picture.
