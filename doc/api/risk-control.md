@@ -22,6 +22,12 @@ Risk-controlling prediction methods.
 
 ---
 
+::: mapie.risk_control.BinaryRisk
+    options:
+      heading_level: 3
+
+---
+
 ::: mapie.risk_control.BinaryClassificationRisk
     options:
       heading_level: 3

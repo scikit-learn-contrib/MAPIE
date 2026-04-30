@@ -113,3 +113,56 @@
   display: block;
   width: 100%;
 }
+
+/* Keep direct entries under each top-level navigation section consistent. */
+.md-nav--primary
+  > .md-nav__list
+  > .md-nav__item
+  > .md-nav
+  > .md-nav__list
+  > .md-nav__item
+  > .md-nav__link {
+  font-weight: 700;
+}
+
+/* Keep only the logo + current page title in header (hide site name text). */
+.md-header__title .md-header__topic {
+  display: none;
+}
+
+.md-header__title .md-header__topic[data-md-component="header-topic"] {
+  display: block;
+}
+
+/* Keep the logo visible on narrow/mobile widths. */
+.md-header__button.md-logo {
+  display: inline-flex !important;
+}
+
+/* On reduced widths, show menu first then logo. */
+@media screen and (max-width: 76.234375em) {
+  .md-header__button.md-icon[for="__drawer"] {
+    order: -2;
+  }
+
+  .md-header__button.md-logo {
+    order: -1;
+    margin-left: 0 !important;
+    display: inline-flex !important;
+    visibility: visible !important;
+  }
+
+  .md-header__title {
+    display: none !important;
+  }
+
+  /* Keep utility controls on the right side (settings/search/repo). */
+  .md-header__option[data-md-component="palette"] {
+    margin-left: auto;
+  }
+}
+
+/* Hide site-name text in mobile drawer title (keep only logo). */
+.md-nav--primary > .md-nav__title[for="__drawer"] {
+  font-size: 0;
+}

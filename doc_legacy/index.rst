@@ -43,12 +43,22 @@
 
 .. toctree::
    :maxdepth: 2
+   :titlesonly:
+   :hidden:
+   :caption: Exchangeability Testing
+
+   theoretical_description_exchangeability
+   examples_exchangeability_testing/index
+
+.. toctree::
+   :maxdepth: 2
    :hidden:
    :caption: Question & Answers
 
    Metrics: how to measure conformal prediction performance? <theoretical_description_metrics>
    index_mondrian
    llm_risk_control
+
 
 .. toctree::
    :maxdepth: 2

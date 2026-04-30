@@ -14,20 +14,21 @@ One method for multi-class calibration has been implemented in MAPIE: **Top-Labe
 
 The goal of binary calibration is to **transform a score** (typically given by an ML model) that is not a probability **into a probability**. The algorithms used for calibration can be interpreted as estimators of the confidence level.
 
-<figure markdown>
-  ![Calibration basic](../images/calibration_basic.png){ width="300" }
-  <figcaption>Expected result: predicted scores closer to true probabilities after calibration.</figcaption>
-</figure>
+![Calibration basic](../images/calibration_basic.png){ width="300" }
+
+Expected result: predicted scores closer to true probabilities after calibration.
 
 ## Binary Calibration
 
 We denote the \((h(X), y)\) pair as the score and ground truth. The model is calibrated if for every output \(q \in [0, 1]\):
 
+
 \[
 \Pr(Y = 1 \mid h(X) = q) = q
 \]
 
-where \(h()\) is the score predictor.
+
+where \(h\) is the score predictor.
 
 To apply calibration to a multi-class context, Gupta et al. propose a **multiclass-to-binary (M2B)** framework to reduce multi-class calibration to multiple binary calibrations.
 
@@ -39,9 +40,11 @@ To apply calibration to a multi-class context, Gupta et al. propose a **multicla
 
 Let \(c\) be the classifier and \(h\) be the maximum score from the classifier. The couple \((c, h)\) is calibrated according to Top-Label calibration if:
 
+
 \[
 \Pr(Y = c(X) \mid h(X), c(X)) = h(X)
 \]
+
 
 ---
 

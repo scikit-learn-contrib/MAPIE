@@ -84,7 +84,8 @@ Complete API documentation for MAPIE v1.
 | [`MultiLabelClassificationController`](risk-control.md#mapie.risk_control.MultiLabelClassificationController) | Risk control for multi-label classification |
 | [`BinaryClassificationController`](risk-control.md#mapie.risk_control.BinaryClassificationController) | Risk control for binary classification |
 | [`SemanticSegmentationController`](risk-control.md#mapie.risk_control.SemanticSegmentationController) | Risk control for semantic segmentation |
-| [`BinaryClassificationRisk`](risk-control.md#mapie.risk_control.BinaryClassificationRisk) | Binary classification risk utilities |
+| [`BinaryRisk`](risk-control.md#mapie.risk_control.BinaryRisk) | Binary classification risk utilities |
+| [`BinaryClassificationRisk`](risk-control.md#mapie.risk_control.BinaryClassificationRisk) | Deprecated alias for `BinaryRisk` |
 
 ---
 

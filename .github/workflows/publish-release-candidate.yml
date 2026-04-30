@@ -1,0 +1,101 @@
+name: publish-release-candidate
+
+on:
+  push:
+    tags:
+      - "v*rc*"
+
+jobs:
+  build:
+    name: Build distribution 📦
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+      - name: Install pypa/build
+        run: python3 -m pip install --upgrade build --user
+      - name: Build a binary wheel and a source tarball
+        run: python3 -m build
+      - name: Store the distribution packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
+
+      - name: Resolve package version from artifact
+        id: package-version
+        run: |
+          python3 - <<'PY'
+          import glob
+          import pathlib
+          import re
+
+          wheel = sorted(glob.glob("dist/*.whl"))
+          if not wheel:
+              raise SystemExit("No wheel found in dist/")
+          name = pathlib.Path(wheel[0]).name
+          match = re.match(r"mapie-([^-]+)-", name)
+          if match is None:
+              raise SystemExit(f"Could not parse mapie version from wheel name: {name}")
+          with open("${GITHUB_OUTPUT}", "a", encoding="utf-8") as fh:
+              fh.write(f"version={match.group(1)}\n")
+          PY
+
+    outputs:
+      version: ${{ steps.package-version.outputs.version }}
+
+  publish-to-testpypi:
+    name: Publish Python 🐍 distribution 📦 to TestPyPI
+    needs: [build]
+    runs-on: ubuntu-latest
+    environment:
+      name: testpypi
+      url: https://test.pypi.org/project/mapie/
+    permissions:
+      id-token: write
+
+    steps:
+      - name: Download all the dists
+        uses: actions/download-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
+      - name: Publish distribution 📦 to TestPyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+
+  smoke-test-testpypi:
+    name: Smoke test install from TestPyPI
+    needs: [build, publish-to-testpypi]
+    if: needs.publish-to-testpypi.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+      - name: Install and import from TestPyPI
+        env:
+          RESOLVED_VERSION: ${{ needs.build.outputs.version }}
+        run: |
+          python3 -m venv .venv-smoke
+          . .venv-smoke/bin/activate
+          for attempt in 1 2 3 4 5 6; do
+            if pip install --pre -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ "mapie==${RESOLVED_VERSION}"; then
+              break
+            fi
+            if [ "${attempt}" -eq 6 ]; then
+              echo "Failed to install mapie==${RESOLVED_VERSION} from TestPyPI after retries."
+              exit 1
+            fi
+            echo "Install not available yet on TestPyPI, retrying in 20s (attempt ${attempt}/6)..."
+            sleep 20
+          done
+          python -c "import mapie; print(mapie.__version__)"

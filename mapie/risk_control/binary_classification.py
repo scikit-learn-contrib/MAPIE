@@ -16,11 +16,11 @@ from mapie.utils import check_valid_ltt_params_index
 
 from .methods import compute_hoeffding_bentkus_p_value, ltt_procedure
 from .risks import (
-    BinaryClassificationRisk,
-    RiskLike,
-    RiskNameLiteral,
+    BinaryRisk,
+    BinaryRiskLike,
+    BinaryRiskNames,
     _best_predict_param_choice_map,
-    risk_choice_map,
+    binary_risk_choice_map,
 )
 
 
@@ -55,14 +55,14 @@ class BinaryClassificationController:
         ensemble multiple binary classifiers with different thresholds for each classifier.
         In that case, `predict_params` must be provided.
 
-    risk : Union[BinaryClassificationRisk, str, List[BinaryClassificationRisk, str]]
+    risk : Union[BinaryRisk, str, List[BinaryRisk, str]]
         The risk or performance metric to control.
         Valid options:
 
         - An existing risk defined in `mapie.risk_control` accessible through
           its string equivalent: "precision", "recall", "accuracy",
           "fpr" for false positive rate, or "predicted_positive_fraction".
-        - A custom instance of BinaryClassificationRisk object
+        - A custom instance of BinaryRisk object
 
         Can be a list of risks in the case of multi risk control.
 
@@ -75,7 +75,7 @@ class BinaryClassificationController:
         The confidence level with which the risk (or performance) is controlled.
         Must be between 0 and 1. See the documentation for detailed explanations.
 
-    best_predict_param_choice : Union["auto", BinaryClassificationRisk, str],
+    best_predict_param_choice : Union["auto", BinaryRisk, str],
         default="auto"
         How to select the best threshold from the valid thresholds that control the risk
         (or performance). The BinaryClassificationController will try to minimize
@@ -88,7 +88,7 @@ class BinaryClassificationController:
 
           its string equivalent: "precision", "recall", "accuracy",
           "fpr" for false positive rate, or "predicted_positive_fraction".
-        - A custom instance of BinaryClassificationRisk object
+        - A custom instance of BinaryRisk object
 
     list_predict_params : NDArray, default=np.linspace(0, 0.99, 100)
         The set of parameters (noted λ in [1]) to consider for controlling the risk (or performance).
@@ -169,11 +169,11 @@ class BinaryClassificationController:
     def __init__(
         self,
         predict_function: Callable[[ArrayLike], NDArray],
-        risk: RiskLike,
+        risk: BinaryRiskLike,
         target_level: Union[float, List[float]],
         confidence_level: float = 0.9,
         best_predict_param_choice: Union[
-            Literal["auto"], RiskNameLiteral, BinaryClassificationRisk
+            Literal["auto"], BinaryRiskNames, BinaryRisk
         ] = "auto",
         list_predict_params: NDArray = np.linspace(0, 0.99, 100),
         fwer_method: Union[FWER_METHODS, FWERProcedure] = "bonferroni_holm",
@@ -183,13 +183,13 @@ class BinaryClassificationController:
         risk_list = risk if isinstance(risk, list) else [risk]
         try:
             self._risk = [
-                risk_choice_map[risk] if isinstance(risk, str) else risk
+                binary_risk_choice_map[risk] if isinstance(risk, str) else risk
                 for risk in risk_list
             ]
         except KeyError as e:
             raise ValueError(
                 "When risk is provided as a string, it must be one of: "
-                f"{list(risk_choice_map.keys())}"
+                f"{list(binary_risk_choice_map.keys())}"
             ) from e
         target_level_list = (
             target_level if isinstance(target_level, list) else [target_level]
@@ -446,9 +446,9 @@ class BinaryClassificationController:
     def _set_best_predict_param_choice(
         self,
         best_predict_param_choice: Union[
-            Literal["auto"], RiskNameLiteral, BinaryClassificationRisk
+            Literal["auto"], BinaryRiskNames, BinaryRisk
         ] = "auto",
-    ) -> BinaryClassificationRisk:
+    ) -> BinaryRisk:
         if best_predict_param_choice == "auto":
             if self.is_multi_risk:
                 # when multi risk, we minimize the first risk in the list
@@ -463,14 +463,14 @@ class BinaryClassificationController:
                         "(e.g. precision, accuracy, false_positive_rate)."
                     )
         if isinstance(best_predict_param_choice, str):
-            return risk_choice_map[best_predict_param_choice]
-        if isinstance(best_predict_param_choice, BinaryClassificationRisk):
+            return binary_risk_choice_map[best_predict_param_choice]
+        if isinstance(best_predict_param_choice, BinaryRisk):
             return best_predict_param_choice
 
         raise TypeError(
             f"Got object of type {type(best_predict_param_choice)}. "
             "best_predict_param_choice must be either 'auto', "
-            "a BinaryClassificationRisk instance, "
+            "a BinaryRisk instance, "
             "or a risk name (str) among those defined in mapie.risk_control "
             "(e.g. 'precision', 'accuracy', 'false_positive_rate')."
         )
@@ -497,7 +497,7 @@ class BinaryClassificationController:
     def _get_risk_values_and_eff_sample_sizes(
         y_true: NDArray,
         predictions_per_param: NDArray,
-        risks: List[BinaryClassificationRisk],
+        risks: List[BinaryRisk],
     ) -> Tuple[NDArray, NDArray]:
         """
         Compute the values of risks and effective sample sizes for multiple risks
@@ -572,7 +572,7 @@ class BinaryClassificationController:
 
     @staticmethod
     def _check_if_multi_risk_control(
-        risk: RiskLike,
+        risk: BinaryRiskLike,
         target_level: Union[float, List[float]],
     ) -> bool:
         """
@@ -588,15 +588,15 @@ class BinaryClassificationController:
                 return False
             else:
                 return True
-        elif (
-            isinstance(risk, BinaryClassificationRisk) or isinstance(risk, str)
-        ) and isinstance(target_level, float):
+        elif (isinstance(risk, BinaryRisk) or isinstance(risk, str)) and isinstance(
+            target_level, float
+        ):
             return False
         else:
             raise ValueError(
                 "If you provide a list of risks, you must provide "
                 "a list of target levels of the same length and vice versa. "
-                "If you provide a single BinaryClassificationRisk risk, "
+                "If you provide a single BinaryRisk risk, "
                 "you must provide a single float target level."
             )
 

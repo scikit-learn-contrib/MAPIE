@@ -4,8 +4,49 @@ from unittest.mock import MagicMock
 import numpy as np
 import pytest
 
-import mapie.exchangeability_testing.online_tests as omt_module
-from mapie.exchangeability_testing.online_tests import OnlineMartingaleTest
+from mapie.exchangeability_testing.exchangeability import (
+    FixedDatasetExchangeabilityTest,
+    OnlineExchangeabilityTest,
+)
+import mapie.exchangeability_testing.exchangeability as et_module
+import mapie.exchangeability_testing.martingales as omt_module
+from mapie.exchangeability_testing.martingales import OnlineMartingaleTest
+
+
+def test_fixed_dataset_exchangeability_validation_errors():
+    """Test fixed-dataset wrapper validation on method names."""
+    with pytest.raises(ValueError, match=r"Invalid method_names type"):
+        FixedDatasetExchangeabilityTest(method_names=1)  # type: ignore[arg-type]
+
+    with pytest.raises(ValueError, match=r"Invalid method name: not_a_method"):
+        FixedDatasetExchangeabilityTest(method_names="not_a_method")  # type: ignore[arg-type]
+
+
+def test_fixed_dataset_exchangeability_accepts_list_of_method_names():
+    """Test fixed-dataset wrapper accepts a list of method names."""
+    wrapper = FixedDatasetExchangeabilityTest(
+        method_names=["pvalue_permutation", "jumper_martingale"]
+    )
+
+    assert wrapper.method_names == ["pvalue_permutation", "jumper_martingale"]
+
+
+def test_online_exchangeability_validation_errors():
+    """Test online wrapper validation on method names."""
+    with pytest.raises(ValueError, match=r"Invalid method_names type"):
+        OnlineExchangeabilityTest(method_names=1)  # type: ignore[arg-type]
+
+    with pytest.raises(ValueError, match=r"Invalid method name: not_a_method"):
+        OnlineExchangeabilityTest(method_names="not_a_method")  # type: ignore[arg-type]
+
+
+def test_online_exchangeability_accepts_list_of_method_names():
+    """Test online wrapper accepts a list of method names."""
+    wrapper = OnlineExchangeabilityTest(
+        method_names=["plugin_martingale", "jumper_martingale"]
+    )
+
+    assert wrapper.method_names == ["plugin_martingale", "jumper_martingale"]
 
 
 def test_init_validation_errors():
@@ -18,6 +59,209 @@ def test_init_validation_errors():
 
     with pytest.raises(ValueError, match=r"jump_size must lie in \(0, 1\)"):
         OnlineMartingaleTest(jump_size=-0.1)
+
+
+def test_fixed_dataset_exchangeability_injects_martingale_test_method():
+    """Test fixed-dataset wrapper injects test_method for martingales."""
+    plugin_test = FixedDatasetExchangeabilityTest(method_names="plugin_martingale")
+    jumper_test = FixedDatasetExchangeabilityTest(method_names="jumper_martingale")
+    assert plugin_test.test_methods[0].test_method == "plugin_martingale"
+    assert jumper_test.test_methods[0].test_method == "jumper_martingale"
+
+
+def test_fixed_dataset_exchangeability_method_params_override_injected_default():
+    """Test explicit method_params take precedence over injected test_method."""
+    wrapper = FixedDatasetExchangeabilityTest(
+        method_names="plugin_martingale",
+        method_params={"plugin_martingale": {"test_method": "jumper_martingale"}},
+    )
+    assert wrapper.test_methods[0].test_method == "jumper_martingale"
+
+
+def test_fixed_dataset_exchangeability_injects_sequential_mc_strategy():
+    """Test fixed-dataset wrapper injects strategy for SMC methods."""
+    bin_test = FixedDatasetExchangeabilityTest(method_names="permutation_binomial")
+    mix_test = FixedDatasetExchangeabilityTest(
+        method_names="permutation_binomial_mixture"
+    )
+    agg_test = FixedDatasetExchangeabilityTest(method_names="permutation_aggressive")
+
+    assert bin_test.test_methods[0].strategy == "binomial"
+    assert mix_test.test_methods[0].strategy == "binomial_mixture"
+    assert agg_test.test_methods[0].strategy == "aggressive"
+
+
+def test_fixed_dataset_exchangeability_override_injected_smc_strategy():
+    """Test explicit method_params override injected SMC strategy."""
+    wrapper = FixedDatasetExchangeabilityTest(
+        method_names="permutation_binomial",
+        method_params={"permutation_binomial": {"strategy": "aggressive"}},
+    )
+    assert wrapper.test_methods[0].strategy == "aggressive"
+
+
+def test_fixed_dataset_exchangeability_is_exchangeable_returns_by_method():
+    """Test fixed-dataset wrapper exposes each method exchangeability decision."""
+    wrapper = FixedDatasetExchangeabilityTest(method_names="all")
+    wrapper.test_methods = [
+        MagicMock(is_exchangeable=True),
+        MagicMock(is_exchangeable=False),
+        MagicMock(is_exchangeable=None),
+        MagicMock(is_exchangeable=True),
+        MagicMock(is_exchangeable=False),
+        MagicMock(is_exchangeable=None),
+    ]
+
+    assert wrapper.is_exchangeable == {
+        "pvalue_permutation": True,
+        "permutation_binomial": False,
+        "permutation_binomial_mixture": None,
+        "permutation_aggressive": True,
+        "plugin_martingale": False,
+        "jumper_martingale": None,
+    }
+
+
+def test_fixed_dataset_exchangeability_run_calls_update_when_available():
+    """Test fixed-dataset wrapper prefers update when both APIs exist."""
+    wrapper = FixedDatasetExchangeabilityTest(method_names="pvalue_permutation")
+    X = np.array([[1.0], [2.0]])
+    y = np.array([0.0, 1.0])
+    update_result = object()
+    run_result = object()
+    test_method = MagicMock()
+    test_method.update = MagicMock(return_value=update_result)
+    test_method.run = MagicMock(return_value=run_result)
+    wrapper.test_methods = [test_method]
+
+    results = wrapper.run(X, y)
+
+    test_method.update.assert_called_once_with(X, y)
+    test_method.run.assert_not_called()
+    assert results == {"pvalue_permutation": update_result}
+
+
+def test_fixed_dataset_exchangeability_run_calls_run_when_update_missing():
+    """Test fixed-dataset wrapper falls back to run when needed."""
+    wrapper = FixedDatasetExchangeabilityTest(method_names="pvalue_permutation")
+    X = np.array([[1.0], [2.0]])
+    y = np.array([0.0, 1.0])
+    run_result = object()
+
+    class RunOnlyMethod:
+        def __init__(self):
+            self.run = MagicMock(return_value=run_result)
+            self.is_exchangeable = None
+
+    test_method = RunOnlyMethod()
+    wrapper.test_methods = [test_method]
+
+    results = wrapper.run(X, y)
+
+    test_method.run.assert_called_once_with(X, y)
+    assert results == {"pvalue_permutation": run_result}
+
+
+def test_fixed_dataset_exchangeability_run_raises_when_no_supported_api():
+    """Test fixed-dataset wrapper errors on invalid test method API."""
+    wrapper = FixedDatasetExchangeabilityTest(method_names="pvalue_permutation")
+    wrapper.test_methods = [object()]
+
+    with pytest.raises(AttributeError, match=r"must define either 'update' or 'run'"):
+        wrapper.run(np.array([[1.0]]), np.array([1.0]))
+
+
+def test_online_exchangeability_injects_martingale_test_method():
+    """Test online wrapper injects test_method for martingales."""
+    plugin_test = OnlineExchangeabilityTest(method_names="plugin_martingale")
+    jumper_test = OnlineExchangeabilityTest(method_names="jumper_martingale")
+
+    assert plugin_test.test_methods[0].test_method == "plugin_martingale"
+    assert jumper_test.test_methods[0].test_method == "jumper_martingale"
+
+
+def test_online_exchangeability_method_params_override_injected_default():
+    """Test explicit method_params take precedence over injected test_method."""
+    wrapper = OnlineExchangeabilityTest(
+        method_names="plugin_martingale",
+        method_params={"plugin_martingale": {"test_method": "jumper_martingale"}},
+    )
+
+    assert wrapper.test_methods[0].test_method == "jumper_martingale"
+
+
+def test_online_exchangeability_does_not_inject_test_method_for_other_classes(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    """Test _init_test_method path when class is not OnlineMartingaleTest."""
+
+    class DummyOnlineMethod:
+        def __init__(self, test_level, warn, extra_flag=False):  # noqa: ANN001
+            self.test_level = test_level
+            self.warn = warn
+            self.extra_flag = extra_flag
+
+    monkeypatch.setitem(
+        et_module.online_test_method_choice_map,
+        "dummy_online",
+        DummyOnlineMethod,
+    )
+
+    wrapper = OnlineExchangeabilityTest(
+        method_names="dummy_online",  # type: ignore[arg-type]
+        method_params={"dummy_online": {"extra_flag": True}},
+    )
+    method = wrapper.test_methods[0]
+    assert isinstance(method, DummyOnlineMethod)
+    assert method.extra_flag is True
+
+
+def test_online_exchangeability_is_exchangeable_returns_by_method():
+    """Test online wrapper exposes each method exchangeability decision."""
+    wrapper = OnlineExchangeabilityTest(method_names="all")
+    wrapper.test_methods[0].pvalue_history = [0.1]
+    wrapper.test_methods[0].martingale_value_history = [1.0]
+    wrapper.test_methods[0].current_martingale_value = 1.0
+    wrapper.test_methods[0].burn_in = 1
+    wrapper.test_methods[1].pvalue_history = [0.1]
+    wrapper.test_methods[1].martingale_value_history = [100.0]
+    wrapper.test_methods[1].current_martingale_value = 100.0
+    wrapper.test_methods[1].burn_in = 1
+
+    assert wrapper.is_exchangeable == {
+        "plugin_martingale": True,
+        "jumper_martingale": False,
+    }
+
+
+def test_online_exchangeability_update_calls_test_method_update():
+    """Test online wrapper forwards update arguments to each test method."""
+    wrapper = OnlineExchangeabilityTest(method_names="all")
+    X = np.array([[1.0], [2.0]])
+    y = np.array([0.0, 1.0])
+
+    first_result = object()
+    second_result = object()
+    wrapper.test_methods[0].update = MagicMock(return_value=first_result)
+    wrapper.test_methods[1].update = MagicMock(return_value=second_result)
+
+    results = wrapper.update(X, y)
+
+    wrapper.test_methods[0].update.assert_called_once_with(X, y)
+    wrapper.test_methods[1].update.assert_called_once_with(X, y)
+    assert results == {
+        "plugin_martingale": first_result,
+        "jumper_martingale": second_result,
+    }
+
+
+def test_online_exchangeability_update_raises_when_update_missing():
+    """Test online wrapper errors when a method does not define update."""
+    wrapper = OnlineExchangeabilityTest(method_names="plugin_martingale")
+    wrapper.test_methods = [object()]
+
+    with pytest.raises(AttributeError, match=r"must define an 'update' method"):
+        wrapper.update(np.array([[1.0]]), np.array([1.0]))
 
 
 def test_reject_threshold_computation():
@@ -571,6 +815,38 @@ def test_compute_non_conformity_scores_uses_provided_estimator_without_creation(
     assert omt.mapie_estimator.conformalize_calls == 1
 
 
+def test_compute_non_conformity_scores_can_reuse_estimator_across_updates():
+    """Test repeated conformalization calls reuse one estimator safely."""
+
+    class DummyProvidedRegressor:
+        def __init__(self):
+            self._is_fitted = True
+            self._mapie_regressor = type("ScoreHolder", (), {})()
+            self.conformalize_calls = 0
+
+        def conformalize(self, X, y):
+            self.conformalize_calls += 1
+            self._mapie_regressor.conformity_scores_ = np.asarray(y, dtype=float)
+
+    omt = OnlineMartingaleTest(
+        mapie_estimator=DummyProvidedRegressor(),
+        task="regression",
+    )
+
+    first_scores = omt._compute_non_conformity_scores(
+        np.array([[0.0], [1.0]]),
+        np.array([0.2, 0.4]),
+    )
+    second_scores = omt._compute_non_conformity_scores(
+        np.array([[2.0], [3.0]]),
+        np.array([0.6, 0.8]),
+    )
+
+    assert np.array_equal(first_scores, np.array([0.2, 0.4]))
+    assert np.array_equal(second_scores, np.array([0.6, 0.8]))
+    assert omt.mapie_estimator.conformalize_calls == 2
+
+
 def test_compute_non_conformity_scores_warns_when_estimator_not_fitted(monkeypatch):
     """Test warning is raised when estimator is not fitted."""
 
@@ -672,50 +948,6 @@ def test_compute_p_value_with_strict_greater_than():
     assert 0.0 <= pvalue <= 1.0
     assert pvalue != 0.0
     assert pvalue != 1.0
-
-
-def test_fit_estimator_calls_estimator_fit():
-    """Test that fit_estimator calls the fit method of the estimator."""
-    # Create a mock estimator
-    mock_estimator = MagicMock()
-    omt = OnlineMartingaleTest(mapie_estimator=mock_estimator)
-
-    # Create dummy data
-    X = np.array([[1.0, 2.0], [3.0, 4.0]])
-    y = np.array([1.0, 2.0])
-
-    # Call fit_estimator
-    result = omt.fit_estimator(X, y)
-
-    # Assert that the fit method was called once with the correct arguments
-    omt.mapie_estimator.fit.assert_called_once_with(X, y)
-
-    # Verify that fit_estimator returns self for method chaining
-    assert result is omt
-
-
-def test_fit_estimator_raises_when_estimator_is_none():
-    """Test that fit_estimator calls _initiate_estimator when estimator is None."""
-    from unittest.mock import patch
-
-    omt = OnlineMartingaleTest(mapie_estimator=None, task="regression")
-
-    X = np.array([[1.0, 2.0], [3.0, 4.0]])
-    y = np.array([1.0, 2.0])
-
-    with patch.object(
-        omt, "_initiate_estimator", wraps=omt._initiate_estimator
-    ) as mock_initiate:
-        result = omt.fit_estimator(X, y)
-
-        # Verify that _initiate_estimator was called once
-        mock_initiate.assert_called_once()
-
-        # Verify that fit_estimator returns self for method chaining
-        assert result is omt
-
-        # Verify that the estimator was initialized
-        assert omt.mapie_estimator is not None
 
 
 def test_initiate_estimator_classification():

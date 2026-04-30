@@ -1,5 +1,6 @@
 """
-# Online martingale exchangeability tests for a deployed regressor
+Online martingale exchangeability tests for a deployed regressor
+================================================================
 
 When a predictive model is deployed in production, a common question arises:
 *are newly arriving labeled observations still exchangeable with the data used
@@ -58,6 +59,10 @@ import warnings
 
 import matplotlib.pyplot as plt
 import numpy as np
+from mapie._example_utils import (
+    plot_martingale_results_one_scenario,
+    print_martingale_summary,
+)
 from sklearn.linear_model import LinearRegression
 
 from mapie.exchangeability_testing import OnlineMartingaleTest
@@ -110,6 +115,9 @@ mapie_regressor = SplitConformalRegressor(
 )
 
 ##############################################################################
+# Build monitoring streams
+# ------------------------
+#
 # We build three monitoring streams. The first half of each stream is the
 # unchanged conformalization set. The second half (test set) is either left
 # unchanged (exchangeable), mildly shifted with noise (subtle), or strongly
@@ -137,6 +145,9 @@ X_abrupt = np.vstack([X_conformalize, X_test_abrupt])
 y_abrupt = np.concatenate([y_conformalize, y_test_abrupt])
 
 ##############################################################################
+# Visualize test scenarios
+# ------------------------
+#
 # The figure below shows (Feature 1, target) for each test scenario before
 # running online martingale monitoring.
 # Marker style encodes temporal segment for shifted scenarios
@@ -184,7 +195,8 @@ plt.tight_layout(rect=(0, 0.08, 1, 1))
 plt.show()
 
 ##############################################################################
-# We define one helper to visualize martingale trajectories and the plug-in
+# The helper :func:`~utils.plot_martingale_results_one_scenario` (defined in
+# the local ``utils.py``) visualizes martingale trajectories and the plug-in
 # p-value histogram for each scenario.
 #
 
@@ -192,87 +204,9 @@ test_level = 0.05
 burn_in = 100
 shift_start_time = len(y_conformalize) + midpoint
 
-
-def plot_results_one_scenario(
-    omt_jumper,
-    omt_plugin,
-    scenario_name,
-    shift_start_time=None,
-):
-    """Plot martingales and p-value histogram for one monitoring scenario."""
-    fig, axes = plt.subplots(1, 3, figsize=(18, 5.8))
-    threshold = omt_jumper.reject_threshold
-
-    # Jumper martingale
-    ax = axes[0]
-    ax.plot(omt_jumper.martingale_value_history, label="Jumper martingale")
-    ax.axhline(threshold, linestyle="--", color="tab:red", label="Reject threshold")
-    if shift_start_time is not None:
-        ax.axvline(
-            shift_start_time,
-            linestyle="--",
-            color="black",
-            label="Shift start",
-        )
-    ax.set_title(f"{scenario_name} - Jumper", fontsize=18)
-    ax.set_xlabel("Time", fontsize=16)
-    ax.set_ylabel("Martingale value", fontsize=16)
-    ax.tick_params(axis="both", labelsize=14)
-    ax.set_yscale("log")
-    summary_jumper = omt_jumper.summary()
-    if summary_jumper["is_exchangeable"] is False:
-        ax.axvline(
-            summary_jumper["stopping_time"],
-            linestyle=":",
-            color="red",
-            label="Stopping time",
-        )
-    ax.legend(fontsize=14)
-
-    # Plug-in martingale
-    ax = axes[1]
-    ax.plot(omt_plugin.martingale_value_history, label="Plug-in martingale")
-    ax.axhline(threshold, linestyle="--", color="tab:red", label="Reject threshold")
-    if shift_start_time is not None:
-        ax.axvline(
-            shift_start_time,
-            linestyle="--",
-            color="black",
-            label="Shift start",
-        )
-    ax.set_title(f"{scenario_name} - Plug-in", fontsize=18)
-    ax.set_xlabel("Time", fontsize=16)
-    ax.set_ylabel("Martingale value", fontsize=16)
-    ax.tick_params(axis="both", labelsize=14)
-    ax.set_yscale("log")
-    summary_plugin = omt_plugin.summary()
-    if summary_plugin["is_exchangeable"] is False:
-        ax.axvline(
-            summary_plugin["stopping_time"],
-            linestyle=":",
-            color="red",
-            label="Stopping time",
-        )
-    ax.legend(fontsize=14)
-
-    # P-value histogram (plug-in)
-    ax = axes[2]
-    ax.hist(omt_plugin.pvalue_history, bins=20, density=True, alpha=0.7)
-    ax.axhline(1.0, linestyle="--", color="tab:gray", label="Uniform density")
-    ax.set_title(f"{scenario_name} - P-values", fontsize=18)
-    ax.set_xlabel("P-value", fontsize=16)
-    ax.set_ylabel("Density", fontsize=16)
-    ax.tick_params(axis="both", labelsize=14)
-    ax.legend(fontsize=14)
-
-    plt.suptitle(f"Online martingale tests - {scenario_name}", fontsize=22)
-    plt.tight_layout()
-    plt.show()
-
-
 ##############################################################################
-# Scenario 1 - Exchangeable test set
-# ----------------------------------
+# Exchangeable stream
+# -------------------
 #
 # The test set follows the same distribution as training data.
 # Both martingales should stay below the rejection threshold.
@@ -300,7 +234,7 @@ omt_plugin_exch = OnlineMartingaleTest(
 omt_jumper_exch.update(X_exch, y_exch)
 omt_plugin_exch.update(X_exch, y_exch)
 
-plot_results_one_scenario(
+plot_martingale_results_one_scenario(
     omt_jumper_exch,
     omt_plugin_exch,
     "Exchangeable",
@@ -312,8 +246,8 @@ plot_results_one_scenario(
 #
 
 ##############################################################################
-# Scenario 2 - Subtle shift
-# -------------------------
+# Subtle shift
+# ------------
 #
 # The second half of the test set receives a mild noisy target location shift.
 #
@@ -340,7 +274,7 @@ omt_plugin_subtle_shift = OnlineMartingaleTest(
 omt_jumper_subtle_shift.update(X_subtle, y_subtle)
 omt_plugin_subtle_shift.update(X_subtle, y_subtle)
 
-plot_results_one_scenario(
+plot_martingale_results_one_scenario(
     omt_jumper_subtle_shift,
     omt_plugin_subtle_shift,
     "Subtle shift",
@@ -353,8 +287,8 @@ plot_results_one_scenario(
 #
 
 ##############################################################################
-# Scenario 3 - Abrupt shift
-# -------------------------
+# Abrupt shift
+# ------------
 #
 # The second half of the test set receives a stronger noisy target location
 # shift, creating a more obvious exchangeability violation.
@@ -386,7 +320,7 @@ with warnings.catch_warnings(record=True) as raised_warnings:
 if raised_warnings:
     print(f"Raised warning: {raised_warnings[0].message}")
 
-plot_results_one_scenario(
+plot_martingale_results_one_scenario(
     omt_jumper_abrupt_shift,
     omt_plugin_abrupt_shift,
     "Abrupt shift",
@@ -410,39 +344,7 @@ regression_results = {
     "Abrupt shift": (omt_jumper_abrupt_shift, omt_plugin_abrupt_shift),
 }
 
-
-def print_result_summary(results):
-    """Print compact diagnostics for each stream and method."""
-    print("\nSummary at test_level = 0.05 (threshold = 20):")
-    print(
-        "Scenario        | Method  | Decision     | Stopping time | "
-        "Value at decision | Final value"
-    )
-    print("-" * 99)
-
-    for scenario_name, (omt_jumper, omt_plugin) in results.items():
-        for method_name, omt in [
-            ("Jumper", omt_jumper),
-            ("Plug-in", omt_plugin),
-        ]:
-            summary = omt.summary()
-            decision = summary["is_exchangeable"]
-            if decision is None:
-                decision_str = "Inconclusive"
-            elif decision:
-                decision_str = "No rejection"
-            else:
-                decision_str = "Rejected"
-
-            print(
-                f"{scenario_name:<15} | {method_name:<7} | {decision_str:<12} | "
-                f"{summary['stopping_time']:<13} | "
-                f"{summary['martingale_value_at_decision']:<17.3g} | "
-                f"{summary['last_martingale_value']:<.3g}"
-            )
-
-
-print_result_summary(regression_results)
+print_martingale_summary(regression_results, test_level=test_level)
 
 ##############################################################################
 # The key takeaway is that online martingale tests integrate naturally into a
