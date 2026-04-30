@@ -12,14 +12,14 @@ exchangeability assumption used by conformal methods.
 import matplotlib.pyplot as plt
 import numpy as np
 
-from mapie.exchangeability_testing.permutation_tests import (
+from mapie.exchangeability_testing.permutations import (
     PValuePermutationTest,
     SequentialMonteCarloTest,
 )
 
 ##############################################################################
-# 1. Build two fixed datasets
-# ---------------------------
+# Build two fixed datasets
+# ------------------------
 #
 # We build a toy regression signal and compare two datasets:
 #
@@ -48,8 +48,8 @@ y_shifted = y_exchangeable.copy()
 y_shifted[len(y_shifted) // 2 :] += 0.8
 
 ##############################################################################
-# 2. Exchangeable case: run all methods and plot
-# -----------------------------------------------
+# Run the exchangeable case
+# -------------------------
 #
 # We start with a dataset that should satisfy exchangeability.
 
@@ -80,14 +80,18 @@ exchangeable_binomial_mixture_test = SequentialMonteCarloTest(
     num_permutations=num_permutations,
 )
 
-exchangeable_pvalue_detected = exchangeable_pvalue_test.run(X, y_exchangeable)
+exchangeable_pvalue_test.run(X, y_exchangeable)
+exchangeable_pvalue_detected = exchangeable_pvalue_test.is_exchangeable
 
-exchangeable_aggressive_detected = exchangeable_aggressive_test.run(X, y_exchangeable)
+exchangeable_aggressive_test.run(X, y_exchangeable)
+exchangeable_aggressive_detected = exchangeable_aggressive_test.is_exchangeable
 
-exchangeable_binomial_detected = exchangeable_binomial_test.run(X, y_exchangeable)
+exchangeable_binomial_test.run(X, y_exchangeable)
+exchangeable_binomial_detected = exchangeable_binomial_test.is_exchangeable
 
-exchangeable_binomial_mixture_detected = exchangeable_binomial_mixture_test.run(
-    X, y_exchangeable
+exchangeable_binomial_mixture_test.run(X, y_exchangeable)
+exchangeable_binomial_mixture_detected = (
+    exchangeable_binomial_mixture_test.is_exchangeable
 )
 
 print("\nExchangeable dataset")
@@ -145,8 +149,8 @@ plt.tight_layout()
 plt.show()
 
 ##############################################################################
-# 3. Non-exchangeable case: run all methods and plot
-# ---------------------------------------------------
+# Run the non-exchangeable case
+# -----------------------------
 #
 # We now repeat the same comparison on the shifted dataset.
 
@@ -174,10 +178,14 @@ shifted_binomial_mixture_test = SequentialMonteCarloTest(
     num_permutations=num_permutations,
 )
 
-shifted_pvalue_detected = shifted_pvalue_test.run(X, y_shifted)
-shifted_aggressive_detected = shifted_aggressive_test.run(X, y_shifted)
-shifted_binomial_detected = shifted_binomial_test.run(X, y_shifted)
-shifted_binomial_mixture_detected = shifted_binomial_mixture_test.run(X, y_shifted)
+shifted_pvalue_test.run(X, y_shifted)
+shifted_pvalue_detected = shifted_pvalue_test.is_exchangeable
+shifted_aggressive_test.run(X, y_shifted)
+shifted_aggressive_detected = shifted_aggressive_test.is_exchangeable
+shifted_binomial_test.run(X, y_shifted)
+shifted_binomial_detected = shifted_binomial_test.is_exchangeable
+shifted_binomial_mixture_test.run(X, y_shifted)
+shifted_binomial_mixture_detected = shifted_binomial_mixture_test.is_exchangeable
 
 print("\nNon-exchangeable dataset")
 print("------------------------")

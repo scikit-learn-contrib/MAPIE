@@ -15,12 +15,12 @@ from sklearn.datasets import make_classification
 from sklearn.neighbors import KNeighborsClassifier
 
 from mapie.classification import SplitConformalClassifier
-from mapie.exchangeability_testing.permutation_tests import PValuePermutationTest
+from mapie.exchangeability_testing.permutations import PValuePermutationTest
 from mapie.utils import train_conformalize_test_split
 
 ##############################################################################
-# 1. Fit a conformal classifier with a non-default conformity score
-# -----------------------------------------------------------------
+# Fit a conformal classifier
+# --------------------------
 #
 # We first split the data into train, conformalization, and test subsets using
 # MAPIE's built-in utility. We fit a multiclass `KNeighborsClassifier` on the
@@ -66,8 +66,8 @@ mapie_classifier = SplitConformalClassifier(
 )
 
 ##############################################################################
-# 2. Test exchangeability on the held-out dataset
-# -----------------------------------------------
+# Test exchangeability on held-out data
+# -------------------------------------
 #
 # To assess whether conformalization guarantees provided by MAPIE are valid,
 # we have to test the exchangeability of the conformalization and test datasets.
@@ -87,15 +87,16 @@ exchangeability_test = PValuePermutationTest(
     mapie_estimator=mapie_classifier,
 )
 
-exchangeability_detected = exchangeability_test.run(X_eval, y_exchangeable)
+exchangeability_test.run(X_eval, y_exchangeable)
+exchangeability_detected = exchangeability_test.is_exchangeable
 
 print("\nExchangeable classification dataset")
 print("----------------------------------")
 print(f"PValuePermutationTest: data exchangeability={exchangeability_detected}")
 
 ##############################################################################
-# 3. Plot the running p-values (exchangeable case)
-# -----------------------------------------------
+# Plot the exchangeable case
+# --------------------------
 
 test_level = exchangeability_test.test_level
 plt.figure(figsize=(8, 4))
@@ -115,8 +116,24 @@ plt.tight_layout()
 plt.show()
 
 ##############################################################################
-# 4. Non-exchangeable example
-# ---------------------------
+# Continue with MAPIE
+# -------------------
+#
+# Because exchangeability of the original conformalization and test sets has
+# been checked, we can continue with the standard MAPIE
+# pipeline on the predefined conformalization and test subsets.
+
+mapie_classifier.conformalize(X_conformalize, y_conformalize)
+y_pred, y_pred_set = mapie_classifier.predict_set(X_test)
+average_set_size = np.mean(np.sum(y_pred_set[:, :, 0], axis=1))
+
+print("\nClassical MAPIE pipeline")
+print("------------------------")
+print(f"Average prediction-set size: {average_set_size:.2f}")
+
+##############################################################################
+# Create a non-exchangeable dataset
+# ---------------------------------
 #
 # For illustration purposes, we now break exchangeability by shifting all labels of the test split.
 # This induces a systematic mismatch between the second half of X_eval and
@@ -132,10 +149,11 @@ non_exchangeability_test = PValuePermutationTest(
     mapie_estimator=mapie_classifier,
 )
 
-exchangeability_detected = non_exchangeability_test.run(
+non_exchangeability_test.run(
     X_eval,
     y_non_exchangeable,
 )
+exchangeability_detected = non_exchangeability_test.is_exchangeable
 
 print("\nNon-exchangeable classification dataset")
 print("--------------------------------------")
@@ -173,19 +191,3 @@ plt.grid(alpha=0.3)
 plt.legend()
 plt.tight_layout()
 plt.show()
-
-##############################################################################
-# 5. Continue with the standard MAPIE pipeline
-# --------------------------------------------
-#
-# Because exchangeability of the original conformalization and test sets has
-# been checked, we can continue with the standard MAPIE
-# pipeline on the predefined conformalization and test subsets.
-
-mapie_classifier.conformalize(X_conformalize, y_conformalize)
-y_pred, y_pred_set = mapie_classifier.predict_set(X_test)
-average_set_size = np.mean(np.sum(y_pred_set[:, :, 0], axis=1))
-
-print("\nClassical MAPIE pipeline")
-print("------------------------")
-print(f"Average prediction-set size: {average_set_size:.2f}")
