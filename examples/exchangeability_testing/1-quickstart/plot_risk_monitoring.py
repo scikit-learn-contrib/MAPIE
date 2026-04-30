@@ -35,8 +35,8 @@ or no labels, please refer to the extensions [2] and [3] respectively.
 # that `RiskMonitoring` tracks the misclassification risk `1 - accuracy`.
 
 from sklearn.linear_model import LogisticRegression
-from mapie._example_utils import generate_gaussian_stream, plot_monitoring_results
 
+from mapie._example_utils import generate_gaussian_stream, plot_monitoring_results
 from mapie.exchangeability_testing import RiskMonitoring
 
 random_state = 42
@@ -71,6 +71,7 @@ print(f"Monitoring threshold: {threshold:.3f}")
 # the monitoring threshold.
 
 X_online_no_shift, y_online_no_shift = generate_gaussian_stream(
+    n_samples=800,
     shift_type="stable",
     random_state=random_state + 2,
 )
@@ -102,6 +103,7 @@ plot_monitoring_results(
 # directly at instantiation).
 
 X_online_abrupt, y_online_abrupt = generate_gaussian_stream(
+    n_samples=800,
     shift_type="abrupt",
     prop_shift=prop_shift,
     random_state=random_state + 3,
@@ -134,6 +136,7 @@ plot_monitoring_results(
 # an abrupt change.
 
 X_online_slow, y_online_slow = generate_gaussian_stream(
+    n_samples=800,
     shift_type="slow",
     prop_shift=prop_shift,
     random_state=random_state + 4,
