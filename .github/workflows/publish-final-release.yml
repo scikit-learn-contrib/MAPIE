@@ -1,0 +1,139 @@
+name: publish-final-release
+
+on:
+  push:
+    tags:
+      - "v*"
+      - "!v*rc*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build distribution 📦
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+      - name: Install pypa/build
+        run: python3 -m pip install --upgrade build --user
+      - name: Build a binary wheel and a source tarball
+        run: python3 -m build
+      - name: Store the distribution packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
+
+  publish-to-pypi:
+    name: Publish Python 🐍 distribution 📦 to PyPI
+    needs: [build]
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/project/mapie/
+    permissions:
+      id-token: write
+
+    steps:
+      - name: Download all the dists
+        uses: actions/download-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
+      - name: Publish distribution 📦 to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+
+  smoke-test-pypi:
+    name: Smoke test install from PyPI
+    needs: [build, publish-to-pypi]
+    if: needs.publish-to-pypi.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+      - name: Resolve package version from tag
+        id: package-version
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          echo "version=${VERSION}" >> "${GITHUB_OUTPUT}"
+      - name: Install and import from PyPI
+        env:
+          RELEASE_VERSION: ${{ steps.package-version.outputs.version }}
+        run: |
+          python3 -m venv .venv-smoke
+          . .venv-smoke/bin/activate
+          for attempt in 1 2 3 4 5 6; do
+            if pip install "mapie==${RELEASE_VERSION}"; then
+              break
+            fi
+            if [ "${attempt}" -eq 6 ]; then
+              echo "Failed to install mapie==${RELEASE_VERSION} from PyPI after retries."
+              exit 1
+            fi
+            echo "Install not available yet on PyPI, retrying in 20s (attempt ${attempt}/6)..."
+            sleep 20
+          done
+          python -c "import mapie; print(mapie.__version__)"
+
+  update-citation:
+    name: Update CITATION.cff
+    needs: [smoke-test-pypi]
+    if: needs.smoke-test-pypi.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout master
+        uses: actions/checkout@v4
+        with:
+          ref: master
+
+      - name: Update CITATION version and release date
+        env:
+          RELEASE_VERSION: ${{ github.ref_name }}
+        run: |
+          VERSION="${RELEASE_VERSION#v}"
+          TODAY="$(date -u +%Y-%m-%d)"
+          python3 - <<'PY'
+          import os
+          import re
+          from pathlib import Path
+
+          path = Path("CITATION.cff")
+          text = path.read_text(encoding="utf-8")
+          version = os.environ["VERSION"]
+          today = os.environ["TODAY"]
+
+          text = re.sub(r"^version:\s*.*$", f"version: {version}", text, count=1, flags=re.MULTILINE)
+          text = re.sub(r"^date-released:\s*.*$", f"date-released: {today}", text, count=1, flags=re.MULTILINE)
+          path.write_text(text, encoding="utf-8")
+          PY
+
+      - name: Commit and push if changed
+        env:
+          VERSION: ${{ github.ref_name }}
+        run: |
+          if git diff --quiet -- CITATION.cff; then
+            echo "No CITATION.cff changes to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add CITATION.cff
+          git commit -m "Update CITATION.cff for ${VERSION#v} release"
+          git push origin master
+
+# Notes:
+# - Make sure to update the pypi and testpypi Trusted Publishers in the settings of your PyPI and TestPyPI accounts.
+# - Configure GitHub Environments named `pypi` and `testpypi` in your repository settings.
+# - For `pypi` the environment should require manual approval (recommended by PyPI Trusted Publishing).
+# - After switching to Trusted Publishing you should remove any long-lived PYPI API token secrets from the repo and
+#   revoke them on PyPI/TestPyPI as described in the PyPI guide.
