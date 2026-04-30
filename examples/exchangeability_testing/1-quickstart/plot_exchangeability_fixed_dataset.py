@@ -1,5 +1,6 @@
 """
-# Exchangeability testing on a fixed dataset
+Exchangeability testing on a fixed dataset
+==========================================
 
 This quickstart demonstrates how to test exchangeability on a fixed dataset.
 
@@ -16,6 +17,9 @@ and hide any potential distribution shift.
 """
 
 ##############################################################################
+# Prepare the data
+# ----------------
+#
 # We first prepare the data and fit a classifier on the training data.
 
 from sklearn.linear_model import LogisticRegression
@@ -45,6 +49,9 @@ classifier = LogisticRegression(random_state=random_state)
 classifier.fit(X_train, y_train)
 
 ##############################################################################
+# Run the exchangeability test
+# ----------------------------
+#
 # Now we can test the exchangeability of the test dataset.
 # By default, we use all available test methods.
 # Method-specific parameters can be passed as a dictionary.
@@ -57,6 +64,9 @@ for test_name, is_exchangeable in exchangeability_test.is_exchangeable.items():
     print(f"{test_name}: {is_exchangeable}")
 
 ##############################################################################
+# Continue with MAPIE
+# -------------------
+#
 # The test dataset is exchangeable. We can continue with MAPIE.
 # Conformalization with a split of the test dataset will provide
 # coverage guarantees on the remaining test data.
@@ -73,6 +83,9 @@ mapie_classifier.conformalize(X_conformalize, y_conformalize)
 y_pred, y_pred_set = mapie_classifier.predict_set(X_test_new)
 
 ##############################################################################
+# Create a non-exchangeable dataset
+# ---------------------------------
+#
 # Now let us see what happens for a non-exchangeable fixed dataset.
 # Here, an abrupt shift happens in the second part of the dataset.
 
@@ -98,6 +111,9 @@ for test_name, is_exchangeable in exchangeability_test.is_exchangeable.items():
     print(f"{test_name}: {is_exchangeable}")
 
 ##############################################################################
+# Interpret the result
+# --------------------
+#
 # The shifted test dataset is not exchangeable: MAPIE cannot provide
 # statistical guarantees on it, and more generally the classifier itself
 # should not be trusted without further investigation.

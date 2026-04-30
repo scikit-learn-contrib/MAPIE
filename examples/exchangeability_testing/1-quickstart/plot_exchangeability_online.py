@@ -1,5 +1,6 @@
 """
-# Exchangeability testing on an online stream
+Exchangeability testing on an online stream
+===========================================
 
 This quickstart demonstrates how to test exchangeability on a labeled online
 stream, i.e. data arriving sequentially in batches.
@@ -15,6 +16,9 @@ run the test and assess performance.
 """
 
 ##############################################################################
+# Prepare the online stream
+# -------------------------
+#
 # We first prepare an exchangeable online stream. The stream is processed
 # batch by batch, as new labeled data would arrive in deployment.
 
@@ -37,6 +41,9 @@ plot_dataset(
 )
 
 ##############################################################################
+# Run the exchangeability test
+# ----------------------------
+#
 # Now we can test exchangeability on the online stream.
 # The test is updated batch by batch as new labels become available.
 
@@ -50,10 +57,16 @@ for test_name, is_exchangeable in online_test.is_exchangeable.items():
     print(f"{test_name}: {is_exchangeable}")
 
 ##############################################################################
+# Interpret the result
+# --------------------
+#
 # The online stream is exchangeable. We can confidently continue monitoring
 # future data with MAPIE's online methods.
 
 ##############################################################################
+# Create a non-exchangeable stream
+# --------------------------------
+#
 # Now let us see what happens for a non-exchangeable online stream.
 # Here, an abrupt shift happens in the second part of the stream.
 
@@ -84,6 +97,9 @@ for test_name, is_exchangeable in online_test_abrupt.is_exchangeable.items():
     print(f"{test_name}: {is_exchangeable}")
 
 ##############################################################################
+# Interpret the shifted stream
+# ----------------------------
+#
 # The shifted online stream is not exchangeable: MAPIE cannot provide
 # statistical guarantees on future data from this stream, and the underlying
 # predictive model should not be trusted without further investigation.

@@ -1,5 +1,6 @@
 """
-# Online martingale exchangeability tests for a deployed classifier
+Online martingale exchangeability tests for a deployed classifier
+=================================================================
 
 When a predictive model is deployed in production, a common question arises:
 *are the newly arriving labeled observations still exchangeable with the data
@@ -130,6 +131,9 @@ mapie_classifier = SplitConformalClassifier(
 )
 
 ##############################################################################
+# Build monitoring streams
+# ------------------------
+#
 # We next build the three monitoring streams.  The first half of each stream
 # is the unchanged conformalization set.  The second half, the test set, is
 # either left intact (exchangeable), slightly translated (subtle shift), or
@@ -160,6 +164,9 @@ X_abrupt = np.vstack([X_conformalize, X_test_abrupt])
 y_abrupt = np.concatenate([y_conformalize, y_test_abrupt])
 
 ##############################################################################
+# Visualize test scenarios
+# ------------------------
+#
 # The figure below shows the first two features of each test-set variant so
 # that the nature of each shift is visible before running the martingale tests.
 # Colors encode class labels. For shifted scenarios only, marker style encodes
@@ -231,8 +238,8 @@ burn_in = 100
 shift_start_time = len(y_conformalize) + midpoint
 
 ##############################################################################
-# Scenario 1 — Exchangeable test set
-# ------------------------------------
+# Exchangeable stream
+# -------------------
 #
 # The test set comes from the same distribution as the training data.
 # Both martingale tests should stay well below the rejection threshold.
@@ -273,8 +280,8 @@ plot_martingale_results_one_scenario(
 #
 
 ##############################################################################
-# Scenario 2 — Subtle shift
-# --------------------------
+# Subtle shift
+# ------------
 #
 # The second half of the test set is subjected to a mild location shift.
 # This shift is intentionally limited in amplitude and is not
@@ -316,8 +323,8 @@ plot_martingale_results_one_scenario(
 #
 
 ##############################################################################
-# Scenario 3 — Abrupt shift
-# --------------------------
+# Abrupt shift
+# ------------
 #
 # The second half of the test set is displaced by a large location shift,
 # creating a strong and immediate break in the conformity score distribution.
@@ -367,6 +374,9 @@ plot_martingale_results_one_scenario(
 #
 
 ##############################################################################
+# Compare martingale reactions
+# ----------------------------
+#
 # In contrast, the next controlled p-value stream illustrates a setting where
 # the jumper can react earlier than the plug-in method.
 # The stream starts with many very small p-values (strong one-sided signal),
