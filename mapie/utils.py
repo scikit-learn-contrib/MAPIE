@@ -1363,14 +1363,6 @@ def _prepare_params(params: Union[dict, None]) -> dict:
     return copy.deepcopy(params) if params else {}
 
 
-def _prepare_fit_params_and_sample_weight(
-    fit_params: Union[dict, None],
-) -> Tuple[dict, Optional[ArrayLike]]:
-    fit_params_ = _prepare_params(fit_params)
-    sample_weight = fit_params_.pop("sample_weight", None)
-    return fit_params_, sample_weight
-
-
 def _raise_error_if_previous_method_not_called(
     current_method_name: str,
     previous_method_name: str,

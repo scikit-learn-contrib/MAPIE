@@ -38,7 +38,6 @@ from mapie.utils import (
     _check_verbose,
     _compute_quantiles,
     _fit_estimator,
-    _prepare_fit_params_and_sample_weight,
     _prepare_params,
     _raise_error_if_fit_called_in_prefit_mode,
     _raise_error_if_method_already_called,
@@ -387,24 +386,6 @@ class TestCastPredictionsToNdarrayTuple:
 def test_prepare_params(params, expected):
     assert _prepare_params(params) == expected
     assert _prepare_params(params) is not params
-
-
-class TestPrepareFitParamsAndSampleWeight:
-    def test_uses_prepare_params(self):
-        with patch("mapie.utils._prepare_params") as mock_prepare_params:
-            _prepare_fit_params_and_sample_weight({"param1": 1})
-            mock_prepare_params.assert_called()
-
-    def test_with_sample_weight(self):
-        fit_params = {"sample_weight": [0.1, 0.2, 0.3]}
-        assert _prepare_fit_params_and_sample_weight(fit_params) == (
-            {},
-            [0.1, 0.2, 0.3],
-        )
-
-    def test_without_sample_weight(self):
-        params = {"param1": 1}
-        assert _prepare_fit_params_and_sample_weight(params) == (params, None)
 
 
 class TestRaiseErrorIfPreviousMethodNotCalled:
