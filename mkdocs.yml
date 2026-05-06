@@ -155,6 +155,7 @@ nav:
     - Conformalization Set: getting-started/split-cross-conformal.md
     - Choosing the Right Algorithm: getting-started/choosing-algorithm.md
     - v1 Release Notes: getting-started/v1-release-notes.md
+    - Migration Guide 0.x to 1.x: getting-started/migration-0x-to-1x.md
   - Conformal Prediction:
     - Regression Theory: theory/regression.md
     - Conformity Scores: theory/conformity-scores.md
