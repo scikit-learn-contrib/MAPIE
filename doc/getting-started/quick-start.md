@@ -15,6 +15,22 @@ This package allows you to easily estimate uncertainties in both regression and 
     ```bash
     pip install mapie
     ```
+    > **Notebook Users (Kaggle / Jupyter / Colab)**
+>
+> After installing, upgrading, or downgrading MAPIE inside notebook environments:
+>
+> ```bash
+> pip install mapie==<version>
+> ```
+>
+> restart the notebook kernel before importing MAPIE again.
+>
+> Python may continue using the already-imported module from `sys.modules`, which can lead to:
+>
+> * stale imports
+> * outdated `mapie.__version__`
+> * confusing version mismatch behavior
+
 
 === "conda"
 
