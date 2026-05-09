@@ -92,7 +92,7 @@ mapie_non_nested = CrossConformalRegressor(
 )
 mapie_non_nested.fit_conformalize(X_train, y_train)
 y_pred_non_nested, y_pis_non_nested = mapie_non_nested.predict_interval(
-    X_test, aggregate_predictions="median"
+    X_test, aggregate_point_predictions="median"
 )
 widths_non_nested = y_pis_non_nested[:, 1, 0] - y_pis_non_nested[:, 0, 0]
 coverage_non_nested = regression_coverage_score(y_test, y_pis_non_nested)[0]
@@ -120,7 +120,7 @@ mapie_nested = CrossConformalRegressor(
 )
 mapie_nested.fit_conformalize(X_train, y_train)
 y_pred_nested, y_pis_nested = mapie_nested.predict_interval(
-    X_test, aggregate_predictions="median"
+    X_test, aggregate_point_predictions="median"
 )
 widths_nested = y_pis_nested[:, 1, 0] - y_pis_nested[:, 0, 0]
 coverage_nested = regression_coverage_score(y_test, y_pis_nested)[0]

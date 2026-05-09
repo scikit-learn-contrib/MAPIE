@@ -209,7 +209,8 @@ Regression-specific
 - **v0.x**: Previously, the ``agg_function`` parameter had two usage: to aggregate predictions when setting ``ensemble=True`` in the ``predict`` method of ``MapieRegressor``, and to specify the aggregation used in ``JackknifeAfterBootstrapRegressor``.
 - **v1**:
 
-  - The ``agg_function`` parameter has been split into two distinct parameters: ``aggregate_predictions`` and ``aggregation_method``. ``aggregate_predictions`` is specific to ``CrossConformalRegressor``, and it specifies how predictions from multiple conformal regressors are aggregated when making point predictions. ``aggregation_method`` is specific to ``JackknifeAfterBootstrapRegressor``, and it specifies the aggregation technique for combining predictions across different bootstrap samples during conformalization.
+  - The ``agg_function`` parameter has been split into two distinct parameters: ``aggregate_point_predictions`` and ``aggregation_method``. ``aggregate_point_predictions`` is specific to ``CrossConformalRegressor``, and it specifies how predictions from multiple conformal regressors are aggregated when making point predictions. ``aggregation_method`` is specific to ``JackknifeAfterBootstrapRegressor``, and it specifies the aggregation technique for combining predictions across different bootstrap samples during conformalization.
+  - The ``ensemble`` parameter in ``JackknifeAfterBootstrapRegressor`` has been renamed to ``aggregate_point_predictions`` for consistency.
   - Note that for both cross conformal regression techniques, predictions points are now computed by default using mean aggregation. This is to avoid prediction points outside of prediction intervals in the default setting.
 
 ``symmetry``
