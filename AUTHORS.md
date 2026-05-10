@@ -53,5 +53,6 @@
 * Aman Vishnoi <amanvishnoi777@gmail.com>
 * Hannes Körner <HannesMK>
 * L. Elaine Dazzio <elaine.dazzio@gmail.com>
+*- Sarthak Bhide (@Tamish03) <neetasarthak26@gmail.com>
 
 To be continued ...
