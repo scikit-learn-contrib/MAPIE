@@ -92,7 +92,6 @@ notebooks = [
     "jupyterlab==4.5.0",
     "jupytext==1.18.1",
     "matplotlib==3.9.4",
-    "nbconvert==7.17.1",
     "pandas==2.3.3",
     "scikeras==0.13.0",
     "seaborn==0.13.2",
