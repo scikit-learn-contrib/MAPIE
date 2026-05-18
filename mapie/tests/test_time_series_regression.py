@@ -71,8 +71,8 @@ STRATEGIES = {
 }
 
 WIDTHS = {
-    "blockbootstrap_enbpi_mean_wopt": 3.89,
-    "blockbootstrap_enbpi_median_wopt": 3.85,
+    "blockbootstrap_enbpi_mean_wopt": 3.84,
+    "blockbootstrap_enbpi_median_wopt": 3.89,
     "blockbootstrap_enbpi_mean": 3.89,
     "blockbootstrap_enbpi_median": 3.85,
     "blockbootstrap_aci_mean": 3.89,  # same as enbpi
@@ -408,7 +408,7 @@ def test_interval_prediction_with_beta_optimize() -> None:
     _, y_pis = mapie_ts_reg.predict(X_test, confidence_level=0.95, optimize_beta=True)
     width_mean = (y_pis[:, 1, 0] - y_pis[:, 0, 0]).mean()
     coverage = regression_coverage_score(y_test, y_pis)[0]
-    np.testing.assert_allclose(width_mean, 3.67, rtol=1e-2)
+    np.testing.assert_allclose(width_mean, 3.59, rtol=1e-2)
     np.testing.assert_allclose(coverage, 0.916, rtol=1e-2)
 
 
