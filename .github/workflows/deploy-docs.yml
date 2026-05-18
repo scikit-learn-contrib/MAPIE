@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - master
+    tags:
+      - 'v*'
+      - '!v*rc*'
     paths:
       - 'doc/**'
       - 'mkdocs.yml'
@@ -16,8 +19,6 @@ on:
       - 'mkdocs.yml'
       - 'examples/**'
       - 'pyproject.toml'
-  release:
-    types: [published]
   workflow_dispatch:
 
 permissions:
@@ -69,9 +70,9 @@ jobs:
           mike deploy --push --update-aliases latest
 
       - name: Deploy stable (release)
-        if: github.event_name == 'release'
+        if: startsWith(github.ref, 'refs/tags/v') && !contains(github.ref, 'rc')
         run: |
-          VERSION=${GITHUB_REF#refs/tags/v}
+          VERSION="${GITHUB_REF_NAME#v}"
           mike deploy --push --update-aliases "$VERSION" stable
           mike set-default --push stable
 

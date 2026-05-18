@@ -12,8 +12,9 @@
 
 ## 2) Release candidate on TestPyPI
 
-- [ ] Create and push a release candidate tag: `git tag vX.Y.ZrcN && git push origin vX.Y.ZrcN` (e.g., v1.5.0rc1)
-- [ ] Check that RC tag points to the tagged commit `git log --decorate`
+- [ ] Create a release candidate tag: `git tag vX.Y.ZrcN` (e.g., v1.5.0rc1)
+- [ ] Verify tag target locally: `git show --no-patch --decorate vX.Y.ZrcN`
+- [ ] Push release candidate tag: `git push origin vX.Y.ZrcN`
 - [ ] Publish to TestPyPI to verify the build:
     * For RC tags (`vX.Y.ZrcN`), TestPyPI publish is automatic on tag push.
     * Smoke-test installation/import from TestPyPI is automatic in the workflow.
@@ -25,8 +26,9 @@
 
 ## 3) Final release on PyPI
 
-- [ ] Create and push the final release tag: `git tag vX.Y.Z && git push origin vX.Y.Z`
-- [ ] Check that final tag points to the tagged commit `git log --decorate`
+- [ ] Create the final release tag: `git tag vX.Y.Z`
+- [ ] Verify tag target locally: `git show --no-patch --decorate vX.Y.Z`
+- [ ] Push final release tag: `git push origin vX.Y.Z`
 - [ ] Monitor the PyPI publish job on GitHub Actions:
     * The workflow automatically triggers on final tag pushes (`vX.Y.Z`) (might take a few minutes to start)
     * The `pypi` environment requires manual approval (configured in repo settings)

@@ -28,28 +28,6 @@ jobs:
           name: python-package-distributions
           path: dist/
 
-      - name: Resolve package version from artifact
-        id: package-version
-        run: |
-          python3 - <<'PY'
-          import glob
-          import pathlib
-          import re
-
-          wheel = sorted(glob.glob("dist/*.whl"))
-          if not wheel:
-              raise SystemExit("No wheel found in dist/")
-          name = pathlib.Path(wheel[0]).name
-          match = re.match(r"mapie-([^-]+)-", name)
-          if match is None:
-              raise SystemExit(f"Could not parse mapie version from wheel name: {name}")
-          with open("${GITHUB_OUTPUT}", "a", encoding="utf-8") as fh:
-              fh.write(f"version={match.group(1)}\n")
-          PY
-
-    outputs:
-      version: ${{ steps.package-version.outputs.version }}
-
   publish-to-testpypi:
     name: Publish Python 🐍 distribution 📦 to TestPyPI
     needs: [build]
@@ -81,18 +59,23 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.x"
+      - name: Resolve package version from tag
+        id: package-version
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          echo "version=${VERSION}" >> "${GITHUB_OUTPUT}"
       - name: Install and import from TestPyPI
         env:
-          RESOLVED_VERSION: ${{ needs.build.outputs.version }}
+          RELEASE_VERSION: ${{ steps.package-version.outputs.version }}
         run: |
           python3 -m venv .venv-smoke
           . .venv-smoke/bin/activate
           for attempt in 1 2 3 4 5 6; do
-            if pip install --pre -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ "mapie==${RESOLVED_VERSION}"; then
+            if pip install --pre -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ "mapie==${RELEASE_VERSION}"; then
               break
             fi
             if [ "${attempt}" -eq 6 ]; then
-              echo "Failed to install mapie==${RESOLVED_VERSION} from TestPyPI after retries."
+              echo "Failed to install mapie==${RELEASE_VERSION} from TestPyPI after retries."
               exit 1
             fi
             echo "Install not available yet on TestPyPI, retrying in 20s (attempt ${attempt}/6)..."
