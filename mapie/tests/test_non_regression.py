@@ -359,10 +359,10 @@ params_test_cases_regression_cross = [
             "fit_params": {"sample_weight": sample_weight},
         },
         "predict_interval": {
-            "aggregate_predictions": "median",
+            "aggregate_point_predictions": "median",
         },
         "predict": {
-            "aggregate_predictions": "median",
+            "aggregate_point_predictions": "median",
         },
     },
     {
@@ -391,10 +391,10 @@ params_test_cases_regression_cross = [
         },
         "predict_interval": {
             "allow_infinite_bounds": True,
-            "aggregate_predictions": None,
+            "aggregate_point_predictions": None,
         },
         "predict": {
-            "aggregate_predictions": None,
+            "aggregate_point_predictions": None,
         },
     },
 ]
