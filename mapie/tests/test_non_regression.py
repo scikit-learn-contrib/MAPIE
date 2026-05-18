@@ -491,11 +491,7 @@ def test_cross_and_jackknife(params: dict) -> None:
     ) = run_pipeline_cross_or_jackknife(params)
 
     np.testing.assert_array_equal(preds_using_predict, preds)
-
-    if not minimize_interval_width:
-        # condition to remove when optimize_beta/minimize_interval_width works
-        # but keep assertion to check shapes
-        assert pred_intervals.shape == (X_test_length, 2, n_confidence_level)
+    assert pred_intervals.shape == (X_test_length, 2, n_confidence_level)
 
 
 params_test_cases_regression_split = [
