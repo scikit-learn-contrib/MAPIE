@@ -66,13 +66,13 @@ jobs:
       - name: Deploy latest (master)
         if: github.event_name == 'push' && github.ref == 'refs/heads/master'
         run: |
-          mike deploy --push --update-aliases latest
+          mike deploy --push --update-aliases --title "latest (dev)" latest
 
       - name: Deploy stable (release)
         if: github.event_name == 'release'
         run: |
           VERSION=${GITHUB_REF#refs/tags/v}
-          mike deploy --push --update-aliases "$VERSION" stable
+          mike deploy --push --update-aliases --title "${VERSION} (stable)" "$VERSION" stable
           mike set-default --push stable
 
       - name: Deploy PR preview
