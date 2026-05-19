@@ -359,10 +359,10 @@ params_test_cases_regression_cross = [
             "fit_params": {"sample_weight": sample_weight},
         },
         "predict_interval": {
-            "aggregate_predictions": "median",
+            "aggregate_point_predictions": "median",
         },
         "predict": {
-            "aggregate_predictions": "median",
+            "aggregate_point_predictions": "median",
         },
     },
     {
@@ -391,10 +391,10 @@ params_test_cases_regression_cross = [
         },
         "predict_interval": {
             "allow_infinite_bounds": True,
-            "aggregate_predictions": None,
+            "aggregate_point_predictions": None,
         },
         "predict": {
-            "aggregate_predictions": None,
+            "aggregate_point_predictions": None,
         },
     },
 ]
@@ -491,11 +491,7 @@ def test_cross_and_jackknife(params: dict) -> None:
     ) = run_pipeline_cross_or_jackknife(params)
 
     np.testing.assert_array_equal(preds_using_predict, preds)
-
-    if not minimize_interval_width:
-        # condition to remove when optimize_beta/minimize_interval_width works
-        # but keep assertion to check shapes
-        assert pred_intervals.shape == (X_test_length, 2, n_confidence_level)
+    assert pred_intervals.shape == (X_test_length, 2, n_confidence_level)
 
 
 params_test_cases_regression_split = [

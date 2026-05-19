@@ -5,6 +5,7 @@
 * Simplify internal `sample_weight` handling in quantile regression module: `sample_weight` now flows through `fit_params` instead of being passed as a separate argument through the call chain. No public API changes. (issue #753)
 * Remove `_prepare_fit_params_and_sample_weight` utility (no longer needed after regression, classification, and quantile regression refactors). (issue #753)
 * Add notebook kernel restart warning for Kaggle/Jupyter/Colab users after installation or version changes. (issue #916)
+* Fix `optimize_beta` in regression conformity scores so prediction interval width minimization actually optimizes β (was previously a no-op due to a shape-collapsing reshape); also resolves incorrect prediction interval shape when used with multiple confidence levels. (issues #588, #484)
 
 ## 1.4.0 (2026-04-30)
 

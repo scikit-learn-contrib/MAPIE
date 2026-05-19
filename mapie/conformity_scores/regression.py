@@ -1,4 +1,3 @@
-import logging
 from abc import ABCMeta, abstractmethod
 from typing import Tuple, cast
 
@@ -186,7 +185,7 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
 
         Parameters
         ----------
-        alpha_np: NDArray
+        alpha_np: NDArray of shape (n_alpha,)
             The quantiles to compute.
 
         upper_bounds: NDArray of shape (n_samples,)
@@ -197,45 +196,36 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
 
         Returns
         -------
-        NDArray of shape (n_samples,)
+        NDArray of shape (n_alpha,)
             Array of betas minimizing the differences
             `(1-alpha+beta)-quantile - beta-quantile`.
         """
-        # Using logging.warning instead of warnings.warn to avoid warnings during tests
-        logging.warning(
-            "The option to optimize beta (minimize interval width) is not working and "
-            "needs to be fixed. See more details in "
-            "https://github.com/scikit-learn-contrib/MAPIE/issues/588"
-        )
-
+        n = len(lower_bounds)
+        upper_f = upper_bounds.astype(float)
+        lower_f = lower_bounds.astype(float)
         beta_np = cast(
             NDArray[np.float64],
-            np.full(
-                shape=(len(lower_bounds), len(alpha_np)),
-                fill_value=np.nan,
-                dtype=float,
-            ),
+            np.full(shape=(len(alpha_np),), fill_value=np.nan, dtype=float),
         )
         for ind_alpha, _alpha in enumerate(alpha_np):
+            _alpha = float(_alpha)
             betas = np.linspace(
-                _alpha / (len(lower_bounds) + 1),
+                _alpha / (n + 1),
                 _alpha,
-                num=len(lower_bounds),
+                num=n,
                 endpoint=True,
             )
             one_alpha_beta = np.nanquantile(
-                upper_bounds.astype(float),
+                upper_f,
                 1 - _alpha + betas,
-                axis=1,
                 method="higher",
             )
             beta = np.nanquantile(
-                lower_bounds.astype(float),
+                lower_f,
                 betas,
-                axis=1,
                 method="lower",
             )
-            beta_np[:, ind_alpha] = betas[np.argmin(one_alpha_beta - beta, axis=0)]
+            beta_np[ind_alpha] = betas[np.argmin(one_alpha_beta - beta)]
 
         return beta_np
 
@@ -319,8 +309,8 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
         if optimize_beta:
             beta_np = self._beta_optimize(
                 alpha_np,
-                conformity_scores.reshape(1, -1),
-                conformity_scores.reshape(1, -1),
+                conformity_scores,
+                conformity_scores,
             )
         else:
             beta_np = alpha_np / 2
