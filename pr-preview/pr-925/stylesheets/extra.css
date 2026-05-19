@@ -1,0 +1,169 @@
+/* Hero section */
+.md-typeset .hero {
+  text-align: center;
+  padding: 2rem 0;
+}
+
+.md-typeset .hero img {
+  max-width: 400px;
+  margin: 1rem auto;
+}
+
+/* Badge styling */
+.md-typeset .badges {
+  text-align: center;
+  margin: 1.5rem 0;
+}
+
+.md-typeset .badges a {
+  text-decoration: none;
+}
+
+.md-typeset .badges img {
+  margin: 0.15rem;
+}
+
+/* Feature grid */
+.md-typeset .grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin: 2rem 0;
+}
+
+.md-typeset .grid .card {
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  transition: box-shadow 0.25s, transform 0.25s;
+}
+
+.md-typeset .grid .card:hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.md-typeset .grid .card h3 {
+  margin-top: 0;
+}
+
+/* Affiliations grid */
+.md-typeset .affiliations {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 2rem;
+  margin: 2rem 0;
+}
+
+.md-typeset .affiliations img {
+  height: 40px;
+  opacity: 0.8;
+  transition: opacity 0.2s;
+}
+
+.md-typeset .affiliations img:hover {
+  opacity: 1;
+}
+
+/* Announcement banner */
+.md-typeset .announcement {
+  background: linear-gradient(135deg, #7c4dff22, #ffd74022);
+  border-radius: 0.5rem;
+  padding: 1rem 1.5rem;
+  margin: 1.5rem 0;
+  border-left: 4px solid var(--md-accent-fg-color);
+}
+
+/* Table improvements */
+.md-typeset table:not([class]) {
+  font-size: 0.85rem;
+}
+
+/* Method comparison table */
+.md-typeset .comparison-table th {
+  white-space: nowrap;
+}
+
+/* Fix gallery section headings overlapping with floated thumbnails.
+   Increase container size so captions don't overflow, and use
+   inline-block to prevent float bleed. */
+.mkd-glr-thumbcontainer {
+  float: none !important;
+  display: inline-block;
+  vertical-align: top;
+  width: 190px;
+  min-height: 220px !important;
+  margin: 6px;
+  overflow: hidden;
+}
+
+.mkd-glr-thumbcontainer a.internal {
+  padding-top: 120px !important;
+}
+
+.mkd-glr-thumbcontainer img {
+  max-height: 112px;
+  max-width: 180px;
+}
+
+.mkd-glr-clear {
+  clear: both;
+  display: block;
+  width: 100%;
+}
+
+/* Keep direct entries under each top-level navigation section consistent. */
+.md-nav--primary
+  > .md-nav__list
+  > .md-nav__item
+  > .md-nav
+  > .md-nav__list
+  > .md-nav__item
+  > .md-nav__link {
+  font-weight: 700;
+}
+
+/* Keep only the logo + current page title in header (hide site name text).
+   Hide the text of the first topic rather than the topic itself, so the
+   mike/Material version selector (injected into the first .md-header__topic)
+   remains visible. */
+.md-header__title .md-header__topic:first-child > .md-ellipsis {
+  display: none;
+}
+
+/* Keep the logo visible on narrow/mobile widths. */
+.md-header__button.md-logo {
+  display: inline-flex !important;
+}
+
+/* On reduced widths, show menu first then logo. */
+@media screen and (max-width: 76.234375em) {
+  .md-header__button.md-icon[for="__drawer"] {
+    order: -2;
+  }
+
+  .md-header__button.md-logo {
+    order: -1;
+    margin-left: 0 !important;
+    display: inline-flex !important;
+    visibility: visible !important;
+  }
+
+  /* Hide the page-title text on narrow widths but keep the title
+     container visible so the version selector stays on screen. */
+  .md-header__title .md-header__ellipsis {
+    display: none;
+  }
+
+  /* Keep utility controls on the right side (settings/search/repo). */
+  .md-header__option[data-md-component="palette"] {
+    margin-left: auto;
+  }
+}
+
+/* Hide site-name text in mobile drawer title (keep only logo). */
+.md-nav--primary > .md-nav__title[for="__drawer"] {
+  font-size: 0;
+}
