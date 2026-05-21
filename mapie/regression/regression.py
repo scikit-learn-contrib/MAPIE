@@ -25,6 +25,7 @@ from mapie.utils import (
     _check_alpha_and_n_samples,
     _check_cv,
     _check_cv_not_string,
+    _check_deprecated_sample_weight_kwarg,
     _check_estimator_fit_predict,
     _check_if_param_in_allowed_values,
     _check_n_features_in,
@@ -484,7 +485,7 @@ class CrossConformalRegressor:
     def predict_interval(
         self,
         X: ArrayLike,
-        aggregate_predictions: Optional[str] = "mean",
+        aggregate_point_predictions: Optional[str] = "mean",
         minimize_interval_width: bool = False,
         allow_infinite_bounds: bool = False,
     ) -> Tuple[NDArray, NDArray]:
@@ -495,14 +496,14 @@ class CrossConformalRegressor:
         intervals will be predicted for each sample. See the return signature.
 
         By default, points are predicted using an aggregation.
-        See the `ensemble` parameter.
+        See the `aggregate_point_predictions` parameter.
 
         Parameters
         ----------
         X : ArrayLike
             Features
 
-        aggregate_predictions : Optional[str], default="mean"
+        aggregate_point_predictions : Optional[str], default="mean"
             The method to predict a point. Options:
 
             - None: a point is predicted using the regressor trained on the entire data
@@ -531,8 +532,8 @@ class CrossConformalRegressor:
             self.is_fitted_and_conformalized,
         )
 
-        ensemble = self._set_aggregate_predictions_and_return_ensemble(
-            aggregate_predictions
+        ensemble = self._set_aggregate_point_predictions_and_return_ensemble(
+            aggregate_point_predictions
         )
         predictions = self._mapie_regressor.predict(
             X,
@@ -547,20 +548,20 @@ class CrossConformalRegressor:
     def predict(
         self,
         X: ArrayLike,
-        aggregate_predictions: Optional[str] = "mean",
+        aggregate_point_predictions: Optional[str] = "mean",
     ) -> NDArray:
         """
         Predicts points.
 
         By default, points are predicted using an aggregation.
-        See the `ensemble` parameter.
+        See the `aggregate_point_predictions` parameter.
 
         Parameters
         ----------
         X : ArrayLike
             Features
 
-        aggregate_predictions : Optional[str], default="mean"
+        aggregate_point_predictions : Optional[str], default="mean"
             The method to predict a point. Options:
 
             - None: a point is predicted using the regressor trained on the entire data
@@ -580,8 +581,8 @@ class CrossConformalRegressor:
             self.is_fitted_and_conformalized,
         )
 
-        ensemble = self._set_aggregate_predictions_and_return_ensemble(
-            aggregate_predictions
+        ensemble = self._set_aggregate_point_predictions_and_return_ensemble(
+            aggregate_point_predictions
         )
         predictions = self._mapie_regressor.predict(
             X,
@@ -591,16 +592,16 @@ class CrossConformalRegressor:
         )
         return _cast_point_predictions_to_ndarray(predictions)
 
-    def _set_aggregate_predictions_and_return_ensemble(
-        self, aggregate_predictions: Optional[str]
+    def _set_aggregate_point_predictions_and_return_ensemble(
+        self, aggregate_point_predictions: Optional[str]
     ) -> bool:
-        if not aggregate_predictions:
+        if not aggregate_point_predictions:
             ensemble = False
         else:
             ensemble = True
-            self._mapie_regressor._check_agg_function(aggregate_predictions)
+            self._mapie_regressor._check_agg_function(aggregate_point_predictions)
             # A hack here, to allow choosing the aggregation function at prediction time
-            self._mapie_regressor.agg_function = aggregate_predictions
+            self._mapie_regressor.agg_function = aggregate_point_predictions
         return ensemble
 
 
@@ -789,7 +790,7 @@ class JackknifeAfterBootstrapRegressor:
     def predict_interval(
         self,
         X: ArrayLike,
-        ensemble: bool = True,
+        aggregate_point_predictions: bool = True,
         minimize_interval_width: bool = False,
         allow_infinite_bounds: bool = False,
     ) -> Tuple[NDArray, NDArray]:
@@ -800,14 +801,14 @@ class JackknifeAfterBootstrapRegressor:
         intervals will be predicted for each sample. See the return signature.
 
         By default, points are predicted using an aggregation.
-        See the `ensemble` parameter.
+        See the `aggregate_point_predictions` parameter.
 
         Parameters
         ----------
         X : ArrayLike
             Test data for prediction intervals.
 
-        ensemble : bool, default=True
+        aggregate_point_predictions : bool, default=True
             If True, a predicted point is an aggregation of the predictions of the
             regressors trained on each bootstrap samples. This aggregation depends on
             the `aggregation_method` provided during initialisation.
@@ -840,7 +841,7 @@ class JackknifeAfterBootstrapRegressor:
             alpha=self._alphas,
             optimize_beta=minimize_interval_width,
             allow_infinite_bounds=allow_infinite_bounds,
-            ensemble=ensemble,
+            ensemble=aggregate_point_predictions,
             **self._predict_params,
         )
         return _cast_predictions_to_ndarray_tuple(predictions)
@@ -848,20 +849,20 @@ class JackknifeAfterBootstrapRegressor:
     def predict(
         self,
         X: ArrayLike,
-        ensemble: bool = True,
+        aggregate_point_predictions: bool = True,
     ) -> NDArray:
         """
         Predicts points.
 
         By default, points are predicted using an aggregation.
-        See the `ensemble` parameter.
+        See the `aggregate_point_predictions` parameter.
 
         Parameters
         ----------
         X : ArrayLike
             Data features for generating point predictions.
 
-        ensemble : bool, default=True
+        aggregate_point_predictions : bool, default=True
             If True, a predicted point is an aggregation of the predictions of the
             regressors trained on each bootstrap samples. This aggregation depends on
             the `aggregation_method` provided during initialisation.
@@ -882,7 +883,7 @@ class JackknifeAfterBootstrapRegressor:
         predictions = self._mapie_regressor.predict(
             X,
             alpha=None,
-            ensemble=ensemble,
+            ensemble=aggregate_point_predictions,
             **self._predict_params,
         )
         return _cast_point_predictions_to_ndarray(predictions)
@@ -1404,6 +1405,7 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
         **kwargs: Any,
     ):
         self._fit_params = _prepare_params(kwargs.pop("fit_params", {}))
+        _check_deprecated_sample_weight_kwarg(kwargs)
 
         # Checks
         (

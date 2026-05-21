@@ -275,17 +275,6 @@ def test_no_fit_predict(MapieEstimator: BaseEstimator) -> None:
         mapie_estimator.predict(X_toy)
 
 
-@pytest.mark.parametrize("MapieEstimator", [_MapieClassifier])
-def test_default_sample_weight(MapieEstimator: BaseEstimator) -> None:
-    """Test default sample weights.
-
-    Note: _MapieRegressor no longer takes sample_weight as a direct parameter;
-    it is now passed inside fit_params.
-    """
-    mapie_estimator = MapieEstimator()
-    assert signature(mapie_estimator.fit).parameters["sample_weight"].default is None
-
-
 @pytest.mark.parametrize("MapieEstimator", MapieSimpleEstimators())
 def test_default_alpha(MapieEstimator: BaseEstimator) -> None:
     """Test default alpha."""

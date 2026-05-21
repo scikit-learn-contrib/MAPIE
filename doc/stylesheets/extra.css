@@ -125,13 +125,12 @@
   font-weight: 700;
 }
 
-/* Keep only the logo + current page title in header (hide site name text). */
-.md-header__title .md-header__topic {
+/* Keep only the logo + current page title in header (hide site name text).
+   Hide the text of the first topic rather than the topic itself, so the
+   mike/Material version selector (injected into the first .md-header__topic)
+   remains visible. */
+.md-header__title .md-header__topic:first-child > .md-ellipsis {
   display: none;
-}
-
-.md-header__title .md-header__topic[data-md-component="header-topic"] {
-  display: block;
 }
 
 /* Keep the logo visible on narrow/mobile widths. */
@@ -152,8 +151,10 @@
     visibility: visible !important;
   }
 
-  .md-header__title {
-    display: none !important;
+  /* Hide the page-title text on narrow widths but keep the title
+     container visible so the version selector stays on screen. */
+  .md-header__title .md-header__ellipsis {
+    display: none;
   }
 
   /* Keep utility controls on the right side (settings/search/repo). */

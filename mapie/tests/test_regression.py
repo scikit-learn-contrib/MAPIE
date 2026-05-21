@@ -1082,3 +1082,10 @@ def test_invalid_method(method: str) -> None:
         ValueError, match="(Invalid method.)|(Invalid conformity score.)*"
     ):
         mapie_estimator.fit(X_toy, y_toy)
+
+
+def test_sample_weight_as_top_level_kwarg_raises() -> None:
+    """Ensure sample_weight must be passed inside fit_params, not as a kwarg."""
+    mapie_reg = _MapieRegressor(cv="prefit", estimator=LinearRegression().fit(X, y))
+    with pytest.raises(TypeError, match="fit_params"):
+        mapie_reg.fit(X, y, sample_weight=np.ones(len(X)))

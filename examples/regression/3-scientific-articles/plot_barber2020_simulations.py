@@ -127,7 +127,7 @@ def PIs_vs_dimensions(
                 )
                 mapie.fit_conformalize(X_train, y_train)
                 _, y_pis = mapie.predict_interval(
-                    X_test, aggregate_predictions="median"
+                    X_test, aggregate_point_predictions="median"
                 )
                 coverage = regression_coverage_score(y_test, y_pis)[0]
                 results[strategy][dimension]["coverage"][trial] = coverage

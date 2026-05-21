@@ -19,7 +19,6 @@ from mapie.utils import (
     _check_lower_upper_bounds,
     _check_null_weight,
     _fit_estimator,
-    _prepare_fit_params_and_sample_weight,
     _prepare_params,
     _raise_error_if_fit_called_in_prefit_mode,
     _raise_error_if_method_already_called,
@@ -119,7 +118,6 @@ class ConformalizedQuantileRegressor:
             alpha=self._alpha,
         )
 
-        self._sample_weight: Optional[ArrayLike] = None
         self._predict_params: dict = {}
 
     def fit(
@@ -154,14 +152,11 @@ class ConformalizedQuantileRegressor:
         _raise_error_if_fit_called_in_prefit_mode(self._prefit)
         _raise_error_if_method_already_called("fit", self._is_fitted)
 
-        fit_params_, self._sample_weight = _prepare_fit_params_and_sample_weight(
-            fit_params
-        )
+        fit_params_ = _prepare_params(fit_params)
         self._mapie_quantile_regressor._initialize_fit_conformalize()
         self._mapie_quantile_regressor._fit_estimators(
             X=X_train,
             y=y_train,
-            sample_weight=self._sample_weight,
             **fit_params_,
         )
 
@@ -688,7 +683,6 @@ class _MapieQuantileRegressor(_MapieRegressor):
         self,
         X: ArrayLike,
         y: ArrayLike,
-        sample_weight: Optional[ArrayLike] = None,
         groups: Optional[ArrayLike] = None,
         X_calib: Optional[ArrayLike] = None,
         y_calib: Optional[ArrayLike] = None,
@@ -713,18 +707,6 @@ class _MapieQuantileRegressor(_MapieRegressor):
 
         y: ArrayLike of shape (n_samples,)
             Training labels.
-
-        sample_weight: Optional[ArrayLike] of shape (n_samples,)
-            Sample weights for fitting the out-of-fold models.
-            If `None`, then samples are equally weighted.
-            If some weights are null,
-            their corresponding observations are removed
-            before the fitting process and hence have no residuals.
-            If weights are non-uniform, residuals are still uniformly weighted.
-            Note that the sample weight defined are only for the training, not
-            for the calibration procedure.
-
-            By default `None`.
 
         groups: Optional[ArrayLike] of shape (n_samples,)
             Always ignored, exists for compatibility.
@@ -766,6 +748,8 @@ class _MapieQuantileRegressor(_MapieRegressor):
 
         **fit_params : dict
             Additional fit parameters.
+            Sample weights can be passed as
+            ``sample_weight=...`` in the keyword arguments.
 
         Returns
         -------
@@ -777,6 +761,7 @@ class _MapieQuantileRegressor(_MapieRegressor):
         if self.cv == "prefit":
             X_calib, y_calib = X, y
         else:
+            sample_weight = fit_params.pop("sample_weight", None)
             result = self._prepare_train_calib(
                 X=X,
                 y=y,
@@ -790,9 +775,8 @@ class _MapieQuantileRegressor(_MapieRegressor):
                 stratify=stratify,
             )
             X_train, y_train, X_calib, y_calib, sample_weight = result
-            self._fit_estimators(
-                X=X_train, y=y_train, sample_weight=sample_weight, **fit_params
-            )
+            fit_params["sample_weight"] = sample_weight
+            self._fit_estimators(X=X_train, y=y_train, **fit_params)
 
         self.conformalize(X_calib, y_calib)
 
@@ -843,13 +827,13 @@ class _MapieQuantileRegressor(_MapieRegressor):
         self,
         X: ArrayLike,
         y: ArrayLike,
-        sample_weight: Optional[ArrayLike] = None,
         **fit_params,
     ) -> None:
         """
         Fits the estimators with provided training data
         and stores them in self.estimators_.
         """
+        sample_weight = fit_params.pop("sample_weight", None)
         checked_estimator = self._check_estimator(self.estimator)
 
         X, y = indexable(X, y)
