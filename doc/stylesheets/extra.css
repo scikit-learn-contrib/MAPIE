@@ -125,6 +125,20 @@
   font-weight: 700;
 }
 
+/* Section nav items (e.g. gallery directories like "Regression Examples")
+   carry an extra `margin: 1.25em 0` from the Material theme, while plain
+   page-link items do not. Since the rule above bolds every second-level
+   entry so they all read as headers, that margin makes the vertical
+   spacing between them uneven. Zero it out for consistent spacing. */
+.md-nav--primary
+  > .md-nav__list
+  > .md-nav__item
+  > .md-nav
+  > .md-nav__list
+  > .md-nav__item--section {
+  margin: 0;
+}
+
 /* Keep only the logo + current page title in header (hide site name text).
    Hide the text of the first topic rather than the topic itself, so the
    mike/Material version selector (injected into the first .md-header__topic)
