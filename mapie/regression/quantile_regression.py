@@ -293,6 +293,24 @@ class ConformalizedQuantileRegressor:
         predictions, _ = estimator.predict(X, **self._predict_params)
         return predictions
 
+    @property
+    def conformity_scores(self) -> NDArray:
+        """
+        Returns the conformity scores computed by the `conformalize` method
+        on the conformalization set.
+
+        For conformalized quantile regression, three scores are stored per
+        sample: the signed residual against the lower-quantile estimator,
+        the signed residual against the upper-quantile estimator, and their
+        pointwise maximum.
+
+        Returns
+        -------
+        NDArray
+            Array of conformity scores, with shape `(3, n_samples)`.
+        """
+        return self._mapie_quantile_regressor.conformity_scores_
+
 
 class _MapieQuantileRegressor(_MapieRegressor):
     """

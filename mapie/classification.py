@@ -308,6 +308,19 @@ class SplitConformalClassifier:
         )
         return _cast_point_predictions_to_ndarray(predictions)
 
+    @property
+    def conformity_scores(self) -> NDArray:
+        """
+        Returns the conformity scores computed by the `conformalize` method
+        on the conformalization set.
+
+        Returns
+        -------
+        NDArray
+            Array of conformity scores, with shape `(n_samples,)`.
+        """
+        return self._mapie_classifier.conformity_scores_
+
 
 class CrossConformalClassifier:
     """
@@ -557,6 +570,20 @@ class CrossConformalClassifier:
             **self._predict_params,
         )
         return _cast_point_predictions_to_ndarray(predictions)
+
+    @property
+    def conformity_scores(self) -> NDArray:
+        """
+        Returns the conformity scores computed by the `fit_conformalize`
+        method, on the out-of-fold predictions produced during
+        cross-validation.
+
+        Returns
+        -------
+        NDArray
+            Array of conformity scores, with shape `(n_samples,)`.
+        """
+        return self._mapie_classifier.conformity_scores_
 
 
 class _MapieClassifier(ClassifierMixin, BaseEstimator):

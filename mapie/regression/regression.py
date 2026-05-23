@@ -304,6 +304,19 @@ class SplitConformalRegressor:
         )
         return _cast_point_predictions_to_ndarray(predictions)
 
+    @property
+    def conformity_scores(self) -> NDArray:
+        """
+        Returns the conformity scores computed by the `conformalize` method
+        on the conformalization set.
+
+        Returns
+        -------
+        NDArray
+            Array of conformity scores, with shape `(n_samples,)`.
+        """
+        return self._mapie_regressor.conformity_scores_
+
 
 class CrossConformalRegressor:
     """
@@ -604,6 +617,20 @@ class CrossConformalRegressor:
             self._mapie_regressor.agg_function = aggregate_point_predictions
         return ensemble
 
+    @property
+    def conformity_scores(self) -> NDArray:
+        """
+        Returns the conformity scores computed by the `fit_conformalize`
+        method, on the out-of-fold predictions produced during
+        cross-validation.
+
+        Returns
+        -------
+        NDArray
+            Array of conformity scores, with shape `(n_samples,)`.
+        """
+        return self._mapie_regressor.conformity_scores_
+
 
 class JackknifeAfterBootstrapRegressor:
     """
@@ -899,6 +926,20 @@ class JackknifeAfterBootstrapRegressor:
         else:
             raise ValueError("resampling must be an integer or a Subsample instance")
         return cv
+
+    @property
+    def conformity_scores(self) -> NDArray:
+        """
+        Returns the conformity scores computed by the `fit_conformalize`
+        method, on the out-of-fold predictions produced during
+        cross-validation.
+
+        Returns
+        -------
+        NDArray
+            Array of conformity scores, with shape `(n_samples,)`.
+        """
+        return self._mapie_regressor.conformity_scores_
 
 
 class _MapieRegressor(RegressorMixin, BaseEstimator):

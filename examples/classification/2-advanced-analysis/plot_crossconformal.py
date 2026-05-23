@@ -148,7 +148,7 @@ fig, axs = plt.subplots(1, len(mapies[conformity_scores[0]]), figsize=(20, 4))
 for i, (key, mapie) in enumerate(mapies[conformity_scores[0]].items()):
     quantiles = mapie._mapie_classifier.conformity_score_function_.quantiles_[89]
     axs[i].set_xlabel("Conformity scores")
-    axs[i].hist(mapie._mapie_classifier.conformity_scores_)
+    axs[i].hist(mapie.conformity_scores)
     axs[i].axvline(quantiles, ls="--", color="k")
     axs[i].set_title(f"split={key}\nquantile={quantiles:.3f}")
 plt.suptitle(

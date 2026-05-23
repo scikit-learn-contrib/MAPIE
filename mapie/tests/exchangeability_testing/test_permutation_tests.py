@@ -40,6 +40,10 @@ class DummyClassificationEstimator:
         self._mapie_classifier.conformity_scores_ = np.arange(len(y), dtype=float)
         return self
 
+    @property
+    def conformity_scores(self):
+        return self._mapie_classifier.conformity_scores_
+
 
 class DummyUnknownEstimator:
     def __init__(self):

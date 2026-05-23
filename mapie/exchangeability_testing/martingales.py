@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import warnings
 from copy import deepcopy
-from typing import Literal, Optional, Union, cast
+from typing import Literal, Optional, Union
 
 import numpy as np
 from numpy.typing import NDArray
@@ -371,20 +371,7 @@ class OnlineMartingaleTest:
             self.mapie_estimator._is_conformalized = False
         self.mapie_estimator.conformalize(X, y)  # compute scores internally
 
-        if self.task == "classification":
-            self.mapie_estimator = cast(SplitConformalClassifier, self.mapie_estimator)
-            scores = cast(
-                NDArray,
-                self.mapie_estimator._mapie_classifier.conformity_scores_,
-            )
-        else:
-            self.mapie_estimator = cast(SplitConformalRegressor, self.mapie_estimator)
-            scores = cast(
-                NDArray,
-                self.mapie_estimator._mapie_regressor.conformity_scores_,
-            )
-
-        return scores
+        return self.mapie_estimator.conformity_scores
 
     @property
     def reject_threshold(self) -> float:
