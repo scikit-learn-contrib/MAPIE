@@ -1,52 +1,86 @@
 # from functools import lru_cache, partial
-# from typing import Callable
+from __future__ import annotations
+
+from typing import Callable, Iterable, Optional, Union
 
 # import cvxpy as cp
 # import numpy as np
+from sklearn.base import RegressorMixin
+from sklearn.linear_model import LinearRegression
+
 # from scipy.optimize import linprog
 # from sklearn.metrics.pairwise import pairwise_kernels
+from mapie.conformity_scores import BaseRegressionScore
+from mapie.regression import SplitConformalRegressor
 
 # FUNCTION_DEFAULTS = {"kernel": None, "gamma": 1, "lambda": 1}
 
 
-# class CondConf:
-#     def __init__(
-#         self,
-#         score_fn: Callable,
-#         Phi_fn: Callable,
-#         quantile_fn: Callable = None,
-#         infinite_params: dict = {},
-#         seed: int = 0,
-#     ):
-#         """
-#         Constructs the CondConf object that caches relevant information for
-#         generating conditionally valid prediction sets.
+class ConditionalSplitConformalRegressor(SplitConformalRegressor):
+    def __init__(
+        self,
+        Phi_fn: Callable,
+        estimator: RegressorMixin = LinearRegression(),
+        confidence_level: Union[float, Iterable[float]] = 0.9,
+        conformity_score: Union[str, BaseRegressionScore] = "absolute",
+        prefit: bool = True,
+        n_jobs: Optional[int] = None,
+        verbose: int = 0,
+        quantile_fn: Optional[Callable] = None,
+        infinite_params: Optional[dict] = None,
+    ) -> None:
+        """
+        Split conformal regressor with conditional validity guarantees.
 
-#         We define the score function and set of conditional guarantees
-#         that we care about in this function.
+        In addition to the parameters of
+        :class:`~mapie.regression.SplitConformalRegressor`, this class accepts
+        settings for the conditional conformal procedure.
 
-#         Parameters
-#         ---------
-#         score_fn : Callable[np.ndarray, np.ndarray] -> np.ndarray
-#             Fixed (vectorized) conformity score function that takes in
-#             X and Y as inputs and returns S as output
+        Parameters
+        ----------
+        Phi_fn : Callable
+            Function mapping covariates to a finite basis used for exact
+            conditional guarantees.
 
-#         Phi_fn : Callable[np.ndarray] -> np.ndarray
-#             Function that defines finite basis set that we provide
-#             exact conditional guarantees over
+        estimator : RegressorMixin, default=LinearRegression()
+            Base regressor used to predict points.
 
-#         infinite_params : dict = {}
-#             Dictionary containing parameters for the RKHS component of the fit
-#             Valid keys are ('kernel', 'gamma', 'lambda')
-#                 'kernel' should be a valid kernel name for sklearn.metrics.pairwise_kernels
-#                 'gamma' is a hyperparameter for certain kernels
-#                 'lambda' is the regularization penalty applied to the RKHS component
-#         """
-#         self.score_fn = score_fn
-#         self.Phi_fn = Phi_fn
-#         self.quantile_fn = quantile_fn
-#         self.infinite_params = infinite_params
-#         self.rng = np.random.default_rng(seed=seed)
+        confidence_level : float or iterable of float, default=0.9
+            Desired coverage probability of the prediction intervals.
+
+        conformity_score : str or BaseRegressionScore, default="absolute"
+            Method used to compute conformity scores. See
+            :class:`~mapie.regression.SplitConformalRegressor`.
+
+        prefit : bool, default=True
+            Whether the base regressor is already fitted.
+
+        n_jobs : int, optional
+            Number of parallel jobs when applicable.
+
+        verbose : int, default=0
+            Verbosity level.
+
+        quantile_fn : Callable, optional
+            Function mapping covariates to local quantile levels. If ``None``,
+            a single global quantile is used.
+
+        infinite_params : dict, optional
+            Parameters for the RKHS component of the fit. Valid keys are
+            ``kernel``, ``gamma``, and ``lambda``.
+        """
+        super().__init__(
+            estimator=estimator,
+            confidence_level=confidence_level,
+            conformity_score=conformity_score,
+            prefit=prefit,
+            n_jobs=n_jobs,
+            verbose=verbose,
+        )
+        self.Phi_fn = Phi_fn
+        self.quantile_fn = quantile_fn
+        self.infinite_params = {} if infinite_params is None else infinite_params
+
 
 #     def setup_problem(self, x_calib: np.ndarray, y_calib: np.ndarray):
 #         """
