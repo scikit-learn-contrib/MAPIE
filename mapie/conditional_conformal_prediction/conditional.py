@@ -292,8 +292,8 @@ class ConditionalSplitConformalRegressor(SplitConformalRegressor):
                 departing_idx = np.where(active_basis)[0][np.argmax(gap_to_bounds)]
             step_size_clip = np.clip(
                 step_size,
-                a_max=quantiles[candidate_idx] - duals[candidate_idx],
-                a_min=(quantiles[candidate_idx] - 1) - duals[candidate_idx],
+                a_max=quantiles[candidate_idx, 0] - duals[candidate_idx],
+                a_min=(quantiles[candidate_idx, 0] - 1) - duals[candidate_idx],
             )
 
             duals[basis] += step_size_clip * direction
