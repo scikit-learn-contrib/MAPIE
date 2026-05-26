@@ -3,17 +3,18 @@ from __future__ import annotations
 
 from typing import Callable, Iterable, Optional, Union
 
-# import cvxpy as cp
-# import numpy as np
+import numpy as np
+from numpy.typing import ArrayLike
 from sklearn.base import RegressorMixin
 from sklearn.linear_model import LinearRegression
 
 # from scipy.optimize import linprog
-# from sklearn.metrics.pairwise import pairwise_kernels
+from sklearn.metrics.pairwise import pairwise_kernels
+
 from mapie.conformity_scores import BaseRegressionScore
 from mapie.regression import SplitConformalRegressor
 
-# FUNCTION_DEFAULTS = {"kernel": None, "gamma": 1, "lambda": 1}
+FUNCTION_DEFAULTS = {"kernel": None, "gamma": 1, "lambda": 1}
 
 
 class ConditionalSplitConformalRegressor(SplitConformalRegressor):
@@ -81,47 +82,73 @@ class ConditionalSplitConformalRegressor(SplitConformalRegressor):
         self.quantile_fn = quantile_fn
         self.infinite_params = {} if infinite_params is None else infinite_params
 
+    def conformalize(
+        self,
+        X_conformalize: ArrayLike,
+        y_conformalize: ArrayLike,
+        predict_params: Optional[dict] = None,
+    ) -> "ConditionalSplitConformalRegressor":
+        """
+        Conformalize the regressor and set up the final fitting problem
+        for the given conformalization set.
 
-#     def setup_problem(self, x_calib: np.ndarray, y_calib: np.ndarray):
-#         """
-#         setup_problem sets up the final fitting problem for a
-#         particular calibration set
+        Performs the standard split-conformal conformalization step from
+        :meth:`SplitConformalRegressor.conformalize`, then builds the
+        cvxpy problem used for the conditional procedure.
 
-#         The resulting cvxpy Problem object is stored inside the CondConf parent.
+        Parameters
+        ----------
+        X_conformalize : ArrayLike
+            Features of the conformalization set.
 
-#         Arguments
-#         ---------
-#         x_calib : np.ndarray
-#             Covariate data for the calibration set
+        y_conformalize : ArrayLike
+            Targets of the conformalization set.
 
-#         y_calib : np.ndarray
-#             Labels for the calibration set
-#         """
-#         self.x_calib = x_calib
-#         self.y_calib = y_calib
-#         phi_calib = self.Phi_fn(x_calib)
+        predict_params : Optional[dict], default=None
+            Parameters to pass to the ``predict`` method of the base
+            regressor.
 
-#         _, s, Vt = np.linalg.svd(phi_calib, full_matrices=False)
+        Returns
+        -------
+        Self
+            The conformalized ConditionalSplitConformalRegressor instance.
+        """
+        super().conformalize(
+            X_conformalize, y_conformalize, predict_params=predict_params
+        )
 
-#         # Set a tolerance to decide which singular values are nonzero
-#         tol = 1e-10
-#         r = np.sum(s > tol)
+        x_calib = np.asarray(X_conformalize)
+        y_calib = np.asarray(y_conformalize)
+        self.x_calib = x_calib
+        self.y_calib = y_calib
+        phi_calib = self.Phi_fn(x_calib)
 
-#         if r < len(s):
-#             self.Phi_fn_orig = self.Phi_fn
-#             T = Vt.T[:, :r]
-#             self.Phi_fn = lambda x: (self.Phi_fn_orig(x) @ T)
-#             phi_calib = self.Phi_fn(x_calib)
+        _, s, Vt = np.linalg.svd(phi_calib, full_matrices=False)
 
-#         self.phi_calib = phi_calib
-#         self.scores_calib = self.score_fn(x_calib, y_calib)
+        # Set a tolerance to decide which singular values are nonzero
+        tol = 1e-10
+        r = np.sum(s > tol)
 
-#         if self.quantile_fn is not None:
-#             self.quantile_calib = self.quantile_fn(x_calib).reshape(-1, 1)
+        if r < len(s):
+            self.Phi_fn_orig = self.Phi_fn
+            T = Vt.T[:, :r]
+            self.Phi_fn = lambda x: (self.Phi_fn_orig(x) @ T)
+            phi_calib = self.Phi_fn(x_calib)
 
-#         self.cvx_problem = setup_cvx_problem(
-#             self.x_calib, self.scores_calib, self.phi_calib, self.infinite_params
-#         )
+        self.phi_calib = phi_calib
+        self.scores_calib = (
+            self._mapie_regressor.conformity_scores_
+        )  # computed in super().conformalize
+
+        if self.quantile_fn is not None:
+            self.quantile_calib = self.quantile_fn(x_calib).reshape(-1, 1)
+
+        self.cvx_problem = setup_cvx_problem(
+            self.x_calib, self.scores_calib, self.phi_calib, self.infinite_params
+        )
+
+        return self
+
 
 #     @lru_cache()
 #     def _get_calibration_solution(self, quantile: float):
@@ -759,61 +786,70 @@ class ConditionalSplitConformalRegressor(SplitConformalRegressor):
 #     return weights[-1] - threshold
 
 
-# def setup_cvx_problem(x_calib, scores_calib, phi_calib, infinite_params={}):
-#     n_calib = len(scores_calib)
-#     if phi_calib is None:
-#         phi_calib = np.ones((n_calib, 1))
+def setup_cvx_problem(x_calib, scores_calib, phi_calib, infinite_params={}):
+    try:
+        import cvxpy as cp
+    except ImportError as e:
+        raise ImportError(
+            "cvxpy is required for ConditionalSplitConformalRegressor. "
+            "Install it with: pip install mapie[conditional]"
+        ) from e
 
-#     eta = cp.Variable(name="weights", shape=n_calib + 1)
+    n_calib = len(scores_calib)
+    if phi_calib is None:
+        phi_calib = np.ones((n_calib, 1))
 
-#     quantile = cp.Parameter(name="quantile")
+    eta = cp.Variable(name="weights", shape=n_calib + 1)
 
-#     scores_const = cp.Constant(scores_calib.reshape(-1, 1))
-#     scores_param = cp.Parameter(name="S_test", shape=(1, 1))
-#     scores = cp.vstack([scores_const, scores_param])
+    quantile = cp.Parameter(name="quantile")
 
-#     Phi_calibration = cp.Constant(phi_calib)
-#     Phi_test = cp.Parameter(name="Phi_test", shape=(1, phi_calib.shape[1]))
-#     Phi = cp.vstack([Phi_calibration, Phi_test])
+    scores_const = cp.Constant(scores_calib.reshape(-1, 1))
+    scores_param = cp.Parameter(name="S_test", shape=(1, 1))
+    scores = cp.vstack([scores_const, scores_param])
 
-#     kernel = infinite_params.get("kernel", FUNCTION_DEFAULTS["kernel"])
-#     gamma = infinite_params.get("gamma", FUNCTION_DEFAULTS["gamma"])
+    Phi_calibration = cp.Constant(phi_calib)
+    Phi_test = cp.Parameter(name="Phi_test", shape=(1, phi_calib.shape[1]))
+    Phi = cp.vstack([Phi_calibration, Phi_test])
 
-#     if kernel is None:  # no RKHS fitting
-#         constraints = [(quantile - 1) <= eta, quantile >= eta, eta.T @ Phi == 0]
-#         prob = cp.Problem(
-#             cp.Minimize(-1 * cp.sum(cp.multiply(eta, cp.vec(scores)))), constraints
-#         )
-#     else:  # RKHS fitting
-#         radius = cp.Parameter(name="radius", nonneg=True)
+    kernel = infinite_params.get("kernel", FUNCTION_DEFAULTS["kernel"])
+    gamma = infinite_params.get("gamma", FUNCTION_DEFAULTS["gamma"])
 
-#         _, L_11 = _get_kernel_matrix(x_calib, kernel, gamma)
+    if kernel is None:  # no RKHS fitting
+        constraints = [(quantile - 1) <= eta, quantile >= eta, eta.T @ Phi == 0]
+        prob = cp.Problem(
+            cp.Minimize(-1 * cp.sum(cp.multiply(eta, cp.vec(scores, order="F")))),
+            constraints,
+        )
+    else:  # RKHS fitting
+        radius = cp.Parameter(name="radius", nonneg=True)
 
-#         L_11_const = cp.Constant(np.hstack([L_11, np.zeros((L_11.shape[0], 1))]))
-#         L_21_22_param = cp.Parameter(name="L_21_22", shape=(1, n_calib + 1))
-#         L = cp.vstack([L_11_const, L_21_22_param])
+        _, L_11 = _get_kernel_matrix(x_calib, kernel, gamma)
 
-#         C = radius / (n_calib + 1)
+        L_11_const = cp.Constant(np.hstack([L_11, np.zeros((L_11.shape[0], 1))]))
+        L_21_22_param = cp.Parameter(name="L_21_22", shape=(1, n_calib + 1))
+        L = cp.vstack([L_11_const, L_21_22_param])
 
-#         # this is really C * (quantile - 1) and C * quantile
-#         constraints = [(quantile - 1) <= eta, quantile >= eta, eta.T @ Phi == 0]
-#         prob = cp.Problem(
-#             cp.Minimize(
-#                 0.5 * C * cp.sum_squares(L.T @ eta)
-#                 - cp.sum(cp.multiply(eta, cp.vec(scores)))
-#             ),
-#             constraints,
-#         )
-#     return prob
+        C = radius / (n_calib + 1)
+
+        # this is really C * (quantile - 1) and C * quantile
+        constraints = [(quantile - 1) <= eta, quantile >= eta, eta.T @ Phi == 0]
+        prob = cp.Problem(
+            cp.Minimize(
+                0.5 * C * cp.sum_squares(L.T @ eta)
+                - cp.sum(cp.multiply(eta, cp.vec(scores, order="F")))
+            ),
+            constraints,
+        )
+    return prob
 
 
-# def _get_kernel_matrix(x_calib, kernel, gamma):
-#     K = pairwise_kernels(X=x_calib, metric=kernel, gamma=gamma) + 1e-5 * np.eye(
-#         len(x_calib)
-#     )
+def _get_kernel_matrix(x_calib, kernel, gamma):
+    K = pairwise_kernels(X=x_calib, metric=kernel, gamma=gamma) + 1e-5 * np.eye(
+        len(x_calib)
+    )
 
-#     K_chol = np.linalg.cholesky(K)
-#     return K, K_chol
+    K_chol = np.linalg.cholesky(K)
+    return K, K_chol
 
 
 # def finish_dual_setup(
