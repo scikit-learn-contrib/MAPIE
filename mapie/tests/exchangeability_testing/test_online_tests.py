@@ -12,6 +12,10 @@ import mapie.exchangeability_testing.exchangeability as et_module
 import mapie.exchangeability_testing.martingales as omt_module
 from mapie.exchangeability_testing.martingales import OnlineMartingaleTest
 
+pytestmark = pytest.mark.filterwarnings(
+    "ignore:The provided MAPIE estimator is not fitted:UserWarning"
+)
+
 
 def test_fixed_dataset_exchangeability_validation_errors():
     """Test fixed-dataset wrapper validation on method names."""

@@ -658,6 +658,9 @@ class TestBinaryClassificationControllerGetPredictionsPerParam:
         ):
             bcc.calibrate([1, 2], [0, 1])
 
+    @pytest.mark.filterwarnings(
+        "ignore:No predict parameters were found:UserWarning"
+    )
     def test_warning_one_dim_binary_predictions(self):
         """Test warning raised when predictions are binary (0 or 1) with one-dimensional parameters"""
 
@@ -1166,6 +1169,9 @@ def test_calibrate_without_learning_sequence_raises():
         bcc.calibrate(realistic_X_calib, realistic_y_calib)
 
 
+@pytest.mark.filterwarnings(
+    "ignore:No predict parameters were found:UserWarning"
+)
 def test_calibrate_uses_sequence_when_split_fixed():
     predict_params = np.array([0.1, 0.2, 0.3])
 
