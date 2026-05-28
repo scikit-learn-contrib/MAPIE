@@ -308,6 +308,49 @@ def test_ece_scores() -> None:
     scr = expected_calibration_error(y_true, y_scores)
     assert np.round(scr, 4) == 0.5363
 
+def test_ece_classwise_basic() -> None:
+    """
+    Test that classwise ECE returns a float for valid 2D input.
+    """
+    prng_cw = RandomState(42)
+    y_true_cw = prng_cw.randint(0, 3, 100)
+    y_scores_cw = prng_cw.dirichlet(np.ones(3), size=100)
+    scr = expected_calibration_error(y_true_cw, y_scores_cw, classwise=True)
+    assert isinstance(scr, float)
+    assert 0.0 <= scr <= 1.0
+
+
+def test_ece_classwise_vs_default() -> None:
+    """
+    Test that classwise=False gives same result as default behavior.
+    """
+    scr_default = expected_calibration_error(y_true, y_score)
+    scr_explicit = expected_calibration_error(y_true, y_score, classwise=False)
+    assert scr_default == scr_explicit
+
+
+def test_ece_classwise_1d_raises_error() -> None:
+    """
+    Test that classwise=True raises ValueError for 1D input.
+    """
+    with pytest.raises(ValueError):
+        expected_calibration_error(y_true, y_score, classwise=True)
+
+
+def test_ece_classwise_perfect_calibration() -> None:
+    """
+    Test that perfectly calibrated scores give ECE close to 0
+    for classwise=True.
+    """
+    prng_cw = RandomState(42)
+    n_samples = 300
+    n_classes = 3
+    y_true_cw = np.repeat(np.arange(n_classes), n_samples // n_classes)
+    y_scores_cw = np.zeros((len(y_true_cw), n_classes))
+    for i, label in enumerate(y_true_cw):
+        y_scores_cw[i, label] = 1.0
+    scr = expected_calibration_error(y_true_cw, y_scores_cw, classwise=True)
+    assert scr < 0.05
 
 def test_top_label_ece() -> None:
     """Test that score is"""

@@ -107,21 +107,37 @@ def expected_calibration_error(
     y_scores: ArrayLike,
     num_bins: int = 50,
     split_strategy: Optional[str] = None,
+    classwise: bool = False,
 ) -> float:
     """
-    The expected calibration error, which is the difference between
-    the confidence scores and accuracy per bin [1].
+    The Expected Calibration Error (ECE), which measures the difference
+    between confidence scores and accuracy per bin.
+
+    When ``classwise=False`` (default), computes the standard
+    confidence-ECE [1]: samples are binned by their top predicted
+    probability and the weighted average of |accuracy - confidence|
+    is returned.
+
+    When ``classwise=True``, computes the classwise-ECE [2]: the ECE
+    is computed independently for each class and then averaged.
 
     [1] Naeini, Mahdi Pakdaman, Gregory Cooper, and Milos Hauskrecht.
     "Obtaining well calibrated probabilities using bayesian binning."
     Twenty-Ninth AAAI Conference on Artificial Intelligence. 2015.
+    https://doi.org/10.1609/aaai.v29i1.9602
+
+    [2] Nixon, Jeremy, et al.
+    "Measuring Calibration in Deep Learning."
+    CVPR Workshops. 2019.
+    https://arxiv.org/abs/1910.12656
 
     Parameters
     ----------
     y_true: ArrayLike of shape (n_samples,)
-        The target values for the calibrator.
+        Whether the prediction is correct (``y == y_pred``),
+        encoded as 0 or 1.
     y_scores: ArrayLike of shape (n_samples,) or (n_samples, n_classes)
-        The predictions scores.
+        The prediction scores (probabilities).
     num_bins: int
         Number of bins to make the split in the y_score. The allowed
         values are num_bins above 0.
@@ -129,16 +145,45 @@ def expected_calibration_error(
         The way of splitting the predictions into different bins.
         The allowed split strategies are "uniform", "quantile" and
         "array split".
+    classwise: bool, default=False
+        If ``False`` (default), computes the standard confidence-ECE.
+        If ``True``, computes the classwise-ECE by averaging the ECE
+        over each class independently.
+
     Returns
     -------
     float
-        The score of ECE (Expected Calibration Error).
+        The ECE score.
     """
     split_strategy = _check_split_strategy(split_strategy)
     num_bins = _check_number_bins(num_bins)
-    y_true_ = _check_binary_zero_one(y_true)
     y_scores = cast(NDArray, y_scores)
 
+    # classwise ECE
+    if classwise:
+        if np.size(y_scores.shape) != 2:
+            raise ValueError(
+                "y_scores must be 2D of shape (n_samples, n_classes) "
+                "when classwise=True."
+            )
+        y_true = cast(NDArray, y_true)
+        n_classes = y_scores.shape[1]
+        ece = float(0.0)
+        for c in range(n_classes):
+            y_true_c = np.array(
+                cast(NDArray, y_true) == c, dtype=int
+            )
+            ece += expected_calibration_error(
+                y_true_c,
+                y_scores[:, c],
+                num_bins=num_bins,
+                split_strategy=split_strategy,
+                classwise=False,
+            )
+        return ece / n_classes
+
+    # standard confidence ECE (default — original order preserved)
+    y_true_ = _check_binary_zero_one(y_true)
     _check_arrays_length(y_true_, y_scores)
     _check_array_nan(y_true_)
     _check_array_inf(y_true_)
@@ -155,9 +200,11 @@ def expected_calibration_error(
     )
 
     return float(
-        np.divide(np.sum(bin_sizes * np.abs(bin_accs - bin_confs)), np.sum(bin_sizes))
+        np.divide(
+            np.sum(bin_sizes * np.abs(bin_accs - bin_confs)),
+            np.sum(bin_sizes)
+        )
     )
-
 
 def top_label_ece(
     y_true: ArrayLike,
