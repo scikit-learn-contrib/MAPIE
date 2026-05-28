@@ -6,6 +6,7 @@
 * Remove `_prepare_fit_params_and_sample_weight` utility (no longer needed after regression, classification, and quantile regression refactors). (issue #753)
 * Add notebook kernel restart warning for Kaggle/Jupyter/Colab users after installation or version changes. (issue #916)
 * Fix `optimize_beta` in regression conformity scores so prediction interval width minimization actually optimizes β (was previously a no-op due to a shape-collapsing reshape); also resolves incorrect prediction interval shape when used with multiple confidence levels. (issues #588, #484)
+* Add `classwise` boolean flag to `expected_calibration_error()` to support classwise-ECE in addition to the existing confidence-ECE; fix misleading `y_true` docstring. (issue #277)
 * Add defensive validation: `_MapieRegressor` and `_MapieClassifier` now raise `TypeError` when `sample_weight` is passed as a top-level keyword argument instead of inside `fit_params`. Previously, top-level `sample_weight` was silently ignored. Also fix `TimeSeriesRegressor` tests that were affected by the same silent-ignore bug.
 
 ## 1.4.0 (2026-04-30)
