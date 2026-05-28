@@ -170,9 +170,7 @@ def expected_calibration_error(
         n_classes = y_scores.shape[1]
         ece = float(0.0)
         for c in range(n_classes):
-            y_true_c = np.array(
-                cast(NDArray, y_true) == c, dtype=int
-            )
+            y_true_c = np.array(cast(NDArray, y_true) == c, dtype=int)
             ece += expected_calibration_error(
                 y_true_c,
                 y_scores[:, c],
@@ -200,10 +198,7 @@ def expected_calibration_error(
     )
 
     return float(
-        np.divide(
-            np.sum(bin_sizes * np.abs(bin_accs - bin_confs)),
-            np.sum(bin_sizes)
-        )
+        np.divide(np.sum(bin_sizes * np.abs(bin_accs - bin_confs)), np.sum(bin_sizes))
     )
 
 def top_label_ece(
