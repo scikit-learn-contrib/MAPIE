@@ -89,7 +89,7 @@ docs = [
 notebooks = [
     "ipykernel==6.31.0",
     "jupyter==1.1.1",
-    "jupyterlab==4.5.0",
+    "jupyterlab==4.5.7",
     "jupytext==1.18.1",
     "matplotlib==3.9.4",
     "nbconvert==7.16.6",
