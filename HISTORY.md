@@ -2,6 +2,10 @@
 
 ## 1.x.x (2026-xx-xx)
 
+### Breaking changes
+
+- Drop support for Python 3.9 (EOL since October 2025). Minimum supported version is now Python 3.10. This was required to upgrade `pytest` to 9.0.3, which fixes a security advisory (CVE on `/tmp/pytest-of-{user}` directory handling).
+
 ## 1.4.0 (2026-04-30)
 
 ### Features

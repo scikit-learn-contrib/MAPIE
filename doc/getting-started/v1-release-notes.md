@@ -43,7 +43,7 @@ The classification and regression APIs have been thoroughly revamped (except for
 
 | Dependency | Required version |
 |---|---|
-| Python | ≥ 3.9 |
+| Python | ≥ 3.10 |
 | NumPy | ≥ 1.23 |
 | scikit-learn | ≥ 1.4 |
 
