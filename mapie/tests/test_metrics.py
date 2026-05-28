@@ -342,7 +342,6 @@ def test_ece_classwise_perfect_calibration() -> None:
     Test that perfectly calibrated scores give ECE close to 0
     for classwise=True.
     """
-    prng_cw = RandomState(42)
     n_samples = 300
     n_classes = 3
     y_true_cw = np.repeat(np.arange(n_classes), n_samples // n_classes)
