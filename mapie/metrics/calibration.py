@@ -201,6 +201,7 @@ def expected_calibration_error(
         np.divide(np.sum(bin_sizes * np.abs(bin_accs - bin_confs)), np.sum(bin_sizes))
     )
 
+
 def top_label_ece(
     y_true: ArrayLike,
     y_scores: ArrayLike,

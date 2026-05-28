@@ -308,6 +308,7 @@ def test_ece_scores() -> None:
     scr = expected_calibration_error(y_true, y_scores)
     assert np.round(scr, 4) == 0.5363
 
+
 def test_ece_classwise_basic() -> None:
     """
     Test that classwise ECE returns a float for valid 2D input.
@@ -350,6 +351,7 @@ def test_ece_classwise_perfect_calibration() -> None:
         y_scores_cw[i, label] = 1.0
     scr = expected_calibration_error(y_true_cw, y_scores_cw, classwise=True)
     assert scr < 0.05
+
 
 def test_top_label_ece() -> None:
     """Test that score is"""
