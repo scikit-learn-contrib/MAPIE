@@ -252,19 +252,19 @@ class Trainer:
             A tuple containing the predicted parameters (e.g., Center, Covariance components).
         """
         feats = self.backbone(bx)
-        preds = self.head(feats)
+        preds: Tuple[torch.Tensor, ...] = self.head(feats)
 
         if self.center_model is not None:
             with torch.no_grad():
                 center_pred = self.center_model(bx)
-                preds = list(preds)
+                preds_list = list(preds)
 
                 # Use as_tensor to avoid warnings if it's already a tensor
                 center_tensor = torch.as_tensor(
                     center_pred, dtype=self.dtype, device=self.device
                 )
-                preds[0] = center_tensor
-                preds = tuple(preds)
+                preds_list[0] = center_tensor
+                preds = tuple(preds_list)
 
         return preds
 
