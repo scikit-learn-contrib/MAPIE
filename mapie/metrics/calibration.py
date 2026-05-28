@@ -178,7 +178,7 @@ def expected_calibration_error(
                 split_strategy=split_strategy,
                 classwise=False,
             )
-        return ece / n_classes
+        return float(ece / n_classes)
 
     # standard confidence ECE (default — original order preserved)
     y_true_ = _check_binary_zero_one(y_true)

@@ -345,7 +345,7 @@ def test_ece_classwise_perfect_calibration() -> None:
     """
     n_samples = 300
     n_classes = 3
-    y_true_cw = np.repeat(np.arange(n_classes), n_samples // n_classes)
+    y_true_cw: NDArray = np.repeat(np.arange(n_classes), n_samples // n_classes)
     y_scores_cw = np.zeros((len(y_true_cw), n_classes))
     for i, label in enumerate(y_true_cw):
         y_scores_cw[i, label] = 1.0
