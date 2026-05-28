@@ -456,10 +456,10 @@ class DummyTrainer:
     def __init__(self, input_dim=1, output_dim=2):
         self.input_dim = input_dim
         self.output_dim = output_dim
-        self.fitted = False
+        self.is_fitted = False
 
     def fit(self, X, y, y_pred=None, **kwargs):
-        self.fitted = True
+        self.is_fitted = True
         return self
 
     def predict(self, X):
@@ -572,7 +572,7 @@ def test_multivariate_get_signed_conformity_scores_without_y_pred(mock_data):
     assert isinstance(scores, np.ndarray)
     assert scores.ndim == 1  # Scores should be a 1D array (the norms)
 
-    assert score_calculator.covariance_estimator_.fitted is True
+    assert score_calculator.covariance_estimator_.is_fitted is True
 
 
 def test_multivariate_get_signed_conformity_scores_with_y_pred(mock_data):
@@ -625,7 +625,7 @@ def test_multivariate_complex_trainer_get_signed_conformity_scores_with_y_pred(
         assert isinstance(scores, np.ndarray)
         assert scores.ndim == 1  # Scores should be a 1D array (the norms)
 
-        assert score_calculator.covariance_estimator_.fitted is True
+        assert score_calculator.covariance_estimator_.is_fitted is True
 
 
 def test_multivariate_get_distribution(mock_data):
@@ -672,7 +672,7 @@ def test_multivariate_complex_trainer_get_signed_conformity_scores_without_y_pre
         assert isinstance(scores, np.ndarray)
         assert scores.ndim == 1  # Scores should be a 1D array (the norms)
 
-        assert score_calculator.covariance_estimator_.fitted is True
+        assert score_calculator.covariance_estimator_.is_fitted is True
 
     for dic_params in list_fit_params:
         score_calculator = MultivariateResidualNormalisedScore()
@@ -682,7 +682,7 @@ def test_multivariate_complex_trainer_get_signed_conformity_scores_without_y_pre
         assert isinstance(scores, np.ndarray)
         assert scores.ndim == 1  # Scores should be a 1D array (the norms)
 
-        assert score_calculator.covariance_estimator_.fitted is True
+        assert score_calculator.covariance_estimator_.is_fitted is True
 
 
 def test_multivariate_dummy_get_signed_conformity_scores_without_y_pred(mock_data):
@@ -702,7 +702,7 @@ def test_multivariate_dummy_get_signed_conformity_scores_without_y_pred(mock_dat
     assert isinstance(scores, np.ndarray)
     assert scores.ndim == 1  # Scores should be a 1D array (the norms)
 
-    assert score_calculator.covariance_estimator_.fitted is True
+    assert score_calculator.covariance_estimator_.is_fitted is True
 
 
 def test_multivariate_dummy_get_signed_conformity_scores_with_y_pred(mock_data):
