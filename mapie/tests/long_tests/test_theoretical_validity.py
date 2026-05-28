@@ -125,7 +125,7 @@ def precision_logistic_classifier(scale: float, threshold: float) -> float:
     )
     TP_plus_FP = (3 - decision_threshold) / 6
 
-    return TP / TP_plus_FP
+    return float(TP / TP_plus_FP)
 
 
 def accuracy_logistic_classifier(scale: float, threshold: float) -> float:
@@ -156,7 +156,7 @@ def accuracy_logistic_classifier(scale: float, threshold: float) -> float:
     )
     FN_plus_TN = (3 + decision_threshold) / 6
     TN = FN_plus_TN - FN
-    return TP + TN
+    return float(TP + TN)
 
 
 def recall_logistic_classifier(scale: float, threshold: float) -> float:
@@ -185,7 +185,7 @@ def recall_logistic_classifier(scale: float, threshold: float) -> float:
             - np.log(1 + np.exp(-3 * scale))
         )
     )
-    return TP / (TP + FN)
+    return float(TP / (TP + FN))
 
 
 def run_one_experiment_with_random_classifier(

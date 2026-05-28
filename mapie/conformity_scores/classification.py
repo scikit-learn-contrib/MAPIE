@@ -23,7 +23,7 @@ class BaseClassificationScore(BaseConformityScore, metaclass=ABCMeta):
         Pseudo random number generator state.
 
     quantiles_: ArrayLike of shape (n_alpha)
-        The quantiles estimated from ``get_sets`` method.
+        The quantiles estimated from `get_sets` method.
     """
 
     def __init__(self) -> None:
@@ -44,7 +44,7 @@ class BaseClassificationScore(BaseConformityScore, metaclass=ABCMeta):
         classes: Optional[ArrayLike]
             Names of the classes.
 
-            By default ``None``.
+            By default `None`.
 
         random_state: Optional[Union[int, np.random.RandomState]]
             Pseudo random number generator state.
@@ -73,7 +73,7 @@ class BaseClassificationScore(BaseConformityScore, metaclass=ABCMeta):
             Observed feature values.
 
         alpha_np: NDArray of shape (n_alpha,)
-            NDArray of floats between ``0`` and ``1``, represents the
+            NDArray of floats between `0` and `1`, represents the
             uncertainty of the confidence set.
 
         y_pred_proba: NDArray
@@ -224,7 +224,8 @@ class BaseClassificationScore(BaseConformityScore, metaclass=ABCMeta):
 
         Returns
         --------
-        The output structure depend on the ``get_sets`` method.
+        result
             The prediction sets for each sample and each alpha level.
+            The output structure depends on the `get_sets` method.
         """
         return self.get_sets(X=X, alpha_np=alpha_np, **kwargs)

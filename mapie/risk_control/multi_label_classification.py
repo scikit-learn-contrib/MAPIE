@@ -43,7 +43,7 @@ class MultiLabelClassificationController:
         It can return either:
         - a list of arrays of length n_classes where each array is of shape
         (n_samples, 2) with probabilities of the negative and positive class
-        (as output by ``MultiOutputClassifier``), or
+        (as output by `MultiOutputClassifier`), or
         - an ndarray of shape (n_samples, n_classes) or (n_samples, n_classes, 2)
         containing positive probabilities, or positive and negative probabilities
         (assuming last dimension is [neg, pos]).
@@ -58,64 +58,64 @@ class MultiLabelClassificationController:
         Method to use for the prediction . If `risk` is
         "recall", the method can be either "crc" (default) or "rcps".
         If `risk` is "precision", the method used is "ltt".
-        If ``None``, the default is "crc" for recall and "ltt" for precision.
+        If `None`, the default is "crc" for recall and "ltt" for precision.
 
     target_level : Optional[Union[float, Iterable[float]]]
         The minimum performance level for the metric. Must be between 0 and 1.
         Can be a float or any iterable of floats.
-        By default ``0.9``.
+        By default `0.9`.
 
     confidence_level : Optional[float]
-        Can be a float, or ``None``. If using method="rcps" or method="ltt"
-        (precision control), then it cannot be set to ``None`` and must lie in
+        Can be a float, or `None`. If using method="rcps" or method="ltt"
+        (precision control), then it cannot be set to `None` and must lie in
         (0, 1). Between 0 and 1, the level of certainty at which we compute
-        the Upper Confidence Bound of the average risk. Higher ``confidence_level``
-        produce larger (more conservative) prediction sets. By default ``None``.
+        the Upper Confidence Bound of the average risk. Higher `confidence_level`
+        produce larger (more conservative) prediction sets. By default `None`.
 
-    rcps_bound : Optional[Union[str, ``None``]]
+    rcps_bound : Optional[Union[str, `None`]]
         Method used to compute the Upper Confidence Bound of the
         average risk. Only necessary with the RCPS method. If provided when
-        using CRC or LTT it is ignored and a warning is raised. By default ``None``.
+        using CRC or LTT it is ignored and a warning is raised. By default `None`.
     predict_params : Optional[ArrayLike]
         Array of parameters (thresholds λ) to consider for controlling the risk.
         Defaults to np.arange(0, 1, 0.01). Length is used to set
-        ``n_predict_params``.
+        `n_predict_params`.
 
 
     n_jobs: Optional[int]
         Number of jobs for parallel processing using joblib
         via the "locky" backend.
         For this moment, parallel processing is disabled.
-        If ``-1`` all CPUs are used.
-        If ``1`` is given, no parallel computing code is used at all,
+        If `-1` all CPUs are used.
+        If `1` is given, no parallel computing code is used at all,
         which is useful for debugging.
-        For n_jobs below ``-1``, ``(n_cpus + 1 + n_jobs)`` are used.
-        "None" is a marker for `unset` that will be interpreted as ``n_jobs=1``
+        For n_jobs below `-1`, `(n_cpus + 1 + n_jobs)` are used.
+        "None" is a marker for `unset` that will be interpreted as `n_jobs=1`
         (sequential execution).
 
-        By default ``None``.
+        By default `None`.
 
     random_state: Optional[Union[int, RandomState]]
         Pseudo random number generator state used for random uniform sampling
         to evaluate quantiles and prediction sets.
         Pass an int for reproducible output across multiple function calls.
 
-        By default ``1``.
+        By default `1`.
 
     verbose : int, optional
         The verbosity level, used with joblib for parallel processing.
         For the moment, parallel processing is disabled.
         The frequency of the messages increases with the verbosity level.
-        If it more than ``10``, all iterations are reported.
-        Above ``50``, the output is sent to stdout.
+        If it more than `10`, all iterations are reported.
+        Above `50`, the output is sent to stdout.
 
-        By default ``0``.
+        By default `0`.
 
     Attributes
     ----------
     valid_methods: List[str]
         List of all valid methods. Either CRC or RCPS
-    valid_bounds: List[Union[str, ``None``]]
+    valid_bounds: List[Union[str, `None`]]
         List of all valid bounds computation for RCPS only.
 
     n_predict_params: int
@@ -154,7 +154,7 @@ class MultiLabelClassificationController:
         learn then test (ltt) procedure.
         Contains n_alpha lists.
 
-     sigma_init : Optional[float]
+    sigma_init : Optional[float]
         First variance in the sigma_hat array. The default
         value is the same as in the paper implementation [1].
 
@@ -322,7 +322,7 @@ class MultiLabelClassificationController:
 
     def _check_confidence_level(self, confidence_level: Optional[float]):
         """
-        Check that confidence_level is not ``None`` when the
+        Check that confidence_level is not `None` when the
         method is RCPS or LTT and that it is between 0 and 1.
 
         Parameters
@@ -334,11 +334,11 @@ class MultiLabelClassificationController:
         Raises
         ------
         ValueError
-            If confidence_level is ``None`` and method requires it
+            If confidence_level is `None` and method requires it
             (RCPS or LTT) or if confidence_level is not in (0, 1).
 
         Warning
-            If confidence_level is not ``None`` and method is CRC
+            If confidence_level is not `None` and method is CRC
             (because it will be ignored).
         """
         if (not isinstance(confidence_level, float)) and (confidence_level is not None):
@@ -349,7 +349,7 @@ class MultiLabelClassificationController:
             if confidence_level is None:
                 raise ValueError(
                     "Invalid confidence_level. "
-                    f"confidence_level cannot be ``None`` when using method '{self.method}'."
+                    f"confidence_level cannot be `None` when using method '{self.method}'."
                 )
             elif (confidence_level <= 0) or (confidence_level >= 1):
                 raise ValueError(
@@ -358,7 +358,7 @@ class MultiLabelClassificationController:
         if (self.method == "crc") and (confidence_level is not None):
             warnings.warn(
                 "WARNING: you are using method 'crc', hence "
-                "even if confidence_level is not ``None``, it will be ignored."
+                "even if confidence_level is not `None`, it will be ignored."
             )
 
     def _check_compute_risks_first_call(self) -> bool:
@@ -379,18 +379,18 @@ class MultiLabelClassificationController:
         """
         if bound not in self.valid_bounds_:
             raise ValueError(
-                "bound must be in ['hoeffding', 'bernstein', 'wsr', ``None``]"
+                "bound must be in ['hoeffding', 'bernstein', 'wsr', `None`]"
             )
         elif (bound is not None) and (self.method == "crc"):
             warnings.warn(
                 "WARNING: you are using crc method, hence "
-                + "even if the bound is not ``None``, it won't be"
+                + "even if the bound is not `None`, it won't be"
                 + "taken into account."
             )
         elif (bound is not None) and (self.method == "ltt"):
             warnings.warn(
                 "WARNING: you are using ltt method hence "
-                + "even if bound is not ``None``, it won't be"
+                + "even if bound is not `None`, it won't be"
                 + "taken into account."
             )
 
@@ -569,7 +569,7 @@ class MultiLabelClassificationController:
     ) -> NDArray:
         """
         Prediction sets on new samples based on the target risk level.
-        Prediction sets for a given ``alpha`` are deduced from the computed
+        Prediction sets for a given `alpha` are deduced from the computed
         risks.
 
         Parameters

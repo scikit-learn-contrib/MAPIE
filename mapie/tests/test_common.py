@@ -276,13 +276,6 @@ def test_no_fit_predict(MapieEstimator: BaseEstimator) -> None:
 
 
 @pytest.mark.parametrize("MapieEstimator", MapieSimpleEstimators())
-def test_default_sample_weight(MapieEstimator: BaseEstimator) -> None:
-    """Test default sample weights."""
-    mapie_estimator = MapieEstimator()
-    assert signature(mapie_estimator.fit).parameters["sample_weight"].default is None
-
-
-@pytest.mark.parametrize("MapieEstimator", MapieSimpleEstimators())
 def test_default_alpha(MapieEstimator: BaseEstimator) -> None:
     """Test default alpha."""
     mapie_estimator = MapieEstimator()
@@ -354,7 +347,7 @@ def test_invalid_cv(MapieEstimator: BaseEstimator, cv: Any) -> None:
 @pytest.mark.parametrize("pack", MapieDefaultEstimators())
 def test_none_alpha_results(pack: Tuple[BaseEstimator, BaseEstimator]) -> None:
     """
-    Test that alpha set to ``None`` in MapieEstimator gives same predictions
+    Test that alpha set to `None` in MapieEstimator gives same predictions
     as base estimator.
     """
     MapieEstimator, DefaultEstimator = pack

@@ -23,7 +23,7 @@ def regression_mean_width_score(y_intervals: NDArray) -> NDArray:
     ----------
     y_intervals: NDArray of shape (n_samples, 2, n_confidence_level)
         Lower and upper bound of prediction intervals
-        with different confidence levels, given by the ``predict_interval`` method
+        with different confidence levels, given by the `predict_interval` method
 
     Returns
     ---------
@@ -49,7 +49,7 @@ def regression_mean_width_score(y_intervals: NDArray) -> NDArray:
 
     width = np.abs(y_intervals[:, 1, :] - y_intervals[:, 0, :])
     mean_width = width.mean(axis=0)
-    return mean_width
+    return cast(NDArray, mean_width)
 
 
 def regression_coverage_score(
@@ -59,13 +59,13 @@ def regression_coverage_score(
     """
     Effective coverage obtained by the prediction intervals.
 
-    Intervals given by the ``predict_interval`` method can be passed directly
-    to the ``y_intervals`` argument (see example below).
+    Intervals given by the `predict_interval` method can be passed directly
+    to the `y_intervals` argument (see example below).
 
     Beside this intended use, this function also works with:
 
-    - ``y_true`` of shape (n_sample,) and ``y_intervals`` of shape (n_sample, 2)
-    - ``y_true`` of shape (n_sample, n) and `y_intervals` of shape
+    - `y_true` of shape (n_sample,) and `y_intervals` of shape (n_sample, 2)
+    - `y_true` of shape (n_sample, n) and `y_intervals` of shape
       (n_sample, 2, n)
 
     The effective coverage is obtained by computing the fraction
@@ -78,7 +78,7 @@ def regression_coverage_score(
 
     y_intervals: NDArray of shape (n_samples, 2, n_confidence_level)
         Lower and upper bound of prediction intervals
-        with different confidence levels, given by the ``predict_interval`` method
+        with different confidence levels, given by the `predict_interval` method
 
     Returns
     ---------
@@ -129,7 +129,7 @@ def regression_coverage_score(
         ),
         axis=0,
     )
-    return coverages
+    return cast(NDArray, coverages)
 
 
 def regression_ssc(y_true: NDArray, y_intervals: NDArray, num_bins: int = 3) -> NDArray:
@@ -247,7 +247,7 @@ def regression_ssc_score(
     >>> print(regression_ssc_score(y_true, y_intervals, num_bins=2))
     [1.  0.5]
     """
-    return np.min(regression_ssc(y_true, y_intervals, num_bins), axis=1)
+    return cast(NDArray, np.min(regression_ssc(y_true, y_intervals, num_bins), axis=1))
 
 
 def _gaussian_kernel(x: NDArray, kernel_size: int) -> NDArray:
@@ -265,7 +265,7 @@ def _gaussian_kernel(x: NDArray, kernel_size: int) -> NDArray:
     dist = (
         -2 * np.matmul(x, x.transpose((0, 2, 1))) + norm_x + norm_x.transpose((0, 2, 1))
     )
-    return np.exp(-dist / kernel_size)
+    return cast(NDArray, np.exp(-dist / kernel_size))
 
 
 def hsic(
@@ -358,7 +358,7 @@ def hsic(
     hsic_mat /= (n_samples - 1) ** 2
     coef_hsic = np.sqrt(np.matrix.trace(hsic_mat, axis1=1, axis2=2))
 
-    return coef_hsic
+    return cast(NDArray, coef_hsic)
 
 
 def coverage_width_based(
@@ -381,16 +381,15 @@ def coverage_width_based(
 
     Parameters
     ----------
-    Coverage score : float
-        Prediction interval coverage probability (Coverage score), which is
-        the estimated fraction of true labels that lie within the prediction
-        intervals.
-    Mean Width Score : float
-        Prediction interval normalized average width (Mean Width Score),
-        calculated as the average width of the prediction intervals.
-    eta : int
+    y_true : ArrayLike of shape (n_samples,)
+        True labels.
+    y_pred_low : ArrayLike of shape (n_samples,)
+        Lower bound of the prediction intervals.
+    y_pred_up : ArrayLike of shape (n_samples,)
+        Upper bound of the prediction intervals.
+    eta : float
         A user-defined parameter that balances the contributions of
-        Mean Width Score and Coverage score in the CWC calculation.
+        mean width score and coverage score in the CWC calculation.
     confidence_level : float
         A user-defined parameter representing the designed confidence level of
         the PI.
@@ -544,5 +543,5 @@ def regression_mwi_score(
     error_above: float = np.sum((y_true - y_pred_up)[y_true > y_pred_up])
     error_below: float = np.sum((y_pred_low - y_true)[y_true < y_pred_low])
     total_error = error_above + error_below
-    mwi = (width + total_error * 2 / (1 - confidence_level)) / len(y_true)
+    mwi = float((width + total_error * 2 / (1 - confidence_level)) / len(y_true))
     return mwi

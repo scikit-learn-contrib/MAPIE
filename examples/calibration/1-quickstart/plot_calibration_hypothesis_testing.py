@@ -1,11 +1,11 @@
 """
-=========================================================
 Testing for calibration in binary classification settings
 =========================================================
-This example uses :func:`~mapie.metrics.kolmogorov_smirnov_pvalue`
+
+This example uses `kolmogorov_smirnov_pvalue`
 to test for calibration of scores output by binary classifiers.
-Other alternatives are :func:`~mapie.metrics.kuiper_pvalue` and
-:func:`~mapie.metrics.spieglehalter_pvalue`.
+Other alternatives are `kuiper_pvalue` and
+`spieglehalter_pvalue`.
 
 These statistical tests are based on the following references:
 
@@ -100,7 +100,7 @@ plt.show()
 # ------------------------------------------------------------------
 #
 # We leverage the Kolomogorov-Smirnov statistical test
-# :func:`~mapie.metrics.kolmogorov_smirnov_pvalue`. It is based
+# `kolmogorov_smirnov_pvalue`. It is based
 # on the cumulative difference between sorted scores and labels.
 # If the null hypothesis holds (i.e., the scores are well calibrated),
 # the curve of the cumulative differences share some nice properties
@@ -152,7 +152,7 @@ p_values = {
 
 
 for name, cum_diff in cum_diffs.items():
-    plt.plot(k, cum_diff, label=f"name (p-value = {p_values[name]:.5f})")
+    plt.plot(k, cum_diff, label=f"{name} (p-value = {p_values[name]:.5f})")
 plt.axhline(y=2 * sigma, color="r", linestyle="--")
 plt.axhline(y=-2 * sigma, color="r", linestyle="--")
 plt.title("Probability curves")

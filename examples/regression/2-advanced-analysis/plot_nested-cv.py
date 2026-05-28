@@ -1,12 +1,12 @@
 """
-======================================================
 Hyperparameters tuning with cross-conformal regression
 ======================================================
 
 
+
 This example compares non-nested and nested cross-validation strategies
 when using
-:class:`~mapie.regression.CrossConformalRegressor`.
+`CrossConformalRegressor`.
 
 In the regular sequential method, a cross-validation parameter search is performed
 on the entire training set. The best model is then used in MAPIE to estimate
@@ -20,9 +20,9 @@ cross-validation parameter search directly within the MAPIE estimator on each
 *out-of-fold* dataset.
 This ensures that residuals seen by MAPIE are never seen by the algorithm
 beforehand. However, this method is much heavier computationally since
-it results in ``N * P`` calculations, where *N* is the number of
+it results in `N * P` calculations, where *N* is the number of
 *out-of-fold* models and *P* the number of parameter search cross-validations,
-versus ``N + P`` for the non-nested approach.
+versus `N + P` for the non-nested approach.
 
 Here, we compare the two strategies on a toy dataset.
 
@@ -92,7 +92,7 @@ mapie_non_nested = CrossConformalRegressor(
 )
 mapie_non_nested.fit_conformalize(X_train, y_train)
 y_pred_non_nested, y_pis_non_nested = mapie_non_nested.predict_interval(
-    X_test, aggregate_predictions="median"
+    X_test, aggregate_point_predictions="median"
 )
 widths_non_nested = y_pis_non_nested[:, 1, 0] - y_pis_non_nested[:, 0, 0]
 coverage_non_nested = regression_coverage_score(y_test, y_pis_non_nested)[0]
@@ -120,7 +120,7 @@ mapie_nested = CrossConformalRegressor(
 )
 mapie_nested.fit_conformalize(X_train, y_train)
 y_pred_nested, y_pis_nested = mapie_nested.predict_interval(
-    X_test, aggregate_predictions="median"
+    X_test, aggregate_point_predictions="median"
 )
 widths_nested = y_pis_nested[:, 1, 0] - y_pis_nested[:, 0, 0]
 coverage_nested = regression_coverage_score(y_test, y_pis_nested)[0]

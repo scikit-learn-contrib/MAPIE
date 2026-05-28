@@ -64,7 +64,7 @@ class BaseConformityScore(metaclass=ABCMeta):
     @abstractmethod
     def get_conformity_scores(self, y: NDArray, y_pred: NDArray, **kwargs) -> NDArray:
         """
-        Placeholder for ``get_conformity_scores``.
+        Placeholder for `get_conformity_scores`.
         Subclasses should implement this method!
 
         Compute the sample conformity scores given the predicted and
@@ -101,25 +101,25 @@ class BaseConformityScore(metaclass=ABCMeta):
             Values from which the quantile is computed.
 
         alpha_np: NDArray of shape (n_alpha,)
-            NDArray of floats between ``0`` and ``1``, represents the
+            NDArray of floats between `0` and `1`, represents the
             uncertainty of the confidence set.
 
         axis: int
             The axis from which to compute the quantile.
 
-            By default ``0``.
+            By default `0`.
 
         reversed: bool
             Boolean specifying whether we take the upper or lower quantile,
             if False, the alpha quantile, otherwise the (1-alpha) quantile.
 
-            By default ``False``.
+            By default `False`.
 
         unbounded: bool
             Boolean specifying whether infinite prediction sets
             could be produced (when alpha_np is greater than or equal to 1.).
 
-            By default ``False``.
+            By default `False`.
 
         Returns
         -------
@@ -173,6 +173,7 @@ class BaseConformityScore(metaclass=ABCMeta):
 
         Returns:
         --------
-        The output structure depend on the subclass.
+        result
             The prediction sets for each sample and each alpha level.
+            The output structure depends on the subclass.
         """

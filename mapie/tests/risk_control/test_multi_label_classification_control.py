@@ -561,7 +561,7 @@ def test_metric_error_in_init(risk: str) -> None:
 
 def test_error_rcps_confidence_level_null() -> None:
     """Test error for RCPS method and confidence_level None"""
-    with pytest.raises(ValueError, match=r".*confidence_level cannot be ``None``*"):
+    with pytest.raises(ValueError, match=r".*confidence_level cannot be `None`*"):
         MultiLabelClassificationController(
             predict_function=toy_predict_function,
             random_state=random_state,
@@ -572,7 +572,7 @@ def test_error_rcps_confidence_level_null() -> None:
 
 def test_error_ltt_confidence_level_null() -> None:
     """Test error for LTT method and confidence_level None"""
-    with pytest.raises(ValueError, match=r".*confidence_level cannot be ``None``*"):
+    with pytest.raises(ValueError, match=r".*confidence_level cannot be `None`*"):
         MultiLabelClassificationController(
             predict_function=toy_predict_function,
             random_state=random_state,

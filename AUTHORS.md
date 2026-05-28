@@ -3,7 +3,6 @@
 ## Development Lead
 
 * Vincent Blot <vincent.blot@capgemini.com>
-* Valentin Laurent <valentin.laurent@capgemini.com>
 * Adrien Le Coz <adrien.le-coz@inria.fr>
 * Hassan Maissoro <hassan.maissoro@capgemini.com>
 * Geoffray Brelurut <geoffray.brelurut@capgemini.com>
@@ -14,6 +13,7 @@
 * Vianney Taquet <vianney.taquet@gmail.com>
 * Thibault Cordier <thibault.a.cordier@capgemini.com>
 * Louis Lacombe <louis.lacombe@capgemini.com>
+* Valentin Laurent <valentin.laurent@capgemini.com>
 
 ## Contributors
 
@@ -52,5 +52,8 @@
 * Omid Gheibi <omidgheibi@gmail.com>
 * Aman Vishnoi <amanvishnoi777@gmail.com>
 * Hannes Körner <HannesMK>
+* L. Elaine Dazzio <elaine.dazzio@gmail.com>
+*- Sarthak Bhide (@Tamish03) <neetasarthak26@gmail.com>
+* Imran Ahamed <immu4989@gmail.com>
 
 To be continued ...

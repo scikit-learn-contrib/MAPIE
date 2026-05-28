@@ -14,10 +14,10 @@ from mapie.utils import (
 )
 
 
-def classification_mean_width_score(y_pred_set: ArrayLike) -> float:
+def classification_mean_width_score(y_pred_set: ArrayLike) -> NDArray:
     """
     Mean width of prediction set output by
-    :class:`~mapie.classification._MapieClassifier`.
+    `mapie.classification._MapieClassifier`.
 
     Parameters
     ----------
@@ -48,7 +48,7 @@ def classification_mean_width_score(y_pred_set: ArrayLike) -> float:
     _check_array_inf(y_pred_set)
     width = y_pred_set.sum(axis=1)
     mean_width = width.mean(axis=0)
-    return mean_width
+    return cast(NDArray, mean_width)
 
 
 def classification_coverage_score(y_true: NDArray, y_pred_set: NDArray) -> NDArray:
@@ -58,13 +58,13 @@ def classification_coverage_score(y_true: NDArray, y_pred_set: NDArray) -> NDArr
     The effective coverage is obtained by estimating the fraction
     of true labels that lie within the prediction sets.
 
-    Prediction sets obtained by the ``predict`` method can be passed directly to the
-    ``y_pred_set`` argument (see example below).
+    Prediction sets obtained by the `predict` method can be passed directly to the
+    `y_pred_set` argument (see example below).
 
     Beside this intended use, this function also works with:
 
-    - ``y_true`` of shape (n_sample,) and ``y_pred_set`` of shape (n_sample, n_class)
-    - ``y_true`` of shape (n_sample, n) and ``y_pred_set`` of shape
+    - `y_true` of shape (n_sample,) and `y_pred_set` of shape (n_sample, n_class)
+    - `y_true` of shape (n_sample, n) and `y_pred_set` of shape
       (n_sample, n_class, n)
 
     Parameters
@@ -74,7 +74,7 @@ def classification_coverage_score(y_true: NDArray, y_pred_set: NDArray) -> NDArr
 
     y_pred_set: NDArray of shape (n_samples, n_class, n_confidence_level)
         Prediction sets with different confidence levels, given by booleans of labels
-        with the ``predict`` method.
+        with the `predict` method.
 
     Returns
     -------
@@ -119,7 +119,7 @@ def classification_coverage_score(y_true: NDArray, y_pred_set: NDArray) -> NDArr
         y_true = np.expand_dims(y_true, axis=1)
     y_true = np.expand_dims(y_true, axis=1)
     coverage = np.nanmean(np.take_along_axis(y_pred_set, y_true, axis=1), axis=0)
-    return coverage[0]
+    return cast(NDArray, coverage[0])
 
 
 def classification_ssc(
@@ -140,8 +140,7 @@ def classification_ssc(
     ----------
     y_true: NDArray of shape (n_samples,)
         True labels.
-    y_pred_set: NDArray of shape (n_samples, n_class, n_confidence_level)
-    or (n_samples, n_class)
+    y_pred_set: NDArray of shape (n_samples, n_class, n_confidence_level) or (n_samples, n_class)
         Prediction sets given by booleans of labels.
     num_bins: int or None
         Number of groups. If None, one value of coverage by possible
@@ -211,8 +210,7 @@ def classification_ssc_score(
     ----------
     y_true: NDArray of shape (n_samples,)
         True labels.
-    y_pred_set: NDArray of shape (n_samples, n_class, n_confidence_level)
-    or (n_samples, n_class)
+    y_pred_set: NDArray of shape (n_samples, n_class, n_confidence_level) or (n_samples, n_class)
         Prediction sets given by booleans of labels.
     num_bins: int or None
         Number of groups. If None, one value of coverage by possible
@@ -243,4 +241,6 @@ def classification_ssc_score(
     _check_array_nan(y_pred_set)
     _check_array_inf(y_pred_set)
 
-    return np.nanmin(classification_ssc(y_true, y_pred_set, num_bins), axis=1)
+    return cast(
+        NDArray, np.nanmin(classification_ssc(y_true, y_pred_set, num_bins), axis=1)
+    )

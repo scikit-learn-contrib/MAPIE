@@ -1,12 +1,12 @@
 """
-========================================
 Recall control for semantic segmentation
 ========================================
+
 
 This example illustrates how to control the recall of a
 semantic segmentation model using MAPIE.
 
-We use :class:`~mapie.risk_control.SemanticSegmentationController`
+We use `SemanticSegmentationController`
 to calibrate a decision threshold that statistically guarantees
 a target recall level on unseen data.
 
@@ -86,22 +86,26 @@ TEST_MASKS_DIR = data_root / "test" / "masks"
 calib_dataset = RoofSegmentationDataset(
     images_dir=CALIB_IMAGES_DIR,
     masks_dir=CALIB_MASKS_DIR,
-    transform=get_validation_transforms(),
+    transform=get_validation_transforms(
+        image_size=(256, 256)
+    ),  # reshape images to reduce memory usage
 )
-calib_loader = torch.utils.data.DataLoader(calib_dataset, batch_size=8)
+calib_loader = torch.utils.data.DataLoader(calib_dataset, batch_size=16)
 
 test_dataset = RoofSegmentationDataset(
     images_dir=TEST_IMAGES_DIR,
     masks_dir=TEST_MASKS_DIR,
-    transform=get_validation_transforms(),
+    transform=get_validation_transforms(
+        image_size=(256, 256)
+    ),  # reshape images to reduce memory usage
 )
-test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=8)
+test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=16)
 
 print(f"Calibration set size: {len(calib_dataset)}")
 print(f"Test set size: {len(test_dataset)}")
 
 ###############################################################################
-# A :class:`~mapie.risk_control.SemanticSegmentationController` is instantiated
+# A `SemanticSegmentationController` is instantiated
 # to control the recall risk (1 - recall) and automatically select a threshold
 # that meets the target recall level with high confidence.
 #
@@ -161,7 +165,7 @@ def denormalize_image(tensor_image: torch.Tensor) -> np.ndarray:
 
 # Select random test images
 NUM_EXAMPLES = 4
-np.random.seed(42)
+np.random.seed(0)
 
 # Get indices of images with masks
 indices_with_masks = []

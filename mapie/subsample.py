@@ -17,20 +17,20 @@ class Subsample(BaseCrossValidator):
     """
     Generate a sampling method, that resamples the training set with
     possible bootstraps. It can be used as cv argument in
-    :class:`~mapie.regression.JackknifeAfterBootstrapRegressor`.
+    `JackknifeAfterBootstrapRegressor`.
 
     Parameters
     ----------
     n_resamplings : int
-        Number of resamplings. By default ``30``.
+        Number of resamplings. By default `30`.
     n_samples: Union[int, float]
-        Number of samples in each resampling. By default ``None``,
+        Number of samples in each resampling. By default `None`,
         the size of the training set. If it is between 0 and 1,
         it becomes the fraction of samples
     replace: bool
-        Whether to replace samples in resamplings or not. By default ``True``.
+        Whether to replace samples in resamplings or not. By default `True`.
     random_state: Optional[Union[int, RandomState]]
-        int or RandomState instance. By default ``None``
+        int or RandomState instance. By default `None`
 
 
     Examples
@@ -110,22 +110,22 @@ class BlockBootstrap(BaseCrossValidator):  # type: ignore
     Parameters
     ----------
     n_resamplings : int
-        Number of resamplings. By default ``30``.
+        Number of resamplings. By default `30`.
     length: int
-        Length of the blocks. By default ``None``,
-        the length of the training set divided by ``n_blocks``.
+        Length of the blocks. By default `None`,
+        the length of the training set divided by `n_blocks`.
     overlapping: bool
-        Whether the blocks can overlap or not. By default ``False``.
+        Whether the blocks can overlap or not. By default `False`.
     n_blocks: int
-        Number of blocks in each resampling. By default ``None``,
-        the size of the training set divided by ``length``.
+        Number of blocks in each resampling. By default `None`,
+        the size of the training set divided by `length`.
     random_state: Optional
         int or RandomState instance.
 
     Raises
     ------
     ValueError
-        If both ``length`` and ``n_blocks`` are ``None``.
+        If both `length` and `n_blocks` are `None`.
 
     Examples
     --------
@@ -174,12 +174,11 @@ class BlockBootstrap(BaseCrossValidator):  # type: ignore
         Raises
         ------
         ValueError
-            If ``length`` is not positive or greater than the train set size.
+            If `length` is not positive or greater than the train set size.
         """
         if (self.n_blocks is not None) + (self.length is not None) != 1:
             raise ValueError(
-                "Exactly one argument between ``length`` or "
-                "``n_blocks`` has to be not None"
+                "Exactly one argument between `length` or `n_blocks` has to be not None"
             )
 
         n = len(X)

@@ -39,6 +39,7 @@ from mapie.estimator.regressor import EnsembleRegressor
 from mapie.metrics.regression import regression_coverage_score
 from mapie.regression.regression import (
     JackknifeAfterBootstrapRegressor,
+    SplitConformalRegressor,
     _MapieRegressor,
 )
 from mapie.subsample import Subsample
@@ -540,9 +541,9 @@ def test_results_with_constant_sample_weights(strategy: str) -> None:
     mapie0 = _MapieRegressor(**STRATEGIES[strategy])
     mapie1 = _MapieRegressor(**STRATEGIES[strategy])
     mapie2 = _MapieRegressor(**STRATEGIES[strategy])
-    mapie0.fit(X, y, sample_weight=None)
-    mapie1.fit(X, y, sample_weight=np.ones(shape=n_samples))
-    mapie2.fit(X, y, sample_weight=np.ones(shape=n_samples) * 5)
+    mapie0.fit(X, y)
+    mapie1.fit(X, y, fit_params={"sample_weight": np.ones(shape=n_samples)})
+    mapie2.fit(X, y, fit_params={"sample_weight": np.ones(shape=n_samples) * 5})
     y_pred0, y_pis0 = mapie0.predict(X, alpha=0.05)
     y_pred1, y_pis1 = mapie1.predict(X, alpha=0.05)
     y_pred2, y_pis2 = mapie2.predict(X, alpha=0.05)
@@ -677,7 +678,7 @@ def test_linear_regression_results(strategy: str) -> None:
 
 
 def test_results_prefit_ignore_method() -> None:
-    """Test that method is ignored when ``cv="prefit"``."""
+    """Test that method is ignored when `cv="prefit"`."""
     estimator = LinearRegression().fit(X, y)
     all_y_pis: List[NDArray] = []
     for method in METHODS:
@@ -753,7 +754,7 @@ def test_invalid_aggregate_all() -> None:
 
 def test_aggregate_with_mask_with_prefit() -> None:
     """
-    Test ``_aggregate_with_mask`` in case ``cv`` is ``"prefit"``.
+    Test `_aggregate_with_mask` in case `cv` is `"prefit"`.
     """
     mapie_reg = _MapieRegressor(LinearRegression().fit(X, y), cv="prefit")
     mapie_reg = mapie_reg.fit(X, y)
@@ -765,7 +766,7 @@ def test_aggregate_with_mask_with_prefit() -> None:
 
 
 def test_aggregate_with_mask_with_invalid_agg_function() -> None:
-    """Test ``_aggregate_with_mask`` in case ``agg_function`` is invalid."""
+    """Test `_aggregate_with_mask` in case `agg_function` is invalid."""
     ens_reg = EnsembleRegressor(
         LinearRegression(),
         "plus",
@@ -824,6 +825,27 @@ def test_pipeline_compatibility() -> None:
     mapie = _MapieRegressor(pipe)
     mapie.fit(X, y)
     mapie.predict(X)
+
+
+def test_split_conformal_pipeline_with_sample_weight() -> None:
+    """Check that SplitConformalRegressor works with Pipeline + sample_weight.
+
+    Regression test for the issue flagged in #753: using SplitConformalRegressor
+    with a Pipeline object and sample weights should not raise an error.
+    """
+    X_reg, y_reg = make_regression(n_samples=100, n_features=5, random_state=42)
+    X_train, X_conf, y_train, y_conf = train_test_split(
+        X_reg, y_reg, test_size=0.3, random_state=42
+    )
+    pipe = make_pipeline(LinearRegression())
+    sample_weight = np.ones(X_train.shape[0])
+
+    scr = SplitConformalRegressor(estimator=pipe, prefit=False)
+    scr.fit(X_train, y_train, fit_params={"sample_weight": sample_weight})
+    scr.conformalize(X_conf, y_conf)
+    y_pred, y_pis = scr.predict_interval(X_conf)
+    assert y_pred.shape == (X_conf.shape[0],)
+    assert y_pis.shape[0] == X_conf.shape[0]
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
@@ -1060,3 +1082,10 @@ def test_invalid_method(method: str) -> None:
         ValueError, match="(Invalid method.)|(Invalid conformity score.)*"
     ):
         mapie_estimator.fit(X_toy, y_toy)
+
+
+def test_sample_weight_as_top_level_kwarg_raises() -> None:
+    """Ensure sample_weight must be passed inside fit_params, not as a kwarg."""
+    mapie_reg = _MapieRegressor(cv="prefit", estimator=LinearRegression().fit(X, y))
+    with pytest.raises(TypeError, match="fit_params"):
+        mapie_reg.fit(X, y, sample_weight=np.ones(len(X)))

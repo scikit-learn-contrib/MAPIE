@@ -13,8 +13,8 @@ convert2rst:
 	gsed -i -e'/<Figure/d' $(dir)/$(file).rst
 	gsed -i -e'/Apple M1/d' $(dir)/$(file).rst
 	gsed -i -e'/.. parsed-literal::/d' $(dir)/$(file).rst
-	cp $(dir)/$(file).rst ../doc/$(file).rst
-	cp -r $(dir)/$(file)_files ../doc/
+	cp $(dir)/$(file).rst ../doc_legacy/$(file).rst
+	cp -r $(dir)/$(file)_files ../doc_legacy/
 	rm -rf $(dir)/.ipynb_checkpoints
 	rm -rf $(dir)/${file}_files
 	rm -rf $(dir)/${file}.rst

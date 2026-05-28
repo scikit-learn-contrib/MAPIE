@@ -5,6 +5,12 @@ import numpy as np
 from numpy.typing import ArrayLike, NDArray
 from scipy.stats import binom
 
+from mapie.risk_control.fwer_control import (
+    FWER_METHODS,
+    FWERFixedSequenceTesting,
+    FWERProcedure,
+    control_fwer,
+)
 from mapie.utils import _check_alpha
 
 
@@ -126,6 +132,18 @@ def get_r_hat_plus(
     return r_hat, r_hat_plus
 
 
+def _check_risk_monotonicity(arr: NDArray, tol: float = 1e-6) -> str:
+    diffs = np.diff(arr)
+
+    if np.all(diffs >= -tol):
+        return "increasing"
+
+    if np.all(diffs <= tol):
+        return "decreasing"
+
+    return "none"
+
+
 def _is_increasing_risk(r_hat_plus: NDArray) -> bool:
     """
     Internal function checking if a risk is increasing or not.
@@ -140,7 +158,7 @@ def _is_increasing_risk(r_hat_plus: NDArray) -> bool:
     bool
         True if array is increasing, False otherwise
     """
-    return r_hat_plus[0] < r_hat_plus[-1]
+    return bool(r_hat_plus[0] < r_hat_plus[-1])
 
 
 def find_best_predict_param(
@@ -206,7 +224,7 @@ def find_best_predict_param(
     if not increasing_risk:
         idx_last_zero = len(lambdas) - 1 - idx_last_zero
     best_predict_param = lambdas[idx_last_zero]
-    return best_predict_param
+    return cast(NDArray, best_predict_param)
 
 
 def ltt_procedure(
@@ -215,11 +233,12 @@ def ltt_procedure(
     delta: float,
     n_obs: NDArray,
     binary: bool = False,
+    fwer_method: Union[FWER_METHODS, FWERProcedure] = "bonferroni_holm",
 ) -> Tuple[List[List[Any]], NDArray]:
     """
     Apply the Learn-Then-Test procedure for risk control.
-    Note that we will do a multiple test for ``r_hat`` that are
-    less than level ``alpha_np``.
+    Note that we will do a multiple test for `r_hat` that are
+    less than level `alpha_np`.
     The procedure follows the instructions in [1]:
         - Calculate p-values for each lambdas discretized
         - Apply a family wise error rate algorithm, here Bonferonni correction
@@ -240,8 +259,6 @@ def ltt_procedure(
         Contains the different alphas control level.
         The empirical risk should be less than alpha with
         probability 1-delta.
-        Note: MAPIE 1.2 does not support multiple risks and multiple alphas
-        simultaneously.
         For MultiLabelClassificationController, the shape should be (1, n_alpha).
         For BinaryClassificationController, the shape should be (n_risks, 1).
 
@@ -259,6 +276,9 @@ def ltt_procedure(
     binary: bool, default=False
         Must be True if the loss associated to the risk is binary.
 
+    fwer_method : {"bonferroni", "bonferroni_holm", "fixed_sequence", "split_fixed_sequence"} or FWERProcedure instance, default="bonferroni_holm"
+        FWER control strategy.
+
     Returns
     -------
     valid_index: List[List[Any]].
@@ -268,6 +288,15 @@ def ltt_procedure(
     p_values : NDArray of shape (n_lambdas, n_alpha)
         P-values associated with each tested parameter. In the multi-risk setting,
         they correspond to the maximum over the tested risks.
+
+    Notes
+    -----
+    fwer_method="fixed_sequence" corresponds to the fixed sequence testing procedure with one start.
+    However, users can use multi-start by instantiating FWERFixedSequenceTesting with
+    any desired number of starts and passing the instance to control_fwer.
+
+    fwer_method="split_fixed_sequence" behaves identically to "fixed_sequence" at this stage.
+    The ordering must have been learned beforehand on independent data (typically by the controller).
 
     References
     ----------
@@ -283,13 +312,43 @@ def ltt_procedure(
             for r_hat_i, n_obs_i, alpha_np_i in zip(r_hat, n_obs, alpha_np)
         ]
     )
-    p_values = p_values.max(axis=0)  # take max over risks (no effect if mono risk)
-    N = len(p_values)
+    p_values = p_values.max(
+        axis=0
+    )  # to handle multiple risks, take max over risks (no effect if mono risk)
+
+    # Fixed Sequence Testing (FST) only supports a single monotonic risk.
+    # - If non-monotonic: raise error.
+    # - If decreasing: reverse order so FST tests easiest -> hardest;
+    #   store permutation to remap indices afterward.
+    order = None
+    p_values_original = p_values
+    if (fwer_method == "fixed_sequence") or (
+        isinstance(fwer_method, FWERFixedSequenceTesting)
+    ):
+        if r_hat.shape[0] > 1:
+            raise ValueError("fixed_sequence cannot be used with multiple risks.")
+
+        direction = _check_risk_monotonicity(r_hat[0])
+
+        if direction == "none":
+            raise ValueError("fixed_sequence requires a monotonic risk over lambdas.")
+
+        if direction == "decreasing":
+            order = np.arange(len(p_values))[::-1]
+            p_values = p_values[order]
+
+        # To have 100% coverage
+        if direction == "increasing":
+            pass
+
     valid_index = []
     for i in range(alpha_np.shape[1]):
-        l_index = np.nonzero(p_values[:, i] <= delta / N)[0].tolist()
+        idx = control_fwer(p_values[:, i], delta, fwer_method=fwer_method)
+        if order is not None:
+            idx = order[idx]
+        l_index = idx.tolist()
         valid_index.append(l_index)
-    return valid_index, p_values
+    return valid_index, p_values_original
 
 
 def compute_hoeffding_bentkus_p_value(
@@ -397,7 +456,7 @@ def _h1(r_hats: NDArray, alphas: NDArray) -> NDArray:
     mask = r_hats != 0
     elt1[mask] = r_hats[mask] * np.log(r_hats[mask] / alphas[mask])
     elt2 = (1 - r_hats) * np.log((1 - r_hats) / (1 - alphas))
-    return elt1 + elt2
+    return cast(NDArray, elt1 + elt2)
 
 
 def find_precision_best_predict_param(
