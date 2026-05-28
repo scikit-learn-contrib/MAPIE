@@ -1,5 +1,5 @@
-from mapie.experimental._base import BaseFitRegressionScore
-from mapie.experimental.standardized_residuals import (
+from mapie.experimental.conformity_scores import (
+    BaseFitRegressionScore,
     MultivariateResidualNormalisedScore,
 )
 

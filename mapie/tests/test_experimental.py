@@ -7,7 +7,10 @@ from mapie.experimental import (
     BaseFitRegressionScore,
     MultivariateResidualNormalisedScore,
 )
-from mapie.experimental._trainer import RobustCovarianceHead, Trainer
+from mapie.experimental.conformity_scores.bounds.utils import (
+    RobustCovarianceHead,
+    Trainer,
+)
 
 X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
 y_toy = np.array([5, 7, 9, 11, 13, 15])
