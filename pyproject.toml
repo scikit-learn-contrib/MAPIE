@@ -62,6 +62,9 @@ dev = [
     "wheel==0.45.1",
     "torch>=2.1",
 ]
+experimental = [
+    "torch>=2.1",
+]
 docs = [
     "lightgbm==4.6.0",
     "matplotlib==3.9.4",

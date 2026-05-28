@@ -1333,7 +1333,6 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
         y = np.asarray(y)
         multi_output = getattr(self.conformity_score, "multi_output", False)
         y = _check_y(y, multi_output=multi_output)
-        y = _check_y(y)
 
         # Handle sample_weight from fit_params
         sample_weight = self._fit_params.pop("sample_weight", None)

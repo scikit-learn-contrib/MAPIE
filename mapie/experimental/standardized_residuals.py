@@ -5,8 +5,8 @@ from numpy.typing import ArrayLike, NDArray
 from sklearn.utils import _safe_indexing
 from sklearn.utils.validation import check_random_state, indexable
 
-from mapie.conformity_scores.regression import BaseFitRegressionScore
-from mapie.conformity_scores.bounds.utils import Trainer
+from mapie.experimental._base import BaseFitRegressionScore
+from mapie.experimental._trainer import Trainer
 
 
 @runtime_checkable
