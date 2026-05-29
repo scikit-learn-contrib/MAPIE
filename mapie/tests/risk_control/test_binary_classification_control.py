@@ -289,6 +289,55 @@ def test_binary_classification_risk_sequence(
     np.testing.assert_array_equal(risk_sequence, expected_sequence)
 
 
+custom_risk_y_true = np.array([1, 0, 1, 0])
+custom_risk_y_pred = np.array([1, 0, 0, 1])
+
+
+@pytest.mark.parametrize(
+    "risk_occurrence",
+    [
+        lambda y_true, y_pred: 2 * (y_pred == y_true),  # integer 2
+        lambda y_true, y_pred: -1 * (y_pred == y_true).astype(int),  # negative
+        lambda y_true, y_pred: 0.5 * np.ones(len(y_true)),  # in [0, 1] but not 0/1
+        lambda y_true, y_pred: np.full(len(y_true), np.nan),  # NaN
+    ],
+)
+def test_custom_binary_risk_non_binary_occurrence_raises(risk_occurrence) -> None:
+    """A custom BinaryRisk whose occurrence is not a 0/1/bool indicator must raise."""
+    bad_risk = BinaryRisk(
+        risk_occurrence=risk_occurrence,
+        risk_condition=lambda y_true, y_pred: np.repeat(True, len(y_true)),
+        higher_is_better=True,
+    )
+    with pytest.raises(ValueError, match=r".*must be binary indicators.*"):
+        bad_risk.get_value_and_effective_sample_size(
+            custom_risk_y_true, custom_risk_y_pred
+        )
+    with pytest.raises(ValueError, match=r".*must be binary indicators.*"):
+        bad_risk.get_risk_sequence(custom_risk_y_true, custom_risk_y_pred)
+
+
+@pytest.mark.parametrize(
+    "risk_occurrence",
+    [
+        lambda y_true, y_pred: y_pred == y_true,  # boolean array
+        lambda y_true, y_pred: (y_pred == y_true).astype(int),  # 0/1 integers
+    ],
+)
+def test_custom_binary_risk_binary_occurrence_passes(risk_occurrence) -> None:
+    """A BinaryRisk with boolean or 0/1 occurrence does not raise."""
+    good_risk = BinaryRisk(
+        risk_occurrence=risk_occurrence,
+        risk_condition=lambda y_true, y_pred: np.repeat(True, len(y_true)),
+        higher_is_better=True,
+    )
+    value, n_obs = good_risk.get_value_and_effective_sample_size(
+        custom_risk_y_true, custom_risk_y_pred
+    )
+    assert 0 <= value <= 1
+    assert n_obs == len(custom_risk_y_true)
+
+
 def test_binary_classification_risk_deprecated_alias_warns() -> None:
     with pytest.warns(
         FutureWarning,

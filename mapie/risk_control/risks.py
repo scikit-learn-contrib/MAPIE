@@ -212,9 +212,39 @@ class BinaryRisk(_BaseRisk):
         y_true: NDArray,
         y_pred: NDArray,
     ) -> Tuple[NDArray, NDArray]:
-        risk_occurrences = self._risk_occurrence(y_true, y_pred).astype(int)
+        risk_occurrences = np.asarray(self._risk_occurrence(y_true, y_pred))
+        self._check_occurrences_are_binary(risk_occurrences)
         risk_conditions = self._risk_condition(y_true, y_pred)
-        return risk_occurrences, risk_conditions
+        return risk_occurrences.astype(int), risk_conditions
+
+    @staticmethod
+    def _check_occurrences_are_binary(occurrences: NDArray) -> None:
+        """
+        Check that the per-sample occurrences are binary indicators.
+
+        A ``BinaryRisk`` is controlled with the binary Hoeffding-Bentkus
+        p-values, which require the per-sample risk values to be binary
+        indicators: booleans, or numeric values strictly equal to ``0`` or
+        ``1``. The predefined risks satisfy this by construction, but a custom
+        ``risk_occurrence`` returning anything else (e.g. ``0.5`` or ``2``)
+        would break the guarantee.
+
+        Raises
+        ------
+        ValueError
+            If any occurrence value is neither a boolean nor equal to 0 or 1.
+        """
+        if occurrences.dtype == bool:
+            return
+        is_binary = np.isin(occurrences, [0, 1])
+        if not is_binary.all():
+            invalid_values = np.unique(occurrences[~is_binary])
+            raise ValueError(
+                "The per-sample values returned by `risk_occurrence` must be "
+                "binary indicators (booleans, or values equal to 0 or 1), but the "
+                f"following invalid values were found: {invalid_values}. Make sure "
+                "`risk_occurrence` returns a boolean array."
+            )
 
 
 class BinaryClassificationRisk(BinaryRisk):
