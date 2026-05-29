@@ -1,20 +1,20 @@
 from typing import Any
-
 import numpy as np
 import pytest
-from numpy.typing import ArrayLike, NDArray
 from sklearn.linear_model import LinearRegression
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import PolynomialFeatures
 
+from numpy.typing import ArrayLike, NDArray
 from mapie.conformity_scores import (
     AbsoluteConformityScore,
     BaseRegressionScore,
     GammaConformityScore,
     ResidualNormalisedScore,
 )
-from mapie.conformity_scores.utils import check_regression_conformity_score
 from mapie.regression.regression import _MapieRegressor
+from mapie.conformity_scores.utils import check_regression_conformity_score
+
 
 X_toy = np.array([0, 1, 2, 3, 4, 5]).reshape(-1, 1)
 y_toy = np.array([5, 7, 9, 11, 13, 15])
