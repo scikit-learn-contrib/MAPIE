@@ -309,6 +309,11 @@ class ConformalizedQuantileRegressor:
         NDArray
             Array of conformity scores, with shape `(3, n_samples)`.
         """
+        _raise_error_if_previous_method_not_called(
+            "conformity_scores",
+            "conformalize",
+            self._is_conformalized,
+        )
         return self._mapie_quantile_regressor.conformity_scores_
 
 

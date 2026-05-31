@@ -508,4 +508,5 @@ class TimeSeriesRegressor(_MapieRegressor):
         NDArray
             Array of conformity scores, with shape `(n_samples,)`.
         """
+        check_is_fitted(self)
         return self.conformity_scores_

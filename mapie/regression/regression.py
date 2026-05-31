@@ -315,6 +315,11 @@ class SplitConformalRegressor:
         NDArray
             Array of conformity scores, with shape `(n_samples,)`.
         """
+        _raise_error_if_previous_method_not_called(
+            "conformity_scores",
+            "conformalize",
+            self._is_conformalized,
+        )
         return self._mapie_regressor.conformity_scores_
 
 
@@ -629,6 +634,11 @@ class CrossConformalRegressor:
         NDArray
             Array of conformity scores, with shape `(n_samples,)`.
         """
+        _raise_error_if_previous_method_not_called(
+            "conformity_scores",
+            "fit_conformalize",
+            self.is_fitted_and_conformalized,
+        )
         return self._mapie_regressor.conformity_scores_
 
 
@@ -939,6 +949,11 @@ class JackknifeAfterBootstrapRegressor:
         NDArray
             Array of conformity scores, with shape `(n_samples,)`.
         """
+        _raise_error_if_previous_method_not_called(
+            "conformity_scores",
+            "fit_conformalize",
+            self.is_fitted_and_conformalized,
+        )
         return self._mapie_regressor.conformity_scores_
 
 

@@ -128,3 +128,52 @@ class TestConformityScoresProperty:
 
         assert isinstance(estimator.conformity_scores, np.ndarray)
         assert estimator.conformity_scores is estimator.conformity_scores_
+
+
+class TestConformityScoresPropertyRaisesBeforeComputation:
+    def test_split_conformal_classifier(self):
+        estimator = SplitConformalClassifier(
+            estimator=LogisticRegression(), prefit=False
+        )
+        with pytest.raises(ValueError):
+            estimator.conformity_scores
+
+    def test_cross_conformal_classifier(self):
+        estimator = CrossConformalClassifier(estimator=LogisticRegression(), cv=5)
+        with pytest.raises(ValueError):
+            estimator.conformity_scores
+
+    def test_split_conformal_regressor(self):
+        estimator = SplitConformalRegressor(estimator=LinearRegression(), prefit=False)
+        with pytest.raises(ValueError):
+            estimator.conformity_scores
+
+    def test_cross_conformal_regressor(self):
+        estimator = CrossConformalRegressor(estimator=LinearRegression(), cv=5)
+        with pytest.raises(ValueError):
+            estimator.conformity_scores
+
+    def test_jackknife_after_bootstrap_regressor(self):
+        estimator = JackknifeAfterBootstrapRegressor(
+            estimator=LinearRegression(), resampling=10
+        )
+        with pytest.raises(ValueError):
+            estimator.conformity_scores
+
+    def test_conformalized_quantile_regressor(self):
+        estimator = ConformalizedQuantileRegressor(
+            estimator=QuantileRegressor(solver="highs"),
+            confidence_level=0.9,
+            prefit=False,
+        )
+        with pytest.raises(ValueError):
+            estimator.conformity_scores
+
+    def test_time_series_regressor(self):
+        estimator = TimeSeriesRegressor(
+            estimator=LinearRegression(),
+            method="enbpi",
+            cv=BlockBootstrap(n_resamplings=10, length=20, random_state=RANDOM_STATE),
+        )
+        with pytest.raises(ValueError):
+            estimator.conformity_scores
