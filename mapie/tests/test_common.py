@@ -217,6 +217,21 @@ class TestWrongMethodsOrderRaisesErrorForCrossTechniques:
                 technique.fit_conformalize(X_conformalize, y_conformalize)
 
 
+def test_cross_conformal_regressor_rejects_subsample():
+    """Test that CrossConformalRegressor raises an error when cv=Subsample().
+
+    Users should use JackknifeAfterBootstrapRegressor for bootstrap-based
+    conformal prediction.  See https://github.com/scikit-learn-contrib/MAPIE/issues/924
+    """
+    from mapie.subsample import Subsample
+
+    with pytest.raises(
+        ValueError,
+        match=r".*Subsample.*JackknifeAfterBootstrapRegressor.*",
+    ):
+        CrossConformalRegressor(cv=Subsample())
+
+
 X_toy = np.arange(18).reshape(-1, 1)
 y_toy = np.array([0, 0, 1, 0, 1, 2, 1, 2, 2, 0, 0, 1, 0, 1, 2, 1, 2, 2])
 

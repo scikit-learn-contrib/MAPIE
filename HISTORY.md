@@ -9,6 +9,7 @@
 * Fix `optimize_beta` in regression conformity scores so prediction interval width minimization actually optimizes β (was previously a no-op due to a shape-collapsing reshape); also resolves incorrect prediction interval shape when used with multiple confidence levels. (issues #588, #484)
 * Add defensive validation: `_MapieRegressor` and `_MapieClassifier` now raise `TypeError` when `sample_weight` is passed as a top-level keyword argument instead of inside `fit_params`. Previously, top-level `sample_weight` was silently ignored. Also fix `TimeSeriesRegressor` tests that were affected by the same silent-ignore bug.
 * Add `conformity_scores` attribute to all Mapie objects, exposing conformity scores through a public property. (issue #921)
+* Add validation to reject `Subsample` as `cv` in `CrossConformalRegressor`, directing users to `JackknifeAfterBootstrapRegressor` instead. (issue #924)
 * Add `reset()` method on `CrossConformalRegressor` and allow refitting via `fit_conformalize` (now emits a `UserWarning` and discards prior conformity scores instead of raising). Same pattern can be propagated to other conformal classes in follow-up PRs. (issue #710)
 
 ## 1.4.0 (2026-04-30)
