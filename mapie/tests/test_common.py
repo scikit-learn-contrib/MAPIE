@@ -1,3 +1,4 @@
+import warnings
 from inspect import signature
 from typing import Any, List, Tuple
 
@@ -204,8 +205,16 @@ class TestWrongMethodsOrderRaisesErrorForCrossTechniques:
 
         technique.fit_conformalize(X_conformalize, y_conformalize)
 
-        with pytest.raises(ValueError, match=r"fit_conformalize method already called"):
-            technique.fit_conformalize(X_conformalize, y_conformalize)
+        if cross_technique is CrossConformalRegressor:
+            with pytest.warns(
+                UserWarning, match=r"fit_conformalize was already called"
+            ):
+                technique.fit_conformalize(X_conformalize, y_conformalize)
+        else:
+            with pytest.raises(
+                ValueError, match=r"fit_conformalize method already called"
+            ):
+                technique.fit_conformalize(X_conformalize, y_conformalize)
 
 
 X_toy = np.arange(18).reshape(-1, 1)
@@ -358,3 +367,48 @@ def test_none_alpha_results(pack: Tuple[BaseEstimator, BaseEstimator]) -> None:
     mapie_estimator.fit(X_toy, y_toy)
     y_pred = mapie_estimator.predict(X_toy)
     np.testing.assert_allclose(y_pred_expected, y_pred)
+
+
+class TestCrossConformalRegressorReset:
+    def test_reset_clears_state(self, dataset_regression) -> None:
+        _, X_conformalize, _, _, y_conformalize, _ = dataset_regression
+        technique = CrossConformalRegressor(estimator=DummyRegressor())
+        technique.fit_conformalize(X_conformalize, y_conformalize)
+        assert technique.is_fitted_and_conformalized
+
+        returned = technique.reset()
+        assert returned is technique
+        assert not technique.is_fitted_and_conformalized
+        assert technique._predict_params == {}
+
+    def test_explicit_reset_then_refit_does_not_warn(self, dataset_regression) -> None:
+        _, X_conformalize, _, _, y_conformalize, _ = dataset_regression
+        technique = CrossConformalRegressor(estimator=DummyRegressor())
+        technique.fit_conformalize(X_conformalize, y_conformalize)
+        technique.reset()
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", UserWarning)
+            technique.fit_conformalize(X_conformalize, y_conformalize)
+        assert technique.is_fitted_and_conformalized
+
+    def test_refit_produces_calibration_from_second_dataset(
+        self, dataset_regression
+    ) -> None:
+        _, X_conformalize, X_test, _, y_conformalize, _ = dataset_regression
+        scale_a, scale_b = 0.5, 50.0
+
+        refit_technique = CrossConformalRegressor(
+            estimator=DummyRegressor(), random_state=RANDOM_STATE
+        )
+        refit_technique.fit_conformalize(X_conformalize, y_conformalize * scale_a)
+        with pytest.warns(UserWarning):
+            refit_technique.fit_conformalize(X_conformalize, y_conformalize * scale_b)
+        _, intervals_refit = refit_technique.predict_interval(X_test)
+
+        reference_technique = CrossConformalRegressor(
+            estimator=DummyRegressor(), random_state=RANDOM_STATE
+        )
+        reference_technique.fit_conformalize(X_conformalize, y_conformalize * scale_b)
+        _, intervals_reference = reference_technique.predict_interval(X_test)
+
+        np.testing.assert_allclose(intervals_refit, intervals_reference)

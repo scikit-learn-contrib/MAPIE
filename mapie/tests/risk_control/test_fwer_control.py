@@ -137,6 +137,9 @@ def test_fixed_sequence_multistart_correct_parsing():
     assert np.array_equal(rejected, np.array([0, 1, 2, 4, 8, 9, 10, 11]))
 
 
+@pytest.mark.filterwarnings(
+    "ignore:n_starts is greater than the number of tests:UserWarning"
+)
 def test_fixed_sequence_starts_clipped():
     fwer_procedure = FWERFixedSequenceTesting(n_starts=10)
     rejected = fwer_procedure.run(np.array([0.0, 0.0]), delta=0.1)

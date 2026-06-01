@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import warnings
 from typing import Any, Iterable, Optional, Tuple, Union, cast
 
 import numpy as np
@@ -445,6 +446,20 @@ class CrossConformalRegressor:
 
         self._predict_params: dict = {}
 
+    def reset(self) -> CrossConformalRegressor:
+        """
+        Discard previously computed conformity scores so that
+        `fit_conformalize` can be called again with new data.
+
+        Returns
+        -------
+        Self
+            This CrossConformalRegressor instance, reset to its pre-fit state.
+        """
+        self.is_fitted_and_conformalized = False
+        self._predict_params = {}
+        return self
+
     def fit_conformalize(
         self,
         X: ArrayLike,
@@ -457,6 +472,10 @@ class CrossConformalRegressor:
         Estimates the uncertainty of the base regressor in a cross-validation style:
         fits the base regressor on different folds of the dataset
         and computes conformity scores on the corresponding out-of-fold data.
+
+        If called on an instance that has already been fitted, a `UserWarning` is
+        emitted and the previously computed conformity scores are discarded before
+        the new fit. Call `reset()` explicitly to suppress the warning.
 
         Parameters
         ----------
@@ -482,10 +501,16 @@ class CrossConformalRegressor:
         Self
             This CrossConformalRegressor instance, fitted and conformalized.
         """
-        _raise_error_if_method_already_called(
-            "fit_conformalize",
-            self.is_fitted_and_conformalized,
-        )
+        if self.is_fitted_and_conformalized:
+            warnings.warn(
+                "CrossConformalRegressor.fit_conformalize was already called; "
+                "conformity scores from the previous fit will be discarded. "
+                "Call .reset() explicitly before fit_conformalize to suppress "
+                "this warning.",
+                UserWarning,
+                stacklevel=2,
+            )
+            self.reset()
 
         fit_params_ = _prepare_params(fit_params)
         self._predict_params = _prepare_params(predict_params)

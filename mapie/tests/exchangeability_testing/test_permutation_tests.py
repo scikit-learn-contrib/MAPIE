@@ -21,6 +21,15 @@ from mapie.regression import (
     SplitConformalRegressor,
 )
 
+pytestmark = [
+    pytest.mark.filterwarnings(
+        "ignore:The provided MAPIE estimator is not fitted:UserWarning"
+    ),
+    pytest.mark.filterwarnings(
+        "ignore:Exchangeability test rejected the null hypothesis:UserWarning"
+    ),
+]
+
 
 class DummyMapieClassifier:
     def __init__(self):
