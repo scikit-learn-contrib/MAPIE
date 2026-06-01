@@ -129,7 +129,7 @@ def expected_calibration_error(
     [2] Nixon, Jeremy, et al.
     "Measuring Calibration in Deep Learning."
     CVPR Workshops. 2019.
-    https://arxiv.org/abs/1910.12656
+    https://arxiv.org/abs/1904.01685
 
     Parameters
     ----------
