@@ -134,8 +134,11 @@ def expected_calibration_error(
     Parameters
     ----------
     y_true: ArrayLike of shape (n_samples,)
-        Whether the prediction is correct (``y == y_pred``),
-        encoded as 0 or 1.
+    When ``classwise=False``, a binary indicator of whether the
+    prediction is correct (``y == y_pred``), encoded as 0 or 1.
+
+    When ``classwise=True``, the true class labels encoded as
+    integers in ``[0, n_classes - 1]``.
     y_scores: ArrayLike of shape (n_samples,) or (n_samples, n_classes)
         The prediction scores (probabilities).
     num_bins: int
