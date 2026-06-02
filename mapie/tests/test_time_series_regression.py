@@ -18,6 +18,10 @@ from mapie.metrics.regression import regression_coverage_score
 from mapie.regression import TimeSeriesRegressor
 from mapie.subsample import BlockBootstrap
 
+pytestmark = pytest.mark.filterwarnings(
+    r"ignore:\s*This function behavior has been changed:UserWarning"
+)
+
 random_state = 1
 X_toy = np.array(range(5)).reshape(-1, 1)
 y_toy = (5.0 + 2.0 * X_toy**1.1).flatten()

@@ -496,3 +496,17 @@ class TimeSeriesRegressor(_MapieRegressor):
                 _transform_confidence_level_to_alpha_list(confidence_level)
             )
         return alpha
+
+    @property
+    def conformity_scores(self) -> NDArray:
+        """
+        Returns the conformity scores computed by the `fit` method on the
+        out-of-resample predictions of the bootstrap ensemble.
+
+        Returns
+        -------
+        NDArray
+            Array of conformity scores, with shape `(n_samples,)`.
+        """
+        check_is_fitted(self)
+        return self.conformity_scores_

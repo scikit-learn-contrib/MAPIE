@@ -1,7 +1,7 @@
 import warnings
 from abc import ABC, abstractmethod
 from copy import deepcopy
-from typing import Any, Literal, Optional, Union, cast
+from typing import Any, Literal, Optional, Union
 
 import numpy as np
 from numpy.typing import NDArray
@@ -249,20 +249,7 @@ class PermutationTest(ABC):
 
         self.mapie_estimator.conformalize(X, y)  # compute scores internally
 
-        if self.task == "classification":
-            self.mapie_estimator = cast(SplitConformalClassifier, self.mapie_estimator)
-            scores = cast(
-                NDArray,
-                self.mapie_estimator._mapie_classifier.conformity_scores_,
-            )
-        else:
-            self.mapie_estimator = cast(SplitConformalRegressor, self.mapie_estimator)
-            scores = cast(
-                NDArray,
-                self.mapie_estimator._mapie_regressor.conformity_scores_,
-            )
-
-        return scores
+        return self.mapie_estimator.conformity_scores
 
     @abstractmethod
     def run(self, X: NDArray, y: NDArray) -> "PermutationTest":

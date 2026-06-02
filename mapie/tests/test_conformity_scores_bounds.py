@@ -254,6 +254,7 @@ def test_residual_normalised_conformity_score_get_conformity_scores(
     np.testing.assert_allclose(conf_scores, expected_signed_conf_scores)
 
 
+@pytest.mark.filterwarnings("ignore:Estimator does not appear fitted:UserWarning")
 def test_residual_normalised_score_prefit_with_notfitted_estim() -> None:
     """Test that a not fitted estimator and prefit=True raises an error."""
     residual_norm_conf_score = ResidualNormalisedScore(

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import warnings
 from typing import Any, Iterable, Optional, Tuple, Union, cast
 
 import numpy as np
@@ -25,6 +26,7 @@ from mapie.utils import (
     _check_alpha_and_n_samples,
     _check_cv,
     _check_cv_not_string,
+    _check_cv_not_subsample,
     _check_deprecated_sample_weight_kwarg,
     _check_estimator_fit_predict,
     _check_if_param_in_allowed_values,
@@ -304,6 +306,24 @@ class SplitConformalRegressor:
         )
         return _cast_point_predictions_to_ndarray(predictions)
 
+    @property
+    def conformity_scores(self) -> NDArray:
+        """
+        Returns the conformity scores computed by the `conformalize` method
+        on the conformalization set.
+
+        Returns
+        -------
+        NDArray
+            Array of conformity scores, with shape `(n_samples,)`.
+        """
+        _raise_error_if_previous_method_not_called(
+            "conformity_scores",
+            "conformalize",
+            self._is_conformalized,
+        )
+        return self._mapie_regressor.conformity_scores_
+
 
 class CrossConformalRegressor:
     """
@@ -408,6 +428,7 @@ class CrossConformalRegressor:
             method, "method", CrossConformalRegressor._VALID_METHODS
         )
         _check_cv_not_string(cv)
+        _check_cv_not_subsample(cv)
 
         self._mapie_regressor = _MapieRegressor(
             estimator=estimator,
@@ -427,6 +448,20 @@ class CrossConformalRegressor:
 
         self._predict_params: dict = {}
 
+    def reset(self) -> CrossConformalRegressor:
+        """
+        Discard previously computed conformity scores so that
+        `fit_conformalize` can be called again with new data.
+
+        Returns
+        -------
+        Self
+            This CrossConformalRegressor instance, reset to its pre-fit state.
+        """
+        self.is_fitted_and_conformalized = False
+        self._predict_params = {}
+        return self
+
     def fit_conformalize(
         self,
         X: ArrayLike,
@@ -439,6 +474,10 @@ class CrossConformalRegressor:
         Estimates the uncertainty of the base regressor in a cross-validation style:
         fits the base regressor on different folds of the dataset
         and computes conformity scores on the corresponding out-of-fold data.
+
+        If called on an instance that has already been fitted, a `UserWarning` is
+        emitted and the previously computed conformity scores are discarded before
+        the new fit. Call `reset()` explicitly to suppress the warning.
 
         Parameters
         ----------
@@ -464,10 +503,16 @@ class CrossConformalRegressor:
         Self
             This CrossConformalRegressor instance, fitted and conformalized.
         """
-        _raise_error_if_method_already_called(
-            "fit_conformalize",
-            self.is_fitted_and_conformalized,
-        )
+        if self.is_fitted_and_conformalized:
+            warnings.warn(
+                "CrossConformalRegressor.fit_conformalize was already called; "
+                "conformity scores from the previous fit will be discarded. "
+                "Call .reset() explicitly before fit_conformalize to suppress "
+                "this warning.",
+                UserWarning,
+                stacklevel=2,
+            )
+            self.reset()
 
         fit_params_ = _prepare_params(fit_params)
         self._predict_params = _prepare_params(predict_params)
@@ -603,6 +648,25 @@ class CrossConformalRegressor:
             # A hack here, to allow choosing the aggregation function at prediction time
             self._mapie_regressor.agg_function = aggregate_point_predictions
         return ensemble
+
+    @property
+    def conformity_scores(self) -> NDArray:
+        """
+        Returns the conformity scores computed by the `fit_conformalize`
+        method, on the out-of-fold predictions produced during
+        cross-validation.
+
+        Returns
+        -------
+        NDArray
+            Array of conformity scores, with shape `(n_samples,)`.
+        """
+        _raise_error_if_previous_method_not_called(
+            "conformity_scores",
+            "fit_conformalize",
+            self.is_fitted_and_conformalized,
+        )
+        return self._mapie_regressor.conformity_scores_
 
 
 class JackknifeAfterBootstrapRegressor:
@@ -899,6 +963,25 @@ class JackknifeAfterBootstrapRegressor:
         else:
             raise ValueError("resampling must be an integer or a Subsample instance")
         return cv
+
+    @property
+    def conformity_scores(self) -> NDArray:
+        """
+        Returns the conformity scores computed by the `fit_conformalize`
+        method, on the out-of-fold predictions produced during
+        cross-validation.
+
+        Returns
+        -------
+        NDArray
+            Array of conformity scores, with shape `(n_samples,)`.
+        """
+        _raise_error_if_previous_method_not_called(
+            "conformity_scores",
+            "fit_conformalize",
+            self.is_fitted_and_conformalized,
+        )
+        return self._mapie_regressor.conformity_scores_
 
 
 class _MapieRegressor(RegressorMixin, BaseEstimator):
