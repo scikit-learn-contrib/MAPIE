@@ -11,6 +11,7 @@
 * Add `conformity_scores` attribute to all Mapie objects, exposing conformity scores through a public property. (issue #921)
 * Add validation to reject `Subsample` as `cv` in `CrossConformalRegressor`, directing users to `JackknifeAfterBootstrapRegressor` instead. (issue #924)
 * Add `reset()` method on `CrossConformalRegressor` and allow refitting via `fit_conformalize` (now emits a `UserWarning` and discards prior conformity scores instead of raising). Same pattern can be propagated to other conformal classes in follow-up PRs. (issue #710)
+* Add `reset()` method on `JackknifeAfterBootstrapRegressor` and allow refitting via `fit_conformalize` (mirrors the pattern landed for `CrossConformalRegressor` in #931).
 
 ## 1.4.0 (2026-04-30)
 
