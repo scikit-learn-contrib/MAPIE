@@ -209,9 +209,9 @@ class MultivariateResidualNormalisedScore(BaseFitRegressionScore):
             The observed input features used to train the covariance estimator.
         y : NDArray
             The target values used to train the covariance estimator.
-        y : Optional[NDArray]
+        y_pred : Optional[NDArray]
             The predicted values. If not None, the model learns the residuals,
-            otherwise if learns the center and the covariance matrix.
+            otherwise it learns the center and the covariance matrix.
 
         Returns
         -------
@@ -239,6 +239,9 @@ class MultivariateResidualNormalisedScore(BaseFitRegressionScore):
             The observed input features used to train the covariance estimator.
         y : NDArray
             The target values (or residuals) used to train the covariance estimator.
+        y_pred : Optional[NDArray]
+            The predicted values. If not None, the model learns the residuals,
+            otherwise it learns the center and the covariance matrix.
 
         Returns
         -------
@@ -348,50 +351,20 @@ class MultivariateResidualNormalisedScore(BaseFitRegressionScore):
         return np.linalg.norm(standardized_trainiduals.squeeze(-1), axis=1)
 
     def get_estimation_distribution(
-        self,
-        y_pred: Optional[ArrayLike],
-        conformity_scores: ArrayLike,
-        X: Optional[ArrayLike] = None,
-        **kwargs,
-    ) -> Any:
+        self, y_pred: NDArray, conformity_scores: NDArray, **kwargs
+    ) -> NDArray:
         """
-        Compute samples of the estimation distribution from the predicted
-        values and the conformity scores, from the following formula:
-        ``y_pred + conformity_scores * r_pred``.
+        Not implemented for the multivariate standardized residuals score.
 
-        The learning has been done with the log of the residual so we use the
-        exponential of the prediction to avoid negative values.
-
-        ``conformity_scores`` can be either the conformity scores or
-        the quantile of the conformity scores.
+        The conformity score is the Euclidean norm of the standardized
+        residuals, so its level sets are ellipsoids in the multivariate
+        target space rather than intervals. There is no straightforward way to
+        invert it into a single estimation distribution as required by the
+        scalar interval contract.
         """
-        if X is None:
-            raise ValueError(
-                "Additional parameters must be provided for the method to "
-                + "work (here `X` is missing)."
-            )
-        assert self.covariance_estimator_ is not None
-        X_array = cast(NDArray, np.asarray(X))
-        return self.covariance_estimator_.get_distribution(X_array)
-        # if X is None:
-        #     raise ValueError(
-        #         "Additional parameters must be provided for the method to "
-        #         + "work (here `X` is missing)."
-        #     )
-
-        # X = cast(ArrayLike, X)
-        # if y_pred is not None:
-        #     Sigma_X = self.covariance_estimator_.get_covariance_matrix(X)
-        # else:
-        #     y_pred, Sigma_X = self.covariance_estimator_.get_distribution(X)
-
-        # return y_pred, Sigma_X
-
-    # def get_estimation_covariance(
-    #     self,
-    #     X: ArrayLike,
-    # ) -> Tuple[NDArray, NDArray]:
-    #     _, Sigma = self.get_estimation_distribution(X)
-    #     return Sigma
-    #     return Sigma
-    #     return Sigma
+        raise NotImplementedError(
+            "get_estimation_distribution is not implemented for "
+            "MultivariateResidualNormalisedScore: the prediction region for a "
+            "multivariate target is an ellipsoid, which cannot be expressed as "
+            "an interval."
+        )

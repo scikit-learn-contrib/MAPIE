@@ -198,11 +198,8 @@ def test_multivariate_get_distribution(mock_data):
     score_calculator = MultivariateResidualNormalisedScore()
     score_calculator.fit(X, y, num_epochs=1)
     scores = score_calculator.get_signed_conformity_scores(y=y, y_pred=y_pred, X=X)
-    estimation_distribution = score_calculator.get_estimation_distribution(
-        y_pred, scores, X=X
-    )
-    assert isinstance(estimation_distribution[0], np.ndarray)
-    assert isinstance(estimation_distribution[1], np.ndarray)
+    with pytest.raises(NotImplementedError, match="not implemented"):
+        score_calculator.get_estimation_distribution(y_pred, scores, X=X)
 
 
 def test_multivariate_complex_trainer_get_signed_conformity_scores_without_y_pred(
@@ -263,11 +260,8 @@ def test_multivariate_dummy_get_signed_conformity_scores_with_y_pred(mock_data):
     assert isinstance(scores, np.ndarray)
     assert len(scores) > 0
 
-    estimation_distribution = score_calculator.get_estimation_distribution(
-        y_pred, scores, X=X
-    )
-    assert isinstance(estimation_distribution[0], np.ndarray)
-    assert isinstance(estimation_distribution[1], np.ndarray)
+    with pytest.raises(NotImplementedError, match="not implemented"):
+        score_calculator.get_estimation_distribution(y_pred, scores, X=X)
 
 
 def test_multivariate_non_existing_rank_method(mock_data):
@@ -298,15 +292,6 @@ def test_multivariate_no_X_given(mock_data):
     score_calculator = MultivariateResidualNormalisedScore()
     with pytest.raises(Exception):
         score_calculator.get_signed_conformity_scores(y=y, y_pred=y_pred)
-
-
-def test_multivariate_get_estimation_distribution_without_X(mock_data):
-    X, y, y_pred = mock_data
-    score_calculator = MultivariateResidualNormalisedScore()
-    score_calculator.fit(X, y, num_epochs=1)
-    scores = score_calculator.get_signed_conformity_scores(y=y, X=X)
-    with pytest.raises(ValueError, match="here `X` is missing"):
-        score_calculator.get_estimation_distribution(y_pred, scores)
 
 
 def test_multivariate_nan_in_y_pred(mock_data):

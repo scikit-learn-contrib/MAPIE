@@ -291,7 +291,7 @@ class Trainer:
             Training input features.
         y_train : Union[NDArray, torch.Tensor]
             Training target outputs.
-        y_train : Union[NDArray, torch.Tensor]
+        y_pred : Union[NDArray, torch.Tensor]
             Training target predictions.
         X_val : Optional[Union[NDArray, torch.Tensor]], optional
             Validation input features, by default None.
