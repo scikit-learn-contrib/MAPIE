@@ -49,6 +49,7 @@ DOWNLOAD = "https://pypi.org/project/MAPIE/#files"
 
 [project.optional-dependencies]
 dev = [
+    "MAPIE[experimental]",
     "build==1.3.0",
     "codecov==2.1.13",
     "mypy==1.19.1",
@@ -60,12 +61,12 @@ dev = [
     "ruff==0.14.3",
     "twine==6.2.0",
     "wheel==0.45.1",
-    "torch>=2.1",
 ]
 experimental = [
     "torch>=2.1",
 ]
 docs = [
+    "MAPIE[experimental]",
     "lightgbm==4.6.0",
     "matplotlib==3.9.4",
     "mkdocs-material>=9.5",
@@ -83,7 +84,6 @@ docs = [
     "sphinx_rtd_theme==3.0.2",
     "pandas==2.3.3",
     "typing_extensions==4.15.0",
-    "torch>=2.1",
     "pytorch-lightning>=2.0",
     "albumentations>=1.4",
     "opencv-python>=4.8",
