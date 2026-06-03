@@ -23,9 +23,9 @@ from sklearn.utils.validation import check_is_fitted
 from mapie._venn_abers import VennAbers, VennAbersMultiClass, predict_proba_prefitted_va
 from mapie.calibration import TopLabelCalibrator, VennAbersCalibrator
 from mapie.metrics.calibration import (
+    _get_binning_groups,
     expected_calibration_error,
     top_label_ece,
-    _get_binning_groups,
 )
 
 random_state = 20
@@ -342,12 +342,24 @@ def test_results_with_constant_sample_weights(
 
     Note that the calibration implementations from sklearn `calibration.py`
     file would not pass these tests.
+
+    With scikit-learn 1.9+, RandomForestClassifier handles differently
+    sample_weights None or ones (consumes RNG differently, resulting in
+    different trees), making the test fail. To solve it, a prefit estimator
+    is used so that ``sample_weight`` only flows to the calibrator,
+    isolating its handling of null and constant weights.
     """
     n_samples = len(X)
-    estimator = RandomForestClassifier(random_state=random_state)
-    mapie_clf0 = TopLabelCalibrator(estimator=estimator, calibrator=calibrator)
-    mapie_clf1 = TopLabelCalibrator(estimator=estimator, calibrator=calibrator)
-    mapie_clf2 = TopLabelCalibrator(estimator=estimator, calibrator=calibrator)
+    estimator = RandomForestClassifier(random_state=random_state).fit(X, y)
+    mapie_clf0 = TopLabelCalibrator(
+        estimator=estimator, calibrator=calibrator, cv="prefit"
+    )
+    mapie_clf1 = TopLabelCalibrator(
+        estimator=estimator, calibrator=calibrator, cv="prefit"
+    )
+    mapie_clf2 = TopLabelCalibrator(
+        estimator=estimator, calibrator=calibrator, cv="prefit"
+    )
     mapie_clf0.fit(X, y, sample_weight=None, random_state=random_state)
     mapie_clf1.fit(
         X, y, sample_weight=np.ones(shape=n_samples), random_state=random_state
