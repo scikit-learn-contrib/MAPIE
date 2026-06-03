@@ -64,10 +64,7 @@ class DummyTrainer:
         return np.zeros((len(X), self.output_dim))
 
     def get_distribution(self, X):
-        n_samples = X.shape[0]
-        y_pred = np.zeros((n_samples, self.output_dim))
-        sigma = np.array([np.eye(self.output_dim) for _ in range(n_samples)])
-        return y_pred, sigma
+        return self.predict(X), self.get_covariance_matrix(X)
 
     def get_covariance_matrix(self, X):
         n_samples = X.shape[0]
@@ -247,6 +244,9 @@ def test_multivariate_dummy_get_signed_conformity_scores_without_y_pred(mock_dat
     assert isinstance(scores, np.ndarray)
     assert scores.ndim == 1
     assert score_calculator.covariance_estimator_.is_fitted is True
+
+    y_pred, sigma = trainer.get_distribution(X)
+    np.testing.assert_allclose(sigma, trainer.get_covariance_matrix(X))
 
 
 def test_multivariate_dummy_get_signed_conformity_scores_with_y_pred(mock_data):
