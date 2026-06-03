@@ -12,6 +12,7 @@
 * Add validation to reject `Subsample` as `cv` in `CrossConformalRegressor`, directing users to `JackknifeAfterBootstrapRegressor` instead. (issue #924)
 * Add `reset()` method on `CrossConformalRegressor` and allow refitting via `fit_conformalize` (now emits a `UserWarning` and discards prior conformity scores instead of raising). Same pattern can be propagated to other conformal classes in follow-up PRs. (issue #710)
 * Add a repository backup of the BlogFeedback dataset (`examples/data/blogData_train.zip`) used by the Kim et al. (2020) example, now loaded by default so the example no longer depends on the UCI download server.
+* Add `reset()` method on `JackknifeAfterBootstrapRegressor` and allow refitting via `fit_conformalize` (mirrors the pattern landed for `CrossConformalRegressor` in #931).
 
 ## 1.4.0 (2026-04-30)
 

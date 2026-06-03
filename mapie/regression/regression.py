@@ -801,6 +801,21 @@ class JackknifeAfterBootstrapRegressor:
         self.is_fitted_and_conformalized = False
         self._predict_params: dict = {}
 
+    def reset(self) -> JackknifeAfterBootstrapRegressor:
+        """
+        Discard previously computed conformity scores so that
+        `fit_conformalize` can be called again with new data.
+
+        Returns
+        -------
+        Self
+            This JackknifeAfterBootstrapRegressor instance, reset to its
+            pre-fit state.
+        """
+        self.is_fitted_and_conformalized = False
+        self._predict_params = {}
+        return self
+
     def fit_conformalize(
         self,
         X: ArrayLike,
@@ -812,6 +827,10 @@ class JackknifeAfterBootstrapRegressor:
         Estimates the uncertainty of the base regressor using bootstrap sampling:
         fits the base regressor on (potentially overlapping) samples of the dataset,
         and computes conformity scores on the corresponding out of samples data.
+
+        If called on an instance that has already been fitted, a `UserWarning` is
+        emitted and the previously computed conformity scores are discarded before
+        the new fit. Call `reset()` explicitly to suppress the warning.
 
         Parameters
         ----------
@@ -834,10 +853,16 @@ class JackknifeAfterBootstrapRegressor:
         Self
             This JackknifeAfterBootstrapRegressor instance, fitted and conformalized.
         """
-        _raise_error_if_method_already_called(
-            "fit_conformalize",
-            self.is_fitted_and_conformalized,
-        )
+        if self.is_fitted_and_conformalized:
+            warnings.warn(
+                "JackknifeAfterBootstrapRegressor.fit_conformalize was already "
+                "called; conformity scores from the previous fit will be "
+                "discarded. Call .reset() explicitly before fit_conformalize "
+                "to suppress this warning.",
+                UserWarning,
+                stacklevel=2,
+            )
+            self.reset()
 
         fit_params_ = _prepare_params(fit_params)
         self._predict_params = _prepare_params(predict_params)
