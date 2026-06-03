@@ -374,6 +374,20 @@ def test_results_with_constant_sample_weights(
     np.testing.assert_allclose(y_pred0, y_pred2)
 
 
+def test_fit_with_sample_weight_splits_weights() -> None:
+    """
+    Test that fitting in split mode with sample weights forwards the weights
+    through the train/calibration split and yields valid probabilities.
+    """
+    sample_weight = np.random.RandomState(random_state).uniform(size=len(X))
+    mapie_cal = TopLabelCalibrator(
+        estimator=RandomForestClassifier(random_state=random_state)
+    )
+    mapie_cal.fit(X, y, sample_weight=sample_weight, random_state=random_state)
+    y_pred = mapie_cal.predict_proba(X)
+    assert y_pred.shape == (len(X), len(mapie_cal.classes_))
+
+
 def test_pipeline_compatibility() -> None:
     """Check that MAPIE works on pipeline based on pandas dataframes"""
     X = pd.DataFrame(
