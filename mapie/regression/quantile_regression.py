@@ -314,7 +314,7 @@ class ConformalizedQuantileRegressor:
             "conformalize",
             self._is_conformalized,
         )
-        return self._mapie_quantile_regressor.conformity_scores_
+        return cast(NDArray, self._mapie_quantile_regressor.conformity_scores_)
 
 
 class _MapieQuantileRegressor(_MapieRegressor):

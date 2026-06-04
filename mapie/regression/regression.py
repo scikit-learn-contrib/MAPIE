@@ -322,7 +322,7 @@ class SplitConformalRegressor:
             "conformalize",
             self._is_conformalized,
         )
-        return self._mapie_regressor.conformity_scores_
+        return cast(NDArray, self._mapie_regressor.conformity_scores_)
 
 
 class CrossConformalRegressor:
@@ -666,7 +666,7 @@ class CrossConformalRegressor:
             "fit_conformalize",
             self.is_fitted_and_conformalized,
         )
-        return self._mapie_regressor.conformity_scores_
+        return cast(NDArray, self._mapie_regressor.conformity_scores_)
 
 
 class JackknifeAfterBootstrapRegressor:
@@ -1007,7 +1007,7 @@ class JackknifeAfterBootstrapRegressor:
             "fit_conformalize",
             self.is_fitted_and_conformalized,
         )
-        return self._mapie_regressor.conformity_scores_
+        return cast(NDArray, self._mapie_regressor.conformity_scores_)
 
 
 class _MapieRegressor(RegressorMixin, BaseEstimator):
