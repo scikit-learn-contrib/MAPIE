@@ -780,7 +780,7 @@ class JackknifeAfterBootstrapRegressor:
             JackknifeAfterBootstrapRegressor._VALID_AGGREGATION_METHODS,
         )
 
-        cv = self._check_and_convert_resampling_to_cv(resampling)
+        cv = self._check_and_convert_resampling_to_cv(resampling, random_state)
 
         self._mapie_regressor = _MapieRegressor(
             estimator=estimator,
@@ -980,9 +980,10 @@ class JackknifeAfterBootstrapRegressor:
     @staticmethod
     def _check_and_convert_resampling_to_cv(
         resampling: Union[int, Subsample],
+        random_state: Optional[Union[int, np.random.RandomState]] = None,
     ) -> Subsample:
         if isinstance(resampling, int):
-            cv = Subsample(n_resamplings=resampling)
+            cv = Subsample(n_resamplings=resampling, random_state=random_state)
         elif isinstance(resampling, Subsample):
             cv = resampling
         else:
