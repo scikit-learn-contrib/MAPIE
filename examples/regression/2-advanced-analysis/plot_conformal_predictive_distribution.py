@@ -79,9 +79,7 @@ class MapieConformalPredictiveDistribution(SplitConformalRegressor):
 
     def get_cumulative_distribution_function(self, X):
         y_pred, _ = self.predict_interval(X)
-        cs = self._mapie_regressor.conformity_scores_[
-            ~np.isnan(self._mapie_regressor.conformity_scores_)
-        ]
+        cs = self.conformity_scores[~np.isnan(self.conformity_scores)]
         res = self._conformity_score.get_estimation_distribution(
             y_pred.reshape((-1, 1)), cs, X=X
         )

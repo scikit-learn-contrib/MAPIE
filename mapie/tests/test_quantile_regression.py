@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from inspect import signature
 from typing import Any, Tuple
 
 import numpy as np
@@ -114,12 +113,6 @@ def test_default_parameters() -> None:
     assert mapie_reg.alpha == 0.1
 
 
-def test_default_sample_weight() -> None:
-    """Test default sample weights."""
-    mapie_reg = _MapieQuantileRegressor()
-    assert signature(mapie_reg.fit).parameters["sample_weight"].default is None
-
-
 def test_default_parameters_estimator() -> None:
     """Test default values of estimator."""
     mapie_reg = _MapieQuantileRegressor()
@@ -223,7 +216,7 @@ def test_results_with_constant_sample_weights(
     mapie0 = _MapieQuantileRegressor(estimator=qt, **STRATEGIES[strategy])
     mapie1 = _MapieQuantileRegressor(estimator=qt, **STRATEGIES[strategy])
     mapie2 = _MapieQuantileRegressor(estimator=qt, **STRATEGIES[strategy])
-    mapie0.fit(X_train, y_train, X_calib=X_calib, y_calib=y_calib, sample_weight=None)
+    mapie0.fit(X_train, y_train, X_calib=X_calib, y_calib=y_calib)
     mapie1.fit(
         X_train,
         y_train,
@@ -603,7 +596,6 @@ def test_fit_parameters_passing(strategy: str) -> None:
         y_train,
         X_calib=X_calib,
         y_calib=y_calib,
-        sample_weight=None,
         monitor=early_stopping_monitor,
     )
 

@@ -144,6 +144,7 @@ extra:
       link: https://pypi.org/project/mapie/
   version:
     provider: mike
+    alias: true
   generator: false
 
 copyright: Copyright &copy; 2021 - 2026 MAPIE Team — BSD-3-Clause License

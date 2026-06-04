@@ -10,9 +10,10 @@ reproduce the simulations by Kim et al. (2020) [1] in their article
 which introduces the jackknife+-after-bootstrap method.
 
 For a given model, the simulation fits MAPIE regressors with jackknife+ and
-jackknife+-after-bootstrap methods, on different resamplings of a data set
-loaded from 'https://archive.ics.uci.edu/', and compares the coverage levels
-and the width means of the PIs.
+jackknife+-after-bootstrap methods, on different resamplings of the BlogFeedback
+data set (originally from 'https://archive.ics.uci.edu/', loaded by default from
+a backup in the MAPIE repository), and compares the coverage levels and the
+width means of the PIs.
 
 In order to reproduce results from the tutorial notebook of [1], we
 implemented their regression model `Ridge2`, a variant of `sklearn.Ridge`
@@ -54,12 +55,38 @@ from mapie.metrics.regression import (
 from mapie.regression import CrossConformalRegressor, JackknifeAfterBootstrapRegressor
 from mapie.subsample import Subsample
 
+# Backup of the BlogFeedback training set, hosted in the MAPIE repository.
+# See examples/data/README.md for details.
+BLOG_BACKUP_URL = (
+    "https://raw.githubusercontent.com/scikit-learn-contrib/MAPIE/master/"
+    "examples/data/blogData_train.zip"
+)
 
-def get_X_y() -> Tuple[NDArray, NDArray]:
+# Original dataset on the UCI Machine Learning Repository.
+BLOG_UCI_URL = (
+    "https://archive.ics.uci.edu/ml/machine-learning-databases/00304/BlogFeedback.zip"
+)
+
+# Name of the training CSV inside both zip archives.
+BLOG_CSV_FILE = "blogData_train.csv"
+
+
+def get_X_y(download: bool = False) -> Tuple[NDArray, NDArray]:
     """
-    Downloads the `blog` dataset from a zip file on the UCI Machine Learning
-    website, and returns X and y, which are respectively the explicative
-    data and the labels.
+    Loads the `BlogFeedback` dataset and returns X and y, which are
+    respectively the explicative data and the labels.
+
+    By default the data is read from a backup hosted in the MAPIE repository
+    (``examples/data/blogData_train.zip``). Set ``download=True`` to fetch
+    the original dataset from the UCI Machine Learning Repository instead.
+    If the chosen source is unavailable, the other one is tried automatically.
+
+    Parameters
+    ----------
+    download : bool
+        If ``True``, download the original dataset from
+        ``https://archive.ics.uci.edu/`` instead of using the repository
+        backup. By default ``False``.
 
     Returns
     -------
@@ -67,18 +94,23 @@ def get_X_y() -> Tuple[NDArray, NDArray]:
     (n_samples, n_features) and (n_samples,)
         Explicative data and labels
     """
-    website = "https://archive.ics.uci.edu/"
-    page = "ml/machine-learning-databases/"
-    folder = "00304/"
-    zip_folder = "BlogFeedback.zip"
-    csv_file = "blogData_train.csv"
-    url = website + page + folder + zip_folder
-    response = requests.get(url)
-    zipfile = ZipFile(BytesIO(response.content))
-    df = pd.read_csv(zipfile.open(csv_file)).to_numpy()
+    primary = BLOG_UCI_URL if download else BLOG_BACKUP_URL
+    fallback = BLOG_BACKUP_URL if download else BLOG_UCI_URL
+    try:
+        df = _read_blog_zip(primary)
+    except Exception:
+        df = _read_blog_zip(fallback)
     X = df[:, :-1]
     y = np.log(1 + df[:, -1])
     return (X, y)
+
+
+def _read_blog_zip(url: str) -> NDArray:
+    """Download a BlogFeedback zip archive and return its training data."""
+    response = requests.get(url)
+    response.raise_for_status()
+    zipfile = ZipFile(BytesIO(response.content))
+    return pd.read_csv(zipfile.open(BLOG_CSV_FILE), header=None).to_numpy()
 
 
 class Ridge2(RegressorMixin, BaseEstimator):

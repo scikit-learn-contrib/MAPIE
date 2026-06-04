@@ -1337,6 +1337,40 @@ def _check_cv_not_string(cv: Union[int, str, BaseCrossValidator]) -> None:
         )
 
 
+def _check_cv_not_subsample(
+    cv: Union[int, str, BaseCrossValidator],
+    caller: str = "CrossConformalRegressor",
+) -> None:
+    """Check that ``cv`` is not a ``Subsample`` instance.
+
+    ``Subsample`` (bootstrap resampling) should not be used with
+    cross-conformal regressors.  Users should use the dedicated
+    ``JackknifeAfterBootstrapRegressor`` class instead.
+
+    Parameters
+    ----------
+    cv : Union[int, str, BaseCrossValidator]
+        The cross-validator to check.
+    caller : str
+        Name of the calling class, used in the error message.
+        By default ``"CrossConformalRegressor"``.
+
+    Raises
+    ------
+    ValueError
+        If ``cv`` is a ``Subsample`` instance.
+    """
+    from mapie.subsample import Subsample
+
+    if isinstance(cv, Subsample):
+        raise ValueError(
+            f"'cv' must not be a Subsample instance in "
+            f"{caller}. "
+            f"Use JackknifeAfterBootstrapRegressor instead for "
+            f"bootstrap-based conformal prediction."
+        )
+
+
 def _cast_point_predictions_to_ndarray(
     point_predictions: Union[NDArray, Tuple[NDArray, NDArray]],
 ) -> NDArray:
@@ -1363,12 +1397,21 @@ def _prepare_params(params: Union[dict, None]) -> dict:
     return copy.deepcopy(params) if params else {}
 
 
-def _prepare_fit_params_and_sample_weight(
-    fit_params: Union[dict, None],
-) -> Tuple[dict, Optional[ArrayLike]]:
-    fit_params_ = _prepare_params(fit_params)
-    sample_weight = fit_params_.pop("sample_weight", None)
-    return fit_params_, sample_weight
+def _check_deprecated_sample_weight_kwarg(kwargs: dict) -> None:
+    """Raise ``TypeError`` if ``sample_weight`` appears in *kwargs*.
+
+    Since the ``sample_weight`` routing refactor,
+    ``sample_weight`` must be passed inside ``fit_params``,
+    e.g. ``fit_params={"sample_weight": ...}``.
+    This helper catches the old calling convention early and
+    gives the caller a clear migration message.
+    """
+    if "sample_weight" in kwargs:
+        raise TypeError(
+            "'sample_weight' must be passed inside 'fit_params', "
+            "e.g., fit_params={'sample_weight': ...}. "
+            "Passing it as a top-level keyword argument is not supported."
+        )
 
 
 def _raise_error_if_previous_method_not_called(

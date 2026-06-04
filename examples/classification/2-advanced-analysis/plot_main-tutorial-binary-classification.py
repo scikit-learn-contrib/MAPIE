@@ -190,7 +190,7 @@ def plot_scores(
 
 
 fig, axs = plt.subplots(1, 1, figsize=(10, 5))
-conformity_scores = mapie_clf._mapie_classifier.conformity_scores_
+conformity_scores = mapie_clf.conformity_scores
 quantiles = mapie_clf._mapie_classifier.conformity_score_function_.quantiles_
 plot_scores(confidence_level, conformity_scores, quantiles, "lac", axs)
 plt.show()

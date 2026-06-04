@@ -18,6 +18,10 @@ from mapie.metrics.regression import regression_coverage_score
 from mapie.regression import TimeSeriesRegressor
 from mapie.subsample import BlockBootstrap
 
+pytestmark = pytest.mark.filterwarnings(
+    r"ignore:\s*This function behavior has been changed:UserWarning"
+)
+
 random_state = 1
 X_toy = np.array(range(5)).reshape(-1, 1)
 y_toy = (5.0 + 2.0 * X_toy**1.1).flatten()
@@ -71,8 +75,8 @@ STRATEGIES = {
 }
 
 WIDTHS = {
-    "blockbootstrap_enbpi_mean_wopt": 3.89,
-    "blockbootstrap_enbpi_median_wopt": 3.85,
+    "blockbootstrap_enbpi_mean_wopt": 3.84,
+    "blockbootstrap_enbpi_median_wopt": 3.89,
     "blockbootstrap_enbpi_mean": 3.89,
     "blockbootstrap_enbpi_median": 3.85,
     "blockbootstrap_aci_mean": 3.89,  # same as enbpi
@@ -223,9 +227,9 @@ def test_results_with_constant_sample_weights(strategy: str) -> None:
     mapie0 = TimeSeriesRegressor(**STRATEGIES[strategy])
     mapie1 = TimeSeriesRegressor(**STRATEGIES[strategy])
     mapie2 = TimeSeriesRegressor(**STRATEGIES[strategy])
-    mapie0.fit(X, y, sample_weight=None)
-    mapie1.fit(X, y, sample_weight=np.ones(shape=n_samples))
-    mapie2.fit(X, y, sample_weight=np.ones(shape=n_samples) * 5)
+    mapie0.fit(X, y)
+    mapie1.fit(X, y, fit_params={"sample_weight": np.ones(shape=n_samples)})
+    mapie2.fit(X, y, fit_params={"sample_weight": np.ones(shape=n_samples) * 5})
     y_pred0, y_pis0 = mapie0.predict(X, confidence_level=0.95)
     y_pred1, y_pis1 = mapie1.predict(X, confidence_level=0.95)
     y_pred2, y_pis2 = mapie2.predict(X, confidence_level=0.95)
@@ -408,7 +412,7 @@ def test_interval_prediction_with_beta_optimize() -> None:
     _, y_pis = mapie_ts_reg.predict(X_test, confidence_level=0.95, optimize_beta=True)
     width_mean = (y_pis[:, 1, 0] - y_pis[:, 0, 0]).mean()
     coverage = regression_coverage_score(y_test, y_pis)[0]
-    np.testing.assert_allclose(width_mean, 3.67, rtol=1e-2)
+    np.testing.assert_allclose(width_mean, 3.59, rtol=1e-2)
     np.testing.assert_allclose(coverage, 0.916, rtol=1e-2)
 
 
@@ -497,3 +501,13 @@ def test_methods_preservation_in_fit(method: str, cv: str) -> None:
     mapie_ts_reg.fit(X_val, y_val)
     mapie_ts_reg.update(X_test, y_test)
     assert mapie_ts_reg.method == method
+
+
+def test_sample_weight_as_top_level_kwarg_raises() -> None:
+    """Ensure sample_weight must be passed inside fit_params, not as a kwarg."""
+    mapie_ts_reg = TimeSeriesRegressor(
+        cv=BlockBootstrap(n_resamplings=30, n_blocks=5, random_state=random_state),
+        agg_function="mean",
+    )
+    with pytest.raises(TypeError, match="fit_params"):
+        mapie_ts_reg.fit(X, y, sample_weight=np.ones(len(X)))

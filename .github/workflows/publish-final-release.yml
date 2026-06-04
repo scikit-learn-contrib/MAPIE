@@ -100,8 +100,8 @@ jobs:
         env:
           RELEASE_VERSION: ${{ github.ref_name }}
         run: |
-          VERSION="${RELEASE_VERSION#v}"
-          TODAY="$(date -u +%Y-%m-%d)"
+          export VERSION="${RELEASE_VERSION#v}"
+          export TODAY="$(date -u +%Y-%m-%d)"
           python3 - <<'PY'
           import os
           import re

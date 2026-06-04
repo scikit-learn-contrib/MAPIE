@@ -28,6 +28,7 @@ from mapie.utils import (
     _check_alpha_and_n_samples,
     _check_cv,
     _check_cv_not_string,
+    _check_deprecated_sample_weight_kwarg,
     _check_estimator_classification,
     _check_n_features_in,
     _check_n_jobs,
@@ -35,7 +36,6 @@ from mapie.utils import (
     _check_predict_params,
     _check_verbose,
     _fit_estimator,
-    _prepare_fit_params_and_sample_weight,
     _prepare_params,
     _raise_error_if_fit_called_in_prefit_mode,
     _raise_error_if_method_already_called,
@@ -180,8 +180,8 @@ class SplitConformalClassifier:
         _raise_error_if_method_already_called("fit", self._is_fitted)
 
         cloned_estimator = clone(self._estimator)
-        fit_params_, sample_weight = _prepare_fit_params_and_sample_weight(fit_params)
-        _fit_estimator(cloned_estimator, X_train, y_train, sample_weight, **fit_params_)
+        fit_params_ = _prepare_params(fit_params)
+        _fit_estimator(cloned_estimator, X_train, y_train, **fit_params_)
         self._mapie_classifier.estimator = cloned_estimator
 
         self._is_fitted = True
@@ -307,6 +307,24 @@ class SplitConformalClassifier:
             **self._predict_params,
         )
         return _cast_point_predictions_to_ndarray(predictions)
+
+    @property
+    def conformity_scores(self) -> NDArray:
+        """
+        Returns the conformity scores computed by the `conformalize` method
+        on the conformalization set.
+
+        Returns
+        -------
+        NDArray
+            Array of conformity scores, with shape `(n_samples,)`.
+        """
+        _raise_error_if_previous_method_not_called(
+            "conformity_scores",
+            "conformalize",
+            self._is_conformalized,
+        )
+        return self._mapie_classifier.conformity_scores_
 
 
 class CrossConformalClassifier:
@@ -456,12 +474,11 @@ class CrossConformalClassifier:
             self.is_fitted_and_conformalized,
         )
 
-        fit_params_, sample_weight = _prepare_fit_params_and_sample_weight(fit_params)
+        fit_params_ = _prepare_params(fit_params)
         self._predict_params = _prepare_params(predict_params)
         self._mapie_classifier.fit(
             X=X,
             y=y,
-            sample_weight=sample_weight,
             groups=groups,
             fit_params=fit_params_,
             predict_params=self._predict_params,
@@ -558,6 +575,25 @@ class CrossConformalClassifier:
             **self._predict_params,
         )
         return _cast_point_predictions_to_ndarray(predictions)
+
+    @property
+    def conformity_scores(self) -> NDArray:
+        """
+        Returns the conformity scores computed by the `fit_conformalize`
+        method, on the out-of-fold predictions produced during
+        cross-validation.
+
+        Returns
+        -------
+        NDArray
+            Array of conformity scores, with shape `(n_samples,)`.
+        """
+        _raise_error_if_previous_method_not_called(
+            "conformity_scores",
+            "fit_conformalize",
+            self.is_fitted_and_conformalized,
+        )
+        return self._mapie_classifier.conformity_scores_
 
 
 class _MapieClassifier(ClassifierMixin, BaseEstimator):
@@ -807,7 +843,6 @@ class _MapieClassifier(ClassifierMixin, BaseEstimator):
         self,
         X: ArrayLike,
         y: ArrayLike,
-        sample_weight: Optional[ArrayLike] = None,
         groups: Optional[ArrayLike] = None,
     ):
         """
@@ -818,9 +853,13 @@ class _MapieClassifier(ClassifierMixin, BaseEstimator):
         X, y = indexable(X, y)
         y = _check_y(y)
 
-        sample_weight = cast(Optional[NDArray], sample_weight)
-        groups = cast(Optional[NDArray], groups)
+        # Handle sample_weight from fit_params
+        sample_weight = self._fit_params.pop("sample_weight", None)
         sample_weight, X, y = _check_null_weight(sample_weight, X, y)
+        if sample_weight is not None:
+            self._fit_params["sample_weight"] = sample_weight
+
+        groups = cast(Optional[NDArray], groups)
 
         y = cast(NDArray, y)
 
@@ -846,7 +885,7 @@ class _MapieClassifier(ClassifierMixin, BaseEstimator):
 
         # Cast
         X, y_enc, y = cast(NDArray, X), cast(NDArray, y_enc), cast(NDArray, y)
-        sample_weight = cast(NDArray, sample_weight)
+        sample_weight = cast(NDArray, self._fit_params.get("sample_weight"))
         groups = cast(NDArray, groups)
 
         X, y, y_enc, sample_weight, groups = cs_estimator.split_data(
@@ -854,15 +893,18 @@ class _MapieClassifier(ClassifierMixin, BaseEstimator):
         )
         self.n_samples_ = cs_estimator.n_samples_
 
+        # Update fit_params with potentially sliced sample_weight
+        if self._fit_params.get("sample_weight") is not None:
+            self._fit_params["sample_weight"] = sample_weight
+
         check_target(cs_estimator, y)
 
-        return (estimator, cs_estimator, cv, X, y, y_enc, sample_weight, groups)
+        return (estimator, cs_estimator, cv, X, y, y_enc, groups)
 
     def fit(
         self,
         X: ArrayLike,
         y: ArrayLike,
-        sample_weight: Optional[ArrayLike] = None,
         groups: Optional[ArrayLike] = None,
         **kwargs: Any,
     ) -> _MapieClassifier:
@@ -877,15 +919,6 @@ class _MapieClassifier(ClassifierMixin, BaseEstimator):
         y: NDArray of shape (n_samples,)
             Training labels.
 
-        sample_weight: Optional[ArrayLike] of shape (n_samples,)
-            Sample weights for fitting the out-of-fold models.
-            If None, then samples are equally weighted.
-            If some weights are null,
-            their corresponding observations are removed
-            before the fitting process and hence have no prediction sets.
-
-            By default `None`.
-
         groups: Optional[ArrayLike] of shape (n_samples,)
             Group labels for the samples used while splitting the dataset into
             train/test set.
@@ -894,13 +927,15 @@ class _MapieClassifier(ClassifierMixin, BaseEstimator):
 
         kwargs : dict
             Additional fit and predict parameters.
+            Sample weights can be passed in ``fit_params={"sample_weight": ...}``.
 
         Returns
         -------
         _MapieClassifier
             The model itself.
         """
-        fit_params = kwargs.pop("fit_params", {})
+        self._fit_params = _prepare_params(kwargs.pop("fit_params", {}))
+        _check_deprecated_sample_weight_kwarg(kwargs)
         predict_params = kwargs.pop("predict_params", {})
 
         if len(predict_params) > 0:
@@ -916,14 +951,16 @@ class _MapieClassifier(ClassifierMixin, BaseEstimator):
             X,
             y,
             y_enc,
-            sample_weight,
             groups,
-        ) = self._check_fit_parameter(X, y, sample_weight, groups)
+        ) = self._check_fit_parameter(X, y, groups)
 
         # Cast
         X, y_enc, y = cast(NDArray, X), cast(NDArray, y_enc), cast(NDArray, y)
-        sample_weight = cast(NDArray, sample_weight)
         groups = cast(NDArray, groups)
+
+        # Extract sample_weight for EnsembleClassifier (needs explicit arg
+        # for per-fold slicing)
+        sample_weight = self._fit_params.pop("sample_weight", None)
 
         # Work
         self.estimator_ = EnsembleClassifier(
@@ -935,7 +972,12 @@ class _MapieClassifier(ClassifierMixin, BaseEstimator):
         )
         # Fit the prediction function
         self.estimator_ = self.estimator_.fit(
-            X, y, y_enc=y_enc, sample_weight=sample_weight, groups=groups, **fit_params
+            X,
+            y,
+            y_enc=y_enc,
+            sample_weight=sample_weight,
+            groups=groups,
+            **self._fit_params,
         )
 
         # Predict on calibration data

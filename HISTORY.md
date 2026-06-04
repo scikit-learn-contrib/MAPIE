@@ -1,6 +1,18 @@
 # History
 
 ## 1.x.x (2026-xx-xx)
+* Add validation that a custom `BinaryRisk` returns per-sample occurrence values that are binary indicators (booleans, or values equal to 0 or 1); a `ValueError` is now raised otherwise, as the binary Hoeffding-Bentkus guarantees require it.
+* Simplify internal `sample_weight` handling in classification module: `sample_weight` now flows through `fit_params` instead of being passed as a separate argument through the call chain. No public API changes. (issue #753)
+* Simplify internal `sample_weight` handling in quantile regression module: `sample_weight` now flows through `fit_params` instead of being passed as a separate argument through the call chain. No public API changes. (issue #753)
+* Remove `_prepare_fit_params_and_sample_weight` utility (no longer needed after regression, classification, and quantile regression refactors). (issue #753)
+* Add notebook kernel restart warning for Kaggle/Jupyter/Colab users after installation or version changes. (issue #916)
+* Fix `optimize_beta` in regression conformity scores so prediction interval width minimization actually optimizes β (was previously a no-op due to a shape-collapsing reshape); also resolves incorrect prediction interval shape when used with multiple confidence levels. (issues #588, #484)
+* Add defensive validation: `_MapieRegressor` and `_MapieClassifier` now raise `TypeError` when `sample_weight` is passed as a top-level keyword argument instead of inside `fit_params`. Previously, top-level `sample_weight` was silently ignored. Also fix `TimeSeriesRegressor` tests that were affected by the same silent-ignore bug.
+* Add `conformity_scores` attribute to all Mapie objects, exposing conformity scores through a public property. (issue #921)
+* Add validation to reject `Subsample` as `cv` in `CrossConformalRegressor`, directing users to `JackknifeAfterBootstrapRegressor` instead. (issue #924)
+* Add `reset()` method on `CrossConformalRegressor` and allow refitting via `fit_conformalize` (now emits a `UserWarning` and discards prior conformity scores instead of raising). Same pattern can be propagated to other conformal classes in follow-up PRs. (issue #710)
+* Add a repository backup of the BlogFeedback dataset (`examples/data/blogData_train.zip`) used by the Kim et al. (2020) example, now loaded by default so the example no longer depends on the UCI download server.
+* Add `reset()` method on `JackknifeAfterBootstrapRegressor` and allow refitting via `fit_conformalize` (mirrors the pattern landed for `CrossConformalRegressor` in #931).
 
 ### Breaking changes
 
