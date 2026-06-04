@@ -67,9 +67,10 @@ clf.fit(X_train, y_train)
 # (``y_true == 0``, the condition) and count those that are correctly predicted
 # as negative (``y_pred == 0``, the occurrence):
 #
-# .. math::
-#     \text{specificity} = \frac{\sum (y_{pred} = 0 \text{ if } y_{true} = 0)}
-#                               {\sum (y_{true} = 0)}
+# $$
+# \text{specificity} = \frac{\#(y_{pred} = 0 \text{ and } y_{true} = 0)}
+#                            {\#(y_{true} = 0)}
+# $$
 #
 # Because a higher specificity is better, we set ``higher_is_better=True`` so
 # that MAPIE treats it as a performance metric rather than a risk.
