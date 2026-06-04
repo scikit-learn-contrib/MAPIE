@@ -87,8 +87,10 @@
 }
 
 /* Fix gallery section headings overlapping with floated thumbnails.
-   Increase container size so captions don't overflow, and use
-   inline-block to prevent float bleed. */
+   Use inline-block to prevent float bleed. `min-height` keeps short cards
+   aligned, while letting tall cards grow so long titles aren't clipped
+   (hence no `overflow: hidden`). Each inline-block row sizes to its tallest
+   card, so growing cards don't overlap the next row. */
 .mkd-glr-thumbcontainer {
   float: none !important;
   display: inline-block;
@@ -96,7 +98,6 @@
   width: 190px;
   min-height: 220px !important;
   margin: 6px;
-  overflow: hidden;
 }
 
 .mkd-glr-thumbcontainer a.internal {
