@@ -18,7 +18,6 @@ raising too many alarms on healthy/benign cases, while keeping recall (the
 ability to catch the positive cases) as high as possible.
 """
 
-
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.datasets import make_circles
