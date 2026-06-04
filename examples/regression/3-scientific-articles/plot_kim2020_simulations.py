@@ -64,8 +64,7 @@ BLOG_BACKUP_URL = (
 
 # Original dataset on the UCI Machine Learning Repository.
 BLOG_UCI_URL = (
-    "https://archive.ics.uci.edu/ml/machine-learning-databases/00304/"
-    "BlogFeedback.zip"
+    "https://archive.ics.uci.edu/ml/machine-learning-databases/00304/BlogFeedback.zip"
 )
 
 # Name of the training CSV inside both zip archives.
