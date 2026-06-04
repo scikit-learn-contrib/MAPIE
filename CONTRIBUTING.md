@@ -38,7 +38,7 @@ MacOS users should install `libomp` beforehand if it is not already present (`br
 
 
 ```sh
-uv sync --python 3.12 --extra dev --extra docs --extra notebooks
+uv sync --python 3.13 --extra dev --extra docs --extra notebooks
 ```
 
 Then, either activate the virtual environment created by `uv`:
