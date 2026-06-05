@@ -128,9 +128,9 @@ def expected_calibration_error(
 
     [2] Nixon, Jeremy, et al.
     "Measuring Calibration in Deep Learning."
-    CVPR Workshops. 2019.
-    https://arxiv.org/abs/1904.01685
-
+    arXiv:1910.12656. 2019.
+    https://arxiv.org/abs/1910.12656
+    
     Parameters
     ----------
     y_true: ArrayLike of shape (n_samples,)
