@@ -130,7 +130,7 @@ def expected_calibration_error(
     "Measuring Calibration in Deep Learning."
     arXiv:1910.12656. 2019.
     https://arxiv.org/abs/1910.12656
-    
+
     Parameters
     ----------
     y_true: ArrayLike of shape (n_samples,)
