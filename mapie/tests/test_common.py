@@ -205,19 +205,8 @@ class TestWrongMethodsOrderRaisesErrorForCrossTechniques:
 
         technique.fit_conformalize(X_conformalize, y_conformalize)
 
-        if cross_technique in (
-            CrossConformalRegressor,
-            JackknifeAfterBootstrapRegressor,
-        ):
-            with pytest.warns(
-                UserWarning, match=r"fit_conformalize was already called"
-            ):
-                technique.fit_conformalize(X_conformalize, y_conformalize)
-        else:
-            with pytest.raises(
-                ValueError, match=r"fit_conformalize method already called"
-            ):
-                technique.fit_conformalize(X_conformalize, y_conformalize)
+        with pytest.warns(UserWarning, match=r"fit_conformalize was already called"):
+            technique.fit_conformalize(X_conformalize, y_conformalize)
 
 
 def test_cross_conformal_regressor_rejects_subsample():
@@ -475,3 +464,51 @@ class TestJackknifeAfterBootstrapRegressorReset:
         _, intervals_reference = reference_technique.predict_interval(X_test)
 
         np.testing.assert_allclose(intervals_refit, intervals_reference, rtol=0.05)
+
+
+class TestCrossConformalClassifierReset:
+    def test_reset_clears_state(self, dataset_classification) -> None:
+        _, X_conformalize, _, _, y_conformalize, _ = dataset_classification
+        technique = CrossConformalClassifier(estimator=DummyClassifier())
+        technique.fit_conformalize(X_conformalize, y_conformalize)
+        assert technique.is_fitted_and_conformalized
+
+        returned = technique.reset()
+        assert returned is technique
+        assert not technique.is_fitted_and_conformalized
+        assert technique._predict_params == {}
+
+    def test_explicit_reset_then_refit_does_not_warn(
+        self, dataset_classification
+    ) -> None:
+        _, X_conformalize, _, _, y_conformalize, _ = dataset_classification
+        technique = CrossConformalClassifier(estimator=DummyClassifier())
+        technique.fit_conformalize(X_conformalize, y_conformalize)
+        technique.reset()
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", UserWarning)
+            technique.fit_conformalize(X_conformalize, y_conformalize)
+        assert technique.is_fitted_and_conformalized
+
+    def test_refit_produces_calibration_from_second_dataset(
+        self, dataset_classification
+    ) -> None:
+        _, X_conformalize, X_test, _, y_conformalize, _ = dataset_classification
+        rng = np.random.RandomState(RANDOM_STATE)
+        y_perm = rng.permutation(y_conformalize)
+
+        refit_technique = CrossConformalClassifier(
+            estimator=DummyClassifier(), random_state=RANDOM_STATE
+        )
+        refit_technique.fit_conformalize(X_conformalize, y_conformalize)
+        with pytest.warns(UserWarning):
+            refit_technique.fit_conformalize(X_conformalize, y_perm)
+        _, sets_refit = refit_technique.predict_set(X_test)
+
+        reference_technique = CrossConformalClassifier(
+            estimator=DummyClassifier(), random_state=RANDOM_STATE
+        )
+        reference_technique.fit_conformalize(X_conformalize, y_perm)
+        _, sets_reference = reference_technique.predict_set(X_test)
+
+        np.testing.assert_array_equal(sets_refit, sets_reference)
