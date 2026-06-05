@@ -317,7 +317,7 @@ def ltt_procedure(
     )  # to handle multiple risks, take max over risks (no effect if mono risk)
 
     # Fixed Sequence Testing (FST) only supports a single monotonic risk.
-    # - If non-monotonic: raise error.
+    # - If non-monotonic: raise warning.
     # - If decreasing: reverse order so FST tests easiest -> hardest;
     #   store permutation to remap indices afterward.
     order = None
@@ -331,7 +331,14 @@ def ltt_procedure(
         direction = _check_risk_monotonicity(r_hat[0])
 
         if direction == "none":
-            raise ValueError("fixed_sequence requires a monotonic risk over lambdas.")
+            warnings.warn(
+                "Fixed sequence testing requires a monotonic risk over lambdas (thresholds) to find "
+                "optimal solutions but this hypothesis is not verified here. "
+                "We recommand you try split_fixed_sequence instead if the hypothesis ordering is not known a priori.",
+                UserWarning,
+            )
+            average_variation = np.mean(np.diff(r_hat[0]))
+            direction = "increasing" if average_variation > 0 else "decreasing"
 
         if direction == "decreasing":
             order = np.arange(len(p_values))[::-1]
