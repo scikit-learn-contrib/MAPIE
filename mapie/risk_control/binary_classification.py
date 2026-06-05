@@ -308,6 +308,7 @@ class BinaryClassificationController:
                 y_calibrate_,
                 predictions_per_param,
                 valid_params_index,
+                risk_values,
             )
 
         self.p_values = p_values
@@ -480,16 +481,24 @@ class BinaryClassificationController:
         y_calibrate_: NDArray,
         predictions_per_param: NDArray,
         valid_params_index: List[Any],
+        risk_values: NDArray,
     ):
         secondary_risks_per_param, _ = self._get_risk_values_and_eff_sample_sizes(
             y_calibrate_,
             predictions_per_param[valid_params_index],
             [self._best_predict_param_choice],
         )
-
-        self.best_predict_param = self.valid_predict_params[
-            np.argmin(secondary_risks_per_param)
-        ]
+        best_index = np.flatnonzero(
+            secondary_risks_per_param == secondary_risks_per_param.min()
+        )
+        if len(best_index) > 1:
+            # When several parameters reach the minimum secondary risk, break ties by
+            # selecting the one that maximizes the first risk (te be less conservative).
+            first_risk_values = risk_values[0, valid_params_index]
+            best_index = best_index[np.argmax(first_risk_values[best_index])]
+        else:
+            best_index = best_index[0]
+        self.best_predict_param = self.valid_predict_params[best_index]
         if isinstance(self.best_predict_param, np.ndarray):
             self.best_predict_param = tuple(self.best_predict_param.tolist())
 
