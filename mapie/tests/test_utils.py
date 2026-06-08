@@ -1112,10 +1112,10 @@ def test_check_model_has_std_argument_invalid() -> None:
     """Check that non-boolean inputs raise ValueError."""
 
     with pytest.raises(ValueError):
-        _check_model_has_std_argument(None)
+        _check_model_has_std_argument(None) # type: ignore[arg-type]
 
     with pytest.raises(ValueError):
-        _check_model_has_std_argument(1)
+        _check_model_has_std_argument(1)# type: ignore[arg-type]
 
     with pytest.raises(ValueError):
-        _check_model_has_std_argument("True")
+        _check_model_has_std_argument("True")# type: ignore[arg-type]

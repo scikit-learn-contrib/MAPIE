@@ -423,7 +423,7 @@ class CrossConformalRegressor:
         estimator: RegressorMixin = LinearRegression(),
         confidence_level: Union[float, Iterable[float]] = 0.9,
         conformity_score: Union[str, BaseRegressionScore] = "absolute",
-        model_has_std: Optional[bool] = False,
+        model_has_std: bool = False,
         method: str = "plus",
         cv: Union[int, BaseCrossValidator] = 5,
         n_jobs: Optional[int] = None,
@@ -1292,8 +1292,8 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
         n_jobs: Optional[int] = None,
         agg_function: Optional[str] = "mean",
         verbose: int = 0,
-        conformity_score: Optional[BaseRegressionScore] = None,
-        model_has_std: Optional[bool] = False,
+        conformity_score: Optional[BaseConformityScore] = None,
+        model_has_std: bool = False,
         random_state: Optional[Union[int, np.random.RandomState]] = None,
     ) -> None:
         self.estimator = estimator

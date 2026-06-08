@@ -1,4 +1,4 @@
-from typing import Optional, no_type_check
+from typing import Optional, Union, no_type_check
 
 from sklearn.utils.multiclass import (
     check_classification_targets,
@@ -54,9 +54,9 @@ def check_and_select_conformity_score(conformity_score, conformity_score_type):
 
 
 def check_regression_conformity_score(
-    conformity_score: Optional[BaseRegressionScore],
+    conformity_score: Optional[Union[BaseRegressionScore, BaseConformityScore]],
     sym: bool = True,
-) -> BaseRegressionScore:
+) -> Union[BaseRegressionScore, BaseConformityScore]:
     """
     Check parameter `conformity_score` for regression task.
     By default, return a AbsoluteConformityScore instance.

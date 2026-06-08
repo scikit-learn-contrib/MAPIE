@@ -1233,7 +1233,7 @@ def test_std_conformity_score_regression_strategies(strategy: dict[str, Any]) ->
     estimator = DummyStdRegressor()
     mapie_reg = _MapieRegressor(
         estimator=estimator,
-        conformity_score=StdConformityScore(),
+        conformity_score=StdConformityScore(), # type: ignore[arg-type]
         **strategy,
     )
 
@@ -1268,7 +1268,7 @@ def test_std_conformity_score_prefit_strategy() -> None:
         estimator=estimator,
         method="base",
         cv="prefit",
-        conformity_score=StdConformityScore(),
+        conformity_score=StdConformityScore(), # type: ignore[arg-type]
     )
 
     with pytest.raises(ValueError):
@@ -1315,7 +1315,8 @@ def test_ensemble_std_regressor_predict_with_std_prefit() -> None:
         ensemble=False,
         return_multi_pred=False,
     )
-    assert y_pred_only.shape == (len(X_toy),)
+    assert isinstance(y_pred_only, np.ndarray) 
+    assert y_pred_only.shape == (len(X_toy),) 
 
 
 @pytest.mark.parametrize("method", ["plus", "minmax"])
@@ -1381,7 +1382,7 @@ def test_mapie_regressor_predict_with_alpha_std_branch(monkeypatch) -> None:
         estimator=DummyStdRegressor().fit(X_toy, y_toy),
         method="base",
         cv="prefit",
-        conformity_score=StdConformityScore(),
+        conformity_score=StdConformityScore(), # type: ignore[arg-type]
         model_has_std=True,
     )
     mapie_reg.estimator_ = EnsembleStdRegressor(
@@ -1449,7 +1450,7 @@ def test_ensemble_std_regressor_predict_with_std_returns_single_prediction(
         ensemble=True,
         return_multi_pred=False,
     )
-
+    assert isinstance(y_pred, np.ndarray) 
     assert y_pred.shape == (len(X_toy),)
 
 def test_mapie_regressor_conformalize_uses_std_branch(monkeypatch) -> None:
@@ -1458,7 +1459,7 @@ def test_mapie_regressor_conformalize_uses_std_branch(monkeypatch) -> None:
         estimator=DummyStdRegressor().fit(X_toy, y_toy),
         method="base",
         cv="prefit",
-        conformity_score=StdConformityScore(),
+        conformity_score=StdConformityScore(), # type: ignore[arg-type]
         model_has_std=True,
     )
 
@@ -1639,7 +1640,7 @@ def test_mapie_regressor_init_fit_uses_ensemble_std_regressor() -> None:
         cv=KFold(n_splits=3, shuffle=True, random_state=random_state),
         agg_function="mean",
         model_has_std=True,
-        conformity_score=StdConformityScore(),
+        conformity_score=StdConformityScore(), # type: ignore[arg-type]
     )
     mapie_reg.init_fit(X_toy, y_toy)
 
