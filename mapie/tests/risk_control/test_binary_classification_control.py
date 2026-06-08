@@ -500,6 +500,7 @@ class TestBinaryClassificationControllerSetBestPredictParam:
             y_calibrate_=dummy_y,
             predictions_per_param=dummy_predictions,
             valid_params_index=valid_params_index,
+            risk_values=np.array([[0.5]]),
         )
 
         assert controller.best_predict_param == dummy_single_param[0]
@@ -525,6 +526,7 @@ class TestBinaryClassificationControllerSetBestPredictParam:
             y_calibrate_=y_calibrate,
             predictions_per_param=predictions_per_param,
             valid_params_index=valid_params_index,
+            risk_values=np.array([[0.5, 0.7]]),
         )
 
         assert controller.best_predict_param == expected
@@ -549,6 +551,7 @@ class TestBinaryClassificationControllerSetBestPredictParam:
             y_calibrate_=y_calibrate,
             predictions_per_param=predictions_per_param,
             valid_params_index=valid_params_index,
+            risk_values=np.array([[0.5]]),
         )
         assert controller.best_predict_param == dummy_single_param[0]
 
