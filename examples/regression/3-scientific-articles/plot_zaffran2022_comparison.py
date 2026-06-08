@@ -46,7 +46,7 @@ import pickle
 import ssl
 import warnings
 from pathlib import Path
-from typing import Tuple
+from typing import Optional, Tuple
 from urllib.request import urlopen
 
 import numpy as np
@@ -60,6 +60,26 @@ from mapie.conformity_scores import AbsoluteConformityScore
 from mapie.regression import TimeSeriesRegressor
 
 warnings.simplefilter("ignore")
+
+
+def _data_path(filename: str) -> Optional[Path]:
+    """
+    Locate a dataset committed under ``examples/data/``.
+
+    sphinx-gallery runs examples with the working directory set to the
+    example's folder and deliberately does not define ``__file__``
+    (sphinx-gallery issues #166, #212), so the data file is located by walking
+    up from the current working directory. Returns ``None`` if not found.
+    """
+    cwd = Path.cwd().resolve()
+    for base in (cwd, *cwd.parents):
+        for candidate in (
+            base / "examples" / "data" / filename,
+            base / "data" / filename,
+        ):
+            if candidate.is_file():
+                return candidate
+    return None
 
 
 #########################################################
@@ -98,9 +118,7 @@ def init_model():
 # committed in the MAPIE repository (see examples/data/README.md) so this
 # example runs at documentation-build time without depending on the external
 # repository.
-PRICES_BACKUP = (
-    Path(__file__).resolve().parents[2] / "data" / "zaffran2022_prices.csv.gz"
-)
+PRICES_BACKUP_FILE = "zaffran2022_prices.csv.gz"
 
 # Original prices data hosted in the authors' repository.
 PRICES_ORIGINAL_URL = (
@@ -131,10 +149,11 @@ def get_data(download: bool = False) -> pd.DataFrame:
     pd.DataFrame
         The DataFrame containing the price data.
     """
-    if download:
-        ssl._create_default_https_context = ssl._create_unverified_context
-        return pd.read_csv(PRICES_ORIGINAL_URL)
-    return pd.read_csv(PRICES_BACKUP)
+    backup = None if download else _data_path(PRICES_BACKUP_FILE)
+    if backup is not None:
+        return pd.read_csv(backup)
+    ssl._create_default_https_context = ssl._create_unverified_context
+    return pd.read_csv(PRICES_ORIGINAL_URL)
 
 
 #########################################################
@@ -265,9 +284,7 @@ results = y_pis_aci_pfit.copy()
 # is committed in the MAPIE repository (see examples/data/README.md) so this
 # example runs at documentation-build time without depending on the external
 # repository.
-REFERENCE_BACKUP = (
-    Path(__file__).resolve().parents[2] / "data" / "zaffran2022_aci_reference.csv"
-)
+REFERENCE_BACKUP_FILE = "zaffran2022_aci_reference.csv"
 
 # Original reference, a pickle hosted in the authors' repository.
 REFERENCE_ORIGINAL_URL = (
@@ -298,8 +315,9 @@ def get_reference_results(download: bool = False) -> Tuple[NDArray, NDArray]:
     Tuple[NDArray, NDArray]
         The lower and upper bounds, each of shape (n_predictions,).
     """
-    if not download:
-        df = pd.read_csv(REFERENCE_BACKUP)
+    backup = None if download else _data_path(REFERENCE_BACKUP_FILE)
+    if backup is not None:
+        df = pd.read_csv(backup)
         return df["Y_inf"].to_numpy(), df["Y_sup"].to_numpy()
 
     ssl._create_default_https_context = ssl._create_unverified_context

@@ -56,11 +56,30 @@ from mapie.metrics.regression import (
 from mapie.regression import CrossConformalRegressor, JackknifeAfterBootstrapRegressor
 from mapie.subsample import Subsample
 
+
+def _data_path(filename: str) -> Optional[Path]:
+    """
+    Locate a dataset committed under ``examples/data/``.
+
+    sphinx-gallery runs examples with the working directory set to the
+    example's folder and deliberately does not define ``__file__``
+    (sphinx-gallery issues #166, #212), so the data file is located by walking
+    up from the current working directory. Returns ``None`` if not found.
+    """
+    cwd = Path.cwd().resolve()
+    for base in (cwd, *cwd.parents):
+        for candidate in (
+            base / "examples" / "data" / filename,
+            base / "data" / filename,
+        ):
+            if candidate.is_file():
+                return candidate
+    return None
+
+
 # Backup of the BlogFeedback training set, committed in the MAPIE repository.
 # See examples/data/README.md for details.
-BLOG_BACKUP_PATH = (
-    Path(__file__).resolve().parents[2] / "data" / "blogData_train.csv.gz"
-)
+BLOG_BACKUP_FILE = "blogData_train.csv.gz"
 
 # Original dataset on the UCI Machine Learning Repository.
 BLOG_UCI_URL = (
@@ -105,7 +124,10 @@ def get_X_y(download: bool = False) -> Tuple[NDArray, NDArray]:
 
 def _read_blog_backup() -> NDArray:
     """Read the BlogFeedback training data from the repository backup."""
-    return pd.read_csv(BLOG_BACKUP_PATH, header=None).to_numpy()
+    path = _data_path(BLOG_BACKUP_FILE)
+    if path is None:
+        raise FileNotFoundError(BLOG_BACKUP_FILE)
+    return pd.read_csv(path, header=None).to_numpy()
 
 
 def _read_blog_uci(url: str) -> NDArray:
