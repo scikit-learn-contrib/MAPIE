@@ -217,12 +217,18 @@ def test_ltt_fst_multirisk_error():
         ltt_procedure(r_hat, alpha_np, delta, n_obs, fwer_method="fixed_sequence")
 
 
-def test_ltt_fst_non_monotone_error():
-    r_hat = np.array([[0.1, 0.4, 0.2]])
+@pytest.mark.parametrize(
+    "r_hat",
+    [
+        np.array([[0.1, 0.4, 0.2]]),  # increasing on average
+        np.array([[0.4, 0.1, 0.2]]),  # decreasing on average
+    ],
+)
+def test_ltt_fst_non_monotone_warns(r_hat):
     n_obs = np.ones_like(r_hat)
     alpha_np = np.array([[0.5]])
 
-    with pytest.raises(ValueError, match=r".*requires a monotonic risk.*"):
+    with pytest.warns(UserWarning, match=r".*requires a monotonic risk.*"):
         ltt_procedure(r_hat, alpha_np, 0.1, n_obs, fwer_method="fixed_sequence")
 
 

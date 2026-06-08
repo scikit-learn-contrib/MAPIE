@@ -55,5 +55,7 @@
 * L. Elaine Dazzio <elaine.dazzio@gmail.com>
 * Sarthak Bhide (@Tamish03) <neetasarthak26@gmail.com>
 * Imran Ahamed <immu4989@gmail.com>
-* Damien Bouet
+* Nazim Fadli <nazimfadli25@gmail.com>
+* Damien Bouet <Damien-Bouet>
+
 To be continued ...

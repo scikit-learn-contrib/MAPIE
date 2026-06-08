@@ -308,6 +308,24 @@ class SplitConformalClassifier:
         )
         return _cast_point_predictions_to_ndarray(predictions)
 
+    @property
+    def conformity_scores(self) -> NDArray:
+        """
+        Returns the conformity scores computed by the `conformalize` method
+        on the conformalization set.
+
+        Returns
+        -------
+        NDArray
+            Array of conformity scores, with shape `(n_samples,)`.
+        """
+        _raise_error_if_previous_method_not_called(
+            "conformity_scores",
+            "conformalize",
+            self._is_conformalized,
+        )
+        return self._mapie_classifier.conformity_scores_
+
 
 class CrossConformalClassifier:
     """
@@ -414,6 +432,20 @@ class CrossConformalClassifier:
 
         self._predict_params: dict = {}
 
+    def reset(self) -> CrossConformalClassifier:
+        """
+        Discard previously computed conformity scores so that
+        `fit_conformalize` can be called again with new data.
+
+        Returns
+        -------
+        Self
+            This CrossConformalClassifier instance, reset to its pre-fit state.
+        """
+        self.is_fitted_and_conformalized = False
+        self._predict_params = {}
+        return self
+
     def fit_conformalize(
         self,
         X: ArrayLike,
@@ -426,6 +458,10 @@ class CrossConformalClassifier:
         Estimates the uncertainty of the base classifier in a cross-validation style:
         fits the base classifier on different folds of the dataset
         and computes conformity scores on the corresponding out-of-fold data.
+
+        If called on an instance that has already been fitted, a `UserWarning` is
+        emitted and the previously computed conformity scores are discarded before
+        the new fit. Call `reset()` explicitly to suppress the warning.
 
         Parameters
         ----------
@@ -451,10 +487,16 @@ class CrossConformalClassifier:
         Self
             This CrossConformalClassifier instance, fitted and conformalized.
         """
-        _raise_error_if_method_already_called(
-            "fit_conformalize",
-            self.is_fitted_and_conformalized,
-        )
+        if self.is_fitted_and_conformalized:
+            warnings.warn(
+                "CrossConformalClassifier.fit_conformalize was already called; "
+                "conformity scores from the previous fit will be discarded. "
+                "Call .reset() explicitly before fit_conformalize to suppress "
+                "this warning.",
+                UserWarning,
+                stacklevel=2,
+            )
+            self.reset()
 
         fit_params_ = _prepare_params(fit_params)
         self._predict_params = _prepare_params(predict_params)
@@ -557,6 +599,25 @@ class CrossConformalClassifier:
             **self._predict_params,
         )
         return _cast_point_predictions_to_ndarray(predictions)
+
+    @property
+    def conformity_scores(self) -> NDArray:
+        """
+        Returns the conformity scores computed by the `fit_conformalize`
+        method, on the out-of-fold predictions produced during
+        cross-validation.
+
+        Returns
+        -------
+        NDArray
+            Array of conformity scores, with shape `(n_samples,)`.
+        """
+        _raise_error_if_previous_method_not_called(
+            "conformity_scores",
+            "fit_conformalize",
+            self.is_fitted_and_conformalized,
+        )
+        return self._mapie_classifier.conformity_scores_
 
 
 class _MapieClassifier(ClassifierMixin, BaseEstimator):

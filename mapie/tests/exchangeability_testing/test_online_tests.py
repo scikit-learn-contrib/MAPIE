@@ -12,6 +12,10 @@ import mapie.exchangeability_testing.exchangeability as et_module
 import mapie.exchangeability_testing.martingales as omt_module
 from mapie.exchangeability_testing.martingales import OnlineMartingaleTest
 
+pytestmark = pytest.mark.filterwarnings(
+    "ignore:The provided MAPIE estimator is not fitted:UserWarning"
+)
+
 
 def test_fixed_dataset_exchangeability_validation_errors():
     """Test fixed-dataset wrapper validation on method names."""
@@ -727,6 +731,10 @@ def test_compute_non_conformity_scores_classification_branch(monkeypatch):
             self._conformalize_X = np.asarray(X)
             self._conformalize_y = np.asarray(y)
 
+        @property
+        def conformity_scores(self):
+            return self._mapie_classifier.conformity_scores_
+
     estimator = DummyMapieClassifier()
 
     def fake_train_test_split(X, y, test_size, shuffle):
@@ -770,6 +778,10 @@ def test_compute_non_conformity_scores_regression_branch(monkeypatch):
         def conformalize(self, X, y):
             self.conformalize_calls += 1
 
+        @property
+        def conformity_scores(self):
+            return self._mapie_regressor.conformity_scores_
+
     estimator = DummyMapieRegressor()
 
     monkeypatch.setattr(
@@ -802,6 +814,10 @@ def test_compute_non_conformity_scores_uses_provided_estimator_without_creation(
             self.conformalize_calls += 1
             self._mapie_regressor.conformity_scores_ = np.array([0.9, 1.1])
 
+        @property
+        def conformity_scores(self):
+            return self._mapie_regressor.conformity_scores_
+
     provided = DummyProvidedRegressor()
     omt = OnlineMartingaleTest(mapie_estimator=provided, task="regression")
 
@@ -827,6 +843,10 @@ def test_compute_non_conformity_scores_can_reuse_estimator_across_updates():
         def conformalize(self, X, y):
             self.conformalize_calls += 1
             self._mapie_regressor.conformity_scores_ = np.asarray(y, dtype=float)
+
+        @property
+        def conformity_scores(self):
+            return self._mapie_regressor.conformity_scores_
 
     omt = OnlineMartingaleTest(
         mapie_estimator=DummyProvidedRegressor(),
@@ -863,6 +883,10 @@ def test_compute_non_conformity_scores_warns_when_estimator_not_fitted(monkeypat
 
         def conformalize(self, X, y):
             self._mapie_regressor.conformity_scores_ = np.array([0.4, 0.6])
+
+        @property
+        def conformity_scores(self):
+            return self._mapie_regressor.conformity_scores_
 
     def fake_train_test_split(X, y, test_size, shuffle):
         assert test_size == pytest.approx(0.7)

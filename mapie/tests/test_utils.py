@@ -355,6 +355,29 @@ def test_check_cv_not_string():
         _check_cv_not_string("string")
 
 
+class TestCheckCvNotSubsample:
+    def test_raises_error_for_subsample(self):
+        from mapie.subsample import Subsample
+        from mapie.utils import _check_cv_not_subsample
+
+        with pytest.raises(
+            ValueError,
+            match=r".*Subsample.*CrossConformalRegressor.*"
+            r"JackknifeAfterBootstrapRegressor.*",
+        ):
+            _check_cv_not_subsample(Subsample())
+
+    def test_accepts_int(self):
+        from mapie.utils import _check_cv_not_subsample
+
+        assert _check_cv_not_subsample(5) is None
+
+    def test_accepts_kfold(self):
+        from mapie.utils import _check_cv_not_subsample
+
+        assert _check_cv_not_subsample(KFold()) is None
+
+
 class TestCastPointPredictionsToNdarray:
     def test_error(self, point_and_interval_predictions):
         with pytest.raises(TypeError):
