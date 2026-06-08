@@ -35,6 +35,7 @@ results than [1], and that the targeted coverage level is obtained.
 from __future__ import annotations
 
 from io import BytesIO
+from pathlib import Path
 from typing import Any, Optional, Tuple
 from zipfile import ZipFile
 
@@ -55,11 +56,10 @@ from mapie.metrics.regression import (
 from mapie.regression import CrossConformalRegressor, JackknifeAfterBootstrapRegressor
 from mapie.subsample import Subsample
 
-# Backup of the BlogFeedback training set, hosted in the MAPIE repository.
+# Backup of the BlogFeedback training set, committed in the MAPIE repository.
 # See examples/data/README.md for details.
-BLOG_BACKUP_URL = (
-    "https://raw.githubusercontent.com/scikit-learn-contrib/MAPIE/master/"
-    "examples/data/blogData_train.zip"
+BLOG_BACKUP_PATH = (
+    Path(__file__).resolve().parents[2] / "data" / "blogData_train.csv.gz"
 )
 
 # Original dataset on the UCI Machine Learning Repository.
@@ -67,7 +67,7 @@ BLOG_UCI_URL = (
     "https://archive.ics.uci.edu/ml/machine-learning-databases/00304/BlogFeedback.zip"
 )
 
-# Name of the training CSV inside both zip archives.
+# Name of the training CSV inside the UCI zip archive.
 BLOG_CSV_FILE = "blogData_train.csv"
 
 
@@ -76,8 +76,8 @@ def get_X_y(download: bool = False) -> Tuple[NDArray, NDArray]:
     Loads the `BlogFeedback` dataset and returns X and y, which are
     respectively the explicative data and the labels.
 
-    By default the data is read from a backup hosted in the MAPIE repository
-    (``examples/data/blogData_train.zip``). Set ``download=True`` to fetch
+    By default the data is read from a backup committed in the MAPIE repository
+    (``examples/data/blogData_train.csv.gz``). Set ``download=True`` to fetch
     the original dataset from the UCI Machine Learning Repository instead.
     If the chosen source is unavailable, the other one is tried automatically.
 
@@ -94,19 +94,22 @@ def get_X_y(download: bool = False) -> Tuple[NDArray, NDArray]:
     (n_samples, n_features) and (n_samples,)
         Explicative data and labels
     """
-    primary = BLOG_UCI_URL if download else BLOG_BACKUP_URL
-    fallback = BLOG_BACKUP_URL if download else BLOG_UCI_URL
     try:
-        df = _read_blog_zip(primary)
+        df = _read_blog_uci(BLOG_UCI_URL) if download else _read_blog_backup()
     except Exception:
-        df = _read_blog_zip(fallback)
+        df = _read_blog_backup() if download else _read_blog_uci(BLOG_UCI_URL)
     X = df[:, :-1]
     y = np.log(1 + df[:, -1])
     return (X, y)
 
 
-def _read_blog_zip(url: str) -> NDArray:
-    """Download a BlogFeedback zip archive and return its training data."""
+def _read_blog_backup() -> NDArray:
+    """Read the BlogFeedback training data from the repository backup."""
+    return pd.read_csv(BLOG_BACKUP_PATH, header=None).to_numpy()
+
+
+def _read_blog_uci(url: str) -> NDArray:
+    """Download the BlogFeedback zip archive from UCI and return its training data."""
     response = requests.get(url)
     response.raise_for_status()
     zipfile = ZipFile(BytesIO(response.content))

@@ -45,6 +45,7 @@ import datetime
 import pickle
 import ssl
 import warnings
+from pathlib import Path
 from typing import Tuple
 from urllib.request import urlopen
 
@@ -93,23 +94,47 @@ def init_model():
 #########################################################
 
 
-def get_data() -> pd.DataFrame:
+# Prices data from Zaffran et al. (2022). A gzip-compressed CSV backup is
+# committed in the MAPIE repository (see examples/data/README.md) so this
+# example runs at documentation-build time without depending on the external
+# repository.
+PRICES_BACKUP = (
+    Path(__file__).resolve().parents[2] / "data" / "zaffran2022_prices.csv.gz"
+)
+
+# Original prices data hosted in the authors' repository.
+PRICES_ORIGINAL_URL = (
+    "https://raw.githubusercontent.com/"
+    "mzaffran/AdaptiveConformalPredictionsTimeSeries/"
+    "131656fe4c25251bad745f52db3c2d7cb1c24bbb/data_prices/"
+    "Prices_2016_2019_extract.csv"
+)
+
+
+def get_data(download: bool = False) -> pd.DataFrame:
     """
-    Get the data from a CSV file containing prices from 2016 to 2019.
+    Get the data containing prices from 2016 to 2019.
+
+    By default the data is read from a gzip-compressed CSV backup committed in
+    the MAPIE repository (``examples/data/zaffran2022_prices.csv.gz``), so this
+    example runs without depending on an external server. Set ``download=True``
+    to fetch the original CSV from the authors' repository instead.
+
+    Parameters
+    ----------
+    download : bool
+        If ``True``, fetch the original CSV from the authors' GitHub repository
+        instead of using the repository backup. By default ``False``.
 
     Returns
     -------
     pd.DataFrame
         The DataFrame containing the price data.
     """
-    website = "https://raw.githubusercontent.com/"
-    page = "mzaffran/AdaptiveConformalPredictionsTimeSeries/"
-    folder = "131656fe4c25251bad745f52db3c2d7cb1c24bbb/data_prices/"
-    file = "Prices_2016_2019_extract.csv"
-    url = website + page + folder + file
-    ssl._create_default_https_context = ssl._create_unverified_context
-    df = pd.read_csv(url)
-    return df
+    if download:
+        ssl._create_default_https_context = ssl._create_unverified_context
+        return pd.read_csv(PRICES_ORIGINAL_URL)
+    return pd.read_csv(PRICES_BACKUP)
 
 
 #########################################################
@@ -235,40 +260,65 @@ results = y_pis_aci_pfit.copy()
 #########################################################
 
 
-def get_pickle() -> Tuple[NDArray, NDArray]:
+# Reference prediction interval bounds from Zaffran et al. (2022), used to check
+# that MAPIE reproduces their adaptive conformal inference results. A CSV backup
+# is committed in the MAPIE repository (see examples/data/README.md) so this
+# example runs at documentation-build time without depending on the external
+# repository.
+REFERENCE_BACKUP = (
+    Path(__file__).resolve().parents[2] / "data" / "zaffran2022_aci_reference.csv"
+)
+
+# Original reference, a pickle hosted in the authors' repository.
+REFERENCE_ORIGINAL_URL = (
+    "https://github.com/mzaffran/AdaptiveConformalPredictionsTimeSeries/raw/"
+    "131656fe4c25251bad745f52db3c2d7cb1c24bbb/results/"
+    "Spot_France_Hour_0_train_2019-01-01/ACP_0.04_RF.pkl"
+)
+
+
+def get_reference_results(download: bool = False) -> Tuple[NDArray, NDArray]:
     """
-    Get the pickle file containing the loaded data.
+    Load the reference prediction interval bounds (lower, upper) from
+    Zaffran et al. (2022).
+
+    By default the bounds are read from a CSV backup committed in the MAPIE
+    repository (``examples/data/zaffran2022_aci_reference.csv``), so this
+    example runs without depending on an external server. Set ``download=True``
+    to fetch the original ``.pkl`` from the authors' repository instead.
+
+    Parameters
+    ----------
+    download : bool
+        If ``True``, fetch the original pickle from the authors' GitHub
+        repository instead of using the repository backup. By default ``False``.
 
     Returns
     -------
     Tuple[NDArray, NDArray]
-        A tuple containing the loaded data.
+        The lower and upper bounds, each of shape (n_predictions,).
     """
-    website = "https://github.com/"
-    page = "mzaffran/AdaptiveConformalPredictionsTimeSeries/raw/"
-    folder = "131656fe4c25251bad745f52db3c2d7cb1c24bbb/results/"
-    folder += "Spot_France_Hour_0_train_2019-01-01/"
-    file = "ACP_0.04_RF.pkl"
-    url = website + page + folder + file
+    if not download:
+        df = pd.read_csv(REFERENCE_BACKUP)
+        return df["Y_inf"].to_numpy(), df["Y_sup"].to_numpy()
+
     ssl._create_default_https_context = ssl._create_unverified_context
-    try:
-        loaded_data = pickle.load(urlopen(url))
-    except FileNotFoundError:
-        print(f"The file {file} was not found.")
-    except Exception as e:
-        print(f"An error occurred: {e}")
-    return loaded_data
+    loaded_data = pickle.load(urlopen(REFERENCE_ORIGINAL_URL))
+    return (
+        np.asarray(loaded_data["Y_inf"]).reshape(-1),
+        np.asarray(loaded_data["Y_sup"]).reshape(-1),
+    )
 
 
-data_ref = get_pickle()
+y_inf_ref, y_sup_ref = get_reference_results()
 
 
 #########################################################
 # Compare results
 #########################################################
 
-# Flatten the array to shape (n, 2)
-results_ref = np.concatenate([data_ref["Y_inf"], data_ref["Y_sup"]], axis=0).T
+# Stack the bounds into shape (n, 2)
+results_ref = np.stack([y_inf_ref, y_sup_ref], axis=1)
 results = np.array(results.reshape(-1, 2))
 
 # Compare the NumPy array with the corresponding DataFrame columns
