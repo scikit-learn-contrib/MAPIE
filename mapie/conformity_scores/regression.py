@@ -389,22 +389,3 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
             The output structure depends on the `get_bounds` method.
         """
         return self.get_bounds(X=X, alpha_np=alpha_np, **kwargs)
-
-    def get_effective_calibration_samples(self, scores: NDArray):
-        """
-        Calculates the effective number of calibration samples.
-
-        Parameters
-        ----------
-        scores: NDArray
-            An array of scores.
-
-        Returns
-        -------
-        n: int
-            The effective number of calibration samples.
-        """
-        n: int = np.sum(~np.isnan(scores))
-        if not self.sym:
-            n //= 2
-        return n
