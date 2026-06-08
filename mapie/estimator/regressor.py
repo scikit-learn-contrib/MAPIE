@@ -299,7 +299,11 @@ class EnsembleRegressor:
         else:
             raise ValueError("The value of the aggregation function is not correct")
 
-    def _pred_multi(self, X: ArrayLike, **predict_params) -> NDArray:
+    def _pred_multi(
+        self, 
+        X: ArrayLike, 
+        **predict_params
+    ) -> NDArray:
         """
         Return a prediction per train sample for each test sample, by
         aggregation with matrix `k_`.
@@ -620,7 +624,6 @@ class EnsembleStdRegressor(EnsembleRegressor):
         cv: Optional[Union[int, str, BaseCrossValidator]],
         agg_function: Optional[str],
         n_jobs: Optional[int],
-        #random_state: Optional[Union[int, np.random.RandomState]],
         test_size: Optional[Union[int, float]],
         verbose: int
     ):
@@ -630,15 +633,20 @@ class EnsembleStdRegressor(EnsembleRegressor):
             cv=cv,
             agg_function=agg_function,
             n_jobs=n_jobs,
-           # random_state=random_state,
             test_size=test_size,
             verbose=verbose,
         )
+        allowed_methods = {"naive", "base", "plus", "minmax"}        
+        if self.method not in allowed_methods:
+            raise ValueError(
+                f"method={self.method!r} is not supported by EnsembleStdRegressor. "
+                f"Choose among {allowed_methods}."
+            )
 
     @staticmethod
-    def _predict_oof_estimator(
-        estimator: RegressorMixin, X: ArrayLike, val_index: ArrayLike, 
-    ) -> Tuple[NDArray, ArrayLike]:
+    def _predict_oof_estimator_with_std(
+        estimator: RegressorMixin, X: ArrayLike, val_index: ArrayLike, **predict_params
+        ) -> Tuple[Tuple[NDArray, NDArray], ArrayLike]:
         """
         Perform predictions on a single out-of-fold model on a validation set.
 
@@ -663,9 +671,13 @@ class EnsembleStdRegressor(EnsembleRegressor):
             y_pred, y_std = estimator.predict(X_val, return_std=True)
         else:
             y_pred, y_std = np.array([]), np.array([])
-        return [y_pred, y_std], val_index
+        return (y_pred, y_std), val_index
 
-    def _pred_multi(self, X: ArrayLike) -> NDArray:
+    def _pred_multi_with_std(
+        self, 
+        X: ArrayLike, 
+        **predict_params
+    ) -> Tuple[NDArray, NDArray]:
         """
         Return a prediction per train sample for each test sample, by
         aggregation with matrix ``k_``.
@@ -695,13 +707,13 @@ class EnsembleStdRegressor(EnsembleRegressor):
 
         return y_pred_multi, y_std
 
-    def predict_calib(
+    def predict_calib_with_std(
         self,
         X: ArrayLike,
         y: Optional[ArrayLike] = None,
         groups: Optional[ArrayLike] = None,
         **predict_params,
-    ) -> NDArray:
+    ) -> Tuple[NDArray, NDArray]:
         """
         Perform predictions on X : the calibration set.
 
@@ -740,7 +752,7 @@ class EnsembleStdRegressor(EnsembleRegressor):
             else:
                 cv = cast(BaseCrossValidator, self.cv)
                 outputs = Parallel(n_jobs=self.n_jobs, verbose=self.verbose)(
-                    delayed(self._predict_oof_estimator)(
+                    delayed(self._predict_oof_estimator_with_std)(
                         estimator, X, calib_index,
                     )
                     for (_, calib_index), estimator in zip(cv.split(X),
@@ -776,13 +788,13 @@ class EnsembleStdRegressor(EnsembleRegressor):
 
         return y_pred, y_std
 
-    def predict(
+    def predict_with_std(
         self,
         X: ArrayLike,
         ensemble: bool = False,
         return_multi_pred: bool = True,
         **predict_params,
-    ) -> Union[NDArray, Tuple[NDArray, NDArray, NDArray]]:
+    ) -> Union[NDArray, Tuple[NDArray, NDArray, NDArray, NDArray]]:
         """
         Predict target from X. It also computes the prediction per train sample
         for each test sample according to ``self.method``.
@@ -830,13 +842,13 @@ class EnsembleStdRegressor(EnsembleRegressor):
             y_pred_multi_up = y_pred[:, np.newaxis]
             y_std_multi = y_std[:, np.newaxis]
         else:
-            y_pred_multi, y_std_multi = self._pred_multi(X)
+            y_pred_multi, y_std_multi = self._pred_multi_with_std(X)
 
             if self.method == "minmax":
                 y_pred_multi_low = np.min(y_pred_multi, axis=1, keepdims=True)
                 y_pred_multi_up = np.max(y_pred_multi, axis=1, keepdims=True)
 
-            elif self.method == "plus":
+            else:
                 y_pred_multi_low = y_pred_multi
                 y_pred_multi_up = y_pred_multi
 

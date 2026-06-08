@@ -12,6 +12,8 @@ from sklearn.pipeline import Pipeline
 from sklearn.utils import check_random_state
 from sklearn.utils.validation import _check_y, indexable
 
+
+from mapie.conformity_scores.interface import BaseConformityScore
 from mapie.conformity_scores import BaseRegressionScore, ResidualNormalisedScore
 from mapie.conformity_scores.utils import (
     check_and_select_conformity_score,
@@ -434,6 +436,8 @@ class CrossConformalRegressor:
         _check_cv_not_string(cv)
         _check_cv_not_subsample(cv)
 
+        _type_conformal_score = BaseRegressionScore if not model_has_std else BaseConformityScore
+
         self._mapie_regressor = _MapieRegressor(
             estimator=estimator,
             method=method,
@@ -442,7 +446,7 @@ class CrossConformalRegressor:
             verbose=verbose,
             conformity_score=check_and_select_conformity_score(
                 conformity_score,
-                BaseRegressionScore,
+                _type_conformal_score,
             ),
             model_has_std=model_has_std,
             random_state=random_state,
@@ -1201,7 +1205,7 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
 
         By default `None`.
 
-    model_has_std: Optional[bool]
+    model_has_std: bool
         Wether or not the regression model can also output an estimator of the
         standard deviation of the prediction (Gaussian Processes for example).
         If `True`, then this value will be used to normalize the conformity
@@ -1640,15 +1644,15 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
         )
         
         # Predict on calibration data and compute the conformity scores (manage jk-ab case )
-        if self.model_has_std:
-            y_pred, y_std = self.estimator_.predict_calib(X, y=y, groups=groups, **predict_params)
+        if isinstance(self.estimator_, EnsembleStdRegressor):
+            y_pred, y_std = self.estimator_.predict_calib_with_std(X, y=y, groups=groups, **predict_params)
             self.conformity_scores_ = self.conformity_score_function_.get_conformity_scores(
-                 X, y, y_pred, y_std
+                X=X, y=y, y_pred=y_pred, y_std=y_std
             )
         else:
             y_pred = self.estimator_.predict_calib(X, y=y, groups=groups, **predict_params)
             self.conformity_scores_ = self.conformity_score_function_.get_conformity_scores(
-                y, y_pred, X=X
+                X=X, y=y, y_pred=y_pred
             )
 
         return self
