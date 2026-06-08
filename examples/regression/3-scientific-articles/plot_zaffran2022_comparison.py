@@ -45,13 +45,11 @@ import datetime
 import pickle
 import ssl
 import warnings
-from typing import Tuple
 from urllib.request import urlopen
 
 import numpy as np
 import pandas as pd
 from matplotlib import pylab as plt
-from numpy.typing import NDArray
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import PredefinedSplit
 
@@ -93,51 +91,33 @@ def init_model():
 #########################################################
 
 
-# Gzip-compressed CSV backup of the prices data, committed in the MAPIE
-# repository (see examples/data/README.md) so this example runs at
-# documentation-build time without depending on the external repository.
-PRICES_BACKUP_URL = (
-    "https://raw.githubusercontent.com/scikit-learn-contrib/MAPIE/master/"
-    "examples/data/zaffran2022_prices.csv.gz"
-)
-
-# Original prices data hosted in the authors' repository.
-PRICES_ORIGINAL_URL = (
-    "https://raw.githubusercontent.com/"
-    "mzaffran/AdaptiveConformalPredictionsTimeSeries/"
-    "131656fe4c25251bad745f52db3c2d7cb1c24bbb/data_prices/"
-    "Prices_2016_2019_extract.csv"
-)
-
-
-def get_data(download: bool = False) -> pd.DataFrame:
+def get_data() -> pd.DataFrame:
     """
-    Get the data containing prices from 2016 to 2019.
-
-    By default the data is read from a gzip-compressed CSV backup committed in
-    the MAPIE repository (``examples/data/zaffran2022_prices.csv.gz``), so this
-    example runs without depending on the authors' repository. Set
-    ``download=True`` to fetch the original CSV from their repository instead.
-    If the backup is unavailable, the original source is used automatically.
-
-    Parameters
-    ----------
-    download : bool
-        If ``True``, fetch the original CSV from the authors' GitHub repository
-        instead of using the repository backup. By default ``False``.
+    Get the data from a CSV file containing prices from 2016 to 2019.
 
     Returns
     -------
     pd.DataFrame
         The DataFrame containing the price data.
     """
-    if not download:
-        try:
-            return pd.read_csv(PRICES_BACKUP_URL)
-        except Exception:
-            pass  # backup unavailable: fall back to the authors' original CSV
+    # Backup committed in the MAPIE repository (see examples/data/README.md), so
+    # this example does not depend on the authors' repository. If the backup is
+    # unavailable, the original source is used instead.
+    backup = (
+        "https://raw.githubusercontent.com/scikit-learn-contrib/MAPIE/master/"
+        "examples/data/zaffran2022_prices.csv.gz"
+    )
+    original = (
+        "https://raw.githubusercontent.com/"
+        "mzaffran/AdaptiveConformalPredictionsTimeSeries/"
+        "131656fe4c25251bad745f52db3c2d7cb1c24bbb/data_prices/"
+        "Prices_2016_2019_extract.csv"
+    )
     ssl._create_default_https_context = ssl._create_unverified_context
-    return pd.read_csv(PRICES_ORIGINAL_URL)
+    try:
+        return pd.read_csv(backup)
+    except Exception:
+        return pd.read_csv(original)
 
 
 #########################################################
@@ -263,71 +243,48 @@ results = y_pis_aci_pfit.copy()
 #########################################################
 
 
-# CSV backup of the reference prediction interval bounds from Zaffran et al.
-# (2022), used to check that MAPIE reproduces their adaptive conformal inference
-# results. Committed in the MAPIE repository (see examples/data/README.md) so
-# this example runs at documentation-build time without depending on the
-# authors' repository.
-REFERENCE_BACKUP_URL = (
-    "https://raw.githubusercontent.com/scikit-learn-contrib/MAPIE/master/"
-    "examples/data/zaffran2022_aci_reference.csv"
-)
-
-# Original reference, a pickle hosted in the authors' repository.
-REFERENCE_ORIGINAL_URL = (
-    "https://github.com/mzaffran/AdaptiveConformalPredictionsTimeSeries/raw/"
-    "131656fe4c25251bad745f52db3c2d7cb1c24bbb/results/"
-    "Spot_France_Hour_0_train_2019-01-01/ACP_0.04_RF.pkl"
-)
-
-
-def get_reference_results(download: bool = False) -> Tuple[NDArray, NDArray]:
+def get_reference_results() -> dict:
     """
-    Load the reference prediction interval bounds (lower, upper) from
-    Zaffran et al. (2022).
-
-    By default the bounds are read from a CSV backup committed in the MAPIE
-    repository (``examples/data/zaffran2022_aci_reference.csv``), so this
-    example runs without depending on the authors' repository. Set
-    ``download=True`` to fetch the original ``.pkl`` from their repository
-    instead. If the backup is unavailable, the original source is used
-    automatically.
-
-    Parameters
-    ----------
-    download : bool
-        If ``True``, fetch the original pickle from the authors' GitHub
-        repository instead of using the repository backup. By default ``False``.
+    Get the reference results to reproduce.
 
     Returns
     -------
-    Tuple[NDArray, NDArray]
-        The lower and upper bounds, each of shape (n_predictions,).
+    dict
+        A dict containing the reference lower (``Y_inf``) and upper (``Y_sup``)
+        prediction interval bounds.
     """
-    if not download:
-        try:
-            df = pd.read_csv(REFERENCE_BACKUP_URL)
-            return df["Y_inf"].to_numpy(), df["Y_sup"].to_numpy()
-        except Exception:
-            pass  # backup unavailable: fall back to the authors' original pickle
-
-    ssl._create_default_https_context = ssl._create_unverified_context
-    loaded_data = pickle.load(urlopen(REFERENCE_ORIGINAL_URL))
-    return (
-        np.asarray(loaded_data["Y_inf"]).reshape(-1),
-        np.asarray(loaded_data["Y_sup"]).reshape(-1),
+    # Backup committed in the MAPIE repository (see examples/data/README.md), so
+    # this example does not depend on the authors' repository. If the backup is
+    # unavailable, the original pickle is used instead.
+    backup = (
+        "https://raw.githubusercontent.com/scikit-learn-contrib/MAPIE/master/"
+        "examples/data/zaffran2022_aci_reference.csv"
     )
+    original = (
+        "https://github.com/mzaffran/AdaptiveConformalPredictionsTimeSeries/raw/"
+        "131656fe4c25251bad745f52db3c2d7cb1c24bbb/results/"
+        "Spot_France_Hour_0_train_2019-01-01/ACP_0.04_RF.pkl"
+    )
+    ssl._create_default_https_context = ssl._create_unverified_context
+    try:
+        df = pd.read_csv(backup)
+        return {
+            "Y_inf": df["Y_inf"].to_numpy().reshape(1, -1),
+            "Y_sup": df["Y_sup"].to_numpy().reshape(1, -1),
+        }
+    except Exception:
+        return pickle.load(urlopen(original))
 
 
-y_inf_ref, y_sup_ref = get_reference_results()
+data_ref = get_reference_results()
 
 
 #########################################################
 # Compare results
 #########################################################
 
-# Stack the bounds into shape (n, 2)
-results_ref = np.stack([y_inf_ref, y_sup_ref], axis=1)
+# Flatten the array to shape (n, 2)
+results_ref = np.concatenate([data_ref["Y_inf"], data_ref["Y_sup"]], axis=0).T
 results = np.array(results.reshape(-1, 2))
 
 # Compare the NumPy array with the corresponding DataFrame columns

@@ -94,30 +94,21 @@ def get_X_y(download: bool = False) -> Tuple[NDArray, NDArray]:
     (n_samples, n_features) and (n_samples,)
         Explicative data and labels
     """
+    primary = BLOG_UCI_URL if download else BLOG_BACKUP_URL
+    fallback = BLOG_BACKUP_URL if download else BLOG_UCI_URL
     try:
-        df = (
-            _read_blog_uci(BLOG_UCI_URL)
-            if download
-            else _read_blog_backup(BLOG_BACKUP_URL)
-        )
+        df = _read_blog(primary)
     except Exception:
-        df = (
-            _read_blog_backup(BLOG_BACKUP_URL)
-            if download
-            else _read_blog_uci(BLOG_UCI_URL)
-        )
+        df = _read_blog(fallback)
     X = df[:, :-1]
     y = np.log(1 + df[:, -1])
     return (X, y)
 
 
-def _read_blog_backup(url: str) -> NDArray:
-    """Read the gzip-compressed BlogFeedback CSV backup from the MAPIE repository."""
-    return pd.read_csv(url, header=None).to_numpy()
-
-
-def _read_blog_uci(url: str) -> NDArray:
-    """Download the BlogFeedback zip archive from UCI and return its training data."""
+def _read_blog(url: str) -> NDArray:
+    """Read the BlogFeedback training data from a gzip CSV or a zip archive."""
+    if url.endswith(".gz"):
+        return pd.read_csv(url, header=None).to_numpy()
     response = requests.get(url)
     response.raise_for_status()
     zipfile = ZipFile(BytesIO(response.content))
