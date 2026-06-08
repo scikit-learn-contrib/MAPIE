@@ -422,7 +422,7 @@ class CrossConformalRegressor:
         self,
         estimator: RegressorMixin = LinearRegression(),
         confidence_level: Union[float, Iterable[float]] = 0.9,
-        conformity_score: Union[str, BaseRegressionScore] = "absolute",
+        conformity_score: Union[str, BaseRegressionScore, BaseConformityScore] = "absolute",
         model_has_std: bool = False,
         method: str = "plus",
         cv: Union[int, BaseCrossValidator] = 5,
@@ -1640,8 +1640,8 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
         self._predict_params = len(predict_params) > 0
 
         self.estimator_.fit_multi_estimators(
-            X, y, sample_weight, groups, **self._fit_params
-        )
+                 X, y, groups=groups, **self._fit_params
+            )
         
         # Predict on calibration data and compute the conformity scores (manage jk-ab case )
         if isinstance(self.estimator_, EnsembleStdRegressor):
