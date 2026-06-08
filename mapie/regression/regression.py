@@ -40,7 +40,9 @@ from mapie.utils import (
     _raise_error_if_fit_called_in_prefit_mode,
     _raise_error_if_method_already_called,
     _raise_error_if_previous_method_not_called,
+    _resolve_renamed_parameter,
     _transform_confidence_level_to_alpha_list,
+    _UNSET,
     check_is_fitted,
     check_sklearn_user_model_is_fitted,
 )
@@ -533,6 +535,7 @@ class CrossConformalRegressor:
         aggregate_point_predictions: Optional[str] = "mean",
         minimize_interval_width: bool = False,
         allow_infinite_bounds: bool = False,
+        aggregate_predictions: Any = _UNSET,
     ) -> Tuple[NDArray, NDArray]:
         """
         Predicts points and intervals.
@@ -563,6 +566,12 @@ class CrossConformalRegressor:
         allow_infinite_bounds : bool, default=False
             If True, allows prediction intervals with infinite bounds.
 
+        aggregate_predictions : Optional[str]
+            .. deprecated::
+                Renamed to `aggregate_point_predictions`. Passing
+                `aggregate_predictions` still works but emits a
+                `FutureWarning` and will be removed in a future release.
+
         Returns
         -------
         Tuple[NDArray, NDArray]
@@ -571,6 +580,12 @@ class CrossConformalRegressor:
             - Prediction points, of shape `(n_samples,)`
             - Prediction intervals, of shape `(n_samples, 2, n_confidence_levels)`
         """
+        aggregate_point_predictions = _resolve_renamed_parameter(
+            "aggregate_point_predictions",
+            aggregate_point_predictions,
+            "aggregate_predictions",
+            aggregate_predictions,
+        )
         _raise_error_if_previous_method_not_called(
             "predict_interval",
             "fit_conformalize",
@@ -594,6 +609,7 @@ class CrossConformalRegressor:
         self,
         X: ArrayLike,
         aggregate_point_predictions: Optional[str] = "mean",
+        aggregate_predictions: Any = _UNSET,
     ) -> NDArray:
         """
         Predicts points.
@@ -615,11 +631,23 @@ class CrossConformalRegressor:
             - "median": Aggregates (using median) the predictions of the regressors
               trained on each cross-validation fold
 
+        aggregate_predictions : Optional[str]
+            .. deprecated::
+                Renamed to `aggregate_point_predictions`. Passing
+                `aggregate_predictions` still works but emits a
+                `FutureWarning` and will be removed in a future release.
+
         Returns
         -------
         NDArray
             Array of point predictions, with shape `(n_samples,)`.
         """
+        aggregate_point_predictions = _resolve_renamed_parameter(
+            "aggregate_point_predictions",
+            aggregate_point_predictions,
+            "aggregate_predictions",
+            aggregate_predictions,
+        )
         _raise_error_if_previous_method_not_called(
             "predict",
             "fit_conformalize",
@@ -882,6 +910,7 @@ class JackknifeAfterBootstrapRegressor:
         aggregate_point_predictions: bool = True,
         minimize_interval_width: bool = False,
         allow_infinite_bounds: bool = False,
+        ensemble: Any = _UNSET,
     ) -> Tuple[NDArray, NDArray]:
         """
         Predicts points and intervals.
@@ -911,6 +940,12 @@ class JackknifeAfterBootstrapRegressor:
         allow_infinite_bounds : bool, default=False
             If True, allows prediction intervals with infinite bounds.
 
+        ensemble : bool
+            .. deprecated::
+                Renamed to `aggregate_point_predictions`. Passing `ensemble`
+                still works but emits a `FutureWarning` and will be removed in
+                a future release.
+
         Returns
         -------
         Tuple[NDArray, NDArray]
@@ -919,6 +954,12 @@ class JackknifeAfterBootstrapRegressor:
             - Prediction points, of shape `(n_samples,)`
             - Prediction intervals, of shape `(n_samples, 2, n_confidence_levels)`
         """
+        aggregate_point_predictions = _resolve_renamed_parameter(
+            "aggregate_point_predictions",
+            aggregate_point_predictions,
+            "ensemble",
+            ensemble,
+        )
         _raise_error_if_previous_method_not_called(
             "predict_interval",
             "fit_conformalize",
@@ -939,6 +980,7 @@ class JackknifeAfterBootstrapRegressor:
         self,
         X: ArrayLike,
         aggregate_point_predictions: bool = True,
+        ensemble: Any = _UNSET,
     ) -> NDArray:
         """
         Predicts points.
@@ -958,11 +1000,23 @@ class JackknifeAfterBootstrapRegressor:
             If False, a point is predicted using the regressor trained on the entire
             data
 
+        ensemble : bool
+            .. deprecated::
+                Renamed to `aggregate_point_predictions`. Passing `ensemble`
+                still works but emits a `FutureWarning` and will be removed in
+                a future release.
+
         Returns
         -------
         NDArray
             Array of point predictions, with shape `(n_samples,)`.
         """
+        aggregate_point_predictions = _resolve_renamed_parameter(
+            "aggregate_point_predictions",
+            aggregate_point_predictions,
+            "ensemble",
+            ensemble,
+        )
         _raise_error_if_previous_method_not_called(
             "predict",
             "fit_conformalize",

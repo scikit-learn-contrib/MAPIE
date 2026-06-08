@@ -1414,6 +1414,56 @@ def _check_deprecated_sample_weight_kwarg(kwargs: dict) -> None:
         )
 
 
+class _Unset:
+    """Sentinel type marking a deprecated argument that was not supplied."""
+
+
+_UNSET = _Unset()
+
+
+def _resolve_renamed_parameter(
+    new_name: str,
+    new_value: Any,
+    old_name: str,
+    old_value: Any,
+) -> Any:
+    """Resolve a renamed keyword argument, warning if the old name is used.
+
+    If the deprecated ``old_name`` argument was supplied (i.e. ``old_value``
+    is not the :data:`_UNSET` sentinel), emit a ``FutureWarning`` and return
+    that value. Otherwise return ``new_value`` unchanged.
+
+    Parameters
+    ----------
+    new_name : str
+        Name of the current (non-deprecated) parameter.
+
+    new_value : Any
+        Value passed (or defaulted) for the current parameter.
+
+    old_name : str
+        Name of the deprecated parameter.
+
+    old_value : Any
+        Value passed for the deprecated parameter, or :data:`_UNSET` if it
+        was not supplied.
+
+    Returns
+    -------
+    Any
+        The value to use for the parameter.
+    """
+    if isinstance(old_value, _Unset):
+        return new_value
+    warnings.warn(
+        f"`{old_name}` is deprecated and will be removed in a future release. "
+        f"Use `{new_name}` instead.",
+        FutureWarning,
+        stacklevel=3,
+    )
+    return old_value
+
+
 def _raise_error_if_previous_method_not_called(
     current_method_name: str,
     previous_method_name: str,

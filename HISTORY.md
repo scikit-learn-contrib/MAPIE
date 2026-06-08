@@ -1,6 +1,7 @@
 # History
 
 ## 1.x.x (2026-xx-xx)
+* Restore backward compatibility for the predict-argument renames introduced in #919: `CrossConformalRegressor`'s `aggregate_predictions` and `JackknifeAfterBootstrapRegressor`'s `ensemble` (in `predict` and `predict_interval`) keep working as deprecated aliases for `aggregate_point_predictions`, now emitting a `FutureWarning` instead of raising a `TypeError`. (issue #906)
 * Add a risk control advanced-analysis example showing how to define and control a custom risk (specificity) with `BinaryRisk` and the `BinaryClassificationController`.
 * Add validation that a custom `BinaryRisk` returns per-sample occurrence values that are binary indicators (booleans, or values equal to 0 or 1); a `ValueError` is now raised otherwise, as the binary Hoeffding-Bentkus guarantees require it.
 * Simplify internal `sample_weight` handling in classification module: `sample_weight` now flows through `fit_params` instead of being passed as a separate argument through the call chain. No public API changes. (issue #753)
