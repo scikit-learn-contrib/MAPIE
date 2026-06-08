@@ -45,8 +45,7 @@ import datetime
 import pickle
 import ssl
 import warnings
-from pathlib import Path
-from typing import Optional, Tuple
+from typing import Tuple
 from urllib.request import urlopen
 
 import numpy as np
@@ -60,26 +59,6 @@ from mapie.conformity_scores import AbsoluteConformityScore
 from mapie.regression import TimeSeriesRegressor
 
 warnings.simplefilter("ignore")
-
-
-def _data_path(filename: str) -> Optional[Path]:
-    """
-    Locate a dataset committed under ``examples/data/``.
-
-    sphinx-gallery runs examples with the working directory set to the
-    example's folder and deliberately does not define ``__file__``
-    (sphinx-gallery issues #166, #212), so the data file is located by walking
-    up from the current working directory. Returns ``None`` if not found.
-    """
-    cwd = Path.cwd().resolve()
-    for base in (cwd, *cwd.parents):
-        for candidate in (
-            base / "examples" / "data" / filename,
-            base / "data" / filename,
-        ):
-            if candidate.is_file():
-                return candidate
-    return None
 
 
 #########################################################
@@ -114,11 +93,13 @@ def init_model():
 #########################################################
 
 
-# Prices data from Zaffran et al. (2022). A gzip-compressed CSV backup is
-# committed in the MAPIE repository (see examples/data/README.md) so this
-# example runs at documentation-build time without depending on the external
-# repository.
-PRICES_BACKUP_FILE = "zaffran2022_prices.csv.gz"
+# Gzip-compressed CSV backup of the prices data, committed in the MAPIE
+# repository (see examples/data/README.md) so this example runs at
+# documentation-build time without depending on the external repository.
+PRICES_BACKUP_URL = (
+    "https://raw.githubusercontent.com/scikit-learn-contrib/MAPIE/master/"
+    "examples/data/zaffran2022_prices.csv.gz"
+)
 
 # Original prices data hosted in the authors' repository.
 PRICES_ORIGINAL_URL = (
@@ -135,8 +116,9 @@ def get_data(download: bool = False) -> pd.DataFrame:
 
     By default the data is read from a gzip-compressed CSV backup committed in
     the MAPIE repository (``examples/data/zaffran2022_prices.csv.gz``), so this
-    example runs without depending on an external server. Set ``download=True``
-    to fetch the original CSV from the authors' repository instead.
+    example runs without depending on the authors' repository. Set
+    ``download=True`` to fetch the original CSV from their repository instead.
+    If the backup is unavailable, the original source is used automatically.
 
     Parameters
     ----------
@@ -149,9 +131,11 @@ def get_data(download: bool = False) -> pd.DataFrame:
     pd.DataFrame
         The DataFrame containing the price data.
     """
-    backup = None if download else _data_path(PRICES_BACKUP_FILE)
-    if backup is not None:
-        return pd.read_csv(backup)
+    if not download:
+        try:
+            return pd.read_csv(PRICES_BACKUP_URL)
+        except Exception:
+            pass  # backup unavailable: fall back to the authors' original CSV
     ssl._create_default_https_context = ssl._create_unverified_context
     return pd.read_csv(PRICES_ORIGINAL_URL)
 
@@ -279,12 +263,15 @@ results = y_pis_aci_pfit.copy()
 #########################################################
 
 
-# Reference prediction interval bounds from Zaffran et al. (2022), used to check
-# that MAPIE reproduces their adaptive conformal inference results. A CSV backup
-# is committed in the MAPIE repository (see examples/data/README.md) so this
-# example runs at documentation-build time without depending on the external
-# repository.
-REFERENCE_BACKUP_FILE = "zaffran2022_aci_reference.csv"
+# CSV backup of the reference prediction interval bounds from Zaffran et al.
+# (2022), used to check that MAPIE reproduces their adaptive conformal inference
+# results. Committed in the MAPIE repository (see examples/data/README.md) so
+# this example runs at documentation-build time without depending on the
+# authors' repository.
+REFERENCE_BACKUP_URL = (
+    "https://raw.githubusercontent.com/scikit-learn-contrib/MAPIE/master/"
+    "examples/data/zaffran2022_aci_reference.csv"
+)
 
 # Original reference, a pickle hosted in the authors' repository.
 REFERENCE_ORIGINAL_URL = (
@@ -301,8 +288,10 @@ def get_reference_results(download: bool = False) -> Tuple[NDArray, NDArray]:
 
     By default the bounds are read from a CSV backup committed in the MAPIE
     repository (``examples/data/zaffran2022_aci_reference.csv``), so this
-    example runs without depending on an external server. Set ``download=True``
-    to fetch the original ``.pkl`` from the authors' repository instead.
+    example runs without depending on the authors' repository. Set
+    ``download=True`` to fetch the original ``.pkl`` from their repository
+    instead. If the backup is unavailable, the original source is used
+    automatically.
 
     Parameters
     ----------
@@ -315,10 +304,12 @@ def get_reference_results(download: bool = False) -> Tuple[NDArray, NDArray]:
     Tuple[NDArray, NDArray]
         The lower and upper bounds, each of shape (n_predictions,).
     """
-    backup = None if download else _data_path(REFERENCE_BACKUP_FILE)
-    if backup is not None:
-        df = pd.read_csv(backup)
-        return df["Y_inf"].to_numpy(), df["Y_sup"].to_numpy()
+    if not download:
+        try:
+            df = pd.read_csv(REFERENCE_BACKUP_URL)
+            return df["Y_inf"].to_numpy(), df["Y_sup"].to_numpy()
+        except Exception:
+            pass  # backup unavailable: fall back to the authors' original pickle
 
     ssl._create_default_https_context = ssl._create_unverified_context
     loaded_data = pickle.load(urlopen(REFERENCE_ORIGINAL_URL))
