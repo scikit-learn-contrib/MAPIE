@@ -1,11 +1,10 @@
 from __future__ import annotations
 
 from functools import lru_cache, partial
-from typing import Callable, Iterable, Optional, Union
+from typing import Any, Callable, Iterable, Optional, Tuple, Union
 
-import cvxpy as cp
 import numpy as np
-from numpy.typing import ArrayLike
+from numpy.typing import ArrayLike, NDArray
 from scipy.optimize import linprog
 from sklearn.base import RegressorMixin
 from sklearn.linear_model import LinearRegression
@@ -13,8 +12,25 @@ from sklearn.metrics.pairwise import pairwise_kernels
 
 from mapie.conformity_scores import BaseRegressionScore
 from mapie.regression import SplitConformalRegressor
+from mapie.utils import _raise_error_if_previous_method_not_called
 
 FUNCTION_DEFAULTS = {"kernel": None, "gamma": 1, "lambda": 1}
+
+
+def _import_cvxpy():
+    """Import cvxpy lazily, raising a helpful error if it is not installed.
+
+    cvxpy is an optional dependency of MAPIE (the ``conditional`` extra), so it
+    is imported only when the conditional conformal procedure is actually used.
+    """
+    try:
+        import cvxpy as cp
+    except ImportError as e:
+        raise ImportError(
+            "cvxpy is required for ConditionalSplitConformalRegressor. "
+            "Install it with: pip install mapie[conditional]"
+        ) from e
+    return cp
 
 
 class ConditionalSplitConformalRegressor(SplitConformalRegressor):
@@ -27,7 +43,8 @@ class ConditionalSplitConformalRegressor(SplitConformalRegressor):
         prefit: bool = True,
         n_jobs: Optional[int] = None,
         verbose: int = 0,
-        quantile_fn: Optional[Callable] = None,
+        randomize: bool = False,
+        exact: bool = True,
         infinite_params: Optional[dict] = None,
         seed: int = 0,
     ) -> None:
@@ -63,9 +80,12 @@ class ConditionalSplitConformalRegressor(SplitConformalRegressor):
         verbose : int, default=0
             Verbosity level.
 
-        quantile_fn : Callable, optional
-            Function mapping covariates to local quantile levels. If ``None``,
-            a single global quantile is used.
+        randomize : bool, default=False
+            Randomize the dual threshold for exact (non-conservative) coverage.
+
+        exact : bool, default=True
+            Compute the conditional score cutoff exactly rather than by binary
+            search.
 
         infinite_params : dict, optional
             Parameters for the RKHS component of the fit. Valid keys are
@@ -80,7 +100,8 @@ class ConditionalSplitConformalRegressor(SplitConformalRegressor):
             verbose=verbose,
         )
         self.Phi_fn = Phi_fn
-        self.quantile_fn = quantile_fn
+        self.randomize = randomize
+        self.exact = exact
         self.infinite_params = {} if infinite_params is None else infinite_params
         self.rng = np.random.default_rng(seed=seed)
 
@@ -129,7 +150,7 @@ class ConditionalSplitConformalRegressor(SplitConformalRegressor):
 
         # Set a tolerance to decide which singular values are nonzero
         tol = 1e-10
-        r = np.sum(s > tol)
+        r = int(np.sum(s > tol))
 
         if r < len(s):
             self.Phi_fn_orig = self.Phi_fn
@@ -141,9 +162,6 @@ class ConditionalSplitConformalRegressor(SplitConformalRegressor):
         self.scores_calib = (
             self._mapie_regressor.conformity_scores_
         )  # computed in super().conformalize
-
-        if self.quantile_fn is not None:
-            self.quantile_calib = self.quantile_fn(x_calib).reshape(-1, 1)
 
         self.cvx_problem = setup_cvx_problem(
             self.x_calib, self.scores_calib, self.phi_calib, self.infinite_params
@@ -157,13 +175,8 @@ class ConditionalSplitConformalRegressor(SplitConformalRegressor):
         Phi = self.phi_calib.astype(float)
         zeros = np.zeros((Phi.shape[1],))
 
-        if quantile is None:
-            bounds = np.concatenate(
-                (self.quantile_calib - 1, self.quantile_calib), axis=1
-            )
-        else:
-            bounds = np.asarray([quantile - 1, quantile])
-            bounds = np.tile(bounds.reshape(1, -1), (len(S), 1))
+        bounds = np.asarray([quantile - 1, quantile])
+        bounds = np.tile(bounds.reshape(1, -1), (len(S), 1))
 
         res = linprog(-1 * S, A_eq=Phi.T, b_eq=zeros, bounds=bounds, method="highs")
         primal_vars = -1 * res.eqlin.marginals.reshape(-1, 1)
@@ -174,7 +187,7 @@ class ConditionalSplitConformalRegressor(SplitConformalRegressor):
 
         # if I didn't converge to a solution that interpolates at least Phi.shape[1] pts,
         # I need to manually find one via a modified simplex iteration
-        if interpolated_pts.sum() < Phi.shape[1]:
+        if interpolated_pts.sum() < Phi.shape[1]:  # pragma: no cover
             num_to_add = Phi.shape[1] - interpolated_pts.sum()
             for _ in range(num_to_add):
                 candidate_pts = interpolated_pts.copy().flatten()
@@ -215,26 +228,29 @@ class ConditionalSplitConformalRegressor(SplitConformalRegressor):
             )
             if np.sum(interp_bools) == Phi.shape[1]:
                 return interp_bools
-            preds = (Phi @ primals).flatten()
-            active_indices = np.where(interp_bools)[0]
-            interp_indices = np.where(np.isclose(np.abs(S - preds), 0))[0]
-            diff_indices = np.setdiff1d(interp_indices, active_indices)
-            num_missing = Phi.shape[1] - np.sum(interp_bools)
-            if num_missing < len(diff_indices):
-                from itertools import combinations
+            else:  # pragma: no cover
+                # Fallback for degenerate dual solutions: not reached on
+                # well-posed problems with a full-rank basis.
+                preds = (Phi @ primals).flatten()
+                active_indices = np.where(interp_bools)[0]
+                interp_indices = np.where(np.isclose(np.abs(S - preds), 0))[0]
+                diff_indices = np.setdiff1d(interp_indices, active_indices)
+                num_missing = Phi.shape[1] - np.sum(interp_bools)
+                if num_missing < len(diff_indices):
+                    from itertools import combinations
 
-                for cand_indices in combinations(diff_indices, num_missing):
-                    cand_phi = Phi[np.concatenate((active_indices, cand_indices))]
-                    if np.isfinite(np.linalg.cond(cand_phi)):
-                        interp_bools[np.asarray(cand_indices)] = True
-                        break
-            else:
-                interp_bools[diff_indices] = True
-            if np.sum(interp_bools) != Phi.shape[1]:
-                raise ValueError(
-                    "Initial basis could not be found - retry with exact=False."
-                )
-            return interp_bools
+                    for cand_indices in combinations(diff_indices, num_missing):
+                        cand_phi = Phi[np.concatenate((active_indices, cand_indices))]
+                        if np.isfinite(np.linalg.cond(cand_phi)):
+                            interp_bools[np.asarray(cand_indices)] = True
+                            break
+                else:
+                    interp_bools[diff_indices] = True
+                if np.sum(interp_bools) != Phi.shape[1]:
+                    raise ValueError(
+                        "Initial basis could not be found - retry with exact=False."
+                    )
+                return interp_bools
 
         if np.allclose(phi_test, 0):
             return np.inf if quantiles[-1] >= 0.5 else -np.inf
@@ -323,7 +339,7 @@ class ConditionalSplitConformalRegressor(SplitConformalRegressor):
                 ignore_entries = np.isclose(bottom, 0) | np.asarray(req_change <= 1e-5)
             else:
                 ignore_entries = np.isclose(bottom, 0) | np.asarray(req_change >= -1e-5)
-            if np.sum(~ignore_entries) == 0:
+            if np.sum(~ignore_entries) == 0:  # pragma: no cover
                 S[-1] = np.inf if quantiles[-1] >= 0.5 else -np.inf
                 break
             if dual_threshold >= 0:
@@ -337,73 +353,138 @@ class ConditionalSplitConformalRegressor(SplitConformalRegressor):
                 ]
                 S[-1] += np.max(req_change[~ignore_entries])
             num_iters += 1
-            if num_iters > 10000:
+            if num_iters > 10000:  # pragma: no cover
                 S[-1] = np.inf if dual_threshold > 0 else -1 * np.inf
         return S[-1]
 
-    def predict_conditional_interval(
+    def predict_interval(
+        self,
+        X: ArrayLike,
+        minimize_interval_width: bool = False,
+        allow_infinite_bounds: bool = False,
+    ) -> Tuple[NDArray, NDArray]:
+        """
+        Predicts points (using the base regressor) and conditionally valid
+        intervals.
+
+        If several confidence levels were provided during initialisation,
+        several intervals will be predicted for each sample. See the return
+        signature.
+
+        Parameters
+        ----------
+        X : ArrayLike
+            Features.
+
+        minimize_interval_width : bool, default=False
+            Not supported by the conditional procedure; provided for API
+            compatibility with
+            :class:`~mapie.regression.SplitConformalRegressor`.
+
+        allow_infinite_bounds : bool, default=False
+            Accepted for API compatibility with
+            :class:`~mapie.regression.SplitConformalRegressor`. Note that the
+            conditional procedure may return infinite bounds regardless of this
+            flag (e.g. when no finite cutoff can be found).
+
+        Returns
+        -------
+        Tuple[NDArray, NDArray]
+            Two arrays:
+
+            - Prediction points, of shape `(n_samples,)`
+            - Prediction intervals, of shape
+              `(n_samples, 2, n_confidence_levels)`
+        """
+        _raise_error_if_previous_method_not_called(
+            "predict_interval",
+            "conformalize",
+            self._is_conformalized,
+        )
+        if minimize_interval_width:
+            raise NotImplementedError(
+                "minimize_interval_width is not supported by "
+                "ConditionalSplitConformalRegressor."
+            )
+
+        X = np.asarray(X)
+        y_pred = self.predict(X)
+
+        score = self._conformity_score
+        alphas = list(self._alphas)
+        n_samples = len(X)
+        intervals = np.empty((n_samples, 2, len(alphas)))
+
+        for j, alpha in enumerate(alphas):
+            for i in range(n_samples):
+                x_row = X[i].reshape(1, -1)
+                if score.sym:
+                    # Symmetric scores are absolute, so a single cutoff at the
+                    # 1 - alpha quantile inverts to a two-sided interval.
+                    cutoff = self._predict_conditional_cutoff(1 - alpha, x_row)
+                    low = score.get_estimation_distribution(y_pred[i], -cutoff, X=x_row)
+                    up = score.get_estimation_distribution(y_pred[i], cutoff, X=x_row)
+                else:
+                    # Signed scores need one cutoff per side.
+                    cutoff_low = self._predict_conditional_cutoff(alpha / 2, x_row)
+                    cutoff_up = self._predict_conditional_cutoff(1 - alpha / 2, x_row)
+                    low = score.get_estimation_distribution(
+                        y_pred[i], cutoff_low, X=x_row
+                    )
+                    up = score.get_estimation_distribution(
+                        y_pred[i], cutoff_up, X=x_row
+                    )
+                intervals[i, 0, j] = float(low)
+                intervals[i, 1, j] = float(up)
+
+        return y_pred, intervals
+
+    def _predict_conditional_cutoff(
         self,
         quantile: float,
         x_test: np.ndarray,
-        score_inv_fn: Callable,
         S_min: Optional[float] = None,
         S_max: Optional[float] = None,
-        randomize: bool = False,
-        exact: bool = True,
-        threshold: Optional[float] = None,
-    ):
+    ) -> float:
         """
-        Returns the (conditionally valid) prediction set for a given
-        test point
+        Computes the conditional conformity-score cutoff S^* for a single test
+        point, i.e. the (conditionally valid) threshold such that the
+        prediction set is ``{y : S(x, y) <= S^*}``.
+
+        Whether the cutoff is computed exactly or by binary search, and whether
+        the dual threshold is randomized, is controlled by the ``exact`` and
+        ``randomize`` attributes set at initialisation.
 
         Arguments
         ---------
         quantile : float
-            Nominal quantile level
+            Nominal quantile level.
         x_test : np.ndarray
-            Single test point
-        score_inv_fn : Callable[float, np.ndarray] -> .
-            Function that takes in a score threshold S^* and test point x and
-            outputs all values of y such that S(x, y) <= S^*
+            Single test point, of shape ``(1, n_features)``.
         S_min : float = None
             Lower bound (if available) on the conformity scores
         S_max : float = None
             Upper bound (if available) on the conformity scores
-        randomize : bool = False
-            Randomize prediction set for exact coverage
-        exact : bool = True
-            Avoid binary search and compute threshold exactly
 
         Returns
         -------
-        prediction_set
+        float
+            The conditional score cutoff S^*.
         """
-        if quantile is None:
-            quantile_test = self.quantile_fn(x_test).reshape(-1, 1)
-            quantiles = np.concatenate((self.quantile_calib, quantile_test), axis=0)
+        quantiles = np.ones((len(self.scores_calib) + 1, 1)) * quantile
+        if self.randomize:
+            threshold = self.rng.uniform(low=quantile - 1, high=quantile)
+        elif quantile < 0.5:
+            threshold = quantile - 1
         else:
-            quantile_test = quantile
-            quantiles = np.ones((len(self.scores_calib) + 1, 1)) * quantile
-        if threshold is None:
-            if randomize:
-                threshold = self.rng.uniform(low=quantile_test - 1, high=quantile_test)
-            else:
-                if quantile_test < 0.5:
-                    threshold = quantile_test - 1
-                else:
-                    threshold = quantile_test
+            threshold = quantile
 
-        if exact:
+        if self.exact:
             if self.infinite_params.get("kernel", FUNCTION_DEFAULTS["kernel"]):
                 raise ValueError(
                     "Exact computation doesn't support RKHS quantile regression for now."
                 )
-            if np.allclose(quantiles[0], quantiles):
-                naive_duals, naive_primals = self._get_calibration_solution(
-                    quantiles.flatten()[0]
-                )
-            else:
-                naive_duals, naive_primals = self._get_calibration_solution(None)
+            naive_duals, naive_primals = self._get_calibration_solution(quantile)
             score_cutoff = self._compute_exact_cutoff(
                 quantiles, naive_primals, naive_duals, self.Phi_fn(x_test), threshold
             )
@@ -427,264 +508,11 @@ class ConditionalSplitConformalRegressor(SplitConformalRegressor):
             else:
                 score_cutoff = self._get_threshold(upper, x_test, quantiles)
 
-        return score_inv_fn(score_cutoff, x_test.reshape(-1, 1))
-
-    # def estimate_coverage(
-    #     self, quantile: float, weights: np.ndarray, x: np.ndarray = None
-    # ):
-    #     """
-    #     estimate_coverage estimates the true percentile of the issued estimate of the
-    #     conditional quantile under the covariate shift induced by 'weights'
-
-    #     If we are ostensibly estimating the 0.95-quantile using an RKHS fit, we may
-    #     determine using our theory that the true percentile of this estimate is only 0.93
-
-    #     Arguments
-    #     ---------
-    #     quantile : float
-    #         Nominal quantile level
-    #     weights : np.ndarray
-    #         RKHS weights for tilt under which the coverage is estimated
-    #     x : np.ndarray = None
-    #         Points for which the RKHS weights are defined. If None, we assume
-    #         that weights corresponds to x_calib
-
-    #     Returns
-    #     -------
-    #     estimated_alpha : float
-    #         Our estimate for the realized quantile level
-    #     """
-    #     weights = weights.reshape(-1, 1)
-    #     prob = setup_cvx_problem_calib(
-    #         quantile,
-    #         self.x_calib,
-    #         self.scores_calib,
-    #         self.phi_calib,
-    #         self.infinite_params,
-    #     )
-    #     if "MOSEK" in cp.installed_solvers():
-    #         prob.solve(solver="MOSEK")
-    #     else:
-    #         prob.solve()
-
-    #     fitted_weights = prob.var_dict["weights"].value
-    #     if x is not None:
-    #         K = pairwise_kernels(
-    #             X=x,
-    #             Y=self.x_calib,
-    #             metric=self.infinite_params.get("kernel", FUNCTION_DEFAULTS["kernel"]),
-    #             gamma=self.infinite_params.get("gamma", FUNCTION_DEFAULTS["gamma"]),
-    #         )
-    #     else:
-    #         K = pairwise_kernels(
-    #             X=self.x_calib,
-    #             metric=self.infinite_params.get("kernel", FUNCTION_DEFAULTS["kernel"]),
-    #             gamma=self.infinite_params.get("gamma", FUNCTION_DEFAULTS["gamma"]),
-    #         )
-    #     inner_prod = weights.T @ K @ fitted_weights
-    #     expectation = np.mean(weights.T @ K)
-    #     # penalty = self.infinite_params['lambda'] * (inner_prod / expectation)
-    #     penalty = (1 / (len(self.x_calib) + 1)) * (inner_prod / expectation)
-    #     return quantile - penalty
-
-    # def predict_naive(self, quantile: float, x: np.ndarray, score_inv_fn: Callable):
-    #     """
-    #     If we do not wish to include the imputed data point, we can sanity check that
-    #     the regression is appropriately adaptive to the conditional variability in the data
-    #     by running a quantile regression on the calibration set without any imputation.
-    #     When n_calib is large and the fit is stable, we expect these two sets to nearly coincide.
-
-    #     Arguments
-    #     ---------
-    #     quantile : float
-    #         Nominal quantile level
-    #     x : np.ndarray
-    #         Set of points for which we are issuing prediction sets
-    #     score_inv_fn : Callable[np.ndarray, np.ndarray] -> np.ndarray
-    #         Vectorized function that takes in a score threshold S^* and test point x and
-    #         outputs all values of y such that S(x, y) <= S^*
-
-    #     Returns
-    #     -------
-    #     prediction_sets
-
-    #     """
-    #     if len(x.shape) < 2:
-    #         raise ValueError("x needs to have shape (m, n), not {x_test.shape}.")
-
-    #     if self.infinite_params.get("kernel", FUNCTION_DEFAULTS["kernel"]):
-    #         prob = setup_cvx_problem_calib(
-    #             quantile,
-    #             self.x_calib,
-    #             self.scores_calib,
-    #             self.phi_calib,
-    #             self.infinite_params,
-    #         )
-    #         if "MOSEK" in cp.installed_solvers():
-    #             prob.solve(solver="MOSEK", verbose=False)
-    #         else:
-    #             prob.solve()
-
-    #         weights = prob.var_dict["weights"].value
-    #         beta = prob.constraints[-1].dual_value
-    #         K = pairwise_kernels(
-    #             X=x,
-    #             Y=self.x_calib,
-    #             metric=self.infinite_params.get("kernel", FUNCTION_DEFAULTS["kernel"]),
-    #             gamma=self.infinite_params.get("gamma", FUNCTION_DEFAULTS["gamma"]),
-    #         )
-    #         threshold = K @ weights + self.Phi_fn(x) @ beta
-    #     else:
-    #         S = np.concatenate([self.scores_calib, [S]], dtype=float)
-    #         Phi = self.phi_calib.astype(float)
-    #         zeros = np.zeros((Phi.shape[1],))
-
-    #         if quantile is None:
-    #             bounds = np.concatenate(
-    #                 (self.quantile_calib - 1, self.quantile_calib), axis=1
-    #             )
-    #         else:
-    #             bounds = [(quantile - 1, quantile)] * (len(self.scores_calib) + 1)
-    #         res = linprog(-1 * S, A_eq=Phi.T, b_eq=zeros, bounds=bounds, method="highs")
-    #         beta = -1 * res.eqlin.marginals
-    #         threshold = self.Phi_fn(x) @ beta
-
-    #     return score_inv_fn(threshold, x)
-
-    # def verify_coverage(
-    #     self,
-    #     x: np.ndarray,
-    #     y: np.ndarray,
-    #     quantile: float,
-    #     randomize: bool = False,
-    #     resolve: bool = False,
-    #     return_dual: bool = False,
-    #     eps: float = 0.001,
-    # ):
-    #     """
-    #     In some experiments, we may simply be interested in verifying the coverage of our method.
-    #     In this case, we do not need to binary search for the threshold S^*, but only need to verify that
-    #     S <= f_S(x) for the true value of S. This function implements this check for test points
-    #     denoted by x and y
-
-    #     Arguments
-    #     ---------
-    #     x : np.ndarray
-    #         A vector of test covariates
-    #     y : np.ndarray
-    #         A vector of test labels
-    #     quantile : float
-    #         Nominal quantile level
-    #     resolve : bool
-    #         Resolve LP/QP with posited value to determine coverage
-
-    #     Returns
-    #     -------
-    #     coverage_booleans : np.ndarray
-    #     """
-    #     covers = []
-    #     duals = []
-
-    #     if quantile is None:
-    #         quantiles = np.concatenate((self.quantile_calib, [[0.0]]), axis=0).flatten()
-    #     else:
-    #         quantiles = quantile * np.ones((len(self.scores_calib) + 1, 1))
-
-    #     if self.infinite_params.get("kernel", FUNCTION_DEFAULTS["kernel"]):
-    #         for x_val, y_val in zip(x, y):
-    #             S_true = self.score_fn(x_val.reshape(1, -1), y_val)
-    #             eta = self._get_dual_solution(
-    #                 S_true[0], x_val.reshape(1, -1), quantiles
-    #             )  # no need to recompute quantiles
-    #             if randomize:
-    #                 threshold = self.rng.uniform(low=quantile - 1, high=quantile)
-    #             elif quantile > 0.5:
-    #                 threshold = quantile - eps
-    #             else:
-    #                 threshold = quantile - 1 + eps
-    #             if quantile > 0.5:
-    #                 covers.append(eta[-1] < threshold)
-    #             else:
-    #                 covers.append(eta[-1] > threshold)
-    #             duals.append(eta[-1])
-
-    #     else:
-    #         for x_val, y_val in zip(x, y):
-    #             if randomize:
-    #                 threshold = self.rng.uniform(
-    #                     low=quantiles[-1] - 1, high=quantiles[-1]
-    #                 )
-    #             elif quantiles[-1] > 0.5:
-    #                 threshold = quantiles[-1]
-    #             else:
-    #                 threshold = quantiles[-1] - 1
-
-    #             S_true = self.score_fn(x_val.reshape(1, -1), y_val)
-    #             if resolve:
-    #                 eta = self._get_dual_solution(
-    #                     S_true[0], x_val.reshape(1, -1), quantile
-    #                 )
-    #                 if quantile > 0.5:
-    #                     covers.append(eta[-1] < threshold)
-    #                 else:
-    #                     covers.append(eta[-1] > threshold)
-    #                 duals.append(eta[-1])
-    #             else:
-    #                 naive_duals, naive_primals = self._get_calibration_solution(
-    #                     quantile
-    #                 )
-    #                 score_cutoff = self._compute_exact_cutoff(
-    #                     quantiles,
-    #                     naive_primals,
-    #                     naive_duals,
-    #                     self.Phi_fn(x_val),
-    #                     threshold,
-    #                 )
-    #                 if quantile > 0.5:
-    #                     covers.append(S_true < score_cutoff)
-    #                 else:
-    #                     covers.append(S_true > score_cutoff)
-    #                 duals.append(np.nan)
-    #     if return_dual:
-    #         return np.asarray(covers), np.asarray(duals)
-    #     return np.asarray(covers)
-
-    # def _get_dual_solution(self, S: float, x: np.ndarray, quantiles: np.ndarray):
-    #     if self.infinite_params.get("kernel", FUNCTION_DEFAULTS["kernel"]):
-    #         prob = finish_dual_setup(
-    #             self.cvx_problem,
-    #             S,
-    #             x,
-    #             quantiles[-1][0],
-    #             self.Phi_fn(x),
-    #             self.x_calib,
-    #             self.infinite_params,
-    #         )
-    #         if "MOSEK" in cp.installed_solvers():
-    #             prob.solve(solver="MOSEK")
-    #         else:
-    #             prob.solve()
-    #         # TODO: THIS IS WRONG
-    #         # raise ValueError("need to get variable out of problem and return its value")
-    #         return prob.var_dict["weights"].value
-    #     else:
-    #         S = np.concatenate([self.scores_calib, [S]])
-    #         Phi = np.concatenate([self.phi_calib, self.Phi_fn(x)], axis=0)
-    #         zeros = np.zeros((Phi.shape[1],))
-    #         bounds = np.concatenate((quantiles - 1, quantiles), axis=1)
-    #         res = linprog(
-    #             -1 * S,
-    #             A_eq=Phi.T,
-    #             b_eq=zeros,
-    #             bounds=bounds,
-    #             method="highs-ds",
-    #             options={"presolve": False},
-    #         )
-    #         eta = res.x
-    #     return eta
+        return float(np.ravel(score_cutoff)[0])
 
     def _get_primal_solution(self, S: float, x: np.ndarray, quantiles: np.ndarray):
         if self.infinite_params.get("kernel", FUNCTION_DEFAULTS["kernel"]):
+            cp = _import_cvxpy()
             prob = finish_dual_setup(
                 self.cvx_problem,
                 S,
@@ -695,7 +523,7 @@ class ConditionalSplitConformalRegressor(SplitConformalRegressor):
                 self.infinite_params,
             )
             if "MOSEK" in cp.installed_solvers():
-                prob.solve(solver="MOSEK")
+                prob.solve(solver="MOSEK")  # pragma: no cover
             else:
                 prob.solve()
 
@@ -747,6 +575,7 @@ def binary_search(func, min, max, tol=1e-3):
 
 def _solve_dual(S, gcc, x_test, quantiles, threshold=None):
     if gcc.infinite_params.get("kernel", None):
+        cp = _import_cvxpy()
         prob = finish_dual_setup(
             gcc.cvx_problem,
             S,
@@ -757,7 +586,7 @@ def _solve_dual(S, gcc, x_test, quantiles, threshold=None):
             gcc.infinite_params,
         )
         if "MOSEK" in cp.installed_solvers():
-            prob.solve(solver="MOSEK")
+            prob.solve(solver="MOSEK")  # pragma: no cover
         else:
             prob.solve(solver="OSQP")
         weights = prob.var_dict["weights"].value
@@ -788,13 +617,7 @@ def _solve_dual(S, gcc, x_test, quantiles, threshold=None):
 
 
 def setup_cvx_problem(x_calib, scores_calib, phi_calib, infinite_params={}):
-    try:
-        import cvxpy as cp
-    except ImportError as e:
-        raise ImportError(
-            "cvxpy is required for ConditionalSplitConformalRegressor. "
-            "Install it with: pip install mapie[conditional]"
-        ) from e
+    cp = _import_cvxpy()
 
     n_calib = len(scores_calib)
     if phi_calib is None:
@@ -854,10 +677,10 @@ def _get_kernel_matrix(x_calib, kernel, gamma):
 
 
 def finish_dual_setup(
-    prob: cp.Problem,
-    S: np.ndarray,
+    prob: Any,
+    S: Any,
     X: np.ndarray,
-    quantile: float,
+    quantile: Any,
     Phi: np.ndarray,
     x_calib: np.ndarray,
     infinite_params={},
@@ -878,10 +701,6 @@ def finish_dual_setup(
             gamma=gamma,
         )
 
-        if "K_12" in prob.param_dict:
-            prob.param_dict["K_12"].value = K_12[:-1]
-            prob.param_dict["K_21"].value = K_12.T
-
         _, L_11 = _get_kernel_matrix(x_calib, kernel, gamma)
         K_22 = pairwise_kernels(X=X.reshape(1, -1), metric=kernel, gamma=gamma)
         L_21 = np.linalg.solve(L_11, K_12[:-1]).T
@@ -897,42 +716,3 @@ def finish_dual_setup(
         # prob.param_dict['quantile'].value *= radius / (len(x_calib) + 1)
 
     return prob
-
-
-# def setup_cvx_problem_calib(
-#     quantile, x_calib, scores_calib, phi_calib, infinite_params={}
-# ):
-#     n_calib = len(scores_calib)
-#     if phi_calib is None:
-#         phi_calib = np.ones((n_calib, 1))
-
-#     eta = cp.Variable(name="weights", shape=n_calib)
-
-#     scores = cp.Constant(scores_calib.reshape(-1, 1))
-
-#     Phi = cp.Constant(phi_calib)
-
-#     kernel = infinite_params.get("kernel", FUNCTION_DEFAULTS["kernel"])
-#     gamma = infinite_params.get("gamma", FUNCTION_DEFAULTS["gamma"])
-
-#     if kernel is None:  # no RKHS fitting
-#         constraints = [(quantile - 1) <= eta, quantile >= eta, eta.T @ Phi == 0]
-#         prob = cp.Problem(
-#             cp.Minimize(-1 * cp.sum(cp.multiply(eta, cp.vec(scores)))), constraints
-#         )
-#     else:  # RKHS fitting
-#         radius = 1 / infinite_params.get("lambda", FUNCTION_DEFAULTS["lambda"])
-
-#         _, L = _get_kernel_matrix(x_calib, kernel, gamma)
-
-#         C = radius / (n_calib + 1)
-
-#         constraints = [(quantile - 1) <= eta, quantile >= eta, eta.T @ Phi == 0]
-#         prob = cp.Problem(
-#             cp.Minimize(
-#                 0.5 * C * cp.sum_squares(L.T @ eta)
-#                 - cp.sum(cp.multiply(eta, cp.vec(scores)))
-#             ),
-#             constraints,
-#         )
-#     return prob
