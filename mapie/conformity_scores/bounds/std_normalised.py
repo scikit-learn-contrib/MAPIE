@@ -79,9 +79,7 @@ class StdConformityScore(BaseConformityScore):
             )
         conformity_scores = self.get_signed_conformity_scores(y, y_pred, y_std)
         if self.consistency_check:
-            self.check_consistency(
-                np.asarray(y), np.asarray(y_pred), conformity_scores
-            )
+            self.check_consistency(np.asarray(y), np.asarray(y_pred), conformity_scores)
         if self.sym:
             conformity_scores = np.abs(conformity_scores)
         return conformity_scores
