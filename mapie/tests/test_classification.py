@@ -22,10 +22,10 @@ from sklearn.model_selection import (
     train_test_split,
 )
 from sklearn.pipeline import Pipeline, make_pipeline
-from sklearn.preprocessing import OneHotEncoder
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from typing_extensions import TypedDict
 
-from mapie.classification import _MapieClassifier
+from mapie.classification import SplitConformalClassifier, _MapieClassifier
 from mapie.conformity_scores import (
     APSConformityScore,
     BaseClassificationScore,
@@ -1321,6 +1321,45 @@ def test_pipeline_compatibility(strategy: str) -> None:
     mapie = _MapieClassifier(estimator=pipe, **STRATEGIES[strategy][0])
     mapie.fit(X, y)
     mapie.predict(X)
+
+
+def test_split_conformal_classifier_pandas_pipeline() -> None:
+    """
+    Check that SplitConformalClassifier works with a pandas DataFrame and a
+    pipeline whose ColumnTransformer selects columns by name.
+
+    Non-regression test for issue #526: MAPIE must pass X through unchanged
+    (without casting it to a numpy array) so that name-based column selection
+    in ColumnTransformer keeps working.
+    """
+    rng = np.random.RandomState(random_state)
+    n_samples = 200
+    X = pd.DataFrame(
+        {
+            "x_num": rng.normal(size=n_samples),
+            "x_cat": rng.choice(["A", "B", "C"], size=n_samples),
+        }
+    )
+    y = rng.randint(0, 3, size=n_samples)
+    preprocessor = ColumnTransformer(
+        [
+            ("num", StandardScaler(), ["x_num"]),
+            ("cat", OneHotEncoder(handle_unknown="ignore"), ["x_cat"]),
+        ]
+    )
+    pipe = make_pipeline(preprocessor, LogisticRegression(max_iter=500))
+    X_train, X_conf, y_train, y_conf = train_test_split(
+        X, y, test_size=0.5, random_state=random_state
+    )
+
+    mapie_classifier = SplitConformalClassifier(
+        estimator=pipe, prefit=False, random_state=random_state
+    )
+    mapie_classifier.fit(X_train, y_train)
+    mapie_classifier.conformalize(X_conf, y_conf)
+    y_pred, y_pred_sets = mapie_classifier.predict_set(X_conf)
+    assert y_pred.shape == (len(X_conf),)
+    assert y_pred_sets.shape == (len(X_conf), 3, 1)
 
 
 def test_pred_proba_float64() -> None:

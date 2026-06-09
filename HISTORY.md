@@ -39,6 +39,7 @@
 - Fix the release process (release-candidate/final-release workflows, docs deployment, and release checklist).
 - Make tests compatible with scikit-learn 1.9 (calibration tests).
 - Silence intentional `UserWarning`s emitted during test runs to keep the test output clean.
+- Add non-regression tests ensuring pandas DataFrames work with name-based `ColumnTransformer` pipelines in `SplitConformalRegressor` (prefit and non-prefit), `CrossConformalRegressor`, `SplitConformalClassifier`, and the manual per-group Mondrian pattern. (issue #526)
 
 ### Breaking changes
 

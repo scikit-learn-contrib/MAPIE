@@ -25,7 +25,7 @@ from sklearn.model_selection import (
     train_test_split,
 )
 from sklearn.pipeline import Pipeline, make_pipeline
-from sklearn.preprocessing import OneHotEncoder
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from typing_extensions import TypedDict
 
 from mapie.aggregation_functions import aggregate_all
@@ -38,6 +38,7 @@ from mapie.conformity_scores import (
 from mapie.estimator.regressor import EnsembleRegressor
 from mapie.metrics.regression import regression_coverage_score
 from mapie.regression.regression import (
+    CrossConformalRegressor,
     JackknifeAfterBootstrapRegressor,
     SplitConformalRegressor,
     _MapieRegressor,
@@ -846,6 +847,108 @@ def test_split_conformal_pipeline_with_sample_weight() -> None:
     y_pred, y_pis = scr.predict_interval(X_conf)
     assert y_pred.shape == (X_conf.shape[0],)
     assert y_pis.shape[0] == X_conf.shape[0]
+
+
+def _make_pandas_dataset_and_pipeline() -> Tuple[pd.DataFrame, pd.Series, Pipeline]:
+    """
+    Build a small mixed-type pandas DataFrame (one numeric and one categorical
+    column) and a sklearn pipeline whose ColumnTransformer selects columns
+    BY NAME. Name-based column selection only works if MAPIE passes X through
+    as a DataFrame (i.e., without casting it to a numpy array).
+    """
+    rng = np.random.RandomState(random_state)
+    n_samples = 200
+    x_num = rng.normal(size=n_samples)
+    x_cat = rng.choice(["A", "B", "C"], size=n_samples)
+    group_effect = pd.Series(x_cat).map({"A": -1.0, "B": 0.0, "C": 1.0}).to_numpy()
+    y = pd.Series(2.0 * x_num + group_effect + rng.normal(scale=0.1, size=n_samples))
+    X = pd.DataFrame({"x_num": x_num, "x_cat": x_cat})
+    preprocessor = ColumnTransformer(
+        [
+            ("num", StandardScaler(), ["x_num"]),
+            ("cat", OneHotEncoder(handle_unknown="ignore"), ["x_cat"]),
+        ]
+    )
+    pipeline = make_pipeline(preprocessor, LinearRegression())
+    return X, y, pipeline
+
+
+def _check_predictions_and_intervals(
+    y_pred: NDArray, y_pis: NDArray, n_samples: int
+) -> None:
+    assert y_pred.shape == (n_samples,)
+    assert y_pis.shape == (n_samples, 2, 1)
+    assert np.isfinite(y_pred).all()
+    assert np.isfinite(y_pis).all()
+
+
+@pytest.mark.parametrize("prefit", [False, True])
+def test_split_conformal_pandas_pipeline(prefit: bool) -> None:
+    """
+    Check that SplitConformalRegressor works with a pandas DataFrame and a
+    pipeline whose ColumnTransformer selects columns by name.
+
+    Non-regression test for issue #526: in v0, MondrianCP cast X to a numpy
+    array, which broke name-based column selection. These tests ensure that
+    X is passed through unchanged so that such pipelines keep working.
+    """
+    X, y, pipeline = _make_pandas_dataset_and_pipeline()
+    X_train, X_conf, y_train, y_conf = train_test_split(
+        X, y, test_size=0.5, random_state=random_state
+    )
+
+    if prefit:
+        pipeline.fit(X_train, y_train)
+        mapie_regressor = SplitConformalRegressor(estimator=pipeline, prefit=True)
+    else:
+        mapie_regressor = SplitConformalRegressor(estimator=pipeline, prefit=False)
+        mapie_regressor.fit(X_train, y_train)
+
+    mapie_regressor.conformalize(X_conf, y_conf)
+    y_pred, y_pis = mapie_regressor.predict_interval(X_conf)
+    _check_predictions_and_intervals(y_pred, y_pis, len(X_conf))
+
+
+def test_cross_conformal_pandas_pipeline() -> None:
+    """
+    Check that CrossConformalRegressor works with a pandas DataFrame and a
+    pipeline whose ColumnTransformer selects columns by name.
+
+    Non-regression test for issue #526.
+    """
+    X, y, pipeline = _make_pandas_dataset_and_pipeline()
+
+    mapie_regressor = CrossConformalRegressor(
+        estimator=pipeline, cv=3, random_state=random_state
+    )
+    mapie_regressor.fit_conformalize(X, y)
+    y_pred, y_pis = mapie_regressor.predict_interval(X)
+    _check_predictions_and_intervals(y_pred, y_pis, len(X))
+
+
+def test_mondrian_pandas_pipeline() -> None:
+    """
+    Check that the manual Mondrian pattern (one SplitConformalRegressor per
+    group, recommended in v1 as a replacement for the removed MondrianCP)
+    works with pandas DataFrames and name-based ColumnTransformer pipelines.
+
+    Non-regression test for issue #526.
+    """
+    X, y, _ = _make_pandas_dataset_and_pipeline()
+    X_train, X_conf, y_train, y_conf = train_test_split(
+        X, y, test_size=0.5, random_state=random_state
+    )
+
+    for group in ["A", "B", "C"]:
+        _, _, pipeline = _make_pandas_dataset_and_pipeline()
+        train_mask = (X_train["x_cat"] == group).to_numpy()
+        conf_mask = (X_conf["x_cat"] == group).to_numpy()
+
+        mapie_regressor = SplitConformalRegressor(estimator=pipeline, prefit=False)
+        mapie_regressor.fit(X_train[train_mask], y_train[train_mask])
+        mapie_regressor.conformalize(X_conf[conf_mask], y_conf[conf_mask])
+        y_pred, y_pis = mapie_regressor.predict_interval(X_conf[conf_mask])
+        _check_predictions_and_intervals(y_pred, y_pis, int(conf_mask.sum()))
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
