@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import warnings
 from inspect import signature
-from typing import Dict, Literal, Optional, Tuple, Union, cast, overload
+from typing import Dict, Literal, NoReturn, Optional, Tuple, Union, cast, overload
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -23,6 +23,7 @@ from .utils import (
     _check_n_features_in,
     _check_null_weight,
     _fit_estimator,
+    _raise_removed_v0_name_error,
     check_is_fitted,
 )
 
@@ -1222,3 +1223,12 @@ class VennAbersCalibrator(BaseEstimator, ClassifierMixin):
             y_pred = classes[np.argmax(p_prime, axis=1)]
 
         return cast(NDArray, y_pred)
+
+
+_V0_TO_V1_NAMES = {
+    "MapieCalibrator": "TopLabelCalibrator",
+}
+
+
+def __getattr__(name: str) -> NoReturn:
+    _raise_removed_v0_name_error(name, __name__, _V0_TO_V1_NAMES)

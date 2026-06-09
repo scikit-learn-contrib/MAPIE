@@ -6,6 +6,9 @@ This package allows you to easily estimate uncertainties in both regression and 
 - In **classification** settings, MAPIE provides **prediction sets** on multi-class data.
 - In any case, MAPIE is compatible with **any scikit-learn-compatible estimator**.
 
+!!! tip "Coming from MAPIE 0.x?"
+    MAPIE v1 renamed and reorganized the main classes: `MapieRegressor`, `MapieClassifier`, `MapieQuantileRegressor` and others were removed. See the [v1 release notes](v1-release-notes.md) for the complete migration guide.
+
 ---
 
 ## 1. Installation

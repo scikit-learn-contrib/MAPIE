@@ -4,7 +4,7 @@ import warnings
 from collections.abc import Iterable as IterableType
 from decimal import Decimal
 from math import isclose
-from typing import Any, Iterable, List, Optional, Tuple, Union, cast
+from typing import Any, Dict, Iterable, List, NoReturn, Optional, Tuple, Union, cast
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -1557,3 +1557,30 @@ def check_sklearn_user_model_is_fitted(estimator):
                 UserWarning,
             )
     return True
+
+
+_V1_MIGRATION_GUIDE_URL = (
+    "https://contrib.scikit-learn.org/MAPIE/stable/getting-started/v1-release-notes/"
+)
+
+
+def _raise_removed_v0_name_error(
+    name: str, module_name: str, v0_to_v1_names: Dict[str, str]
+) -> NoReturn:
+    """
+    Raise a helpful error for v0 class names that were removed in MAPIE v1.
+
+    Intended to be called from module-level ``__getattr__`` hooks (PEP 562),
+    so that v0-style imports such as
+    ``from mapie.regression import MapieRegressor`` fail with a message
+    pointing to the v1 classes to use and to the migration guide, instead of
+    a bare ImportError. Names that were never part of the v0 API raise a
+    plain AttributeError, as expected for unknown module attributes.
+    """
+    if name in v0_to_v1_names:
+        raise ImportError(
+            f"{name} was removed in MAPIE v1. "
+            f"Use {v0_to_v1_names[name]} instead. "
+            f"See the migration guide: {_V1_MIGRATION_GUIDE_URL}"
+        )
+    raise AttributeError(f"module {module_name!r} has no attribute {name!r}")

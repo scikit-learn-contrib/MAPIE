@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import warnings
-from typing import Any, Iterable, Literal, Optional, Tuple, Union, cast
+from typing import Any, Iterable, Literal, NoReturn, Optional, Tuple, Union, cast
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -40,6 +40,7 @@ from mapie.utils import (
     _raise_error_if_fit_called_in_prefit_mode,
     _raise_error_if_method_already_called,
     _raise_error_if_previous_method_not_called,
+    _raise_removed_v0_name_error,
     _transform_confidence_level_to_alpha_list,
     check_is_fitted,
     check_proba_normalized,
@@ -1141,3 +1142,12 @@ class _MapieClassifier(ClassifierMixin, BaseEstimator):
         self.quantiles_ = self.conformity_score_function_.quantiles_
 
         return y_pred, prediction_sets
+
+
+_V0_TO_V1_NAMES = {
+    "MapieClassifier": "SplitConformalClassifier or CrossConformalClassifier",
+}
+
+
+def __getattr__(name: str) -> NoReturn:
+    _raise_removed_v0_name_error(name, __name__, _V0_TO_V1_NAMES)

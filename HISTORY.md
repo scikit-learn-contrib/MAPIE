@@ -1,5 +1,8 @@
 # History
 
+## 1.x.x (2026-xx-xx)
+* Raise a migration-aware `ImportError` when accessing v0 class names removed in v1 (`MapieRegressor`, `MapieQuantileRegressor`, `MapieTimeSeriesRegressor`, `MapieClassifier`, `MapieCalibrator`), pointing users to the corresponding v1 classes and the migration guide. (issue #915)
+
 ## 1.4.1 (2026-06-08)
 
 ### Features
