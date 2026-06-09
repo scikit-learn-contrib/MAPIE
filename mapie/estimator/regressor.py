@@ -737,12 +737,11 @@ class EnsembleStdRegressor(EnsembleRegressor):
         """
         check_is_fitted(self)
 
-        y_std = None
         if self.cv == "prefit":
             y_pred, y_std = self.single_estimator_.predict(X, return_std=True)
         else:
             if self.method == "naive":
-                y_pred = self.single_estimator_.predict(X)
+                y_pred, y_std = self.single_estimator_.predict(X, return_std=True)
             else:
                 cv = cast(BaseCrossValidator, self.cv)
                 outputs = Parallel(n_jobs=self.n_jobs, verbose=self.verbose)(

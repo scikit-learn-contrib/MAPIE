@@ -1198,10 +1198,7 @@ def test_ensemble_std_regressor_predict_calib(
         ens_reg.fit_multi_estimators(X_toy, y_toy)
 
     result = ens_reg.predict_calib_with_std(X_toy)
-    if isinstance(result[0], tuple):
-        y_pred, y_std = result[0]
-    else:
-        y_pred, y_std = result
+    y_pred, y_std = result
     assert y_pred.shape == (len(X_toy),)
     assert y_std is not None
     assert y_std.shape == (len(X_toy),)
@@ -1628,3 +1625,13 @@ def test_mapie_regressor_init_fit_with_prebuilt_ensemble_regressor() -> None:
     ccr._mapie_regressor.init_fit(X_toy, y_toy)
 
     assert ccr._mapie_regressor.estimator_ is prebuilt
+
+
+def test_std_conformity_score_signed_scores_raises_without_std() -> None:
+    """Cover the y_std=None guard in get_signed_conformity_scores (line 44)."""
+    score = StdConformityScore()
+    y = np.array([1.0, 2.0, 3.0])
+    y_pred = np.array([1.1, 1.9, 3.1])
+
+    with pytest.raises(ValueError, match="y_std is required for StdConformityScore."):
+        score.get_signed_conformity_scores(y, y_pred, y_std=None)
