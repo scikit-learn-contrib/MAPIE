@@ -29,6 +29,7 @@
 
 ### Documentation
 
+- Add a classification advanced-analysis example comparing the "lac", "aps" and "raps" conformity scores on a dataset with many classes, showing how the RAPS regularization stabilizes the prediction set sizes. (issue #268)
 - Add a risk control advanced-analysis example showing how to define and control a custom risk (specificity) with `BinaryRisk` and the `BinaryClassificationController`.
 - Add a repository backup of the BlogFeedback dataset (`examples/data/blogData_train.csv.gz`) used by the Kim et al. (2020) example, now loaded by default so the example no longer depends on the UCI download server.
 - Add repository backups of the Zaffran et al. (2022) data used by the ACI comparison example — the prices dataset (`examples/data/zaffran2022_prices.csv.gz`) and the reference results (`examples/data/zaffran2022_aci_reference.csv`) — now loaded by default so the example no longer depends on external downloads (also fixes an `UnboundLocalError` that surfaced when the reference download failed).
