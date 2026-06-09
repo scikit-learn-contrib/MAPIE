@@ -430,7 +430,7 @@ def compute_hoeffding_bentkus_p_value(
     hb_p_value = np.where(
         bentkus_p_value > hoeffding_p_value, hoeffding_p_value, bentkus_p_value
     )
-    return hb_p_value
+    return cast(NDArray, hb_p_value)
 
 
 def _h1(r_hats: NDArray, alphas: NDArray) -> NDArray:

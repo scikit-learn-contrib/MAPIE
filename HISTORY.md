@@ -46,6 +46,10 @@
 - Make tests compatible with scikit-learn 1.9 (calibration tests).
 - Silence intentional `UserWarning`s emitted during test runs to keep the test output clean.
 
+### Breaking changes
+
+- Drop support for Python 3.9 (EOL since October 2025). Minimum supported version is now Python 3.10. This was required to upgrade `pytest` to 9.0.3, which fixes a security advisory (CVE on `/tmp/pytest-of-{user}` directory handling).
+
 ## 1.4.0 (2026-04-30)
 
 ### Features

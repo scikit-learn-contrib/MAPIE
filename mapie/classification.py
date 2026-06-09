@@ -324,7 +324,7 @@ class SplitConformalClassifier:
             "conformalize",
             self._is_conformalized,
         )
-        return self._mapie_classifier.conformity_scores_
+        return cast(NDArray, self._mapie_classifier.conformity_scores_)
 
 
 class CrossConformalClassifier:
@@ -617,7 +617,7 @@ class CrossConformalClassifier:
             "fit_conformalize",
             self.is_fitted_and_conformalized,
         )
-        return self._mapie_classifier.conformity_scores_
+        return cast(NDArray, self._mapie_classifier.conformity_scores_)
 
 
 class _MapieClassifier(ClassifierMixin, BaseEstimator):

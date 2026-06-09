@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import warnings
-from typing import Callable, List, Literal, Tuple, Union
+from typing import Callable, List, Literal, Tuple, Union, cast
 
 import numpy as np
 from numpy.typing import NDArray
@@ -136,10 +136,10 @@ class _BaseRisk:
         """
         values, effective_mask = self._compute_values_and_effective_mask(y_true, y_pred)
         self._warn_if_nan_values(values)
-        risk_sequence = values[effective_mask]
+        risk_sequence: NDArray = values[effective_mask]
         if self.higher_is_better:
             risk_sequence = 1 - risk_sequence
-        return risk_sequence
+        return cast(NDArray, risk_sequence)
 
 
 class BinaryRisk(_BaseRisk):
