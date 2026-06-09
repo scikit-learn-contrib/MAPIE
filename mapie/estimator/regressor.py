@@ -602,7 +602,7 @@ class EnsembleRegressor:
         if return_multi_pred:
             return y_pred, y_pred_multi_low, y_pred_multi_up
         else:
-            return y_pred
+            return cast(NDArray, y_pred)
 
 
 class EnsembleStdRegressor(EnsembleRegressor):
@@ -777,6 +777,7 @@ class EnsembleStdRegressor(EnsembleRegressor):
                 y_pred = aggregate_all(self.agg_function, pred_matrix)
                 y_std = aggregate_all(self.agg_function, std_matrix)
 
+        assert y_std is not None
         return y_pred, y_std
 
     def predict_with_std(
@@ -826,7 +827,7 @@ class EnsembleStdRegressor(EnsembleRegressor):
 
         y_pred, y_std = self.single_estimator_.predict(X, return_std=True)
         if not return_multi_pred and not ensemble:
-            return y_pred
+            return cast(NDArray, y_pred)
 
         if self.method in self.no_agg_methods_ or self.cv in self.no_agg_cv_:
             y_pred_multi_low = y_pred[:, np.newaxis]
@@ -849,4 +850,4 @@ class EnsembleStdRegressor(EnsembleRegressor):
         if return_multi_pred:
             return y_pred, y_pred_multi_low, y_pred_multi_up, y_std_multi
         else:
-            return y_pred
+            return cast(NDArray, y_pred)

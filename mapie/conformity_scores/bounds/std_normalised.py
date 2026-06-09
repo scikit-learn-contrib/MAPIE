@@ -40,6 +40,8 @@ class StdConformityScore(BaseConformityScore):
         and the observed ones, from the following formula:
         signed conformity score = y - y_pred
         """
+        if y_std is None:
+            raise ValueError("y_std is required for StdConformityScore.")
         y_std = np.maximum(self.eps, y_std) ** self.pow
         return np.subtract(y, y_pred) / y_std
 
@@ -77,7 +79,9 @@ class StdConformityScore(BaseConformityScore):
             )
         conformity_scores = self.get_signed_conformity_scores(y, y_pred, y_std)
         if self.consistency_check:
-            self.check_consistency(y, y_pred, conformity_scores)
+            self.check_consistency(
+                np.asarray(y), np.asarray(y_pred), conformity_scores
+            )
         if self.sym:
             conformity_scores = np.abs(conformity_scores)
         return conformity_scores
