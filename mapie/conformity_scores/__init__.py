@@ -4,7 +4,7 @@ from .bounds import (
     AbsoluteConformityScore,
     GammaConformityScore,
     ResidualNormalisedScore,
-    StdConformityScore
+    StdConformityScore,
 )
 from .sets import (
     APSConformityScore,

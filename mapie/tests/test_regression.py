@@ -1106,6 +1106,8 @@ def test_ensemble_regressor_fit() -> None:
         False,
     )
     ens_reg.fit(X, y)
+
+
 def test_ensemble_std_regressor_predict_oof_estimator() -> None:
     """Test std-aware out-of-fold predictions for empty and non-empty folds."""
     # This test targets EnsembleStdRegressor directly — no _MapieRegressor involved.
@@ -1135,9 +1137,7 @@ def test_ensemble_std_regressor_predict_oof_estimator() -> None:
 
 @pytest.mark.parametrize("method", ["plus", "minmax"])
 @pytest.mark.parametrize("ensemble", [True, False])
-def test_ensemble_std_regressor_predict_outputs(
-    method: str, ensemble: bool
-) -> None:
+def test_ensemble_std_regressor_predict_outputs(method: str, ensemble: bool) -> None:
     """Test std-aware ensemble predictions with and without aggregation."""
     # Direct EnsembleStdRegressor test — unchanged.
     ens_reg = EnsembleStdRegressor(
@@ -1254,12 +1254,20 @@ def test_ensemble_std_regressor_predict_with_std_prefit() -> None:
     # Direct EnsembleStdRegressor test — unchanged.
     estimator = DummyStdRegressor().fit(X_toy, y_toy)
     ens_reg = EnsembleStdRegressor(
-        estimator, "base", "prefit", "mean", None, 0.2, False,
+        estimator,
+        "base",
+        "prefit",
+        "mean",
+        None,
+        0.2,
+        False,
     )
     ens_reg.fit(X_toy, y_toy)
 
     y_pred, y_pred_low, y_pred_up, y_std = ens_reg.predict_with_std(
-        X_toy, ensemble=False, return_multi_pred=True,
+        X_toy,
+        ensemble=False,
+        return_multi_pred=True,
     )
     assert y_pred.shape == (len(X_toy),)
     assert y_pred_low.shape == (len(X_toy), 1)
@@ -1268,7 +1276,9 @@ def test_ensemble_std_regressor_predict_with_std_prefit() -> None:
     np.testing.assert_allclose(y_std, 0.5)
 
     y_pred_only = ens_reg.predict_with_std(
-        X_toy, ensemble=False, return_multi_pred=False,
+        X_toy,
+        ensemble=False,
+        return_multi_pred=False,
     )
     assert isinstance(y_pred_only, np.ndarray)
     assert y_pred_only.shape == (len(X_toy),)
@@ -1282,13 +1292,18 @@ def test_ensemble_std_regressor_predict_with_std_cv_no_ensemble(method: str) -> 
         DummyStdRegressor(),
         method,
         KFold(n_splits=3, shuffle=True, random_state=random_state),
-        "mean", None, 0.2, False,
+        "mean",
+        None,
+        0.2,
+        False,
     )
     ens_reg.fit_single_estimator(X_toy, y_toy)
     ens_reg.fit_multi_estimators(X_toy, y_toy)
 
     y_pred, y_pred_low, y_pred_up, y_std = ens_reg.predict_with_std(
-        X_toy, ensemble=False, return_multi_pred=True,
+        X_toy,
+        ensemble=False,
+        return_multi_pred=True,
     )
     assert y_pred.shape == (len(X_toy),)
     assert y_pred_low.shape[0] == len(X_toy)
@@ -1304,13 +1319,18 @@ def test_ensemble_std_regressor_predict_with_std_cv_ensemble(method: str) -> Non
         DummyStdRegressor(),
         method,
         KFold(n_splits=3, shuffle=True, random_state=random_state),
-        "mean", None, 0.2, False,
+        "mean",
+        None,
+        0.2,
+        False,
     )
     ens_reg.fit_single_estimator(X_toy, y_toy)
     ens_reg.fit_multi_estimators(X_toy, y_toy)
 
     y_pred, y_pred_low, y_pred_up, y_std = ens_reg.predict_with_std(
-        X_toy, ensemble=True, return_multi_pred=True,
+        X_toy,
+        ensemble=True,
+        return_multi_pred=True,
     )
     assert y_pred.shape == (len(X_toy),)
     assert y_pred_low.shape[0] == len(X_toy)
@@ -1332,8 +1352,14 @@ def test_mapie_regressor_predict_with_alpha_std_branch(monkeypatch) -> None:
     monkeypatch.setattr(
         ccr._mapie_regressor.conformity_score_function_,
         "predict_set",
-        lambda X, alpha_np, estimator, conformity_scores, ensemble, method,
-               optimize_beta, allow_infinite_bounds: (
+        lambda X,
+        alpha_np,
+        estimator,
+        conformity_scores,
+        ensemble,
+        method,
+        optimize_beta,
+        allow_infinite_bounds: (
             np.full(len(X), 1.5, dtype=float),
             np.zeros((len(X), len(alpha_np)), dtype=float),
             np.ones((len(X), len(alpha_np)), dtype=float),
@@ -1355,7 +1381,10 @@ def test_ensemble_std_regressor_predict_with_std_returns_single_prediction(
         DummyStdRegressor(),
         "plus",
         KFold(n_splits=3, shuffle=True, random_state=random_state),
-        "mean", None, 0.2, False,
+        "mean",
+        None,
+        0.2,
+        False,
     )
     ens_reg.fit_single_estimator(X_toy, y_toy)
     ens_reg.fit_multi_estimators(X_toy, y_toy)
@@ -1431,13 +1460,17 @@ def test_ensemble_std_regressor_predict_with_std_no_ensemble_branch(
         DummyStdRegressor(),
         method,
         KFold(n_splits=3, shuffle=True, random_state=random_state),
-        "mean", None, 0.2, False,
+        "mean",
+        None,
+        0.2,
+        False,
     )
     ens_reg.fit_single_estimator(X_toy, y_toy)
     ens_reg.fit_multi_estimators(X_toy, y_toy)
 
     monkeypatch.setattr(
-        ens_reg, "_pred_multi_with_std",
+        ens_reg,
+        "_pred_multi_with_std",
         lambda X: (
             np.full((len(X), 2), 3.0, dtype=float),
             np.full((len(X), 2), 0.5, dtype=float),
@@ -1447,7 +1480,9 @@ def test_ensemble_std_regressor_predict_with_std_no_ensemble_branch(
     single_pred, _ = ens_reg.single_estimator_.predict(X_toy, return_std=True)
 
     y_pred, y_pred_low, y_pred_up, y_std = ens_reg.predict_with_std(
-        X_toy, ensemble=False, return_multi_pred=True,
+        X_toy,
+        ensemble=False,
+        return_multi_pred=True,
     )
 
     np.testing.assert_allclose(y_pred, single_pred)
@@ -1477,13 +1512,17 @@ def test_ensemble_std_regressor_predict_with_std_no_ensemble_single_output_branc
         DummyStdRegressor(),
         method,
         KFold(n_splits=3, shuffle=True, random_state=random_state),
-        "mean", None, 0.2, False,
+        "mean",
+        None,
+        0.2,
+        False,
     )
     ens_reg.fit_single_estimator(X_toy, y_toy)
     ens_reg.fit_multi_estimators(X_toy, y_toy)
 
     monkeypatch.setattr(
-        ens_reg, "_pred_multi_with_std",
+        ens_reg,
+        "_pred_multi_with_std",
         lambda X: (
             np.full((len(X), 2), 3.0, dtype=float),
             np.full((len(X), 2), 0.5, dtype=float),
@@ -1501,12 +1540,20 @@ def test_ensemble_std_regressor_predict_with_std_prefit_multi_pred() -> None:
     # Direct EnsembleStdRegressor test — unchanged.
     estimator = DummyStdRegressor().fit(X_toy, y_toy)
     ens_reg = EnsembleStdRegressor(
-        estimator, "base", "prefit", "mean", None, 0.2, False,
+        estimator,
+        "base",
+        "prefit",
+        "mean",
+        None,
+        0.2,
+        False,
     )
     ens_reg.fit(X_toy, y_toy)
 
     y_pred, y_pred_low, y_pred_up, y_std = ens_reg.predict_with_std(
-        X_toy, ensemble=False, return_multi_pred=True,
+        X_toy,
+        ensemble=False,
+        return_multi_pred=True,
     )
     expected_pred, expected_std = estimator.predict(X_toy, return_std=True)
 
@@ -1549,7 +1596,10 @@ def test_ensemble_std_regressor_invalid_method() -> None:
             DummyStdRegressor(),
             "enbpi",
             KFold(n_splits=3, shuffle=True, random_state=random_state),
-            "mean", None, 0.2, False,
+            "mean",
+            None,
+            0.2,
+            False,
         )
 
 
@@ -1562,7 +1612,10 @@ def test_mapie_regressor_init_fit_with_prebuilt_ensemble_regressor() -> None:
         LinearRegression(),
         "plus",
         KFold(n_splits=3, shuffle=True, random_state=random_state),
-        "mean", None, 0.2, False,
+        "mean",
+        None,
+        0.2,
+        False,
     )
     prebuilt.fit_single_estimator(X_toy, y_toy)
 

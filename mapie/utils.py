@@ -1496,6 +1496,7 @@ def _raise_error_if_fit_called_in_prefit_mode(
             "Use the conformalize method directly after instanciation."
         )
 
+
 def _check_model_has_std_argument(model_has_std: bool) -> None:
     """Check if the argument `model_has_std` is a boolean or not
 
@@ -1515,8 +1516,7 @@ def _check_model_has_std_argument(model_has_std: bool) -> None:
 
     if not isinstance(model_has_std, bool):
         raise ValueError(
-            "Invalid value for `model_has_std`. "
-            "Please enter a boolean value."
+            "Invalid value for `model_has_std`. Please enter a boolean value."
         )
 
 

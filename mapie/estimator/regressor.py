@@ -299,11 +299,7 @@ class EnsembleRegressor:
         else:
             raise ValueError("The value of the aggregation function is not correct")
 
-    def _pred_multi(
-        self, 
-        X: ArrayLike, 
-        **predict_params
-    ) -> NDArray:
+    def _pred_multi(self, X: ArrayLike, **predict_params) -> NDArray:
         """
         Return a prediction per train sample for each test sample, by
         aggregation with matrix `k_`.
@@ -625,7 +621,7 @@ class EnsembleStdRegressor(EnsembleRegressor):
         agg_function: Optional[str],
         n_jobs: Optional[int],
         test_size: Optional[Union[int, float]],
-        verbose: int
+        verbose: int,
     ):
         super().__init__(
             estimator=estimator,
@@ -636,7 +632,7 @@ class EnsembleStdRegressor(EnsembleRegressor):
             test_size=test_size,
             verbose=verbose,
         )
-        allowed_methods = {"naive", "base", "plus", "minmax"}        
+        allowed_methods = {"naive", "base", "plus", "minmax"}
         if self.method not in allowed_methods:
             raise ValueError(
                 f"method={self.method!r} is not supported by EnsembleStdRegressor. "
@@ -646,7 +642,7 @@ class EnsembleStdRegressor(EnsembleRegressor):
     @staticmethod
     def _predict_oof_estimator_with_std(
         estimator: RegressorMixin, X: ArrayLike, val_index: ArrayLike, **predict_params
-        ) -> Tuple[Tuple[NDArray, NDArray], ArrayLike]:
+    ) -> Tuple[Tuple[NDArray, NDArray], ArrayLike]:
         """
         Perform predictions on a single out-of-fold model on a validation set.
 
@@ -674,9 +670,7 @@ class EnsembleStdRegressor(EnsembleRegressor):
         return (y_pred, y_std), val_index
 
     def _pred_multi_with_std(
-        self, 
-        X: ArrayLike, 
-        **predict_params
+        self, X: ArrayLike, **predict_params
     ) -> Tuple[NDArray, NDArray]:
         """
         Return a prediction per train sample for each test sample, by
@@ -753,14 +747,15 @@ class EnsembleStdRegressor(EnsembleRegressor):
                 cv = cast(BaseCrossValidator, self.cv)
                 outputs = Parallel(n_jobs=self.n_jobs, verbose=self.verbose)(
                     delayed(self._predict_oof_estimator_with_std)(
-                        estimator, X, calib_index,
+                        estimator,
+                        X,
+                        calib_index,
                     )
-                    for (_, calib_index), estimator in zip(cv.split(X),
-                                                           self.estimators_)
+                    for (_, calib_index), estimator in zip(
+                        cv.split(X), self.estimators_
+                    )
                 )
-                predictions, indices = map(
-                    list, zip(*outputs)
-                )
+                predictions, indices = map(list, zip(*outputs))
                 n_samples = _num_samples(X)
                 pred_matrix = np.full(
                     shape=(n_samples, cv.get_n_splits(X)),
@@ -773,12 +768,8 @@ class EnsembleStdRegressor(EnsembleRegressor):
                     dtype=float,
                 )
                 for i, ind in enumerate(indices):
-                    pred_matrix[ind, i] = np.array(
-                        predictions[i][0], dtype=float
-                    )
-                    std_matrix[ind, i] = np.array(
-                        predictions[i][1], dtype=float
-                    )
+                    pred_matrix[ind, i] = np.array(predictions[i][0], dtype=float)
+                    std_matrix[ind, i] = np.array(predictions[i][1], dtype=float)
                     self.k_[ind, i] = 1
 
                 _check_nan_in_aposteriori_prediction(pred_matrix)

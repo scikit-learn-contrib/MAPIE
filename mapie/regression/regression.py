@@ -422,7 +422,9 @@ class CrossConformalRegressor:
         self,
         estimator: RegressorMixin = LinearRegression(),
         confidence_level: Union[float, Iterable[float]] = 0.9,
-        conformity_score: Union[str, BaseRegressionScore, BaseConformityScore] = "absolute",
+        conformity_score: Union[
+            str, BaseRegressionScore, BaseConformityScore
+        ] = "absolute",
         model_has_std: bool = False,
         method: str = "plus",
         cv: Union[int, BaseCrossValidator] = 5,
@@ -436,7 +438,9 @@ class CrossConformalRegressor:
         _check_cv_not_string(cv)
         _check_cv_not_subsample(cv)
 
-        _type_conformal_score = BaseRegressionScore if not model_has_std else BaseConformityScore
+        _type_conformal_score = (
+            BaseRegressionScore if not model_has_std else BaseConformityScore
+        )
 
         self._mapie_regressor = _MapieRegressor(
             estimator=estimator,
@@ -1601,8 +1605,7 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
 
         if not isinstance(estimator, EnsembleRegressor):
             my_regressor = (
-                EnsembleRegressor if not self.model_has_std
-                else EnsembleStdRegressor
+                EnsembleRegressor if not self.model_has_std else EnsembleStdRegressor
             )
 
             self.estimator_ = my_regressor(
@@ -1639,20 +1642,26 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
         predict_params = kwargs.pop("predict_params", {})
         self._predict_params = len(predict_params) > 0
 
-        self.estimator_.fit_multi_estimators(
-                 X, y, groups=groups, **self._fit_params
-            )
-        
+        self.estimator_.fit_multi_estimators(X, y, groups=groups, **self._fit_params)
+
         # Predict on calibration data and compute the conformity scores (manage jk-ab case )
         if isinstance(self.estimator_, EnsembleStdRegressor):
-            y_pred, y_std = self.estimator_.predict_calib_with_std(X, y=y, groups=groups, **predict_params)
-            self.conformity_scores_ = self.conformity_score_function_.get_conformity_scores(
-                X=X, y=y, y_pred=y_pred, y_std=y_std
+            y_pred, y_std = self.estimator_.predict_calib_with_std(
+                X, y=y, groups=groups, **predict_params
+            )
+            self.conformity_scores_ = (
+                self.conformity_score_function_.get_conformity_scores(
+                    X=X, y=y, y_pred=y_pred, y_std=y_std
+                )
             )
         else:
-            y_pred = self.estimator_.predict_calib(X, y=y, groups=groups, **predict_params)
-            self.conformity_scores_ = self.conformity_score_function_.get_conformity_scores(
-                X=X, y=y, y_pred=y_pred
+            y_pred = self.estimator_.predict_calib(
+                X, y=y, groups=groups, **predict_params
+            )
+            self.conformity_scores_ = (
+                self.conformity_score_function_.get_conformity_scores(
+                    X=X, y=y, y_pred=y_pred
+                )
             )
 
         return self

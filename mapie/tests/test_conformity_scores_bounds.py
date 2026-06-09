@@ -11,7 +11,7 @@ from mapie.conformity_scores import (
     BaseRegressionScore,
     GammaConformityScore,
     ResidualNormalisedScore,
-    StdConformityScore
+    StdConformityScore,
 )
 from mapie.regression.regression import _MapieRegressor
 from mapie.conformity_scores.utils import check_regression_conformity_score
@@ -446,6 +446,7 @@ def test_beta_optimize_handles_float32_alpha() -> None:
 =======
 # ------------------------ StdConformityScore tests ------------------------
 
+
 class DummyStdEstimator:
     """Minimal estimator implementing predict_with_std for testing."""
 
@@ -559,6 +560,7 @@ def test_std_consistency_check() -> None:
 
     score.get_conformity_scores(y, y_pred, y_std=y_std)
 
+
 def test_std_conformity_scores_nonsym() -> None:
     score = StdConformityScore(sym=False)
 
@@ -592,6 +594,7 @@ def test_std_predict_set() -> None:
     assert y_pred.shape == (5,)
     assert low.shape[0] == 5
     assert up.shape[0] == 5
+
 
 def test_std_check_consistency_raises() -> None:
     score = StdConformityScore()

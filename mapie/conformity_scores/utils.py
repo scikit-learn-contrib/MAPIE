@@ -11,7 +11,7 @@ from .bounds import (
     AbsoluteConformityScore,
     GammaConformityScore,
     ResidualNormalisedScore,
-    StdConformityScore
+    StdConformityScore,
 )
 from .sets import (
     LACConformityScore,
@@ -29,11 +29,7 @@ CONFORMITY_SCORES_STRING_MAP = {
         "gamma": GammaConformityScore,
         "residual_normalized": ResidualNormalisedScore,
     },
-
-    BaseConformityScore: {
-        "std_normalized": StdConformityScore
-    },
-
+    BaseConformityScore: {"std_normalized": StdConformityScore},
     BaseClassificationScore: {
         "lac": LACConformityScore,
         "top_k": TopKConformityScore,

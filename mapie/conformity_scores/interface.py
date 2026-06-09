@@ -196,4 +196,3 @@ class BaseConformityScore(metaclass=ABCMeta):
         if not self.sym:
             n //= 2
         return n
-

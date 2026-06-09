@@ -107,7 +107,7 @@ print(f"  N testing  points = {len(X_test)}")
 kernel = ConstantKernel(1.0) * RBF(length_scale=1.0)
 gp = GaussianProcessRegressor(
     kernel=kernel,
-    alpha=1e-6,      # numerical stability nugget
+    alpha=1e-6,  # numerical stability nugget
     normalize_y=True,
     n_restarts_optimizer=5,
     random_state=42,
@@ -121,7 +121,7 @@ gp.fit(X_train, y_train)
 # J+GP: conformity scores normalised by GP posterior std (Jaber et al. 2025)
 mapie_jplus_gp = CrossConformalRegressor(
     estimator=gp,
-    cv=-1,                              # leave-one-out (jackknife+)
+    cv=-1,  # leave-one-out (jackknife+)
     method="plus",
     confidence_level=1 - ALPHA,
     conformity_score=StdConformityScore(),
@@ -150,7 +150,7 @@ mapie_jplus.fit_conformalize(X_train, y_train)
 # ---------------------------------------------------------------------------
 
 _, y_pis_jplus_gp = mapie_jplus_gp.predict_interval(X_test)
-_, y_pis_jplus   = mapie_jplus.predict_interval(X_test)
+_, y_pis_jplus = mapie_jplus.predict_interval(X_test)
 
 y_mean, y_std = gp.predict(X_test, return_std=True)
 
@@ -162,16 +162,18 @@ q_hi = scipy.stats.norm.ppf(1 - ALPHA / 2)
 # Empirical coverage
 # ---------------------------------------------------------------------------
 
+
 def coverage(y_true, y_pis):
     return float(np.mean((y_true >= y_pis[:, 0, 0]) & (y_true <= y_pis[:, 1, 0])))
 
-cov_gp  = float(np.mean(
-    (y_test >= y_mean + y_std * q_lo) & (y_test <= y_mean + y_std * q_hi)
-))
-cov_jplus_gp = coverage(y_test, y_pis_jplus_gp)
-cov_jplus    = coverage(y_test, y_pis_jplus)
 
-print(f"\nEmpirical coverage at 1-α={1-ALPHA:.0%}:")
+cov_gp = float(
+    np.mean((y_test >= y_mean + y_std * q_lo) & (y_test <= y_mean + y_std * q_hi))
+)
+cov_jplus_gp = coverage(y_test, y_pis_jplus_gp)
+cov_jplus = coverage(y_test, y_pis_jplus)
+
+print(f"\nEmpirical coverage at 1-α={1 - ALPHA:.0%}:")
 print(f"  GP credibility interval  : {cov_gp:.1%}")
 print(f"  J+GP (StdConformityScore): {cov_jplus_gp:.1%}")
 print(f"  J+   (AbsoluteScore)     : {cov_jplus:.1%}")
@@ -189,18 +191,25 @@ titles = [
 
 for ax, title in zip(axes, titles):
     # True function
-    ax.plot(x_mesh[x_mesh < DISCONTINUITY],
-            g(x_mesh)[x_mesh < DISCONTINUITY],
-            color=BLUE[0], lw=1.5, label="True function $g$")
-    ax.plot(x_mesh[x_mesh >= DISCONTINUITY],
-            g(x_mesh)[x_mesh >= DISCONTINUITY],
-            color=BLUE[0], lw=1.5)
+    ax.plot(
+        x_mesh[x_mesh < DISCONTINUITY],
+        g(x_mesh)[x_mesh < DISCONTINUITY],
+        color=BLUE[0],
+        lw=1.5,
+        label="True function $g$",
+    )
+    ax.plot(
+        x_mesh[x_mesh >= DISCONTINUITY],
+        g(x_mesh)[x_mesh >= DISCONTINUITY],
+        color=BLUE[0],
+        lw=1.5,
+    )
     # GP mean
-    ax.plot(X_test[:, 0], y_mean, color=YELLOW[0], lw=1.5,
-            label="GP posterior mean")
+    ax.plot(X_test[:, 0], y_mean, color=YELLOW[0], lw=1.5, label="GP posterior mean")
     # Training data
-    ax.scatter(X_train[:, 0], y_train, color=BLUE[0], s=30, zorder=5,
-               label="Training points")
+    ax.scatter(
+        X_train[:, 0], y_train, color=BLUE[0], s=30, zorder=5, label="Training points"
+    )
     ax.set_xlabel("$x$")
     ax.set_title(title, fontsize=10)
 
@@ -209,7 +218,8 @@ axes[0].fill_between(
     X_test[:, 0],
     y_mean + y_std * q_lo,
     y_mean + y_std * q_hi,
-    alpha=0.25, color=YELLOW[0],
+    alpha=0.25,
+    color=YELLOW[0],
     label="GP ±$z_{{α/2}}$ σ̂(x)",
 )
 
@@ -218,7 +228,8 @@ axes[1].fill_between(
     X_test[:, 0],
     y_pis_jplus_gp[:, 0, 0],
     y_pis_jplus_gp[:, 1, 0],
-    alpha=0.3, color="green",
+    alpha=0.3,
+    color="green",
     label="J+GP conformal PI",
 )
 
@@ -227,7 +238,8 @@ axes[2].fill_between(
     X_test[:, 0],
     y_pis_jplus[:, 0, 0],
     y_pis_jplus[:, 1, 0],
-    alpha=0.3, color=ORANGE[0],
+    alpha=0.3,
+    color=ORANGE[0],
     label="J+ conformal PI",
 )
 

@@ -32,13 +32,8 @@ class StdConformityScore(BaseConformityScore):
         self.eps = eps
         self.consistency_check = False
 
-
     def get_signed_conformity_scores(
-        self,
-        y: ArrayLike,
-        y_pred: ArrayLike,
-        y_std: Union[ArrayLike, None],
-        **kwargs
+        self, y: ArrayLike, y_pred: ArrayLike, y_std: Union[ArrayLike, None], **kwargs
     ) -> NDArray:
         """
         Compute the signed conformity scores from the predicted values
@@ -49,10 +44,7 @@ class StdConformityScore(BaseConformityScore):
         return np.subtract(y, y_pred) / y_std
 
     def get_conformity_scores(
-        self,
-        y: ArrayLike,
-        y_pred: ArrayLike,
-        **kwargs
+        self, y: ArrayLike, y_pred: ArrayLike, **kwargs
     ) -> NDArray:
         """
         Get the conformity score considering the symmetrical property if so.
@@ -83,9 +75,7 @@ class StdConformityScore(BaseConformityScore):
                 "y_std is required to compute conformity scores with "
                 "StdConformityScore."
             )
-        conformity_scores = self.get_signed_conformity_scores(
-            y, y_pred, y_std
-        )
+        conformity_scores = self.get_signed_conformity_scores(y, y_pred, y_std)
         if self.consistency_check:
             self.check_consistency(y, y_pred, conformity_scores)
         if self.sym:
@@ -93,10 +83,7 @@ class StdConformityScore(BaseConformityScore):
         return conformity_scores
 
     def get_estimation_distribution(
-        self,
-        y_pred: ArrayLike,
-        conformity_scores: ArrayLike,
-        **kwargs
+        self, y_pred: ArrayLike, conformity_scores: ArrayLike, **kwargs
     ) -> NDArray:
         """
         Compute samples of the estimation distribution from the predicted
@@ -117,7 +104,7 @@ class StdConformityScore(BaseConformityScore):
         alpha_np: NDArray,
         ensemble: bool,
         method: str,
-        **kwargs
+        **kwargs,
     ) -> Tuple[NDArray, NDArray, NDArray]:
         """
         Compute bounds of the prediction intervals from the observed values,
@@ -162,7 +149,7 @@ class StdConformityScore(BaseConformityScore):
         )
         signed = -1 if self.sym else 1
         conformity_scores = conformity_scores * np.maximum(
-            self.eps, y_std_multi ** self.pow
+            self.eps, y_std_multi**self.pow
         )
         if method == "plus":
             alpha_low = alpha_np if self.sym else alpha_np / 2
@@ -187,18 +174,14 @@ class StdConformityScore(BaseConformityScore):
             quantile_low = self.get_quantile(
                 conformity_scores, alpha_low, axis=1, reversed=True
             )
-            quantile_up = self.get_quantile(
-                conformity_scores, alpha_up, axis=1
-            )
+            quantile_up = self.get_quantile(conformity_scores, alpha_up, axis=1)
             bound_low = self.get_estimation_distribution(
                 y_pred_low, signed * quantile_low
             )
-            bound_up = self.get_estimation_distribution(
-                y_pred_up, quantile_up
-            )
+            bound_up = self.get_estimation_distribution(y_pred_up, quantile_up)
 
         return y_pred, bound_low, bound_up
-    
+
     def predict_set(self, X: NDArray, alpha_np: NDArray, **kwargs):
         """
         Compute the prediction sets on new samples based on the uncertainty of
@@ -222,7 +205,6 @@ class StdConformityScore(BaseConformityScore):
         """
         return self.get_bounds(X=X, alpha_np=alpha_np, **kwargs)
 
-    
     def check_consistency(
         self, y: NDArray, y_pred: NDArray, conformity_scores: NDArray, **kwargs
     ) -> None:
