@@ -415,35 +415,6 @@ def test_intervals_shape_with_every_score(
     assert intervals.shape == (n_samples, 2, len(alpha))
 
 
-<<<<<<< HEAD
-@pytest.mark.parametrize(
-    "alpha_np",
-    [np.array([0.1]), np.array([0.1, 0.2, 0.5])],
-)
-def test_beta_optimize_shape_and_range(alpha_np: NDArray) -> None:
-    rng = np.random.default_rng(random_state)
-    conformity_scores = rng.standard_normal(50)
-    beta_np = AbsoluteConformityScore._beta_optimize(
-        alpha_np, conformity_scores, conformity_scores
-    )
-    n = len(conformity_scores)
-    assert beta_np.shape == (len(alpha_np),)
-    assert beta_np.dtype == np.float64
-    assert not np.isnan(beta_np).any()
-    for ind, _alpha in enumerate(alpha_np):
-        assert _alpha / (n + 1) <= beta_np[ind] <= _alpha
-
-
-def test_beta_optimize_handles_float32_alpha() -> None:
-    rng = np.random.default_rng(random_state)
-    conformity_scores = rng.standard_normal(50)
-    alpha_np = np.array([0.1, 0.2], dtype=np.float32)
-    beta_np = AbsoluteConformityScore._beta_optimize(
-        alpha_np, conformity_scores, conformity_scores
-    )
-    assert beta_np.shape == (2,)
-    assert not np.isnan(beta_np).any()
-=======
 # ------------------------ StdConformityScore tests ------------------------
 
 
@@ -610,4 +581,3 @@ def test_std_check_consistency_raises() -> None:
 
     with pytest.raises(ValueError, match="are not consistent"):
         score.check_consistency(y, y_pred, conformity_scores)
->>>>>>> d371044f (TEST: unitary tests for the new Std score)
