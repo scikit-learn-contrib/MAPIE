@@ -66,6 +66,7 @@ dev = [
     "wheel==0.45.1",
 ]
 docs = [
+    "cvxpy>=1.4",
     "lightgbm==4.6.0",
     "matplotlib==3.9.4",
     "mkdocs-material>=9.5",
