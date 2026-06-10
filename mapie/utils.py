@@ -4,7 +4,7 @@ import warnings
 from collections.abc import Iterable as IterableType
 from decimal import Decimal
 from math import isclose
-from typing import Any, Iterable, List, Optional, Tuple, Union, cast
+from typing import Any, Callable, Iterable, List, Optional, Tuple, Union, cast
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -19,9 +19,14 @@ from sklearn.model_selection import (
     train_test_split,
 )
 from sklearn.pipeline import Pipeline
-from sklearn.utils import _safe_indexing
+from sklearn.utils import _safe_indexing, gen_batches
 from sklearn.utils.multiclass import type_of_target
-from sklearn.utils.validation import _check_sample_weight, _num_features, column_or_1d
+from sklearn.utils.validation import (
+    _check_sample_weight,
+    _num_features,
+    _num_samples,
+    column_or_1d,
+)
 
 
 # This function is the only public utility of MAPIE as of v1 release
@@ -1391,6 +1396,93 @@ def _cast_predictions_to_ndarray_tuple(
             "and intervals, not points only."
         )
     return cast(Tuple[NDArray, NDArray], predictions)
+
+
+def _check_batch_size(batch_size: Optional[int]) -> None:
+    """
+    Check that `batch_size` is either `None` or a strictly positive integer.
+
+    Parameters
+    ----------
+    batch_size : Optional[int]
+        Value to check.
+
+    Raises
+    ------
+    ValueError
+        If `batch_size` is not `None` and is lower than 1.
+    """
+    if batch_size is not None and batch_size < 1:
+        raise ValueError(
+            "Invalid batch_size argument: must be None or a strictly positive integer."
+        )
+
+
+def _predict_points_in_batches(
+    predict_function: Callable[[ArrayLike], NDArray],
+    X: ArrayLike,
+    batch_size: int,
+) -> NDArray:
+    """
+    Apply a point prediction function to batches of `X` and concatenate results.
+
+    Parameters
+    ----------
+    predict_function : Callable[[ArrayLike], NDArray]
+        Function returning point predictions of shape (n_samples_batch,).
+
+    X : ArrayLike of shape (n_samples, n_features)
+        Features.
+
+    batch_size : int
+        Maximum number of samples per batch.
+
+    Returns
+    -------
+    NDArray
+        Array of point predictions, with shape (n_samples,).
+    """
+    batches = gen_batches(_num_samples(X), batch_size)
+    return np.concatenate(
+        [predict_function(_safe_indexing(X, batch)) for batch in batches],
+        axis=0,
+    )
+
+
+def _predict_points_and_intervals_in_batches(
+    predict_function: Callable[[ArrayLike], Tuple[NDArray, NDArray]],
+    X: ArrayLike,
+    batch_size: int,
+) -> Tuple[NDArray, NDArray]:
+    """
+    Apply an interval prediction function to batches of `X` and concatenate
+    results.
+
+    Parameters
+    ----------
+    predict_function : Callable[[ArrayLike], Tuple[NDArray, NDArray]]
+        Function returning a tuple (prediction points, prediction intervals)
+        of shapes (n_samples_batch,) and (n_samples_batch, 2, n_alpha).
+
+    X : ArrayLike of shape (n_samples, n_features)
+        Features.
+
+    batch_size : int
+        Maximum number of samples per batch.
+
+    Returns
+    -------
+    Tuple[NDArray, NDArray]
+        Two arrays:
+
+        - Prediction points, of shape (n_samples,)
+        - Prediction intervals, of shape (n_samples, 2, n_alpha)
+    """
+    batches = gen_batches(_num_samples(X), batch_size)
+    outputs = [predict_function(_safe_indexing(X, batch)) for batch in batches]
+    points = np.concatenate([points for points, _ in outputs], axis=0)
+    intervals = np.concatenate([intervals for _, intervals in outputs], axis=0)
+    return points, intervals
 
 
 def _prepare_params(params: Union[dict, None]) -> dict:

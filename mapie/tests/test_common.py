@@ -580,3 +580,125 @@ class TestCrossConformalClassifierReset:
         _, sets_reference = reference_technique.predict_set(X_test)
 
         np.testing.assert_array_equal(sets_refit, sets_reference)
+
+
+class TestBatchedPrediction:
+    """The `batch_size` argument of `predict` and `predict_interval` bounds
+    memory usage by processing the test set in batches; results must be
+    exactly the same as without batching (issue #160)."""
+
+    TECHNIQUES = [
+        (
+            CrossConformalRegressor,
+            {"confidence_level": [0.9, 0.5], "method": "plus", "cv": 3},
+            {"aggregate_point_predictions": "mean"},
+        ),
+        (
+            CrossConformalRegressor,
+            {"confidence_level": [0.9, 0.5], "method": "plus", "cv": 3},
+            {"aggregate_point_predictions": "median"},
+        ),
+        (
+            CrossConformalRegressor,
+            {"confidence_level": 0.9, "method": "minmax", "cv": 3},
+            {"aggregate_point_predictions": None},
+        ),
+        (
+            CrossConformalRegressor,
+            {"confidence_level": 0.9, "method": "base", "cv": 3},
+            {},
+        ),
+        (
+            JackknifeAfterBootstrapRegressor,
+            {
+                "confidence_level": [0.9, 0.5],
+                "method": "plus",
+                "resampling": 20,
+                "random_state": RANDOM_STATE,
+            },
+            {"aggregate_point_predictions": True},
+        ),
+        (
+            JackknifeAfterBootstrapRegressor,
+            {
+                "confidence_level": 0.9,
+                "method": "minmax",
+                "aggregation_method": "median",
+                "resampling": 20,
+                "random_state": RANDOM_STATE,
+            },
+            {"aggregate_point_predictions": False},
+        ),
+    ]
+
+    @pytest.fixture(scope="class")
+    def X_test_50(self, dataset_regression):
+        X_train, _, _, _, _, _ = dataset_regression
+        return X_train[:50]
+
+    @staticmethod
+    def _fit_technique(technique_class, init_kwargs, dataset_regression):
+        _, X_conformalize, _, _, y_conformalize, _ = dataset_regression
+        return technique_class(**init_kwargs).fit_conformalize(
+            X_conformalize, y_conformalize
+        )
+
+    @pytest.mark.parametrize("technique_class, init_kwargs, predict_kwargs", TECHNIQUES)
+    @pytest.mark.parametrize("batch_size", [1, 7, 50, 200])
+    def test_predict_interval_batched_equals_unbatched(
+        self,
+        dataset_regression,
+        X_test_50,
+        technique_class,
+        init_kwargs,
+        predict_kwargs,
+        batch_size,
+    ) -> None:
+        technique = self._fit_technique(
+            technique_class, init_kwargs, dataset_regression
+        )
+        points, intervals = technique.predict_interval(X_test_50, **predict_kwargs)
+        points_batched, intervals_batched = technique.predict_interval(
+            X_test_50, batch_size=batch_size, **predict_kwargs
+        )
+        assert np.array_equal(points, points_batched)
+        assert np.array_equal(intervals, intervals_batched)
+
+    @pytest.mark.parametrize("technique_class, init_kwargs, predict_kwargs", TECHNIQUES)
+    @pytest.mark.parametrize("batch_size", [1, 7, 50, 200])
+    def test_predict_batched_equals_unbatched(
+        self,
+        dataset_regression,
+        X_test_50,
+        technique_class,
+        init_kwargs,
+        predict_kwargs,
+        batch_size,
+    ) -> None:
+        technique = self._fit_technique(
+            technique_class, init_kwargs, dataset_regression
+        )
+        points = technique.predict(X_test_50, **predict_kwargs)
+        points_batched = technique.predict(
+            X_test_50, batch_size=batch_size, **predict_kwargs
+        )
+        assert np.array_equal(points, points_batched)
+
+    @pytest.mark.parametrize(
+        "technique_class",
+        [CrossConformalRegressor, JackknifeAfterBootstrapRegressor],
+    )
+    @pytest.mark.parametrize("predict_method", ["predict", "predict_interval"])
+    @pytest.mark.parametrize("invalid_batch_size", [0, -1])
+    def test_invalid_batch_size_raises(
+        self,
+        dataset_regression,
+        technique_class,
+        predict_method,
+        invalid_batch_size,
+    ) -> None:
+        _, X_conformalize, X_test, _, y_conformalize, _ = dataset_regression
+        technique = technique_class(estimator=DummyRegressor())
+        technique.fit_conformalize(X_conformalize, y_conformalize)
+        with pytest.raises(ValueError, match="batch_size"):
+            getattr(technique, predict_method)(X_test, batch_size=invalid_batch_size)

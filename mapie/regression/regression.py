@@ -24,6 +24,7 @@ from mapie.utils import (
     _cast_predictions_to_ndarray_tuple,
     _check_alpha,
     _check_alpha_and_n_samples,
+    _check_batch_size,
     _check_cv,
     _check_cv_not_string,
     _check_cv_not_subsample,
@@ -36,6 +37,8 @@ from mapie.utils import (
     _check_predict_params,
     _check_verbose,
     _fit_estimator,
+    _predict_points_and_intervals_in_batches,
+    _predict_points_in_batches,
     _prepare_params,
     _raise_error_if_fit_called_in_prefit_mode,
     _raise_error_if_method_already_called,
@@ -535,6 +538,7 @@ class CrossConformalRegressor:
         aggregate_point_predictions: Optional[str] = "mean",
         minimize_interval_width: bool = False,
         allow_infinite_bounds: bool = False,
+        batch_size: Optional[int] = None,
         aggregate_predictions: Any = _UNSET,
     ) -> Tuple[NDArray, NDArray]:
         """
@@ -566,6 +570,15 @@ class CrossConformalRegressor:
         allow_infinite_bounds : bool, default=False
             If True, allows prediction intervals with infinite bounds.
 
+        batch_size : Optional[int], default=None
+            Maximum number of test samples processed at a time. The cross
+            conformal computation involves intermediate arrays of shape
+            `(n_samples, n_samples_train)`, the memory footprint of which can
+            be prohibitive when both the test set and the training set are
+            large. Setting `batch_size` bounds memory usage by processing `X`
+            in batches of at most `batch_size` samples. Results are the same
+            as without batching. By default `None` (no batching).
+
         aggregate_predictions : Optional[str]
             .. deprecated::
                 Renamed to `aggregate_point_predictions`. Passing
@@ -591,24 +604,32 @@ class CrossConformalRegressor:
             "fit_conformalize",
             self.is_fitted_and_conformalized,
         )
+        _check_batch_size(batch_size)
 
         ensemble = self._set_aggregate_point_predictions_and_return_ensemble(
             aggregate_point_predictions
         )
-        predictions = self._mapie_regressor.predict(
-            X,
-            alpha=self._alphas,
-            optimize_beta=minimize_interval_width,
-            allow_infinite_bounds=allow_infinite_bounds,
-            ensemble=ensemble,
-            **self._predict_params,
-        )
-        return _cast_predictions_to_ndarray_tuple(predictions)
+
+        def predict_function(X_batch: ArrayLike) -> Tuple[NDArray, NDArray]:
+            predictions = self._mapie_regressor.predict(
+                X_batch,
+                alpha=self._alphas,
+                optimize_beta=minimize_interval_width,
+                allow_infinite_bounds=allow_infinite_bounds,
+                ensemble=ensemble,
+                **self._predict_params,
+            )
+            return _cast_predictions_to_ndarray_tuple(predictions)
+
+        if batch_size is None:
+            return predict_function(X)
+        return _predict_points_and_intervals_in_batches(predict_function, X, batch_size)
 
     def predict(
         self,
         X: ArrayLike,
         aggregate_point_predictions: Optional[str] = "mean",
+        batch_size: Optional[int] = None,
         aggregate_predictions: Any = _UNSET,
     ) -> NDArray:
         """
@@ -630,6 +651,15 @@ class CrossConformalRegressor:
               cross-validation fold
             - "median": Aggregates (using median) the predictions of the regressors
               trained on each cross-validation fold
+
+        batch_size : Optional[int], default=None
+            Maximum number of test samples processed at a time. Predicting
+            with an aggregation involves intermediate arrays of shape
+            `(n_samples, n_samples_train)`, the memory footprint of which can
+            be prohibitive when both the test set and the training set are
+            large. Setting `batch_size` bounds memory usage by processing `X`
+            in batches of at most `batch_size` samples. Results are the same
+            as without batching. By default `None` (no batching).
 
         aggregate_predictions : Optional[str]
             .. deprecated::
@@ -653,17 +683,24 @@ class CrossConformalRegressor:
             "fit_conformalize",
             self.is_fitted_and_conformalized,
         )
+        _check_batch_size(batch_size)
 
         ensemble = self._set_aggregate_point_predictions_and_return_ensemble(
             aggregate_point_predictions
         )
-        predictions = self._mapie_regressor.predict(
-            X,
-            alpha=None,
-            ensemble=ensemble,
-            **self._predict_params,
-        )
-        return _cast_point_predictions_to_ndarray(predictions)
+
+        def predict_function(X_batch: ArrayLike) -> NDArray:
+            predictions = self._mapie_regressor.predict(
+                X_batch,
+                alpha=None,
+                ensemble=ensemble,
+                **self._predict_params,
+            )
+            return _cast_point_predictions_to_ndarray(predictions)
+
+        if batch_size is None:
+            return predict_function(X)
+        return _predict_points_in_batches(predict_function, X, batch_size)
 
     def _set_aggregate_point_predictions_and_return_ensemble(
         self, aggregate_point_predictions: Optional[str]
@@ -910,6 +947,7 @@ class JackknifeAfterBootstrapRegressor:
         aggregate_point_predictions: bool = True,
         minimize_interval_width: bool = False,
         allow_infinite_bounds: bool = False,
+        batch_size: Optional[int] = None,
         ensemble: Any = _UNSET,
     ) -> Tuple[NDArray, NDArray]:
         """
@@ -940,6 +978,15 @@ class JackknifeAfterBootstrapRegressor:
         allow_infinite_bounds : bool, default=False
             If True, allows prediction intervals with infinite bounds.
 
+        batch_size : Optional[int], default=None
+            Maximum number of test samples processed at a time. The jackknife
+            after bootstrap computation involves intermediate arrays of shape
+            `(n_samples, n_samples_train)`, the memory footprint of which can
+            be prohibitive when both the test set and the training set are
+            large. Setting `batch_size` bounds memory usage by processing `X`
+            in batches of at most `batch_size` samples. Results are the same
+            as without batching. By default `None` (no batching).
+
         ensemble : bool
             .. deprecated::
                 Renamed to `aggregate_point_predictions`. Passing `ensemble`
@@ -965,21 +1012,28 @@ class JackknifeAfterBootstrapRegressor:
             "fit_conformalize",
             self.is_fitted_and_conformalized,
         )
+        _check_batch_size(batch_size)
 
-        predictions = self._mapie_regressor.predict(
-            X,
-            alpha=self._alphas,
-            optimize_beta=minimize_interval_width,
-            allow_infinite_bounds=allow_infinite_bounds,
-            ensemble=aggregate_point_predictions,
-            **self._predict_params,
-        )
-        return _cast_predictions_to_ndarray_tuple(predictions)
+        def predict_function(X_batch: ArrayLike) -> Tuple[NDArray, NDArray]:
+            predictions = self._mapie_regressor.predict(
+                X_batch,
+                alpha=self._alphas,
+                optimize_beta=minimize_interval_width,
+                allow_infinite_bounds=allow_infinite_bounds,
+                ensemble=aggregate_point_predictions,
+                **self._predict_params,
+            )
+            return _cast_predictions_to_ndarray_tuple(predictions)
+
+        if batch_size is None:
+            return predict_function(X)
+        return _predict_points_and_intervals_in_batches(predict_function, X, batch_size)
 
     def predict(
         self,
         X: ArrayLike,
         aggregate_point_predictions: bool = True,
+        batch_size: Optional[int] = None,
         ensemble: Any = _UNSET,
     ) -> NDArray:
         """
@@ -999,6 +1053,15 @@ class JackknifeAfterBootstrapRegressor:
             the `aggregation_method` provided during initialisation.
             If False, a point is predicted using the regressor trained on the entire
             data
+
+        batch_size : Optional[int], default=None
+            Maximum number of test samples processed at a time. Predicting
+            with an aggregation involves intermediate arrays of shape
+            `(n_samples, n_samples_train)`, the memory footprint of which can
+            be prohibitive when both the test set and the training set are
+            large. Setting `batch_size` bounds memory usage by processing `X`
+            in batches of at most `batch_size` samples. Results are the same
+            as without batching. By default `None` (no batching).
 
         ensemble : bool
             .. deprecated::
@@ -1022,14 +1085,20 @@ class JackknifeAfterBootstrapRegressor:
             "fit_conformalize",
             self.is_fitted_and_conformalized,
         )
+        _check_batch_size(batch_size)
 
-        predictions = self._mapie_regressor.predict(
-            X,
-            alpha=None,
-            ensemble=aggregate_point_predictions,
-            **self._predict_params,
-        )
-        return _cast_point_predictions_to_ndarray(predictions)
+        def predict_function(X_batch: ArrayLike) -> NDArray:
+            predictions = self._mapie_regressor.predict(
+                X_batch,
+                alpha=None,
+                ensemble=aggregate_point_predictions,
+                **self._predict_params,
+            )
+            return _cast_point_predictions_to_ndarray(predictions)
+
+        if batch_size is None:
+            return predict_function(X)
+        return _predict_points_in_batches(predict_function, X, batch_size)
 
     @staticmethod
     def _check_and_convert_resampling_to_cv(

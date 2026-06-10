@@ -1,5 +1,9 @@
 # History
 
+## 1.x.x (2026-xx-xx)
+* Add an optional `batch_size` argument to `predict` and `predict_interval` in `CrossConformalRegressor` and `JackknifeAfterBootstrapRegressor`: the test set is processed in batches to bound the memory usage of cross conformal predictions, which involve intermediate arrays of shape (n_samples, n_samples_train). Batched results are identical to unbatched ones. (issue #160)
+* Replace `np.matmul` with a shape-stable `np.einsum` in the mean aggregation of `EnsembleRegressor` so that predictions do not depend on the number of test samples processed at a time (makes batched predictions bitwise identical to unbatched ones).
+
 ## 1.4.1 (2026-06-08)
 
 ### Features

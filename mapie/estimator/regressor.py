@@ -293,9 +293,16 @@ class EnsembleRegressor:
         # However, phi2D contains a np.apply_along_axis loop which
         # is much slower than the matrices multiplication that can
         # be used to compute the means.
+        # Note: np.einsum is used instead of np.matmul because its result
+        # for a given test sample (row of `x`) does not depend on the
+        # number of rows of `x`, unlike BLAS-backed np.matmul. This makes
+        # batched predictions (`batch_size` argument) bitwise identical to
+        # unbatched ones.
         elif self.agg_function in ["mean", None]:
             K = np.nan_to_num(k, nan=0.0)
-            return cast(NDArray, np.matmul(x, (K / (K.sum(axis=1, keepdims=True))).T))
+            return cast(
+                NDArray, np.einsum("ij,kj->ik", x, K / (K.sum(axis=1, keepdims=True)))
+            )
         else:
             raise ValueError("The value of the aggregation function is not correct")
 
