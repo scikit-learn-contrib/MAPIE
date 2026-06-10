@@ -17,6 +17,18 @@ from mapie.risk_control import MultiLabelClassificationController
 from mapie.risk_control.methods import find_best_predict_param
 from mapie.utils import check_is_fitted
 
+pytestmark = [
+    pytest.mark.filterwarnings("ignore:No predict parameters were found:UserWarning"),
+    pytest.mark.filterwarnings("ignore:The risk cannot be controlled:UserWarning"),
+    pytest.mark.filterwarnings(
+        r"ignore:WARNING.+you are using method 'crc':UserWarning"
+    ),
+    pytest.mark.filterwarnings(r"ignore:WARNING.+you are using crc method:UserWarning"),
+    pytest.mark.filterwarnings(
+        r"ignore:\s*Warning.+the risk couldn't be controlled:UserWarning"
+    ),
+]
+
 Params = TypedDict(
     "Params",
     {

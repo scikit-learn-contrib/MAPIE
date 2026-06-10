@@ -36,9 +36,14 @@ The `dev` extra includes development dependencies such as linters and testing to
 
 MacOS users should install `libomp` beforehand if it is not already present (`brew install libomp`) because LightGBM depends on it and is used in the documentation.
 
+```sh
+uv sync --python 3.13 --all-extras
+```
+
+Or if you only need some optional dependencies:
 
 ```sh
-uv sync --python 3.12 --extra dev --extra docs --extra notebooks
+uv sync --python 3.13 --extra dev --extra docs
 ```
 
 Then, either activate the virtual environment created by `uv`:

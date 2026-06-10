@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import warnings
-from typing import Callable, List, Literal, Tuple, Union
+from typing import Callable, List, Literal, Tuple, Union, cast
 
 import numpy as np
 from numpy.typing import NDArray
@@ -136,10 +136,10 @@ class _BaseRisk:
         """
         values, effective_mask = self._compute_values_and_effective_mask(y_true, y_pred)
         self._warn_if_nan_values(values)
-        risk_sequence = values[effective_mask]
+        risk_sequence: NDArray = values[effective_mask]
         if self.higher_is_better:
             risk_sequence = 1 - risk_sequence
-        return risk_sequence
+        return cast(NDArray, risk_sequence)
 
 
 class BinaryRisk(_BaseRisk):
@@ -212,9 +212,39 @@ class BinaryRisk(_BaseRisk):
         y_true: NDArray,
         y_pred: NDArray,
     ) -> Tuple[NDArray, NDArray]:
-        risk_occurrences = self._risk_occurrence(y_true, y_pred).astype(int)
+        risk_occurrences = np.asarray(self._risk_occurrence(y_true, y_pred))
+        self._check_occurrences_are_binary(risk_occurrences)
         risk_conditions = self._risk_condition(y_true, y_pred)
-        return risk_occurrences, risk_conditions
+        return risk_occurrences.astype(int), risk_conditions
+
+    @staticmethod
+    def _check_occurrences_are_binary(occurrences: NDArray) -> None:
+        """
+        Check that the per-sample occurrences are binary indicators.
+
+        A ``BinaryRisk`` is controlled with the binary Hoeffding-Bentkus
+        p-values, which require the per-sample risk values to be binary
+        indicators: booleans, or numeric values strictly equal to ``0`` or
+        ``1``. The predefined risks satisfy this by construction, but a custom
+        ``risk_occurrence`` returning anything else (e.g. ``0.5`` or ``2``)
+        would break the guarantee.
+
+        Raises
+        ------
+        ValueError
+            If any occurrence value is neither a boolean nor equal to 0 or 1.
+        """
+        if occurrences.dtype == bool:
+            return
+        is_binary = np.isin(occurrences, [0, 1])
+        if not is_binary.all():
+            invalid_values = np.unique(occurrences[~is_binary])
+            raise ValueError(
+                "The per-sample values returned by `risk_occurrence` must be "
+                "binary indicators (booleans, or values equal to 0 or 1), but the "
+                f"following invalid values were found: {invalid_values}. Make sure "
+                "`risk_occurrence` returns a boolean array."
+            )
 
 
 class BinaryClassificationRisk(BinaryRisk):

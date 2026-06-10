@@ -1,13 +1,49 @@
 # History
 
-## 1.x.x (2026-xx-xx)
+## 1.4.1 (2026-06-08)
+
+### Features
+
+* Add `conformity_scores` attribute to all Mapie objects, exposing conformity scores through a public property. (issue #921)
+* Add `reset()` method on `CrossConformalRegressor` and allow refitting via `fit_conformalize` (now emits a `UserWarning` and discards prior conformity scores instead of raising). Same pattern can be propagated to other conformal classes in follow-up PRs. (issue #710)
+* Add `reset()` method on `JackknifeAfterBootstrapRegressor` and allow refitting via `fit_conformalize` (mirrors the pattern landed for `CrossConformalRegressor` in #931).
+* Add `reset()` method on `CrossConformalClassifier` and allow refitting via `fit_conformalize` (mirrors the pattern landed in #931 and #936); completes the warn-on-refit pattern across all Cross/Jackknife conformal techniques.
+* Add `classwise` boolean flag to `expected_calibration_error()` to support classwise-ECE in addition to the existing confidence-ECE. (issue #277)
+
+### Improvements and refactoring
+
+* Relax the monotonicity check in the `fixed_sequence` FWER procedure: a non-monotonic risk now emits a `UserWarning` (suggesting `split_fixed_sequence`) and infers a direction, instead of raising a `ValueError`. (issue #942)
+* Add validation that a custom `BinaryRisk` returns per-sample occurrence values that are binary indicators (booleans, or values equal to 0 or 1); a `ValueError` is now raised otherwise, as the binary Hoeffding-Bentkus guarantees require it.
+* Add validation to reject `Subsample` as `cv` in `CrossConformalRegressor`, directing users to `JackknifeAfterBootstrapRegressor` instead. (issue #924)
+* Add defensive validation: `_MapieRegressor` and `_MapieClassifier` now raise `TypeError` when `sample_weight` is passed as a top-level keyword argument instead of inside `fit_params`. Previously, top-level `sample_weight` was silently ignored. Also fix `TimeSeriesRegressor` tests that were affected by the same silent-ignore bug.
+* Add notebook kernel restart warning for Kaggle/Jupyter/Colab users after installation or version changes. (issue #916)
 * Simplify internal `sample_weight` handling in classification module: `sample_weight` now flows through `fit_params` instead of being passed as a separate argument through the call chain. No public API changes. (issue #753)
 * Simplify internal `sample_weight` handling in quantile regression module: `sample_weight` now flows through `fit_params` instead of being passed as a separate argument through the call chain. No public API changes. (issue #753)
 * Remove `_prepare_fit_params_and_sample_weight` utility (no longer needed after regression, classification, and quantile regression refactors). (issue #753)
-* Add notebook kernel restart warning for Kaggle/Jupyter/Colab users after installation or version changes. (issue #916)
+
+### Bug fixes
+
+* Fix `BinaryClassificationController` so the selected best threshold is optimal: when several parameters reach the minimum secondary risk, ties are now broken in favor of the least conservative threshold. (issue #942)
 * Fix `optimize_beta` in regression conformity scores so prediction interval width minimization actually optimizes β (was previously a no-op due to a shape-collapsing reshape); also resolves incorrect prediction interval shape when used with multiple confidence levels. (issues #588, #484)
-* Add `classwise` boolean flag to `expected_calibration_error()` to support classwise-ECE in addition to the existing confidence-ECE; fix misleading `y_true` docstring. (issue #277)
-* Add defensive validation: `_MapieRegressor` and `_MapieClassifier` now raise `TypeError` when `sample_weight` is passed as a top-level keyword argument instead of inside `fit_params`. Previously, top-level `sample_weight` was silently ignored. Also fix `TimeSeriesRegressor` tests that were affected by the same silent-ignore bug.
+* Propagate `random_state` to the internal `Subsample` in `JackknifeAfterBootstrapRegressor` so bootstrap resampling is reproducible and no longer depends on the global NumPy RNG state. (issue #940)
+* Restore backward compatibility for the predict-argument renames introduced in #919: `CrossConformalRegressor`'s `aggregate_predictions` and `JackknifeAfterBootstrapRegressor`'s `ensemble` (in `predict` and `predict_interval`) keep working as deprecated aliases for `aggregate_point_predictions`, now emitting a `FutureWarning` instead of raising a `TypeError`. (issue #906)
+
+### Documentation
+
+* Add a risk control advanced-analysis example showing how to define and control a custom risk (specificity) with `BinaryRisk` and the `BinaryClassificationController`.
+* Add a repository backup of the BlogFeedback dataset (`examples/data/blogData_train.csv.gz`) used by the Kim et al. (2020) example, now loaded by default so the example no longer depends on the UCI download server.
+* Add repository backups of the Zaffran et al. (2022) data used by the ACI comparison example — the prices dataset (`examples/data/zaffran2022_prices.csv.gz`) and the reference results (`examples/data/zaffran2022_aci_reference.csv`) — now loaded by default so the example no longer depends on external downloads (also fixes an `UnboundLocalError` that surfaced when the reference download failed).
+* Fix the documentation site navigation dropdown and even out the vertical spacing between sidebar nav entries.
+
+### CI, release, and developer experience
+
+* Fix the release process (release-candidate/final-release workflows, docs deployment, and release checklist).
+* Make tests compatible with scikit-learn 1.9 (calibration tests).
+* Silence intentional `UserWarning`s emitted during test runs to keep the test output clean.
+
+### Breaking changes
+
+* Drop support for Python 3.9 (EOL since October 2025). Minimum supported version is now Python 3.10. This was required to upgrade `pytest` to 9.0.3, which fixes a security advisory (CVE on `/tmp/pytest-of-{user}` directory handling).
 
 ## 1.4.0 (2026-04-30)
 

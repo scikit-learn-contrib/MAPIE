@@ -168,7 +168,7 @@ def plot_scores(
 
 fig, axs = plt.subplots(1, 2, figsize=(10, 5))
 for i, conformity_score in enumerate(conformity_scores):
-    conf_scores = mapie[conformity_score]._mapie_classifier.conformity_scores_
+    conf_scores = mapie[conformity_score].conformity_scores
     n = mapie[conformity_score]._mapie_classifier.n_samples_
     quantiles = mapie[
         conformity_score

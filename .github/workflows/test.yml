@@ -62,7 +62,7 @@ jobs:
           # minimum supported dependencies
           - name: minimum-supported
             os: ubuntu-latest
-            python-version: "3.9"
+            python-version: "3.10"
             use-pinned-deps: true
             numpy-version: "==1.24.1"
             sklearn-version: "==1.4.*"

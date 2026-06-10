@@ -17,7 +17,7 @@ maintainers = [
     {name = "Hassan Maissoro", email = "hassan.maissoro@capgemini.com"},
     {name = "Adrien Le Coz", email = "adrien.le-coz@inria.fr"},
 ]
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dependencies = [
     "numpy>=1.24.1",
     "scikit-learn>=1.4",
@@ -32,7 +32,6 @@ classifiers = [
     "Operating System :: POSIX",
     "Operating System :: Unix",
     "Operating System :: MacOS",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -54,22 +53,20 @@ dev = [
     "mypy==1.19.1",
     "pandas==2.3.3",
     "pre-commit==4.0.1",
-    "pytest==8.4.2",
+    "pytest==9.0.3",
     "pytest-cov==7.0.0",
     "pytest-xdist==3.8.0",
     "ruff==0.14.3",
     "twine==6.2.0",
-    "wheel==0.45.1",
+    "wheel==0.46.2",
 ]
 docs = [
     "lightgbm==4.6.0",
     "matplotlib==3.9.4",
     "mkdocs-material>=9.5",
     "mkdocs-gallery>=0.10",
-    "mkdocstrings[python]>=1.0; python_version >= '3.10'",
-    "mkdocstrings[python]<1.0; python_version < '3.10'",
-    "mkdocstrings-python>=2.0; python_version >= '3.10'",
-    "mkdocstrings-python<2.0; python_version < '3.10'",
+    "mkdocstrings[python]>=1.0",
+    "mkdocstrings-python>=2.0",
     "ruff>=0.4",
     "mike>=2.0",
     "pymdown-extensions>=10.0",
@@ -89,10 +86,10 @@ docs = [
 notebooks = [
     "ipykernel==6.31.0",
     "jupyter==1.1.1",
-    "jupyterlab==4.5.0",
+    "jupyterlab==4.5.7",
     "jupytext==1.18.1",
+    "nbconvert==7.17.1",
     "matplotlib==3.9.4",
-    "nbconvert==7.16.6",
     "pandas==2.3.3",
     "scikeras==0.13.0",
     "seaborn==0.13.2",
@@ -149,8 +146,8 @@ exclude = [
 line-length = 88
 indent-width = 4
 
-# Assume Python 3.9
-target-version = "py39"
+# Assume Python 3.10
+target-version = "py310"
 
 [tool.ruff.lint]
 # Enable Pyflakes (`F`) and a subset of the pycodestyle (`E`) codes by default.

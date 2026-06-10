@@ -6,7 +6,7 @@
 - [ ] Make sure CI tests pass on GitHub Actions for the latest commit on master. Otherwise fix issues in a Pull Request and merge it.
 - [ ] Look at the latest documentation version and check if it was compiled without issue or warning (https://app.readthedocs.org/projects/mapie/builds/). Otherwise fix issues in a Pull Request and merge it.
 - [ ] Checkout `master` and pull latest changes: `git checkout master && git pull origin master`.
-- [ ] Edit HISTORY.md and AUTHORS.md to make sure it’s up-to-date.
+- [ ] Edit HISTORY.md and AUTHORS.md to make sure it’s up-to-date. If possible split the history between "Features", "Improvements and Refactoring", "Bug Fixes", "Documentation", and finally "CI, release, and developer experience".
 - [ ] Do a pre-release commit including every change from the steps above: `git add HISTORY.md AUTHORS.md && git commit -m "vX.Y.Z pre-release changes"`.
 - [ ] Push the pre-release commit: `git push origin master`
 
@@ -16,13 +16,14 @@
 - [ ] Verify tag target locally: `git show --no-patch --decorate vX.Y.ZrcN`
 - [ ] Push release candidate tag: `git push origin vX.Y.ZrcN`
 - [ ] Publish to TestPyPI to verify the build:
-    * For RC tags (`vX.Y.ZrcN`), TestPyPI publish is automatic on tag push.
-    * Smoke-test installation/import from TestPyPI is automatic in the workflow.
-    * Verify that the build and TestPyPI publish succeeded (https://test.pypi.org/project/MAPIE/)
-    * (Optional extra manual check) Test installation from TestPyPI:
-        - create a new empty virtual environment
-        - `pip install --pre -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ mapie==X.Y.ZrcN` or if using `uv`: `uv pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ --index-strategy unsafe-best-match mapie==X.Y.ZrcN`.
-        - import mapie and verify version: `python -c "import mapie; print(mapie.__version__)"`
+
+  * For RC tags (`vX.Y.ZrcN`), TestPyPI publish is automatic on tag push.
+  * Smoke-test installation/import from TestPyPI is automatic in the workflow.
+  * Verify that the build and TestPyPI publish succeeded (https://test.pypi.org/project/MAPIE/)
+  * (Optional extra manual check) Test installation from TestPyPI:
+      - create a new empty virtual environment
+      - `pip install --pre -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ mapie==X.Y.ZrcN` or if using `uv`: `uv pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ --index-strategy unsafe-best-match mapie==X.Y.ZrcN`.
+      - import mapie and verify version: `python -c "import mapie; print(mapie.__version__)"`
 
 ## 3) Final release on PyPI
 
@@ -30,18 +31,18 @@
 - [ ] Verify tag target locally: `git show --no-patch --decorate vX.Y.Z`
 - [ ] Push final release tag: `git push origin vX.Y.Z`
 - [ ] Monitor the PyPI publish job on GitHub Actions:
-    * The workflow automatically triggers on final tag pushes (`vX.Y.Z`) (might take a few minutes to start)
-    * The `pypi` environment requires manual approval (configured in repo settings)
-    * Approve the deployment in the GitHub Actions UI when prompted
-    * Verify the package appears on PyPI after approval (https://pypi.org/project/MAPIE/)
-    * Test installation:
-        - create a new empty virtual environment
-        - `pip install mapie` or if using `uv`: `uv pip install mapie` (you might need to run `uv cache clean` first).
-        - import mapie and verify version: `python -c "import mapie; print(mapie.__version__)"`
+
+  * The workflow automatically triggers on final tag pushes (`vX.Y.Z`) (might take a few minutes to start)
+  * The `pypi` environment requires manual approval (configured in repo settings)
+  * Approve the deployment in the GitHub Actions UI when prompted
+  * Verify the package appears on PyPI after approval (https://pypi.org/project/MAPIE/)
+  * Test installation:
+      - create a new empty virtual environment
+      - `pip install mapie` or if using `uv`: `uv pip install mapie` (you might need to run `uv cache clean` first).
+      - import mapie and verify version: `python -c "import mapie; print(mapie.__version__)"`
 
 ## 4) Post-release checks
 
-- [ ] Create new release on GitHub for this tag, using information from HISTORY.md.
+- [ ] Create new release on GitHub for this tag, using information from HISTORY.md. Write the following sections: "What's New 🤩", "What's Changed 👀", "Contributors 🙌🏻".
 - [ ] Check that the new stable version of the documentation is built and published and that the new version appears in the version selector (should be automatically made by a Read The Docs automation).
 - [ ] Merge the automatically created pull request on https://github.com/conda-forge/mapie-feedstock (PR creation might take some time). You need to be added as a maintainer on this repo first. To create the pull request manually to avoid waiting for automation, create an issue with the name `@conda-forge-admin, please update version`
-

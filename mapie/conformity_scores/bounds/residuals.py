@@ -317,6 +317,9 @@ class ResidualNormalisedScore(BaseRegressionScore):
 
         r_pred = self._predict_residual_estimator(X).reshape((-1, 1))
         if not self.prefit:
-            return np.add(y_pred, np.multiply(conformity_scores, np.exp(r_pred)))
+            return cast(
+                NDArray,
+                np.add(y_pred, np.multiply(conformity_scores, np.exp(r_pred))),
+            )
         else:
-            return np.add(y_pred, np.multiply(conformity_scores, r_pred))
+            return cast(NDArray, np.add(y_pred, np.multiply(conformity_scores, r_pred)))
