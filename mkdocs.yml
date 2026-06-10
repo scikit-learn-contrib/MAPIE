@@ -179,6 +179,7 @@ nav:
   - All Examples: all-examples/index.md
   - Q&A:
     - Mondrian: theory/mondrian.md
+    - Using Non-scikit-learn Models: theory/non-sklearn-models.md
   - API Reference:
     - Overview: api/index.md
     - Regression: api/regression.md

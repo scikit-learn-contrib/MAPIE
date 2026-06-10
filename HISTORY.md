@@ -1,5 +1,8 @@
 # History
 
+## 1.x.x (2026-xx-xx)
+* Add a Q&A documentation page explaining how to wrap non-scikit-learn models (e.g. statsmodels) for use with MAPIE. (issue #884)
+
 ## 1.4.1 (2026-06-08)
 
 ### Features
