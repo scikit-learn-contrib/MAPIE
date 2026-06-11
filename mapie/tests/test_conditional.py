@@ -6,18 +6,16 @@ import numpy as np
 import pytest
 from sklearn.linear_model import LinearRegression, LogisticRegression
 
-from mapie.conformity_scores import AbsoluteConformityScore
 from mapie.conditional_conformal_prediction import (
     ConditionalSplitConformalClassifier,
     ConditionalSplitConformalRegressor,
-)
-from mapie.conditional_conformal_prediction.conditional import (
     _import_cvxpy,
+    _solve_dual,
     binary_search,
     finish_dual_setup,
     setup_cvx_problem,
-    _solve_dual,
 )
+from mapie.conformity_scores import AbsoluteConformityScore
 
 
 def _make_data(n=300, seed=0):
