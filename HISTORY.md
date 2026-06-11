@@ -1,5 +1,11 @@
 # History
 
+## 1.x.x (unreleased)
+
+### Features
+
+- Add `ConditionalSplitConformalRegressor` and `ConditionalSplitConformalClassifier`, implementing conformal prediction with conditional guarantees (Gibbs et al., 2023), adapted from https://github.com/jjcherian/conditional-conformal.
+
 ## 1.4.1 (2026-06-08)
 
 ### Features
