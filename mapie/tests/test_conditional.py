@@ -1,13 +1,16 @@
-"""Tests for the conditional split conformal regressor."""
+"""Tests for the conditional split conformal regressor and classifier."""
 
 import sys
 
 import numpy as np
 import pytest
-from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import LinearRegression, LogisticRegression
 
 from mapie.conformity_scores import AbsoluteConformityScore
-from mapie.conditional_conformal_prediction import ConditionalSplitConformalRegressor
+from mapie.conditional_conformal_prediction import (
+    ConditionalSplitConformalClassifier,
+    ConditionalSplitConformalRegressor,
+)
 from mapie.conditional_conformal_prediction.conditional import (
     _import_cvxpy,
     binary_search,
@@ -215,6 +218,97 @@ def test_exact_with_kernel_raises():
     regressor.conformalize(X_conf, y_conf)
     with pytest.raises(ValueError, match="RKHS"):
         regressor.predict_interval(X_test[:2])
+
+
+def _make_multiclass_data(n=300, seed=0):
+    rng = np.random.default_rng(seed)
+    X = rng.uniform(-1, 1, size=(n, 2))
+    logits = np.column_stack([3 * X[:, 0], -1.5 * X[:, 0] + 2 * X[:, 1], np.zeros(n)])
+    probs = np.exp(logits) / np.exp(logits).sum(axis=1, keepdims=True)
+    y = np.array([rng.choice(3, p=p) for p in probs])
+    n_half = n // 2
+    return X[:n_half], y[:n_half], X[n_half:], y[n_half:]
+
+
+def _fitted_classifier(confidence_level=0.9, conformity_score="lac", **kwargs):
+    X_conf, y_conf, _, _ = _make_multiclass_data()
+    estimator = LogisticRegression().fit(X_conf, y_conf)
+    classifier = ConditionalSplitConformalClassifier(
+        Phi_fn=_phi,
+        estimator=estimator,
+        confidence_level=confidence_level,
+        conformity_score=conformity_score,
+        prefit=True,
+        **kwargs,
+    )
+    return classifier.conformalize(X_conf, y_conf)
+
+
+class TestConditionalSplitConformalClassifier:
+    def test_predict_set_shapes_and_nesting(self):
+        classifier = _fitted_classifier(confidence_level=[0.8, 0.9])
+        _, _, X_test, _ = _make_multiclass_data()
+        labels, sets = classifier.predict_set(X_test[:20])
+        assert labels.shape == (20,)
+        assert sets.shape == (20, 3, 2)
+        assert sets.dtype == bool
+        # Higher confidence level yields larger sets on average.
+        assert sets[:, :, 1].sum() >= sets[:, :, 0].sum()
+
+    def test_predict_set_marginal_coverage(self):
+        classifier = _fitted_classifier(confidence_level=0.9)
+        _, _, X_test, y_test = _make_multiclass_data()
+        _, sets = classifier.predict_set(X_test)
+        covered = sets[np.arange(len(y_test)), y_test, 0]
+        assert np.mean(covered) >= 0.8
+
+    def test_predict_returns_labels(self):
+        classifier = _fitted_classifier()
+        _, _, X_test, _ = _make_multiclass_data()
+        labels = classifier.predict(X_test)
+        assert labels.shape == (len(X_test),)
+        assert set(labels) <= {0, 1, 2}
+
+    def test_aps_conformity_score(self):
+        classifier = _fitted_classifier(confidence_level=0.9, conformity_score="aps")
+        _, _, X_test, y_test = _make_multiclass_data()
+        _, sets = classifier.predict_set(X_test[:20])
+        assert sets.shape == (20, 3, 1)
+        covered = sets[np.arange(20), y_test[:20], 0]
+        assert np.mean(covered) >= 0.8
+
+    def test_non_prefit_fit_then_conformalize(self):
+        X_conf, y_conf, X_test, _ = _make_multiclass_data()
+        classifier = ConditionalSplitConformalClassifier(
+            Phi_fn=_phi,
+            estimator=LogisticRegression(),
+            confidence_level=0.9,
+            prefit=False,
+        )
+        classifier.fit(X_conf, y_conf).conformalize(X_conf, y_conf)
+        _, sets = classifier.predict_set(X_test[:10])
+        assert sets.shape == (10, 3, 1)
+
+    def test_binary_search_path(self):
+        classifier = _fitted_classifier(confidence_level=0.9, exact=False)
+        _, _, X_test, _ = _make_multiclass_data()
+        _, sets = classifier.predict_set(X_test[:10])
+        assert sets.shape == (10, 3, 1)
+
+    @pytest.mark.parametrize("conformity_score", ["top_k", "raps"])
+    def test_unsupported_conformity_score_raises(self, conformity_score):
+        with pytest.raises(ValueError, match="thresholding"):
+            ConditionalSplitConformalClassifier(
+                Phi_fn=_phi, conformity_score=conformity_score
+            )
+
+    def test_predict_set_before_conformalize_raises(self):
+        X_conf, y_conf, X_test, _ = _make_multiclass_data()
+        classifier = ConditionalSplitConformalClassifier(
+            Phi_fn=_phi, estimator=LogisticRegression().fit(X_conf, y_conf)
+        )
+        with pytest.raises(ValueError, match="conformalize"):
+            classifier.predict_set(X_test)
 
 
 def test_binary_search_function():

@@ -6,13 +6,20 @@ from typing import Any, Callable, Iterable, Optional, Tuple, Union
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 from scipy.optimize import linprog
-from sklearn.base import RegressorMixin
-from sklearn.linear_model import LinearRegression
+from sklearn.base import ClassifierMixin, RegressorMixin
+from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.metrics.pairwise import pairwise_kernels
 
-from mapie.conformity_scores import BaseRegressionScore
+from mapie.classification import SplitConformalClassifier
+from mapie.conformity_scores import BaseClassificationScore, BaseRegressionScore
+from mapie.conformity_scores.sets.raps import RAPSConformityScore
+from mapie.conformity_scores.sets.topk import TopKConformityScore
 from mapie.regression import SplitConformalRegressor
-from mapie.utils import _raise_error_if_previous_method_not_called
+from mapie.utils import (
+    _prepare_params,
+    _raise_error_if_previous_method_not_called,
+    check_proba_normalized,
+)
 
 FUNCTION_DEFAULTS = {"kernel": None, "gamma": 1, "lambda": 1}
 
@@ -33,117 +40,41 @@ def _import_cvxpy():
     return cp
 
 
-class ConditionalSplitConformalRegressor(SplitConformalRegressor):
-    def __init__(
+class _ConditionalConformalMixin:
+    """
+    Shared machinery for the conditional conformal procedure of Gibbs et al.
+
+    Computes, for a single test point, the conditionally valid
+    conformity-score cutoff S^* such that the prediction set is
+    ``{y : S(x, y) <= S^*}``. Task-specific subclasses only differ in how this
+    cutoff is inverted into a prediction interval (regression) or a prediction
+    set (classification).
+    """
+
+    def _init_conditional(
         self,
         Phi_fn: Callable,
-        estimator: RegressorMixin = LinearRegression(),
-        confidence_level: Union[float, Iterable[float]] = 0.9,
-        conformity_score: Union[str, BaseRegressionScore] = "absolute",
-        prefit: bool = True,
-        n_jobs: Optional[int] = None,
-        verbose: int = 0,
-        randomize: bool = False,
-        exact: bool = True,
-        infinite_params: Optional[dict] = None,
-        seed: int = 0,
+        randomize: bool,
+        exact: bool,
+        infinite_params: Optional[dict],
+        seed: int,
     ) -> None:
-        """
-        Split conformal regressor with conditional validity guarantees.
-
-        In addition to the parameters of
-        :class:`~mapie.regression.SplitConformalRegressor`, this class accepts
-        settings for the conditional conformal procedure.
-
-        Parameters
-        ----------
-        Phi_fn : Callable
-            Function mapping covariates to a finite basis used for exact
-            conditional guarantees.
-
-        estimator : RegressorMixin, default=LinearRegression()
-            Base regressor used to predict points.
-
-        confidence_level : float or iterable of float, default=0.9
-            Desired coverage probability of the prediction intervals.
-
-        conformity_score : str or BaseRegressionScore, default="absolute"
-            Method used to compute conformity scores. See
-            :class:`~mapie.regression.SplitConformalRegressor`.
-
-        prefit : bool, default=True
-            Whether the base regressor is already fitted.
-
-        n_jobs : int, optional
-            Number of parallel jobs when applicable.
-
-        verbose : int, default=0
-            Verbosity level.
-
-        randomize : bool, default=False
-            Randomize the dual threshold for exact (non-conservative) coverage.
-
-        exact : bool, default=True
-            Compute the conditional score cutoff exactly rather than by binary
-            search.
-
-        infinite_params : dict, optional
-            Parameters for the RKHS component of the fit. Valid keys are
-            ``kernel``, ``gamma``, and ``lambda``.
-        """
-        super().__init__(
-            estimator=estimator,
-            confidence_level=confidence_level,
-            conformity_score=conformity_score,
-            prefit=prefit,
-            n_jobs=n_jobs,
-            verbose=verbose,
-        )
         self.Phi_fn = Phi_fn
         self.randomize = randomize
         self.exact = exact
         self.infinite_params = {} if infinite_params is None else infinite_params
         self.rng = np.random.default_rng(seed=seed)
 
-    def conformalize(
-        self,
-        X_conformalize: ArrayLike,
-        y_conformalize: ArrayLike,
-        predict_params: Optional[dict] = None,
-    ) -> "ConditionalSplitConformalRegressor":
+    def _conformalize_conditional(
+        self, x_calib: NDArray, scores_calib: NDArray
+    ) -> None:
         """
-        Conformalize the regressor and set up the final fitting problem
-        for the given conformalization set.
-
-        Performs the standard split-conformal conformalization step from
-        :meth:`SplitConformalRegressor.conformalize`, then builds the
-        cvxpy problem used for the conditional procedure.
-
-        Parameters
-        ----------
-        X_conformalize : ArrayLike
-            Features of the conformalization set.
-
-        y_conformalize : ArrayLike
-            Targets of the conformalization set.
-
-        predict_params : Optional[dict], default=None
-            Parameters to pass to the ``predict`` method of the base
-            regressor.
-
-        Returns
-        -------
-        Self
-            The conformalized ConditionalSplitConformalRegressor instance.
+        Set up the final fitting problem for the given conformalization set:
+        reduce the basis to full rank if needed and build the cvxpy problem
+        used for the conditional procedure.
         """
-        super().conformalize(
-            X_conformalize, y_conformalize, predict_params=predict_params
-        )
-
-        x_calib = np.asarray(X_conformalize)
-        y_calib = np.asarray(y_conformalize)
         self.x_calib = x_calib
-        self.y_calib = y_calib
+        self.scores_calib = np.asarray(scores_calib).ravel()
         phi_calib = self.Phi_fn(x_calib)
 
         _, s, Vt = np.linalg.svd(phi_calib, full_matrices=False)
@@ -159,15 +90,10 @@ class ConditionalSplitConformalRegressor(SplitConformalRegressor):
             phi_calib = self.Phi_fn(x_calib)
 
         self.phi_calib = phi_calib
-        self.scores_calib = (
-            self._mapie_regressor.conformity_scores_
-        )  # computed in super().conformalize
 
         self.cvx_problem = setup_cvx_problem(
             self.x_calib, self.scores_calib, self.phi_calib, self.infinite_params
         )
-
-        return self
 
     @lru_cache()
     def _get_calibration_solution(self, quantile: float):
@@ -357,6 +283,241 @@ class ConditionalSplitConformalRegressor(SplitConformalRegressor):
                 S[-1] = np.inf if dual_threshold > 0 else -1 * np.inf
         return S[-1]
 
+    def _predict_conditional_cutoff(
+        self,
+        quantile: float,
+        x_test: np.ndarray,
+        S_min: Optional[float] = None,
+        S_max: Optional[float] = None,
+    ) -> float:
+        """
+        Computes the conditional conformity-score cutoff S^* for a single test
+        point, i.e. the (conditionally valid) threshold such that the
+        prediction set is ``{y : S(x, y) <= S^*}``.
+
+        Whether the cutoff is computed exactly or by binary search, and whether
+        the dual threshold is randomized, is controlled by the ``exact`` and
+        ``randomize`` attributes set at initialisation.
+
+        Arguments
+        ---------
+        quantile : float
+            Nominal quantile level.
+        x_test : np.ndarray
+            Single test point, of shape ``(1, n_features)``.
+        S_min : float = None
+            Lower bound (if available) on the conformity scores
+        S_max : float = None
+            Upper bound (if available) on the conformity scores
+
+        Returns
+        -------
+        float
+            The conditional score cutoff S^*.
+        """
+        quantiles = np.ones((len(self.scores_calib) + 1, 1)) * quantile
+        if self.randomize:
+            threshold = self.rng.uniform(low=quantile - 1, high=quantile)
+        elif quantile < 0.5:
+            threshold = quantile - 1
+        else:
+            threshold = quantile
+
+        if self.exact:
+            if self.infinite_params.get("kernel", FUNCTION_DEFAULTS["kernel"]):
+                raise ValueError(
+                    "Exact computation doesn't support RKHS quantile regression for now."
+                )
+            naive_duals, naive_primals = self._get_calibration_solution(quantile)
+            score_cutoff = self._compute_exact_cutoff(
+                quantiles, naive_primals, naive_duals, self.Phi_fn(x_test), threshold
+            )
+        else:
+            _solve = partial(
+                _solve_dual,
+                gcc=self,
+                x_test=x_test,
+                quantiles=quantiles,
+                threshold=threshold,
+            )
+
+            if S_min is None:
+                S_min = np.min(self.scores_calib)
+            if S_max is None:
+                S_max = np.max(self.scores_calib)
+            lower, upper = binary_search(_solve, S_min, S_max * 2)
+
+            if quantile < 0.5:
+                score_cutoff = self._get_threshold(lower, x_test, quantiles)
+            else:
+                score_cutoff = self._get_threshold(upper, x_test, quantiles)
+
+        return float(np.ravel(score_cutoff)[0])
+
+    def _get_primal_solution(self, S: float, x: np.ndarray, quantiles: np.ndarray):
+        if self.infinite_params.get("kernel", FUNCTION_DEFAULTS["kernel"]):
+            cp = _import_cvxpy()
+            prob = finish_dual_setup(
+                self.cvx_problem,
+                S,
+                x,
+                quantiles[-1][0],
+                self.Phi_fn(x),
+                self.x_calib,
+                self.infinite_params,
+            )
+            if "MOSEK" in cp.installed_solvers():
+                prob.solve(solver="MOSEK")  # pragma: no cover
+            else:
+                prob.solve()
+
+            weights = prob.var_dict["weights"].value
+            beta = prob.constraints[-1].dual_value
+        else:
+            S = np.concatenate([self.scores_calib, [S]])
+            Phi = np.concatenate([self.phi_calib, self.Phi_fn(x)], axis=0)
+            zeros = np.zeros((Phi.shape[1],))
+            bounds = np.concatenate((quantiles - 1, quantiles), axis=1)
+            res = linprog(
+                -1 * S,
+                A_eq=Phi.T,
+                b_eq=zeros,
+                bounds=bounds,
+                method="highs-ds",
+                options={"presolve": False},
+            )
+            beta = -1 * res.eqlin.marginals
+            weights = None
+        return beta, weights
+
+    def _get_threshold(self, S: float, x: np.ndarray, quantiles: np.ndarray):
+        beta, weights = self._get_primal_solution(S, x, quantiles)
+
+        threshold = self.Phi_fn(x) @ beta
+        if self.infinite_params.get("kernel", FUNCTION_DEFAULTS["kernel"]):
+            K = pairwise_kernels(
+                X=np.concatenate([self.x_calib, x.reshape(1, -1)], axis=0),
+                Y=np.concatenate([self.x_calib, x.reshape(1, -1)], axis=0),
+                metric=self.infinite_params.get("kernel", FUNCTION_DEFAULTS["kernel"]),
+                gamma=self.infinite_params.get("gamma", FUNCTION_DEFAULTS["gamma"]),
+            )
+            threshold = (K @ weights)[-1] + threshold
+        return threshold
+
+
+class ConditionalSplitConformalRegressor(
+    _ConditionalConformalMixin, SplitConformalRegressor
+):
+    def __init__(
+        self,
+        Phi_fn: Callable,
+        estimator: RegressorMixin = LinearRegression(),
+        confidence_level: Union[float, Iterable[float]] = 0.9,
+        conformity_score: Union[str, BaseRegressionScore] = "absolute",
+        prefit: bool = True,
+        n_jobs: Optional[int] = None,
+        verbose: int = 0,
+        randomize: bool = False,
+        exact: bool = True,
+        infinite_params: Optional[dict] = None,
+        seed: int = 0,
+    ) -> None:
+        """
+        Split conformal regressor with conditional validity guarantees.
+
+        In addition to the parameters of
+        :class:`~mapie.regression.SplitConformalRegressor`, this class accepts
+        settings for the conditional conformal procedure.
+
+        Parameters
+        ----------
+        Phi_fn : Callable
+            Function mapping covariates to a finite basis used for exact
+            conditional guarantees.
+
+        estimator : RegressorMixin, default=LinearRegression()
+            Base regressor used to predict points.
+
+        confidence_level : float or iterable of float, default=0.9
+            Desired coverage probability of the prediction intervals.
+
+        conformity_score : str or BaseRegressionScore, default="absolute"
+            Method used to compute conformity scores. See
+            :class:`~mapie.regression.SplitConformalRegressor`.
+
+        prefit : bool, default=True
+            Whether the base regressor is already fitted.
+
+        n_jobs : int, optional
+            Number of parallel jobs when applicable.
+
+        verbose : int, default=0
+            Verbosity level.
+
+        randomize : bool, default=False
+            Randomize the dual threshold for exact (non-conservative) coverage.
+
+        exact : bool, default=True
+            Compute the conditional score cutoff exactly rather than by binary
+            search.
+
+        infinite_params : dict, optional
+            Parameters for the RKHS component of the fit. Valid keys are
+            ``kernel``, ``gamma``, and ``lambda``.
+        """
+        super().__init__(
+            estimator=estimator,
+            confidence_level=confidence_level,
+            conformity_score=conformity_score,
+            prefit=prefit,
+            n_jobs=n_jobs,
+            verbose=verbose,
+        )
+        self._init_conditional(Phi_fn, randomize, exact, infinite_params, seed)
+
+    def conformalize(
+        self,
+        X_conformalize: ArrayLike,
+        y_conformalize: ArrayLike,
+        predict_params: Optional[dict] = None,
+    ) -> "ConditionalSplitConformalRegressor":
+        """
+        Conformalize the regressor and set up the final fitting problem
+        for the given conformalization set.
+
+        Performs the standard split-conformal conformalization step from
+        :meth:`SplitConformalRegressor.conformalize`, then builds the
+        cvxpy problem used for the conditional procedure.
+
+        Parameters
+        ----------
+        X_conformalize : ArrayLike
+            Features of the conformalization set.
+
+        y_conformalize : ArrayLike
+            Targets of the conformalization set.
+
+        predict_params : Optional[dict], default=None
+            Parameters to pass to the ``predict`` method of the base
+            regressor.
+
+        Returns
+        -------
+        Self
+            The conformalized ConditionalSplitConformalRegressor instance.
+        """
+        super().conformalize(
+            X_conformalize, y_conformalize, predict_params=predict_params
+        )
+
+        self.y_calib = np.asarray(y_conformalize)
+        self._conformalize_conditional(
+            np.asarray(X_conformalize),
+            self._mapie_regressor.conformity_scores_,  # computed in super().conformalize
+        )
+
+        return self
+
     def predict_interval(
         self,
         X: ArrayLike,
@@ -438,77 +599,6 @@ class ConditionalSplitConformalRegressor(SplitConformalRegressor):
                 intervals[i, 1, j] = float(up)
 
         return y_pred, intervals
-
-    def _predict_conditional_cutoff(
-        self,
-        quantile: float,
-        x_test: np.ndarray,
-        S_min: Optional[float] = None,
-        S_max: Optional[float] = None,
-    ) -> float:
-        """
-        Computes the conditional conformity-score cutoff S^* for a single test
-        point, i.e. the (conditionally valid) threshold such that the
-        prediction set is ``{y : S(x, y) <= S^*}``.
-
-        Whether the cutoff is computed exactly or by binary search, and whether
-        the dual threshold is randomized, is controlled by the ``exact`` and
-        ``randomize`` attributes set at initialisation.
-
-        Arguments
-        ---------
-        quantile : float
-            Nominal quantile level.
-        x_test : np.ndarray
-            Single test point, of shape ``(1, n_features)``.
-        S_min : float = None
-            Lower bound (if available) on the conformity scores
-        S_max : float = None
-            Upper bound (if available) on the conformity scores
-
-        Returns
-        -------
-        float
-            The conditional score cutoff S^*.
-        """
-        quantiles = np.ones((len(self.scores_calib) + 1, 1)) * quantile
-        if self.randomize:
-            threshold = self.rng.uniform(low=quantile - 1, high=quantile)
-        elif quantile < 0.5:
-            threshold = quantile - 1
-        else:
-            threshold = quantile
-
-        if self.exact:
-            if self.infinite_params.get("kernel", FUNCTION_DEFAULTS["kernel"]):
-                raise ValueError(
-                    "Exact computation doesn't support RKHS quantile regression for now."
-                )
-            naive_duals, naive_primals = self._get_calibration_solution(quantile)
-            score_cutoff = self._compute_exact_cutoff(
-                quantiles, naive_primals, naive_duals, self.Phi_fn(x_test), threshold
-            )
-        else:
-            _solve = partial(
-                _solve_dual,
-                gcc=self,
-                x_test=x_test,
-                quantiles=quantiles,
-                threshold=threshold,
-            )
-
-            if S_min is None:
-                S_min = np.min(self.scores_calib)
-            if S_max is None:
-                S_max = np.max(self.scores_calib)
-            lower, upper = binary_search(_solve, S_min, S_max * 2)
-
-            if quantile < 0.5:
-                score_cutoff = self._get_threshold(lower, x_test, quantiles)
-            else:
-                score_cutoff = self._get_threshold(upper, x_test, quantiles)
-
-        return float(np.ravel(score_cutoff)[0])
 
     # def estimate_coverage(
     #     self, quantile: float, weights: np.ndarray, x: np.ndarray = None
@@ -764,55 +854,211 @@ class ConditionalSplitConformalRegressor(SplitConformalRegressor):
     #         eta = res.x
     #     return eta
 
-    def _get_primal_solution(self, S: float, x: np.ndarray, quantiles: np.ndarray):
-        if self.infinite_params.get("kernel", FUNCTION_DEFAULTS["kernel"]):
-            cp = _import_cvxpy()
-            prob = finish_dual_setup(
-                self.cvx_problem,
-                S,
-                x,
-                quantiles[-1][0],
-                self.Phi_fn(x),
-                self.x_calib,
-                self.infinite_params,
-            )
-            if "MOSEK" in cp.installed_solvers():
-                prob.solve(solver="MOSEK")  # pragma: no cover
-            else:
-                prob.solve()
 
-            weights = prob.var_dict["weights"].value
-            beta = prob.constraints[-1].dual_value
-        else:
-            S = np.concatenate([self.scores_calib, [S]])
-            Phi = np.concatenate([self.phi_calib, self.Phi_fn(x)], axis=0)
-            zeros = np.zeros((Phi.shape[1],))
-            bounds = np.concatenate((quantiles - 1, quantiles), axis=1)
-            res = linprog(
-                -1 * S,
-                A_eq=Phi.T,
-                b_eq=zeros,
-                bounds=bounds,
-                method="highs-ds",
-                options={"presolve": False},
-            )
-            beta = -1 * res.eqlin.marginals
-            weights = None
-        return beta, weights
+class ConditionalSplitConformalClassifier(
+    _ConditionalConformalMixin, SplitConformalClassifier
+):
+    def __init__(
+        self,
+        Phi_fn: Callable,
+        estimator: ClassifierMixin = LogisticRegression(),
+        confidence_level: Union[float, Iterable[float]] = 0.9,
+        conformity_score: Union[str, BaseClassificationScore] = "lac",
+        prefit: bool = True,
+        n_jobs: Optional[int] = None,
+        verbose: int = 0,
+        randomize: bool = False,
+        exact: bool = True,
+        infinite_params: Optional[dict] = None,
+        seed: int = 0,
+    ) -> None:
+        """
+        Split conformal classifier with conditional validity guarantees.
 
-    def _get_threshold(self, S: float, x: np.ndarray, quantiles: np.ndarray):
-        beta, weights = self._get_primal_solution(S, x, quantiles)
+        In addition to the parameters of
+        :class:`~mapie.classification.SplitConformalClassifier`, this class
+        accepts settings for the conditional conformal procedure.
 
-        threshold = self.Phi_fn(x) @ beta
-        if self.infinite_params.get("kernel", FUNCTION_DEFAULTS["kernel"]):
-            K = pairwise_kernels(
-                X=np.concatenate([self.x_calib, x.reshape(1, -1)], axis=0),
-                Y=np.concatenate([self.x_calib, x.reshape(1, -1)], axis=0),
-                metric=self.infinite_params.get("kernel", FUNCTION_DEFAULTS["kernel"]),
-                gamma=self.infinite_params.get("gamma", FUNCTION_DEFAULTS["gamma"]),
+        Parameters
+        ----------
+        Phi_fn : Callable
+            Function mapping covariates to a finite basis used for exact
+            conditional guarantees.
+
+        estimator : ClassifierMixin, default=LogisticRegression()
+            Base classifier used to predict labels.
+
+        confidence_level : float or iterable of float, default=0.9
+            Desired coverage probability of the prediction sets.
+
+        conformity_score : str or BaseClassificationScore, default="lac"
+            Method used to compute conformity scores. The conditional
+            procedure inverts a real-valued score cutoff into a prediction
+            set, so only scores whose prediction sets are obtained by
+            thresholding real-valued scores are supported ("lac", "aps");
+            "top_k" and "raps" are not.
+
+        prefit : bool, default=True
+            Whether the base classifier is already fitted.
+
+        n_jobs : int, optional
+            Number of parallel jobs when applicable.
+
+        verbose : int, default=0
+            Verbosity level.
+
+        randomize : bool, default=False
+            Randomize the dual threshold for exact (non-conservative) coverage.
+
+        exact : bool, default=True
+            Compute the conditional score cutoff exactly rather than by binary
+            search.
+
+        infinite_params : dict, optional
+            Parameters for the RKHS component of the fit. Valid keys are
+            ``kernel``, ``gamma``, and ``lambda``.
+        """
+        super().__init__(
+            estimator=estimator,
+            confidence_level=confidence_level,
+            conformity_score=conformity_score,
+            prefit=prefit,
+            n_jobs=n_jobs,
+            verbose=verbose,
+        )
+        if isinstance(
+            self._conformity_score, (RAPSConformityScore, TopKConformityScore)
+        ):
+            raise ValueError(
+                "ConditionalSplitConformalClassifier requires a conformity "
+                "score whose prediction sets are obtained by thresholding "
+                'real-valued scores, e.g. "lac" or "aps".'
             )
-            threshold = (K @ weights)[-1] + threshold
-        return threshold
+        self._init_conditional(Phi_fn, randomize, exact, infinite_params, seed)
+
+    def conformalize(
+        self,
+        X_conformalize: ArrayLike,
+        y_conformalize: ArrayLike,
+        predict_params: Optional[dict] = None,
+    ) -> "ConditionalSplitConformalClassifier":
+        """
+        Conformalize the classifier and set up the final fitting problem
+        for the given conformalization set.
+
+        Performs the standard split-conformal conformalization step from
+        :meth:`SplitConformalClassifier.conformalize`, then builds the
+        cvxpy problem used for the conditional procedure.
+
+        Parameters
+        ----------
+        X_conformalize : ArrayLike
+            Features of the conformalization set.
+
+        y_conformalize : ArrayLike
+            Targets of the conformalization set.
+
+        predict_params : Optional[dict], default=None
+            Parameters to pass to the ``predict`` and ``predict_proba``
+            methods of the base classifier.
+
+        Returns
+        -------
+        Self
+            The conformalized ConditionalSplitConformalClassifier instance.
+        """
+        super().conformalize(
+            X_conformalize, y_conformalize, predict_params=predict_params
+        )
+
+        self._conformalize_conditional(
+            np.asarray(X_conformalize),
+            self._mapie_classifier.conformity_scores_,  # computed in super().conformalize
+        )
+
+        return self
+
+    def predict_set(
+        self,
+        X: ArrayLike,
+        conformity_score_params: Optional[dict] = None,
+    ) -> Tuple[NDArray, NDArray]:
+        """
+        For each sample in X, predicts a label (using the base classifier)
+        and a conditionally valid set of labels.
+
+        If several confidence levels were provided during initialisation,
+        several sets will be predicted for each sample. See the return
+        signature.
+
+        Parameters
+        ----------
+        X : ArrayLike
+            Features.
+
+        conformity_score_params : Optional[dict], default=None
+            Parameters specific to conformity scores, used at prediction time
+            (e.g. ``include_last_label`` for the "aps" conformity score).
+
+        Returns
+        -------
+        Tuple[NDArray, NDArray]
+            Two arrays:
+
+            - Prediction labels, of shape `(n_samples,)`
+            - Prediction sets, of shape
+              `(n_samples, n_class, n_confidence_levels)`
+        """
+        _raise_error_if_previous_method_not_called(
+            "predict_set",
+            "conformalize",
+            self._is_conformalized,
+        )
+        conformity_score_params_ = _prepare_params(conformity_score_params)
+        include_last_label = conformity_score_params_.get("include_last_label", True)
+
+        X = np.asarray(X)
+        mapie_classifier = self._mapie_classifier
+        y_pred_proba = mapie_classifier.estimator_.single_estimator_.predict_proba(
+            X, **self._predict_params
+        )
+        y_pred_proba = check_proba_normalized(y_pred_proba, axis=1)
+        y_pred = mapie_classifier.label_encoder_.inverse_transform(
+            np.argmax(y_pred_proba, axis=1)
+        )
+
+        score = mapie_classifier.conformity_score_function_
+        alphas = np.asarray(self._alphas)
+        n_samples, n_classes = y_pred_proba.shape
+        prediction_sets = np.empty((n_samples, n_classes, len(alphas)), dtype=bool)
+
+        y_pred_proba = score.get_predictions(
+            X,
+            alphas,
+            y_pred_proba,
+            cv="prefit",
+            include_last_label=include_last_label,
+        )
+
+        for i in range(n_samples):
+            x_row = X[i].reshape(1, -1)
+            # Classification scores are one-sided ("higher = less conforming"),
+            # so a single cutoff at the 1 - alpha quantile inverts to the
+            # prediction set {y : S(x, y) <= cutoff}. The inversion itself is
+            # delegated to the conformity score, with the conditional cutoffs
+            # in place of the marginal quantiles.
+            score.quantiles_ = np.asarray(
+                [self._predict_conditional_cutoff(1 - alpha, x_row) for alpha in alphas]
+            )
+            prediction_sets[i] = score.get_prediction_sets(
+                y_pred_proba[[i]],
+                self.scores_calib,
+                alphas,
+                cv="prefit",
+                include_last_label=include_last_label,
+            )[0]
+
+        return y_pred, prediction_sets
 
 
 def binary_search(func, min, max, tol=1e-3):

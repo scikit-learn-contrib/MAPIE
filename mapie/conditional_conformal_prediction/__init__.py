@@ -1,3 +1,9 @@
-from .conditional import ConditionalSplitConformalRegressor
+from .conditional import (
+    ConditionalSplitConformalClassifier,
+    ConditionalSplitConformalRegressor,
+)
 
-__all__ = ["ConditionalSplitConformalRegressor"]
+__all__ = [
+    "ConditionalSplitConformalClassifier",
+    "ConditionalSplitConformalRegressor",
+]
