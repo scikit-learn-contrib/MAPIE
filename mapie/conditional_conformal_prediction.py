@@ -374,12 +374,12 @@ class _ConditionalConformalMixin:
             weights = prob.var_dict["weights"].value
             beta = prob.constraints[-1].dual_value
         else:
-            S = np.concatenate([self.scores_calib, [S]])
+            scores = np.concatenate([self.scores_calib, [S]])
             Phi = np.concatenate([self.phi_calib, self.Phi_fn(x)], axis=0)
             zeros = np.zeros((Phi.shape[1],))
             bounds = np.concatenate((quantiles - 1, quantiles), axis=1)
             res = linprog(
-                -1 * S,
+                -1 * scores,
                 A_eq=Phi.T,
                 b_eq=zeros,
                 bounds=bounds,
