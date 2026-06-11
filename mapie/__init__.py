@@ -8,7 +8,7 @@ from . import (
     risk_control,
     calibration,
     subsample,
-    conditional_conformal_prediction
+    conditional_conformal_prediction,
 )
 
 try:
@@ -25,6 +25,6 @@ __all__ = [
     "metrics",
     "utils",
     "subsample",
-    "conditional_conformal_prediction"
+    "conditional_conformal_prediction",
     "__version__",
 ]
