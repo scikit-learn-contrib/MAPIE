@@ -31,14 +31,13 @@ import warnings
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import seaborn as sns
 from sklearn.linear_model import LinearRegression
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import PolynomialFeatures
 
-from mapie.conditional_conformal_prediction import (
-    ConditionalSplitConformalRegressor,
-)
+from mapie.conditional_conformal_prediction import ConditionalSplitConformalRegressor
 from mapie.conformity_scores import AbsoluteConformityScore
 
 warnings.filterwarnings("ignore")
@@ -108,8 +107,8 @@ def indicator_matrix(scalar_values, disc):
     return matrix
 
 
-x_train_final, y_train_final, x_calib, y_calib, x_test, y_test = (
-    generate_cqr_data(seed=1, n_calib=2000)
+x_train_final, y_train_final, x_calib, y_calib, x_test, y_test = generate_cqr_data(
+    seed=1, n_calib=2000
 )
 
 x_calib = np.asarray(x_calib, dtype=np.float64)
@@ -204,9 +203,9 @@ q = np.quantile(
 # target coverage on each of the highlighted groups of ``X``. This reproduces the
 # figure of the original implementation [2].
 
-cp = sns.color_palette()
 sns.set(font="DejaVu Sans")
 sns.set_style("whitegrid", {"axes.grid": False})
+cp = sns.color_palette()
 fig = plt.figure()
 fig.set_size_inches(10.5, 6)
 
@@ -259,4 +258,87 @@ ax2.axvspan(1, 2, facecolor="grey", alpha=0.25)
 ax2.axvspan(3, 4, facecolor="grey", alpha=0.25)
 
 plt.tight_layout(pad=5)
+plt.show()
+
+
+##############################################################################
+# 7. Group-conditional miscoverage over repeated trials
+# --------------------------------------------------------------------------
+#
+# We now quantify the coverage difference between the two methods. Following
+# the reference notebook [2], we repeat the experiment over independent draws
+# of the calibration and test sets (keeping the fitted base model), and
+# measure the miscoverage rate of both methods, marginally and on the two
+# highlighted groups ``X in [1, 2]`` and ``X in [3, 4]``. The conditional
+# procedure is run with ``randomize=True`` so that its coverage is exact
+# rather than conservative.
+#
+# Both methods control the *marginal* miscoverage at the nominal 10% level
+# (red line), but the split-conformal interval (blue, as in the figure above)
+# undercovers on ``[1, 2]`` -- where the noise is large -- and overcovers on
+# ``[3, 4]`` -- where it is small. The conditional calibration (orange)
+# achieves the nominal miscoverage on both groups. The original experiment
+# uses 500 trials; we use fewer here to keep the runtime of the example
+# reasonable.
+
+n_trials = 20
+rows = []
+for seed in range(n_trials):
+    _, _, x_calib_t, y_calib_t, x_test_t, y_test_t = generate_cqr_data(
+        seed=seed, n_calib=2000
+    )
+    x_calib_t = np.asarray(x_calib_t, dtype=np.float64)
+    y_calib_t = np.asarray(y_calib_t, dtype=np.float64)
+    x_test_t = np.asarray(x_test_t, dtype=np.float64)
+
+    mapie_trial = ConditionalSplitConformalRegressor(
+        phi_fn,
+        estimator=reg,
+        prefit=True,
+        confidence_level=confidence_level,
+        conformity_score=AbsoluteConformityScore(sym=False),
+        randomize=True,
+        seed=seed,
+    ).conformalize(x_calib_t, y_calib_t)
+    _, intervals = mapie_trial.predict_interval(x_test_t)
+    miscover_conditional = (y_test_t < intervals[:, 0, 0]) | (
+        y_test_t > intervals[:, 1, 0]
+    )
+
+    q_t = np.quantile(
+        np.abs(reg.predict(x_calib_t) - y_calib_t),
+        np.ceil((len(x_calib_t) + 1) * confidence_level) / len(x_calib_t),
+    )
+    miscover_split = np.abs(reg.predict(x_test_t) - y_test_t) >= q_t
+
+    x_t = x_test_t[:, 0]
+    groups = {
+        "Marginal": np.ones_like(x_t, dtype=bool),
+        "[1,2]": (x_t > 1) & (x_t < 2),
+        "[3,4]": (x_t > 3) & (x_t < 4),
+    }
+    for method, miscover in [
+        ("Split", miscover_split),
+        ("Conditional", miscover_conditional),
+    ]:
+        for group_name, mask in groups.items():
+            rows.append(
+                {
+                    "Method": method,
+                    "Groups": group_name,
+                    "Miscoverage": miscover[mask].mean(),
+                }
+            )
+
+coverage_data = pd.DataFrame(rows)
+
+fig, ax3 = plt.subplots(figsize=(5.5, 5))
+barplot = sns.barplot(coverage_data, x="Groups", y="Miscoverage", hue="Method", ax=ax3)
+barplot.axhline(alpha, color="red", label=r"Target miscoverage $\alpha$")
+ax3.legend()
+ax3.set_ylabel("Miscoverage", fontsize=16, labelpad=10)
+ax3.set_xlabel("Groups", fontsize=16, labelpad=10)
+ax3.set_ylim(0.0, 0.2)
+ax3.tick_params(axis="both", which="major", labelsize=12)
+plt.tight_layout()
 plt.show()
