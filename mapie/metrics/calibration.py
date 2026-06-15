@@ -108,6 +108,7 @@ def expected_calibration_error(
     num_bins: int = 50,
     split_strategy: Optional[str] = None,
     classwise: bool = False,
+    class_labels: Optional[ArrayLike] = None,
 ) -> float:
     """
     The Expected Calibration Error (ECE), which measures the difference
@@ -134,11 +135,12 @@ def expected_calibration_error(
     Parameters
     ----------
     y_true: ArrayLike of shape (n_samples,)
-    When ``classwise=False``, a binary indicator of whether the
-    prediction is correct (``y == y_pred``), encoded as 0 or 1.
+        Binary indicator of whether the prediction is correct
+        (``y == y_pred``), encoded as 0 or 1.
 
-    When ``classwise=True``, the true class labels encoded as
-    integers in ``[0, n_classes - 1]``.
+        Note that the parameter name ``y_true`` is historical and may
+        be misleading. It represents prediction correctness rather
+        than the true class labels.
     y_scores: ArrayLike of shape (n_samples,) or (n_samples, n_classes)
         The prediction scores (probabilities).
     num_bins: int
@@ -152,6 +154,11 @@ def expected_calibration_error(
         If ``False`` (default), computes the standard confidence-ECE.
         If ``True``, computes the classwise-ECE by averaging the ECE
         over each class independently.
+    class_labels: Optional[ArrayLike], default=None
+        True class labels encoded as integers in
+        ``[0, n_classes - 1]``.
+
+        Must be provided when ``classwise=True``.
 
     Returns
     -------
@@ -169,11 +176,15 @@ def expected_calibration_error(
                 "y_scores must be 2D of shape (n_samples, n_classes) "
                 "when classwise=True."
             )
-        y_true = cast(NDArray, y_true)
+        if class_labels is None:
+            raise ValueError(
+                "class_labels must be provided when classwise=True."
+            )
+        class_labels = cast(NDArray, class_labels)
         n_classes = y_scores.shape[1]
         ece = float(0.0)
         for c in range(n_classes):
-            y_true_c = np.array(cast(NDArray, y_true) == c, dtype=int)
+            y_true_c = np.array(class_labels == c, dtype=int)
             ece += expected_calibration_error(
                 y_true_c,
                 y_scores[:, c],
