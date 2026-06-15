@@ -1469,7 +1469,7 @@ def test_mapie_regressor_conformalize_uses_std_branch(monkeypatch) -> None:
         called["predict_calib_with_std"] = True
         return np.zeros(len(X)), np.ones(len(X))
 
-    def fake_get_conformity_scores(X, y, y_pred, y_std):
+    def fake_get_conformity_scores(y, y_pred, X, y_std):
         called["get_conformity_scores"] = True
         np.testing.assert_array_equal(y_pred, np.zeros(len(y)))
         np.testing.assert_array_equal(y_std, np.ones(len(y)))
