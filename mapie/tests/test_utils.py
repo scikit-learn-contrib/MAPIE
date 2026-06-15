@@ -48,7 +48,6 @@ from mapie.utils import (
     check_sklearn_user_model_is_fitted,
     check_valid_ltt_params_index,
     train_conformalize_test_split,
-    _check_model_has_std_argument,
 )
 
 
@@ -1100,22 +1099,3 @@ def test_check_user_model_is_fitted_predict_fails():
         match=r".*has `n_features_in_` but failed a minimal prediction test.*",
     ):
         check_sklearn_user_model_is_fitted(model)
-
-
-def test_check_model_has_std_argument_valid() -> None:
-    """Check that boolean inputs are accepted."""
-    _check_model_has_std_argument(True)
-    _check_model_has_std_argument(False)
-
-
-def test_check_model_has_std_argument_invalid() -> None:
-    """Check that non-boolean inputs raise ValueError."""
-
-    with pytest.raises(ValueError):
-        _check_model_has_std_argument(None)  # type: ignore[arg-type]
-
-    with pytest.raises(ValueError):
-        _check_model_has_std_argument(1)  # type: ignore[arg-type]
-
-    with pytest.raises(ValueError):
-        _check_model_has_std_argument("True")  # type: ignore[arg-type]

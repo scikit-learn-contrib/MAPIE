@@ -1286,6 +1286,16 @@ def test_invalid_method(method: str) -> None:
         _MapieRegressor(method=method).fit(X_toy, y_toy)
 
 
+@pytest.mark.parametrize("model_has_std", [None, 1, "True"])
+def test_invalid_model_has_std(model_has_std: Any) -> None:
+    """Test that non-boolean model_has_std values raise errors."""
+    with pytest.raises(
+        ValueError,
+        match="Invalid value for `model_has_std`. Please enter a boolean value.",
+    ):
+        _MapieRegressor(model_has_std=model_has_std).fit(X_toy, y_toy)
+
+
 def test_ensemble_std_regressor_predict_with_std_prefit() -> None:
     """Test std-aware prediction in the prefit/no-aggregation case."""
     # Direct EnsembleStdRegressor test — unchanged.

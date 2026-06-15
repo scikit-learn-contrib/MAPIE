@@ -32,7 +32,6 @@ from mapie.utils import (
     _check_deprecated_sample_weight_kwarg,
     _check_estimator_fit_predict,
     _check_if_param_in_allowed_values,
-    _check_model_has_std_argument,
     _check_n_features_in,
     _check_n_jobs,
     _check_null_weight,
@@ -1330,7 +1329,10 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
         _check_n_jobs(self.n_jobs)
         _check_verbose(self.verbose)
         check_random_state(self.random_state)
-        _check_model_has_std_argument(self.model_has_std)
+        if not isinstance(self.model_has_std, bool):
+            raise ValueError(
+                "Invalid value for `model_has_std`. Please enter a boolean value."
+            )
 
     def _check_method(self, method: str) -> str:
         """
