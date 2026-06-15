@@ -319,11 +319,13 @@ def test_ece_classwise_basic() -> None:
     y_true_cw = np.ones_like(class_labels)
     scr = expected_calibration_error(
         y_true_cw,
-        y_scores_cw,classwise=True,
+        y_scores_cw,
+        classwise=True,
         class_labels=class_labels,
     )
     assert isinstance(scr, float)
     assert 0.0 <= scr <= 1.0
+
 
 def test_ece_classwise_vs_default() -> None:
     """

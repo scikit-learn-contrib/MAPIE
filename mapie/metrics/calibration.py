@@ -177,9 +177,7 @@ def expected_calibration_error(
                 "when classwise=True."
             )
         if class_labels is None:
-            raise ValueError(
-                "class_labels must be provided when classwise=True."
-            )
+            raise ValueError("class_labels must be provided when classwise=True.")
         class_labels = cast(NDArray, class_labels)
         n_classes = y_scores.shape[1]
         ece = float(0.0)
