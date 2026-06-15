@@ -1768,6 +1768,7 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
                 method=self.method,
                 optimize_beta=optimize_beta,
                 allow_infinite_bounds=allow_infinite_bounds,
+                **predict_params,
             )
             y_pred, y_pred_low, y_pred_up = outputs
 

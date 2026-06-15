@@ -106,7 +106,9 @@ class StdConformityScore(BaseConformityScore):
         alpha_np: NDArray,
         ensemble: bool,
         method: str,
-        **kwargs,
+        optimize_beta: bool = False,
+        allow_infinite_bounds: bool = False,
+        **predict_params,
     ) -> Tuple[NDArray, NDArray, NDArray]:
         """
         Compute bounds of the prediction intervals from the observed values,
@@ -147,7 +149,7 @@ class StdConformityScore(BaseConformityScore):
             (n_samples, n_alpha).
         """
         y_pred, y_pred_low, y_pred_up, y_std_multi = estimator.predict_with_std(
-            X, ensemble
+            X, ensemble, **predict_params
         )
         signed = -1 if self.sym else 1
         conformity_scores = conformity_scores * np.maximum(
@@ -164,19 +166,36 @@ class StdConformityScore(BaseConformityScore):
                 y_pred_up, conformity_scores
             )
             bound_low = self.get_quantile(
-                conformity_scores_low, alpha_low, axis=1, reversed=True
+                conformity_scores_low,
+                alpha_low,
+                axis=1,
+                reversed=True,
+                unbounded=allow_infinite_bounds,
             )
             bound_up = self.get_quantile(
-                conformity_scores_up, alpha_up, axis=1, reversed=False
+                conformity_scores_up,
+                alpha_up,
+                axis=1,
+                reversed=False,
+                unbounded=allow_infinite_bounds,
             )
         else:
             alpha_low = 1 - alpha_np if self.sym else alpha_np / 2
             alpha_up = 1 - alpha_np if self.sym else 1 - alpha_np / 2
 
             quantile_low = self.get_quantile(
-                conformity_scores, alpha_low, axis=1, reversed=True
+                conformity_scores,
+                alpha_low,
+                axis=1,
+                reversed=True,
+                unbounded=allow_infinite_bounds,
             )
-            quantile_up = self.get_quantile(conformity_scores, alpha_up, axis=1)
+            quantile_up = self.get_quantile(
+                conformity_scores,
+                alpha_up,
+                axis=1,
+                unbounded=allow_infinite_bounds,
+            )
             bound_low = self.get_estimation_distribution(
                 y_pred_low, signed * quantile_low
             )

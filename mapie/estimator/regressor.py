@@ -664,7 +664,7 @@ class EnsembleStdRegressor(EnsembleRegressor):
         """
         X_val = _safe_indexing(X, val_index)
         if _num_samples(X_val) > 0:
-            y_pred, y_std = estimator.predict(X_val, return_std=True)
+            y_pred, y_std = estimator.predict(X_val, return_std=True, **predict_params)
         else:
             y_pred, y_std = np.array([]), np.array([])
         return (y_pred, y_std), val_index
@@ -686,7 +686,10 @@ class EnsembleStdRegressor(EnsembleRegressor):
         NDArray of shape (n_samples_test, n_samples_train)
         """
         y_pred = np.array(
-            [list(e.predict(X, return_std=True)) for e in self.estimators_]
+            [
+                list(e.predict(X, return_std=True, **predict_params))
+                for e in self.estimators_
+            ]
         ).T
         # y_pred is of shape (n_samples_test, n_estimators_, 2)
         # We separate predictions and stds
@@ -738,10 +741,14 @@ class EnsembleStdRegressor(EnsembleRegressor):
         check_is_fitted(self)
 
         if self.cv == "prefit":
-            y_pred, y_std = self.single_estimator_.predict(X, return_std=True)
+            y_pred, y_std = self.single_estimator_.predict(
+                X, return_std=True, **predict_params
+            )
         else:
             if self.method == "naive":
-                y_pred, y_std = self.single_estimator_.predict(X, return_std=True)
+                y_pred, y_std = self.single_estimator_.predict(
+                    X, return_std=True, **predict_params
+                )
             else:
                 cv = cast(BaseCrossValidator, self.cv)
                 outputs = Parallel(n_jobs=self.n_jobs, verbose=self.verbose)(
@@ -749,20 +756,21 @@ class EnsembleStdRegressor(EnsembleRegressor):
                         estimator,
                         X,
                         calib_index,
+                        **predict_params,
                     )
                     for (_, calib_index), estimator in zip(
-                        cv.split(X), self.estimators_
+                        cv.split(X, y, groups), self.estimators_
                     )
                 )
                 predictions, indices = map(list, zip(*outputs))
                 n_samples = _num_samples(X)
                 pred_matrix = np.full(
-                    shape=(n_samples, cv.get_n_splits(X)),
+                    shape=(n_samples, cv.get_n_splits(X, y, groups)),
                     fill_value=np.nan,
                     dtype=float,
                 )
                 std_matrix = np.full(
-                    shape=(n_samples, cv.get_n_splits(X)),
+                    shape=(n_samples, cv.get_n_splits(X, y, groups)),
                     fill_value=np.nan,
                     dtype=float,
                 )
@@ -824,7 +832,9 @@ class EnsembleStdRegressor(EnsembleRegressor):
         """
         check_is_fitted(self)
 
-        y_pred, y_std = self.single_estimator_.predict(X, return_std=True)
+        y_pred, y_std = self.single_estimator_.predict(
+            X, return_std=True, **predict_params
+        )
         if not return_multi_pred and not ensemble:
             return cast(NDArray, y_pred)
 
@@ -833,7 +843,7 @@ class EnsembleStdRegressor(EnsembleRegressor):
             y_pred_multi_up = y_pred[:, np.newaxis]
             y_std_multi = y_std[:, np.newaxis]
         else:
-            y_pred_multi, y_std_multi = self._pred_multi_with_std(X)
+            y_pred_multi, y_std_multi = self._pred_multi_with_std(X, **predict_params)
 
             if self.method == "minmax":
                 y_pred_multi_low = np.min(y_pred_multi, axis=1, keepdims=True)

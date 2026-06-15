@@ -239,6 +239,7 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
         method: str = "base",
         optimize_beta: bool = False,
         allow_infinite_bounds: bool = False,
+        **predict_params,
     ) -> Tuple[NDArray, NDArray, NDArray]:
         """
         Compute bounds of the prediction intervals from the observed values,
@@ -303,7 +304,7 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
                 + "symmetrical conformity score function."
             )
 
-        y_pred, y_pred_low, y_pred_up = estimator.predict(X, ensemble)
+        y_pred, y_pred_low, y_pred_up = estimator.predict(X, ensemble, **predict_params)
         signed = -1 if self.sym else 1
 
         if optimize_beta:
