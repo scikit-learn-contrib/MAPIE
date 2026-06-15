@@ -132,6 +132,15 @@ def expected_calibration_error(
     arXiv:1910.12656. 2019.
     https://arxiv.org/abs/1910.12656
 
+    Examples
+    --------
+    >>> import numpy as np
+    >>> y = np.array([0, 1, 0, 1])
+    >>> y_pred = np.array([0, 1, 1, 1])
+    >>> y_true = (y_pred == y).astype(int)
+    >>> y_true
+    array([1, 1, 0, 1])
+
     Parameters
     ----------
     y_true: ArrayLike of shape (n_samples,)
