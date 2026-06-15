@@ -12,7 +12,6 @@ from sklearn.pipeline import Pipeline
 from sklearn.utils import check_random_state
 from sklearn.utils.validation import _check_y, indexable
 
-
 from mapie.conformity_scores import (
     BaseRegressionScore,
     ResidualNormalisedScore,
@@ -425,7 +424,6 @@ class CrossConformalRegressor:
         estimator: RegressorMixin = LinearRegression(),
         confidence_level: Union[float, Iterable[float]] = 0.9,
         conformity_score: Union[str, BaseRegressionScore] = "absolute",
-        model_has_std: bool = False,
         method: str = "plus",
         cv: Union[int, BaseCrossValidator] = 5,
         n_jobs: Optional[int] = None,
@@ -438,23 +436,16 @@ class CrossConformalRegressor:
         _check_cv_not_string(cv)
         _check_cv_not_subsample(cv)
 
-        selected_conformity_score = check_and_select_conformity_score(
-            conformity_score,
-            BaseRegressionScore,
-        )
-        if isinstance(selected_conformity_score, StdConformityScore) and (
-            not model_has_std
-        ):
-            raise ValueError("Invalid conformity_score parameter")
-
         self._mapie_regressor = _MapieRegressor(
             estimator=estimator,
             method=method,
             cv=cv,
             n_jobs=n_jobs,
             verbose=verbose,
-            conformity_score=selected_conformity_score,
-            model_has_std=model_has_std,
+            conformity_score=check_and_select_conformity_score(
+                conformity_score,
+                BaseRegressionScore,
+            ),
             random_state=random_state,
         )
 
@@ -1211,14 +1202,6 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
 
         By default `None`.
 
-    model_has_std: bool
-        Wether or not the regression model can also output an estimator of the
-        standard deviation of the prediction (Gaussian Processes for example).
-        If `True`, then this value will be used to normalize the conformity
-        score to have more adaptive predicion intervals.
-
-        By default `False`.
-
     random_state: Optional[Union[int, RandomState]]
         Pseudo random number generator state used for random sampling.
         Pass an int for reproducible output across multiple function calls.
@@ -1299,7 +1282,6 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
         agg_function: Optional[str] = "mean",
         verbose: int = 0,
         conformity_score: Optional[BaseRegressionScore] = None,
-        model_has_std: bool = False,
         random_state: Optional[Union[int, np.random.RandomState]] = None,
     ) -> None:
         self.estimator = estimator
@@ -1311,7 +1293,6 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
         self.verbose = verbose
         self.conformity_score = conformity_score
         self.random_state = random_state
-        self.model_has_std = model_has_std
         self._is_fitted = False
 
     @property
@@ -1332,10 +1313,6 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
         _check_n_jobs(self.n_jobs)
         _check_verbose(self.verbose)
         check_random_state(self.random_state)
-        if not isinstance(self.model_has_std, bool):
-            raise ValueError(
-                "Invalid value for `model_has_std`. Please enter a boolean value."
-            )
 
     def _check_method(self, method: str) -> str:
         """
@@ -1608,22 +1585,20 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
             groups,
         ) = self._check_fit_parameters(X, y, groups)
 
-        if not isinstance(estimator, EnsembleRegressor):
-            my_regressor = (
-                EnsembleRegressor if not self.model_has_std else EnsembleStdRegressor
-            )
-
-            self.estimator_ = my_regressor(
-                estimator,
-                self.method,
-                cv,
-                agg_function,
-                self.n_jobs,
-                self.test_size,
-                self.verbose,
-            )
-        else:
-            self.estimator_ = estimator
+        my_regressor = (
+            EnsembleStdRegressor
+            if isinstance(self.conformity_score_function_, StdConformityScore)
+            else EnsembleRegressor
+        )
+        self.estimator_ = my_regressor(
+            estimator,
+            self.method,
+            cv,
+            agg_function,
+            self.n_jobs,
+            self.test_size,
+            self.verbose,
+        )
 
         return (X, y, groups)
 
@@ -1649,25 +1624,23 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
 
         self.estimator_.fit_multi_estimators(X, y, groups=groups, **self._fit_params)
 
-        # Predict on calibration data and compute the conformity scores (manage jk-ab case )
-        if isinstance(self.estimator_, EnsembleStdRegressor):
-            y_pred, y_std = self.estimator_.predict_calib_with_std(
+        # Predict on calibration data
+        conformity_score_params = {}
+        if isinstance(self.conformity_score_function_, StdConformityScore):
+            estimator = cast(EnsembleStdRegressor, self.estimator_)
+            y_pred, y_std = estimator.predict_calib_with_std(
                 X, y=y, groups=groups, **predict_params
             )
-            self.conformity_scores_ = (
-                self.conformity_score_function_.get_conformity_scores(
-                    X=X, y=y, y_pred=y_pred, y_std=y_std
-                )
-            )
+            conformity_score_params["y_std"] = y_std
         else:
             y_pred = self.estimator_.predict_calib(
                 X, y=y, groups=groups, **predict_params
             )
-            self.conformity_scores_ = (
-                self.conformity_score_function_.get_conformity_scores(
-                    X=X, y=y, y_pred=y_pred
-                )
-            )
+
+        # Compute the conformity scores (manage jk-ab case)
+        self.conformity_scores_ = self.conformity_score_function_.get_conformity_scores(
+            y, y_pred, X=X, **conformity_score_params
+        )
 
         return self
 

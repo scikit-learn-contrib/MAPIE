@@ -13,10 +13,10 @@ class StdConformityScore(BaseRegressionScore):
 
     The conformity score = |y - y_pred|/ y_std.
 
-    This is appropriate when your model is a Gaussian Process or is able to
-    return an estimate of the standard deviation of the prediction. This
-    non-conformity score is able to give adaptive prediction intervals
-    (taking X into account).
+    This requires a model, such as a Gaussian Process, that can return an
+    estimate of the standard deviation of the prediction through
+    ``predict(X, return_std=True)``. This non-conformity score is able to give
+    adaptive prediction intervals (taking X into account).
     """
 
     def __init__(

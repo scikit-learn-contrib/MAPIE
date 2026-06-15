@@ -1254,7 +1254,7 @@ def test_ensemble_std_regressor_predict_calib(
     ids=["cv_base", "cv_plus"],
 )
 def test_std_conformity_score_regression_strategies(strategy: dict[str, Any]) -> None:
-    """StdConformityScore is rejected at construction time when model_has_std=False."""
+    """StdConformityScore automatically uses the std-aware regressor."""
     X_loc, y_loc = make_regression(
         n_samples=60,
         n_features=2,
@@ -1262,13 +1262,17 @@ def test_std_conformity_score_regression_strategies(strategy: dict[str, Any]) ->
         random_state=random_state,
     )
 
-    with pytest.raises(ValueError, match="Invalid conformity_score parameter"):
-        CrossConformalRegressor(
-            estimator=DummyStdRegressor(),
-            conformity_score=StdConformityScore(),  # type: ignore[arg-type]
-            model_has_std=False,
-            **strategy,
-        )
+    ccr = CrossConformalRegressor(
+        estimator=DummyStdRegressor(),
+        conformity_score=StdConformityScore(),  # type: ignore[arg-type]
+        confidence_level=0.8,
+        **strategy,
+    )
+    ccr.fit_conformalize(X_loc, y_loc)
+    _, y_pis = ccr.predict_interval(X_loc)
+
+    assert isinstance(ccr._mapie_regressor.estimator_, EnsembleStdRegressor)
+    assert y_pis.shape == (len(X_loc), 2, 1)
 
 
 @pytest.mark.parametrize("method", [0.5, 1, "cv", ["base", "plus"]])
@@ -1291,16 +1295,6 @@ def test_sample_weight_as_top_level_kwarg_raises() -> None:
     mapie_reg = _MapieRegressor(cv="prefit", estimator=LinearRegression().fit(X, y))
     with pytest.raises(TypeError, match="fit_params"):
         mapie_reg.fit(X, y, sample_weight=np.ones(len(X)))
-
-
-@pytest.mark.parametrize("model_has_std", [None, 1, "True"])
-def test_invalid_model_has_std(model_has_std: Any) -> None:
-    """Test that non-boolean model_has_std values raise errors."""
-    with pytest.raises(
-        ValueError,
-        match="Invalid value for `model_has_std`. Please enter a boolean value.",
-    ):
-        _MapieRegressor(model_has_std=model_has_std).fit(X_toy, y_toy)
 
 
 def test_ensemble_std_regressor_predict_with_std_prefit() -> None:
@@ -1398,7 +1392,6 @@ def test_mapie_regressor_predict_with_alpha_std_branch(monkeypatch) -> None:
         method="plus",
         cv=-1,
         conformity_score=StdConformityScore(),  # type: ignore[arg-type]
-        model_has_std=True,
         confidence_level=[0.8, 0.9],
     )
     ccr.fit_conformalize(X_toy, y_toy)
@@ -1464,7 +1457,6 @@ def test_mapie_regressor_conformalize_uses_std_branch(monkeypatch) -> None:
         method="plus",
         cv=KFold(n_splits=3, shuffle=True, random_state=random_state),
         conformity_score=StdConformityScore(),  # type: ignore[arg-type]
-        model_has_std=True,
     )
     # Run init_fit manually to set up estimator_ without running the full fit.
     ccr._mapie_regressor._fit_params = {}
@@ -1624,14 +1616,12 @@ def test_ensemble_std_regressor_predict_with_std_prefit_multi_pred() -> None:
 def test_mapie_regressor_init_fit_uses_ensemble_std_regressor() -> None:
     """
     Cover the EnsembleStdRegressor branch in init_fit:
-    when model_has_std=True, CrossConformalRegressor must wire up
-    an EnsembleStdRegressor internally.
+    StdConformityScore must wire up an EnsembleStdRegressor internally.
     """
     ccr = CrossConformalRegressor(
         estimator=DummyStdRegressor(),
         method="plus",
         cv=KFold(n_splits=3, shuffle=True, random_state=random_state),
-        model_has_std=True,
         conformity_score=StdConformityScore(),  # type: ignore[arg-type]
     )
     ccr._mapie_regressor._fit_params = {}
@@ -1647,7 +1637,6 @@ def test_std_conformity_score_forwards_predict_params() -> None:
         method="plus",
         cv=KFold(n_splits=3, shuffle=True, random_state=random_state),
         confidence_level=0.8,
-        model_has_std=True,
         conformity_score=StdConformityScore(),  # type: ignore[arg-type]
     )
 
@@ -1670,7 +1659,6 @@ def test_std_conformity_score_uses_groups_in_cv_split() -> None:
         method="plus",
         cv=GroupKFold(n_splits=3),
         confidence_level=0.8,
-        model_has_std=True,
         conformity_score=StdConformityScore(),  # type: ignore[arg-type]
     )
 
@@ -1688,7 +1676,6 @@ def test_std_conformity_score_allows_infinite_intervals() -> None:
         method="plus",
         cv=KFold(n_splits=3, shuffle=True, random_state=random_state),
         confidence_level=1.0,
-        model_has_std=True,
         conformity_score=StdConformityScore(),  # type: ignore[arg-type]
     )
 
@@ -1714,33 +1701,6 @@ def test_ensemble_std_regressor_invalid_method() -> None:
             0.2,
             False,
         )
-
-
-def test_mapie_regressor_init_fit_with_prebuilt_ensemble_regressor() -> None:
-    """
-    Cover the else branch in init_fit: when the estimator is already an
-    EnsembleRegressor instance it is assigned directly without re-wrapping.
-    """
-    prebuilt = EnsembleRegressor(
-        LinearRegression(),
-        "plus",
-        KFold(n_splits=3, shuffle=True, random_state=random_state),
-        "mean",
-        None,
-        0.2,
-        False,
-    )
-    prebuilt.fit_single_estimator(X_toy, y_toy)
-
-    ccr = CrossConformalRegressor(
-        estimator=prebuilt,
-        method="plus",
-        cv=KFold(n_splits=3, shuffle=True, random_state=random_state),
-    )
-    ccr._mapie_regressor._fit_params = {}
-    ccr._mapie_regressor.init_fit(X_toy, y_toy)
-
-    assert ccr._mapie_regressor.estimator_ is prebuilt
 
 
 def test_std_conformity_score_signed_scores_raises_without_std() -> None:
