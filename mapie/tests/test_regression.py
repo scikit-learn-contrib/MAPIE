@@ -1286,6 +1286,13 @@ def test_invalid_method(method: str) -> None:
         _MapieRegressor(method=method).fit(X_toy, y_toy)
 
 
+def test_sample_weight_as_top_level_kwarg_raises() -> None:
+    """Ensure sample_weight must be passed inside fit_params, not as a kwarg."""
+    mapie_reg = _MapieRegressor(cv="prefit", estimator=LinearRegression().fit(X, y))
+    with pytest.raises(TypeError, match="fit_params"):
+        mapie_reg.fit(X, y, sample_weight=np.ones(len(X)))
+
+
 @pytest.mark.parametrize("model_has_std", [None, 1, "True"])
 def test_invalid_model_has_std(model_has_std: Any) -> None:
     """Test that non-boolean model_has_std values raise errors."""
