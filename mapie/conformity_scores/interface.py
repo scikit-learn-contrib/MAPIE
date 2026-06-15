@@ -14,8 +14,8 @@ class BaseConformityScore(metaclass=ABCMeta):
     This class should not be used directly. Use derived classes instead.
     """
 
-    def __init__(self, sym: bool = True) -> None:
-        self.sym = sym
+    def __init__(self) -> None:
+        pass
 
     def set_external_attributes(self, **kwargs) -> None:
         """
@@ -177,22 +177,3 @@ class BaseConformityScore(metaclass=ABCMeta):
             The prediction sets for each sample and each alpha level.
             The output structure depends on the subclass.
         """
-
-    def get_effective_calibration_samples(self, scores: NDArray):
-        """
-        Calculates the effective number of calibration samples.
-
-        Parameters
-        ----------
-        scores: NDArray
-            An array of scores.
-
-        Returns
-        -------
-        n: int
-            The effective number of calibration samples.
-        """
-        n: int = np.sum(~np.isnan(scores))
-        if not self.sym:
-            n //= 2
-        return n

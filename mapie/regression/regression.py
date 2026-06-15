@@ -13,8 +13,11 @@ from sklearn.utils import check_random_state
 from sklearn.utils.validation import _check_y, indexable
 
 
-from mapie.conformity_scores.interface import BaseConformityScore
-from mapie.conformity_scores import BaseRegressionScore, ResidualNormalisedScore
+from mapie.conformity_scores import (
+    BaseRegressionScore,
+    ResidualNormalisedScore,
+    StdConformityScore,
+)
 from mapie.conformity_scores.utils import (
     check_and_select_conformity_score,
     check_regression_conformity_score,
@@ -421,9 +424,7 @@ class CrossConformalRegressor:
         self,
         estimator: RegressorMixin = LinearRegression(),
         confidence_level: Union[float, Iterable[float]] = 0.9,
-        conformity_score: Union[
-            str, BaseRegressionScore, BaseConformityScore
-        ] = "absolute",
+        conformity_score: Union[str, BaseRegressionScore] = "absolute",
         model_has_std: bool = False,
         method: str = "plus",
         cv: Union[int, BaseCrossValidator] = 5,
@@ -437,9 +438,14 @@ class CrossConformalRegressor:
         _check_cv_not_string(cv)
         _check_cv_not_subsample(cv)
 
-        _type_conformal_score = (
-            BaseRegressionScore if not model_has_std else BaseConformityScore
+        selected_conformity_score = check_and_select_conformity_score(
+            conformity_score,
+            BaseRegressionScore,
         )
+        if isinstance(selected_conformity_score, StdConformityScore) and (
+            not model_has_std
+        ):
+            raise ValueError("Invalid conformity_score parameter")
 
         self._mapie_regressor = _MapieRegressor(
             estimator=estimator,
@@ -447,10 +453,7 @@ class CrossConformalRegressor:
             cv=cv,
             n_jobs=n_jobs,
             verbose=verbose,
-            conformity_score=check_and_select_conformity_score(
-                conformity_score,
-                _type_conformal_score,
-            ),
+            conformity_score=selected_conformity_score,
             model_has_std=model_has_std,
             random_state=random_state,
         )
@@ -1295,7 +1298,7 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
         n_jobs: Optional[int] = None,
         agg_function: Optional[str] = "mean",
         verbose: int = 0,
-        conformity_score: Optional[BaseConformityScore] = None,
+        conformity_score: Optional[BaseRegressionScore] = None,
         model_has_std: bool = False,
         random_state: Optional[Union[int, np.random.RandomState]] = None,
     ) -> None:

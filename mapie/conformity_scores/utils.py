@@ -1,10 +1,9 @@
-from typing import Optional, Union, no_type_check
+from typing import Optional, no_type_check
 
 from sklearn.utils.multiclass import (
     check_classification_targets,
     type_of_target,
 )
-from .interface import BaseConformityScore
 from .regression import BaseRegressionScore
 from .classification import BaseClassificationScore
 from .bounds import (
@@ -28,8 +27,8 @@ CONFORMITY_SCORES_STRING_MAP = {
         "absolute": AbsoluteConformityScore,
         "gamma": GammaConformityScore,
         "residual_normalized": ResidualNormalisedScore,
+        "std_normalized": StdConformityScore,
     },
-    BaseConformityScore: {"std_normalized": StdConformityScore},
     BaseClassificationScore: {
         "lac": LACConformityScore,
         "top_k": TopKConformityScore,
@@ -50,9 +49,9 @@ def check_and_select_conformity_score(conformity_score, conformity_score_type):
 
 
 def check_regression_conformity_score(
-    conformity_score: Optional[Union[BaseRegressionScore, BaseConformityScore]],
+    conformity_score: Optional[BaseRegressionScore],
     sym: bool = True,
-) -> Union[BaseRegressionScore, BaseConformityScore]:
+) -> BaseRegressionScore:
     """
     Check parameter `conformity_score` for regression task.
     By default, return a AbsoluteConformityScore instance.
@@ -90,8 +89,6 @@ def check_regression_conformity_score(
     if conformity_score is None:
         return AbsoluteConformityScore(sym=sym)
     elif isinstance(conformity_score, BaseRegressionScore):
-        return conformity_score
-    elif isinstance(conformity_score, BaseConformityScore):
         return conformity_score
     else:
         raise ValueError(

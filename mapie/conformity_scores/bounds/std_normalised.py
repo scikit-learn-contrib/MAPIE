@@ -1,14 +1,13 @@
-from typing import Tuple, Union
+from typing import Any, Optional, Tuple
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
-from sklearn.base import RegressorMixin
 from mapie._machine_precision import EPSILON
 
-from mapie.conformity_scores.interface import BaseConformityScore
+from mapie.conformity_scores.regression import BaseRegressionScore
 
 
-class StdConformityScore(BaseConformityScore):
+class StdConformityScore(BaseRegressionScore):
     """
     Standardized non-conformity score
 
@@ -26,14 +25,15 @@ class StdConformityScore(BaseConformityScore):
         sym=True,
         eps: float = float(EPSILON),
     ) -> None:
-        super().__init__()
+        super().__init__(sym=sym, consistency_check=False, eps=eps)
         self.pow = power
-        self.sym = sym
-        self.eps = eps
-        self.consistency_check = False
 
     def get_signed_conformity_scores(
-        self, y: ArrayLike, y_pred: ArrayLike, y_std: Union[ArrayLike, None], **kwargs
+        self,
+        y: ArrayLike,
+        y_pred: ArrayLike,
+        y_std: Optional[ArrayLike] = None,
+        **kwargs,
     ) -> NDArray:
         """
         Compute the signed conformity scores from the predicted values
@@ -44,45 +44,6 @@ class StdConformityScore(BaseConformityScore):
             raise ValueError("y_std is required for StdConformityScore.")
         y_std = np.maximum(self.eps, y_std) ** self.pow
         return np.subtract(y, y_pred) / y_std
-
-    def get_conformity_scores(
-        self, y: ArrayLike, y_pred: ArrayLike, **kwargs
-    ) -> NDArray:
-        """
-        Get the conformity score considering the symmetrical property if so.
-
-        Parameters
-        ----------
-        X: NDArray of shape (n_samples, n_features)
-            Observed feature values.
-
-        y: NDArray of shape (n_samples,)
-            Observed target values.
-
-        y_pred: NDArray of shape (n_samples,)
-            Predicted target values.
-
-        y_std: Union[NDArray, None]
-            Estimated standard deviation of the predictions.
-            If None, the conformity scores are not standardised.
-
-        Returns
-        -------
-        NDArray of shape (n_samples,)
-            Conformity scores.
-        """
-        y_std = kwargs.get("y_std", None)
-        if y_std is None:
-            raise ValueError(
-                "y_std is required to compute conformity scores with "
-                "StdConformityScore."
-            )
-        conformity_scores = self.get_signed_conformity_scores(y, y_pred, y_std)
-        if self.consistency_check:
-            self.check_consistency(np.asarray(y), np.asarray(y_pred), conformity_scores)
-        if self.sym:
-            conformity_scores = np.abs(conformity_scores)
-        return conformity_scores
 
     def get_estimation_distribution(
         self, y_pred: ArrayLike, conformity_scores: ArrayLike, **kwargs
@@ -100,12 +61,12 @@ class StdConformityScore(BaseConformityScore):
 
     def get_bounds(
         self,
-        X: ArrayLike,
-        estimator: RegressorMixin,
-        conformity_scores: NDArray,
+        X: NDArray,
         alpha_np: NDArray,
-        ensemble: bool,
-        method: str,
+        estimator: Any,
+        conformity_scores: NDArray,
+        ensemble: bool = False,
+        method: str = "base",
         optimize_beta: bool = False,
         allow_infinite_bounds: bool = False,
         **predict_params,
@@ -202,74 +163,3 @@ class StdConformityScore(BaseConformityScore):
             bound_up = self.get_estimation_distribution(y_pred_up, quantile_up)
 
         return y_pred, bound_low, bound_up
-
-    def predict_set(self, X: NDArray, alpha_np: NDArray, **kwargs):
-        """
-        Compute the prediction sets on new samples based on the uncertainty of
-        the target confidence set.
-
-        Parameters
-        -----------
-        X: NDArray of shape (n_samples,)
-            The input data or samples for prediction.
-
-        alpha_np: NDArray of shape (n_alpha, )
-            Represents the uncertainty of the confidence set to produce.
-
-        **kwargs: dict
-            Additional keyword arguments.
-
-        Returns
-        --------
-        The output structure depend on the ``get_bounds`` method.
-            The prediction sets for each sample and each alpha level.
-        """
-        return self.get_bounds(X=X, alpha_np=alpha_np, **kwargs)
-
-    def check_consistency(
-        self, y: NDArray, y_pred: NDArray, conformity_scores: NDArray, **kwargs
-    ) -> None:
-        """
-        Check consistency between the following methods:
-        ``get_estimation_distribution`` and ``get_signed_conformity_scores``
-
-        The following equality should be verified::
-
-            y == self.get_estimation_distribution(
-                y_pred,
-                self.get_conformity_scores(y, y_pred, **kwargs),
-                **kwargs)
-
-        Parameters
-        ----------
-        y: NDArray of shape (n_samples,)
-            Observed target values.
-
-        y_pred: NDArray of shape (n_samples,)
-            Predicted target values.
-
-        conformity_scores: NDArray of shape (n_samples,)
-            Conformity scores.
-
-        Raises
-        ------
-        ValueError
-            If the two methods are not consistent.
-        """
-        score_distribution = self.get_estimation_distribution(
-            y_pred, conformity_scores, **kwargs
-        )
-        abs_conformity_scores = np.abs(np.subtract(score_distribution, y))
-        max_conf_score: float = np.max(abs_conformity_scores)
-        if max_conf_score > self.eps:
-            raise ValueError(
-                "The two functions get_conformity_scores and "
-                "get_estimation_distribution of the BaseRegressionScore class "
-                "are not consistent. "
-                "The following equation must be verified: "
-                "self.get_estimation_distribution(y_pred, "
-                "self.get_conformity_scores(y, y_pred)) == y. "
-                f"The maximum conformity score is {max_conf_score}. "
-                "The eps attribute may need to be increased if you are "
-                "sure that the two methods are consistent."
-            )
