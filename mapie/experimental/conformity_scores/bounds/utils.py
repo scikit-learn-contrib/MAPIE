@@ -635,17 +635,11 @@ class Trainer:
             mu, D, V = params
             return cast(
                 NDArray,
-                self._compute_mahalanobis_low_rank(y_, mu, D, V)
-                .detach()
-                .cpu()
-                .numpy(),
+                self._compute_mahalanobis_low_rank(y_, mu, D, V).detach().cpu().numpy(),
             )
         else:
             mu, L = params
             return cast(
                 NDArray,
-                self._compute_mahalanobis_full_chol(y_, mu, L)
-                .detach()
-                .cpu()
-                .numpy(),
+                self._compute_mahalanobis_full_chol(y_, mu, L).detach().cpu().numpy(),
             )
