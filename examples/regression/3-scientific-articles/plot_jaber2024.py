@@ -24,9 +24,6 @@ test function ``g``:
 3. **Jackknife+ without GP std (J+ / AbsoluteConformityScore)** — plain absolute
    residuals, ignoring heteroscedasticity. Serves as a baseline.
 
-The key difference from the notebook ``conformalized_gp_quickstart_disc.ipynb``
-is that we replace the custom ``GpOTtoSklearnChooseKernel`` wrapper with a
-standard ``sklearn.gaussian_process.GaussianProcessRegressor``.
 """
 
 # sphinx_gallery_thumbnail_number = 1
