@@ -317,8 +317,13 @@ def test_ece_classwise_basic() -> None:
     class_labels = prng_cw.randint(0, 3, 100)
     y_scores_cw = prng_cw.dirichlet(np.ones(3), size=100)
     y_true_cw = np.ones_like(class_labels)
-    scr = expected_calibration_error(y_true_cw,y_scores_cw,classwise=True,class_labels=class_labels,)
-
+    scr = expected_calibration_error(
+        y_true_cw,
+        y_scores_cw,classwise=True,
+        class_labels=class_labels,
+    )
+    assert isinstance(scr, float)
+    assert 0.0 <= scr <= 1.0
 
 def test_ece_classwise_vs_default() -> None:
     """
