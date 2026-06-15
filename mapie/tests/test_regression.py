@@ -106,13 +106,35 @@ class DummyStdRegressor(BaseEstimator, RegressorMixin):
         self.offset_ = float(np.mean(y - X[:, 0]))
         return self
 
-    def predict(self, X, return_std: bool = True):
+    def predict(self, X, return_std: bool = True, **kwargs):
         X = np.asarray(X)
         y_pred = X[:, 0].astype(float) + self.offset_
         y_std = np.full(X.shape[0], self.std, dtype=float)
         if return_std:
             return y_pred, y_std
         return y_pred  # pragma: no cover
+
+
+class PredictParamsStdRegressor(BaseEstimator, RegressorMixin):
+    def __init__(self, std: float = 0.5):
+        self.std = std
+        self.offset_ = 0.0
+
+    def fit(self, X, y):
+        X = np.asarray(X)
+        y = np.asarray(y)
+        self.offset_ = float(np.mean(y - X[:, 0]))
+        return self
+
+    def predict(self, X, return_std: bool = True, check_predict_params=False):
+        if not check_predict_params:
+            raise RuntimeError("Missing expected predict parameter.")
+        X = np.asarray(X)
+        y_pred = X[:, 0].astype(float) + self.offset_
+        y_std = np.full(X.shape[0], self.std, dtype=float)
+        if return_std:
+            return y_pred, y_std
+        return y_pred
 
 
 def test_dummy_std_regressor_predict_without_std() -> None:
@@ -1581,6 +1603,65 @@ def test_mapie_regressor_init_fit_uses_ensemble_std_regressor() -> None:
     ccr._mapie_regressor.init_fit(X_toy, y_toy)
 
     assert isinstance(ccr._mapie_regressor.estimator_, EnsembleStdRegressor)
+
+
+def test_std_conformity_score_forwards_predict_params() -> None:
+    """Std-aware calibration and interval prediction must reuse predict_params."""
+    ccr = CrossConformalRegressor(
+        estimator=PredictParamsStdRegressor(),
+        method="plus",
+        cv=KFold(n_splits=3, shuffle=True, random_state=random_state),
+        confidence_level=0.8,
+        model_has_std=True,
+        conformity_score=StdConformityScore(),  # type: ignore[arg-type]
+    )
+
+    ccr.fit_conformalize(
+        X_toy,
+        y_toy,
+        predict_params={"check_predict_params": True},
+    )
+    y_pred, y_pis = ccr.predict_interval(X_toy)
+
+    assert y_pred.shape == (len(X_toy),)
+    assert y_pis.shape == (len(X_toy), 2, 1)
+
+
+def test_std_conformity_score_uses_groups_in_cv_split() -> None:
+    """Std-aware calibration must pass groups to group-aware cross validators."""
+    groups = np.repeat(np.arange(3), 2)
+    ccr = CrossConformalRegressor(
+        estimator=DummyStdRegressor(),
+        method="plus",
+        cv=GroupKFold(n_splits=3),
+        confidence_level=0.8,
+        model_has_std=True,
+        conformity_score=StdConformityScore(),  # type: ignore[arg-type]
+    )
+
+    ccr.fit_conformalize(X_toy, y_toy, groups=groups)
+    y_pred, y_pis = ccr.predict_interval(X_toy)
+
+    assert y_pred.shape == (len(X_toy),)
+    assert y_pis.shape == (len(X_toy), 2, 1)
+
+
+def test_std_conformity_score_allows_infinite_intervals() -> None:
+    """StdConformityScore should honor allow_infinite_bounds at alpha=0."""
+    ccr = CrossConformalRegressor(
+        estimator=DummyStdRegressor(),
+        method="plus",
+        cv=KFold(n_splits=3, shuffle=True, random_state=random_state),
+        confidence_level=1.0,
+        model_has_std=True,
+        conformity_score=StdConformityScore(),  # type: ignore[arg-type]
+    )
+
+    ccr.fit_conformalize(X_toy, y_toy)
+    _, y_pis = ccr.predict_interval(X_toy, allow_infinite_bounds=True)
+
+    assert np.isneginf(y_pis[:, 0, 0]).all()
+    assert np.isposinf(y_pis[:, 1, 0]).all()
 
 
 def test_ensemble_std_regressor_invalid_method() -> None:
