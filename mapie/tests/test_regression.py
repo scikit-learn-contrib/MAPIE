@@ -148,6 +148,24 @@ def test_dummy_std_regressor_predict_without_std() -> None:
     np.testing.assert_allclose(y_pred, expected)
 
 
+def test_predict_params_std_regressor_predict_branches() -> None:
+    """Cover helper branches used by std predict_params regression tests."""
+    estimator = PredictParamsStdRegressor().fit(X_toy, y_toy)
+
+    with pytest.raises(RuntimeError, match="Missing expected predict parameter."):
+        estimator.predict(X_toy)
+
+    y_pred = estimator.predict(
+        X_toy,
+        return_std=False,
+        check_predict_params=True,
+    )
+    expected = X_toy[:, 0].astype(float) + estimator.offset_
+
+    assert y_pred.shape == (len(X_toy),)
+    np.testing.assert_allclose(y_pred, expected)
+
+
 def early_stopping_monitor(i, est, locals):
     """Returns True on the 3rd iteration."""
     if i == 2:
