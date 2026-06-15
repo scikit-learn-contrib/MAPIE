@@ -1,6 +1,6 @@
 import copy
 import math
-from typing import Any, Optional, Tuple, Union
+from typing import Any, Optional, Tuple, Union, cast
 
 import torch
 import torch.nn as nn
@@ -607,7 +607,7 @@ class Trainer:
             An array y_pred of the prediction of the model.
         """
         x_ = torch.as_tensor(x, dtype=self.dtype, device=self.device)
-        return self.forward(x_)[0].detach().cpu().numpy()
+        return cast(NDArray, self.forward(x_)[0].detach().cpu().numpy())
 
     def get_standardized_score(
         self, x: Union[NDArray, torch.Tensor], y: Union[NDArray, torch.Tensor]
@@ -633,9 +633,19 @@ class Trainer:
 
         if self.mode == "low_rank":
             mu, D, V = params
-            return (
-                self._compute_mahalanobis_low_rank(y_, mu, D, V).detach().cpu().numpy()
+            return cast(
+                NDArray,
+                self._compute_mahalanobis_low_rank(y_, mu, D, V)
+                .detach()
+                .cpu()
+                .numpy(),
             )
         else:
             mu, L = params
-            return self._compute_mahalanobis_full_chol(y_, mu, L).detach().cpu().numpy()
+            return cast(
+                NDArray,
+                self._compute_mahalanobis_full_chol(y_, mu, L)
+                .detach()
+                .cpu()
+                .numpy(),
+            )

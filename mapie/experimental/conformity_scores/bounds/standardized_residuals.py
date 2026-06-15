@@ -348,7 +348,9 @@ class MultivariateResidualNormalisedScore(BaseFitRegressionScore):
             0, 2, 1
         )
         standardized_trainiduals = Sigma_inv_half @ residuals[..., np.newaxis]
-        return np.linalg.norm(standardized_trainiduals.squeeze(-1), axis=1)
+        return cast(
+            NDArray, np.linalg.norm(standardized_trainiduals.squeeze(-1), axis=1)
+        )
 
     def get_estimation_distribution(
         self, y_pred: NDArray, conformity_scores: NDArray, **kwargs
