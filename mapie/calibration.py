@@ -292,9 +292,10 @@ class TopLabelCalibrator(BaseEstimator, ClassifierMixin):
 
         if sample_weight is not None:
             sample_weight_ = sample_weight[given_label_indices]
-            (sample_weight_, top_class_prob_, y_calib_) = _check_null_weight(
-                sample_weight_, top_class_prob_, y_calib_
-            )
+            checked = _check_null_weight(sample_weight_, top_class_prob_, y_calib_)
+            sample_weight_ = cast(NDArray, checked[0])
+            top_class_prob_ = cast(NDArray, checked[1])
+            y_calib_ = cast(NDArray, checked[2])
         else:
             sample_weight_ = sample_weight
         calibrator_ = _fit_estimator(
