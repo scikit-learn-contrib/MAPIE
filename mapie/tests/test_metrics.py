@@ -326,6 +326,7 @@ def test_ece_classwise_basic() -> None:
     assert isinstance(scr, float)
     assert 0.0 <= scr <= 1.0
 
+
 def test_ece_classwise_vs_default() -> None:
     """
     Test that classwise=False gives same result as default behavior.
@@ -347,6 +348,7 @@ def test_ece_classwise_1d_raises_error() -> None:
             class_labels=np.zeros_like(y_true),
         )
 
+
 def test_ece_classwise_requires_class_labels() -> None:
     """
     Test that classwise=True requires class_labels.
@@ -364,6 +366,7 @@ def test_ece_classwise_requires_class_labels() -> None:
             y_scores_cw,
             classwise=True,
         )
+
 
 def test_ece_classwise_perfect_calibration() -> None:
     """
@@ -393,6 +396,7 @@ def test_ece_classwise_perfect_calibration() -> None:
     )
 
     assert scr < 0.05
+
 
 def test_top_label_ece() -> None:
     """Test that score is"""
