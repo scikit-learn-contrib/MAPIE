@@ -7,7 +7,7 @@ build:
   jobs:
     build:
       html:
-        - python -m mkdocs build --verbose --clean --site-dir $READTHEDOCS_OUTPUT/html --config-file mkdocs.yml
+        - python -u doc/hooks/rtd_mkdocs_debug.py
 
 python:
   install:
