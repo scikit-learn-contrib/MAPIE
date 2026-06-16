@@ -68,7 +68,6 @@ docs = [
     "cvxpy>=1.4",
     "lightgbm==4.6.0",
     "matplotlib==3.9.4",
-    "scikit-learn>=1.4,<1.9",
     "mkdocs-material>=9.5",
     "mkdocs-gallery>=0.10",
     "mkdocstrings[python]>=1.0",
