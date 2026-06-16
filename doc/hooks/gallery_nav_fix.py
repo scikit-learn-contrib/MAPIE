@@ -1,12 +1,26 @@
-"""MkDocs hook to fix mkdocs-gallery nav generation.
+"""MkDocs hooks for MAPIE documentation builds.
 
 mkdocs-gallery generates nav entries like {"Gallery Title": []} for gallery
 index pages, which render as broken links to the homepage. This hook removes
 those empty section entries after the gallery plugin populates the nav.
 """
 import logging
+import os
 
 log = logging.getLogger("mkdocs.hooks.gallery_nav_fix")
+
+
+def on_config(config):
+    """Disable example execution on Read the Docs cold builds."""
+    if not _is_readthedocs_build():
+        return config
+
+    gallery_plugin = config["plugins"].get("gallery")
+    if gallery_plugin is not None:
+        gallery_plugin.config["plot_gallery"] = False
+        log.info("Disabled mkdocs-gallery example execution on Read the Docs.")
+
+    return config
 
 
 def on_pre_build(config):
@@ -36,3 +50,8 @@ def _is_empty_section(item):
         value = list(item.values())[0]
         return isinstance(value, list) and len(value) == 0
     return False
+
+
+def _is_readthedocs_build():
+    """Check if the build is running on Read the Docs."""
+    return os.environ.get("READTHEDOCS") == "True" or "READTHEDOCS_OUTPUT" in os.environ
