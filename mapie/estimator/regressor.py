@@ -603,3 +603,260 @@ class EnsembleRegressor:
             return y_pred, y_pred_multi_low, y_pred_multi_up
         else:
             return cast(NDArray, y_pred)
+
+
+class EnsembleStdRegressor(EnsembleRegressor):
+    """
+    This class implements methods to handle the training and usage of the
+    estimator if it returns both a prediction and a standard deviation.
+    This estimator can be unique or composed by cross validated
+    estimators.
+    """
+
+    def __init__(
+        self,
+        estimator: Optional[RegressorMixin],
+        method: str,
+        cv: Optional[Union[int, str, BaseCrossValidator]],
+        agg_function: Optional[str],
+        n_jobs: Optional[int],
+        test_size: Optional[Union[int, float]],
+        verbose: int,
+    ):
+        super().__init__(
+            estimator=estimator,
+            method=method,
+            cv=cv,
+            agg_function=agg_function,
+            n_jobs=n_jobs,
+            test_size=test_size,
+            verbose=verbose,
+        )
+        allowed_methods = {"naive", "base", "plus", "minmax"}
+        if self.method not in allowed_methods:
+            raise ValueError(
+                f"method={self.method!r} is not supported by EnsembleStdRegressor. "
+                f"Choose among {allowed_methods}."
+            )
+
+    @staticmethod
+    def _predict_oof_estimator_with_std(
+        estimator: RegressorMixin, X: ArrayLike, val_index: ArrayLike, **predict_params
+    ) -> Tuple[Tuple[NDArray, NDArray], ArrayLike]:
+        """
+        Perform predictions on a single out-of-fold model on a validation set.
+
+        Parameters
+        ----------
+        estimator: RegressorMixin
+            Estimator to train.
+
+        X: ArrayLike of shape (n_samples, n_features)
+            Input data.
+
+        val_index: ArrayLike of shape (n_samples_val)
+            Validation data indices.
+
+        Returns
+        -------
+        Tuple[NDArray, ArrayLike]
+            Predictions of estimator from val_index of X.
+        """
+        X_val = _safe_indexing(X, val_index)
+        if _num_samples(X_val) > 0:
+            y_pred, y_std = estimator.predict(X_val, return_std=True, **predict_params)
+        else:
+            y_pred, y_std = np.array([]), np.array([])
+        return (y_pred, y_std), val_index
+
+    def _pred_multi_with_std(
+        self, X: ArrayLike, **predict_params
+    ) -> Tuple[NDArray, NDArray]:
+        """
+        Return a prediction per train sample for each test sample, by
+        aggregation with matrix ``k_``.
+
+        Parameters
+        ----------
+        X: ArrayLike of shape (n_samples_test, n_features)
+            Input data
+
+        Returns
+        -------
+        NDArray of shape (n_samples_test, n_samples_train)
+        """
+        y_pred = np.array(
+            [
+                list(e.predict(X, return_std=True, **predict_params))
+                for e in self.estimators_
+            ]
+        ).T
+        # y_pred is of shape (n_samples_test, n_estimators_, 2)
+        # We separate predictions and stds
+        y_pred_multi, y_std = y_pred[:, 0, :], y_pred[:, 1, :]
+
+        # At this point, y_pred_multi is of shape
+        # (n_samples_test, n_estimators_). The method
+        # ``_aggregate_with_mask`` fits it to the right size
+        # thanks to the shape of k_.
+        y_pred_multi = self._aggregate_with_mask(y_pred_multi, self.k_)
+        y_std = self._aggregate_with_mask(y_std, self.k_)
+
+        return y_pred_multi, y_std
+
+    def predict_calib_with_std(
+        self,
+        X: ArrayLike,
+        y: Optional[ArrayLike] = None,
+        groups: Optional[ArrayLike] = None,
+        **predict_params,
+    ) -> Tuple[NDArray, NDArray]:
+        """
+        Perform predictions on X : the calibration set.
+
+        Parameters
+        ----------
+        X: ArrayLike of shape (n_samples_test, n_features)
+            Input data
+
+        y: Optional[ArrayLike] of shape (n_samples_test,)
+            Input labels.
+
+            By default ``None``.
+
+        groups: Optional[ArrayLike] of shape (n_samples_test,)
+            Group labels for the samples used while splitting the dataset into
+            train/test set.
+
+            By default ``None``.
+
+        **predict_params : dict
+            Additional predict parameters.
+
+        Returns
+        -------
+        NDArray of shape (n_samples_test, 1)
+            The predictions.
+        """
+        check_is_fitted(self)
+
+        if self.cv == "prefit":
+            y_pred, y_std = self.single_estimator_.predict(
+                X, return_std=True, **predict_params
+            )
+        else:
+            if self.method == "naive":
+                y_pred, y_std = self.single_estimator_.predict(
+                    X, return_std=True, **predict_params
+                )
+            else:
+                cv = cast(BaseCrossValidator, self.cv)
+                outputs = Parallel(n_jobs=self.n_jobs, verbose=self.verbose)(
+                    delayed(self._predict_oof_estimator_with_std)(
+                        estimator,
+                        X,
+                        calib_index,
+                        **predict_params,
+                    )
+                    for (_, calib_index), estimator in zip(
+                        cv.split(X, y, groups), self.estimators_
+                    )
+                )
+                predictions, indices = map(list, zip(*outputs))
+                n_samples = _num_samples(X)
+                pred_matrix = np.full(
+                    shape=(n_samples, cv.get_n_splits(X, y, groups)),
+                    fill_value=np.nan,
+                    dtype=float,
+                )
+                std_matrix = np.full(
+                    shape=(n_samples, cv.get_n_splits(X, y, groups)),
+                    fill_value=np.nan,
+                    dtype=float,
+                )
+                for i, ind in enumerate(indices):
+                    pred_matrix[ind, i] = np.array(predictions[i][0], dtype=float)
+                    std_matrix[ind, i] = np.array(predictions[i][1], dtype=float)
+                    self.k_[ind, i] = 1
+
+                _check_nan_in_aposteriori_prediction(pred_matrix)
+
+                y_pred = aggregate_all(self.agg_function, pred_matrix)
+                y_std = aggregate_all(self.agg_function, std_matrix)
+
+        assert y_std is not None
+        return y_pred, y_std
+
+    def predict_with_std(
+        self,
+        X: ArrayLike,
+        ensemble: bool = False,
+        return_multi_pred: bool = True,
+        **predict_params,
+    ) -> Union[NDArray, Tuple[NDArray, NDArray, NDArray, NDArray]]:
+        """
+        Predict target from X. It also computes the prediction per train sample
+        for each test sample according to ``self.method``.
+
+        Parameters
+        ----------
+        X: ArrayLike of shape (n_samples, n_features)
+            Test data.
+
+        ensemble: bool
+            Boolean determining whether the predictions are ensembled or not.
+            If ``False``, predictions are those of the model trained on the
+            whole training set.
+            If ``True``, predictions from perturbed models are aggregated by
+            the aggregation function specified in the ``agg_function``
+            attribute.
+
+            If ``cv`` is ``"prefit"`` or ``"split"``, ``ensemble`` is ignored.
+
+            By default ``False``.
+
+        return_multi_pred: bool
+            If ``True`` the method returns the predictions and the multiple
+            predictions (3 arrays). If ``False`` the method return the
+            simple predictions only.
+
+        **predict_params : dict
+            Additional predict parameters.
+
+        Returns
+        -------
+        Tuple[NDArray, NDArray, NDArray]
+            - Predictions
+            - The multiple predictions for the lower bound of the intervals.
+            - The multiple predictions for the upper bound of the intervals.
+        """
+        check_is_fitted(self)
+
+        y_pred, y_std = self.single_estimator_.predict(
+            X, return_std=True, **predict_params
+        )
+        if not return_multi_pred and not ensemble:
+            return cast(NDArray, y_pred)
+
+        if self.method in self.no_agg_methods_ or self.cv in self.no_agg_cv_:
+            y_pred_multi_low = y_pred[:, np.newaxis]
+            y_pred_multi_up = y_pred[:, np.newaxis]
+            y_std_multi = y_std[:, np.newaxis]
+        else:
+            y_pred_multi, y_std_multi = self._pred_multi_with_std(X, **predict_params)
+
+            if self.method == "minmax":
+                y_pred_multi_low = np.min(y_pred_multi, axis=1, keepdims=True)
+                y_pred_multi_up = np.max(y_pred_multi, axis=1, keepdims=True)
+
+            else:
+                y_pred_multi_low = y_pred_multi
+                y_pred_multi_up = y_pred_multi
+
+            if ensemble:
+                y_pred = aggregate_all(self.agg_function, y_pred_multi)
+
+        if return_multi_pred:
+            return y_pred, y_pred_multi_low, y_pred_multi_up, y_std_multi
+        else:
+            return cast(NDArray, y_pred)
