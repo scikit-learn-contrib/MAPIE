@@ -27,6 +27,8 @@ When implementing a new method, it should be supported by a journal or conferenc
 
 ## Development environment
 
+> **Using a coding agent?** See [AGENTS.md](AGENTS.md) for a condensed, agent-oriented reference of the dev environment, CI conventions, and architecture.
+
 ### using uv
 We recommend using [uv](https://docs.astral.sh/uv/), an extremely fast Python package and project manager, to create an environment for `mapie`.
 You'll want to activate it every time you want to work on `mapie`.
