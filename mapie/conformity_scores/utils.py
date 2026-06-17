@@ -4,13 +4,13 @@ from sklearn.utils.multiclass import (
     check_classification_targets,
     type_of_target,
 )
-
 from .regression import BaseRegressionScore
 from .classification import BaseClassificationScore
 from .bounds import (
     AbsoluteConformityScore,
     GammaConformityScore,
     ResidualNormalisedScore,
+    StdConformityScore,
 )
 from .sets import (
     LACConformityScore,
@@ -27,6 +27,7 @@ CONFORMITY_SCORES_STRING_MAP = {
         "absolute": AbsoluteConformityScore,
         "gamma": GammaConformityScore,
         "residual_normalized": ResidualNormalisedScore,
+        "std_normalized": StdConformityScore,
     },
     BaseClassificationScore: {
         "lac": LACConformityScore,

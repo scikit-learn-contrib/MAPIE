@@ -8,6 +8,7 @@ import pandas as pd
 import pytest
 from numpy.typing import NDArray
 from scipy.stats import ttest_1samp
+from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.compose import ColumnTransformer
 from sklearn.datasets import make_regression
 from sklearn.dummy import DummyRegressor
@@ -34,10 +35,12 @@ from mapie.conformity_scores import (
     BaseRegressionScore,
     GammaConformityScore,
     ResidualNormalisedScore,
+    StdConformityScore,
 )
-from mapie.estimator.regressor import EnsembleRegressor
+from mapie.estimator.regressor import EnsembleRegressor, EnsembleStdRegressor
 from mapie.metrics.regression import regression_coverage_score
 from mapie.regression.regression import (
+    CrossConformalRegressor,
     JackknifeAfterBootstrapRegressor,
     SplitConformalRegressor,
     _MapieRegressor,
@@ -90,6 +93,77 @@ class CustomGradientBoostingRegressor(GradientBoostingRegressor):
         if check_predict_params:
             return np.zeros(X.shape[0])
         return super().predict(X)
+
+
+class DummyStdRegressor(BaseEstimator, RegressorMixin):
+    def __init__(self, std: float = 0.5):
+        self.std = std
+        self.offset_ = 0.0
+
+    def fit(self, X, y):
+        X = np.asarray(X)
+        y = np.asarray(y)
+        self.offset_ = float(np.mean(y - X[:, 0]))
+        return self
+
+    def predict(self, X, return_std: bool = True, **kwargs):
+        X = np.asarray(X)
+        y_pred = X[:, 0].astype(float) + self.offset_
+        y_std = np.full(X.shape[0], self.std, dtype=float)
+        if return_std:
+            return y_pred, y_std
+        return y_pred  # pragma: no cover
+
+
+class PredictParamsStdRegressor(BaseEstimator, RegressorMixin):
+    def __init__(self, std: float = 0.5):
+        self.std = std
+        self.offset_ = 0.0
+
+    def fit(self, X, y):
+        X = np.asarray(X)
+        y = np.asarray(y)
+        self.offset_ = float(np.mean(y - X[:, 0]))
+        return self
+
+    def predict(self, X, return_std: bool = True, check_predict_params=False):
+        if not check_predict_params:
+            raise RuntimeError("Missing expected predict parameter.")
+        X = np.asarray(X)
+        y_pred = X[:, 0].astype(float) + self.offset_
+        y_std = np.full(X.shape[0], self.std, dtype=float)
+        if return_std:
+            return y_pred, y_std
+        return y_pred
+
+
+def test_dummy_std_regressor_predict_without_std() -> None:
+    """Cover the branch where DummyStdRegressor returns only predictions."""
+    estimator = DummyStdRegressor().fit(X_toy, y_toy)
+
+    y_pred = estimator.predict(X_toy, return_std=False)
+    expected = X_toy[:, 0].astype(float) + estimator.offset_
+
+    assert y_pred.shape == (len(X_toy),)
+    np.testing.assert_allclose(y_pred, expected)
+
+
+def test_predict_params_std_regressor_predict_branches() -> None:
+    """Cover helper branches used by std predict_params regression tests."""
+    estimator = PredictParamsStdRegressor().fit(X_toy, y_toy)
+
+    with pytest.raises(RuntimeError, match="Missing expected predict parameter."):
+        estimator.predict(X_toy)
+
+    y_pred = estimator.predict(
+        X_toy,
+        return_std=False,
+        check_predict_params=True,
+    )
+    expected = X_toy[:, 0].astype(float) + estimator.offset_
+
+    assert y_pred.shape == (len(X_toy),)
+    np.testing.assert_allclose(y_pred, expected)
 
 
 def early_stopping_monitor(i, est, locals):
@@ -1074,14 +1148,146 @@ def test_ensemble_regressor_fit() -> None:
     ens_reg.fit(X, y)
 
 
+def test_ensemble_std_regressor_predict_oof_estimator() -> None:
+    """Test std-aware out-of-fold predictions for empty and non-empty folds."""
+    # This test targets EnsembleStdRegressor directly — no _MapieRegressor involved.
+    estimator = DummyStdRegressor().fit(X_toy, y_toy)
+
+    (y_pred, y_std), val_index = EnsembleStdRegressor._predict_oof_estimator_with_std(
+        estimator=estimator,
+        X=X_toy,
+        val_index=np.array([0, 2, 4]),
+    )
+    np.testing.assert_array_equal(val_index, np.array([0, 2, 4]))
+    assert y_pred.shape == (3,)
+    assert y_std.shape == (3,)
+    np.testing.assert_allclose(y_std, 0.5)
+
+    (y_pred_empty, y_std_empty), val_index_empty = (
+        EnsembleStdRegressor._predict_oof_estimator_with_std(
+            estimator=estimator,
+            X=X_toy,
+            val_index=np.array([], dtype=int),
+        )
+    )
+    np.testing.assert_array_equal(val_index_empty, np.array([], dtype=int))
+    assert y_pred_empty.shape == (0,)
+    assert y_std_empty.shape == (0,)
+
+
+@pytest.mark.parametrize("method", ["plus", "minmax"])
+@pytest.mark.parametrize("ensemble", [True, False])
+def test_ensemble_std_regressor_predict_outputs(method: str, ensemble: bool) -> None:
+    """Test std-aware ensemble predictions with and without aggregation."""
+    # Direct EnsembleStdRegressor test — unchanged.
+    ens_reg = EnsembleStdRegressor(
+        DummyStdRegressor(),
+        method,
+        KFold(n_splits=3, shuffle=True, random_state=random_state),
+        "mean",
+        None,
+        0.2,
+        False,
+    )
+    ens_reg.fit_single_estimator(X_toy, y_toy)
+    ens_reg.fit_multi_estimators(X_toy, y_toy)
+
+    y_pred_only, _ = ens_reg.predict_calib_with_std(X_toy, ensemble=ensemble)
+    assert y_pred_only.shape == (len(X_toy),)
+
+    y_pred, y_pred_low, y_pred_up, y_std = ens_reg.predict_with_std(
+        X_toy,
+        ensemble=ensemble,
+        return_multi_pred=True,
+    )
+    assert y_pred.shape == (len(X_toy),)
+    assert y_pred_low.shape[0] == len(X_toy)
+    assert y_pred_up.shape[0] == len(X_toy)
+    assert y_std.shape[0] == len(X_toy)
+    assert np.all(y_std >= 0)
+
+
+@pytest.mark.parametrize(
+    "method, cv, test_size",
+    [
+        ("naive", KFold(n_splits=3, shuffle=True, random_state=random_state), 0.2),
+        ("base", "prefit", 0.2),
+    ],
+)
+def test_ensemble_std_regressor_predict_calib(
+    method: str,
+    cv: Union[str, KFold],
+    test_size: float,
+) -> None:
+    """Test calibration predictions for std-aware ensemble special cases."""
+    # Direct EnsembleStdRegressor test — unchanged.
+    ens_reg = EnsembleStdRegressor(
+        DummyStdRegressor(),
+        method,
+        cv,
+        "mean",
+        None,
+        test_size,
+        False,
+    )
+
+    if cv == "prefit":
+        ens_reg.fit_single_estimator(X_toy, y_toy)
+    else:
+        ens_reg.fit_single_estimator(X_toy, y_toy)
+        ens_reg.fit_multi_estimators(X_toy, y_toy)
+
+    result = ens_reg.predict_calib_with_std(X_toy)
+    y_pred, y_std = result
+    assert y_pred.shape == (len(X_toy),)
+    assert y_std is not None
+    assert y_std.shape == (len(X_toy),)
+    np.testing.assert_allclose(y_std, 0.5)
+
+
+@pytest.mark.parametrize(
+    "strategy",
+    [
+        dict(method="base", cv=-1),
+        dict(method="plus", cv=-1),
+    ],
+    ids=["cv_base", "cv_plus"],
+)
+def test_std_conformity_score_regression_strategies(strategy: dict[str, Any]) -> None:
+    """StdConformityScore automatically uses the std-aware regressor."""
+    X_loc, y_loc = make_regression(
+        n_samples=60,
+        n_features=2,
+        noise=0.1,
+        random_state=random_state,
+    )
+
+    ccr = CrossConformalRegressor(
+        estimator=DummyStdRegressor(),
+        conformity_score=StdConformityScore(),  # type: ignore[arg-type]
+        confidence_level=0.8,
+        **strategy,
+    )
+    ccr.fit_conformalize(X_loc, y_loc)
+    _, y_pis = ccr.predict_interval(X_loc)
+
+    assert isinstance(ccr._mapie_regressor.estimator_, EnsembleStdRegressor)
+    assert y_pis.shape == (len(X_loc), 2, 1)
+
+
 @pytest.mark.parametrize("method", [0.5, 1, "cv", ["base", "plus"]])
 def test_invalid_method(method: str) -> None:
-    """Test that invalid methods raise errors."""
-    mapie_estimator = _MapieRegressor(method=method)
-    with pytest.raises(
-        ValueError, match="(Invalid method.)|(Invalid conformity score.)*"
-    ):
-        mapie_estimator.fit(X_toy, y_toy)
+    """Test that invalid methods raise errors at both the public API and backend level."""
+    # CrossConformalRegressor validates via _check_if_param_in_allowed_values in __init__
+    with pytest.raises(ValueError):
+        CrossConformalRegressor(
+            estimator=DummyRegressor(),
+            method=method,  # type: ignore[arg-type]
+        )
+
+    # _MapieRegressor._check_method is reached during fit, covers line 1297 in regression.py
+    with pytest.raises(ValueError, match="Invalid method."):
+        _MapieRegressor(method=method).fit(X_toy, y_toy)
 
 
 def test_sample_weight_as_top_level_kwarg_raises() -> None:
@@ -1089,3 +1295,419 @@ def test_sample_weight_as_top_level_kwarg_raises() -> None:
     mapie_reg = _MapieRegressor(cv="prefit", estimator=LinearRegression().fit(X, y))
     with pytest.raises(TypeError, match="fit_params"):
         mapie_reg.fit(X, y, sample_weight=np.ones(len(X)))
+
+
+def test_ensemble_std_regressor_predict_with_std_prefit() -> None:
+    """Test std-aware prediction in the prefit/no-aggregation case."""
+    # Direct EnsembleStdRegressor test — unchanged.
+    estimator = DummyStdRegressor().fit(X_toy, y_toy)
+    ens_reg = EnsembleStdRegressor(
+        estimator,
+        "base",
+        "prefit",
+        "mean",
+        None,
+        0.2,
+        False,
+    )
+    ens_reg.fit(X_toy, y_toy)
+
+    y_pred, y_pred_low, y_pred_up, y_std = ens_reg.predict_with_std(
+        X_toy,
+        ensemble=False,
+        return_multi_pred=True,
+    )
+    assert y_pred.shape == (len(X_toy),)
+    assert y_pred_low.shape == (len(X_toy), 1)
+    assert y_pred_up.shape == (len(X_toy), 1)
+    assert y_std.shape == (len(X_toy), 1)
+    np.testing.assert_allclose(y_std, 0.5)
+
+    y_pred_only = ens_reg.predict_with_std(
+        X_toy,
+        ensemble=False,
+        return_multi_pred=False,
+    )
+    assert isinstance(y_pred_only, np.ndarray)
+    assert y_pred_only.shape == (len(X_toy),)
+
+
+@pytest.mark.parametrize("method", ["plus", "minmax"])
+def test_ensemble_std_regressor_predict_with_std_cv_no_ensemble(method: str) -> None:
+    """Test std-aware CV predictions without ensemble aggregation."""
+    # Direct EnsembleStdRegressor test — unchanged.
+    ens_reg = EnsembleStdRegressor(
+        DummyStdRegressor(),
+        method,
+        KFold(n_splits=3, shuffle=True, random_state=random_state),
+        "mean",
+        None,
+        0.2,
+        False,
+    )
+    ens_reg.fit_single_estimator(X_toy, y_toy)
+    ens_reg.fit_multi_estimators(X_toy, y_toy)
+
+    y_pred, y_pred_low, y_pred_up, y_std = ens_reg.predict_with_std(
+        X_toy,
+        ensemble=False,
+        return_multi_pred=True,
+    )
+    assert y_pred.shape == (len(X_toy),)
+    assert y_pred_low.shape[0] == len(X_toy)
+    assert y_pred_up.shape[0] == len(X_toy)
+    assert y_std.shape[0] == len(X_toy)
+
+
+@pytest.mark.parametrize("method", ["plus", "minmax"])
+def test_ensemble_std_regressor_predict_with_std_cv_ensemble(method: str) -> None:
+    """Test std-aware CV predictions with ensemble aggregation."""
+    # Direct EnsembleStdRegressor test — unchanged.
+    ens_reg = EnsembleStdRegressor(
+        DummyStdRegressor(),
+        method,
+        KFold(n_splits=3, shuffle=True, random_state=random_state),
+        "mean",
+        None,
+        0.2,
+        False,
+    )
+    ens_reg.fit_single_estimator(X_toy, y_toy)
+    ens_reg.fit_multi_estimators(X_toy, y_toy)
+
+    y_pred, y_pred_low, y_pred_up, y_std = ens_reg.predict_with_std(
+        X_toy,
+        ensemble=True,
+        return_multi_pred=True,
+    )
+    assert y_pred.shape == (len(X_toy),)
+    assert y_pred_low.shape[0] == len(X_toy)
+    assert y_std.shape[0] == len(X_toy)
+
+
+def test_mapie_regressor_predict_with_alpha_std_branch(monkeypatch) -> None:
+    """Cover the alpha-not-None prediction branch via CrossConformalRegressor."""
+    ccr = CrossConformalRegressor(
+        estimator=DummyStdRegressor(),
+        method="plus",
+        cv=-1,
+        conformity_score=StdConformityScore(),  # type: ignore[arg-type]
+        confidence_level=[0.8, 0.9],
+    )
+    ccr.fit_conformalize(X_toy, y_toy)
+
+    monkeypatch.setattr(
+        ccr._mapie_regressor.conformity_score_function_,
+        "predict_set",
+        lambda X,
+        alpha_np,
+        estimator,
+        conformity_scores,
+        ensemble,
+        method,
+        optimize_beta,
+        allow_infinite_bounds: (
+            np.full(len(X), 1.5, dtype=float),
+            np.zeros((len(X), len(alpha_np)), dtype=float),
+            np.ones((len(X), len(alpha_np)), dtype=float),
+        ),
+    )
+
+    y_pred, y_pis = ccr.predict_interval(X_toy, allow_infinite_bounds=True)
+
+    assert y_pred.shape == (len(X_toy),)
+    assert y_pis.shape == (len(X_toy), 2, 2)
+
+
+def test_ensemble_std_regressor_predict_with_std_returns_single_prediction(
+    monkeypatch,
+) -> None:
+    """Cover the return branch when ensemble=True and multi-pred is off."""
+    # Direct EnsembleStdRegressor test — unchanged.
+    ens_reg = EnsembleStdRegressor(
+        DummyStdRegressor(),
+        "plus",
+        KFold(n_splits=3, shuffle=True, random_state=random_state),
+        "mean",
+        None,
+        0.2,
+        False,
+    )
+    ens_reg.fit_single_estimator(X_toy, y_toy)
+    ens_reg.fit_multi_estimators(X_toy, y_toy)
+
+    monkeypatch.setattr(
+        ens_reg,
+        "_pred_multi_with_std",
+        lambda X: (
+            np.full((len(X), 2), 3.0, dtype=float),
+            np.full((len(X), 2), 0.5, dtype=float),
+        ),
+    )
+
+    y_pred = ens_reg.predict_with_std(X_toy, ensemble=True, return_multi_pred=False)
+    assert isinstance(y_pred, np.ndarray)
+    assert y_pred.shape == (len(X_toy),)
+
+
+def test_mapie_regressor_conformalize_uses_std_branch(monkeypatch) -> None:
+    """Cover the EnsembleStdRegressor branch in conformalize via CrossConformalRegressor."""
+    ccr = CrossConformalRegressor(
+        estimator=DummyStdRegressor(),
+        method="plus",
+        cv=KFold(n_splits=3, shuffle=True, random_state=random_state),
+        conformity_score=StdConformityScore(),  # type: ignore[arg-type]
+    )
+    # Run init_fit manually to set up estimator_ without running the full fit.
+    ccr._mapie_regressor._fit_params = {}
+    ccr._mapie_regressor.init_fit(X_toy, y_toy)
+    ccr._mapie_regressor.fit_estimator(X_toy, y_toy)
+
+    called = {"predict_calib_with_std": False, "get_conformity_scores": False}
+
+    def fake_predict_calib_with_std(X, y=None, groups=None, **predict_params):
+        called["predict_calib_with_std"] = True
+        return np.zeros(len(X)), np.ones(len(X))
+
+    def fake_get_conformity_scores(y, y_pred, X, y_std):
+        called["get_conformity_scores"] = True
+        np.testing.assert_array_equal(y_pred, np.zeros(len(y)))
+        np.testing.assert_array_equal(y_std, np.ones(len(y)))
+        return np.arange(len(y), dtype=float)
+
+    monkeypatch.setattr(
+        ccr._mapie_regressor.estimator_,
+        "predict_calib_with_std",
+        fake_predict_calib_with_std,
+    )
+    monkeypatch.setattr(
+        ccr._mapie_regressor.conformity_score_function_,
+        "get_conformity_scores",
+        fake_get_conformity_scores,
+    )
+
+    ccr._mapie_regressor.conformalize(X_toy, y_toy)
+
+    assert called["predict_calib_with_std"]
+    assert called["get_conformity_scores"]
+    np.testing.assert_array_equal(
+        ccr._mapie_regressor.conformity_scores_,
+        np.arange(len(y_toy), dtype=float),
+    )
+
+
+@pytest.mark.parametrize("method", ["plus", "minmax"])
+def test_ensemble_std_regressor_predict_with_std_no_ensemble_branch(
+    monkeypatch, method
+) -> None:
+    """Cover the non-ensemble branch in predict_with_std."""
+    # Direct EnsembleStdRegressor test — unchanged.
+    ens_reg = EnsembleStdRegressor(
+        DummyStdRegressor(),
+        method,
+        KFold(n_splits=3, shuffle=True, random_state=random_state),
+        "mean",
+        None,
+        0.2,
+        False,
+    )
+    ens_reg.fit_single_estimator(X_toy, y_toy)
+    ens_reg.fit_multi_estimators(X_toy, y_toy)
+
+    monkeypatch.setattr(
+        ens_reg,
+        "_pred_multi_with_std",
+        lambda X: (
+            np.full((len(X), 2), 3.0, dtype=float),
+            np.full((len(X), 2), 0.5, dtype=float),
+        ),
+    )
+
+    single_pred, _ = ens_reg.single_estimator_.predict(X_toy, return_std=True)
+
+    y_pred, y_pred_low, y_pred_up, y_std = ens_reg.predict_with_std(
+        X_toy,
+        ensemble=False,
+        return_multi_pred=True,
+    )
+
+    np.testing.assert_allclose(y_pred, single_pred)
+
+    if method == "plus":
+        assert y_pred_low.shape == (len(X_toy), 2)
+        assert y_pred_up.shape == (len(X_toy), 2)
+        np.testing.assert_allclose(y_pred_low, 3.0)
+        np.testing.assert_allclose(y_pred_up, 3.0)
+    else:
+        assert y_pred_low.shape == (len(X_toy), 1)
+        assert y_pred_up.shape == (len(X_toy), 1)
+        np.testing.assert_allclose(y_pred_low, 3.0)
+        np.testing.assert_allclose(y_pred_up, 3.0)
+
+    assert y_std.shape == (len(X_toy), 2)
+    np.testing.assert_allclose(y_std, 0.5)
+
+
+@pytest.mark.parametrize("method", ["plus", "minmax"])
+def test_ensemble_std_regressor_predict_with_std_no_ensemble_single_output_branch(
+    monkeypatch, method
+) -> None:
+    """Cover the non-ensemble + single-output return branch."""
+    # Direct EnsembleStdRegressor test — unchanged.
+    ens_reg = EnsembleStdRegressor(
+        DummyStdRegressor(),
+        method,
+        KFold(n_splits=3, shuffle=True, random_state=random_state),
+        "mean",
+        None,
+        0.2,
+        False,
+    )
+    ens_reg.fit_single_estimator(X_toy, y_toy)
+    ens_reg.fit_multi_estimators(X_toy, y_toy)
+
+    monkeypatch.setattr(
+        ens_reg,
+        "_pred_multi_with_std",
+        lambda X: (
+            np.full((len(X), 2), 3.0, dtype=float),
+            np.full((len(X), 2), 0.5, dtype=float),
+        ),
+    )
+
+    single_pred, _ = ens_reg.single_estimator_.predict(X_toy, return_std=True)
+
+    y_pred = ens_reg.predict_with_std(X_toy, ensemble=False, return_multi_pred=False)
+    np.testing.assert_allclose(y_pred, single_pred)
+
+
+def test_ensemble_std_regressor_predict_with_std_prefit_multi_pred() -> None:
+    """Cover the final multi-pred return in the std prefit path."""
+    # Direct EnsembleStdRegressor test — unchanged.
+    estimator = DummyStdRegressor().fit(X_toy, y_toy)
+    ens_reg = EnsembleStdRegressor(
+        estimator,
+        "base",
+        "prefit",
+        "mean",
+        None,
+        0.2,
+        False,
+    )
+    ens_reg.fit(X_toy, y_toy)
+
+    y_pred, y_pred_low, y_pred_up, y_std = ens_reg.predict_with_std(
+        X_toy,
+        ensemble=False,
+        return_multi_pred=True,
+    )
+    expected_pred, expected_std = estimator.predict(X_toy, return_std=True)
+
+    np.testing.assert_allclose(y_pred, expected_pred)
+    np.testing.assert_allclose(y_std[:, 0], expected_std)
+    np.testing.assert_allclose(y_pred_low[:, 0], expected_pred)
+    np.testing.assert_allclose(y_pred_up[:, 0], expected_pred)
+    assert y_pred.shape == (len(X_toy),)
+    assert y_pred_low.shape == (len(X_toy), 1)
+    assert y_pred_up.shape == (len(X_toy), 1)
+    assert y_std.shape == (len(X_toy), 1)
+
+
+def test_mapie_regressor_init_fit_uses_ensemble_std_regressor() -> None:
+    """
+    Cover the EnsembleStdRegressor branch in init_fit:
+    StdConformityScore must wire up an EnsembleStdRegressor internally.
+    """
+    ccr = CrossConformalRegressor(
+        estimator=DummyStdRegressor(),
+        method="plus",
+        cv=KFold(n_splits=3, shuffle=True, random_state=random_state),
+        conformity_score=StdConformityScore(),  # type: ignore[arg-type]
+    )
+    ccr._mapie_regressor._fit_params = {}
+    ccr._mapie_regressor.init_fit(X_toy, y_toy)
+
+    assert isinstance(ccr._mapie_regressor.estimator_, EnsembleStdRegressor)
+
+
+def test_std_conformity_score_forwards_predict_params() -> None:
+    """Std-aware calibration and interval prediction must reuse predict_params."""
+    ccr = CrossConformalRegressor(
+        estimator=PredictParamsStdRegressor(),
+        method="plus",
+        cv=KFold(n_splits=3, shuffle=True, random_state=random_state),
+        confidence_level=0.8,
+        conformity_score=StdConformityScore(),  # type: ignore[arg-type]
+    )
+
+    ccr.fit_conformalize(
+        X_toy,
+        y_toy,
+        predict_params={"check_predict_params": True},
+    )
+    y_pred, y_pis = ccr.predict_interval(X_toy)
+
+    assert y_pred.shape == (len(X_toy),)
+    assert y_pis.shape == (len(X_toy), 2, 1)
+
+
+def test_std_conformity_score_uses_groups_in_cv_split() -> None:
+    """Std-aware calibration must pass groups to group-aware cross validators."""
+    groups = np.repeat(np.arange(3), 2)
+    ccr = CrossConformalRegressor(
+        estimator=DummyStdRegressor(),
+        method="plus",
+        cv=GroupKFold(n_splits=3),
+        confidence_level=0.8,
+        conformity_score=StdConformityScore(),  # type: ignore[arg-type]
+    )
+
+    ccr.fit_conformalize(X_toy, y_toy, groups=groups)
+    y_pred, y_pis = ccr.predict_interval(X_toy)
+
+    assert y_pred.shape == (len(X_toy),)
+    assert y_pis.shape == (len(X_toy), 2, 1)
+
+
+def test_std_conformity_score_allows_infinite_intervals() -> None:
+    """StdConformityScore should honor allow_infinite_bounds at alpha=0."""
+    ccr = CrossConformalRegressor(
+        estimator=DummyStdRegressor(),
+        method="plus",
+        cv=KFold(n_splits=3, shuffle=True, random_state=random_state),
+        confidence_level=1.0,
+        conformity_score=StdConformityScore(),  # type: ignore[arg-type]
+    )
+
+    ccr.fit_conformalize(X_toy, y_toy)
+    _, y_pis = ccr.predict_interval(X_toy, allow_infinite_bounds=True)
+
+    assert np.isneginf(y_pis[:, 0, 0]).all()
+    assert np.isposinf(y_pis[:, 1, 0]).all()
+
+
+def test_ensemble_std_regressor_invalid_method() -> None:
+    """Test that EnsembleStdRegressor raises on unsupported methods."""
+    with pytest.raises(
+        ValueError,
+        match=r"method='enbpi' is not supported by EnsembleStdRegressor",
+    ):
+        EnsembleStdRegressor(
+            DummyStdRegressor(),
+            "enbpi",
+            KFold(n_splits=3, shuffle=True, random_state=random_state),
+            "mean",
+            None,
+            0.2,
+            False,
+        )
+
+
+def test_std_conformity_score_signed_scores_raises_without_std() -> None:
+    """Cover the y_std=None guard in get_signed_conformity_scores (line 44)."""
+    score = StdConformityScore()
+    y = np.array([1.0, 2.0, 3.0])
+    y_pred = np.array([1.1, 1.9, 3.1])
+
+    with pytest.raises(ValueError, match="y_std is required for StdConformityScore."):
+        score.get_signed_conformity_scores(y, y_pred, y_std=None)
