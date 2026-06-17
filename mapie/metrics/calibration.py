@@ -127,8 +127,9 @@ def expected_calibration_error(
     Twenty-Ninth AAAI Conference on Artificial Intelligence. 2015.
     https://doi.org/10.1609/aaai.v29i1.9602
 
-    [2] Nixon, Jeremy, et al.
-    "Measuring Calibration in Deep Learning."
+    [2] Kull, Meelis, et al.
+    "Beyond temperature scaling: Obtaining well-calibrated multiclass
+    probabilities with Dirichlet calibration."
     arXiv:1910.12656. 2019.
     https://arxiv.org/abs/1910.12656
 
