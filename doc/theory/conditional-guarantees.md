@@ -125,28 +125,32 @@ Following these steps, we have the coverage guarantee, \(\forall f \in \mathcal{
 
 ### Creating a class of functions adapted to our needs
 
-The following will provide some tips on how to use the method (for more practical examples, see the regression examples gallery or [How to leverage the CCP method on real data](https://github.com/scikit-learn-contrib/MAPIE/tree/master/notebooks/regression/tutorial_ccp_CandC.ipynb)).
+The following will provide some tips on how to use the method. For practical
+examples, see the regression and classification examples using
+`ConditionalSplitConformalRegressor` and `ConditionalSplitConformalClassifier`.
 
-1. If you want a generally adaptative interval and you don't have prior knowledge about your data, you can use gaussian kernels, implemented in MAPIE in `GaussianCCP` (`mapie.future.calibrators.ccp.GaussianCCP`). See the API doc for more information.
+1. The class of functions is defined with `Phi_fn`, passed directly to the
+   conditional estimator. This function returns the \(\Phi(X)\) matrix used by
+   the method.
 
-2. If you want to avoid bias on sub-groups and ensure a homogeneous coverage on those, you can add indicator functions corresponding to those groups.
+2. If you want to avoid bias on sub-groups and ensure a homogeneous coverage on
+   those, you can add indicator functions corresponding to those groups in
+   `Phi_fn`.
 
-3. You can inject prior knowledge in the method using `CustomCCP` (`mapie.future.calibrators.ccp.CustomCCP`), if you have information about the conformity scores distribution (domains with different behavior, expected model uncertainty depending on a given feature, etc.).
+3. You can inject prior knowledge in the method through `Phi_fn`, if you have
+   information about the conformity scores distribution (domains with different
+   behavior, expected model uncertainty depending on a given feature, etc.).
 
-4. Empirically test the obtained coverage on a test set, to make sure that the expected coverage is achieved.
+4. Empirically test the obtained coverage on a test set, to make sure that the
+   expected coverage is achieved.
 
 ### Avoid miscoverage
 
-- To guarantee marginal coverage, you need to have an intercept term in the \(\Phi\) function (meaning, a feature equal to \(1\) for all \(X_i\)). It corresponds, in the API, to `bias=True`.
+- To guarantee marginal coverage, you need to have an intercept term in the
+  \(\Phi\) function (meaning, a feature equal to \(1\) for all \(X_i\)).
 
-- Some miscoverage can come from the optimization process, which is solved with numerical methods, and may fail to find the global minimum. If the target coverage is not achieved, you can try adding regularization, to help the optimization process. You can also try reducing the number of dimensions \(d\) or using a smoother \(\Phi\) function, such as with gaussian kernels (indeed, using only indicator functions makes the optimization difficult).
-
-    !!! warning
-        Adding some regularization will theoretically induce a miscoverage, as the objective function will slightly increase, to minimize the regularization term.
-
-        In practice, it may increase the coverage (as it helps the optimization convergence), but it can also decrease it. Always empirically check the resulting coverage and avoid too big regularization terms (below \(10^{-4}\) is usually recommended).
-
-- Finally, if you have coverage issues because the optimisation is difficult, you can artificially enforce higher coverage by reducing the value of \(\alpha\). Evaluating the best adjusted \(\alpha\) using cross-validation will ensure the same coverage on the test set (subject to variability due to the finite number of samples).
+- Keep the number of dimensions \(d\) reasonable compared with the
+  conformalization set size.
 
 ---
 
