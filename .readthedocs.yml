@@ -7,10 +7,7 @@ build:
 
 python:
   install:
-    - method: pip
-      path: .
-      extra_requirements:
-        - docs
+    - requirements: doc/rtd-requirements.txt
 
 mkdocs:
   configuration: mkdocs.yml
