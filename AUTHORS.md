@@ -56,5 +56,6 @@
 * Sarthak Bhide (@Tamish03) <neetasarthak26@gmail.com>
 * Imran Ahamed <immu4989@gmail.com>
 * Nazim Fadli <nazimfadli25@gmail.com>
+* Edgar Jaber <EdgarJaber>
 
 To be continued ...
