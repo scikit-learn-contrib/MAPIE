@@ -122,7 +122,6 @@ mapie_jplus_gp = CrossConformalRegressor(
     method="plus",
     confidence_level=1 - ALPHA,
     conformity_score=StdConformityScore(),
-    model_has_std=True,
     verbose=0,
     random_state=42,
 )
@@ -134,7 +133,6 @@ mapie_jplus = CrossConformalRegressor(
     method="plus",
     confidence_level=1 - ALPHA,
     conformity_score=AbsoluteConformityScore(),
-    model_has_std=False,
     verbose=0,
     random_state=42,
 )
