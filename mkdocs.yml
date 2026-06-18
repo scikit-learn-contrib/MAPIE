@@ -9,7 +9,7 @@ edit_uri: edit/master/doc/
 theme:
   name: material
   logo: images/mapie_logo_white_cut.png
-  favicon: images/mapie_logo_nobg_cut.png
+  favicon: images/mapie_logo_m_cut.png
   icon:
     repo: fontawesome/brands/github
   palette:
