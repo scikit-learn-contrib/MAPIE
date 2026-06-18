@@ -764,5 +764,5 @@ pd.DataFrame(
 # ----------------------------------------
 #
 # If you would like to run a series of notebooks hosted on the MAPIE Github
-# repository that can be run on Google Colab, please visit this documentation
-# link: https://mapie.readthedocs.io/en/stable/notebooks_regression.html.
+# repository that can be run on Google Colab, please visit:
+# https://github.com/scikit-learn-contrib/MAPIE/tree/master/notebooks/regression.

@@ -36,7 +36,7 @@
 .. |Ask DeepWiki| image:: https://deepwiki.com/badge.svg
     :target: https://deepwiki.com/scikit-learn-contrib/MAPIE
 
-.. image:: https://github.com/scikit-learn-contrib/MAPIE/raw/master/doc_legacy/images/mapie_logo_nobg_cut.png
+.. image:: https://github.com/scikit-learn-contrib/MAPIE/raw/master/doc/images/mapie_logo_nobg_cut.png
     :width: 400
     :align: center
 
@@ -44,13 +44,13 @@
 MAPIE - Model Agnostic Prediction Interval Estimator
 ====================================================
 
- 🎉 MAPIE v1 is live!  🎉 You're seeing the documentation of this new version, which introduces major changes to the API. Extensive release notes are available in the `documentation <https://mapie.readthedocs.io/en/stable/v1_release_notes.html>`_. You can switch to the documentation of previous versions using the button on the bottom right of ReadTheDoc pages.
+ 🎉 MAPIE v1 is live!  🎉 You're seeing the documentation of this new version, which introduces major changes to the API. Extensive release notes are available in the `documentation <https://mapie.readthedocs.io/en/stable/getting-started/v1-release-notes/>`_. You can switch to the documentation of previous versions using the Read the Docs version menu.
 
  🚀 MAPIE Roadmap 2026 🚀 New features are coming, starting with the application of **risk control** to emerging use cases such as **LLM-as-Judge** and **image segmentation**. In addition, **exchangeability tests** will be introduced to help users verify when MAPIE can be legitimately applied. Finally, **conformal prediction methods** will be revisited with a stronger focus on **adaptability**. More details are available `here <https://github.com/scikit-learn-contrib/MAPIE/discussions/822>`_.
 
 **MAPIE** is an open-source Python library for quantifying uncertainties and controlling the risks of machine learning models.
 
-.. image:: https://raw.githubusercontent.com/scikit-learn-contrib/MAPIE/refs/heads/master/doc_legacy/images/educational_visual.png
+.. image:: https://raw.githubusercontent.com/scikit-learn-contrib/MAPIE/refs/heads/master/doc/images/educational_visual.png
     :width: 500
     :align: center
 
@@ -86,9 +86,9 @@ MAPIE can be installed in different ways:
 
 Below are two simple examples from `our documentation <https://mapie.readthedocs.io/en/latest/>`_ that show how MAPIE is used in a regression setting and a classification setting:
 
-- `Uncertainty quantification for a regression task <https://mapie.readthedocs.io/en/latest/examples_regression/1-quickstart/plot_toy_model.html>`_
+- `Uncertainty quantification for a regression task <https://mapie.readthedocs.io/en/latest/generated/regression/1-quickstart/plot_toy_model/>`_
 
-- `Uncertainty quantification for a classification task <https://mapie.readthedocs.io/en/latest/examples_classification/1-quickstart/plot_quickstart_classification.html>`_
+- `Uncertainty quantification for a classification task <https://mapie.readthedocs.io/en/latest/generated/classification/1-quickstart/plot_quickstart_classification/>`_
 
 📝 Contributing
 ===============
@@ -117,7 +117,7 @@ and with the financial support from Région Ile de France and Confiance.ai.
     :width: 140px
     :target: https://www.inria.fr/
 
-.. |Projet P16| image:: https://raw.githubusercontent.com/scikit-learn-contrib/MAPIE/master/doc_legacy/_static/img/logo_P16.png
+.. |Projet P16| image:: https://raw.githubusercontent.com/scikit-learn-contrib/MAPIE/master/doc/images/logo_P16.png
     :height: 45px
     :width: 60px
     :target: https://p16.inria.fr/fr/
