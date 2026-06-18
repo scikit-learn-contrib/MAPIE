@@ -72,6 +72,12 @@ Evaluation metrics for conformal prediction.
 
 ---
 
+::: mapie.metrics.coverage_diagnostics.covmetrics_score
+    options:
+      heading_level: 3
+
+---
+
 ## Calibration
 
 ::: mapie.metrics.calibration.expected_calibration_error
