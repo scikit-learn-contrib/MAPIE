@@ -44,6 +44,7 @@ Conformity Scores
    mapie.conformity_scores.AbsoluteConformityScore
    mapie.conformity_scores.GammaConformityScore
    mapie.conformity_scores.ResidualNormalisedScore
+   mapie.conformity_scores.StdConformityScore
 
 Resampling
 ----------

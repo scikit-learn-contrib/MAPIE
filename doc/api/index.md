@@ -36,6 +36,7 @@ Complete API documentation for MAPIE v1.
 | [`AbsoluteConformityScore`](conformity-scores.md#mapie.conformity_scores.AbsoluteConformityScore) | Absolute residual conformity score |
 | [`GammaConformityScore`](conformity-scores.md#mapie.conformity_scores.GammaConformityScore) | Gamma (normalized) conformity score |
 | [`ResidualNormalisedScore`](conformity-scores.md#mapie.conformity_scores.ResidualNormalisedScore) | Residual normalized conformity score |
+| [`StdConformityScore`](conformity-scores.md#mapie.conformity_scores.StdConformityScore) | Standardized conformity score |
 
 ### Resampling
 
