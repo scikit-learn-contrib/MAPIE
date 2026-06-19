@@ -53,13 +53,13 @@ class _ConditionalConformalMixin:
 
     def _init_conditional(
         self,
-        Phi_fn: Callable,
+        feature_map: Callable,
         randomize: bool,
         exact: bool,
         infinite_params: Optional[dict],
         seed: int,
     ) -> None:
-        self.Phi_fn = Phi_fn
+        self.feature_map = feature_map
         self.randomize = randomize
         self.exact = exact
         self.infinite_params = {} if infinite_params is None else infinite_params
@@ -75,7 +75,7 @@ class _ConditionalConformalMixin:
         """
         self.x_calib = x_calib
         self.scores_calib = np.asarray(scores_calib).ravel()
-        phi_calib = self.Phi_fn(x_calib)
+        phi_calib = self.feature_map(x_calib)
 
         _, s, Vt = np.linalg.svd(phi_calib, full_matrices=False)
 
@@ -84,10 +84,10 @@ class _ConditionalConformalMixin:
         r = int(np.sum(s > tol))
 
         if r < len(s):
-            self.Phi_fn_orig = self.Phi_fn
+            self.feature_map_orig = self.feature_map
             T = Vt.T[:, :r]
-            self.Phi_fn = lambda x: (self.Phi_fn_orig(x) @ T)
-            phi_calib = self.Phi_fn(x_calib)
+            self.feature_map = lambda x: (self.feature_map_orig(x) @ T)
+            phi_calib = self.feature_map(x_calib)
 
         self.phi_calib = phi_calib
 
@@ -330,7 +330,7 @@ class _ConditionalConformalMixin:
                 )
             naive_duals, naive_primals = self._get_calibration_solution(quantile)
             score_cutoff = self._compute_exact_cutoff(
-                quantiles, naive_primals, naive_duals, self.Phi_fn(x_test), threshold
+                quantiles, naive_primals, naive_duals, self.feature_map(x_test), threshold
             )
         else:
             _solve = partial(
@@ -362,7 +362,7 @@ class _ConditionalConformalMixin:
                 S,
                 x,
                 quantiles[-1][0],
-                self.Phi_fn(x),
+                self.feature_map(x),
                 self.x_calib,
                 self.infinite_params,
             )
@@ -375,7 +375,7 @@ class _ConditionalConformalMixin:
             beta = prob.constraints[-1].dual_value
         else:
             scores = np.concatenate([self.scores_calib, [S]])
-            Phi = np.concatenate([self.phi_calib, self.Phi_fn(x)], axis=0)
+            Phi = np.concatenate([self.phi_calib, self.feature_map(x)], axis=0)
             zeros = np.zeros((Phi.shape[1],))
             bounds = np.concatenate((quantiles - 1, quantiles), axis=1)
             res = linprog(
@@ -393,7 +393,7 @@ class _ConditionalConformalMixin:
     def _get_threshold(self, S: float, x: np.ndarray, quantiles: np.ndarray):
         beta, weights = self._get_primal_solution(S, x, quantiles)
 
-        threshold = self.Phi_fn(x) @ beta
+        threshold = self.feature_map(x) @ beta
         if self.infinite_params.get("kernel", FUNCTION_DEFAULTS["kernel"]):
             K = pairwise_kernels(
                 X=np.concatenate([self.x_calib, x.reshape(1, -1)], axis=0),
@@ -410,7 +410,7 @@ class ConditionalSplitConformalRegressor(
 ):
     def __init__(
         self,
-        Phi_fn: Callable,
+        feature_map: Callable,
         estimator: RegressorMixin = LinearRegression(),
         confidence_level: Union[float, Iterable[float]] = 0.9,
         conformity_score: Union[str, BaseRegressionScore] = "absolute",
@@ -431,7 +431,7 @@ class ConditionalSplitConformalRegressor(
 
         Parameters
         ----------
-        Phi_fn : Callable
+        feature_map : Callable
             Function mapping covariates to a finite basis used for exact
             conditional guarantees.
 
@@ -473,7 +473,7 @@ class ConditionalSplitConformalRegressor(
             n_jobs=n_jobs,
             verbose=verbose,
         )
-        self._init_conditional(Phi_fn, randomize, exact, infinite_params, seed)
+        self._init_conditional(feature_map, randomize, exact, infinite_params, seed)
 
     def conformalize(
         self,
@@ -704,7 +704,7 @@ class ConditionalSplitConformalRegressor(
     #             metric=self.infinite_params.get("kernel", FUNCTION_DEFAULTS["kernel"]),
     #             gamma=self.infinite_params.get("gamma", FUNCTION_DEFAULTS["gamma"]),
     #         )
-    #         threshold = K @ weights + self.Phi_fn(x) @ beta
+    #         threshold = K @ weights + self.feature_map(x) @ beta
     #     else:
     #         S = np.concatenate([self.scores_calib, [S]], dtype=float)
     #         Phi = self.phi_calib.astype(float)
@@ -718,7 +718,7 @@ class ConditionalSplitConformalRegressor(
     #             bounds = [(quantile - 1, quantile)] * (len(self.scores_calib) + 1)
     #         res = linprog(-1 * S, A_eq=Phi.T, b_eq=zeros, bounds=bounds, method="highs")
     #         beta = -1 * res.eqlin.marginals
-    #         threshold = self.Phi_fn(x) @ beta
+    #         threshold = self.feature_map(x) @ beta
 
     #     return score_inv_fn(threshold, x)
 
@@ -808,7 +808,7 @@ class ConditionalSplitConformalRegressor(
     #                     quantiles,
     #                     naive_primals,
     #                     naive_duals,
-    #                     self.Phi_fn(x_val),
+    #                     self.feature_map(x_val),
     #                     threshold,
     #                 )
     #                 if quantile > 0.5:
@@ -827,7 +827,7 @@ class ConditionalSplitConformalRegressor(
     #             S,
     #             x,
     #             quantiles[-1][0],
-    #             self.Phi_fn(x),
+    #             self.feature_map(x),
     #             self.x_calib,
     #             self.infinite_params,
     #         )
@@ -840,7 +840,7 @@ class ConditionalSplitConformalRegressor(
     #         return prob.var_dict["weights"].value
     #     else:
     #         S = np.concatenate([self.scores_calib, [S]])
-    #         Phi = np.concatenate([self.phi_calib, self.Phi_fn(x)], axis=0)
+    #         Phi = np.concatenate([self.phi_calib, self.feature_map(x)], axis=0)
     #         zeros = np.zeros((Phi.shape[1],))
     #         bounds = np.concatenate((quantiles - 1, quantiles), axis=1)
     #         res = linprog(
@@ -860,7 +860,7 @@ class ConditionalSplitConformalClassifier(
 ):
     def __init__(
         self,
-        Phi_fn: Callable,
+        feature_map: Callable,
         estimator: ClassifierMixin = LogisticRegression(),
         confidence_level: Union[float, Iterable[float]] = 0.9,
         conformity_score: Union[str, BaseClassificationScore] = "lac",
@@ -881,7 +881,7 @@ class ConditionalSplitConformalClassifier(
 
         Parameters
         ----------
-        Phi_fn : Callable
+        feature_map : Callable
             Function mapping covariates to a finite basis used for exact
             conditional guarantees.
 
@@ -934,7 +934,7 @@ class ConditionalSplitConformalClassifier(
                 "score whose prediction sets are obtained by thresholding "
                 'real-valued scores, e.g. "lac" or "aps".'
             )
-        self._init_conditional(Phi_fn, randomize, exact, infinite_params, seed)
+        self._init_conditional(feature_map, randomize, exact, infinite_params, seed)
 
     def conformalize(
         self,
@@ -1081,7 +1081,7 @@ def _solve_dual(S, gcc, x_test, quantiles, threshold=None):
             S,
             x_test,
             quantiles[-1][0],
-            gcc.Phi_fn(x_test),
+            gcc.feature_map(x_test),
             gcc.x_calib,
             gcc.infinite_params,
         )
@@ -1092,7 +1092,7 @@ def _solve_dual(S, gcc, x_test, quantiles, threshold=None):
         weights = prob.var_dict["weights"].value
     else:
         S = np.concatenate([gcc.scores_calib, [S]], dtype=float)
-        Phi = np.concatenate([gcc.phi_calib, gcc.Phi_fn(x_test)], axis=0, dtype=float)
+        Phi = np.concatenate([gcc.phi_calib, gcc.feature_map(x_test)], axis=0, dtype=float)
         zeros = np.zeros((Phi.shape[1],))
 
         bounds = np.concatenate((quantiles - 1, quantiles), axis=1)
