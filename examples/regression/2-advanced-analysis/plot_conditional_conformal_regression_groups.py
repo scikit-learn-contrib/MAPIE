@@ -11,7 +11,7 @@ groups.
 It is a simple companion to the Gibbs, Cherian and Candès (2023) reproduction
 example in the scientific-articles gallery. Here, the goal is not to reproduce a
 paper figure, but to isolate the main idea on a small synthetic regression
-problem: define ``Phi_fn`` as group indicators, then compare marginal and
+problem: define ``feature_map`` as group indicators, then compare marginal and
 group-conditional calibration.
 """
 
@@ -117,7 +117,7 @@ plt.show()
 # 3. Define the conditional groups
 # --------------------------------------------------------------------------
 #
-# ``Phi_fn`` returns one indicator column per difficulty group. The conditional
+# ``feature_map`` returns one indicator column per difficulty group. The conditional
 # regressor uses these columns to calibrate score cutoffs that are valid on each
 # group, not only on average over the full distribution.
 
@@ -142,7 +142,7 @@ def phi_fn(X):
 #
 # Both methods use the same fitted polynomial regressor and the same
 # conformalization data. The marginal regressor uses one residual cutoff for all
-# samples, while ``ConditionalSplitConformalRegressor`` receives ``Phi_fn`` and
+# samples, while ``ConditionalSplitConformalRegressor`` receives ``feature_map`` and
 # calibrates the cutoff by difficulty group.
 
 confidence_level = 0.90

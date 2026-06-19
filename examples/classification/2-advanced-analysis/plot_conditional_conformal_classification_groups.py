@@ -9,7 +9,7 @@ to build prediction sets with conditional guarantees on pre-defined groups.
 
 It is inspired by the synthetic examples from Gibbs, Cherian and Candès (2023)
 and their ``conditional-conformal`` reference implementation. The key idea is to
-provide a basis function ``Phi_fn`` that identifies the covariate groups on
+provide a basis function ``feature_map`` that identifies the covariate groups on
 which coverage should be controlled.
 """
 
@@ -113,7 +113,7 @@ plt.show()
 # 3. Define the conditional groups
 # --------------------------------------------------------------------------
 #
-# ``Phi_fn`` returns one indicator column per difficulty bin. The conditional
+# ``feature_map`` returns one indicator column per difficulty bin. The conditional
 # classifier will use these columns to calibrate score cutoffs that are valid on
 # each group, not only on average over the full distribution.
 
@@ -140,7 +140,7 @@ def phi_fn(X):
 #
 # Both methods use the same fitted logistic regression model and the same
 # conformalization data. The only difference is that
-# ``ConditionalSplitConformalClassifier`` receives ``Phi_fn``.
+# ``ConditionalSplitConformalClassifier`` receives ``feature_map``.
 
 confidence_level = 0.95
 estimator = LogisticRegression(max_iter=1000).fit(X_train, y_train)

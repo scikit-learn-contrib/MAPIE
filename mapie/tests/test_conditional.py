@@ -35,7 +35,7 @@ def _fitted_regressor(confidence_level=0.9, conformity_score="absolute", **kwarg
     X_conf, y_conf, _, _ = _make_data()
     estimator = LinearRegression().fit(X_conf, y_conf)
     regressor = ConditionalSplitConformalRegressor(
-        Phi_fn=_phi,
+        feature_map=_phi,
         estimator=estimator,
         confidence_level=confidence_level,
         conformity_score=conformity_score,
@@ -82,7 +82,7 @@ def test_conformity_scores_property():
 def test_non_prefit_fit_then_conformalize():
     X_conf, y_conf, X_test, _ = _make_data()
     regressor = ConditionalSplitConformalRegressor(
-        Phi_fn=_phi,
+        feature_map=_phi,
         estimator=LinearRegression(),
         confidence_level=0.9,
         prefit=False,
@@ -140,7 +140,7 @@ def test_randomize():
 
 def test_predict_interval_before_conformalize_raises():
     regressor = ConditionalSplitConformalRegressor(
-        Phi_fn=_phi, estimator=LinearRegression().fit(*_make_data()[:2])
+        feature_map=_phi, estimator=LinearRegression().fit(*_make_data()[:2])
     )
     with pytest.raises(ValueError, match="conformalize"):
         regressor.predict_interval(_make_data()[2])
@@ -160,7 +160,7 @@ def test_rank_deficient_basis():
 
     X_conf, y_conf, X_test, _ = _make_data()
     regressor = ConditionalSplitConformalRegressor(
-        Phi_fn=phi_redundant,
+        feature_map=phi_redundant,
         estimator=LinearRegression().fit(X_conf, y_conf),
         confidence_level=0.9,
     )
@@ -178,7 +178,7 @@ def test_infinite_bounds_when_basis_degenerate():
 
     X_conf, y_conf, _, _ = _make_data()
     regressor = ConditionalSplitConformalRegressor(
-        Phi_fn=phi_no_intercept,
+        feature_map=phi_no_intercept,
         estimator=LinearRegression().fit(X_conf, y_conf),
         confidence_level=0.9,
         conformity_score=AbsoluteConformityScore(sym=False),
@@ -193,7 +193,7 @@ def test_infinite_bounds_when_basis_degenerate():
 def test_rkhs_kernel_path():
     X_conf, y_conf, X_test, _ = _make_data(n=120)
     regressor = ConditionalSplitConformalRegressor(
-        Phi_fn=_phi,
+        feature_map=_phi,
         estimator=LinearRegression().fit(X_conf, y_conf),
         confidence_level=0.9,
         exact=False,
@@ -207,7 +207,7 @@ def test_rkhs_kernel_path():
 def test_exact_with_kernel_raises():
     X_conf, y_conf, X_test, _ = _make_data(n=120)
     regressor = ConditionalSplitConformalRegressor(
-        Phi_fn=_phi,
+        feature_map=_phi,
         estimator=LinearRegression().fit(X_conf, y_conf),
         confidence_level=0.9,
         exact=True,
@@ -232,7 +232,7 @@ def _fitted_classifier(confidence_level=0.9, conformity_score="lac", **kwargs):
     X_conf, y_conf, _, _ = _make_multiclass_data()
     estimator = LogisticRegression().fit(X_conf, y_conf)
     classifier = ConditionalSplitConformalClassifier(
-        Phi_fn=_phi,
+        feature_map=_phi,
         estimator=estimator,
         confidence_level=confidence_level,
         conformity_score=conformity_score,
@@ -278,7 +278,7 @@ class TestConditionalSplitConformalClassifier:
     def test_non_prefit_fit_then_conformalize(self):
         X_conf, y_conf, X_test, _ = _make_multiclass_data()
         classifier = ConditionalSplitConformalClassifier(
-            Phi_fn=_phi,
+            feature_map=_phi,
             estimator=LogisticRegression(),
             confidence_level=0.9,
             prefit=False,
@@ -297,13 +297,13 @@ class TestConditionalSplitConformalClassifier:
     def test_unsupported_conformity_score_raises(self, conformity_score):
         with pytest.raises(ValueError, match="thresholding"):
             ConditionalSplitConformalClassifier(
-                Phi_fn=_phi, conformity_score=conformity_score
+                feature_map=_phi, conformity_score=conformity_score
             )
 
     def test_predict_set_before_conformalize_raises(self):
         X_conf, y_conf, X_test, _ = _make_multiclass_data()
         classifier = ConditionalSplitConformalClassifier(
-            Phi_fn=_phi, estimator=LogisticRegression().fit(X_conf, y_conf)
+            feature_map=_phi, estimator=LogisticRegression().fit(X_conf, y_conf)
         )
         with pytest.raises(ValueError, match="conformalize"):
             classifier.predict_set(X_test)

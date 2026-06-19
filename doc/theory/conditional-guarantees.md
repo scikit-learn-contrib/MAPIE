@@ -129,15 +129,15 @@ The following will provide some tips on how to use the method. For practical
 examples, see the regression and classification examples using
 `ConditionalSplitConformalRegressor` and `ConditionalSplitConformalClassifier`.
 
-1. The class of functions is defined with `Phi_fn`, passed directly to the
+1. The class of functions is defined with `feature_map`, passed directly to the
    conditional estimator. This function returns the \(\Phi(X)\) matrix used by
    the method.
 
 2. If you want to avoid bias on sub-groups and ensure a homogeneous coverage on
    those, you can add indicator functions corresponding to those groups in
-   `Phi_fn`.
+   `feature_map`.
 
-3. You can inject prior knowledge in the method through `Phi_fn`, if you have
+3. You can inject prior knowledge in the method through `feature_map`, if you have
    information about the conformity scores distribution (domains with different
    behavior, expected model uncertainty depending on a given feature, etc.).
 

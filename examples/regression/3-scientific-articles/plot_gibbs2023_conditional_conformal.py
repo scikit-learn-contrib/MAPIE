@@ -123,7 +123,7 @@ y_calib = np.asarray(y_calib, dtype=np.float64)
 # polynomial regression. The polynomial features are wrapped in a
 # :class:`~sklearn.pipeline.Pipeline` so that the estimator can be called
 # directly on the raw covariate ``X``: MAPIE calls ``predict`` on the raw
-# features internally, and the conditional basis ``Phi_fn`` below is also
+# features internally, and the conditional basis ``feature_map`` below is also
 # defined on the raw ``X``.
 
 reg = make_pipeline(PolynomialFeatures(4), LinearRegression()).fit(
@@ -138,7 +138,7 @@ alpha = 1 - confidence_level
 # 3. Defining the conditional guarantee
 # --------------------------------------------------------------------------
 #
-# ``Phi_fn`` defines the finite-dimensional class of covariate shifts over which
+# ``feature_map`` defines the finite-dimensional class of covariate shifts over which
 # exact coverage is guaranteed. Here we use the indicators of the sub-intervals
 # with endpoints in ``[0, 0.5, 1, ..., 5]``: coverage is then valid not only
 # marginally, but on each of these groups of ``X``.
