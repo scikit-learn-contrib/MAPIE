@@ -107,21 +107,52 @@ def expected_calibration_error(
     y_scores: ArrayLike,
     num_bins: int = 50,
     split_strategy: Optional[str] = None,
+    classwise: bool = False,
+    class_labels: Optional[ArrayLike] = None,
 ) -> float:
     """
-    The expected calibration error, which is the difference between
-    the confidence scores and accuracy per bin [1].
+    The Expected Calibration Error (ECE), which measures the difference
+    between confidence scores and accuracy per bin.
+
+    When ``classwise=False`` (default), computes the standard
+    confidence-ECE [1]: samples are binned by their top predicted
+    probability and the weighted average of |accuracy - confidence|
+    is returned.
+
+    When ``classwise=True``, computes the classwise-ECE [2]: the ECE
+    is computed independently for each class and then averaged.
 
     [1] Naeini, Mahdi Pakdaman, Gregory Cooper, and Milos Hauskrecht.
     "Obtaining well calibrated probabilities using bayesian binning."
     Twenty-Ninth AAAI Conference on Artificial Intelligence. 2015.
+    https://doi.org/10.1609/aaai.v29i1.9602
+
+    [2] Kull, Meelis, et al.
+    "Beyond temperature scaling: Obtaining well-calibrated multiclass
+    probabilities with Dirichlet calibration."
+    arXiv:1910.12656. 2019.
+    https://arxiv.org/abs/1910.12656
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> y = np.array([0, 1, 0, 1])
+    >>> y_pred = np.array([0, 1, 1, 1])
+    >>> y_true = (y_pred == y).astype(int)
+    >>> y_true
+    array([1, 1, 0, 1])
 
     Parameters
     ----------
     y_true: ArrayLike of shape (n_samples,)
-        The target values for the calibrator.
+        Binary indicator of whether the prediction is correct
+        (``y == y_pred``), encoded as 0 or 1.
+
+        Note that the parameter name ``y_true`` is historical and may
+        be misleading. It represents prediction correctness rather
+        than the true class labels.
     y_scores: ArrayLike of shape (n_samples,) or (n_samples, n_classes)
-        The predictions scores.
+        The prediction scores (probabilities).
     num_bins: int
         Number of bins to make the split in the y_score. The allowed
         values are num_bins above 0.
@@ -129,16 +160,50 @@ def expected_calibration_error(
         The way of splitting the predictions into different bins.
         The allowed split strategies are "uniform", "quantile" and
         "array split".
+    classwise: bool, default=False
+        If ``False`` (default), computes the standard confidence-ECE.
+        If ``True``, computes the classwise-ECE by averaging the ECE
+        over each class independently.
+    class_labels: Optional[ArrayLike], default=None
+        True class labels encoded as integers in
+        ``[0, n_classes - 1]``.
+
+        Must be provided when ``classwise=True``.
+
     Returns
     -------
     float
-        The score of ECE (Expected Calibration Error).
+        The ECE score.
     """
     split_strategy = _check_split_strategy(split_strategy)
     num_bins = _check_number_bins(num_bins)
-    y_true_ = _check_binary_zero_one(y_true)
     y_scores = cast(NDArray, y_scores)
 
+    # classwise ECE
+    if classwise:
+        if np.size(y_scores.shape) != 2:
+            raise ValueError(
+                "y_scores must be 2D of shape (n_samples, n_classes) "
+                "when classwise=True."
+            )
+        if class_labels is None:
+            raise ValueError("class_labels must be provided when classwise=True.")
+        class_labels = cast(NDArray, class_labels)
+        n_classes = y_scores.shape[1]
+        ece = float(0.0)
+        for c in range(n_classes):
+            y_true_c = np.array(class_labels == c, dtype=int)
+            ece += expected_calibration_error(
+                y_true_c,
+                y_scores[:, c],
+                num_bins=num_bins,
+                split_strategy=split_strategy,
+                classwise=False,
+            )
+        return float(ece / n_classes)
+
+    # standard confidence ECE (default — original order preserved)
+    y_true_ = _check_binary_zero_one(y_true)
     _check_arrays_length(y_true_, y_scores)
     _check_array_nan(y_true_)
     _check_array_inf(y_true_)
