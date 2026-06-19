@@ -7,7 +7,7 @@ In this example, we explain how to do multi-risk control for binary classificati
 
 """
 
-# sphinx_gallery_thumbnail_number = 2
+# mkdocs_gallery_thumbnail_number = 2
 
 import warnings
 

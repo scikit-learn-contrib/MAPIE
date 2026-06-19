@@ -54,7 +54,7 @@ the size of the intervals will decrease.
 You can use a gamma coefficient to adjust the strength of the correction.
 """
 
-# sphinx_gallery_thumbnail_number = 2
+# mkdocs_gallery_thumbnail_number = 2
 
 import warnings
 

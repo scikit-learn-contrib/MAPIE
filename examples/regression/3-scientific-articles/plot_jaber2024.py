@@ -26,7 +26,7 @@ test function ``g``:
 
 """
 
-# sphinx_gallery_thumbnail_number = 1
+# mkdocs_gallery_thumbnail_number = 1
 
 import warnings
 
