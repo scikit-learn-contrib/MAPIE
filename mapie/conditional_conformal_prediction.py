@@ -330,7 +330,11 @@ class _ConditionalConformalMixin:
                 )
             naive_duals, naive_primals = self._get_calibration_solution(quantile)
             score_cutoff = self._compute_exact_cutoff(
-                quantiles, naive_primals, naive_duals, self.feature_map(x_test), threshold
+                quantiles,
+                naive_primals,
+                naive_duals,
+                self.feature_map(x_test),
+                threshold,
             )
         else:
             _solve = partial(
@@ -513,7 +517,7 @@ class ConditionalSplitConformalRegressor(
         self.y_calib = np.asarray(y_conformalize)
         self._conformalize_conditional(
             np.asarray(X_conformalize),
-            self._mapie_regressor.conformity_scores_,  # computed in super().conformalize
+            self.conformity_scores,  # computed in super().conformalize
         )
 
         return self
@@ -973,7 +977,7 @@ class ConditionalSplitConformalClassifier(
 
         self._conformalize_conditional(
             np.asarray(X_conformalize),
-            self._mapie_classifier.conformity_scores_,  # computed in super().conformalize
+            self.conformity_scores,  # computed in super().conformalize
         )
 
         return self
@@ -1092,7 +1096,9 @@ def _solve_dual(S, gcc, x_test, quantiles, threshold=None):
         weights = prob.var_dict["weights"].value
     else:
         S = np.concatenate([gcc.scores_calib, [S]], dtype=float)
-        Phi = np.concatenate([gcc.phi_calib, gcc.feature_map(x_test)], axis=0, dtype=float)
+        Phi = np.concatenate(
+            [gcc.phi_calib, gcc.feature_map(x_test)], axis=0, dtype=float
+        )
         zeros = np.zeros((Phi.shape[1],))
 
         bounds = np.concatenate((quantiles - 1, quantiles), axis=1)
