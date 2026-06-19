@@ -44,7 +44,7 @@
 MAPIE - Model Agnostic Prediction Interval Estimator
 ====================================================
 
- 🚀 MAPIE in 2026 🚀 New features have been implemented, starting with the application of **risk control** to emerging use cases such as **LLM-as-Judge** and **image segmentation**. In addition, **exchangeability tests** have been introduced to help users verify when MAPIE can be legitimately applied. Finally, new **adaptive** conformal prediction methods have been added. More details are available `here <https://github.com/scikit-learn-contrib/MAPIE/discussions/822>`_.
+ 🚀 MAPIE in 2026 🚀 New features have been implemented, starting with the application of **risk control** to emerging use cases such as **LLM-as-Judge** and **image segmentation**. In addition, **exchangeability tests** have been introduced to help users verify when MAPIE can be legitimately applied. Also, new **adaptive** conformal prediction methods have been added. Finally, the documentation has been updated with a new design!
  🎉 MAPIE in 2025 🎉 MAPIE v1 is live! You're seeing the documentation of this new version, which introduces major changes to the API. Extensive release notes are available in the `documentation <https://mapie.readthedocs.io/en/stable/getting-started/v1-release-notes/>`_. You can switch to the documentation of previous versions using the Read the Docs version menu.
 
  See `GitHub Releases <https://github.com/scikit-learn-contrib/MAPIE/releases>`_ and `HISTORY.md <https://github.com/scikit-learn-contrib/MAPIE/blob/master/HISTORY.md>`_ for up-to-date details on the new features.
