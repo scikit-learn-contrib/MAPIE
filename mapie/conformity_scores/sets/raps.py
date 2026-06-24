@@ -309,8 +309,8 @@ class RAPSConformityScore(APSConformityScore):
         """
         classes = cast(NDArray, self.classes)
 
-        lambda_star = np.zeros(len(alpha_np))
-        best_sizes = np.full(len(alpha_np), np.finfo(np.float64).max)
+        lambda_star: NDArray = np.zeros(len(alpha_np))
+        best_sizes: NDArray = np.full(len(alpha_np), np.finfo(np.float64).max)
 
         for lambda_ in [0.001, 0.01, 0.1, 0.2, 0.5]:  # values given in paper[1]
             true_label_cumsum_proba, cutoff = self.get_true_label_cumsum_proba(
@@ -338,7 +338,7 @@ class RAPSConformityScore(APSConformityScore):
             )
 
         if len(lambda_star) == 1:
-            lambda_star = lambda_star[0]
+            return float(lambda_star[0])
 
         return lambda_star
 
