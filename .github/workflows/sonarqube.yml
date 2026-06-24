@@ -9,7 +9,7 @@ on:
   pull_request:
       types: [opened, synchronize, reopened]
 
-name: Main Workflow
+name: Sonarqube
 jobs:
   sonarqube:
     runs-on: ubuntu-latest
