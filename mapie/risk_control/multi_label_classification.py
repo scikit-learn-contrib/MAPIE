@@ -476,7 +476,7 @@ class MultiLabelClassificationController:
         y_pred_proba_array_repeat = np.repeat(y_pred_proba_array, n_lambdas, axis=2)
         y_pred = (y_pred_proba_array_repeat > self.predict_params).astype(int)
 
-        risk = np.zeros((n_samples, n_lambdas))
+        risk: NDArray = np.zeros((n_samples, n_lambdas))
         for index_sample in range(n_samples):
             for index_lambda in range(n_lambdas):
                 risk[index_sample, index_lambda], _ = (
