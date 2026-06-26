@@ -217,6 +217,5 @@ docstring-code-line-length = "dynamic"
 [tool.coverage.run]
 omit = [
     "mapie/_example_utils.py",
-    "mapie/metrics/coverage_diagnostics.py",
     "mapie/tests/covmetrics/*",
 ]
