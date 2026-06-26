@@ -81,7 +81,6 @@ Metrics
    mapie.metrics.classification.classification_mean_width_score
    mapie.metrics.classification.classification_ssc
    mapie.metrics.classification.classification_ssc_score
-   mapie.metrics.coverage_diagnostics.covmetrics_score
 
 Conformity Scores
 -----------------
