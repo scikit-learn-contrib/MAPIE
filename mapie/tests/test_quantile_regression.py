@@ -113,10 +113,35 @@ def test_default_parameters() -> None:
     assert mapie_reg.alpha == 0.1
 
 
+@pytest.mark.parametrize(
+    "cv, alpha, expected_cv, expected_alpha_np",
+    [
+        (None, 0.1, "split", np.array([0.05, 0.95, 0.5])),
+        ("prefit", 0.2, "prefit", np.array([0.1, 0.9, 0.5])),
+    ],
+)
+def test_initialize_fit_conformalize(
+    cv: Any,
+    alpha: float,
+    expected_cv: str,
+    expected_alpha_np: NDArray,
+) -> None:
+    """Test initialization with default and user-provided values."""
+    mapie_reg = _MapieQuantileRegressor(cv=cv, alpha=alpha)
+    mapie_reg.estimators_ = [clone(qt)]
+
+    mapie_reg._initialize_fit_conformalize()
+
+    assert mapie_reg.cv == expected_cv
+    np.testing.assert_allclose(mapie_reg.alpha_np, expected_alpha_np)
+    assert mapie_reg.estimators_ == []
+
+
 def test_default_parameters_estimator() -> None:
     """Test default values of estimator."""
     mapie_reg = _MapieQuantileRegressor()
-    mapie_reg.fit(X_train, y_train, X_calib=X_calib, y_calib=y_calib)
+    mapie_reg._initialize_fit_conformalize()
+    mapie_reg._fit_estimators(X_train, y_train)
     for estimator in mapie_reg.estimators_:
         assert isinstance(estimator, QuantileRegressor)
         assert estimator.__dict__["solver"] == "highs-ds"
@@ -129,9 +154,8 @@ def test_no_predict_fit_estimator() -> None:
         match=r".*Invalid estimator.*",
     ):
         mapie_reg = _MapieQuantileRegressor(estimator=NotFitPredictEstimator(alpha=0.2))
-        mapie_reg.fit(
-            X_train_toy, y_train_toy, X_calib=X_calib_toy, y_calib=y_calib_toy
-        )
+        mapie_reg._initialize_fit_conformalize()
+        mapie_reg._fit_estimators(X_train, y_train)
 
 
 def test_no_para_loss_estimator() -> None:
@@ -146,9 +170,8 @@ def test_no_para_loss_estimator() -> None:
             "alpha_name": "alpha",
         }
         mapie_reg.estimator = NoLossParameterEstimator(alpha=0.2)
-        mapie_reg.fit(
-            X_train_toy, y_train_toy, X_calib=X_calib_toy, y_calib=y_calib_toy
-        )
+        mapie_reg._initialize_fit_conformalize()
+        mapie_reg._fit_estimators(X_train, y_train)
 
 
 def test_no_para_alpha_estimator() -> None:
@@ -163,9 +186,8 @@ def test_no_para_alpha_estimator() -> None:
             "alpha_name": "noalpha",
         }
         mapie_reg.estimator = NoAlphaParameterEstimator(alpha=0.2, loss="quantile")
-        mapie_reg.fit(
-            X_train_toy, y_train_toy, X_calib=X_calib_toy, y_calib=y_calib_toy
-        )
+        mapie_reg._initialize_fit_conformalize()
+        mapie_reg._fit_estimators(X_train, y_train)
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
@@ -173,7 +195,8 @@ def test_no_para_alpha_estimator() -> None:
 def test_valid_method(strategy: str, estimator: RegressorMixin) -> None:
     """Test that valid strategies and estimators raise no error"""
     mapie_reg = _MapieQuantileRegressor(estimator=estimator, **STRATEGIES[strategy])
-    mapie_reg.fit(X_train_toy, y_train_toy, X_calib=X_calib_toy, y_calib=y_calib_toy)
+    mapie_reg._initialize_fit_conformalize()
+    mapie_reg._fit_estimators(X_train, y_train)
     check_is_fitted(mapie_reg)
     assert mapie_reg.__dict__["method"] == "quantile"
 
@@ -197,7 +220,9 @@ def test_predict_output_shape(
     """Test predict output shape."""
     mapie_reg = _MapieQuantileRegressor(estimator=estimator, **STRATEGIES[strategy])
     (X_t, X_c, y_t, y_c) = dataset
-    mapie_reg.fit(X_t, y_t, X_calib=X_c, y_calib=y_c)
+    mapie_reg._initialize_fit_conformalize()
+    mapie_reg._fit_estimators(X_t, y_t)
+    mapie_reg.conformalize(X_c, y_c)
     y_pred, y_pis = mapie_reg.predict(X_t, symmetry=symmetry)
     assert y_pred.shape == (X_t.shape[0],)
     assert y_pis[:, 0, 0].shape == (X_t.shape[0],)
@@ -216,21 +241,15 @@ def test_results_with_constant_sample_weights(
     mapie0 = _MapieQuantileRegressor(estimator=qt, **STRATEGIES[strategy])
     mapie1 = _MapieQuantileRegressor(estimator=qt, **STRATEGIES[strategy])
     mapie2 = _MapieQuantileRegressor(estimator=qt, **STRATEGIES[strategy])
-    mapie0.fit(X_train, y_train, X_calib=X_calib, y_calib=y_calib)
-    mapie1.fit(
-        X_train,
-        y_train,
-        X_calib=X_calib,
-        y_calib=y_calib,
-        sample_weight=np.ones(shape=n_samples),
-    )
-    mapie2.fit(
-        X_train,
-        y_train,
-        X_calib=X_calib,
-        y_calib=y_calib,
-        sample_weight=np.ones(shape=n_samples) * 5,
-    )
+    mapie0._initialize_fit_conformalize()
+    mapie0._fit_estimators(X_train, y_train)
+    mapie0.conformalize(X_calib, y_calib)
+    mapie1._initialize_fit_conformalize()
+    mapie1._fit_estimators(X_train, y_train, sample_weight=np.ones(shape=n_samples))
+    mapie1.conformalize(X_calib, y_calib)
+    mapie2._initialize_fit_conformalize()
+    mapie2._fit_estimators(X_train, y_train, sample_weight=np.ones(shape=n_samples) * 5)
+    mapie2.conformalize(X_calib, y_calib)
 
     np.testing.assert_allclose(mapie0.conformity_scores_, mapie1.conformity_scores_)
     np.testing.assert_allclose(mapie0.conformity_scores_, mapie2.conformity_scores_)
@@ -253,8 +272,12 @@ def test_results_for_same_alpha(estimator: RegressorMixin, symmetry: bool) -> No
     """
     mapie_reg = _MapieQuantileRegressor(estimator=estimator, alpha=0.2)
     mapie_reg_clone = clone(mapie_reg)
-    mapie_reg.fit(X_train, y_train, X_calib=X_calib, y_calib=y_calib)
-    mapie_reg_clone.fit(X_train, y_train, X_calib=X_calib, y_calib=y_calib)
+    mapie_reg._initialize_fit_conformalize()
+    mapie_reg._fit_estimators(X_train, y_train)
+    mapie_reg.conformalize(X_calib, y_calib)
+    mapie_reg_clone._initialize_fit_conformalize()
+    mapie_reg_clone._fit_estimators(X_train, y_train)
+    mapie_reg_clone.conformalize(X_calib, y_calib)
     y_pred, y_pis = mapie_reg.predict(X, symmetry=symmetry)
     y_pred_clone, y_pis_clone = mapie_reg_clone.predict(X, symmetry=symmetry)
     np.testing.assert_allclose(y_pred, y_pred_clone)
@@ -270,7 +293,9 @@ def test_wrong_alphas_types(alphas: float) -> None:
         match=r".*Invalid confidence_level. Allowed values are float.*",
     ):
         mapie_reg = _MapieQuantileRegressor(alpha=alphas)
-        mapie_reg.fit(X_train, y_train, X_calib=X_calib, y_calib=y_calib)
+        mapie_reg._initialize_fit_conformalize()
+        mapie_reg._fit_estimators(X_train, y_train)
+        mapie_reg.conformalize(X_calib, y_calib)
 
 
 @pytest.mark.parametrize("alphas", [1.0, 1.6, 1.95, 5.0, -0.1, -0.001, -10.0])
@@ -281,8 +306,9 @@ def test_wrong_alphas(alphas: float) -> None:
         match=r".*Invalid confidence_level. Allowed values are between .*",
     ):
         mapie_reg = _MapieQuantileRegressor(alpha=alphas)
-        mapie_reg.fit(X_train, y_train, X_calib=X_calib, y_calib=y_calib)
-
+        mapie_reg._initialize_fit_conformalize()
+        mapie_reg._fit_estimators(X_train, y_train)
+        mapie_reg.conformalize(X_calib, y_calib)
 
 def test_estimators_quantile_function() -> None:
     """Checking for badly set estimator parameters."""
@@ -291,7 +317,9 @@ def test_estimators_quantile_function() -> None:
         match=r".*You need to set the loss/objective*",
     ):
         mapie_reg = _MapieQuantileRegressor(estimator=GradientBoostingRegressor())
-        mapie_reg.fit(X_train, y_train, X_calib=X_calib, y_calib=y_calib)
+        mapie_reg._initialize_fit_conformalize()
+        mapie_reg._fit_estimators(X_train, y_train)
+        mapie_reg.conformalize(X_calib, y_calib)
 
 
 @pytest.mark.parametrize("cv", [-1, 2, KFold(), LeaveOneOut()])
@@ -302,20 +330,25 @@ def test_invalid_cv(cv: Any) -> None:
         match=r".*Invalid cv method.*",
     ):
         mapie = _MapieQuantileRegressor(cv=cv)
-        mapie.fit(X_train_toy, y_train_toy, X_calib=X_calib_toy, y_calib=y_calib_toy)
-
+        mapie._initialize_fit_conformalize()
+        mapie._fit_estimators(X_train, y_train)
+        mapie.conformalize(X_calib, y_calib)
 
 @pytest.mark.parametrize("cv", [None, "split"])
 def test_valid_cv(cv: Any) -> None:
     """Test that valid cv raise no errors."""
     mapie = _MapieQuantileRegressor(cv=cv)
-    mapie.fit(X_train_toy, y_train_toy, X_calib=X_calib_toy, y_calib=y_calib_toy)
-
+    mapie._initialize_fit_conformalize()
+    mapie._fit_estimators(X_train, y_train)
+    mapie.conformalize(X_calib, y_calib)
 
 def test_calib_dataset_is_none() -> None:
     """Test that the fit method works when X_calib or y_calib is None."""
     mapie = _MapieQuantileRegressor()
-    mapie.fit(X, y, calib_size=0.5)
+    mapie._initialize_fit_conformalize()
+    X_train, y_train, X_calib, y_calib, _ = mapie._prepare_train_calib(X, y, calib_size=0.5)
+    mapie._fit_estimators(X_train, y_train)
+    mapie.conformalize(X_calib, y_calib)
     mapie.predict(X)
 
 
@@ -325,23 +358,11 @@ def test_calib_dataset_is_none_with_sample_weight() -> None:
     with sample weights.
     """
     mapie = _MapieQuantileRegressor()
-    mapie.fit(X, y, calib_size=0.5, sample_weight=np.ones(X.shape[0]))
+    mapie._initialize_fit_conformalize()
+    X_train, y_train, X_calib, y_calib, weights = mapie._prepare_train_calib(X, y, sample_weight=np.ones(X.shape[0]), calib_size=0.5)
+    mapie._fit_estimators(X_train, y_train, sample_weight=weights)
+    mapie.conformalize(X_calib, y_calib)
     mapie.predict(X)
-
-
-def test_calib_dataset_is_none_vs_defined() -> None:
-    """
-    Test that for the same results whether you split before
-    or in the fit method.
-    """
-    mapie = _MapieQuantileRegressor()
-    mapie_defined = clone(mapie)
-    mapie.fit(X, y, calib_size=0.5, random_state=random_state)
-    mapie_defined.fit(X_train, y_train, X_calib=X_calib, y_calib=y_calib)
-    y_pred, y_pis = mapie.predict(X)
-    y_pred_defined, y_pis_defined = mapie_defined.predict(X)
-    np.testing.assert_allclose(y_pred, y_pred_defined, rtol=1e-2)
-    np.testing.assert_allclose(y_pis, y_pis_defined, rtol=1e-2)
 
 
 @pytest.mark.parametrize("est", [RandomForestClassifier(), LinearRegression()])
@@ -355,9 +376,9 @@ def test_estimators_not_in_list(est: RegressorMixin) -> None:
         match=r".*The base model is not supported.*",
     ):
         mapie_reg = _MapieQuantileRegressor(estimator=est)
-        mapie_reg.fit(
-            X_train_toy, y_train_toy, X_calib=X_calib_toy, y_calib=y_calib_toy
-        )
+        mapie_reg._initialize_fit_conformalize()
+        mapie_reg._fit_estimators(X_train, y_train)
+        mapie_reg.conformalize(X_calib, y_calib)
 
 
 def test_for_small_dataset() -> None:
@@ -369,13 +390,9 @@ def test_for_small_dataset() -> None:
         mapie_reg = _MapieQuantileRegressor(estimator=qt, alpha=0.1)
         X_calib_toy_small = X_calib_toy[:2]
         y_calib_toy_small = y_calib_toy[:2]
-        mapie_reg.fit(
-            X_train_toy,
-            y_train_toy,
-            X_calib=X_calib_toy_small,
-            y_calib=y_calib_toy_small,
-        )
-
+        mapie_reg._initialize_fit_conformalize()
+        mapie_reg._fit_estimators(X_train_toy, y_train_toy)
+        mapie_reg.conformalize(X_calib_toy_small, y_calib_toy_small)
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
 @pytest.mark.parametrize("estimator", ESTIMATOR)
@@ -397,7 +414,9 @@ def test_conformity_len(
     mapie_regressor = _MapieQuantileRegressor(
         estimator=estimator, **STRATEGIES[strategy]
     )
-    mapie_regressor.fit(X_t, y_t, X_calib=X_c, y_calib=y_c)
+    mapie_regressor._initialize_fit_conformalize()
+    mapie_regressor._fit_estimators(X_t, y_t)
+    mapie_regressor.conformalize(X_c, y_c)
     assert mapie_regressor.conformity_scores_[0].shape[0] == n_samples
 
 
@@ -409,7 +428,9 @@ def test_linear_regression_results(strategy: str) -> None:
     a different strategies.
     """
     mapie = _MapieQuantileRegressor(**STRATEGIES[strategy])
-    mapie.fit(X_train, y_train, X_calib=X_calib, y_calib=y_calib)
+    mapie._initialize_fit_conformalize()
+    mapie._fit_estimators(X_train, y_train)
+    mapie.conformalize(X_calib, y_calib)
     _, y_pis = mapie.predict(X)
     y_pred_low, y_pred_up = y_pis[:, 0, 0], y_pis[:, 1, 0]
     width_mean = (y_pred_up - y_pred_low).mean()
@@ -432,7 +453,7 @@ def test_quantile_prefit_three_estimators() -> None:
         gb_trained2.fit(X_train, y_train)
         list_estimators = [gb_trained1, gb_trained2]
         mapie_reg = _MapieQuantileRegressor(estimator=list_estimators, cv="prefit")
-        mapie_reg.fit(X_calib, y_calib)
+        mapie_reg.conformalize(X_calib, y_calib)
 
 
 def test_prefit_no_fit_predict() -> None:
@@ -451,7 +472,8 @@ def test_prefit_no_fit_predict() -> None:
         mapie_reg = _MapieQuantileRegressor(
             estimator=list_estimators, cv="prefit", alpha=0.3
         )
-        mapie_reg.fit(X_calib, y_calib)
+        mapie_reg.conformalize(X_calib, y_calib)
+
 
 
 @pytest.mark.filterwarnings("ignore:Estimator does not appear fitted.*:UserWarning")
@@ -470,7 +492,7 @@ def test_non_trained_estimator() -> None:
         mapie_reg = _MapieQuantileRegressor(
             estimator=list_estimators, cv="prefit", alpha=0.3
         )
-        mapie_reg.fit(X_calib, y_calib)
+        mapie_reg.conformalize(X_calib, y_calib)
 
 
 @pytest.mark.parametrize("alpha", [0.05, 0.1, 0.2, 0.3])
@@ -490,11 +512,13 @@ def test_prefit_and_non_prefit_equal(alpha: float) -> None:
     mapie_reg_prefit = _MapieQuantileRegressor(
         estimator=list_estimators, cv="prefit", alpha=alpha
     )
-    mapie_reg_prefit.fit(X_calib, y_calib)
+    mapie_reg_prefit.conformalize(X_calib, y_calib)
     y_pred_prefit, y_pis_prefit = mapie_reg_prefit.predict(X)
 
     mapie_reg = _MapieQuantileRegressor(estimator=qt, alpha=alpha)
-    mapie_reg.fit(X_train, y_train, X_calib=X_calib, y_calib=y_calib)
+    mapie_reg._initialize_fit_conformalize()
+    mapie_reg._fit_estimators(X_train, y_train)
+    mapie_reg.conformalize(X_calib, y_calib)
     y_pred, y_pis = mapie_reg.predict(X)
 
     np.testing.assert_allclose(y_pred_prefit, y_pred)
@@ -519,19 +543,19 @@ def test_prefit_different_type_list_tuple_array(alpha: float) -> None:
     mapie_reg_prefit_list = _MapieQuantileRegressor(
         estimator=list_estimators, cv="prefit", alpha=alpha
     )
-    mapie_reg_prefit_list.fit(X_calib, y_calib)
+    mapie_reg_prefit_list.conformalize(X_calib, y_calib)
     y_pred_prefit_list, y_pis_prefit_list = mapie_reg_prefit_list.predict(X)
 
     mapie_reg_prefit_tuple = _MapieQuantileRegressor(
         estimator=tuple(list_estimators), cv="prefit", alpha=alpha
     )
-    mapie_reg_prefit_tuple.fit(X_calib, y_calib)
+    mapie_reg_prefit_tuple.conformalize(X_calib, y_calib)
     y_pred_prefit_tuple, y_pis_prefit_tuple = mapie_reg_prefit_tuple.predict(X)
 
     mapie_reg_prefit_array = _MapieQuantileRegressor(
         estimator=np.array(list_estimators), cv="prefit", alpha=alpha
     )
-    mapie_reg_prefit_array.fit(X_calib, y_calib)
+    mapie_reg_prefit_array.conformalize(X_calib, y_calib)
     y_pred_prefit_array, y_pis_prefit_array = mapie_reg_prefit_array.predict(X)
 
     np.testing.assert_allclose(y_pred_prefit_list, y_pred_prefit_tuple)
@@ -571,7 +595,9 @@ def test_pipeline_compatibility(estimator: RegressorMixin) -> None:
     )
     pipe = make_pipeline(preprocessor, estimator)
     mapie = _MapieQuantileRegressor(pipe, alpha=0.4)
-    mapie.fit(X_train_toy, y_train_toy, X_calib=X_calib_toy, y_calib=y_calib_toy)
+    mapie._initialize_fit_conformalize()
+    mapie._fit_estimators(X_train_toy, y_train_toy)
+    mapie.conformalize(X_calib_toy, y_calib_toy)
     mapie.predict(X)
 
 
