@@ -9,7 +9,7 @@ from mapie.conformity_scores.regression import BaseRegressionScore
 
 class StdConformityScore(BaseRegressionScore):
     """
-    Standardized non-conformity score
+    Standardized non-conformity score.
 
     The conformity score = |y - y_pred|/ y_std.
 
@@ -17,6 +17,16 @@ class StdConformityScore(BaseRegressionScore):
     estimate of the standard deviation of the prediction through
     ``predict(X, return_std=True)``. This non-conformity score is able to give
     adaptive prediction intervals (taking X into account).
+
+    When used with a Gaussian Process in Jackknife+, this score is also known
+    as J+GP: residuals are normalized by the GP posterior standard deviation.
+
+    References
+    ----------
+    [1] Jaber, E., Blot, V. et al. "Conformal approach to Gaussian process
+    surrogate evaluation with marginal coverage guarantees."
+    Journal of Machine Learning for Modeling and Computing, 6(3), 2025.
+    https://doi.org/10.1615/JMachLearnModelComput.2025054687
     """
 
     def __init__(
