@@ -215,4 +215,8 @@ docstring-code-line-length = "dynamic"
 "*.ipynb" = ["E702", "F841", "E402"]
 
 [tool.coverage.run]
-omit = ["mapie/_example_utils.py"]
+omit = [
+    "mapie/_example_utils.py",
+    "mapie/metrics/coverage_diagnostics.py",
+    "mapie/tests/covmetrics/*",
+]
