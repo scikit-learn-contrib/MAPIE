@@ -4,10 +4,26 @@ import pandas as pd
 import torch
 from sklearn.linear_model import LogisticRegression
 from covmetrics import ERT
-from covmetrics.classifiers import BetterCatBoostClassifier, BetterLGBMClassifier, CheapBetterCatBoostClassifier
 from covmetrics.losses import *
 
 from unittest.mock import patch
+
+try:
+    import probmetrics  # noqa: F401
+    from covmetrics.classifiers import (
+        BetterCatBoostClassifier,
+        BetterLGBMClassifier,
+        CheapBetterCatBoostClassifier,
+    )
+except ImportError:
+    DEFAULT_SETTING_MODELS = [LogisticRegression]
+else:
+    DEFAULT_SETTING_MODELS = [
+        None,
+        BetterCatBoostClassifier,
+        BetterLGBMClassifier,
+        CheapBetterCatBoostClassifier,
+    ]
 
 @pytest.mark.parametrize("backend", ["numpy", "torch", "dataframe"])
 def test_ert_initialization(backend):
@@ -352,23 +368,8 @@ def test_evaluate_using_adaptive_coverage_policy():
             assert isinstance(value, float)
 
 
-@pytest.mark.parametrize(
-    "backend, model",
-    [
-        ("numpy", None),
-        ("numpy", BetterCatBoostClassifier),
-        ("numpy", BetterLGBMClassifier),
-        ("numpy", CheapBetterCatBoostClassifier),
-        ("torch", None),
-        ("torch", BetterCatBoostClassifier),
-        ("torch", BetterLGBMClassifier),
-        ("torch", CheapBetterCatBoostClassifier),
-        ("dataframe", None),
-        ("dataframe", BetterCatBoostClassifier),
-        ("dataframe", BetterLGBMClassifier),
-        ("dataframe", CheapBetterCatBoostClassifier),
-    ]
-)
+@pytest.mark.parametrize("backend", ["numpy", "torch", "dataframe"])
+@pytest.mark.parametrize("model", DEFAULT_SETTING_MODELS)
 def test_default_settings(backend, model):
     n_samples, n_features = 100, 4
 

@@ -1,10 +1,9 @@
-import importlib.util
-import sys
-from pathlib import Path
+import importlib
 from typing import Any, Callable, Dict, Literal, Optional, Tuple, Union, cast
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
+from sklearn.linear_model import LogisticRegression
 from sklearn.utils import column_or_1d
 
 from mapie.utils import (
@@ -38,6 +37,65 @@ _METRIC_CLASSES = {
 }
 
 
+class _DefaultERTClassifier:
+    def __init__(
+        self,
+        max_iter: int = 1000,
+        random_state: Optional[int] = None,
+    ) -> None:
+        self.max_iter = max_iter
+        self.random_state = random_state
+        self.classes_: NDArray = np.array([0, 1])
+        self.constant_proba_: Optional[float] = None
+        self.estimator_: Optional[LogisticRegression] = None
+
+    def fit(
+        self,
+        X: ArrayLike,
+        y: ArrayLike,
+        **fit_kwargs: Any,
+    ) -> "_DefaultERTClassifier":
+        fit_kwargs.pop("X_val", None)
+        fit_kwargs.pop("y_val", None)
+        X_array = self._to_numpy(X)
+        y_array = column_or_1d(self._to_numpy(y)).astype(int)
+        classes = np.unique(y_array)
+        self.classes_ = np.array([0, 1])
+
+        if classes.shape[0] == 1:
+            self.constant_proba_ = float(classes[0])
+            self.estimator_ = None
+            return self
+
+        self.constant_proba_ = None
+        self.estimator_ = LogisticRegression(
+            max_iter=self.max_iter,
+            random_state=self.random_state,
+        )
+        self.estimator_.fit(X_array, y_array, **fit_kwargs)
+        return self
+
+    def predict_proba(self, X: ArrayLike) -> NDArray:
+        X_array = self._to_numpy(X)
+        if self.constant_proba_ is not None:
+            proba = np.full(X_array.shape[0], self.constant_proba_)
+            return cast(NDArray, np.column_stack((1 - proba, proba)))
+        if self.estimator_ is None:  # pragma: no cover
+            raise ValueError("The classifier must be fitted before prediction.")
+        return cast(NDArray, self.estimator_.predict_proba(X_array))
+
+    def predict(self, X: ArrayLike) -> NDArray:
+        return cast(NDArray, self.predict_proba(X)[:, 1] >= 0.5).astype(int)
+
+    @staticmethod
+    def _to_numpy(array: ArrayLike) -> NDArray:
+        if hasattr(array, "to_numpy"):
+            return cast(NDArray, array.to_numpy())
+        if hasattr(array, "detach"):
+            array = array.detach().cpu().numpy()
+        return cast(NDArray, np.asarray(array))
+
+
 def covmetrics_score(
     y_true: ArrayLike,
     y_pred: ArrayLike,
@@ -62,7 +120,7 @@ def covmetrics_score(
     fit_kwargs: Optional[Dict[str, Any]] = None,
 ) -> NDArray:
     """
-    Evaluate a vendored covmetrics diagnostic on MAPIE prediction outputs.
+    Evaluate a covmetrics diagnostic on MAPIE prediction outputs.
 
     The function converts MAPIE regression intervals or classification prediction
     sets into the binary coverage indicators expected by covmetrics, then
@@ -108,8 +166,8 @@ def covmetrics_score(
     sigma_y : float, default=1
         Second kernel bandwidth used by covmetrics ``"hsic"``.
     model_cls : type, optional
-        Classifier class used by covmetrics ``"ert"``. If omitted, covmetrics
-        tries its own optional default classifier.
+        Classifier class used by covmetrics ``"ert"``. If omitted, MAPIE uses
+        a logistic-regression classifier that only depends on scikit-learn.
     model_kwargs : dict, optional
         Keyword arguments used to instantiate ``model_cls`` for ``"ert"``.
     loss : callable, optional
@@ -328,7 +386,8 @@ def _evaluate_metric_for_confidence_level(
 
     if metric == "ert":
         X_array = _required_2d_array(X, "X")
-        estimator = metric_class(model_cls=model_cls, **(model_kwargs or {}))
+        ert_model_cls = model_cls or _DefaultERTClassifier
+        estimator = metric_class(model_cls=ert_model_cls, **(model_kwargs or {}))
         return float(
             estimator.evaluate(
                 X_array,
@@ -400,47 +459,15 @@ def _get_covmetric_class(metric: CoverageMetric) -> type:
             "metric must be one of 'covgap', 'ert', 'fsc', 'hsic', "
             "'pearson', 'ssc', or 'wsc'."
         ) from exc
-    return cast(type, getattr(_load_vendored_covmetrics(), class_name))
+    return cast(type, getattr(_load_covmetrics(), class_name))
 
 
-def _load_vendored_covmetrics() -> Any:
-    package_dir = Path(__file__).resolve().parent / "covmetrics"
-    loaded_module = sys.modules.get("covmetrics")
-    if loaded_module is not None:
-        module_paths = getattr(loaded_module, "__path__", [])
-        if any(Path(path).resolve() == package_dir for path in module_paths):
-            return loaded_module
-        raise ImportError(
-            "A different 'covmetrics' package is already imported. "
-            "Restart Python before using MAPIE's vendored covmetrics wrapper."
-        )
-
-    spec = importlib.util.spec_from_file_location(
-        "covmetrics",
-        package_dir / "__init__.py",
-        submodule_search_locations=[str(package_dir)],
-    )
-    if spec is None or spec.loader is None:  # pragma: no cover
-        raise ImportError("Unable to load MAPIE's vendored covmetrics package.")
-
-    module = importlib.util.module_from_spec(spec)
-    sys.modules["covmetrics"] = module
+def _load_covmetrics() -> Any:
     try:
-        spec.loader.exec_module(module)
+        return importlib.import_module("covmetrics")
     except ModuleNotFoundError as exc:  # pragma: no cover
-        _clear_vendored_covmetrics_modules()
         raise ImportError(
-            "MAPIE's covmetrics wrapper requires covmetrics runtime "
-            "dependencies such as torch and pandas. Install MAPIE with "
-            "the 'conditional' extra to use this wrapper."
+            "MAPIE's covmetrics wrapper requires the optional 'covmetrics' "
+            "dependency. Install MAPIE with the 'conditional' extra to use "
+            "this wrapper."
         ) from exc
-    except Exception:  # pragma: no cover
-        _clear_vendored_covmetrics_modules()
-        raise
-    return module
-
-
-def _clear_vendored_covmetrics_modules() -> None:  # pragma: no cover
-    for module_name in list(sys.modules):
-        if module_name == "covmetrics" or module_name.startswith("covmetrics."):
-            del sys.modules[module_name]

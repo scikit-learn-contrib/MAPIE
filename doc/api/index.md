@@ -63,7 +63,7 @@ Complete API documentation for MAPIE v1.
 | [`classification_mean_width_score`](metrics.md#mapie.metrics.classification.classification_mean_width_score) | Average size of prediction sets |
 | [`classification_ssc`](metrics.md#mapie.metrics.classification.classification_ssc) | Size-stratified coverage for classification |
 | [`classification_ssc_score`](metrics.md#mapie.metrics.classification.classification_ssc_score) | Size-stratified coverage score |
-| [`covmetrics_score`](metrics.md#mapie.metrics.coverage_diagnostics.covmetrics_score) | Vendored covmetrics diagnostics for MAPIE prediction outputs |
+| [`covmetrics_score`](metrics.md#mapie.metrics.coverage_diagnostics.covmetrics_score) | Covmetrics diagnostics for MAPIE prediction outputs |
 
 ### Conformity Scores
 

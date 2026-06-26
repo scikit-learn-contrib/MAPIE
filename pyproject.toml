@@ -8,7 +8,7 @@ dynamic = ["version"]
 description = "A scikit-learn-compatible module for estimating prediction intervals."
 readme = "README.rst"
 license = "BSD-3-Clause"
-license-files = ["LICENSE"]
+license-files = ["LICENSE", "THIRD_PARTY_NOTICES.md"]
 maintainers = [
     {name = "Valentin Laurent", email = "valentin.laurent@capgemini.com"},
     {name = "Louis Lacombe", email = "louis.lacombe@capgemini.com"},
@@ -48,6 +48,7 @@ DOWNLOAD = "https://pypi.org/project/MAPIE/#files"
 
 [project.optional-dependencies]
 conditional = [
+    "covmetrics==0.1.2",
     "cvxpy==1.7.5; python_version < '3.11'",
     "cvxpy==1.9.1; python_version >= '3.11'",
     "pandas>=1.5.3",
