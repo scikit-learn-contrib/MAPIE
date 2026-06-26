@@ -1,3 +1,5 @@
+from typing import cast
+
 import numpy as np
 
 from numpy.typing import ArrayLike, NDArray
@@ -69,7 +71,7 @@ class GammaConformityScore(BaseRegressionScore):
         """
         self._check_observed_data(y)
         self._check_predicted_data(y_pred)
-        return np.divide(np.subtract(y, y_pred), y_pred)
+        return cast(NDArray, np.divide(np.subtract(y, y_pred), y_pred))
 
     def get_estimation_distribution(
         self, y_pred: ArrayLike, conformity_scores: ArrayLike, **kwargs
@@ -84,4 +86,4 @@ class GammaConformityScore(BaseRegressionScore):
         the quantile of the conformity scores.
         """
         self._check_predicted_data(y_pred)
-        return np.multiply(y_pred, np.add(1, conformity_scores))
+        return cast(NDArray, np.multiply(y_pred, np.add(1, conformity_scores)))

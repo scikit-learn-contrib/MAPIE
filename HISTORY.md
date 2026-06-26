@@ -4,6 +4,11 @@
 - Add a scientific article example reproducing the Jaber et al. (2025) Gaussian-process surrogate experiment and comparing GP credibility intervals, J+GP, and standard Jackknife+ intervals.
 - Add optional `covmetrics` integration for conditional coverage diagnostics.
 
+## 1.x.x (2026-xx-xx)
+
+- Add `ConditionalSplitConformalRegressor` and `ConditionalSplitConformalClassifier`, implementing conformal prediction with conditional guarantees (Gibbs et al., 2023), adapted from https://github.com/jjcherian/conditional-conformal.
+- Add experimental multivariate standardized residuals
+
 ## 1.4.1 (2026-06-08)
 
 ### Features

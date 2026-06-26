@@ -200,6 +200,7 @@ class BlockBootstrap(BaseCrossValidator):  # type: ignore
         if self.overlapping:
             blocks = sliding_window_view(indices, window_shape=length)
         else:
+            indices_used_for_blocks: NDArray
             if n % length == 0:
                 indices_used_for_blocks = indices
             else:

@@ -9,3 +9,4 @@ Prediction intervals (regression)
    examples_regression/index
    theoretical_description_regression
    theoretical_description_conformity_scores
+   theoretical_description_ccp
