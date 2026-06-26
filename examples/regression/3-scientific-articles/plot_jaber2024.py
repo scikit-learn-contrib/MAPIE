@@ -46,9 +46,11 @@ warnings.simplefilter("ignore")
 # Plotting style
 # ---------------------------------------------------------------------------
 
-BLUE = np.array([[26, 54, 105]]) / 255
-ORANGE = np.array([[223, 84, 49]]) / 255
-YELLOW = np.array([[242, 188, 64]]) / 255
+NAVY = "#172B63"
+POSTERIOR_MEAN = "#F2B233"
+GP_BAND = "#F9DFA6"
+JPLUS_BAND = "#C8D8C3"
+JPLUS_GP_BAND = "#676B96"
 
 plt.rcParams["figure.dpi"] = 150
 
@@ -189,21 +191,23 @@ for ax, title in zip(axes, titles):
     ax.plot(
         x_mesh[x_mesh < DISCONTINUITY],
         g(x_mesh)[x_mesh < DISCONTINUITY],
-        color=BLUE[0],
+        color=NAVY,
         lw=1.5,
         label="True function $g$",
     )
     ax.plot(
         x_mesh[x_mesh >= DISCONTINUITY],
         g(x_mesh)[x_mesh >= DISCONTINUITY],
-        color=BLUE[0],
+        color=NAVY,
         lw=1.5,
     )
     # GP mean
-    ax.plot(X_test[:, 0], y_mean, color=YELLOW[0], lw=1.5, label="GP posterior mean")
+    ax.plot(
+        X_test[:, 0], y_mean, color=POSTERIOR_MEAN, lw=1.5, label="GP posterior mean"
+    )
     # Training data
     ax.scatter(
-        X_train[:, 0], y_train, color=BLUE[0], s=30, zorder=5, label="Training points"
+        X_train[:, 0], y_train, color=NAVY, s=30, zorder=5, label="Training points"
     )
     ax.set_xlabel("$x$")
     ax.set_title(title, fontsize=10)
@@ -213,8 +217,8 @@ axes[0].fill_between(
     X_test[:, 0],
     y_mean + y_std * q_lo,
     y_mean + y_std * q_hi,
-    alpha=0.25,
-    color=YELLOW[0],
+    alpha=0.75,
+    color=GP_BAND,
     label="GP ±$z_{{α/2}}$ σ̂(x)",
 )
 
@@ -223,8 +227,8 @@ axes[1].fill_between(
     X_test[:, 0],
     y_pis_jplus[:, 0, 0],
     y_pis_jplus[:, 1, 0],
-    alpha=0.3,
-    color=ORANGE[0],
+    alpha=0.85,
+    color=JPLUS_BAND,
     label="J+ conformal PI",
 )
 
@@ -233,8 +237,8 @@ axes[2].fill_between(
     X_test[:, 0],
     y_pis_jplus_gp[:, 0, 0],
     y_pis_jplus_gp[:, 1, 0],
-    alpha=0.3,
-    color="green",
+    alpha=0.9,
+    color=JPLUS_GP_BAND,
     label="J+GP conformal PI",
 )
 
