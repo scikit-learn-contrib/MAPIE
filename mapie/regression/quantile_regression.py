@@ -6,8 +6,8 @@ import warnings
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 from sklearn.base import RegressorMixin, clone
-from sklearn.linear_model import QuantileRegressor, LinearRegression
-from sklearn.model_selection import train_test_split, BaseCrossValidator
+from sklearn.linear_model import QuantileRegressor
+from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.utils import check_random_state
 from sklearn.utils.validation import _check_y, _num_samples, indexable
@@ -29,7 +29,6 @@ from mapie.utils import (
 )
 
 from .regression import _MapieRegressor
-
 
 
 class ConformalizedQuantileRegressor:
