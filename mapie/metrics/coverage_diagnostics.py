@@ -184,11 +184,13 @@ def covmetrics_score(
 
     Examples
     --------
+    This example requires the optional ``conditional`` dependencies.
+
     >>> import numpy as np
     >>> from mapie.metrics.coverage_diagnostics import covmetrics_score
     >>> y_true = np.array([0.5, 1.5, 2.0, 7.0])
     >>> y_intervals = np.array([[0, 1], [1, 2], [1, 3], [4, 6]])
-    >>> covmetrics_score(y_true, y_intervals, "ssc", alpha=0.25)
+    >>> covmetrics_score(y_true, y_intervals, "ssc", alpha=0.25)  # doctest: +SKIP
     array([0.25])
     """
     coverage, sizes = _prediction_outputs_to_coverage_and_sizes(
