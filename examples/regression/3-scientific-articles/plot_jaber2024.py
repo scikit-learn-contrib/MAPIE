@@ -180,8 +180,8 @@ print(f"  J+   (AbsoluteScore)     : {cov_jplus:.1%}")
 fig, axes = plt.subplots(1, 3, figsize=(18, 5), sharey=True)
 titles = [
     f"GP credibility interval\n(coverage {cov_gp:.1%})",
-    f"J+GP — StdConformityScore\n(Jaber et al. 2025, coverage {cov_jplus_gp:.1%})",
     f"J+ — AbsoluteConformityScore\n(baseline, coverage {cov_jplus:.1%})",
+    f"J+GP — StdConformityScore\n(Jaber et al. 2025, coverage {cov_jplus_gp:.1%})",
 ]
 
 for ax, title in zip(axes, titles):
@@ -218,24 +218,24 @@ axes[0].fill_between(
     label="GP ±$z_{{α/2}}$ σ̂(x)",
 )
 
-# Panel 1: J+GP conformal interval
+# Panel 1: J+ conformal interval
 axes[1].fill_between(
-    X_test[:, 0],
-    y_pis_jplus_gp[:, 0, 0],
-    y_pis_jplus_gp[:, 1, 0],
-    alpha=0.3,
-    color="green",
-    label="J+GP conformal PI",
-)
-
-# Panel 2: J+ conformal interval
-axes[2].fill_between(
     X_test[:, 0],
     y_pis_jplus[:, 0, 0],
     y_pis_jplus[:, 1, 0],
     alpha=0.3,
     color=ORANGE[0],
     label="J+ conformal PI",
+)
+
+# Panel 2: J+GP conformal interval
+axes[2].fill_between(
+    X_test[:, 0],
+    y_pis_jplus_gp[:, 0, 0],
+    y_pis_jplus_gp[:, 1, 0],
+    alpha=0.3,
+    color="green",
+    label="J+GP conformal PI",
 )
 
 for ax in axes:
