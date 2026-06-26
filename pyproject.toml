@@ -156,7 +156,8 @@ exclude = [
     "site-packages",
     "venv",
     "list",
-    "doc_legacy/conf.py"
+    "doc_legacy/conf.py",
+    "mapie/tests/covmetrics",
 ]
 
 line-length = 88
