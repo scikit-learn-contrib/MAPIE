@@ -30,6 +30,625 @@ from mapie.utils import (
 
 from .regression import _MapieRegressor
 
+REGRESSOR_TYPE = Union[RegressorMixin, Pipeline]
+
+
+class __QuantileConformalizer:
+    quantile_estimator_params = {
+        "GradientBoostingRegressor": {"loss_name": "loss", "alpha_name": "alpha"},
+        "QuantileRegressor": {"loss_name": "quantile", "alpha_name": "quantile"},
+        "HistGradientBoostingRegressor": {
+            "loss_name": "loss",
+            "alpha_name": "quantile",
+        },
+        "LGBMRegressor": {"loss_name": "objective", "alpha_name": "alpha"},
+    }
+
+    def _check_alpha(
+        self,
+        alpha: float = 0.1,
+    ) -> NDArray:
+        """
+        Perform several checks on the alpha value and changes it from
+        a float to an ArrayLike.
+
+        Parameters
+        ----------
+        alpha : float
+            Can only be a float value between `0.0` and `1.0`.
+            Represent the risk level of the confidence interval.
+            Lower alpha produce larger (more conservative) prediction
+            intervals. Alpha is the complement of the target coverage level.
+
+            By default `0.1`.
+
+        Returns
+        -------
+        ArrayLike
+            An ArrayLike of three values:
+
+            - [0]: alpha value of alpha/2
+            - [1]: alpha value of of 1 - alpha/2
+            - [2]: alpha value of 0.5
+
+        Raises
+        ------
+        ValueError
+            If alpha is not a float.
+
+        ValueError
+            If the value of `alpha` is not between `0.0` and `1.0`.
+        """
+        if isinstance(alpha, float):
+            if np.any(np.logical_or(alpha <= 0, alpha >= 1.0)):
+                raise ValueError(
+                    "Invalid confidence_level. Allowed values are between 0.0 and 1.0."
+                )
+            else:
+                alpha_np = np.array([alpha / 2, 1 - alpha / 2, 0.5])
+        else:
+            raise ValueError("Invalid confidence_level. Allowed values are float.")
+        return alpha_np
+
+    def _check_estimator(
+        self,
+        estimator: Optional[REGRESSOR_TYPE] = None,
+    ) -> REGRESSOR_TYPE:
+        """
+        Perform several checks on the estimator to check if it has
+        all the required specifications to be used with this methodology.
+        The estimators that can be used in _MapieQuantileRegressor need to
+        have a `fit` and `predict` attribute, but also need to allow
+        a quantile loss and therefore also setting a quantile value.
+        Note that there is a `TypedDict` to check which methods allow for
+        quantile regression.
+
+        Parameters
+        ----------
+        estimator : Optional[RegressorMixin], optional
+            Estimator to check, by default `None`.
+
+        Returns
+        -------
+        RegressorMixin
+            The estimator itself or a default `QuantileRegressor` instance
+            with `solver` set to "highs".
+
+        Raises
+        ------
+        ValueError
+            If the estimator implements `fit` or `predict` methods.
+
+        ValueError
+            We check if it's a known estimator that does quantile regression
+            according to the dictionnary set quantile_estimator_params.
+            This dictionnary will need to be updated with the latest new
+            available estimators.
+
+        ValueError
+            The estimator does not have the `"loss_name"` in its parameters
+            and therefore can not be used as an estimator.
+
+        ValueError
+            There is no quantile `"loss_name"` and therefore this estimator
+            can not be used as a `_MapieQuantileRegressor`.
+
+        ValueError
+            The parameter to set the alpha value does not exist in this
+            estimator and therefore we cannot use it.
+        """
+        if estimator is None:
+            return QuantileRegressor(
+                solver="highs-ds",
+                alpha=0.0,
+            )
+        _check_estimator_fit_predict(estimator)
+        if isinstance(estimator, Pipeline):
+            self._check_estimator(estimator[-1])
+            return estimator
+        else:
+            name_estimator = estimator.__class__.__name__
+            if name_estimator == "QuantileRegressor":
+                return estimator
+            else:
+                if name_estimator in self.quantile_estimator_params:
+                    param_estimator = estimator.get_params()
+                    loss_name, alpha_name = self.quantile_estimator_params[
+                        name_estimator
+                    ].values()
+                    if loss_name in param_estimator:
+                        if param_estimator[loss_name] != "quantile":
+                            raise ValueError(
+                                "You need to set the loss/objective argument"
+                                + " of your base model to `quantile`."
+                            )
+                        else:
+                            if alpha_name in param_estimator:
+                                return estimator
+                            else:
+                                raise ValueError(
+                                    "The matching parameter `alpha_name` for"
+                                    " estimator does not exist. "
+                                    "Make sure you set it when initializing "
+                                    "your estimator."
+                                )
+                    else:
+                        raise ValueError(
+                            "The matching parameter `loss_name` for"
+                            + " estimator does not exist."
+                        )
+                else:
+                    raise ValueError(
+                        "The base model is not supported. \n"
+                        "Give a base model among: \n"
+                        f"{self.quantile_estimator_params.keys()} "
+                        "Or, add your base model to" + " `quantile_estimator_params`."
+                    )
+
+    @property
+    def is_fitted(self):
+        """Returns True if the estimator is fitted"""
+        return self._is_fitted
+
+    # Potential caching here
+    def get_estimator_name(self) -> str:
+        """
+        Get the name of the estimator class.
+
+        Returns
+        -------
+        str
+            The name of the estimator class.
+        """
+        if isinstance(self.estimator, Pipeline):
+            return self.estimator[-1].__class__.__name__
+        return self.estimator.__class__.__name__
+
+    def _set_estimator_params(
+        self, estimator: REGRESSOR_TYPE, **params
+    ) -> REGRESSOR_TYPE:
+        """
+        Set the parameters of the estimator to the given alpha value.
+
+        Parameters
+        ----------
+        estimator : RegressorMixin
+            The estimator to set the parameters for.
+
+        params : dict
+            The parameters to set for the estimator.
+
+        Returns
+        -------
+        RegressorMixin
+            The estimator with updated parameters.
+        """
+        estimator_name = self.get_estimator_name()
+        alpha_name = self.quantile_estimator_params[estimator_name]["alpha_name"]
+        if isinstance(estimator, Pipeline):
+            estimator[-1].set_params(**params)
+        else:
+            estimator.set_params(**params)
+        return estimator
+
+    def _initialize_fit_conformalize(self) -> None:
+        self.cv = self._check_cv(cast(str, self.cv))
+        self.alpha_np = self._check_alpha(self.alpha)
+        self.estimators_: List[RegressorMixin] = []
+
+    # -------------------------------------- Fit
+    # From MapiequantileRegressor
+    # Second function: Handles estimator fitting
+    def _fit_estimators(
+        self,
+        X: ArrayLike,
+        y: ArrayLike,
+        **fit_params,
+    ) -> None:
+        """
+        Fits the estimators with provided training data
+        and stores them in self.estimators_.
+        """
+        sample_weight = fit_params.pop("sample_weight", None)
+        checked_estimator = self._check_estimator(self.estimator)
+
+        X, y = indexable(X, y)
+        y = _check_y(y)
+
+        sample_weight, X, y = _check_null_weight(sample_weight, X, y)
+
+        for i, alpha_ in enumerate(self.alpha_np):
+            cloned_estimator_ = clone(checked_estimator)
+            params = {alpha_name: alpha_}
+            if isinstance(checked_estimator, Pipeline):
+                cloned_estimator_[-1].set_params(**params)
+            else:
+                cloned_estimator_.set_params(**params)
+
+            self.estimators_.append(
+                _fit_estimator(
+                    cloned_estimator_,
+                    X,
+                    y,
+                    sample_weight,
+                    **fit_params,
+                )
+            )
+
+        self._is_fitted = True
+
+        self.single_estimator_ = self.estimators_[2]
+
+    def fit(
+        self,
+        X_train: ArrayLike,
+        y_train: ArrayLike,
+        fit_params: Optional[dict] = None,
+    ) -> __QuantileConformalizer:
+        _raise_error_if_method_already_called("fit", self._is_fitted)
+        fit_params_ = _prepare_params(fit_params)
+        self._initialize_fit_conformalize()
+        self._mapie_quantile_regressor._fit_estimators(
+            X=X_train,
+            y=y_train,
+            **fit_params_,
+        )
+
+        self._is_fitted = True
+        return self
+
+    # ---------------------Conformalizer
+    # From MapieQuantileRegressor
+    def conformalize(  # type: ignore[override]
+        self,
+        X: ArrayLike,
+        y: ArrayLike,
+        sample_weight: Optional[ArrayLike] = None,
+        # Parameter groups kept for compliance with superclass _MapieRegressor
+        groups: Optional[ArrayLike] = None,
+        **kwargs: Any,
+    ) -> _MapieRegressor:
+        if self.cv == "prefit":
+            self._initialize_and_check_prefit_estimators()
+
+        X_calib, y_calib = cast(ArrayLike, X), cast(ArrayLike, y)
+        X_calib, y_calib = indexable(X_calib, y_calib)
+        y_calib = _check_y(y_calib)
+
+        self.n_calib_samples = _num_samples(y_calib)
+        _check_alpha_and_n_samples(self.alpha, self.n_calib_samples)
+
+        y_calib_preds = np.full(shape=(3, self.n_calib_samples), fill_value=np.nan)
+
+        for i, est in enumerate(self.estimators_):
+            y_calib_preds[i] = est.predict(X_calib, **kwargs).ravel()
+
+        self.conformity_scores_ = np.full(
+            shape=(3, self.n_calib_samples), fill_value=np.nan
+        )
+
+        self.conformity_scores_[0] = y_calib_preds[0] - y_calib
+        self.conformity_scores_[1] = y_calib - y_calib_preds[1]
+        self.conformity_scores_[2] = np.max(
+            [self.conformity_scores_[0], self.conformity_scores_[1]], axis=0
+        )
+        return self
+
+
+class CrossConformalizedQuantileRegressor:
+    """
+    Computes prediction intervals using the cross-conformalized quantile regression technique.
+
+    1. The `fit` method fits three models to the training folds data using the provided
+       regressor: a model to predict the target, and models to predict upper
+       and lower quantiles around the target.
+    2. The `conformalize` method estimates the uncertainty of the quantile models
+       using the conformalization set.
+    3. The `predict_interval` computes prediction points and intervals.
+
+    Parameters
+    ----------
+    estimator : Union[`RegressorMixin`, `Pipeline`,
+    """
+
+    _VALID_METHODS = ["base", "plus", "minmax"]
+
+    def __init__(
+        self,
+        estimator: RegressorMixin = LinearRegression(),
+        confidence_level: Union[float, Iterable[float]] = 0.9,
+        conformity_score: Union[str, BaseRegressionScore] = "absolute",
+        method: str = "plus",
+        cv: Union[int, BaseCrossValidator] = 5,
+        n_jobs: Optional[int] = None,
+        verbose: int = 0,
+        random_state: Optional[Union[int, np.random.RandomState]] = None,
+    ) -> None:
+        _check_if_param_in_allowed_values(
+            method, "method", CrossConformalizedQuantileRegressor._VALID_METHODS
+        )
+        _check_cv_not_string(cv)
+        _check_cv_not_subsample(cv)
+
+        self._mapie_regressor = _MapieRegressor(
+            estimator=estimator,
+            method=method,
+            cv=cv,
+            n_jobs=n_jobs,
+            verbose=verbose,
+            conformity_score=check_and_select_conformity_score(
+                conformity_score,
+                BaseRegressionScore,
+            ),
+            random_state=random_state,
+        )
+
+        self._alpha = _transform_confidence_level_to_alpha(confidence_level)
+        self._is_fitted_and_conformalized = False
+
+        self._mapie_quantile_regressor = _MapieQuantileRegressor(
+            estimator=estimator,
+            method="quantile",
+            cv=cv,
+            alpha=self._alpha,
+        )
+
+        self._predict_params: dict = {}
+
+    #---------------------Fit and Conformalize
+    #TODO: Duplicated from CrossConformalRegressor -> should be factorize in next refacto
+    def reset(self) -> "CrossConformalizedQuantileRegressor":
+        """
+        Discard previously computed conformity scores so that
+        `fit_conformalize` can be called again with new data.
+
+        Returns
+        -------
+        Self
+            This CrossConformalRegressor instance, reset to its pre-fit state.
+        """
+        self.is_fitted_and_conformalized = False
+        self._predict_params = {}
+        return self
+
+    #TODO: Nearly duplicated from CrossConformalRegressor -> should be factorize in next refacto
+    def fit_conformalize(
+        self,
+        X: ArrayLike,
+        y: ArrayLike,
+        groups: Optional[ArrayLike] = None,
+        fit_params: Optional[dict] = None,
+        predict_params: Optional[dict] = None,
+    ) -> CrossConformalRegressor:
+        """
+        Estimates the uncertainty of the base regressor in a cross-validation style:
+        fits the base regressor on different folds of the dataset
+        and computes conformity scores on the corresponding out-of-fold data.
+
+        If called on an instance that has already been fitted, a `UserWarning` is
+        emitted and the previously computed conformity scores are discarded before
+        the new fit. Call `reset()` explicitly to suppress the warning.
+
+        Parameters
+        ----------
+        X : ArrayLike
+            Features
+
+        y : ArrayLike
+            Targets
+
+        groups: Optional[ArrayLike] of shape (n_samples,), default=None
+            Groups to pass to the cross-validator.
+
+        fit_params : Optional[dict], default=None
+            Parameters to pass to the `fit` method of the base regressor.
+
+        predict_params : Optional[dict], default=None
+            Parameters to pass to the `predict` method of the base regressor.
+            These parameters will also be used in the `predict_interval`
+            and `predict` methods of this CrossConformalRegressor.
+
+        Returns
+        -------
+        Self
+            This CrossConformalRegressor instance, fitted and conformalized.
+        """
+        if self.is_fitted_and_conformalized:
+            warnings.warn(
+                "CrossConformalRegressor.fit_conformalize was already called; "
+                "conformity scores from the previous fit will be discarded. "
+                "Call .reset() explicitly before fit_conformalize to suppress "
+                "this warning.",
+                UserWarning,
+                stacklevel=2,
+            )
+            self.reset()
+
+        fit_params_ = _prepare_params(fit_params)
+        self._predict_params = _prepare_params(predict_params)
+        self._mapie_regressor.fit(
+            X,
+            y,
+            groups=groups,
+            fit_params=fit_params_,
+            predict_params=self._predict_params,
+        )
+
+        self.is_fitted_and_conformalized = True
+        return self
+
+    #--------------------- Prediction
+    #TODO: Duplicated from CrossConformalRegressor
+    def predict_interval(
+        self,
+        X: ArrayLike,
+        aggregate_point_predictions: Optional[str] = "mean",
+        minimize_interval_width: bool = False,
+        allow_infinite_bounds: bool = False,
+        aggregate_predictions: Any = _UNSET,
+    ) -> Tuple[NDArray, NDArray]:
+            """
+        Predicts points and intervals.
+
+        If several confidence levels were provided during initialisation, several
+        intervals will be predicted for each sample. See the return signature.
+
+        By default, points are predicted using an aggregation.
+        See the `aggregate_point_predictions` parameter.
+
+        Parameters
+        ----------
+        X : ArrayLike
+            Features
+
+        aggregate_point_predictions : Optional[str], default="mean"
+            The method to predict a point. Options:
+
+            - None: a point is predicted using the regressor trained on the entire data
+            - "mean": Averages the predictions of the regressors trained on each
+                cross-validation fold
+            - "median": Aggregates (using median) the predictions of the regressors
+                trained on each cross-validation fold
+
+        minimize_interval_width : bool, default=False
+            If True, attempts to minimize the interval width.
+
+        allow_infinite_bounds : bool, default=False
+            If True, allows prediction intervals with infinite bounds.
+
+        aggregate_predictions : Optional[str]
+            .. deprecated::
+                Renamed to `aggregate_point_predictions`. Passing
+                `aggregate_predictions` still works but emits a
+                `FutureWarning` and will be removed in a future release.
+
+        Returns
+        -------
+        Tuple[NDArray, NDArray]
+            Two arrays:
+
+            - Prediction points, of shape `(n_samples,)`
+            - Prediction intervals, of shape `(n_samples, 2, n_confidence_levels)`
+        """
+        aggregate_point_predictions = _resolve_renamed_parameter(
+            "aggregate_point_predictions",
+            aggregate_point_predictions,
+            "aggregate_predictions",
+            aggregate_predictions,
+        )
+        _raise_error_if_previous_method_not_called(
+            "predict_interval",
+            "fit_conformalize",
+            self.is_fitted_and_conformalized,
+        )
+
+        ensemble = self._set_aggregate_point_predictions_and_return_ensemble(
+            aggregate_point_predictions
+        )
+        predictions = self._mapie_regressor.predict(
+            X,
+            alpha=self._alphas,
+            optimize_beta=minimize_interval_width,
+            allow_infinite_bounds=allow_infinite_bounds,
+            ensemble=ensemble,
+            **self._predict_params,
+        )
+        return _cast_predictions_to_ndarray_tuple(predictions)
+
+    #TODO: Duplicated from CrossConformalRegressor
+    def predict(
+        self,
+        X: ArrayLike,
+        aggregate_point_predictions: Optional[str] = "mean",
+        aggregate_predictions: Any = _UNSET,
+    ) -> NDArray:
+        """
+        Predicts points.
+
+        By default, points are predicted using an aggregation.
+        See the `aggregate_point_predictions` parameter.
+
+        Parameters
+        ----------
+        X : ArrayLike
+            Features
+
+        aggregate_point_predictions : Optional[str], default="mean"
+            The method to predict a point. Options:
+
+            - None: a point is predicted using the regressor trained on the entire data
+            - "mean": Averages the predictions of the regressors trained on each
+              cross-validation fold
+            - "median": Aggregates (using median) the predictions of the regressors
+              trained on each cross-validation fold
+
+        aggregate_predictions : Optional[str]
+            .. deprecated::
+                Renamed to `aggregate_point_predictions`. Passing
+                `aggregate_predictions` still works but emits a
+                `FutureWarning` and will be removed in a future release.
+
+        Returns
+        -------
+        NDArray
+            Array of point predictions, with shape `(n_samples,)`.
+        """
+        aggregate_point_predictions = _resolve_renamed_parameter(
+            "aggregate_point_predictions",
+            aggregate_point_predictions,
+            "aggregate_predictions",
+            aggregate_predictions,
+        )
+        _raise_error_if_previous_method_not_called(
+            "predict",
+            "fit_conformalize",
+            self.is_fitted_and_conformalized,
+        )
+
+        ensemble = self._set_aggregate_point_predictions_and_return_ensemble(
+            aggregate_point_predictions
+        )
+        predictions = self._mapie_regressor.predict(
+            X,
+            alpha=None,
+            ensemble=ensemble,
+            **self._predict_params,
+        )
+        return _cast_point_predictions_to_ndarray(predictions)
+
+    #TODO: Duplicated from CrossConformalRegressor
+    def _set_aggregate_point_predictions_and_return_ensemble(
+        self, aggregate_point_predictions: Optional[str]
+    ) -> bool:
+        if not aggregate_point_predictions:
+            ensemble = False
+        else:
+            ensemble = True
+            self._mapie_regressor._check_agg_function(aggregate_point_predictions)
+            # A hack here, to allow choosing the aggregation function at prediction time
+            self._mapie_regressor.agg_function = aggregate_point_predictions
+        return ensemble
+
+    #TODO: Duplicated from CrossConformalRegressor -> should be factorize in next refacto
+    @property
+    def conformity_scores(self) -> NDArray:
+        """
+        Returns the conformity scores computed by the `fit_conformalize`
+        method, on the out-of-fold predictions produced during
+        cross-validation.
+
+        Returns
+        -------
+        NDArray
+            Array of conformity scores, with shape `(n_samples,)`.
+        """
+        _raise_error_if_previous_method_not_called(
+            "conformity_scores",
+            "fit_conformalize",
+            self.is_fitted_and_conformalized,
+        )
+        return cast(NDArray, self._mapie_regressor.conformity_scores_)
+
 
 class ConformalizedQuantileRegressor:
     """
