@@ -310,6 +310,7 @@ def test_wrong_alphas(alphas: float) -> None:
         mapie_reg._fit_estimators(X_train, y_train)
         mapie_reg.conformalize(X_calib, y_calib)
 
+
 def test_estimators_quantile_function() -> None:
     """Checking for badly set estimator parameters."""
     with pytest.raises(
@@ -334,6 +335,7 @@ def test_invalid_cv(cv: Any) -> None:
         mapie._fit_estimators(X_train, y_train)
         mapie.conformalize(X_calib, y_calib)
 
+
 @pytest.mark.parametrize("cv", [None, "split"])
 def test_valid_cv(cv: Any) -> None:
     """Test that valid cv raise no errors."""
@@ -342,11 +344,14 @@ def test_valid_cv(cv: Any) -> None:
     mapie._fit_estimators(X_train, y_train)
     mapie.conformalize(X_calib, y_calib)
 
+
 def test_calib_dataset_is_none() -> None:
     """Test that the fit method works when X_calib or y_calib is None."""
     mapie = _MapieQuantileRegressor()
     mapie._initialize_fit_conformalize()
-    X_train, y_train, X_calib, y_calib, _ = mapie._prepare_train_calib(X, y, calib_size=0.5)
+    X_train, y_train, X_calib, y_calib, _ = mapie._prepare_train_calib(
+        X, y, calib_size=0.5
+    )
     mapie._fit_estimators(X_train, y_train)
     mapie.conformalize(X_calib, y_calib)
     mapie.predict(X)
@@ -359,7 +364,9 @@ def test_calib_dataset_is_none_with_sample_weight() -> None:
     """
     mapie = _MapieQuantileRegressor()
     mapie._initialize_fit_conformalize()
-    X_train, y_train, X_calib, y_calib, weights = mapie._prepare_train_calib(X, y, sample_weight=np.ones(X.shape[0]), calib_size=0.5)
+    X_train, y_train, X_calib, y_calib, weights = mapie._prepare_train_calib(
+        X, y, sample_weight=np.ones(X.shape[0]), calib_size=0.5
+    )
     mapie._fit_estimators(X_train, y_train, sample_weight=weights)
     mapie.conformalize(X_calib, y_calib)
     mapie.predict(X)
@@ -393,6 +400,7 @@ def test_for_small_dataset() -> None:
         mapie_reg._initialize_fit_conformalize()
         mapie_reg._fit_estimators(X_train_toy, y_train_toy)
         mapie_reg.conformalize(X_calib_toy_small, y_calib_toy_small)
+
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
 @pytest.mark.parametrize("estimator", ESTIMATOR)
@@ -473,7 +481,6 @@ def test_prefit_no_fit_predict() -> None:
             estimator=list_estimators, cv="prefit", alpha=0.3
         )
         mapie_reg.conformalize(X_calib, y_calib)
-
 
 
 @pytest.mark.filterwarnings("ignore:Estimator does not appear fitted.*:UserWarning")
