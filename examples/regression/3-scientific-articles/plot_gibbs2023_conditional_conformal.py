@@ -32,7 +32,6 @@ import warnings
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import seaborn as sns
 from sklearn.linear_model import LinearRegression
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import PolynomialFeatures
@@ -203,9 +202,8 @@ q = np.quantile(
 # target coverage on each of the highlighted groups of ``X``. This reproduces the
 # figure of the original implementation [2].
 
-sns.set(font="DejaVu Sans")
-sns.set_style("whitegrid", {"axes.grid": False})
-cp = sns.color_palette()
+plt.rcParams["font.family"] = "DejaVu Sans"
+cp = plt.rcParams["axes.prop_cycle"].by_key()["color"]
 fig = plt.figure()
 fig.set_size_inches(10.5, 6)
 
@@ -331,14 +329,38 @@ for seed in range(n_trials):
             )
 
 coverage_data = pd.DataFrame(rows)
+coverage_summary = coverage_data.groupby(["Groups", "Method"], as_index=False)[
+    "Miscoverage"
+].mean()
 
 fig, ax3 = plt.subplots(figsize=(5.5, 5))
-barplot = sns.barplot(coverage_data, x="Groups", y="Miscoverage", hue="Method", ax=ax3)
-barplot.axhline(alpha, color="red", label=r"Target miscoverage $\alpha$")
+group_names = ["Marginal", "[1,2]", "[3,4]"]
+method_names = ["Split", "Conditional"]
+x_pos = np.arange(len(group_names))
+bar_width = 0.35
+offsets = [-bar_width / 2, bar_width / 2]
+
+for offset, method_name, color in zip(offsets, method_names, cp[:2]):
+    method_values = coverage_summary[coverage_summary["Method"] == method_name]
+    heights = [
+        method_values[method_values["Groups"] == group_name]["Miscoverage"].item()
+        for group_name in group_names
+    ]
+    ax3.bar(
+        x_pos + offset,
+        heights,
+        width=bar_width,
+        label=method_name,
+        color=color,
+    )
+
+ax3.axhline(alpha, color="red", label=r"Target miscoverage $\alpha$")
 ax3.legend()
 ax3.set_ylabel("Miscoverage", fontsize=16, labelpad=10)
 ax3.set_xlabel("Groups", fontsize=16, labelpad=10)
 ax3.set_ylim(0.0, 0.2)
+ax3.set_xticks(x_pos)
+ax3.set_xticklabels(group_names)
 ax3.tick_params(axis="both", which="major", labelsize=12)
 plt.tight_layout()
 plt.show()
