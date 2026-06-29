@@ -32,6 +32,7 @@ from mapie.metrics.classification import (
     classification_ssc,
     classification_ssc_score,
 )
+from mapie.metrics.conditional import coverage_gap
 from mapie.metrics.regression import (
     coverage_width_based,
     hsic,
@@ -158,6 +159,123 @@ prng = RandomState(1234567890)
 y_score = prng.random(51)
 y_scores = prng.random((51, 5))
 y_true = prng.randint(0, 2, 51)
+
+conditional_groups = np.array([0, 0, 1, 1])
+conditional_y_regression = np.array([0.0, 1.0, 2.0, 3.0])
+conditional_intervals = np.array(
+    [
+        [0.0, 1.0],
+        [0.0, 2.0],
+        [1.0, 2.0],
+        [4.0, 5.0],
+    ]
+)
+conditional_y_classification = np.array([0, 1, 0, 1])
+conditional_sets = np.array(
+    [
+        [True, False],
+        [False, True],
+        [True, False],
+        [False, False],
+    ]
+)
+
+
+def test_coverage_gap_with_intervals() -> None:
+    """Test coverage gap with regression intervals."""
+    gap = coverage_gap(
+        conditional_y_regression,
+        conditional_groups,
+        0.75,
+        y_intervals=conditional_intervals[:, :, np.newaxis],
+    )
+    np.testing.assert_allclose(gap, 0.25)
+
+
+def test_coverage_gap_with_sets() -> None:
+    """Test coverage gap with classification prediction sets."""
+    gap = coverage_gap(
+        conditional_y_classification,
+        conditional_groups,
+        0.75,
+        y_sets=conditional_sets[:, :, np.newaxis],
+    )
+    np.testing.assert_allclose(gap, 0.25)
+
+
+def test_coverage_gap_without_coverage_input() -> None:
+    """Test coverage gap requires intervals or sets."""
+    with pytest.raises(ValueError, match="Either y_intervals or y_sets"):
+        coverage_gap(  # type: ignore[call-overload]
+            conditional_y_regression, conditional_groups, 0.75
+        )
+
+
+def test_coverage_gap_with_two_coverage_inputs() -> None:
+    """Test coverage gap rejects ambiguous coverage inputs."""
+    with pytest.raises(ValueError, match="Only one of y_intervals or y_sets"):
+        coverage_gap(  # type: ignore[call-overload]
+            conditional_y_regression,
+            conditional_groups,
+            0.75,
+            y_intervals=conditional_intervals,
+            y_sets=conditional_sets,
+        )
+
+
+def test_coverage_gap_with_multiple_interval_confidence_levels() -> None:
+    """Test coverage gap rejects multiple interval confidence levels."""
+    with pytest.raises(ValueError, match="only one confidence level"):
+        coverage_gap(
+            conditional_y_regression,
+            conditional_groups,
+            0.75,
+            y_intervals=np.repeat(conditional_intervals[:, :, np.newaxis], 2, axis=2),
+        )
+
+
+def test_coverage_gap_with_multiple_set_confidence_levels() -> None:
+    """Test coverage gap rejects multiple set confidence levels."""
+    with pytest.raises(ValueError, match="only one confidence level"):
+        coverage_gap(
+            conditional_y_classification,
+            conditional_groups,
+            0.75,
+            y_sets=np.repeat(conditional_sets[:, :, np.newaxis], 2, axis=2),
+        )
+
+
+def test_coverage_gap_with_float_class_labels() -> None:
+    """Test coverage gap rejects non-integer class labels."""
+    with pytest.raises(ValueError, match="integer class labels"):
+        coverage_gap(
+            conditional_y_classification.astype(float),
+            conditional_groups,
+            0.75,
+            y_sets=conditional_sets,
+        )
+
+
+def test_coverage_gap_with_class_labels_outside_sets() -> None:
+    """Test coverage gap rejects class labels outside prediction sets."""
+    with pytest.raises(ValueError, match="outside y_sets"):
+        coverage_gap(
+            np.array([0, 1, 0, 2]),
+            conditional_groups,
+            0.75,
+            y_sets=conditional_sets,
+        )
+
+
+def test_coverage_gap_with_float_groups() -> None:
+    """Test coverage gap rejects non-integer groups."""
+    with pytest.raises(ValueError, match="integer group labels"):
+        coverage_gap(
+            conditional_y_regression,
+            conditional_groups.astype(float),
+            0.75,
+            y_intervals=conditional_intervals,
+        )
 
 
 def test_regression_ypredlow_shape() -> None:
