@@ -163,6 +163,7 @@ nav:
     - Classification Examples: generated/classification
     - Conformity Scores: theory/conformity-scores.md
     - Metrics: theory/metrics-conformal.md
+    - Metrics for Conditional Conformal Prediction: theory/metrics-conditional-conformal.md
     - Conditional Guarantees: theory/conditional-guarantees.md
   - Risk Control:
     - Getting Started: theory/risk-control.md

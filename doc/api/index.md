@@ -77,6 +77,16 @@ Complete API documentation for MAPIE v1.
 
 ---
 
+## Conditional Conformal Prediction
+
+### Metrics
+
+| Function | Description |
+|---|---|
+| [`coverage_gap`](metrics.md#mapie.metrics.conditional.coverage_gap) | CovGap and WCovGap across predefined groups |
+
+---
+
 ## [Risk Control](risk-control.md)
 
 | Class | Description |

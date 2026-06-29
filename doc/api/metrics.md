@@ -72,6 +72,14 @@ Evaluation metrics for conformal prediction.
 
 ---
 
+## Conditional Coverage
+
+::: mapie.metrics.conditional.coverage_gap
+    options:
+      heading_level: 3
+
+---
+
 ## Calibration
 
 ::: mapie.metrics.calibration.expected_calibration_error

@@ -3,6 +3,7 @@
 - Add `StdConformityScore` for regression models that expose prediction standard deviations through `predict(..., return_std=True)`, enabling standard-deviation-normalized conformal prediction intervals such as J+GP.
 - Add a scientific article example reproducing the Jaber et al. (2025) Gaussian-process surrogate experiment and comparing GP credibility intervals, J+GP, and standard Jackknife+ intervals.
 - Add optional `covmetrics` integration for conditional coverage diagnostics.
+- Add CovGap and WCovGap documentation for conditional coverage diagnostics.
 
 ## 1.x.x (2026-xx-xx)
 
