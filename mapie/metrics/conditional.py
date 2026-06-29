@@ -140,12 +140,18 @@ def coverage_gap(
     weighted: bool = False,
 ) -> float:
     """
-    Compute the conditional coverage gap across groups.
+    Compute the coverage gap across groups.
 
     This metric wraps :class:`covmetrics.CovGap`. It first converts regression
     intervals or classification prediction sets into a binary coverage vector,
-    where ``1`` means that the true label is covered, then evaluates the
-    deviation from the target miscoverage level in each group.
+    where ``1`` means that the true label is covered. It then computes the
+    average absolute deviation between the empirical coverage of each group and
+    the target coverage level.
+
+    With ``weighted=False``, this function returns the unweighted coverage gap
+    (CovGap), which gives every non-empty group the same weight. With
+    ``weighted=True``, it returns the weighted coverage gap (WCovGap), which
+    weights each group's gap by its sample proportion.
 
     Ding, T., Angelopoulos, A., Bates, S., Jordan, M., and Tibshirani, R. J.
     Class-conditional conformal prediction with many classes. In Advances in
@@ -166,13 +172,14 @@ def coverage_gap(
         Classification prediction sets. Provide either ``y_intervals`` or
         ``y_sets``, but not both.
     weighted: bool, optional
-        Whether to compute the weighted version of the coverage gap, in which case each group's
-        coverage gap will be be scaled by its number of members, by default ``False``.
+        Whether to compute WCovGap. If ``False``, all non-empty groups have the
+        same weight. If ``True``, each group's coverage gap is weighted by its
+        sample proportion, by default ``False``.
 
     Returns
     -------
     float
-        Conditional coverage gap.
+        Coverage gap across groups.
 
     Examples
     --------
