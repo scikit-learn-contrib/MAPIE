@@ -63,17 +63,17 @@ y = np.sin(X).ravel() + np.random.normal(0, 0.2, 500)
 
 # Split into train / conformalize / test
 X_train, X_conf, X_test, y_train, y_conf, y_test = (
-    train_conformalize_test_split(X, y, test_size=0.2, conformalize_size=0.25)
+    train_conformalize_test_split(X, y, train_size=0.55, conformalize_size=0.25, test_size=0.2)
 )
 
 # Fit and conformalize
 model = MLPRegressor(hidden_layer_sizes=(50,), max_iter=500, random_state=42)
-mapie_reg = SplitConformalRegressor(estimator=model)
+mapie_reg = SplitConformalRegressor(estimator=model, confidence_level=0.9, prefit=False)
 mapie_reg.fit(X_train, y_train)
 mapie_reg.conformalize(X_conf, y_conf)
 
 # Predict with intervals
-y_pred, y_intervals = mapie_reg.predict_interval(X_test, confidence_level=0.9)
+y_pred, y_intervals = mapie_reg.predict_interval(X_test)
 ```
 
 ---
@@ -93,17 +93,17 @@ X, y = make_classification(n_samples=500, n_features=10, random_state=42)
 
 # Split into train / conformalize / test
 X_train, X_conf, X_test, y_train, y_conf, y_test = (
-    train_conformalize_test_split(X, y, test_size=0.2, conformalize_size=0.25)
+    train_conformalize_test_split(X, y, train_size=0.55, conformalize_size=0.25, test_size=0.2)
 )
 
 # Fit and conformalize
 model = RandomForestClassifier(random_state=42)
-mapie_clf = SplitConformalClassifier(estimator=model)
+mapie_clf = SplitConformalClassifier(estimator=model, confidence_level=0.9, prefit=False)
 mapie_clf.fit(X_train, y_train)
 mapie_clf.conformalize(X_conf, y_conf)
 
 # Predict with sets
-y_pred, y_sets = mapie_clf.predict_set(X_test, confidence_level=0.9)
+y_pred, y_sets = mapie_clf.predict_set(X_test)
 ```
 
 ---
