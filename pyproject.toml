@@ -157,7 +157,6 @@ exclude = [
     "venv",
     "list",
     "doc_legacy/conf.py",
-    "mapie/tests/covmetrics",
 ]
 
 line-length = 88
@@ -217,5 +216,4 @@ docstring-code-line-length = "dynamic"
 [tool.coverage.run]
 omit = [
     "mapie/_example_utils.py",
-    "mapie/tests/covmetrics/*",
 ]

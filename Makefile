@@ -24,19 +24,7 @@ coverage:
 		--cov-fail-under=100 \
 		--no-cov-on-fail \
 		--ignore=mapie/_example_utils.py \
-		--ignore=mapie/tests/covmetrics \
 		--ignore=mapie/tests/long_tests
-
-covmetrics-coverage:
-	COVMETRICS_COVERAGE_OMIT=$$(python -c "import importlib.util; print('*/covmetrics/classifiers.py' if importlib.util.find_spec('probmetrics') is None else '')") \
-	pytest -vx \
-		--cov-branch \
-		--cov=covmetrics \
-		--cov-config=mapie/tests/covmetrics/coverage.ini \
-		--cov-report term-missing \
-		--cov-fail-under=70 \
-		--no-cov-on-fail \
-		mapie/tests/covmetrics
 
 long-tests:
 	pytest -vsx \
@@ -66,7 +54,6 @@ tests:
 		--doctest-modules \
 		--pyargs mapie \
 		--ignore=mapie/_example_utils.py \
-		--ignore=mapie/tests/covmetrics \
 		--ignore=mapie/tests/long_tests
 
 clean-doc:

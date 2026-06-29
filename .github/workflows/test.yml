@@ -68,26 +68,22 @@ jobs:
             sklearn-version: "==1.4.*"
             scipy-version: "==1.10.*"
             run-long-tests: true
-            run-covmetrics-coverage: false
           # latest supported environments
           - name: ubuntu-latest
             os: ubuntu-latest
             python-version: "3.13"
             use-pinned-deps: false
             run-long-tests: true
-            run-covmetrics-coverage: true
           - name: windows-latest
             os: windows-latest
             python-version: "3.13"
             use-pinned-deps: false
             run-long-tests: false
-            run-covmetrics-coverage: false
           - name: macos-latest
             os: macos-latest
             python-version: "3.13"
             use-pinned-deps: false
             run-long-tests: false
-            run-covmetrics-coverage: false
     defaults:
       run:
         shell: bash
@@ -111,12 +107,6 @@ jobs:
         run: python -m pip install -e '.[dev]'
       - name: Test and coverage with pytest
         run: make coverage
-      - name: Install conditional dependencies
-        if: ${{ matrix.run-covmetrics-coverage }}
-        run: python -m pip install -e '.[conditional]'
-      - name: Covmetrics tests and coverage with pytest
-        if: ${{ matrix.run-covmetrics-coverage }}
-        run: make covmetrics-coverage
       - name: Long tests with pytest
         # Skip on draft PRs to keep early feedback fast.
         if: matrix.run-long-tests && (github.event_name == 'push' || !github.event.pull_request.draft)
