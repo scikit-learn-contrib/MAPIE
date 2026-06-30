@@ -24,7 +24,7 @@ classification sets, \(c_i = 1\) means \(y_i \in \hat{C}(x_i)\).
 The empirical coverage of group \(g\) is:
 
 \[
-\hat{p}_g = \frac{1}{|I_g|} \sum_{i \in I_g} c_i
+\hat{Cov}_g = \frac{1}{|I_g|} \sum_{i \in I_g} c_i
 \]
 
 The unweighted coverage gap averages the absolute group-level deviations from
@@ -32,7 +32,7 @@ the target coverage \(1-\alpha\):
 
 \[
 \text{CovGap} = \frac{1}{|G|} \sum_{g \in G}
-\left| \hat{p}_g - (1-\alpha) \right|
+\left| \hat{Cov}_g - (1-\alpha) \right|
 \]
 
 The weighted coverage gap weights each group by its empirical sample
@@ -40,7 +40,7 @@ proportion:
 
 \[
 \text{WCovGap} = \sum_{g \in G} \frac{|I_g|}{n}
-\left| \hat{p}_g - (1-\alpha) \right|
+\left| \hat{Cov}_g - (1-\alpha) \right|
 \]
 
 CovGap gives small and large groups the same influence, which is useful when
