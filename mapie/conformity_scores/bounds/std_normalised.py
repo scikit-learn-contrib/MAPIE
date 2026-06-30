@@ -5,6 +5,7 @@ from numpy.typing import ArrayLike, NDArray
 from mapie._machine_precision import EPSILON
 
 from mapie.conformity_scores.regression import BaseRegressionScore
+from mapie.utils import _compute_regression_quantile
 
 
 class StdConformityScore(BaseRegressionScore):
@@ -136,32 +137,31 @@ class StdConformityScore(BaseRegressionScore):
             conformity_scores_up = self.get_estimation_distribution(
                 y_pred_up, conformity_scores
             )
-            bound_low = self.get_quantile(
+            bound_low = _compute_regression_quantile(
                 conformity_scores_low,
                 alpha_low,
                 axis=1,
-                reversed=True,
+                reverse=True,
                 unbounded=allow_infinite_bounds,
             )
-            bound_up = self.get_quantile(
+            bound_up = _compute_regression_quantile(
                 conformity_scores_up,
                 alpha_up,
                 axis=1,
-                reversed=False,
                 unbounded=allow_infinite_bounds,
             )
         else:
             alpha_low = 1 - alpha_np if self.sym else alpha_np / 2
             alpha_up = 1 - alpha_np if self.sym else 1 - alpha_np / 2
 
-            quantile_low = self.get_quantile(
+            quantile_low = _compute_regression_quantile(
                 conformity_scores,
                 alpha_low,
                 axis=1,
-                reversed=True,
+                reverse=True,
                 unbounded=allow_infinite_bounds,
             )
-            quantile_up = self.get_quantile(
+            quantile_up = _compute_regression_quantile(
                 conformity_scores,
                 alpha_up,
                 axis=1,
