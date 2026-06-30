@@ -28,6 +28,12 @@ Conformity score classes for regression and classification.
 
 ---
 
+::: mapie.conformity_scores.StdConformityScore
+    options:
+      heading_level: 3
+
+---
+
 ## Classification
 
 ::: mapie.conformity_scores.BaseClassificationScore

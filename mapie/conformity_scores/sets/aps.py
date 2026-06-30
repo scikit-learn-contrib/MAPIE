@@ -9,7 +9,7 @@ from sklearn.utils import check_random_state
 from mapie._machine_precision import EPSILON
 from mapie.conformity_scores.sets.naive import NaiveConformityScore
 from mapie.conformity_scores.sets.utils import check_include_last_label
-from mapie.utils import _compute_quantiles
+from mapie.utils import _compute_classification_quantile
 
 
 class APSConformityScore(NaiveConformityScore):
@@ -196,7 +196,7 @@ class APSConformityScore(NaiveConformityScore):
         n = len(conformity_scores)
 
         if cv == "prefit" or agg_scores in ["mean"]:
-            quantiles_ = _compute_quantiles(conformity_scores, alpha_np)
+            quantiles_ = _compute_classification_quantile(conformity_scores, alpha_np)
         else:
             quantiles_ = (n + 1) * (1 - alpha_np)
 

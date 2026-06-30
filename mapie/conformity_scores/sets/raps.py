@@ -11,7 +11,8 @@ from mapie._machine_precision import EPSILON
 from mapie.conformity_scores.sets.aps import APSConformityScore
 from mapie.conformity_scores.sets.utils import get_true_label_position
 from mapie.metrics.classification import classification_mean_width_score
-from mapie.utils import _check_alpha_and_n_samples, _compute_quantiles
+from mapie.utils import _check_alpha_and_n_samples
+from mapie.utils import _compute_classification_quantile
 
 
 class RAPSConformityScore(APSConformityScore):
@@ -321,7 +322,9 @@ class RAPSConformityScore(APSConformityScore):
                 k_star, lambda_, true_label_cumsum_proba, cutoff
             )
 
-            quantiles_ = _compute_quantiles(true_label_cumsum_proba_reg, alpha_np)
+            quantiles_ = _compute_classification_quantile(
+                true_label_cumsum_proba_reg, alpha_np
+            )
 
             _, _, y_pred_proba_last = self._get_last_included_proba(
                 y_pred_proba_raps,
@@ -395,7 +398,7 @@ class RAPSConformityScore(APSConformityScore):
         # position_raps = cast(NDArray, position_raps)
 
         _check_alpha_and_n_samples(alpha_np, self.X_raps.shape[0])
-        self.k_star = _compute_quantiles(self.position_raps, alpha_np) + 1
+        self.k_star = _compute_classification_quantile(self.position_raps, alpha_np) + 1
         y_pred_proba_raps = np.repeat(
             self.y_pred_proba_raps[:, :, np.newaxis], len(alpha_np), axis=2
         )
@@ -409,7 +412,9 @@ class RAPSConformityScore(APSConformityScore):
         conformity_scores_regularized = self._regularize_conformity_score(
             self.k_star, self.lambda_star, conformity_scores, self.cutoff
         )
-        quantiles_ = _compute_quantiles(conformity_scores_regularized, alpha_np)
+        quantiles_ = _compute_classification_quantile(
+            conformity_scores_regularized, alpha_np
+        )
 
         return quantiles_
 

@@ -7,7 +7,7 @@ from sklearn.model_selection import BaseCrossValidator
 from mapie._machine_precision import EPSILON
 from mapie.conformity_scores.classification import BaseClassificationScore
 from mapie.conformity_scores.sets.utils import get_true_label_position
-from mapie.utils import _compute_quantiles
+from mapie.utils import _compute_classification_quantile
 
 
 class TopKConformityScore(BaseClassificationScore):
@@ -134,7 +134,7 @@ class TopKConformityScore(BaseClassificationScore):
         NDArray
             Array of quantiles with respect to alpha_np.
         """
-        return _compute_quantiles(conformity_scores, alpha_np)
+        return _compute_classification_quantile(conformity_scores, alpha_np)
 
     def get_prediction_sets(
         self,

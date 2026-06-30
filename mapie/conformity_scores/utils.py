@@ -1,5 +1,6 @@
 from typing import Optional, no_type_check
 
+from numpy.typing import ArrayLike
 from sklearn.utils.multiclass import (
     check_classification_targets,
     type_of_target,
@@ -18,8 +19,6 @@ from .sets import (
     APSConformityScore,
     RAPSConformityScore,
 )
-
-from numpy.typing import ArrayLike
 
 
 CONFORMITY_SCORES_STRING_MAP = {
@@ -49,7 +48,7 @@ def check_and_select_conformity_score(conformity_score, conformity_score_type):
 
 
 def check_regression_conformity_score(
-    conformity_score: Optional[BaseRegressionScore],
+    conformity_score: Optional[BaseRegressionScore] = None,
     sym: bool = True,
 ) -> BaseRegressionScore:
     """
