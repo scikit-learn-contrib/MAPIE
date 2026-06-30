@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 from numpy.typing import NDArray
 
-from mapie.metrics.conditional import coverage_gap
+from mapie.metrics.conditional import coverage_gap, worst_slab_coverage
 
 
 @pytest.mark.parametrize(
@@ -284,4 +284,142 @@ def test_coverage_gap_with_float_groups() -> None:
                     [4.0, 5.0],
                 ]
             ),
+        )
+
+
+class DummyWSC:
+    """Dummy covmetrics WSC backend for deterministic wrapper tests."""
+
+    x: list[NDArray] = []
+    cover: list[NDArray] = []
+    params: list[tuple[float, int, int]] = []
+
+    def evaluate(
+        self,
+        x: NDArray,
+        cover: NDArray,
+        delta: float,
+        M: int,
+        seed: int,
+    ) -> float:
+        """Store call arguments and return a fixed score."""
+        self.x.append(x)
+        self.cover.append(cover)
+        self.params.append((delta, M, seed))
+        return 0.5
+
+
+@pytest.fixture
+def dummy_wsc(monkeypatch: pytest.MonkeyPatch) -> type[DummyWSC]:
+    """Patch covmetrics WSC with a deterministic dummy."""
+    DummyWSC.x = []
+    DummyWSC.cover = []
+    DummyWSC.params = []
+    monkeypatch.setattr("mapie.metrics.conditional.WSC", DummyWSC)
+    return DummyWSC
+
+
+def test_worst_slab_coverage_with_intervals(
+    dummy_wsc: type[DummyWSC],
+) -> None:
+    """Test WSC with regression intervals."""
+    x = np.array([[0.0], [1.0], [2.0], [3.0]])
+    y = np.array([0.0, 1.0, 2.0, 3.0])
+    y_intervals = np.array([[0.0, 1.0], [0.0, 2.0], [1.0, 2.0], [4.0, 5.0]])
+
+    score = worst_slab_coverage(
+        x,
+        y,
+        y_intervals=y_intervals,
+        delta=0.5,
+        n_directions=7,
+        random_state=123,
+    )
+
+    assert score == 0.5
+    np.testing.assert_array_equal(dummy_wsc.x[0], x)
+    np.testing.assert_array_equal(dummy_wsc.cover[0], np.array([1, 1, 1, 0]))
+    assert dummy_wsc.params == [(0.5, 7, 123)]
+
+
+def test_worst_slab_coverage_with_sets(dummy_wsc: type[DummyWSC]) -> None:
+    """Test WSC with classification prediction sets."""
+    x = np.array([[0.0, 1.0], [1.0, 1.0], [2.0, 0.0], [3.0, 0.0]])
+    y = np.array([0, 1, 0, 1])
+    y_sets = np.array(
+        [
+            [True, False],
+            [False, True],
+            [False, True],
+            [True, True],
+        ]
+    )
+
+    score = worst_slab_coverage(
+        x,
+        y,
+        y_sets=y_sets,
+        delta=0.25,
+        n_directions=3,
+        random_state=321,
+    )
+
+    assert score == 0.5
+    np.testing.assert_array_equal(dummy_wsc.cover[0], np.array([1, 1, 0, 1]))
+    assert dummy_wsc.params == [(0.25, 3, 321)]
+
+
+def test_worst_slab_coverage_without_coverage_input() -> None:
+    """Test WSC requires intervals or sets."""
+    with pytest.raises(ValueError, match="Either y_intervals or y_sets"):
+        worst_slab_coverage(  # type: ignore[call-overload]
+            np.array([[0.0], [1.0]]), np.array([0.0, 1.0])
+        )
+
+
+def test_worst_slab_coverage_with_two_coverage_inputs() -> None:
+    """Test WSC rejects ambiguous coverage inputs."""
+    with pytest.raises(ValueError, match="Only one of y_intervals or y_sets"):
+        worst_slab_coverage(  # type: ignore[call-overload]
+            np.array([[0.0], [1.0]]),
+            np.array([0, 1]),
+            y_intervals=np.array([[0.0, 1.0], [0.0, 1.0]]),
+            y_sets=np.array([[True, False], [False, True]]),
+        )
+
+
+@pytest.mark.parametrize(
+    "x, delta, n_directions, match",
+    [
+        (np.array([0.0, 1.0]), 0.5, 10, "2D array"),
+        (np.array([[0.0], [np.nan]]), 0.5, 10, "NaN"),
+        (np.array([[0.0], [1.0]]), 0.0, 10, "delta"),
+        (np.array([[0.0], [1.0]]), 1.0, 10, "delta"),
+        (np.array([[0.0], [1.0]]), 0.5, 0, "n_directions"),
+    ],
+)
+def test_worst_slab_coverage_invalid_inputs(
+    x: NDArray,
+    delta: float,
+    n_directions: int,
+    match: str,
+) -> None:
+    """Test WSC input validation."""
+    with pytest.raises(ValueError, match=match):
+        worst_slab_coverage(
+            x,
+            np.array([0.0, 1.0]),
+            y_intervals=np.array([[0.0, 1.0], [0.0, 1.0]]),
+            delta=delta,
+            n_directions=n_directions,
+        )
+
+
+def test_worst_slab_coverage_rejects_length_mismatch() -> None:
+    """Test WSC rejects inconsistent x and coverage lengths."""
+    with pytest.raises(ValueError, match="different length"):
+        worst_slab_coverage(
+            np.array([[0.0], [1.0], [2.0]]),
+            np.array([0.0, 1.0]),
+            y_intervals=np.array([[0.0, 1.0], [0.0, 1.0]]),
         )

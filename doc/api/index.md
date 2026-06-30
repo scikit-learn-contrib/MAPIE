@@ -84,6 +84,7 @@ Complete API documentation for MAPIE v1.
 | Function | Description |
 |---|---|
 | [`coverage_gap`](metrics.md#mapie.metrics.conditional.coverage_gap) | CovGap and WCovGap across predefined groups |
+| [`worst_slab_coverage`](metrics.md#mapie.metrics.conditional.worst_slab_coverage) | Worst-case slab coverage over geometric slices |
 
 ---
 
