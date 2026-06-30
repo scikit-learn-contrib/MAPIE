@@ -6,8 +6,11 @@ across subpopulations, beyond their marginal coverage guarantee [^1].
 ### Coverage Gap (CovGap and WCovGap)
 
 Measures how far empirical coverage is from the target coverage **inside
-predefined groups** [^2]. Let \(G\) be the set of observed groups,
-\(I_g = \{i: g_i = g\}\), and \(c_i\) be the binary coverage indicator:
+predefined groups** [^2]. For an evaluation set \(\{(x_i, y_i, g_i)\}_{i=1}^n\)
+of size \(n\), let \(\alpha\) be the target miscoverage level,
+\(\hat{C}(x_i)\) be the prediction set or interval for sample \(i\), \(G\) be
+the set of observed groups, \(I_g = \{i: g_i = g\}\), and \(c_i\) be the
+binary coverage indicator:
 
 \[
 c_i =
@@ -18,8 +21,10 @@ c_i =
 \]
 
 For regression intervals, \(c_i = 1\) means
-\(\hat{y}^{\text{low}}_i \leq y_i \leq \hat{y}^{\text{up}}_i\). For
-classification sets, \(c_i = 1\) means \(y_i \in \hat{C}(x_i)\).
+\(\hat{y}^{\text{low}}_i \leq y_i \leq \hat{y}^{\text{up}}_i\), where
+\(\hat{y}^{\text{low}}_i\) and \(\hat{y}^{\text{up}}_i\) are the interval
+endpoints. For classification sets, \(c_i = 1\) means
+\(y_i \in \hat{C}(x_i)\).
 
 The empirical coverage of group \(g\) is:
 
