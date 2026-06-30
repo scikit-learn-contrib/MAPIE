@@ -6,7 +6,11 @@ import numpy as np
 import pytest
 from numpy.typing import NDArray
 
-from mapie.metrics.conditional import coverage_gap, worst_slab_coverage
+from mapie.metrics.conditional import (
+    coverage_gap,
+    excess_risk_target_coverage,
+    worst_slab_coverage,
+)
 
 
 @pytest.mark.parametrize(
@@ -421,5 +425,166 @@ def test_worst_slab_coverage_rejects_length_mismatch() -> None:
         worst_slab_coverage(
             np.array([[0.0], [1.0], [2.0]]),
             np.array([0.0, 1.0]),
+            y_intervals=np.array([[0.0, 1.0], [0.0, 1.0]]),
+        )
+
+
+class DummyERT:
+    """Dummy covmetrics ERT backend for deterministic wrapper tests."""
+
+    x: list[NDArray] = []
+    cover: list[NDArray] = []
+    params: list[tuple[float, int, int, object]] = []
+    model_cls: list[object] = []
+    model_kwargs: list[dict[str, object]] = []
+    fit_kwargs: list[dict[str, object]] = []
+
+    def __init__(self, model_cls: object = None, **model_kwargs: object) -> None:
+        self.model_cls.append(model_cls)
+        self.model_kwargs.append(model_kwargs)
+
+    def evaluate(
+        self,
+        x: NDArray,
+        cover: NDArray,
+        alpha: float,
+        n_splits: int,
+        random_state: int,
+        loss: object,
+        **fit_kwargs: object,
+    ) -> float:
+        """Store call arguments and return a fixed score."""
+        self.x.append(x)
+        self.cover.append(cover)
+        self.params.append((alpha, n_splits, random_state, loss))
+        self.fit_kwargs.append(fit_kwargs)
+        return -0.25
+
+
+@pytest.fixture
+def dummy_ert(monkeypatch: pytest.MonkeyPatch) -> type[DummyERT]:
+    """Patch covmetrics ERT with a deterministic dummy."""
+    DummyERT.x = []
+    DummyERT.cover = []
+    DummyERT.params = []
+    DummyERT.model_cls = []
+    DummyERT.model_kwargs = []
+    DummyERT.fit_kwargs = []
+    monkeypatch.setattr("mapie.metrics.conditional.ERT", DummyERT)
+    return DummyERT
+
+
+def test_excess_risk_target_coverage_with_intervals(
+    dummy_ert: type[DummyERT],
+) -> None:
+    """Test ERT with regression intervals."""
+    x = np.array([[0.0], [1.0], [2.0], [3.0]])
+    y = np.array([0.0, 1.0, 2.0, 3.0])
+    y_intervals = np.array([[0.0, 1.0], [0.0, 2.0], [3.0, 4.0], [4.0, 5.0]])
+    loss = object()
+
+    score = excess_risk_target_coverage(
+        x,
+        y,
+        0.75,
+        y_intervals=y_intervals,
+        model_kwargs={"max_iter": 3},
+        n_splits=2,
+        random_state=123,
+        loss=loss,
+        fit_kwargs={"sample_weight": np.ones(2)},
+    )
+
+    assert score == -0.25
+    np.testing.assert_array_equal(dummy_ert.x[0], x)
+    np.testing.assert_array_equal(dummy_ert.cover[0], np.array([1, 1, 0, 0]))
+    assert dummy_ert.params == [(0.25, 2, 123, loss)]
+    assert dummy_ert.model_kwargs == [{"max_iter": 3, "random_state": 123}]
+    np.testing.assert_array_equal(dummy_ert.fit_kwargs[0]["sample_weight"], np.ones(2))
+
+
+def test_excess_risk_target_coverage_with_sets(dummy_ert: type[DummyERT]) -> None:
+    """Test ERT with classification prediction sets."""
+    x = np.array([[0.0, 1.0], [1.0, 1.0], [2.0, 0.0], [3.0, 0.0]])
+    y = np.array([0, 1, 0, 1])
+    y_sets = np.array(
+        [
+            [True, False],
+            [False, True],
+            [False, True],
+            [True, True],
+        ]
+    )
+
+    score = excess_risk_target_coverage(
+        x,
+        y,
+        0.8,
+        y_sets=y_sets,
+        model_cls=dict,
+        model_kwargs={"custom": True},
+        n_splits=3,
+        random_state=321,
+    )
+
+    assert score == -0.25
+    np.testing.assert_array_equal(dummy_ert.cover[0], np.array([1, 1, 0, 1]))
+    assert dummy_ert.params == [(0.2, 3, 321, None)]
+    assert dummy_ert.model_cls == [dict]
+    assert dummy_ert.model_kwargs == [{"custom": True}]
+
+
+def test_excess_risk_target_coverage_without_coverage_input() -> None:
+    """Test ERT requires intervals or sets."""
+    with pytest.raises(ValueError, match="Either y_intervals or y_sets"):
+        excess_risk_target_coverage(  # type: ignore[call-overload]
+            np.array([[0.0], [1.0]]), np.array([0.0, 1.0]), 0.75
+        )
+
+
+def test_excess_risk_target_coverage_with_two_coverage_inputs() -> None:
+    """Test ERT rejects ambiguous coverage inputs."""
+    with pytest.raises(ValueError, match="Only one of y_intervals or y_sets"):
+        excess_risk_target_coverage(  # type: ignore[call-overload]
+            np.array([[0.0], [1.0]]),
+            np.array([0, 1]),
+            0.75,
+            y_intervals=np.array([[0.0, 1.0], [0.0, 1.0]]),
+            y_sets=np.array([[True, False], [False, True]]),
+        )
+
+
+@pytest.mark.parametrize(
+    "x, n_splits, match",
+    [
+        (np.array([0.0, 1.0]), 2, "2D array"),
+        (np.array([[0.0], [np.nan]]), 2, "NaN"),
+        (np.array([[0.0], [1.0]]), 1, "n_splits"),
+        (np.array([[0.0], [1.0]]), 2.5, "n_splits"),
+    ],
+)
+def test_excess_risk_target_coverage_invalid_inputs(
+    x: NDArray,
+    n_splits: int,
+    match: str,
+) -> None:
+    """Test ERT input validation."""
+    with pytest.raises(ValueError, match=match):
+        excess_risk_target_coverage(
+            x,
+            np.array([0.0, 1.0]),
+            0.75,
+            y_intervals=np.array([[0.0, 1.0], [0.0, 1.0]]),
+            n_splits=n_splits,
+        )
+
+
+def test_excess_risk_target_coverage_rejects_length_mismatch() -> None:
+    """Test ERT rejects inconsistent x and coverage lengths."""
+    with pytest.raises(ValueError, match="different length"):
+        excess_risk_target_coverage(
+            np.array([[0.0], [1.0], [2.0]]),
+            np.array([0.0, 1.0]),
+            0.75,
             y_intervals=np.array([[0.0, 1.0], [0.0, 1.0]]),
         )

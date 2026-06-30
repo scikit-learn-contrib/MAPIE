@@ -6,6 +6,7 @@
 - Add optional `covmetrics` integration for conditional coverage diagnostics.
 - Add CovGap and WCovGap documentation for conditional coverage diagnostics.
 - Add WSC (`worst_slab_coverage`) for slab-based conditional coverage diagnostics.
+- Add ERT (`excess_risk_target_coverage`) for model-based conditional coverage diagnostics.
 
 ## 1.x.x (2026-xx-xx)
 

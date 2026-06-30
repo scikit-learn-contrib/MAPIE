@@ -105,6 +105,40 @@ does not require user-defined groups. It returns a coverage value directly:
 values well below the target coverage reveal a slab of the feature space where
 the prediction sets or intervals under-cover.
 
+
+### Excess Risk of the Target Coverage (ERT)
+
+ERT estimates whether the conditional coverage function
+\(x \mapsto \mathbb{P}\{Y \in \hat{C}(X) \mid X=x\}\) carries useful signal
+beyond the constant target coverage \(1-\alpha\) [^1]. It trains a classifier to
+predict the binary coverage indicator \(c_i\) from the features \(x_i\), then
+compares the loss of this learned conditional coverage predictor with the loss
+of the constant predictor \(1-\alpha\):
+
+\[
+\mathrm{ERT}_\ell =
+\frac{1}{n}\sum_{i=1}^n
+\ell(1-\alpha, c_i)
+-
+\frac{1}{n}\sum_{i=1}^n
+\ell(\widehat{p}(x_i), c_i),
+\]
+
+where \(\widehat{p}(x_i)\) is the predicted conditional coverage and \(\ell\) is a
+proper loss. Larger positive values indicate that the features help predict
+coverage, which is evidence of conditional coverage variation. Values near zero
+indicate little detectable improvement over the target coverage baseline, given
+the chosen classifier and loss.
+
+MAPIE's `excess_risk_target_coverage` wrapper converts intervals or prediction
+sets into the binary indicators \(c_i\), then delegates the cross-validated ERT
+estimation to `covmetrics.ERT`. The `model_cls` and `model_kwargs` parameters
+control the classifier used to estimate conditional coverage, while `n_splits`
+controls the cross-validation estimate.
+
+For more advanced use of ERT, you can directly import ERT from `covmetrics` and
+follow the guidelines of the official GitHub [repository](https://github.com/ElSacho/covmetrics/).
+
 ---
 
 ## References
