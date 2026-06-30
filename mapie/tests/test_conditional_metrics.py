@@ -397,8 +397,10 @@ def test_worst_slab_coverage_with_two_coverage_inputs() -> None:
     [
         (np.array([0.0, 1.0]), 0.5, 10, "2D array"),
         (np.array([[0.0], [np.nan]]), 0.5, 10, "NaN"),
+        (np.array([[0.0], [1.0]]), "0.5", 10, "delta"),
         (np.array([[0.0], [1.0]]), 0.0, 10, "delta"),
         (np.array([[0.0], [1.0]]), 1.0, 10, "delta"),
+        (np.array([[0.0], [1.0]]), 0.5, 1.5, "n_directions"),
         (np.array([[0.0], [1.0]]), 0.5, 0, "n_directions"),
     ],
 )
