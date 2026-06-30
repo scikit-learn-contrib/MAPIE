@@ -39,7 +39,7 @@ def _compute_cover_from_intervals(
     Parameters
     ----------
     y: ArrayLike of shape (n_samples,)
-        True labels.
+        True target values.
     y_intervals: ArrayLike of shape (n_samples, 2) or (n_samples, 2, 1)
         Regression prediction intervals.
 
@@ -76,9 +76,9 @@ def _compute_cover_from_sets(
     Parameters
     ----------
     y: ArrayLike of shape (n_samples,)
-        True labels.
+        True integer class labels.
     y_sets: ArrayLike of shape (n_samples, n_classes) or (n_samples, n_classes, 1)
-        Classification prediction sets.
+        Boolean indicators of class membership in each prediction set.
 
     Returns
     -------
