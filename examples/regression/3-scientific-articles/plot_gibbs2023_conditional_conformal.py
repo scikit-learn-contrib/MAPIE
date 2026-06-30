@@ -28,7 +28,7 @@ arXiv:2305.12616, 2023.
 """
 
 import warnings
-import seaborn as sns
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
