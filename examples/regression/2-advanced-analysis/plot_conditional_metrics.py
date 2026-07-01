@@ -251,7 +251,7 @@ with pd.option_context("display.max_columns", None):
 # - ``ERT`` is a learned conditional-coverage diagnostic. A lower loss means the
 #   conditional coverage is closer to the target across ``X``.
 # - ``SSC`` and ``HSIC`` only look at coverage as a function of interval width.
-#   They are not enough to diagnose a constant-width marginal interval.
+#   They are not enough to diagnose a constant-width marginal interval (returning NaN).
 
 
 ##############################################################################
