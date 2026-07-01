@@ -1,11 +1,11 @@
 """
-Conditional coverage metrics on Gibbs-style regression data
-===========================================================
+Conditional coverage metrics
+============================
 
 
-This example uses a one-dimensional heteroscedastic regression problem inspired
-by Gibbs, Cherian and Candès (2023) [1] to compare MAPIE's conditional coverage
-metrics on marginal and conditionally-calibrated conformal regressors.
+This example uses a one-dimensional heteroscedastic regression problem
+to compare MAPIE's conditional coverage metrics on marginal and
+conditionally-calibrated conformal regressors.
 
 The two regressors use the same fitted polynomial model and the same
 conformalization data. The marginal
@@ -15,9 +15,6 @@ cutoff, while
 uses interval indicators in ``X`` as its conditional feature map. The goal is to
 show which metrics detect the local undercoverage of the marginal intervals.
 
-[1] Isaac Gibbs, John J. Cherian, Emmanuel J. Candès.
-"Conformal Prediction With Conditional Guarantees."
-arXiv:2305.12616, 2023.
 """
 
 import warnings
@@ -194,20 +191,20 @@ def compute_metrics(name, y_intervals):
         "Regressor": name,
         "Marginal coverage": regression_coverage_score(y_test, y_intervals)[0],
         "Mean width": regression_mean_width_score(y_intervals)[0],
-        "CovGap (lower is better)": coverage_gap(
+        "CovGap": coverage_gap(
             y_test,
             groups,
             confidence_level,
             y_intervals=y_intervals,
         ),
-        "WCovGap (lower is better)": coverage_gap(
+        "WCovGap": coverage_gap(
             y_test,
             groups,
             confidence_level,
             y_intervals=y_intervals,
             weighted=True,
         ),
-        "WSC (higher is better)": worst_slab_coverage(
+        "WSC": worst_slab_coverage(
             X_test,
             y_test,
             y_intervals=y_intervals,
@@ -215,7 +212,7 @@ def compute_metrics(name, y_intervals):
             n_directions=100,
             random_state=1,
         ),
-        "ERT loss (lower is better)": excess_risk_target_coverage(
+        "ERT loss": excess_risk_target_coverage(
             X_test,
             y_test,
             confidence_level,
