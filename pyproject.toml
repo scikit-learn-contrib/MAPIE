@@ -74,7 +74,7 @@ dev = [
     "wheel==0.46.2",
 ]
 docs = [
-    "MAPIE[experimental]",
+    "MAPIE[conditional,experimental]",
     "cvxpy==1.7.5; python_version < '3.11'",
     "cvxpy==1.9.1; python_version >= '3.11'",
     "lightgbm==4.6.0",
