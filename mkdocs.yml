@@ -89,8 +89,8 @@ plugins:
       plot_gallery: true
       run_stale_examples: true
       download_all_examples: false
-      abort_on_example_error: false
-      only_warn_on_example_error: true
+      abort_on_example_error: true
+      only_warn_on_example_error: false
 
 hooks:
   - doc/hooks/gallery_nav_fix.py
