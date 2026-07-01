@@ -78,11 +78,9 @@ def generate_heteroscedastic_data(
     x_train_conformalize = rng.uniform(0, 5, size=n_train_conformalize)
     x_test = rng.uniform(0, 5, size=n_test)
 
-    y_train_conformalize = (
-        mean_function(x_train_conformalize)
-        + noise_scale(x_train_conformalize)
-        * rng.normal(size=n_train_conformalize)
-    )
+    y_train_conformalize = mean_function(x_train_conformalize) + noise_scale(
+        x_train_conformalize
+    ) * rng.normal(size=n_train_conformalize)
     y_test = mean_function(x_test) + noise_scale(x_test) * rng.normal(size=n_test)
 
     X_train_conformalize = x_train_conformalize.reshape(-1, 1)
