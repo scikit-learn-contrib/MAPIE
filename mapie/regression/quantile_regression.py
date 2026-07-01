@@ -334,6 +334,8 @@ class __QuantileConformalizer:
         )
         return self
 
+    #------------------------------ Predict
+
 
 class CrossConformalizedQuantileRegressor:
     """
