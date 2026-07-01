@@ -19,6 +19,13 @@ Prediction sets for single-label and multi-label classification.
 </div>
 
 <div class="card" markdown>
+### :material-vector-polyline: Conditional Conformal Prediction
+Conditional prediction intervals and prediction sets.
+
+[Open Conditional CP examples](../generated/conditional_cp/index.md)
+</div>
+
+<div class="card" markdown>
 ### :material-target: Calibration
 Calibration techniques and probabilistic prediction evaluation.
 

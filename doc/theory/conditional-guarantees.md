@@ -67,17 +67,6 @@ This is the equation corresponding to the perfect conditional coverage, which is
     \hat{g}_M^{n+1} := \arg\min_{g \in \mathcal{F}} \; \frac{1}{n+1} \sum_{i=1}^n{l_{\alpha} (g(X_i), S_i)} \; + \frac{1}{n+1}l_{\alpha} (g(X_{n+1}), M)
     \]
 
-    !!! warning
-        In the API, we use by default \(M=\max(\{S_i\}_{i\leq n})\), the maximum conformity score of the calibration set, but you can specify it yourself if a bound is known, considering your data, model and conformity score.
-
-        Moreover, it means that there are still small computations which are done for each test point \(X_{n+1}\). If you want to avoid that, you can use `unsafe_approximation=True`, which only considers:
-
-        \[
-        \hat{g} := \arg\min_{g \in \mathcal{F}} \; \frac{1}{n} \sum_{i=1}^n{l_{\alpha} (g(X_i), S_i)}
-        \]
-
-        However, it may result in a small miscoverage. It is recommended to empirically check the resulting coverage on the test set.
-
 3. We use this optimized function \(\hat{g}_M^{n+1}\) to compute the prediction intervals:
 
     \[
@@ -156,4 +145,4 @@ examples, see the regression and classification examples using
 
 ## References
 
-[^1]: Isaac Gibbs, John J. Cherian, and Emmanuel J. Candès (2023). *Conformal Prediction With Conditional Guarantees.* [arXiv:2305.12616](https://arxiv.org/abs/2305.12616).
+[^1]: Isaac Gibbs, John J Cherian, Emmanuel J Candès, Conformal prediction with conditional guarantees, Journal of the Royal Statistical Society Series B: Statistical Methodology, Volume 87, Issue 4, September 2025, Pages 1100–1126, [https://doi.org/10.1093/jrsssb/qkaf008](https://doi.org/10.1093/jrsssb/qkaf008).
