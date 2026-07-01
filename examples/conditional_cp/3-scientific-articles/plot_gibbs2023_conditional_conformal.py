@@ -16,8 +16,8 @@ The data is heteroscedastic: the conditional spread of ``Y`` varies strongly
 with ``X``. A marginal split-conformal interval uses a *single* score cutoff for
 every ``X``, so it is too wide where the noise is small and too narrow where it
 is large. The conditional procedure instead guarantees coverage over a chosen
-finite class of covariate shifts -- here the indicators of the sub-intervals
-``[0, 0.5), [0.5, 1), ..., [4.5, 5)`` -- and therefore adapts the interval width
+finite class of covariate shifts -- here smooth Gaussian functions centered on
+regions where coverage is evaluated -- and therefore adapts the interval width
 to ``X``.
 
 [1] Isaac Gibbs, John J. Cherian, Emmanuel J. Candès.
@@ -32,6 +32,7 @@ import warnings
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from scipy.stats import norm
 from sklearn.linear_model import LinearRegression
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import PolynomialFeatures
@@ -138,16 +139,36 @@ alpha = 1 - confidence_level
 # --------------------------------------------------------------------------
 #
 # ``feature_map`` defines the finite-dimensional class of covariate shifts over which
-# exact coverage is guaranteed. Here we use the indicators of the sub-intervals
-# with endpoints in ``[0, 0.5, 1, ..., 5]``: coverage is then valid not only
-# marginally, but on each of these groups of ``X``.
+# exact coverage is guaranteed. The original notebook provides several choices.
+# Here we use its smooth ``shifts`` setting: two narrow Gaussian shifts at the
+# evaluation locations, three broader Gaussian shifts elsewhere, and an intercept.
+# These smooth basis functions produce smoother intervals than the interval
+# indicators used in the ``groups`` setting.
 
 eps = 0.5
 disc = np.arange(0, 5 + eps, eps)
+eval_locs = [1.5, 3.5]
+eval_scale = 0.2
+other_locs = [0.5, 2.5, 4.5]
+other_scale = 1
 
 
-def phi_fn(x):
+def phi_fn_groups(x):
     return indicator_matrix(x, disc)
+
+
+def phi_fn_shifts(x):
+    shifts = [
+        norm.pdf(x, loc=loc, scale=eval_scale).reshape(-1, 1) for loc in eval_locs
+    ]
+    shifts.extend(
+        [norm.pdf(x, loc=loc, scale=other_scale).reshape(-1, 1) for loc in other_locs]
+    )
+    shifts.append(np.ones((x.shape[0], 1)))
+    return np.concatenate(shifts, axis=1)
+
+
+phi_fn = phi_fn_shifts
 
 
 ##############################################################################
@@ -166,6 +187,8 @@ mapie_conditional = ConditionalSplitConformalRegressor(
     prefit=True,
     confidence_level=confidence_level,
     conformity_score=AbsoluteConformityScore(sym=False),
+    randomize=True,
+    seed=1,
 )
 mapie_conditional.conformalize(x_calib, y_calib)
 
@@ -176,7 +199,6 @@ for i, x_t in enumerate(x_test):
     _, interval = mapie_conditional.predict_interval(x_t.reshape(1, -1))
     lbs[i] = interval[0, 0, 0]
     ubs[i] = interval[0, 1, 0]
-
 
 ##############################################################################
 # 5. Marginal split-conformal baseline
@@ -232,8 +254,14 @@ ax1.tick_params(axis="both", which="major", labelsize=14)
 ax1.set_xlabel("$X$", fontsize=16, labelpad=10)
 ax1.set_ylabel("$Y$", fontsize=16, labelpad=10)
 ax1.set_title("Split Conformal", fontsize=18, pad=12)
-ax1.axvspan(1, 2, facecolor="grey", alpha=0.25)
-ax1.axvspan(3, 4, facecolor="grey", alpha=0.25)
+for loc in eval_locs:
+    ax1.plot(
+        x_test_s,
+        norm.pdf(x_test_s, loc=loc, scale=eval_scale),
+        color="grey",
+        ls="--",
+        lw=3,
+    )
 
 ax2 = fig.add_subplot(1, 2, 2, sharex=ax1, sharey=ax1)
 ax2.plot(x_test_s, y_test_s, ".", alpha=0.2)
@@ -252,8 +280,14 @@ ax2.tick_params(axis="both", which="major", direction="out", labelsize=14)
 ax2.set_xlabel("$X$", fontsize=16, labelpad=10)
 ax2.set_ylabel("$Y$", fontsize=16, labelpad=10)
 ax2.set_title("Conditional Calibration", fontsize=18, pad=12)
-ax2.axvspan(1, 2, facecolor="grey", alpha=0.25)
-ax2.axvspan(3, 4, facecolor="grey", alpha=0.25)
+for loc in eval_locs:
+    ax2.plot(
+        x_test_s,
+        norm.pdf(x_test_s, loc=loc, scale=eval_scale),
+        color="grey",
+        ls="--",
+        lw=3,
+    )
 
 plt.tight_layout(pad=5)
 plt.show()
@@ -267,17 +301,17 @@ plt.show()
 # the reference notebook [2], we repeat the experiment over independent draws
 # of the calibration and test sets (keeping the fitted base model), and
 # measure the miscoverage rate of both methods, marginally and on the two
-# highlighted groups ``X in [1, 2]`` and ``X in [3, 4]``. The conditional
+# highlighted intervals ``X in [1, 2]`` and ``X in [3, 4]``. The conditional
 # procedure is run with ``randomize=True`` so that its coverage is exact
 # rather than conservative.
 #
 # Both methods control the *marginal* miscoverage at the nominal 10% level
 # (red line), but the split-conformal interval (blue, as in the figure above)
 # undercovers on ``[1, 2]`` -- where the noise is large -- and overcovers on
-# ``[3, 4]`` -- where it is small. The conditional calibration (orange)
-# achieves the nominal miscoverage on both groups. The original experiment
-# uses 500 trials; we use fewer here to keep the runtime of the example
-# reasonable.
+# ``[3, 4]`` -- where it is small. The conditional calibration (orange), fitted
+# with the smooth shift feature map, brings both regions closer to the target.
+# The original experiment uses 500 trials; we use fewer here to keep the runtime
+# of the example reasonable.
 
 n_trials = 20
 rows = []
@@ -363,4 +397,92 @@ ax3.set_xticks(x_pos)
 ax3.set_xticklabels(group_names)
 ax3.tick_params(axis="both", which="major", labelsize=12)
 plt.tight_layout()
+plt.show()
+
+
+##############################################################################
+# 8. Combined comparison plot from the reference notebook
+# --------------------------------------------------------------------------
+#
+# The last figure of the reference notebook combines the conditional interval
+# plot with the repeated-trial miscoverage comparison. We reproduce that layout
+# here: the left panel shows the conditionally calibrated interval, and the
+# right panel compares marginal and group-conditional miscoverage for split and
+# conditional calibration.
+
+coverage_stats = (
+    coverage_data.groupby(["Groups", "Method"], as_index=False)["Miscoverage"]
+    .agg(["mean", "sem"])
+    .reset_index()
+)
+coverage_stats["sem"] = coverage_stats["sem"].fillna(0.0)
+
+fig = plt.figure()
+fig.set_size_inches(12.5, 6)
+
+ax1 = fig.add_subplot(1, 2, 1)
+ax1.plot(x_test_s, y_test_s, ".", alpha=0.2)
+ax1.plot(x_test_s, y_test_hat, lw=1, color="k")
+ax1.plot(x_test_s, ub, color=cp[1], lw=2)
+ax1.plot(x_test_s, lb, color=cp[1], lw=2)
+ax1.fill_between(
+    x_test_s.flatten(),
+    lb,
+    ub,
+    color=cp[1],
+    alpha=0.4,
+    label="conditional calibration",
+)
+ax1.set_ylim(-2, 6)
+ax1.tick_params(axis="both", which="major", labelsize=14)
+ax1.set_xlabel("$X$", fontsize=16, labelpad=10)
+ax1.set_ylabel("$Y$", fontsize=16, labelpad=10)
+ax1.set_title("Conditional Calibration", fontsize=18, pad=12)
+
+for loc in eval_locs:
+    ax1.plot(
+        x_test_s,
+        norm.pdf(x_test_s, loc=loc, scale=eval_scale),
+        color="grey",
+        ls="--",
+        lw=3,
+    )
+
+ax2 = fig.add_subplot(1, 2, 2)
+group_names = ["Marginal", "[1,2]", "[3,4]"]
+method_names = ["Split", "Conditional"]
+x_pos = np.arange(len(group_names))
+bar_width = 0.35
+
+for offset, method_name, color, hatch in [
+    (-bar_width / 2, "Split", cp[0], "//"),
+    (bar_width / 2, "Conditional", cp[1], None),
+]:
+    method_values = coverage_stats[coverage_stats["Method"] == method_name]
+    heights = []
+    errors = []
+    for group_name in group_names:
+        row = method_values[method_values["Groups"] == group_name]
+        heights.append(row["mean"].item())
+        errors.append(row["sem"].item())
+    ax2.bar(
+        x_pos + offset,
+        heights,
+        width=bar_width,
+        yerr=errors,
+        label=method_name,
+        color=color,
+        edgecolor="white",
+        hatch=hatch,
+    )
+
+ax2.axhline(alpha, color="red")
+ax2.set_ylabel("Miscoverage", fontsize=18, labelpad=10)
+ax2.set_xlabel("Covariate Shift", fontsize=18, labelpad=10)
+ax2.set_ylim(0.0, 0.16)
+ax2.set_xticks(x_pos)
+ax2.set_xticklabels(group_names)
+ax2.tick_params(axis="both", which="major", labelsize=14)
+ax2.legend(fontsize=18)
+plt.tight_layout(pad=3)
 plt.show()
