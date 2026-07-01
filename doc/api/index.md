@@ -78,6 +78,18 @@ Complete API documentation for MAPIE v1.
 
 ---
 
+## Conditional Conformal Prediction
+
+### Metrics
+
+| Function | Description |
+|---|---|
+| [`coverage_gap`](metrics.md#mapie.metrics.conditional.coverage_gap) | CovGap and WCovGap across predefined groups |
+| [`worst_slab_coverage`](metrics.md#mapie.metrics.conditional.worst_slab_coverage) | Worst-case slab coverage over geometric slices |
+| [`excess_risk_target_coverage`](metrics.md#mapie.metrics.conditional.excess_risk_target_coverage) | ERT conditional coverage diagnostic using a learned coverage model |
+
+---
+
 ## [Risk Control](risk-control.md)
 
 | Class | Description |

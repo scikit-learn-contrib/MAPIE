@@ -1,4 +1,4 @@
-# Metrics for Confromal Prediction — Theoretical Description
+# Metrics for Conformal Prediction — Theoretical Description
 
 !!! note "Terminology"
     In theoretical parts of the documentation:
