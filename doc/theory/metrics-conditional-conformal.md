@@ -1,12 +1,12 @@
 # Metrics for Conditional Conformal Prediction - Theoretical Description
 
 Conditional coverage diagnostics evaluate how prediction sets or intervals behave
-across subpopulations, beyond their marginal coverage guarantee [^1].
+across subpopulations, beyond their marginal coverage guarantee.
 
-### Coverage Gap (CovGap and WCovGap)
+### Coverage Gap (CovGap and WCovGap) [^1]
 
-Measures how far empirical coverage is from the target coverage **inside
-predefined groups** [^2]. For an evaluation set \(\{(x_i, y_i, g_i)\}_{i=1}^n\)
+Measures how far empirical coverage is from the target coverage inside
+predefined groups. For an evaluation set \(\{(x_i, y_i, g_i)\}_{i=1}^n\)
 of size \(n\), let \(\alpha\) be the target miscoverage level,
 \(\hat{C}(x_i)\) be the prediction set or interval for sample \(i\), \(G\) be
 the set of observed groups, \(I_g = \{i: g_i = g\}\), and \(c_i\) be the
@@ -52,12 +52,11 @@ CovGap gives small and large groups the same influence, which is useful when
 each group is equally important. WCovGap gives more influence to larger groups,
 which summarizes the average conditional coverage deviation over samples.
 
-### Worst Slab Coverage (WSC)
+### Worst Slab Coverage (WSC) [^2]
 
 Worst-case slab coverage evaluates conditional coverage over geometric slices of
-feature space rather than over predefined groups [^1][^3]. Following the notation
-of Braun et al. [^1], assume that \(X \subset \mathbb{R}^d\) and that a predictive
-set rule \(C_\alpha(\cdot)\) is evaluated on a test dataset
+feature space rather than over predefined groups. Assume that \(X \subset \mathbb{R}^d\) 
+and that a predictive set rule \(C_\alpha(\cdot)\) is evaluated on a test dataset
 \(\mathcal{D}_{\text{test}} = \{(X_i, Y_i)\}_{i=1}^n\).
 
 For a direction \(v \in \mathbb{R}^d\) and scalars \(a < b\), define the slab:
@@ -76,7 +75,7 @@ Let \(I_{v,a,b} = \{i : X_i \in S_{v,a,b}\}\). For a mass threshold
 \frac{1}{|I_{v,a,b}|}
 \sum_{i \in I_{v,a,b}}
 \mathbf{1}\{Y_i \in C_\alpha(X_i)\}
-\; : \;
+\;\middle|\;
 \frac{|I_{v,a,b}|}{n} \geq \delta
 \right\}.
 \]
@@ -106,25 +105,24 @@ values well below the target coverage reveal a slab of the feature space where
 the prediction sets or intervals under-cover.
 
 
-### Excess Risk of the Target Coverage (ERT)
+### Excess Risk of the Target Coverage (ERT) [^3]
 
 ERT estimates whether the conditional coverage function
 \(x \mapsto \mathbb{P}\{Y \in \hat{C}(X) \mid X=x\}\) carries useful signal
-beyond the constant target coverage \(1-\alpha\) [^1]. It trains a classifier to
+beyond the constant target coverage \(1-\alpha\). It trains a classifier to
 predict the binary coverage indicator \(c_i\) from the features \(x_i\), then
 compares the loss of this learned conditional coverage predictor with the loss
 of the constant predictor \(1-\alpha\):
 
 \[
-\mathrm{ERT}_\ell =
-\frac{1}{n}\sum_{i=1}^n
-\ell(1-\alpha, c_i)
--
-\frac{1}{n}\sum_{i=1}^n
-\ell(\widehat{p}(x_i), c_i),
+\widehat{\ell\text{-}\mathrm{ERT}}(h) :=
+\frac{1}{m}\sum_{i=1}^m
+\left[
+\ell(1-\alpha, c_i) - \ell(h(x_i), c_i)
+\right].
 \]
 
-where \(\widehat{p}(x_i)\) is the predicted conditional coverage and \(\ell\) is a
+Here, \(h(x_i)\) is the predicted conditional coverage and \(\ell\) is a
 proper loss. Larger positive values indicate that the features help predict
 coverage, which is evidence of conditional coverage variation. Values near zero
 indicate little detectable improvement over the target coverage baseline, given
@@ -143,6 +141,6 @@ follow the guidelines of the official GitHub [repository](https://github.com/ElS
 
 ## References
 
-[^1]: Braun, S., Holzmüller, D., Jordan, M. I., and Bach, F. "Conditional Coverage Diagnostics for Conformal Prediction." *arXiv:2512.11779*, 2025. [arXiv:2512.11779](https://arxiv.org/abs/2512.11779).
-[^2]: Ding, T., Angelopoulos, A., Bates, S., Jordan, M., and Tibshirani, R. J. "Class-conditional conformal prediction with many classes." *NeurIPS*, 2023. [arXiv:2306.09335](https://arxiv.org/abs/2306.09335).
-[^3]: Cauchois, M., Gupta, S., and Duchi, J. "Knowing What You Know: Valid and Validated Confidence Sets in Multiclass and Multilabel Prediction." *JMLR*, 2021. [JMLR 22(81)](https://www.jmlr.org/papers/v22/20-753.html).
+[^1]: Ding, T., Angelopoulos, A., Bates, S., Jordan, M., and Tibshirani, R. J. "Class-conditional conformal prediction with many classes." *NeurIPS*, 2023. [arXiv:2306.09335](https://arxiv.org/abs/2306.09335).
+[^2]: Cauchois, M., Gupta, S., and Duchi, J. "Knowing What You Know: Valid and Validated Confidence Sets in Multiclass and Multilabel Prediction." *JMLR*, 2021. [JMLR 22(81)](https://www.jmlr.org/papers/v22/20-753.html).
+[^3]: Braun, S., Holzmüller, D., Jordan, M. I., and Bach, F. "Conditional Coverage Diagnostics for Conformal Prediction." *arXiv:2512.11779*, 2025. [arXiv:2512.11779](https://arxiv.org/abs/2512.11779).
