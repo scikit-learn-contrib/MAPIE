@@ -35,6 +35,7 @@ from mapie.regression import SplitConformalRegressor
 # 1. Data-generating process from Gibbs et al. (2023)
 # --------------------------------------------------------------------------
 
+
 confidence_level = 0.9
 alpha = 1 - confidence_level
 
