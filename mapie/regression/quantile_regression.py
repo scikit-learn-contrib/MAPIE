@@ -227,7 +227,6 @@ class __QuantileConformalizer:
         RegressorMixin
             The estimator with updated parameters.
         """
-        estimator_name = self.get_estimator_name()
         if isinstance(estimator, Pipeline):
             estimator[-1].set_params(**params)
         else:
