@@ -29,6 +29,7 @@ from mapie.utils import (
 )
 
 from .regression import _MapieRegressor
+from mapie.conformity_scores import BaseRegressionScore, check_and_select_conformity_score
 
 REGRESSOR_TYPE = Union[RegressorMixin, Pipeline]
 
@@ -421,7 +422,7 @@ class CrossConformalizedQuantileRegressor:
         groups: Optional[ArrayLike] = None,
         fit_params: Optional[dict] = None,
         predict_params: Optional[dict] = None,
-    ) -> CrossConformalRegressor:
+    ) -> CrossConformalizedQuantileRegressor:
         """
         Estimates the uncertainty of the base regressor in a cross-validation style:
         fits the base regressor on different folds of the dataset
@@ -555,7 +556,7 @@ class CrossConformalizedQuantileRegressor:
             ensemble=ensemble,
             **self._predict_params,
         )
-        return  predictions # _cast_predictions_to_ndarray_tuple(predictions)
+        return predictions  # _cast_predictions_to_ndarray_tuple(predictions)
 
     # TODO: Duplicated from CrossConformalRegressor
     def predict(
@@ -1390,7 +1391,6 @@ class _MapieQuantileRegressor(_MapieRegressor):
 
         name_estimator = estimator.__class__.__name__
         alpha_name = self.quantile_estimator_params[name_estimator]["alpha_name"]
-
         for i, alpha_ in enumerate(self.alpha_np):
             cloned_estimator_ = clone(checked_estimator)
             params = {alpha_name: alpha_}
