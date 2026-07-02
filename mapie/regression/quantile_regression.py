@@ -100,6 +100,30 @@ class _QuantileConformalizer:
             raise ValueError("Invalid confidence_level. Allowed values are float.")
         return alpha_np
 
+
+    def pinball_loss(self, y_true: ArrayLike, y_pred: ArrayLike) -> NDArray:
+        """
+        Compute the pinball loss for quantile regression.
+
+        Parameters
+        ----------
+        y_true : ArrayLike
+            True target values.
+        y_pred : ArrayLike
+            Predicted target values.
+        alpha : float
+            Quantile level.
+
+        Returns
+        -------
+        NDArray
+            Pinball loss values.
+        """
+        alpha = self.alpha
+        y_true = np.asarray(y_true)
+        y_pred = np.asarray(y_pred)
+        return np.maximum(alpha * (y_true - y_pred), (alpha - 1) * (y_true - y_pred))
+
     def _check_quantile_estimator(
         self,
         estimator: Optional[REGRESSOR_TYPE] = None,
