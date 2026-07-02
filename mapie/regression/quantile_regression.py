@@ -253,7 +253,7 @@ class _QuantileConformalizer:
             2: 'central'
         }
 
-    def _set_quantile_estimator_params(self, estimator: REGRESSOR_TYPE, alpha: float, alpha_name **params) -> REGRESSOR_TYPE:
+    def _set_quantile_estimator_params(self, estimator: REGRESSOR_TYPE, alpha: float, alpha_name: str, **params) -> REGRESSOR_TYPE:
         """
         Set the parameters of the estimator to the given alpha value.
 
