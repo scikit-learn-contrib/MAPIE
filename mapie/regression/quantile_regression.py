@@ -259,7 +259,8 @@ class __QuantileConformalizer:
         y = _check_y(y)
 
         sample_weight, X, y = _check_null_weight(sample_weight, X, y)
-
+        estimator_name = self.get_estimator_name()
+        alpha_name = self.quantile_estimator_params[estimator_name]["alpha_name"]
         for i, alpha_ in enumerate(self.alpha_np):
             cloned_estimator_ = clone(checked_estimator)
             params = {alpha_name: alpha_}
