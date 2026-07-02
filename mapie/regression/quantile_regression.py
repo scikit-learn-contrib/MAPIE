@@ -40,6 +40,42 @@ from mapie.conformity_scores import (
 REGRESSOR_TYPE = Union[RegressorMixin, Pipeline]
 
 
+class AbsoluteQuantileRegressionScore(BaseRegressionScore):
+    """
+    Absolute conformity score for quantile regression.
+    """
+
+    def __init__(
+        self,
+        sym: bool = True,
+    ) -> None:
+        super().__init__(sym=sym, consistency_check=True)
+
+    def get_conformity_scores(
+        self, y: ArrayLike, y_pred: ArrayLike, **kwargs
+    ) -> NDArray:
+        """
+        Compute the conformity scores from the predicted values
+        and the observed ones, from the following formula:
+        conformity score = max(y_pred_lower - y, y - y_pred_upper)
+        """
+        return np.maximum(super().get_conformity_scores(y, y_pred, **kwargs))
+
+    def get_estimation_distribution(
+        self, y_pred: ArrayLike, conformity_scores: ArrayLike, **kwargs
+    ) -> NDArray:
+        """
+        Compute samples of the estimation distribution from the predicted
+        values and the conformity scores, from the following formula:
+        signed conformity score = y - y_pred
+        <=> y = y_pred + signed conformity score
+
+        `conformity_scores` can be either the conformity scores or
+        the quantile of the conformity scores.
+        """
+        return np.add(y_pred, conformity_scores)
+
+
 class _QuantileConformalizer:
     quantile_estimator_params = {
         "GradientBoostingRegressor": {"loss_name": "loss", "alpha_name": "alpha"},
@@ -99,7 +135,6 @@ class _QuantileConformalizer:
         else:
             raise ValueError("Invalid confidence_level. Allowed values are float.")
         return alpha_np
-
 
     def pinball_loss(self, y_true: ArrayLike, y_pred: ArrayLike) -> NDArray:
         """
