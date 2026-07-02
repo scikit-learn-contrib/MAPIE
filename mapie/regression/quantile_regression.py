@@ -239,7 +239,7 @@ class __QuantileConformalizer:
     # -------------------------------------- Fit
     # From MapiequantileRegressor
     # Second function: Handles estimator fitting
-    def _fit_estimators(
+    def _fit_quantiles(
         self,
         X: ArrayLike,
         y: ArrayLike,
@@ -288,7 +288,7 @@ class __QuantileConformalizer:
         _raise_error_if_method_already_called("fit", self._is_fitted)
         fit_params_ = _prepare_params(fit_params)
         self._initialize_fit_conformalize()
-        self._mapie_quantile_regressor._fit_estimators(
+        self._fit_quantiles(
             X=X_train,
             y=y_train,
             **fit_params_,
@@ -334,7 +334,7 @@ class __QuantileConformalizer:
         )
         return self
 
-    #------------------------------ Predict
+    # ------------------------------ Predict
 
 
 class CrossConformalizedQuantileRegressor:
@@ -397,8 +397,8 @@ class CrossConformalizedQuantileRegressor:
 
         self._predict_params: dict = {}
 
-    #---------------------Fit and Conformalize
-    #TODO: Duplicated from CrossConformalRegressor -> should be factorize in next refacto
+    # ---------------------Fit and Conformalize
+    # TODO: Duplicated from CrossConformalRegressor -> should be factorize in next refacto
     def reset(self) -> "CrossConformalizedQuantileRegressor":
         """
         Discard previously computed conformity scores so that
@@ -413,7 +413,7 @@ class CrossConformalizedQuantileRegressor:
         self._predict_params = {}
         return self
 
-    #TODO: Nearly duplicated from CrossConformalRegressor -> should be factorize in next refacto
+    # TODO: Nearly duplicated from CrossConformalRegressor -> should be factorize in next refacto
     def fit_conformalize(
         self,
         X: ArrayLike,
@@ -479,17 +479,17 @@ class CrossConformalizedQuantileRegressor:
         self.is_fitted_and_conformalized = True
         return self
 
-    #--------------------- Prediction
-    #TODO: Duplicated from CrossConformalRegressor
+    # --------------------- Prediction
+    # TODO: Duplicated from CrossConformalRegressor
     def predict_interval(
         self,
         X: ArrayLike,
         aggregate_point_predictions: Optional[str] = "mean",
         minimize_interval_width: bool = False,
         allow_infinite_bounds: bool = False,
-        aggregate_predictions: Any = _UNSET,
+        aggregate_predictions: Any = None #_UNSET,
     ) -> Tuple[NDArray, NDArray]:
-            """
+        """
         Predicts points and intervals.
 
         If several confidence levels were provided during initialisation, several
@@ -555,14 +555,14 @@ class CrossConformalizedQuantileRegressor:
             ensemble=ensemble,
             **self._predict_params,
         )
-        return _cast_predictions_to_ndarray_tuple(predictions)
+        return  # _cast_predictions_to_ndarray_tuple(predictions)
 
-    #TODO: Duplicated from CrossConformalRegressor
+    # TODO: Duplicated from CrossConformalRegressor
     def predict(
         self,
         X: ArrayLike,
         aggregate_point_predictions: Optional[str] = "mean",
-        aggregate_predictions: Any = _UNSET,
+        aggregate_predictions: Any = None #_UNSET,
     ) -> NDArray:
         """
         Predicts points.
@@ -595,12 +595,12 @@ class CrossConformalizedQuantileRegressor:
         NDArray
             Array of point predictions, with shape `(n_samples,)`.
         """
-        aggregate_point_predictions = _resolve_renamed_parameter(
-            "aggregate_point_predictions",
-            aggregate_point_predictions,
-            "aggregate_predictions",
-            aggregate_predictions,
-        )
+        # aggregate_point_predictions = _resolve_renamed_parameter(
+        #     "aggregate_point_predictions",
+        #     aggregate_point_predictions,
+        #     "aggregate_predictions",
+        #     aggregate_predictions,
+        # )
         _raise_error_if_previous_method_not_called(
             "predict",
             "fit_conformalize",
@@ -616,9 +616,9 @@ class CrossConformalizedQuantileRegressor:
             ensemble=ensemble,
             **self._predict_params,
         )
-        return _cast_point_predictions_to_ndarray(predictions)
+        #return _cast_point_predictions_to_ndarray(predictions)
 
-    #TODO: Duplicated from CrossConformalRegressor
+    # TODO: Duplicated from CrossConformalRegressor
     def _set_aggregate_point_predictions_and_return_ensemble(
         self, aggregate_point_predictions: Optional[str]
     ) -> bool:
@@ -631,7 +631,7 @@ class CrossConformalizedQuantileRegressor:
             self._mapie_regressor.agg_function = aggregate_point_predictions
         return ensemble
 
-    #TODO: Duplicated from CrossConformalRegressor -> should be factorize in next refacto
+    # TODO: Duplicated from CrossConformalRegressor -> should be factorize in next refacto
     @property
     def conformity_scores(self) -> NDArray:
         """
