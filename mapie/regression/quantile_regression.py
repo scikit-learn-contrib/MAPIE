@@ -487,7 +487,7 @@ class CrossConformalizedQuantileRegressor:
         aggregate_point_predictions: Optional[str] = "mean",
         minimize_interval_width: bool = False,
         allow_infinite_bounds: bool = False,
-        aggregate_predictions: Any = None #_UNSET,
+        aggregate_predictions: Any = None,  # _UNSET,
     ) -> Tuple[NDArray, NDArray]:
         """
         Predicts points and intervals.
@@ -532,12 +532,12 @@ class CrossConformalizedQuantileRegressor:
             - Prediction points, of shape `(n_samples,)`
             - Prediction intervals, of shape `(n_samples, 2, n_confidence_levels)`
         """
-        aggregate_point_predictions = _resolve_renamed_parameter(
-            "aggregate_point_predictions",
-            aggregate_point_predictions,
-            "aggregate_predictions",
-            aggregate_predictions,
-        )
+        # aggregate_point_predictions = _resolve_renamed_parameter(
+        #     "aggregate_point_predictions",
+        #     aggregate_point_predictions,
+        #     "aggregate_predictions",
+        #     aggregate_predictions,
+        # )
         _raise_error_if_previous_method_not_called(
             "predict_interval",
             "fit_conformalize",
@@ -555,14 +555,14 @@ class CrossConformalizedQuantileRegressor:
             ensemble=ensemble,
             **self._predict_params,
         )
-        return  # _cast_predictions_to_ndarray_tuple(predictions)
+        return  predictions # _cast_predictions_to_ndarray_tuple(predictions)
 
     # TODO: Duplicated from CrossConformalRegressor
     def predict(
         self,
         X: ArrayLike,
         aggregate_point_predictions: Optional[str] = "mean",
-        aggregate_predictions: Any = None #_UNSET,
+        aggregate_predictions: Any = None,  # _UNSET,
     ) -> NDArray:
         """
         Predicts points.
@@ -616,7 +616,8 @@ class CrossConformalizedQuantileRegressor:
             ensemble=ensemble,
             **self._predict_params,
         )
-        #return _cast_point_predictions_to_ndarray(predictions)
+        return predictions
+        # return _cast_point_predictions_to_ndarray(predictions)
 
     # TODO: Duplicated from CrossConformalRegressor
     def _set_aggregate_point_predictions_and_return_ensemble(
