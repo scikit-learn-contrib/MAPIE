@@ -280,7 +280,6 @@ class _QuantileConformalizer:
         X: ArrayLike,
         y: ArrayLike,
         **fit_params,
-        **central_fit_params: Optional[dict] = None
     ) -> None:
         """
         Fits the estimators with provided training data
@@ -319,12 +318,12 @@ class _QuantileConformalizer:
                     X,
                     y,
                     sample_weight,
-                    **central_fit_params,
+                    **fit_params,
                 )
             )
 
         if self._central_estimator is None:
-            self.central_estimator_ = self.estimators_[2]
+            self._central_estimator = self.estimators_[2]
 
     # ---------------------Conformalizer
     # From MapieQuantileRegressor
