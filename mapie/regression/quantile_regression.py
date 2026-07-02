@@ -243,17 +243,15 @@ class _QuantileConformalizer:
         self.cv = self._check_cv(cast(str, self.cv))
         self.quantiles = self._check_alpha(self.alpha)
         self.estimators_: dict[str, List[RegressorMixin]] = {
-            'lower': [],
-            'upper': [],
-            'central': []
+            "lower": [],
+            "upper": [],
+            "central": [],
         }
-        self.key_mapping = {
-            0: 'lower',
-            1: 'upper',
-            2: 'central'
-        }
+        self.key_mapping = {0: "lower", 1: "upper", 2: "central"}
 
-    def _set_quantile_estimator_params(self, estimator: REGRESSOR_TYPE, alpha: float, alpha_name: str, **params) -> REGRESSOR_TYPE:
+    def _set_quantile_estimator_params(
+        self, estimator: REGRESSOR_TYPE, alpha: float, alpha_name: str, **params
+    ) -> REGRESSOR_TYPE:
         """
         Set the parameters of the estimator to the given alpha value.
 
@@ -272,7 +270,7 @@ class _QuantileConformalizer:
             The estimator with updated parameters.
         """
         cloned_estimator_ = clone(estimator)
-        params = {alpha_name: alpha_}
+        params = {alpha_name: alpha}
         return self._set_estimator_params(cloned_estimator_, **params)
 
     # -------------------------------------- Fit
@@ -282,6 +280,7 @@ class _QuantileConformalizer:
         X: ArrayLike,
         y: ArrayLike,
         **fit_params,
+        **central_fit_params: Optional[dict] = None
     ) -> None:
         """
         Fits the estimators with provided training data
@@ -324,7 +323,7 @@ class _QuantileConformalizer:
                 )
             )
 
-        if self._central_estimator is None :
+        if self._central_estimator is None:
             self.central_estimator_ = self.estimators_[2]
 
     # ---------------------Conformalizer
@@ -428,7 +427,7 @@ class CrossConformalizedQuantileRegressor:
         self._predict_params: dict = {}
 
         self.central_estimator_: Optional[RegressorMixin] = None
-        self.fit_central_estimator : Optional[bool] = True
+        self.fit_central_estimator: Optional[bool] = True
 
     # ---------------------Fit and Conformalize
     # TODO: Duplicated from CrossConformalRegressor -> should be factorize in next refacto
@@ -765,7 +764,7 @@ class ConformalizedQuantileRegressor:
         self._prefit = prefit
         self._is_fitted = prefit
         self._is_conformalized = False
-        self.cv ="prefit" if prefit else "split"
+        self.cv = "prefit" if prefit else "split"
 
         self._mapie_quantile_regressor = _MapieQuantileRegressor(
             estimator=estimator,
