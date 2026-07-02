@@ -40,7 +40,7 @@ from mapie.conformity_scores import (
 REGRESSOR_TYPE = Union[RegressorMixin, Pipeline]
 
 
-class __QuantileConformalizer:
+class _QuantileConformalizer:
     quantile_estimator_params = {
         "GradientBoostingRegressor": {"loss_name": "loss", "alpha_name": "alpha"},
         "QuantileRegressor": {"loss_name": "quantile", "alpha_name": "quantile"},
@@ -92,12 +92,15 @@ class __QuantileConformalizer:
                     "Invalid confidence_level. Allowed values are between 0.0 and 1.0."
                 )
             else:
-                alpha_np = np.array([alpha / 2, 1 - alpha / 2, 0.5])
+                alpha_values = [alpha / 2, 1 - alpha / 2]
+                if self._central_estimator is None:
+                    alpha_values.append(0.5)
+                alpha_np = np.array(alpha_values)
         else:
             raise ValueError("Invalid confidence_level. Allowed values are float.")
         return alpha_np
 
-    def _check_estimator(
+    def _check_quantile_estimator(
         self,
         estimator: Optional[REGRESSOR_TYPE] = None,
     ) -> REGRESSOR_TYPE:
@@ -151,7 +154,7 @@ class __QuantileConformalizer:
             )
         _check_estimator_fit_predict(estimator)
         if isinstance(estimator, Pipeline):
-            self._check_estimator(estimator[-1])
+            self._check_quantile_estimator(estimator[-1])
             return estimator
         else:
             name_estimator = estimator.__class__.__name__
@@ -238,12 +241,42 @@ class __QuantileConformalizer:
 
     def _initialize_fit_conformalize(self) -> None:
         self.cv = self._check_cv(cast(str, self.cv))
-        self.alpha_np = self._check_alpha(self.alpha)
-        self.estimators_: List[RegressorMixin] = []
+        self.quantiles = self._check_alpha(self.alpha)
+        self.estimators_: dict[str, List[RegressorMixin]] = {
+            'lower': [],
+            'upper': [],
+            'central': []
+        }
+        self.key_mapping = {
+            0: 'lower',
+            1: 'upper',
+            2: 'central'
+        }
+
+    def _set_quantile_estimator_params(self, estimator: REGRESSOR_TYPE, alpha: float, alpha_name **params) -> REGRESSOR_TYPE:
+        """
+        Set the parameters of the estimator to the given alpha value.
+
+        Parameters
+        ----------
+        estimator : RegressorMixin
+            The estimator to set the parameters for.
+        alpha : float
+            The quantile level to set for the estimator.
+        **params : dict
+            Additional parameters to set for the estimator.
+
+        Returns
+        -------
+        RegressorMixin
+            The estimator with updated parameters.
+        """
+        cloned_estimator_ = clone(estimator)
+        params = {alpha_name: alpha_}
+        return self._set_estimator_params(cloned_estimator_, **params)
 
     # -------------------------------------- Fit
-    # From MapiequantileRegressor
-    # Second function: Handles estimator fitting
+    # TODO: A structure can handle quantiles fitting and prediction to avoid code duplication between conformalizer
     def _fit_quantiles(
         self,
         X: ArrayLike,
@@ -255,7 +288,7 @@ class __QuantileConformalizer:
         and stores them in self.estimators_.
         """
         sample_weight = fit_params.pop("sample_weight", None)
-        checked_estimator = self._check_estimator(self.estimator)
+        checked_estimator = self._check_quantile_estimator(self.estimator)
 
         X, y = indexable(X, y)
         y = _check_y(y)
@@ -263,15 +296,13 @@ class __QuantileConformalizer:
         sample_weight, X, y = _check_null_weight(sample_weight, X, y)
         estimator_name = self.get_estimator_name()
         alpha_name = self.quantile_estimator_params[estimator_name]["alpha_name"]
-        for i, alpha_ in enumerate(self.alpha_np):
-            cloned_estimator_ = clone(checked_estimator)
-            params = {alpha_name: alpha_}
-            if isinstance(checked_estimator, Pipeline):
-                cloned_estimator_[-1].set_params(**params)
-            else:
-                cloned_estimator_.set_params(**params)
-
-            self.estimators_.append(
+        for i, alpha in enumerate(self.quantiles):
+            cloned_estimator_ = self._set_quantile_estimator_params(
+                checked_estimator,
+                alpha,
+                alpha_name=alpha_name,
+            )
+            self.estimators_[self.key_map[i]].append(
                 _fit_estimator(
                     cloned_estimator_,
                     X,
@@ -281,27 +312,20 @@ class __QuantileConformalizer:
                 )
             )
 
-        self._is_fitted = True
+        if self._central_estimator is not None and self.fit_centeral_estimator:
+            cloned_estimator = clone(self._check_estimator(self._central_estimator))
+            self.estimators_.append(
+                _fit_estimator(
+                    cloned_estimator,
+                    X,
+                    y,
+                    sample_weight,
+                    **central_fit_params,
+                )
+            )
 
-        self.single_estimator_ = self.estimators_[2]
-
-    def fit(
-        self,
-        X_train: ArrayLike,
-        y_train: ArrayLike,
-        fit_params: Optional[dict] = None,
-    ) -> __QuantileConformalizer:
-        _raise_error_if_method_already_called("fit", self._is_fitted)
-        fit_params_ = _prepare_params(fit_params)
-        self._initialize_fit_conformalize()
-        self._fit_quantiles(
-            X=X_train,
-            y=y_train,
-            **fit_params_,
-        )
-
-        self._is_fitted = True
-        return self
+        if self._central_estimator is None :
+            self.central_estimator_ = self.estimators_[2]
 
     # ---------------------Conformalizer
     # From MapieQuantileRegressor
@@ -402,6 +426,9 @@ class CrossConformalizedQuantileRegressor:
         )
 
         self._predict_params: dict = {}
+
+        self.central_estimator_: Optional[RegressorMixin] = None
+        self.fit_central_estimator : Optional[bool] = True
 
     # ---------------------Fit and Conformalize
     # TODO: Duplicated from CrossConformalRegressor -> should be factorize in next refacto
@@ -738,6 +765,7 @@ class ConformalizedQuantileRegressor:
         self._prefit = prefit
         self._is_fitted = prefit
         self._is_conformalized = False
+        self.cv ="prefit" if prefit else "split"
 
         self._mapie_quantile_regressor = _MapieQuantileRegressor(
             estimator=estimator,
@@ -747,6 +775,9 @@ class ConformalizedQuantileRegressor:
         )
 
         self._predict_params: dict = {}
+
+        self.central_predictor_: Optional[RegressorMixin] = None
+        self.fit_central_predictor: Optional[bool] = True
 
     def fit(
         self,
@@ -1123,7 +1154,10 @@ class _MapieQuantileRegressor(_MapieRegressor):
                     "Invalid confidence_level. Allowed values are between 0.0 and 1.0."
                 )
             else:
-                alpha_np = np.array([alpha / 2, 1 - alpha / 2, 0.5])
+                alpha_values = [alpha / 2, 1 - alpha / 2]
+                if self._central_predictor is None:
+                    alpha_values.append(0.5)
+                alpha_np = np.array(alpha_values)
         else:
             raise ValueError("Invalid confidence_level. Allowed values are float.")
         return alpha_np
