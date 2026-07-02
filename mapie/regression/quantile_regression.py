@@ -29,7 +29,10 @@ from mapie.utils import (
 )
 
 from .regression import _MapieRegressor
-from mapie.conformity_scores import BaseRegressionScore, check_and_select_conformity_score
+from mapie.conformity_scores import (
+    BaseRegressionScore,
+    check_and_select_conformity_score,
+)
 
 REGRESSOR_TYPE = Union[RegressorMixin, Pipeline]
 
@@ -225,7 +228,6 @@ class __QuantileConformalizer:
             The estimator with updated parameters.
         """
         estimator_name = self.get_estimator_name()
-        alpha_name = self.quantile_estimator_params[estimator_name]["alpha_name"]
         if isinstance(estimator, Pipeline):
             estimator[-1].set_params(**params)
         else:
