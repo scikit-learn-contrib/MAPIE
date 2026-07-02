@@ -15,7 +15,10 @@ from sklearn.utils.validation import _check_y, _num_samples, indexable
 from mapie.utils import (
     _cast_predictions_to_ndarray_tuple,
     _check_alpha_and_n_samples,
+    _check_cv_not_string,
+    _check_cv_not_subsample,
     _check_estimator_fit_predict,
+    _check_if_param_in_allowed_values,
     _check_lower_upper_bounds,
     _check_null_weight,
     _fit_estimator,
