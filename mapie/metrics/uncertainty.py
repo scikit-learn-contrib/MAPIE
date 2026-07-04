@@ -17,11 +17,8 @@ softmax probability for classification).
 """
 
 
-from typing import Union
-
-
 import numpy as np
-from numpy.typing import ArrayLike, NDArray
+from numpy.typing import ArrayLike
 from sklearn.metrics import roc_auc_score
 from sklearn.utils import column_or_1d
 from sklearn.utils.validation import check_consistent_length
