@@ -16,14 +16,11 @@ e.g. prediction interval width for regression, or 1 minus max
 softmax probability for classification).
 """
 
-
 import numpy as np
 from numpy.typing import ArrayLike
 from sklearn.metrics import roc_auc_score
 from sklearn.utils import column_or_1d
 from sklearn.utils.validation import check_consistent_length
-
-
 
 
 def aucroc_score(
@@ -96,19 +93,12 @@ def aucroc_score(
     y_wrong = column_or_1d(np.asarray(y_wrong, dtype=float))
     y_uncertainty = column_or_1d(np.asarray(y_uncertainty, dtype=float))
 
-
     check_consistent_length(y_wrong, y_uncertainty)
 
-
     if np.any(np.isnan(y_wrong)) or np.any(np.isnan(y_uncertainty)):
-        raise ValueError(
-            "y_wrong and y_uncertainty must not contain NaN values."
-        )
+        raise ValueError("y_wrong and y_uncertainty must not contain NaN values.")
     if np.any(np.isinf(y_wrong)) or np.any(np.isinf(y_uncertainty)):
-        raise ValueError(
-            "y_wrong and y_uncertainty must not contain Inf values."
-        )
-
+        raise ValueError("y_wrong and y_uncertainty must not contain Inf values.")
 
     unique_labels = np.unique(y_wrong)
     if not np.all(np.isin(unique_labels, [0.0, 1.0])):
@@ -117,19 +107,13 @@ def aucroc_score(
             f"Got unique values: {unique_labels}."
         )
 
-
     if np.any(y_uncertainty < 0):
-        raise ValueError(
-            "y_uncertainty must contain only non-negative values."
-        )
-
+        raise ValueError("y_uncertainty must contain only non-negative values.")
 
     # sklearn's roc_auc_score handles the AUC computation;
     # we use uncertainty as the score that should rank positives (wrong=1)
     # higher than negatives (wrong=0).
     return float(roc_auc_score(y_wrong, y_uncertainty))
-
-
 
 
 def auarc_score(
@@ -203,19 +187,12 @@ def auarc_score(
     y_wrong = column_or_1d(np.asarray(y_wrong, dtype=float))
     y_uncertainty = column_or_1d(np.asarray(y_uncertainty, dtype=float))
 
-
     check_consistent_length(y_wrong, y_uncertainty)
 
-
     if np.any(np.isnan(y_wrong)) or np.any(np.isnan(y_uncertainty)):
-        raise ValueError(
-            "y_wrong and y_uncertainty must not contain NaN values."
-        )
+        raise ValueError("y_wrong and y_uncertainty must not contain NaN values.")
     if np.any(np.isinf(y_wrong)) or np.any(np.isinf(y_uncertainty)):
-        raise ValueError(
-            "y_wrong and y_uncertainty must not contain Inf values."
-        )
-
+        raise ValueError("y_wrong and y_uncertainty must not contain Inf values.")
 
     unique_labels = np.unique(y_wrong)
     if not np.all(np.isin(unique_labels, [0.0, 1.0])):
@@ -224,21 +201,15 @@ def auarc_score(
             f"Got unique values: {unique_labels}."
         )
 
-
     if np.any(y_uncertainty < 0):
-        raise ValueError(
-            "y_uncertainty must contain only non-negative values."
-        )
-
+        raise ValueError("y_uncertainty must contain only non-negative values.")
 
     n = len(y_wrong)
-
 
     # Sort by descending uncertainty: highest uncertainty rejected first.
     # Stable sort ensures deterministic behaviour for tied uncertainty values.
     rejection_order = np.argsort(y_uncertainty)[::-1]
     y_wrong_sorted = y_wrong[rejection_order]
-
 
     # accuracy_at_k[k] = accuracy when the k most uncertain samples
     # are rejected, i.e. we retain samples[k:] (n - k samples).
@@ -247,10 +218,8 @@ def auarc_score(
     # cumulative correct from the retained tail as we reject from the front
     cumulative_correct_from_tail = np.cumsum(y_correct_sorted[::-1])[::-1]
 
-
     retained_counts = np.arange(n, 0, -1, dtype=float)  # n, n-1, ..., 1
     accuracy_curve = cumulative_correct_from_tail / retained_counts
-
 
     # AUARC = mean accuracy across all rejection thresholds (0 rejected,
     # 1 rejected, ..., n-1 rejected), i.e. when retaining n, n-1, ..., 1
