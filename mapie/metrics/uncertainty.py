@@ -90,30 +90,30 @@ def aucroc_score(
     Quantification for Black-box Large Language Models. TMLR.
     https://arxiv.org/abs/2305.19187
     """
-    y_wrong = column_or_1d(np.asarray(y_wrong, dtype=float))
-    y_uncertainty = column_or_1d(np.asarray(y_uncertainty, dtype=float))
+    y_wrong_arr = column_or_1d(np.asarray(y_wrong, dtype=float))
+    y_uncertainty_arr = column_or_1d(np.asarray(y_uncertainty, dtype=float))
 
-    check_consistent_length(y_wrong, y_uncertainty)
+    check_consistent_length(y_wrong_arr, y_uncertainty_arr)
 
-    if np.any(np.isnan(y_wrong)) or np.any(np.isnan(y_uncertainty)):
+    if np.any(np.isnan(y_wrong_arr)) or np.any(np.isnan(y_uncertainty_arr)):
         raise ValueError("y_wrong and y_uncertainty must not contain NaN values.")
-    if np.any(np.isinf(y_wrong)) or np.any(np.isinf(y_uncertainty)):
+    if np.any(np.isinf(y_wrong_arr)) or np.any(np.isinf(y_uncertainty_arr)):
         raise ValueError("y_wrong and y_uncertainty must not contain Inf values.")
 
-    unique_labels = np.unique(y_wrong)
+    unique_labels = np.unique(y_wrong_arr)
     if not np.all(np.isin(unique_labels, [0.0, 1.0])):
         raise ValueError(
             "y_wrong must be a binary array containing only 0 and 1. "
             f"Got unique values: {unique_labels}."
         )
 
-    if np.any(y_uncertainty < 0):
+    if np.any(y_uncertainty_arr < 0):
         raise ValueError("y_uncertainty must contain only non-negative values.")
 
     # sklearn's roc_auc_score handles the AUC computation;
     # we use uncertainty as the score that should rank positives (wrong=1)
     # higher than negatives (wrong=0).
-    return float(roc_auc_score(y_wrong, y_uncertainty))
+    return float(roc_auc_score(y_wrong_arr, y_uncertainty_arr))
 
 
 def auarc_score(
@@ -184,32 +184,32 @@ def auarc_score(
     Quantification for Black-box Large Language Models. TMLR.
     https://arxiv.org/abs/2305.19187
     """
-    y_wrong = column_or_1d(np.asarray(y_wrong, dtype=float))
-    y_uncertainty = column_or_1d(np.asarray(y_uncertainty, dtype=float))
+    y_wrong_arr = column_or_1d(np.asarray(y_wrong, dtype=float))
+    y_uncertainty_arr = column_or_1d(np.asarray(y_uncertainty, dtype=float))
 
-    check_consistent_length(y_wrong, y_uncertainty)
+    check_consistent_length(y_wrong_arr, y_uncertainty_arr)
 
-    if np.any(np.isnan(y_wrong)) or np.any(np.isnan(y_uncertainty)):
+    if np.any(np.isnan(y_wrong_arr)) or np.any(np.isnan(y_uncertainty_arr)):
         raise ValueError("y_wrong and y_uncertainty must not contain NaN values.")
-    if np.any(np.isinf(y_wrong)) or np.any(np.isinf(y_uncertainty)):
+    if np.any(np.isinf(y_wrong_arr)) or np.any(np.isinf(y_uncertainty_arr)):
         raise ValueError("y_wrong and y_uncertainty must not contain Inf values.")
 
-    unique_labels = np.unique(y_wrong)
+    unique_labels = np.unique(y_wrong_arr)
     if not np.all(np.isin(unique_labels, [0.0, 1.0])):
         raise ValueError(
             "y_wrong must be a binary array containing only 0 and 1. "
             f"Got unique values: {unique_labels}."
         )
 
-    if np.any(y_uncertainty < 0):
+    if np.any(y_uncertainty_arr < 0):
         raise ValueError("y_uncertainty must contain only non-negative values.")
 
-    n = len(y_wrong)
+    n = len(y_wrong_arr)
 
     # Sort by descending uncertainty: highest uncertainty rejected first.
     # Stable sort ensures deterministic behaviour for tied uncertainty values.
-    rejection_order = np.argsort(y_uncertainty)[::-1]
-    y_wrong_sorted = y_wrong[rejection_order]
+    rejection_order = np.argsort(y_uncertainty_arr)[::-1]
+    y_wrong_sorted = y_wrong_arr[rejection_order]
 
     # accuracy_at_k[k] = accuracy when the k most uncertain samples
     # are rejected, i.e. we retain samples[k:] (n - k samples).
