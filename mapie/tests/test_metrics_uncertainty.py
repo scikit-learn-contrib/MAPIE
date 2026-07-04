@@ -187,4 +187,4 @@ class TestAuarcScore:
 
     def test_raises_on_negative_uncertainty(self):
         with pytest.raises(ValueError, match="non-negative"):
-            aucroc_score(Y_WRONG_PERFECT, [-0.1, 0.2, 0.8, 0.9])
+            auarc_score(Y_WRONG_PERFECT, [-0.1, 0.2, 0.8, 0.9])
