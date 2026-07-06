@@ -149,3 +149,11 @@ class TestAuarc:
     def test_raises_on_length_mismatch(self):
         with pytest.raises(ValueError):
             auarc([0, 1], [0.1, 0.2, 0.3])
+
+    def test_raises_on_inf(self):
+        with pytest.raises(ValueError, match="Inf"):
+            auarc([0, 1, 1], [0.1, np.inf, 0.3])
+
+    def test_raises_on_non_binary_labels(self):
+        with pytest.raises(ValueError, match="binary"):
+            auarc([0, 1, 2], [0.1, 0.2, 0.3])
