@@ -40,7 +40,55 @@ from mapie.conformity_scores import (
 REGRESSOR_TYPE = Union[RegressorMixin, Pipeline]
 
 
-class AbsoluteQuantileRegressionScore(BaseRegressionScore):
+class QuantileRegressionScore(BaseRegressionScore):
+    """
+    Quantile conformity score for quantile regression.
+    """
+
+    def __init__(self, sym: bool = False):
+        super().__init__(sym=sym, consistency_check=True)
+
+    def get_signed_conformity_scores(
+        self, y: NDArray, y_pred: NDArray, **kwargs
+    ) -> NDArray:
+        """
+        Placeholder for `get_conformity_scores`.
+        Subclasses should implement this method!
+
+        Compute the sample conformity scores given the predicted and
+        observed targets.
+
+        Parameters
+        ----------
+        y: NDArray of shape (n_samples, 2)
+            Observed target values.
+
+        y_pred: NDArray of shape (n_samples,)
+            Predicted target values.
+
+        Returns
+        -------
+        NDArray of shape (n_samples, 2)
+            Signed conformity scores.
+        """
+        return np.column_stack(y_pred[:0] - y, y - y_pred[1])
+
+    def get_estimation_distribution(
+        self, y_pred: ArrayLike, conformity_scores: ArrayLike, **kwargs
+    ) -> NDArray:
+        """
+        Compute samples of the estimation distribution from the predicted
+        values and the conformity scores, from the following formula:
+        signed conformity score = y - y_pred
+        <=> y = y_pred + signed conformity score
+
+        `conformity_scores` can be either the conformity scores or
+        the quantile of the conformity scores.
+        """
+        return np.add(y_pred, conformity_scores)
+
+
+class AbsoluteQuantileRegressionScore(QuantileRegressionScore):
     """
     Absolute conformity score for quantile regression.
     """
@@ -59,21 +107,11 @@ class AbsoluteQuantileRegressionScore(BaseRegressionScore):
         and the observed ones, from the following formula:
         conformity score = max(y_pred_lower - y, y - y_pred_upper)
         """
-        return np.maximum(super().get_conformity_scores(y, y_pred, **kwargs))
+        conformity_scores = self.get_signed_conformity_scores(y, y_pred, **kwargs)
 
-    def get_estimation_distribution(
-        self, y_pred: ArrayLike, conformity_scores: ArrayLike, **kwargs
-    ) -> NDArray:
-        """
-        Compute samples of the estimation distribution from the predicted
-        values and the conformity scores, from the following formula:
-        signed conformity score = y - y_pred
-        <=> y = y_pred + signed conformity score
-
-        `conformity_scores` can be either the conformity scores or
-        the quantile of the conformity scores.
-        """
-        return np.add(y_pred, conformity_scores)
+        if self.consistency_check:
+            self.check_consistency(y, y_pred, conformity_scores, **kwargs)
+        return np.maximum(conformity_scores[:, 0], conformity_scores[:, 1])
 
 
 class _QuantileConformalizer:
@@ -86,6 +124,8 @@ class _QuantileConformalizer:
         },
         "LGBMRegressor": {"loss_name": "objective", "alpha_name": "alpha"},
     }
+
+    allowed_scores = [QuantileRegressionScore]
 
     def _check_alpha(
         self,
@@ -158,6 +198,15 @@ class _QuantileConformalizer:
         y_true = np.asarray(y_true)
         y_pred = np.asarray(y_pred)
         return np.maximum(alpha * (y_true - y_pred), (alpha - 1) * (y_true - y_pred))
+
+    def _check_score(self, score):
+        """
+        Check if the score is a subclass of QuantileRegressionScore.
+        """
+        if not issubclass(score, QuantileRegressionScore):
+            raise ValueError(
+                "Invalid score. Allowed values are subclasses of QuantileRegressionScore."
+            )
 
     def _check_quantile_estimator(
         self,
@@ -306,6 +355,8 @@ class _QuantileConformalizer:
             "upper": [],
             "central": [],
         }
+        self.n_calib_samples: List[int] = []
+        self.conformity_scores: List[Iterable[float]] = []
         self.key_mapping = {0: "lower", 1: "upper", 2: "central"}
 
     def _set_quantile_estimator_params(
@@ -371,7 +422,7 @@ class _QuantileConformalizer:
 
         if self._central_estimator is not None and self.fit_centeral_estimator:
             cloned_estimator = clone(self._check_estimator(self._central_estimator))
-            self.estimators_.append(
+            self.estimators_["central"].append(
                 _fit_estimator(
                     cloned_estimator,
                     X,
@@ -380,11 +431,27 @@ class _QuantileConformalizer:
                     **fit_params,
                 )
             )
-
-        if self._central_estimator is None:
-            self._central_estimator = self.estimators_[2]
+        elif self._central_estimator is not None and not self.fit_centeral_estimator:
+            self.estimators_["central"].append(self._central_estimator)
 
     # ---------------------Conformalizer
+    def _conformalize(
+        self,
+        X: ArrayLike,
+        y: ArrayLike,
+        index=int,
+        sample_weight: Optional[ArrayLike] = None,
+        groups: Optional[ArrayLike] = None,
+        **kwargs: Any,
+    ) -> _QuantileConformalizer:
+        X_calib, y_calib = cast(ArrayLike, X), cast(ArrayLike, y)
+        X_calib, y_calib = indexable(X_calib, y_calib)
+        y_calib = _check_y(y_calib)
+
+        self.n_calib_samples.append(_num_samples(y_calib))
+        pred = self._predict_quantiles(X, index)
+        pred -1
+
     # From MapieQuantileRegressor
     def conformalize(  # type: ignore[override]
         self,
@@ -422,6 +489,51 @@ class _QuantileConformalizer:
         return self
 
     # ------------------------------ Predict
+    # TODO: A structure can handle quantiles fitting and prediction to avoid code duplication between conformalizer
+    def _predict_quantiles(self, X: ArrayLike, index: int, **predict_params):
+        """
+        Predicts the lower and upper quantiles for the given input data X using the specified index.
+
+        Parameters
+        ----------
+        X : ArrayLike
+            Input data for which to predict quantiles.
+        index : int
+            Index of the estimator to use for prediction (for split method this is always 0)
+        **predict_params : Any
+            Additional parameters to pass to the predict method of the estimators.
+
+        Returns
+        -------
+        ArrayLike
+            Predicted lower and upper quantiles for the input data X.
+        """
+        return np.column_stack(
+            [
+                self.estimators_["lower"][index].predict(X, **predict_params).ravel(),
+                self.estimators_["upper"][index].predict(X, **predict_params).ravel(),
+            ]
+        )
+
+    def _predict_center(self, X: ArrayLike, index: int, **predict_params):
+        """
+        Predicts the central quantile for the given input data X using the specified index.
+
+        Parameters
+        ----------
+        X : ArrayLike
+            Input data for which to predict the central quantile.
+        index : int
+            Index of the estimator to use for prediction (for split method this is always 0)
+        **predict_params : Any
+            Additional parameters to pass to the predict method of the estimators.
+
+        Returns
+        -------
+        ArrayLike
+            Predicted central quantile for the input data X.
+        """
+        return self.estimators_["central"][index].predict(X, **predict_params).ravel()
 
 
 class CrossConformalizedQuantileRegressor:
