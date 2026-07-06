@@ -64,15 +64,16 @@ class TestAuroc:
 
     def test_all_correct_predictions(self):
         """
-        When all predictions are correct, sklearn warns about
-        undefined AUC (single class). We still get a float result.
+        When all predictions are correct, AUROC is not defined
+        (single class) and should raise ValueError.
         """
-        import warnings
+        with pytest.raises(ValueError, match="both 0 and 1"):
+            auroc(Y_CORRECT_ALL_CORRECT, Y_CONF_UNIFORM)
 
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            result = auroc(Y_CORRECT_ALL_CORRECT, Y_CONF_UNIFORM)
-        assert isinstance(result, float)
+    def test_all_incorrect_predictions(self):
+        """All-incorrect also raises for single-class AUROC."""
+        with pytest.raises(ValueError, match="both 0 and 1"):
+            auroc(np.zeros(4, dtype=float), np.array([0.1, 0.2, 0.3, 0.4]))
 
     def test_raises_on_non_binary_labels(self):
         with pytest.raises(ValueError, match="binary"):

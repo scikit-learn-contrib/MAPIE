@@ -85,6 +85,11 @@ def auroc(
             f"Got unique values: {unique_labels}."
         )
 
+    if len(unique_labels) < 2:
+        raise ValueError(
+            "correctness must contain both 0 and 1 values to compute AUROC."
+        )
+
     return float(roc_auc_score(correctness_arr, confidence_arr))
 
 
