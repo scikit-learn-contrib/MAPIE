@@ -9,19 +9,13 @@ their article [1] which we argue is a good procedure to get adaptative
 prediction intervals (PI) and a guaranteed coverage on all sub groups of
 interest.
 
-For a given model, the simulation adjusts the MAPIE regressors using the
-``CCP`` method, on a synthetic dataset first considered by Romano et al. (2019)
-[2], and compares the bounds of the PIs with the standard split CP.
+For a given model, the simulation uses the
+``ConditionalSplitConformalRegressor`` class, on a synthetic dataset first considered by Romano et al. (2019)
+[2], and compares the bounds of the PIs with the standard SplitConformalRegressor.
 
-This simulation is carried out to check that the CCP method implemented in
+This simulation is carried out to check that the conditional method implemented in
 MAPIE gives the same results as [1], and that the bounds of the PIs are
 obtained.
-
-It is important to note that we are checking here if the adaptativity property
-of the prediction intervals are well obtained. However, the paper do this
-computations with the full conformal prediction approach, whereas we
-implemented the faster but more conservative split method. Thus, the results
-may vary a little.
 
 [1] Isaac Gibbs, John J. Cherian, Emmanuel J. Candès (2023).
 Conformal Prediction With Conditional Guarantees
@@ -153,15 +147,8 @@ plt.show()
 # In this experiment, we will use the
 # :class:`~mapie.regression.SplitConformalRegressor` and
 # :class:`~mapie.conditional_conformal_prediction.ConditionalSplitConformalRegressor`
-# to compute prediction intervals with the basic Split CP method and the paper
-# CCP method.
-# The coverages was computed, in the paper, on 500 different dataset
-# generations, to have a good idea of the true value.
-# Indeed, the empirical coverage of a single
-# experiment is stochastic, because of the finite number of calibration and
-# test samples.
-# We will only compute few trials, because of the documentation
-# computational power limitations.
+# to compute prediction intervals with the basic SplitConformalRegressor method and the paper
+# conditional method.
 
 eval_locs = np.array([1.5, 3.5])
 eval_scale = 0.2
