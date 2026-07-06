@@ -1,258 +1,537 @@
 """
-Tutorial: conditional conformal prediction for regression
-=========================================================
+============================================
+Tutorial: Conditional CP for regression
+============================================
 
+The tutorial will explain how to use the CCP method, and
+will compare it with the other methods available in MAPIE. The CCP method
+implements the method described in the Gibbs et al. (2023) paper [1].
 
-This tutorial shows how to use
-:class:`~mapie.conditional_conformal_prediction.ConditionalSplitConformalRegressor`.
-The method follows Gibbs, Cherian and Candès (2023) [1] and builds prediction
-intervals with guarantees over a user-chosen finite class of covariate shifts.
+We will see in this tutorial how to use the method. It has a lot of advantages:
 
-In MAPIE, this finite class is passed as ``feature_map``. The examples below
-compare standard split conformal prediction with two conditional feature maps:
+- It is model agnostic (it doesn't depend on the model but only on the
+  predictions, unlike `CQR`)
+- It can create very adaptative intervals (with a varying width which truly
+  reflects the model uncertainty)
+- while providing coverage guarantee on all sub-groups of interest
+  (avoiding biases)
+- with the possibility to inject prior knowledge about the data or the model
 
-- polynomial features of ``X``;
-- smooth radial basis functions over the one-dimensional input.
+However, we will also see its disadvantages:
+
+- The adaptativity depends on the calibrator we use: It can be difficult to
+  choose the correct calibrator,
+  with the best parameters (this tutorial will try to help you with this task).
+- The calibration and even more the inference are much longer than for the
+  other methods.
+
+Conclusion on the method:
+
+It can create more adaptative intervals than the other methods, but it can be
+difficult to find the best settings (calibrator type and parameters)
+and can have a big computational time.
+
+----
+
+In this tutorial, we will use a synthetic toy dataset.
+The estimator will be :class:`~sklearn.pipeline.Pipeline`
+with :class:`~sklearn.preprocessing.PolynomialFeatures` and
+:class:`~sklearn.linear_model.LinearRegression` (or
+:class:`~sklearn.linear_model.QuantileRegressor` for CQR).
+
+We will compare the different available feature maps of the CCP method
+(using
+:class:`~mapie.conditional_conformal_prediction.ConditionalSplitConformalRegressor`),
+with the standard split-conformal method, the CV+ method
+(:class:`~mapie.regression.CrossConformalRegressor`) and CQR
+(:class:`~mapie.regression.ConformalizedQuantileRegressor`)
+
+Recall that the ``alpha`` is ``1 - target coverage``.
 
 [1] Isaac Gibbs, John J. Cherian, and Emmanuel J. Candès,
 "Conformal Prediction With Conditional Guarantees",
 `arXiv <https://arxiv.org/abs/2305.12616>`_, 2023.
 """
 
+import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.stats import norm
-from sklearn.linear_model import LinearRegression
-from sklearn.pipeline import make_pipeline
+from sklearn.base import clone
+from sklearn.linear_model import LinearRegression, QuantileRegressor
+from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import PolynomialFeatures
 
 from mapie.conditional_conformal_prediction import ConditionalSplitConformalRegressor
-from mapie.metrics.regression import (
-    regression_coverage_score,
-    regression_mean_width_score,
+from mapie.regression import (
+    ConformalizedQuantileRegressor,
+    CrossConformalRegressor,
+    SplitConformalRegressor,
 )
-from mapie.regression import SplitConformalRegressor
-from mapie.utils import train_conformalize_test_split
+
+random_state = 42
+rng = np.random.default_rng(random_state)
+
+ALPHA = 0.1
+confidence_level = 1 - ALPHA
 
 ##############################################################################
-# 1. Generate heteroscedastic regression data
+# 1. Data generation
 # --------------------------------------------------------------------------
+# Let's start by creating some synthetic data with different domains and
+# distributions to evaluate the adaptativity of the methods:
+#  - baseline distribution of ``x*sin(x)``
+#  - Add noise :
+#   - between -1 and 0: uniform distribution of the points around the baseline
+#   - between 0 and 5: normal distribution with a noise value which
+#     increase with ``x``
 #
-# The noise distribution changes with ``X``: it is almost uniform on the left
-# side and increasingly Gaussian on the right side. A single marginal cutoff
-# cannot adapt to this local variation.
-
-rng = np.random.default_rng(42)
-confidence_level = 0.9
+# We use reduced sample sizes compared with the paper-scale experiment so that
+# the documentation example remains fast enough to execute.
 
 
-def mean_function(x):
+def x_sinx(x):
+    """One-dimensional x*sin(x) function."""
     return x * np.sin(x)
 
 
-def generate_data(n_samples=1800):
-    X = rng.uniform(-1, 5, size=n_samples)
-    gaussian_scale = 0.8 * np.maximum(X, 0) ** 2 / 5
-    noise = rng.normal(scale=gaussian_scale)
-    noise += rng.uniform(-2.4, 2.4, size=n_samples) * (X < 0)
-    y = mean_function(X) + noise
-    return X.reshape(-1, 1), y
+def get_1d_data_with_heteroscedastic_noise(
+    min_x=-1,
+    max_x=5,
+    n_samples=1400,
+    noise=0.8,
+    power=2,
+    seed=42,
+):
+    data_rng = np.random.default_rng(seed)
+    X = data_rng.uniform(min_x, max_x, size=n_samples)
+    normal_scale = noise * (np.maximum(X, 0) / max_x) ** power * max_x
+    y = x_sinx(X) + data_rng.normal(0, normal_scale)
+    y += data_rng.uniform(-noise * 3, noise * 3, size=n_samples) * (X < 0)
+
+    true_pi = np.column_stack([x_sinx(X), x_sinx(X)])
+    true_pi[X < 0, 0] -= noise * 3 * confidence_level
+    true_pi[X < 0, 1] += noise * 3 * confidence_level
+    normal_half_width = norm.ppf((1 + confidence_level) / 2) * normal_scale
+    true_pi[X >= 0, 0] -= normal_half_width[X >= 0]
+    true_pi[X >= 0, 1] += normal_half_width[X >= 0]
+
+    return X.reshape(-1, 1), y, true_pi
 
 
-def true_interval_bounds(X):
-    x = np.asarray(X).reshape(-1)
-    gaussian_scale = 0.8 * np.maximum(x, 0) ** 2 / 5
-    true_interval = np.column_stack([mean_function(x), mean_function(x)])
-    true_interval[x < 0, 0] -= 2.4 * confidence_level
-    true_interval[x < 0, 1] += 2.4 * confidence_level
-    normal_half_width = norm.ppf((1 + confidence_level) / 2) * gaussian_scale
-    true_interval[x >= 0, 0] -= normal_half_width[x >= 0]
-    true_interval[x >= 0, 1] += normal_half_width[x >= 0]
-    return true_interval
+def generate_data(n_train=500, n_calib=500, n_test=350, seed=42):
+    X, y, true_pi = get_1d_data_with_heteroscedastic_noise(
+        n_samples=n_train + n_calib + n_test,
+        seed=seed,
+    )
+    permutation = rng.permutation(len(X))
+    train_indexes = permutation[:n_train]
+    calib_indexes = permutation[n_train : n_train + n_calib]
+    test_indexes = permutation[n_train + n_calib :]
+    return (
+        X[train_indexes],
+        y[train_indexes],
+        X[calib_indexes],
+        y[calib_indexes],
+        X[test_indexes],
+        y[test_indexes],
+        true_pi[test_indexes],
+    )
 
 
-X, y = generate_data()
-(
-    X_train,
-    X_conformalize,
-    X_test,
-    y_train,
-    y_conformalize,
-    y_test,
-) = train_conformalize_test_split(
-    X,
-    y,
-    train_size=0.35,
-    conformalize_size=0.45,
-    test_size=0.20,
-    random_state=42,
-)
-true_interval_test = true_interval_bounds(X_test)
+X_train, y_train, X_calib, y_calib, X_test, y_test, test_pi = generate_data()
 
-fig, ax = plt.subplots(figsize=(7, 4))
-ax.scatter(X_train[:, 0], y_train, s=8, alpha=0.35, label="Training data")
+plt.scatter(X_train, y_train, color="C0", alpha=0.5, s=6, label="Training data")
 sort_order = np.argsort(X_train[:, 0])
-ax.plot(X_train[sort_order, 0], mean_function(X_train[sort_order, 0]), color="black")
-ax.set_title("Heteroscedastic regression data")
-ax.set_xlabel("$X$")
-ax.set_ylabel("$Y$")
-ax.legend()
-plt.tight_layout()
+x_sorted = X_train[sort_order]
+plt.plot(
+    x_sorted[:, 0],
+    x_sinx(x_sorted[:, 0]),
+    "k-",
+    label="Baseline",
+)
+plt.plot(
+    x_sorted[:, 0],
+    x_sinx(x_sorted[:, 0]) - 0.8 * 3 * confidence_level,
+    "k--",
+    label=f"Uniform-noise interval (alpha={ALPHA})",
+)
+plt.plot(x_sorted[:, 0], x_sinx(x_sorted[:, 0]) + 0.8 * 3 * confidence_level, "k--")
+plt.xlabel("x")
+plt.ylabel("y")
+plt.title("Data")
+plt.legend()
 plt.show()
 
 
 ##############################################################################
-# 2. Define conditional feature maps
+# 2. Model: polynomial regression
 # --------------------------------------------------------------------------
-#
-# ``polynomial_feature_map`` encodes a simple prior: uncertainty is expected to
-# change smoothly with ``X``. ``rbf_feature_map`` is less parametric and uses
-# Gaussian bumps spread across the input range. Both include an intercept-like
-# component through their first column.
+
+polynomial_degree = 4
+quantile_estimator = Pipeline(
+    [
+        ("poly", PolynomialFeatures(degree=polynomial_degree)),
+        ("linear", QuantileRegressor(solver="highs", alpha=0)),
+    ]
+)
+estimator = Pipeline(
+    [
+        ("poly", PolynomialFeatures(degree=polynomial_degree)),
+        ("linear", LinearRegression()),
+    ]
+)
+
+
+##############################################################################
+# 3. Plotting and adaptativity comparison functions
+# --------------------------------------------------------------------------
+# The old PR used dedicated calibrator classes. With the current API, the same
+# ideas are expressed directly as functions from covariates to feature matrices.
+
+gaussian_centers = np.linspace(-1, 5, 8)
+
+
+def constant_feature_map(X):
+    X = np.asarray(X)
+    return np.ones((len(X), 1))
 
 
 def polynomial_feature_map(X):
     x = np.asarray(X).reshape(-1)
-    return np.column_stack([np.ones(len(x)), x, x**2])
+    return np.column_stack([np.ones(len(x)), x, x**2, x**3])
 
 
-rbf_centers = np.linspace(-1, 5, 7)
-
-
-def rbf_feature_map(X):
+def gaussian_feature_map(X, sigma=0.55):
     x = np.asarray(X).reshape(-1)
-    squared_distances = (x[:, np.newaxis] - rbf_centers[np.newaxis, :]) ** 2
-    return np.column_stack([np.ones(len(x)), np.exp(-squared_distances / 0.75)])
+    squared_distances = (x[:, np.newaxis] - gaussian_centers[np.newaxis, :]) ** 2
+    return np.column_stack(
+        [np.ones(len(x)), np.exp(-squared_distances / (2 * sigma**2))]
+    )
 
 
-##############################################################################
-# 3. Fit split and conditional conformal regressors
-# --------------------------------------------------------------------------
-#
-# The estimator is fitted once. The conformal methods share the same
-# conformalization samples and differ only in how the residual cutoff is chosen.
-
-estimator = make_pipeline(PolynomialFeatures(4), LinearRegression()).fit(
-    X_train, y_train
-)
-
-mapie_split = SplitConformalRegressor(
-    estimator=estimator,
-    confidence_level=confidence_level,
-    conformity_score="absolute",
-    prefit=True,
-)
-mapie_split.conformalize(X_conformalize, y_conformalize)
-y_pred_split, y_interval_split = mapie_split.predict_interval(X_test)
-
-mapie_poly = ConditionalSplitConformalRegressor(
-    polynomial_feature_map,
-    estimator=estimator,
-    confidence_level=confidence_level,
-    conformity_score="absolute",
-    prefit=True,
-)
-mapie_poly.conformalize(X_conformalize, y_conformalize)
-y_pred_poly, y_interval_poly = mapie_poly.predict_interval(X_test)
-
-mapie_rbf = ConditionalSplitConformalRegressor(
-    rbf_feature_map,
-    estimator=estimator,
-    confidence_level=confidence_level,
-    conformity_score="absolute",
-    prefit=True,
-)
-mapie_rbf.conformalize(X_conformalize, y_conformalize)
-y_pred_rbf, y_interval_rbf = mapie_rbf.predict_interval(X_test)
+def grouped_polynomial_feature_map(X):
+    x = np.asarray(X).reshape(-1)
+    left = (x < 0).astype(float)
+    right = (x >= 0).astype(float)
+    return np.column_stack(
+        [
+            left,
+            right,
+            right * x,
+            right * x**2,
+            right * x**3,
+        ]
+    )
 
 
-##############################################################################
-# 4. Visualize prediction intervals
-# --------------------------------------------------------------------------
-
-intervals = [y_interval_split, y_interval_poly, y_interval_rbf]
-predictions = [y_pred_split, y_pred_poly, y_pred_rbf]
-titles = [
-    "Marginal split conformal",
-    "Conditional: polynomial feature map",
-    "Conditional: RBF feature map",
-]
-colors = ["C0", "C1", "C2"]
-sort_order = np.argsort(X_test[:, 0])
-
-fig, axes = plt.subplots(1, 3, figsize=(13, 4), sharex=True, sharey=True)
-for ax, y_pred, y_interval, title, color in zip(
-    axes, predictions, intervals, titles, colors
+def plot_subplot(
+    ax,
+    X,
+    y,
+    mapie,
+    y_pred,
+    y_pi,
+    color_rgb,
+    show_transform=False,
+    ax_transform=None,
 ):
-    ax.scatter(X_test[:, 0], y_test, s=8, alpha=0.25, color="black")
-    ax.plot(X_test[sort_order, 0], y_pred[sort_order], color="black", linewidth=1.5)
-    ax.plot(
-        X_test[sort_order, 0],
-        true_interval_test[sort_order, 0],
-        "--",
-        color="gray",
-        linewidth=1,
+    """Plot the prediction interval and, optionally, feature-map components."""
+    sort_order = np.argsort(X[:, 0])
+    color = mcolors.rgb2hex(color_rgb)
+    x_sorted = X[sort_order]
+    y_sorted = y[sort_order]
+    y_pred_sorted = y_pred[sort_order]
+    lower_pi_sorted = y_pi[sort_order, 0, 0]
+    upper_pi_sorted = y_pi[sort_order, 1, 0]
+
+    ax.scatter(
+        x_sorted[:, 0],
+        y_sorted,
+        s=3,
+        alpha=0.3,
+        color="darkblue",
+        label="Test data",
     )
-    ax.plot(
-        X_test[sort_order, 0],
-        true_interval_test[sort_order, 1],
-        "--",
-        color="gray",
-        linewidth=1,
-    )
+    ax.plot(x_sorted[:, 0], y_pred_sorted, lw=1, color="black", label="Prediction")
     ax.fill_between(
-        X_test[sort_order, 0],
-        y_interval[sort_order, 0, 0],
-        y_interval[sort_order, 1, 0],
+        x_sorted[:, 0],
+        lower_pi_sorted,
+        upper_pi_sorted,
         color=color,
         alpha=0.3,
+        label="Prediction interval",
     )
-    ax.set_title(title)
-    ax.set_xlabel("$X$")
-axes[0].set_ylabel("$Y$")
-plt.tight_layout()
-plt.show()
+    ax.plot(x_sorted[:, 0], lower_pi_sorted, lw=1, color=color)
+    ax.plot(x_sorted[:, 0], upper_pi_sorted, lw=1, color=color)
+    ax.plot(
+        x_sorted[:, 0],
+        test_pi[sort_order, 0],
+        "--k",
+        lw=1,
+        label="True interval",
+    )
+    ax.plot(x_sorted[:, 0], test_pi[sort_order, 1], "--k", lw=1)
+
+    if show_transform and isinstance(mapie, ConditionalSplitConformalRegressor):
+        transform = mapie.feature_map(x_sorted)
+        for column in range(transform.shape[1]):
+            ax_transform.plot(x_sorted[:, 0], transform[:, column], lw=1, color=color)
+
+
+def plot_figure(mapies, y_preds, y_pis, titles, show_components=False):
+    """Plot the prediction intervals of all MAPIE instances."""
+    cp = plt.get_cmap("tab10").colors
+    ncols = min(3, len(titles))
+    nrows = int(np.ceil(len(titles) / ncols))
+
+    if show_components:
+        fig, axes = plt.subplots(
+            nrows=2 * nrows,
+            ncols=ncols,
+            figsize=(ncols * 4, nrows * 5.2),
+            height_ratios=[3, 1] * nrows,
+        )
+        axes = np.asarray(axes).reshape(2 * nrows, ncols)
+        main_axes = axes[::2].flatten()
+        transform_axes = axes[1::2].flatten()
+    else:
+        fig, axes = plt.subplots(
+            nrows=nrows, ncols=ncols, figsize=(ncols * 4, nrows * 4)
+        )
+        main_axes = np.asarray(axes).reshape(nrows, ncols).flatten()
+        transform_axes = np.full(main_axes.shape, None)
+
+    for axis_index in range(len(mapies), len(main_axes)):
+        fig.delaxes(main_axes[axis_index])
+        if transform_axes[axis_index] is not None:
+            fig.delaxes(transform_axes[axis_index])
+
+    for index, (m_ax, t_ax, mapie, y_pred, y_pi, title) in enumerate(
+        zip(main_axes, transform_axes, mapies, y_preds, y_pis, titles)
+    ):
+        plot_subplot(
+            m_ax,
+            X_test,
+            y_test,
+            mapie,
+            y_pred,
+            y_pi,
+            cp[index],
+            show_transform=show_components,
+            ax_transform=t_ax,
+        )
+        m_ax.set_title(title)
+        m_ax.set_xlabel("X")
+        if index % ncols == 0:
+            m_ax.set_ylabel("Y")
+        m_ax.legend(fontsize=8)
+        if t_ax is not None:
+            t_ax.set_title("Feature-map components")
+            t_ax.set_xlabel("X")
+            if index % ncols == 0:
+                t_ax.set_ylabel("Value")
+
+    fig.tight_layout()
+    plt.show()
+
+
+def compute_conditional_coverage(X, y, y_pi, bins_width=0.5):
+    """Compute conditional coverage on bins of X."""
+    bin_edges = np.arange(np.min(X), np.max(X) + bins_width, bins_width)
+    coverage = np.zeros(len(bin_edges) - 1)
+
+    for bin_index in range(len(bin_edges) - 1):
+        in_bin = (X[:, 0] >= bin_edges[bin_index]) & (
+            X[:, 0] < bin_edges[bin_index + 1]
+        )
+        if np.any(in_bin):
+            coverage[bin_index] = np.mean(
+                (y[in_bin] >= y_pi[in_bin, 0, 0]) & (y[in_bin] <= y_pi[in_bin, 1, 0])
+            )
+        else:
+            coverage[bin_index] = np.nan
+
+    bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
+    return bin_centers, coverage
+
+
+def plot_evaluation(titles, y_pis, X, y):
+    """Plot conditional coverages and interval widths."""
+    sort_order = np.argsort(X[:, 0])
+    cp = plt.get_cmap("tab10").colors
+
+    fig, axs = plt.subplots(nrows=1, ncols=2, figsize=(10, 4))
+    for index, pi in enumerate(y_pis):
+        color = mcolors.rgb2hex(cp[index])
+        bin_centers, coverage = compute_conditional_coverage(X, y, pi)
+        axs[0].plot(bin_centers, coverage, lw=2, color=color, label=titles[index])
+        width = pi[sort_order, 1, 0] - pi[sort_order, 0, 0]
+        axs[1].plot(X[sort_order, 0], width, lw=2, color=color, label=titles[index])
+
+    perfect_width = test_pi[sort_order, 1] - test_pi[sort_order, 0]
+    axs[1].plot(
+        X[sort_order, 0],
+        perfect_width,
+        lw=2,
+        color="black",
+        linestyle="--",
+        label="True width",
+    )
+    axs[0].axhline(
+        y=confidence_level,
+        color="black",
+        linestyle="--",
+        label=f"target={confidence_level}",
+    )
+    axs[0].legend(fontsize=8)
+    axs[0].set_title("Conditional coverage")
+    axs[0].set_xlabel("X (bins of 0.5 width)")
+    axs[0].set_ylabel("Coverage")
+    axs[0].set_ylim([0.55, 1.05])
+    axs[1].legend(fontsize=8)
+    axs[1].set_title("Prediction interval width")
+    axs[1].set_xlabel("X")
+    axs[1].set_ylabel("Width")
+    plt.tight_layout()
+    plt.show()
 
 
 ##############################################################################
-# 5. Evaluate local coverage and interval width
+# 4. Creation of Mapie instances
+# --------------------------------------------------------------------------
+# We are going to test different methods : ``CV+``, ``CQR`` and ``CCP``
+# (with default parameters)
+
+estimator_split = clone(estimator).fit(X_train, y_train)
+mapie_split = SplitConformalRegressor(
+    estimator=estimator_split,
+    confidence_level=confidence_level,
+    conformity_score="absolute",
+    prefit=True,
+).conformalize(X_calib, y_calib)
+y_pred_split, y_pi_split = mapie_split.predict_interval(X_test)
+
+mapie_cv = CrossConformalRegressor(
+    estimator=clone(estimator),
+    confidence_level=confidence_level,
+    method="plus",
+    cv=3,
+)
+mapie_cv.fit_conformalize(
+    np.vstack([X_train, X_calib]),
+    np.hstack([y_train, y_calib]),
+)
+y_pred_cv, y_pi_cv = mapie_cv.predict_interval(X_test)
+
+mapie_cqr = ConformalizedQuantileRegressor(
+    estimator=clone(quantile_estimator),
+    confidence_level=confidence_level,
+)
+mapie_cqr.fit(X_train, y_train).conformalize(X_calib, y_calib)
+y_pred_cqr, y_pi_cqr = mapie_cqr.predict_interval(X_test)
+
+mapie_ccp = ConditionalSplitConformalRegressor(
+    gaussian_feature_map,
+    estimator=estimator_split,
+    confidence_level=confidence_level,
+    conformity_score="absolute",
+    prefit=True,
+).conformalize(X_calib, y_calib)
+y_pred_ccp, y_pi_ccp = mapie_ccp.predict_interval(X_test)
+
+mapies = [mapie_split, mapie_cv, mapie_cqr, mapie_ccp]
+y_preds = [y_pred_split, y_pred_cv, y_pred_cqr, y_pred_ccp]
+y_pis = [y_pi_split, y_pi_cv, y_pi_cqr, y_pi_ccp]
+titles = ["Basic split", "CV+", "CQR", "CCP Gaussian feature map"]
+
+plot_figure(mapies, y_preds, y_pis, titles)
+plot_evaluation(titles, y_pis, X_test, y_test)
+
+
+##############################################################################
+# The :class:`~mapie.conditional_conformal_prediction.ConditionalSplitConformalRegressor`
+# has is a very adaptative method, even with default
+# parameters values. If the dataset is more complex, the default parameters
+# may not be enough to get the best performances. In this case, we can use
+# more advanced settings, described below.
+
+
+##############################################################################
+# 5. How to improve the results?
 # --------------------------------------------------------------------------
 #
-# We bin the test samples by ``X``. A conditional method is useful when it gets
-# closer to the target coverage in each region while assigning width where the
-# data are genuinely noisy.
+# 5.1. How does the ``CCP`` method works ?
+# --------------------------------------------------------------------------
+# The CCP method is based on a function which create some features(vector of
+# d dimensions), based on ``X`` (and potentially the prediction ``y_pred``).
+#
+# These features should be able to represente the distribuion of the
+# conformity scores, which is here (by default) the absolute residual:
+# ``|y_true - y_pred|``
 
-bin_edges = np.linspace(-1, 5, 9)
-bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
+##############################################################################
+# Examples of basic functions:
+# --------------------------------------------------------------------------
+#
+##############################################################################
+
+##############################################################################
+#  1) ``f : X -> (1)``, will try to estimate the absolute residual with a
+#  constant, and will results in a prediction interval of constant width
+#  (like the basic split CP)
+#
+#  2) ``f : X -> (1, X)``, will result in a prediction interval of width
+#  equal to: a constant + a value proportional to the value of ``X``
+#  (it seems a good idea here, as the uncertainty increase with ``X``)
+#
+# In the current API, these are passed as ``feature_map`` callables.
+
+feature_maps = [
+    constant_feature_map,
+    polynomial_feature_map,
+    gaussian_feature_map,
+    grouped_polynomial_feature_map,
+]
+feature_map_titles = [
+    "CCP constant",
+    "CCP polynomial",
+    "CCP Gaussian",
+    "CCP grouped polynomial",
+]
+
+ccp_mapies = []
+ccp_y_preds = []
+ccp_y_pis = []
+for feature_map in feature_maps:
+    mapie = ConditionalSplitConformalRegressor(
+        feature_map,
+        estimator=estimator_split,
+        confidence_level=confidence_level,
+        conformity_score="absolute",
+        prefit=True,
+    ).conformalize(X_calib, y_calib)
+    y_pred, y_pi = mapie.predict_interval(X_test)
+    ccp_mapies.append(mapie)
+    ccp_y_preds.append(y_pred)
+    ccp_y_pis.append(y_pi)
+
+plot_figure(ccp_mapies, ccp_y_preds, ccp_y_pis, feature_map_titles, True)
+plot_evaluation(feature_map_titles, ccp_y_pis, X_test, y_test)
 
 
-def scores_by_bin(y_true, y_interval, X):
-    coverages = []
-    widths = []
-    for left, right in zip(bin_edges[:-1], bin_edges[1:]):
-        mask = (X[:, 0] >= left) & (X[:, 0] < right)
-        coverages.append(regression_coverage_score(y_true[mask], y_interval[mask]))
-        widths.append(regression_mean_width_score(y_interval[mask]))
-    return np.asarray(coverages).ravel(), np.asarray(widths).ravel()
-
-
-fig, axes = plt.subplots(1, 2, figsize=(11, 4), sharex=True)
-for y_interval, title, color in zip(intervals, titles, colors):
-    coverage, width = scores_by_bin(y_test, y_interval, X_test)
-    axes[0].plot(bin_centers, coverage, marker="o", color=color, label=title)
-    axes[1].plot(bin_centers, width, marker="o", color=color, label=title)
-
-axes[0].axhline(confidence_level, color="black", linestyle="--", linewidth=1)
-axes[0].set_ylim(0.55, 1.02)
-axes[0].set_ylabel("Coverage")
-axes[0].set_title("Coverage by region")
-axes[0].legend(fontsize=8)
-
-axes[1].set_ylabel("Mean interval width")
-axes[1].set_title("Interval width by region")
-
-for ax in axes:
-    ax.set_xlabel("$X$ bin center")
-
-plt.tight_layout()
-plt.show()
+##############################################################################
+##############################################################################
+# 6. Conclusion:
+# --------------------------------------------------------------------------
+# The goal is to get prediction intervals that are as adaptive as possible while
+# still keeping the target coverage. Perfect adaptativity whould result in a
+# perfectly constant conditional coverage.
+#
+# This is the power of the ``CCP`` method: combining prior knowledge and
+# generic features (gaussian kernels) to have a great overall adaptativity.
+#
+# However, it can be difficult to find the best calibrator and parameters.
+# Sometimes, a simpler method (standard ``split`` with ``GammaConformityScore``
+# for example) can be enough. Don't forget to try at first the simpler method,
+# and move on with the more advanced if it is necessary.

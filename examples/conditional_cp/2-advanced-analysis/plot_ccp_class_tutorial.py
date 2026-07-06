@@ -1,22 +1,25 @@
 """
-Tutorial: conditional conformal prediction for classification
-=============================================================
+============================================
+Tutorial: Conditional CP for classification
+============================================
 
-
-This tutorial shows how to use
-:class:`~mapie.conditional_conformal_prediction.ConditionalSplitConformalClassifier`
-on a synthetic multiclass problem inspired by Gibbs, Cherian and Candès (2023)
+The tutorial explains how to use conditional conformal prediction (CCP) for
+classification and will compare it with the other methods available in MAPIE.
+The CCP method implements the method described in the Gibbs et al. (2023) paper
 [1].
 
-The conditional classifier receives a ``feature_map`` function. This function
-maps each input sample to a finite set of basis functions defining where the
-conditional coverage guarantees should hold. Here we compare:
+In this tutorial, the classifier will be
+:class:`~sklearn.linear_model.LogisticRegression`.
+We will use a synthetic toy dataset.
 
-- a standard marginal split-conformal classifier;
-- a conditional classifier whose ``feature_map`` groups samples by the base
-  model's predicted class;
-- a conditional classifier whose ``feature_map`` contains radial basis
-  functions centered on the class clouds.
+We will compare the CCP method (using
+:class:`~mapie.conditional_conformal_prediction.ConditionalSplitConformalClassifier`),
+with the standard method, using for both, the LAC conformity score
+(:class:`~mapie.conformity_scores.LACConformityScore`).
+
+Recall that the ``LAC`` method consists on applying a threshold on the
+predicted softmax, to keep all the classes above the threshold
+(``alpha`` is ``1 - target coverage``).
 
 [1] Isaac Gibbs, John J. Cherian, and Emmanuel J. Candès,
 "Conformal Prediction With Conditional Guarantees",
@@ -25,24 +28,24 @@ conditional coverage guarantees should hold. Here we compare:
 
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.patches import Patch
 from sklearn.linear_model import LogisticRegression
 
 from mapie.classification import SplitConformalClassifier
 from mapie.conditional_conformal_prediction import ConditionalSplitConformalClassifier
-from mapie.metrics.classification import (
-    classification_coverage_score,
-    classification_mean_width_score,
-)
+
+random_state = 1
+ALPHA = 0.2
+confidence_level = 1 - ALPHA
+N_CLASSES = 5
 
 ##############################################################################
-# 1. Generate a multiclass toy dataset
+# 1. Data generation
 # --------------------------------------------------------------------------
+# Let's start by creating some synthetic data with 5 gaussian distributions
 #
-# The classes overlap near the center of the plot. In that region, prediction
-# sets should become larger because the base classifier is less certain.
-
-N_CLASSES = 5
-confidence_level = 0.8
+# We use reduced sample sizes compared with the paper-scale experiment so that
+# the documentation example remains fast enough to execute.
 
 centers = np.array(
     [
@@ -62,8 +65,8 @@ covariances = [
 ]
 
 
-def make_toy_dataset(n_samples, random_state):
-    rng = np.random.default_rng(random_state)
+def create_toy_dataset(n_samples=1000, seed=1):
+    rng = np.random.default_rng(seed)
     n_per_class = np.full(N_CLASSES, n_samples // N_CLASSES)
     n_per_class[: n_samples % N_CLASSES] += 1
     X = np.vstack(
@@ -72,180 +75,306 @@ def make_toy_dataset(n_samples, random_state):
             for center, covariance, n in zip(centers, covariances, n_per_class)
         ]
     )
-    y = np.concatenate(
+    y = np.hstack(
         [np.full(n, class_index) for class_index, n in enumerate(n_per_class)]
     )
     permutation = rng.permutation(len(y))
     return X[permutation], y[permutation]
 
 
-X_train, y_train = make_toy_dataset(1200, random_state=1)
-X_conformalize, y_conformalize = make_toy_dataset(1200, random_state=2)
-X_test, y_test = make_toy_dataset(1600, random_state=3)
+def generate_data(seed=1, n_train=1000, n_calib=700, n_test=1000):
+    x_train, y_train = create_toy_dataset(n_train, seed=seed)
+    x_calib, y_calib = create_toy_dataset(n_calib, seed=seed + 1)
+    x_test, y_test = create_toy_dataset(n_test, seed=seed + 2)
+    return x_train, y_train, x_calib, y_calib, x_test, y_test
 
-fig, ax = plt.subplots(figsize=(6, 5))
+
+x_train, y_train, *_ = generate_data(seed=random_state)
+
 for class_index in range(N_CLASSES):
-    mask = y_train == class_index
-    ax.scatter(
-        X_train[mask, 0],
-        X_train[mask, 1],
-        s=8,
-        alpha=0.55,
+    plt.scatter(
+        x_train[y_train == class_index, 0],
+        x_train[y_train == class_index, 1],
+        c=f"C{class_index}",
+        s=3,
         label=f"Class {class_index}",
     )
-ax.set_title("Multiclass data with overlapping class clouds")
-ax.set_xlabel("$X_0$")
-ax.set_ylabel("$X_1$")
-ax.legend(markerscale=2)
-plt.tight_layout()
+plt.legend(markerscale=4)
+plt.title("Synthetic multiclass data")
+plt.xlabel("$X_0$")
+plt.ylabel("$X_1$")
 plt.show()
 
 
 ##############################################################################
-# 2. Define conditional feature maps
+# 2. Plotting and adaptativity comparison functions
 # --------------------------------------------------------------------------
-#
-# ``predicted_class_feature_map`` asks the conditional procedure to balance
-# coverage across the base classifier's predicted classes. ``rbf_feature_map``
-# instead gives a smooth local basis over the feature space.
-
-base_classifier = LogisticRegression(max_iter=1000).fit(X_train, y_train)
+# The current API receives the conditional class of functions through a
+# ``feature_map`` callable. The functions below replace the old ``CustomCCP``
+# and ``GaussianCCP`` calibrators from the original version of this tutorial.
 
 
-def predicted_class_feature_map(X):
-    predicted_class = base_classifier.predict(X)
-    return np.eye(N_CLASSES)[predicted_class]
+def predicted_class_feature_map(estimator):
+    def feature_map(X):
+        predicted_class = estimator.predict(X)
+        return np.eye(N_CLASSES)[predicted_class]
+
+    return feature_map
 
 
-def rbf_feature_map(X):
+def gaussian_feature_map(X):
     X = np.asarray(X)
     squared_distances = ((X[:, np.newaxis, :] - centers[np.newaxis, :, :]) ** 2).sum(
         axis=2
     )
-    rbf_values = np.exp(-squared_distances / (2 * 2.0**2))
-    return np.column_stack([np.ones(len(X)), rbf_values])
+    gaussian_features = np.exp(-squared_distances / (2 * 1.5**2))
+    return np.column_stack([np.ones(len(X)), gaussian_features])
 
 
-##############################################################################
-# 3. Fit marginal and conditional classifiers
-# --------------------------------------------------------------------------
-#
-# All three methods use the same fitted logistic regression model and the
-# same conformalization data. Only the conformal calibration step changes.
+def fit_methods(x_train, y_train, x_calib, y_calib):
+    estimator = LogisticRegression(max_iter=1000).fit(x_train, y_train)
 
-mapie_lac = SplitConformalClassifier(
-    estimator=base_classifier,
-    confidence_level=confidence_level,
-    conformity_score="lac",
-    prefit=True,
-)
-mapie_lac.conformalize(X_conformalize, y_conformalize)
-y_pred_lac, y_set_lac = mapie_lac.predict_set(X_test)
+    mapie_lac = SplitConformalClassifier(
+        estimator=estimator,
+        confidence_level=confidence_level,
+        conformity_score="lac",
+        prefit=True,
+    ).conformalize(x_calib, y_calib)
 
-mapie_predicted_class = ConditionalSplitConformalClassifier(
-    predicted_class_feature_map,
-    estimator=base_classifier,
-    confidence_level=confidence_level,
-    conformity_score="lac",
-    prefit=True,
-)
-mapie_predicted_class.conformalize(X_conformalize, y_conformalize)
-y_pred_pc, y_set_pc = mapie_predicted_class.predict_set(X_test)
+    mapie_ccp_y_pred = ConditionalSplitConformalClassifier(
+        predicted_class_feature_map(estimator),
+        estimator=estimator,
+        confidence_level=confidence_level,
+        conformity_score="lac",
+        prefit=True,
+    ).conformalize(x_calib, y_calib)
 
-mapie_rbf = ConditionalSplitConformalClassifier(
-    rbf_feature_map,
-    estimator=base_classifier,
-    confidence_level=confidence_level,
-    conformity_score="lac",
-    prefit=True,
-)
-mapie_rbf.conformalize(X_conformalize, y_conformalize)
-y_pred_rbf, y_set_rbf = mapie_rbf.predict_set(X_test)
+    mapie_ccp_gauss = ConditionalSplitConformalClassifier(
+        gaussian_feature_map,
+        estimator=estimator,
+        confidence_level=confidence_level,
+        conformity_score="lac",
+        prefit=True,
+    ).conformalize(x_calib, y_calib)
+
+    return [mapie_lac, mapie_ccp_y_pred, mapie_ccp_gauss]
 
 
-##############################################################################
-# 4. Visualize adaptivity of the prediction sets
-# --------------------------------------------------------------------------
-#
-# The plots show the size of each prediction set on a feature-space grid. The
-# conditional feature maps allocate larger sets near the overlapping regions.
-
-xx, yy = np.meshgrid(np.linspace(-6, 8, 30), np.linspace(-6, 8, 30))
-X_grid = np.column_stack([xx.ravel(), yy.ravel()])
-
-_, y_set_grid_lac = mapie_lac.predict_set(X_grid)
-_, y_set_grid_pc = mapie_predicted_class.predict_set(X_grid)
-_, y_set_grid_rbf = mapie_rbf.predict_set(X_grid)
-
-grid_sets = [y_set_grid_lac, y_set_grid_pc, y_set_grid_rbf]
-titles = [
-    "Marginal LAC",
-    "Conditional: predicted-class groups",
-    "Conditional: RBF feature map",
-]
-
-fig, axes = plt.subplots(1, 3, figsize=(13, 4), sharex=True, sharey=True)
-for ax, y_pred_set, title in zip(axes, grid_sets, titles):
-    set_sizes = y_pred_set[:, :, 0].sum(axis=1).reshape(xx.shape)
-    image = ax.pcolormesh(xx, yy, set_sizes, cmap="Purples", vmin=0, vmax=N_CLASSES)
-    ax.scatter(X_test[:, 0], X_test[:, 1], c=y_test, cmap="tab10", s=5, alpha=0.35)
-    ax.set_title(title)
-    ax.set_xlabel("$X_0$")
-axes[0].set_ylabel("$X_1$")
-fig.colorbar(image, ax=axes, label="Prediction set size")
-plt.show()
+def evaluate_conditional_coverage(mapies, x_test, y_test):
+    scores = np.zeros((len(mapies), N_CLASSES + 1))
+    for method_index, mapie in enumerate(mapies):
+        _, y_ps_test = mapie.predict_set(x_test)
+        scores[method_index, 1:] = [
+            y_ps_test[y_test == class_index, class_index, 0].mean()
+            for class_index in range(N_CLASSES)
+        ]
+        scores[method_index, 0] = y_ps_test[np.arange(len(y_test)), y_test, 0].mean()
+    return scores
 
 
-##############################################################################
-# 5. Compare coverage by class
-# --------------------------------------------------------------------------
-#
-# The marginal method targets coverage only on average. Conditional feature maps
-# make it possible to target more local notions of coverage chosen by the user.
+def run_exp(
+    names,
+    n_train=1000,
+    n_calib=700,
+    n_test=1000,
+    grid_step=26,
+    plot=True,
+    seed=1,
+    max_display=1000,
+):
+    x_train, y_train, x_calib, y_calib, x_test, y_test = generate_data(
+        seed=seed, n_train=n_train, n_calib=n_calib, n_test=n_test
+    )
+    mapies = fit_methods(x_train, y_train, x_calib, y_calib)
+
+    if max_display:
+        rng = np.random.default_rng(seed)
+        display_ind = rng.choice(len(x_test), min(max_display, len(x_test)))
+    else:
+        display_ind = np.arange(len(x_test))
+
+    if plot:
+        fig = plt.figure(figsize=(6 * (len(mapies) + 1), 7))
+        grid = plt.GridSpec(1, len(mapies) + 1)
+        xx, yy = np.meshgrid(
+            np.linspace(-6, 8, grid_step), np.linspace(-6, 8, grid_step)
+        )
+        x_mesh = np.stack([xx.ravel(), yy.ravel()], axis=1)
+        color_map = plt.colormaps["Purples"].resampled(N_CLASSES + 1)
+
+    if not plot:
+        return evaluate_conditional_coverage(mapies, x_test, y_test)
+
+    for method_index, (mapie, name) in enumerate(zip(mapies, names)):
+        y_pred_mesh, y_ps_mesh = mapie.predict_set(x_mesh)
+
+        if method_index == 0:
+            ax = fig.add_subplot(grid[0, 0])
+            ax.scatter(
+                x_mesh[:, 0],
+                x_mesh[:, 1],
+                c=[f"C{x}" for x in y_pred_mesh],
+                alpha=0.95,
+                marker="s",
+                edgecolor="none",
+                s=24,
+            )
+            ax.scatter(
+                x_test[display_ind, 0],
+                x_test[display_ind, 1],
+                c=[f"C{x}" for x in y_test[display_ind]],
+                alpha=0.85,
+                marker=".",
+                edgecolor="black",
+                s=60,
+            )
+            ax.set_title("Predictions")
+            ax.set_xlim([-6, 8])
+            ax.set_ylim([-6, 8])
+            handles = [
+                plt.Line2D(
+                    [0],
+                    [0],
+                    marker=".",
+                    color="w",
+                    markerfacecolor=f"C{i}",
+                    markersize=10,
+                )
+                for i in range(N_CLASSES)
+            ]
+            ax.legend(handles, [f"Class {i}" for i in range(N_CLASSES)])
+
+        y_ps_sums = y_ps_mesh[:, :, 0].sum(axis=1)
+        ax = fig.add_subplot(grid[0, method_index + 1])
+        scatter = ax.scatter(
+            x_mesh[:, 0],
+            x_mesh[:, 1],
+            c=y_ps_sums,
+            marker="s",
+            edgecolor="none",
+            s=24,
+            cmap=color_map,
+            vmin=0,
+            vmax=N_CLASSES,
+        )
+        ax.scatter(
+            x_test[display_ind, 0],
+            x_test[display_ind, 1],
+            c=[f"C{x}" for x in y_test[display_ind]],
+            alpha=0.55,
+            marker=".",
+            edgecolor="gray",
+            s=35,
+        )
+        colorbar = plt.colorbar(scatter, ax=ax)
+        colorbar.ax.set_ylabel("Set size")
+        ax.set_title(name)
+        ax.set_xlim([-6, 8])
+        ax.set_ylim([-6, 8])
+
+    scores = evaluate_conditional_coverage(mapies, x_test, y_test)
+    fig.tight_layout()
+    plt.show()
+    return scores
 
 
-def scores_by_class(y_true, y_pred_set):
-    coverages = []
-    set_sizes = []
-    for class_index in range(N_CLASSES):
-        mask = y_true == class_index
-        coverages.append(classification_coverage_score(y_true[mask], y_pred_set[mask]))
-        set_sizes.append(classification_mean_width_score(y_pred_set[mask]))
-    return np.asarray(coverages).ravel(), np.asarray(set_sizes).ravel()
+def plot_cond_coverage(scores, names):
+    labels = [f"Class {i}" for i in range(N_CLASSES)]
+    labels.insert(0, "marginal")
+    x = np.arange(len(labels))
+    width = 0.2
 
-
-coverage_lac, width_lac = scores_by_class(y_test, y_set_lac)
-coverage_pc, width_pc = scores_by_class(y_test, y_set_pc)
-coverage_rbf, width_rbf = scores_by_class(y_test, y_set_rbf)
-
-x = np.arange(N_CLASSES)
-bar_width = 0.25
-fig, axes = plt.subplots(1, 2, figsize=(11, 4), sharex=True)
-
-for offset, coverage, label in [
-    (-bar_width, coverage_lac, "Marginal LAC"),
-    (0.0, coverage_pc, "Predicted-class groups"),
-    (bar_width, coverage_rbf, "RBF feature map"),
-]:
-    axes[0].bar(x + offset, coverage, width=bar_width, label=label)
-axes[0].axhline(confidence_level, color="black", linestyle="--", linewidth=1)
-axes[0].set_ylim(0.55, 1.02)
-axes[0].set_ylabel("Coverage")
-axes[0].set_title("Coverage by true class")
-axes[0].legend()
-
-for offset, width, label in [
-    (-bar_width, width_lac, "Marginal LAC"),
-    (0.0, width_pc, "Predicted-class groups"),
-    (bar_width, width_rbf, "RBF feature map"),
-]:
-    axes[1].bar(x + offset, width, width=bar_width, label=label)
-axes[1].set_ylabel("Mean prediction set size")
-axes[1].set_title("Set size by true class")
-
-for ax in axes:
-    ax.set_xlabel("Class")
+    fig, ax = plt.subplots(figsize=(10, 6))
+    for method_index in range(scores.shape[1]):
+        ax.boxplot(
+            scores[:, method_index, :],
+            positions=x + width * (method_index - 1),
+            widths=width,
+            patch_artist=True,
+            boxprops=dict(facecolor=f"C{method_index}"),
+            medianprops=dict(color="black"),
+            tick_labels=labels,
+        )
+    ax.axhline(
+        y=confidence_level,
+        color="red",
+        linestyle="--",
+        label=f"target={confidence_level}",
+    )
+    ax.axvline(x=0.5, color="black", linestyle="--")
+    ax.set_ylabel("Coverage")
+    ax.set_title("Coverage on each class")
     ax.set_xticks(x)
+    ax.set_xticklabels(labels)
+    ax.set_ylim([0.6, 1])
 
-plt.tight_layout()
-plt.show()
+    custom_handles = [
+        Patch(facecolor=f"C{i}", edgecolor="black", label=names[i])
+        for i in range(len(names))
+    ]
+    handles, legend_labels = ax.get_legend_handles_labels()
+    ax.legend(handles + custom_handles, legend_labels + names, loc="lower left")
+    plt.show()
+
+
+##############################################################################
+# 3. Creation of Mapie instances
+# --------------------------------------------------------------------------
+# We are going to compare the standard ``LAC`` method with:
+#
+# - The ``CCP`` method using the predicted classes as groups (to have a
+#   homogenous coverage on each class).
+# - The ``CCP`` method with gaussian kernels, to have adaptative prediction
+#   sets, without prior knowledge or information.
+
+
+##############################################################################
+# 4. Generate the prediction sets
+# --------------------------------------------------------------------------
+
+names = ["Standard LAC", "CCP predicted class groups", "CCP Gaussian kernel"]
+
+run_exp(names)
+
+##############################################################################
+# We can see that the ``CCP`` method seems to create better
+# prediction sets than the standard method. Indeed, where the
+# classes distributions overlap (especially for class 3 and 4),
+# the size of the sets should increase, to correctly represente the model
+# uncertainty on those samples.
+#
+# The middle of all the classes distributions, where points could
+# belong to any class, should have the biggest prediction sets (with almost
+# all the clases in the sets, as we are very uncertain). The calibrator
+# with gaussian kernels represented this uncertainty, with big sets
+# for the middle points.
+#
+# Thus, between the two ``CCP`` methods, the one using gaussian kernels
+# seems the most adaptative.
+
+
+##############################################################################
+# 5. Evaluate the adaptativity
+# --------------------------------------------------------------------------
+# If we can, at first, assess the adaptativity of the methods just looking at
+# the prediction sets, the most accurate way is to look if the coverage is
+# homogenous on sub parts of the data (on each class for instance).
+
+N_TRIALS = 4
+scores = np.zeros((N_TRIALS, len(names), N_CLASSES + 1))
+for trial in range(N_TRIALS):
+    scores[trial, :, :] = run_exp(names, plot=False, seed=trial)
+
+plot_cond_coverage(scores, names)
+
+##############################################################################
+# A pefectly adaptative method whould result in a homogenous coverage
+# for all classes. We can see that the ``CCP`` method, with the predicted
+# classes as groups, is more adaptative than the standard method.
+#
+# To conclude, the ``CCP`` method offer adaptative perdiction sets.
+# We can inject prior knowledge or groups on which we want to avois bias
+# (We tried to do this with the classes, but it was not perfect because we only
+# had access to the predictions, not the true classes).
+# Using gaussian kernels, with a correct sigma parameter
+# can be the easiest and best solution to have very adaptative prdiction sets.
