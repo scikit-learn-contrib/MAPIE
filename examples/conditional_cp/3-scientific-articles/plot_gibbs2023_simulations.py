@@ -13,10 +13,6 @@ For a given model, the simulation adjusts the MAPIE regressors using the
 ``CCP`` method, on a synthetic dataset first considered by Romano et al. (2019)
 [2], and compares the bounds of the PIs with the standard split CP.
 
-In order to reproduce the results of the standard split conformal prediction
-(Split CP), we reuse the Mapie implementation in
-:class:`~mapie.regression.SplitConformalRegressor`.
-
 This simulation is carried out to check that the CCP method implemented in
 MAPIE gives the same results as [1], and that the bounds of the PIs are
 obtained.
@@ -34,6 +30,8 @@ Conformal Prediction With Conditional Guarantees
 Conformalized Quantile Regression.
 33rd Conference on Neural Information Processing Systems (NeurIPS 2019).
 """
+
+# sphinx_gallery_thumbnail_number = 2
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -72,36 +70,42 @@ def init_model():
 # -----------------------------------------------------------------------------
 
 
-def generate_data(seed=random_state, n_train=1200, n_calib=700, n_test=250):
-    rng = np.random.default_rng(seed)
+def generate_data(seed=random_state, n_train=2000, n_calib=1000, n_test=500):
+    np.random.seed(seed)
+    n_train = n_train + n_calib
 
     def f(x):
-        ax = np.zeros_like(x)
+        ax = 0 * x
         for i in range(len(x)):
-            ax[i] = rng.poisson(np.sin(x[i]) ** 2 + 0.1)
-            ax[i] += 0.03 * x[i] * rng.normal()
-            ax[i] += 25 * (rng.uniform() < 0.01) * rng.normal()
-        return ax.astype(np.float64)
+            ax[i] = (
+                np.random.poisson(np.sin(x[i]) ** 2 + 0.1)
+                + 0.03 * x[i] * np.random.randn(1)
+            ).item()
+            ax[i] += (
+                25 * (np.random.uniform(0, 1, 1) < 0.01) * np.random.randn(1)
+            ).item()
+        return ax.astype(np.float32)
 
-    # training features
-    X_train = rng.uniform(0, 5.0, size=n_train).astype(np.float64)
-    X_calib = rng.uniform(0, 5.0, size=n_calib).astype(np.float64)
-    X_test = rng.uniform(0, 5.0, size=n_test).astype(np.float64)
-
-    # generate labels
+    X_train = np.random.uniform(0, 5.0, size=n_train).astype(np.float32)
+    X_test = np.random.uniform(0, 5.0, size=n_test).astype(np.float32)
     y_train = f(X_train)
-    y_calib = f(X_calib)
     y_test = f(X_test)
 
-    # reshape the features
     X_train = X_train.reshape(-1, 1)
-    X_calib = X_calib.reshape(-1, 1)
     X_test = X_test.reshape(-1, 1)
 
-    return X_train, y_train, X_calib, y_calib, X_test, y_test
+    train_set_size = len(y_train) - n_calib
+    X_train_final = X_train[:train_set_size]
+    X_calib = X_train[train_set_size:]
+    y_train_final = y_train[:train_set_size]
+    y_calib = y_train[train_set_size:]
+
+    return X_train_final, y_train_final, X_calib, y_calib, X_test, y_test
 
 
-X_train, y_train, X_calib, y_calib, X_test, y_test = generate_data()
+X_train, y_train, X_calib, y_calib, X_test, y_test = generate_data(n_calib=2000)
+X_calib = np.asarray(X_calib, dtype=np.float64)
+y_calib = np.asarray(y_calib, dtype=np.float64)
 
 fig = plt.figure(figsize=(12, 5))
 ax1 = fig.add_subplot(1, 2, 1)
@@ -172,7 +176,7 @@ def group_feature_map(X):
     return np.column_stack(
         [
             ((x >= t) & (x < t + 0.5)).astype(float).ravel()
-            for t in np.arange(0, 5.5, 0.5)
+            for t in np.arange(0, 5.0, 0.5)
         ]
     )
 
@@ -187,25 +191,33 @@ def shift_feature_map(X):
     return np.column_stack([np.ones(len(x)), gaussian_features])
 
 
-def fit_split_interval(model, X_calib, y_calib, X_test, split_sym=True):
+def fit_split_interval(model, X_calib, y_calib, X_test):
     mapie_split = SplitConformalRegressor(
         model,
         confidence_level=confidence_level,
-        conformity_score=AbsoluteConformityScore(sym=split_sym),
+        conformity_score=AbsoluteConformityScore(sym=True),
         prefit=True,
     )
     mapie_split.conformalize(X_calib, y_calib)
     return mapie_split.predict_interval(X_test)
 
 
-def fit_ccp_interval(model, X_calib, y_calib, X_test, feature_map, seed=0):
+def fit_ccp_interval(
+    model,
+    X_calib,
+    y_calib,
+    X_test,
+    feature_map,
+    randomize=False,
+    seed=0,
+):
     mapie_ccp = ConditionalSplitConformalRegressor(
         feature_map,
         estimator=model,
         confidence_level=confidence_level,
         conformity_score=AbsoluteConformityScore(sym=False),
         prefit=True,
-        randomize=True,
+        randomize=randomize,
         seed=seed,
     )
     mapie_ccp.conformalize(X_calib, y_calib)
@@ -216,12 +228,20 @@ def estimate_coverage(feature_map, group_functs=None, seed=0):
     if group_functs is None:
         group_functs = []
 
-    X_train, y_train, X_calib, y_calib, X_test, y_test = generate_data(seed=seed)
-    trial_model = init_model().fit(X_train, y_train)
+    _, _, X_calib, y_calib, X_test, y_test = generate_data(seed=seed, n_calib=2000)
+    X_calib = np.asarray(X_calib, dtype=np.float64)
+    y_calib = np.asarray(y_calib, dtype=np.float64)
+    X_test = np.asarray(X_test, dtype=np.float64)
 
-    _, y_pi_split = fit_split_interval(trial_model, X_calib, y_calib, X_test)
+    _, y_pi_split = fit_split_interval(model, X_calib, y_calib, X_test)
     _, y_pi_ccp = fit_ccp_interval(
-        trial_model, X_calib, y_calib, X_test, feature_map, seed=seed
+        model,
+        X_calib,
+        y_calib,
+        X_test,
+        feature_map,
+        randomize=True,
+        seed=seed,
     )
 
     cover_split = np.logical_or(
@@ -239,18 +259,16 @@ def estimate_coverage(feature_map, group_functs=None, seed=0):
     return marginal_cover, np.array(group_covers)
 
 
-def plot_results(X_test, y_test, n_trials=8, experiment="Groups", split_sym=True):
-    _, y_pi_split = fit_split_interval(
-        model, X_calib, y_calib, X_test, split_sym=split_sym
-    )
+def plot_results(X_test, y_test, n_trials=20, experiment="Groups"):
+    _, y_pi_split = fit_split_interval(model, X_calib, y_calib, X_test)
 
     if experiment == "Groups":
         feature_map = group_feature_map
         eval_functions = [
-            lambda X, a=a, b=b: ((X >= a) & (X <= b)).astype(float)
+            lambda X, a=a, b=b: ((X > a) & (X < b)).astype(float)
             for a, b in zip([1, 3], [2, 4])
         ]
-        eval_names = ["[1, 2]", "[3, 4]"]
+        eval_names = ["[1,2]", "[3,4]"]
     else:
         feature_map = shift_feature_map
         eval_functions = [
@@ -271,7 +289,7 @@ def plot_results(X_test, y_test, n_trials=8, experiment="Groups", split_sym=True
     coverage_data = pd.DataFrame()
 
     for group, cov in zip(["Marginal"] + eval_names, [marginal_cov] + list(group_cov)):
-        for i, name in enumerate(["Split", "CCP"]):
+        for i, name in enumerate(["Split", "Conditional"]):
             coverage_data = pd.concat(
                 [
                     coverage_data,
@@ -396,9 +414,9 @@ def plot_results(X_test, y_test, n_trials=8, experiment="Groups", split_sym=True
 # 5. Reproduce experiment and results
 # -----------------------------------------------------------------------------
 
-plot_results(X_test, y_test, 8, experiment="Groups")
+plot_results(X_test, y_test, experiment="Groups")
 
-plot_results(X_test, y_test, 8, experiment="Shifts")
+plot_results(X_test, y_test, experiment="Shifts")
 
 
 ##############################################################################
