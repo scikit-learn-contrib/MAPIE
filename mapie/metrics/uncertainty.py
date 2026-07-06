@@ -145,6 +145,13 @@ def auarc(
     >>> confidence = np.array([0.1, 0.2, 0.8, 0.9])
     >>> auarc(correctness, confidence)
     0.7916666666666666
+
+    References
+    ----------
+    Nadeem, M. S. A., Zucker, J.-D., and Hanczar, B. (2009).
+    "Accuracy-rejection curves (ARCs) for comparing classification
+    methods with a reject option." Proceedings of Machine Learning
+    Research, 8, 65-81.
     """
     correctness_arr = column_or_1d(np.asarray(correctness, dtype=float))
     confidence_arr = column_or_1d(np.asarray(confidence, dtype=float))
