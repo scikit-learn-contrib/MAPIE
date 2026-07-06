@@ -1,19 +1,16 @@
 """
 Uncertainty evaluation metrics for MAPIE.
 
+Implements AUROC and AUARC as model-agnostic metrics for
+evaluating how well uncertainty estimates rank or reject
+incorrect predictions.
 
-Implements AUCROC and AUARC as introduced in:
-    Lin et al. (2023), "Generating with Confidence: Uncertainty
-    Quantification for Black-box Large Language Models",
-    TMLR. https://arxiv.org/abs/2305.19187
-
-
-These metrics are model-agnostic and apply to both regression
-and classification tasks. The caller is responsible for computing
-``y_wrong`` (binary: 1 if prediction is incorrect) and
-``y_uncertainty`` (a non-negative scalar uncertainty per sample,
-e.g. prediction interval width for regression, or 1 minus max
-softmax probability for classification).
+These metrics apply to both regression and classification.
+The caller is responsible for computing ``correctness``
+(binary: 1 if the prediction is correct) and ``confidence``
+(a scalar where higher values indicate greater confidence /
+lower uncertainty — e.g. 1 / prediction interval width for
+regression, or max softmax probability for classification).
 """
 
 import numpy as np
@@ -23,206 +20,154 @@ from sklearn.utils import column_or_1d
 from sklearn.utils.validation import check_consistent_length
 
 
-def aucroc_score(
-    y_wrong: ArrayLike,
-    y_uncertainty: ArrayLike,
+def auroc(
+    correctness: ArrayLike,
+    confidence: ArrayLike,
 ) -> float:
     """
-    Area Under the ROC Curve measuring how well uncertainty
-    ranks incorrect predictions.
+    Area Under the ROC Curve measuring how well confidence
+    ranks correct predictions.
 
+    A high score means that samples with higher confidence tend
+    to be the ones where the model is correct — i.e. the confidence
+    is *predictive* of correctness.
 
-    A high score means that samples with larger uncertainty tend
-    to be the ones where the model is wrong — i.e. the uncertainty
-    is *predictive* of errors.
-
-
-    Defined as ``AUCROC(y_wrong, y_uncertainty)`` following
-    Lin et al. (2023).
-
+    Defined as ``AUROC(correctness, confidence)``.
 
     Parameters
     ----------
-    y_wrong : ArrayLike of shape (n_samples,)
+    correctness : ArrayLike of shape (n_samples,)
         Binary array. 1 if the prediction for that sample is
-        considered wrong, 0 if correct. The definition of "wrong"
-        is left to the caller (e.g. outside prediction interval
-        for regression, misclassified for classification).
+        considered correct, 0 if incorrect.
 
-
-    y_uncertainty : ArrayLike of shape (n_samples,)
-        Non-negative scalar uncertainty estimate per sample.
-        Higher values must indicate higher uncertainty.
-        For regression, a common choice is prediction interval
-        width. For classification, ``1 - max(softmax)`` or
-        prediction-set size are typical choices.
-
+    confidence : ArrayLike of shape (n_samples,)
+        Scalar confidence estimate per sample.
+        Higher values must indicate higher confidence
+        (lower uncertainty).
 
     Returns
     -------
     float
-        AUCROC score in [0, 1]. A score of 0.5 corresponds to a
-        random uncertainty estimator. A score close to 1 means
-        the uncertainty reliably identifies wrong predictions.
-
+        AUROC score in [0, 1]. A score of 0.5 corresponds to a
+        random confidence estimator. A score close to 1 means
+        the confidence reliably identifies correct predictions.
 
     Raises
     ------
     ValueError
-        If ``y_wrong`` and ``y_uncertainty`` have different lengths,
-        contain NaN or Inf values, if ``y_wrong`` is not binary,
-        or if ``y_uncertainty`` contains negative values.
-
+        If ``correctness`` and ``confidence`` have different
+        lengths, contain NaN or Inf values, or if ``correctness``
+        is not binary.
 
     Examples
     --------
     >>> import numpy as np
-    >>> from mapie.metrics.uncertainty import aucroc_score
-    >>> y_wrong = np.array([0, 0, 1, 1])
-    >>> y_uncertainty = np.array([0.1, 0.2, 0.8, 0.9])
-    >>> aucroc_score(y_wrong, y_uncertainty)
+    >>> from mapie.metrics.uncertainty import auroc
+    >>> correctness = np.array([1, 1, 0, 0])
+    >>> confidence = np.array([0.9, 0.8, 0.2, 0.1])
+    >>> auroc(correctness, confidence)
     1.0
-
-
-    References
-    ----------
-    Lin et al. (2023). Generating with Confidence: Uncertainty
-    Quantification for Black-box Large Language Models. TMLR.
-    https://arxiv.org/abs/2305.19187
     """
-    y_wrong_arr = column_or_1d(np.asarray(y_wrong, dtype=float))
-    y_uncertainty_arr = column_or_1d(np.asarray(y_uncertainty, dtype=float))
+    correctness_arr = column_or_1d(np.asarray(correctness, dtype=float))
+    confidence_arr = column_or_1d(np.asarray(confidence, dtype=float))
 
-    check_consistent_length(y_wrong_arr, y_uncertainty_arr)
+    check_consistent_length(correctness_arr, confidence_arr)
 
-    if np.any(np.isnan(y_wrong_arr)) or np.any(np.isnan(y_uncertainty_arr)):
-        raise ValueError("y_wrong and y_uncertainty must not contain NaN values.")
-    if np.any(np.isinf(y_wrong_arr)) or np.any(np.isinf(y_uncertainty_arr)):
-        raise ValueError("y_wrong and y_uncertainty must not contain Inf values.")
+    if np.any(np.isnan(correctness_arr)) or np.any(np.isnan(confidence_arr)):
+        raise ValueError("correctness and confidence must not contain NaN values.")
+    if np.any(np.isinf(correctness_arr)) or np.any(np.isinf(confidence_arr)):
+        raise ValueError("correctness and confidence must not contain Inf values.")
 
-    unique_labels = np.unique(y_wrong_arr)
+    unique_labels = np.unique(correctness_arr)
     if not np.all(np.isin(unique_labels, [0.0, 1.0])):
         raise ValueError(
-            "y_wrong must be a binary array containing only 0 and 1. "
+            "correctness must be a binary array containing only 0 and 1. "
             f"Got unique values: {unique_labels}."
         )
 
-    if np.any(y_uncertainty_arr < 0):
-        raise ValueError("y_uncertainty must contain only non-negative values.")
-
-    # sklearn's roc_auc_score handles the AUC computation;
-    # we use uncertainty as the score that should rank positives (wrong=1)
-    # higher than negatives (wrong=0).
-    return float(roc_auc_score(y_wrong_arr, y_uncertainty_arr))
+    return float(roc_auc_score(correctness_arr, confidence_arr))
 
 
-def auarc_score(
-    y_wrong: ArrayLike,
-    y_uncertainty: ArrayLike,
+def auarc(
+    correctness: ArrayLike,
+    confidence: ArrayLike,
 ) -> float:
     """
     Area Under the Accuracy-Rejection Curve (AUARC).
 
-
     Measures how much accuracy improves when the model is allowed
-    to abstain on high-uncertainty predictions. Samples are rejected
-    in descending order of uncertainty; at each rejection threshold
+    to abstain on low-confidence predictions. Samples are retained
+    in descending order of confidence; at each retention threshold
     the accuracy on retained samples is recorded. The AUARC is the
     area under this curve, normalised to [0, 1].
 
-
-    A higher AUARC means that rejecting uncertain predictions leads
-    to a larger accuracy gain — i.e. the uncertainty is actionable
-    for selective prediction / human-in-the-loop workflows.
-
-
-    Defined as ``AUARC`` following Lin et al. (2023).
-
+    A higher AUARC means that rejecting low-confidence predictions
+    leads to a larger accuracy gain — i.e. the confidence is
+    actionable for selective prediction / human-in-the-loop
+    workflows.
 
     Parameters
     ----------
-    y_wrong : ArrayLike of shape (n_samples,)
+    correctness : ArrayLike of shape (n_samples,)
         Binary array. 1 if the prediction for that sample is
-        considered wrong, 0 if correct.
+        considered correct, 0 if incorrect.
 
-
-    y_uncertainty : ArrayLike of shape (n_samples,)
-        Non-negative scalar uncertainty estimate per sample.
-        Higher values must indicate higher uncertainty.
-
+    confidence : ArrayLike of shape (n_samples,)
+        Scalar confidence estimate per sample.
+        Higher values must indicate higher confidence
+        (lower uncertainty).
 
     Returns
     -------
     float
         AUARC score in [0, 1]. A higher score indicates a better
-        uncertainty estimator — the maximum achievable score depends
+        confidence estimator — the maximum achievable score depends
         on the fraction of correct predictions in the data. A score
         equal to the overall accuracy corresponds to a random estimator.
-
 
     Raises
     ------
     ValueError
-        If ``y_wrong`` and ``y_uncertainty`` have different lengths,
-        contain NaN or Inf values, if ``y_wrong`` is not binary,
-        or if ``y_uncertainty`` contains negative values.
-
+        If ``correctness`` and ``confidence`` have different
+        lengths, contain NaN or Inf values, or if ``correctness``
+        is not binary.
 
     Examples
     --------
     >>> import numpy as np
-    >>> from mapie.metrics.uncertainty import auarc_score
-    >>> y_wrong = np.array([1, 1, 0, 0])
-    >>> y_uncertainty = np.array([0.9, 0.8, 0.2, 0.1])
-    >>> auarc_score(y_wrong, y_uncertainty)
+    >>> from mapie.metrics.uncertainty import auarc
+    >>> correctness = np.array([0, 0, 1, 1])
+    >>> confidence = np.array([0.1, 0.2, 0.8, 0.9])
+    >>> auarc(correctness, confidence)
     0.7916666666666666
-
-
-    References
-    ----------
-    Lin et al. (2023). Generating with Confidence: Uncertainty
-    Quantification for Black-box Large Language Models. TMLR.
-    https://arxiv.org/abs/2305.19187
     """
-    y_wrong_arr = column_or_1d(np.asarray(y_wrong, dtype=float))
-    y_uncertainty_arr = column_or_1d(np.asarray(y_uncertainty, dtype=float))
+    correctness_arr = column_or_1d(np.asarray(correctness, dtype=float))
+    confidence_arr = column_or_1d(np.asarray(confidence, dtype=float))
 
-    check_consistent_length(y_wrong_arr, y_uncertainty_arr)
+    check_consistent_length(correctness_arr, confidence_arr)
 
-    if np.any(np.isnan(y_wrong_arr)) or np.any(np.isnan(y_uncertainty_arr)):
-        raise ValueError("y_wrong and y_uncertainty must not contain NaN values.")
-    if np.any(np.isinf(y_wrong_arr)) or np.any(np.isinf(y_uncertainty_arr)):
-        raise ValueError("y_wrong and y_uncertainty must not contain Inf values.")
+    if np.any(np.isnan(correctness_arr)) or np.any(np.isnan(confidence_arr)):
+        raise ValueError("correctness and confidence must not contain NaN values.")
+    if np.any(np.isinf(correctness_arr)) or np.any(np.isinf(confidence_arr)):
+        raise ValueError("correctness and confidence must not contain Inf values.")
 
-    unique_labels = np.unique(y_wrong_arr)
+    unique_labels = np.unique(correctness_arr)
     if not np.all(np.isin(unique_labels, [0.0, 1.0])):
         raise ValueError(
-            "y_wrong must be a binary array containing only 0 and 1. "
+            "correctness must be a binary array containing only 0 and 1. "
             f"Got unique values: {unique_labels}."
         )
 
-    if np.any(y_uncertainty_arr < 0):
-        raise ValueError("y_uncertainty must contain only non-negative values.")
+    n = len(correctness_arr)
 
-    n = len(y_wrong_arr)
+    # Sort by descending confidence: retain highest confidence first.
+    order = np.argsort(-confidence_arr, kind="stable")
+    correctness_sorted = correctness_arr[order]
 
-    # Sort by descending uncertainty: highest uncertainty rejected first.
-    # Stable sort ensures deterministic behaviour for tied uncertainty values.
-    rejection_order = np.argsort(y_uncertainty_arr)[::-1]
-    y_wrong_sorted = y_wrong_arr[rejection_order]
+    # accuracy_at_k[k] = accuracy when we retain the top k most
+    # confident samples (k = n, n-1, ..., 1).
+    cumulative_correct = np.cumsum(correctness_sorted)
+    retained_counts = np.arange(1, n + 1, dtype=float)
+    accuracy_curve = cumulative_correct / retained_counts
 
-    # accuracy_at_k[k] = accuracy when the k most uncertain samples
-    # are rejected, i.e. we retain samples[k:] (n - k samples).
-    # We accumulate correct predictions from the *least* uncertain end.
-    y_correct_sorted = 1.0 - y_wrong_sorted
-    # cumulative correct from the retained tail as we reject from the front
-    cumulative_correct_from_tail = np.cumsum(y_correct_sorted[::-1])[::-1]
-
-    retained_counts = np.arange(n, 0, -1, dtype=float)  # n, n-1, ..., 1
-    accuracy_curve = cumulative_correct_from_tail / retained_counts
-
-    # AUARC = mean accuracy across all rejection thresholds (0 rejected,
-    # 1 rejected, ..., n-1 rejected), i.e. when retaining n, n-1, ..., 1
-    # samples respectively. We exclude the point where 0 samples remain.
-    auarc = float(np.mean(accuracy_curve))
-    return auarc
+    return float(np.mean(accuracy_curve))
