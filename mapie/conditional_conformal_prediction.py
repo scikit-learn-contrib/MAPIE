@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import warnings
 from functools import lru_cache, partial
 from typing import Any, Callable, Iterable, Optional, Tuple, Union
 
@@ -64,6 +65,17 @@ class _ConditionalConformalMixin:
         self.exact = exact
         self.infinite_params = {} if infinite_params is None else infinite_params
         self.rng = np.random.default_rng(seed=seed)
+
+        if self.exact and self.infinite_params.get(
+            "kernel", FUNCTION_DEFAULTS["kernel"]
+        ):
+            warnings.warn(
+                "Exact computation doesn't support RKHS quantile regression for now. "
+                "Continuing with exact=False",
+                UserWarning,
+                stacklevel=2,
+            )
+            self.exact = False
 
     def _conformalize_conditional(
         self, x_calib: NDArray, scores_calib: NDArray
