@@ -7,6 +7,7 @@ Tutorial and comparison with other methods on "Communities and Crimes" Dataset.
 
 # In[1]:
 
+import logging
 import warnings
 from copy import deepcopy
 from urllib.request import urlopen
@@ -22,11 +23,11 @@ from sklearn.preprocessing import StandardScaler
 from tqdm import tqdm
 
 from mapie.conditional_conformal_prediction import ConditionalSplitConformalRegressor
-from mapie.conformity_scores import AbsoluteConformityScore
 from mapie.regression import ConformalizedQuantileRegressor, SplitConformalRegressor
 
 warnings.filterwarnings("ignore")
 warnings.filterwarnings("ignore", category=UserWarning)
+logging.disable(logging.INFO)
 
 random_state = 1
 np.random.seed(random_state)
@@ -184,7 +185,7 @@ def get_scores_n_trials(
 
     scores = np.zeros((n_trials, 3, len(score_functions), len(group_functions)))
 
-    for trial in tqdm(range(n_trials)):
+    for trial in tqdm(range(n_trials), disable=True):
         scores[trial, :, :, :] = estimate_scores(
             mapies, group_functions, score_functions, n_train, n_calib, n_test, trial
         )
@@ -440,22 +441,29 @@ group_names = (
 
 
 confidence_level = 0.8
-n_train, n_calib, n_test = 650, 650, 694
-n_trials = 10
+# These values are smaller than in the original notebook so that the gallery
+# example keeps the same narrative while running quickly in documentation builds.
+n_train, n_calib, n_test = 400, 250, 150
+n_trials = 3
 
 # Define the model
 estimator = LGBMRegressor(
     objective="quantile",
     alpha=0.5,
+    n_estimators=35,
+    num_leaves=15,
+    min_child_samples=12,
+    learning_rate=0.08,
     random_state=random_state,
     verbose=-1,
+    n_jobs=1,
 )
 
 # ================= Split =================
 mapie_split = SplitConformalRegressor(
     estimator=deepcopy(estimator),
     confidence_level=confidence_level,
-    conformity_score=AbsoluteConformityScore(sym=False),
+    conformity_score="absolute",
     prefit=False,
 )
 
@@ -516,10 +524,10 @@ def make_gaussian_ccp_feature_map(n_centers=12, seed=random_state):
 
 
 mapie_ccp = ConditionalSplitConformalRegressor(
-    make_gaussian_ccp_feature_map(n_centers=12, seed=random_state),
+    make_gaussian_ccp_feature_map(n_centers=6, seed=random_state),
     estimator=deepcopy(estimator),
     confidence_level=confidence_level,
-    conformity_score=AbsoluteConformityScore(sym=False),
+    conformity_score="absolute",
     prefit=False,
     randomize=True,
 )
@@ -598,7 +606,7 @@ mapie_ccp = ConditionalSplitConformalRegressor(
     ethnicity_feature_map,
     estimator=deepcopy(estimator),
     confidence_level=confidence_level,
-    conformity_score=AbsoluteConformityScore(sym=False),
+    conformity_score="absolute",
     prefit=False,
 )
 
