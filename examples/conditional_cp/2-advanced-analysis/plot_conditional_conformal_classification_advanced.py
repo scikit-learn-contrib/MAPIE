@@ -1,6 +1,6 @@
 """
-Conformal prediction conditional to predictions for classification
-==================================================================
+Conditional conformal prediction for classification
+===================================================
 
 The tutorial explains how to use ``ConditionalSplitConformalClassifier`` for
 classification. In particular, a gaussian feature map is compared to groups

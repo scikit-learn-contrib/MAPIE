@@ -122,16 +122,12 @@ bin_labels = [f"[{left:.2f}, {right:.2f})" for left, right in zip(bins[:-1], bin
 bin_labels[-1] = "[0.67, 1.00]"
 
 
-def indicator_matrix(values, bin_edges):
-    values = np.asarray(values).reshape(-1)
-    bin_indexes = np.digitize(values, bin_edges[1:-1], right=False)
-    matrix = np.zeros((len(values), len(bin_edges) - 1))
-    matrix[np.arange(len(values)), bin_indexes] = 1
+def feature_map(X):
+    difficulty = np.asarray(X)[:, 0]
+    bin_indexes = np.digitize(difficulty, bins[1:-1], right=False)
+    matrix = np.zeros((len(difficulty), len(bins) - 1))
+    matrix[np.arange(len(difficulty)), bin_indexes] = 1
     return matrix
-
-
-def phi_fn(X):
-    return indicator_matrix(np.asarray(X)[:, 0], bins)
 
 
 ##############################################################################
@@ -155,7 +151,7 @@ mapie_marginal.conformalize(X_conformalize, y_conformalize)
 _, y_pred_set_marginal = mapie_marginal.predict_set(X_test)
 
 mapie_conditional = ConditionalSplitConformalClassifier(
-    phi_fn,
+    feature_map,
     estimator=estimator,
     confidence_level=confidence_level,
     conformity_score="lac",

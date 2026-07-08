@@ -1,6 +1,6 @@
 """
-Using Conditional Conformal Prediction to get adaptative prediction intervals
-============================================================================
+Conditional conformal prediction for regression
+===============================================
 
 Tutorial and comparison with other methods on "Communities and Crimes" Dataset.
 """

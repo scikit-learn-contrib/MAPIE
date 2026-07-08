@@ -1,6 +1,6 @@
 """
-Conditional CP for regression
-=============================
+Group-conditional prediction sets (advanced)
+============================================
 
 The tutorial will explain how to use the CCP method, and
 will compare it with the other methods available in MAPIE. The CCP method

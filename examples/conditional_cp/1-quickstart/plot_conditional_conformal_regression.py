@@ -122,16 +122,12 @@ plt.show()
 bin_centers = (x_bins[:-1] + x_bins[1:]) / 2
 
 
-def indicator_matrix(values, bin_edges):
-    values = np.asarray(values).reshape(-1)
-    bin_indexes = np.digitize(values, bin_edges[1:-1], right=False)
-    matrix = np.zeros((len(values), len(bin_edges) - 1))
-    matrix[np.arange(len(values)), bin_indexes] = 1
+def feature_map(X):
+    x = np.asarray(X).reshape(-1)
+    bin_indexes = np.digitize(x, x_bins[1:-1], right=False)
+    matrix = np.zeros((len(x), len(x_bins) - 1))
+    matrix[np.arange(len(x)), bin_indexes] = 1
     return matrix
-
-
-def phi_fn(X):
-    return indicator_matrix(np.asarray(X).reshape(-1), x_bins)
 
 
 ##############################################################################
@@ -158,7 +154,7 @@ mapie_marginal.conformalize(X_conformalize, y_conformalize)
 _, y_interval_marginal = mapie_marginal.predict_interval(X_test)
 
 mapie_conditional = ConditionalSplitConformalRegressor(
-    phi_fn,
+    feature_map,
     estimator=estimator,
     confidence_level=confidence_level,
     conformity_score="absolute",
