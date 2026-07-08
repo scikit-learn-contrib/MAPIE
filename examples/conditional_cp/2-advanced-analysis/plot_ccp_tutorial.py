@@ -1,7 +1,6 @@
 """
-============================================
-Tutorial: Conditional CP for regression
-============================================
+Conditional CP for regression
+=============================
 
 The tutorial will explain how to use the CCP method, and
 will compare it with the other methods available in MAPIE. The CCP method
@@ -190,11 +189,20 @@ estimator = Pipeline(
 # ideas are expressed directly as functions from covariates to feature matrices.
 
 gaussian_centers = np.linspace(-1, 5, 8)
+x_bins = np.array([-1, 0, 1.5, 3.0, 5.0])
 
 
 def constant_feature_map(X):
     X = np.asarray(X)
     return np.ones((len(X), 1))
+
+
+def binned_feature_map(X):
+    x = np.asarray(X).reshape(-1)
+    bin_indexes = np.digitize(x, x_bins[1:-1], right=False)
+    features = np.zeros((len(x), len(x_bins) - 1))
+    features[np.arange(len(x)), bin_indexes] = 1
+    return features
 
 
 def polynomial_feature_map(X):
@@ -485,18 +493,24 @@ plot_evaluation(titles, y_pis, X_test, y_test)
 #  equal to: a constant + a value proportional to the value of ``X``
 #  (it seems a good idea here, as the uncertainty increase with ``X``)
 #
+#  3) ``f : X -> (1_{X in bin_1}, ..., 1_{X in bin_k})`` defines a simple
+#  group-conditional feature map. It is useful when the subgroups of interest
+#  are known in advance.
+#
 # In the current API, these are passed as ``feature_map`` callables.
 
 feature_maps = [
     constant_feature_map,
     polynomial_feature_map,
     gaussian_feature_map,
+    binned_feature_map,
     grouped_polynomial_feature_map,
 ]
 feature_map_titles = [
     "CCP constant",
     "CCP polynomial",
     "CCP Gaussian",
+    "CCP binned groups",
     "CCP grouped polynomial",
 ]
 
