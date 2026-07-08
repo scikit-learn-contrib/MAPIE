@@ -750,7 +750,7 @@ class _MapieQuantileRegressor(_MapieRegressor):
             Controls the shuffling applied to the data before applying the
             split.
             Pass an int for reproducible output across multiple function calls.
-            See :term:`Glossary <random_state>`.
+            See `random_state` in the scikit-learn glossary.
 
             By default `None`.
 

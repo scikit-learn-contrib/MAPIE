@@ -6,7 +6,7 @@ When a predictive model is deployed in production, a common question arises:
 *are the newly arriving labeled observations still exchangeable with the data
 used during model development?*
 
-This example answers that question using :class:`~mapie.exchangeability_testing.OnlineMartingaleTest`,
+This example answers that question using `OnlineMartingaleTest`,
 a lightweight, model-agnostic sequential test that converts each new observation
 into a conformal p-value and accumulates evidence against exchangeability through
 a martingale process.
@@ -21,7 +21,7 @@ Following standard MAPIE practice, we generate a single dataset and split it int
 2. **Conformalization set** (20 %): held-out data used to calibrate the conformal scores.
 3. **Test set** (50 %): future monitoring data, never seen by the model.
 
-The monitoring stream fed to :class:`~mapie.exchangeability_testing.OnlineMartingaleTest`
+The monitoring stream fed to `OnlineMartingaleTest`
 is the concatenation of the conformalization and test partitions.
 This design reflects the practical recommendation:
 *run exchangeability diagnostics only on data that was not used during training.*
@@ -89,9 +89,9 @@ warnings.filterwarnings(
 #
 # We generate a single binary classification dataset and apply the standard
 # MAPIE train, conformalize, and test split.  The logistic regression model is
-# fitted only on the train partition, and a :class:`~mapie.classification.SplitConformalClassifier`
+# fitted only on the train partition, and a `SplitConformalClassifier`
 # wraps it in prefit mode so that the conformalization step is handled inside
-# :class:`~mapie.exchangeability_testing.OnlineMartingaleTest`.
+# `OnlineMartingaleTest`.
 #
 
 X_full, y_full = make_classification(
@@ -228,7 +228,7 @@ plt.tight_layout(rect=(0, 0.08, 1, 1))
 plt.show()
 
 ##############################################################################
-# The helper :func:`~utils.plot_martingale_results_one_scenario` (defined in
+# The helper `plot_martingale_results_one_scenario` (defined in
 # the local ``utils.py``) visualizes martingale trajectories and the plug-in
 # p-value histogram for any single monitoring scenario.
 #
@@ -330,7 +330,7 @@ plot_martingale_results_one_scenario(
 # creating a strong and immediate break in the conformity score distribution.
 #
 # The ``warn=True`` flag on the plug-in instance will trigger a
-# :class:`UserWarning` as soon as exchangeability is rejected.
+# `UserWarning` as soon as exchangeability is rejected.
 #
 
 omt_jumper_abrupt_shift = OnlineMartingaleTest(
