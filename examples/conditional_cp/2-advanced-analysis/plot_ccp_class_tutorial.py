@@ -1,29 +1,23 @@
 """
-============================================
-Tutorial: Conditional CP for classification
-============================================
+============================================================================
+Tutorial: Conformal prediction conditional to predictions for classification
+============================================================================
 
-The tutorial explains how to use conditional conformal prediction (CCP) for
-classification and will compare it with the other methods available in MAPIE.
-The CCP method implements the method described in the Gibbs et al. (2023) paper
-[1].
+The tutorial explains how to use ``ConditionalSplitConformalClassifier`` for
+classification. In particular, a gaussian feature map is compared to groups
+defined from the predicted class.
 
 In this tutorial, the classifier will be
 :class:`~sklearn.linear_model.LogisticRegression`.
 We will use a synthetic toy dataset.
 
-We will compare the CCP method (using
-:class:`~mapie.conditional_conformal_prediction.ConditionalSplitConformalClassifier`),
+We will compare the conditional method
 with the standard method, using for both, the LAC conformity score
 (:class:`~mapie.conformity_scores.LACConformityScore`).
 
 Recall that the ``LAC`` method consists on applying a threshold on the
 predicted softmax, to keep all the classes above the threshold
 (``alpha`` is ``1 - target coverage``).
-
-[1] Isaac Gibbs, John J. Cherian, and Emmanuel J. Candès,
-"Conformal Prediction With Conditional Guarantees",
-`arXiv <https://arxiv.org/abs/2305.12616>`_, 2023.
 """
 
 import matplotlib.pyplot as plt
@@ -35,17 +29,13 @@ from mapie.classification import SplitConformalClassifier
 from mapie.conditional_conformal_prediction import ConditionalSplitConformalClassifier
 
 random_state = 1
-ALPHA = 0.2
-confidence_level = 1 - ALPHA
+CONFIDENCE_LEVEL = 0.8
 N_CLASSES = 5
 
 ##############################################################################
 # 1. Data generation
 # --------------------------------------------------------------------------
 # Let's start by creating some synthetic data with 5 gaussian distributions
-#
-# We use reduced sample sizes compared with the paper-scale experiment so that
-# the documentation example remains fast enough to execute.
 
 centers = np.array(
     [
@@ -110,8 +100,7 @@ plt.show()
 # 2. Plotting and adaptativity comparison functions
 # --------------------------------------------------------------------------
 # The current API receives the conditional class of functions through a
-# ``feature_map`` callable. The functions below replace the old ``CustomCCP``
-# and ``GaussianCCP`` calibrators from the original version of this tutorial.
+# ``feature_map`` callable.
 
 
 def predicted_class_feature_map(estimator):
@@ -136,7 +125,7 @@ def fit_methods(x_train, y_train, x_calib, y_calib):
 
     mapie_lac = SplitConformalClassifier(
         estimator=estimator,
-        confidence_level=confidence_level,
+        confidence_level=CONFIDENCE_LEVEL,
         conformity_score="lac",
         prefit=True,
     ).conformalize(x_calib, y_calib)
@@ -144,7 +133,7 @@ def fit_methods(x_train, y_train, x_calib, y_calib):
     mapie_ccp_y_pred = ConditionalSplitConformalClassifier(
         predicted_class_feature_map(estimator),
         estimator=estimator,
-        confidence_level=confidence_level,
+        confidence_level=CONFIDENCE_LEVEL,
         conformity_score="lac",
         prefit=True,
     ).conformalize(x_calib, y_calib)
@@ -152,7 +141,7 @@ def fit_methods(x_train, y_train, x_calib, y_calib):
     mapie_ccp_gauss = ConditionalSplitConformalClassifier(
         gaussian_feature_map,
         estimator=estimator,
-        confidence_level=confidence_level,
+        confidence_level=CONFIDENCE_LEVEL,
         conformity_score="lac",
         prefit=True,
     ).conformalize(x_calib, y_calib)
@@ -296,10 +285,10 @@ def plot_cond_coverage(scores, names):
             tick_labels=labels,
         )
     ax.axhline(
-        y=confidence_level,
+        y=CONFIDENCE_LEVEL,
         color="red",
         linestyle="--",
-        label=f"target={confidence_level}",
+        label=f"target={CONFIDENCE_LEVEL}",
     )
     ax.axvline(x=0.5, color="black", linestyle="--")
     ax.set_ylabel("Coverage")
@@ -322,9 +311,9 @@ def plot_cond_coverage(scores, names):
 # --------------------------------------------------------------------------
 # We are going to compare the standard ``LAC`` method with:
 #
-# - The ``CCP`` method using the predicted classes as groups (to have a
+# - The conditional method using the predicted classes as groups (to have a
 #   homogenous coverage on each class).
-# - The ``CCP`` method with gaussian kernels, to have adaptative prediction
+# - The conditional method with gaussian kernels, to have adaptative prediction
 #   sets, without prior knowledge or information.
 
 
@@ -332,12 +321,16 @@ def plot_cond_coverage(scores, names):
 # 4. Generate the prediction sets
 # --------------------------------------------------------------------------
 
-names = ["Standard LAC", "CCP predicted class groups", "CCP Gaussian kernel"]
+names = [
+    "Standard LAC",
+    "Conditional with predicted class groups",
+    "Conditional with Gaussian kernel",
+]
 
 run_exp(names)
 
 ##############################################################################
-# We can see that the ``CCP`` method seems to create better
+# We can see that the conditional method seems to create better
 # prediction sets than the standard method. Indeed, where the
 # classes distributions overlap (especially for class 3 and 4),
 # the size of the sets should increase, to correctly represente the model
@@ -349,7 +342,7 @@ run_exp(names)
 # with gaussian kernels represented this uncertainty, with big sets
 # for the middle points.
 #
-# Thus, between the two ``CCP`` methods, the one using gaussian kernels
+# Thus, between the two conditional methods, the one using gaussian kernels
 # seems the most adaptative.
 
 
@@ -372,9 +365,9 @@ plot_cond_coverage(scores, names)
 # for all classes. We can see that the ``CCP`` method, with the predicted
 # classes as groups, is more adaptative than the standard method.
 #
-# To conclude, the ``CCP`` method offer adaptative perdiction sets.
+# To conclude, the conditional method offer adaptative prediction sets.
 # We can inject prior knowledge or groups on which we want to avois bias
-# (We tried to do this with the classes, but it was not perfect because we only
-# had access to the predictions, not the true classes).
+# Groups can be defined from different features from X, including the
+# predicted class.
 # Using gaussian kernels, with a correct sigma parameter
 # can be the easiest and best solution to have very adaptative prdiction sets.
