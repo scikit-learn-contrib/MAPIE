@@ -1,9 +1,8 @@
 """
-======================================================================
 Reproduction of part of the paper experiments of Gibbs et al. (2023)
 ======================================================================
 
-:class:`~mapie.conditional_conformal_prediction.ConditionalSplitConformalRegressor`
+``ConditionalSplitConformalRegressor``
 is used to reproduce a part of the paper experiments of Gibbs et al. (2023) in
 their article [1] which we argue is a good procedure to get adaptative
 prediction intervals (PI) and a guaranteed coverage on all sub groups of
@@ -145,8 +144,8 @@ plt.show()
 # 4. Prepare Experiments
 # -----------------------------------------------------------------------------
 # In this experiment, we will use the
-# :class:`~mapie.regression.SplitConformalRegressor` and
-# :class:`~mapie.conditional_conformal_prediction.ConditionalSplitConformalRegressor`
+# ``SplitConformalRegressor`` and
+# ``ConditionalSplitConformalRegressor``
 # to compute prediction intervals with the basic SplitConformalRegressor method and the paper
 # conditional method.
 

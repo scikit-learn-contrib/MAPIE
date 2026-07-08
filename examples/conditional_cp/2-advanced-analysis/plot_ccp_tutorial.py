@@ -33,23 +33,23 @@ and can have a big computational time.
 ----
 
 In this tutorial, we will use a synthetic toy dataset.
-The estimator will be :class:`~sklearn.pipeline.Pipeline`
-with :class:`~sklearn.preprocessing.PolynomialFeatures` and
-:class:`~sklearn.linear_model.LinearRegression` (or
-:class:`~sklearn.linear_model.QuantileRegressor` for CQR).
+The estimator will be ``Pipeline``
+with ``PolynomialFeatures`` and
+``LinearRegression`` (or
+``QuantileRegressor`` for CQR).
 
 We will compare the different available feature maps of the CCP method
 (using
-:class:`~mapie.conditional_conformal_prediction.ConditionalSplitConformalRegressor`),
+``ConditionalSplitConformalRegressor``),
 with the standard split-conformal method, the CV+ method
-(:class:`~mapie.regression.CrossConformalRegressor`) and CQR
-(:class:`~mapie.regression.ConformalizedQuantileRegressor`)
+(``CrossConformalRegressor``) and CQR
+(``ConformalizedQuantileRegressor``)
 
 Recall that the ``alpha`` is ``1 - target coverage``.
 
 [1] Isaac Gibbs, John J. Cherian, and Emmanuel J. Candès,
 "Conformal Prediction With Conditional Guarantees",
-`arXiv <https://arxiv.org/abs/2305.12616>`_, 2023.
+[arXiv](https://arxiv.org/abs/2305.12616), 2023.
 """
 
 import matplotlib.colors as mcolors
@@ -458,7 +458,7 @@ plot_evaluation(titles, y_pis, X_test, y_test)
 
 
 ##############################################################################
-# The :class:`~mapie.conditional_conformal_prediction.ConditionalSplitConformalRegressor`
+# The ``ConditionalSplitConformalRegressor``
 # has is a very adaptative method, even with default
 # parameters values. If the dataset is more complex, the default parameters
 # may not be enough to get the best performances. In this case, we can use

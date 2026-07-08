@@ -1,19 +1,18 @@
 """
-============================================================================
-Tutorial: Conformal prediction conditional to predictions for classification
-============================================================================
+Conformal prediction conditional to predictions for classification
+==================================================================
 
 The tutorial explains how to use ``ConditionalSplitConformalClassifier`` for
 classification. In particular, a gaussian feature map is compared to groups
 defined from the predicted class.
 
 In this tutorial, the classifier will be
-:class:`~sklearn.linear_model.LogisticRegression`.
+``LogisticRegression``.
 We will use a synthetic toy dataset.
 
 We will compare the conditional method
 with the standard method, using for both, the LAC conformity score
-(:class:`~mapie.conformity_scores.LACConformityScore`).
+(``LACConformityScore``).
 
 Recall that the ``LAC`` method consists on applying a threshold on the
 predicted softmax, to keep all the classes above the threshold

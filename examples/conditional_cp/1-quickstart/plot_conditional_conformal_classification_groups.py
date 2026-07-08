@@ -4,7 +4,7 @@ Group-conditional prediction sets
 
 
 This example shows how to use
-:class:`~mapie.conditional_conformal_prediction.ConditionalSplitConformalClassifier`
+``ConditionalSplitConformalClassifier``
 to build prediction sets with conditional guarantees on pre-defined groups.
 
 It is inspired by the synthetic examples from Gibbs, Cherian and Candès (2023)
