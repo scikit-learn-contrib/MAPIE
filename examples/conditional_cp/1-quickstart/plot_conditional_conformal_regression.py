@@ -85,8 +85,7 @@ X, y = generate_grouped_regression_data()
 
 group_indexes = np.digitize(X[:, 0], x_bins[1:-1], right=False)
 bin_labels = [
-    f"[{left:.2f}, {right:.2f})"
-    for left, right in zip(x_bins[:-1], x_bins[1:])
+    f"[{left:.2f}, {right:.2f})" for left, right in zip(x_bins[:-1], x_bins[1:])
 ]
 bin_labels[-1] = f"[{x_bins[-2]:.2f}, {x_bins[-1]:.2f}]"
 
@@ -177,12 +176,8 @@ _, y_interval_conditional = mapie_conditional.predict_interval(X_test)
 
 def group_mask(X, bin_index):
     if bin_index == len(x_bins) - 2:
-        return (X[:, 0] >= x_bins[bin_index]) & (
-            X[:, 0] <= x_bins[-1]
-        )
-    return (X[:, 0] >= x_bins[bin_index]) & (
-        X[:, 0] < x_bins[bin_index + 1]
-    )
+        return (X[:, 0] >= x_bins[bin_index]) & (X[:, 0] <= x_bins[-1])
+    return (X[:, 0] >= x_bins[bin_index]) & (X[:, 0] < x_bins[bin_index + 1])
 
 
 def scores_by_group(y_true, intervals, X):

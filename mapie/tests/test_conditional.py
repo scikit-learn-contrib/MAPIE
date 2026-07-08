@@ -223,6 +223,17 @@ def test_exact_with_kernel_warns_and_sets_exact_false():
     assert np.all(intervals[:, 0, 0] <= intervals[:, 1, 0])
 
 
+def test_exact_cutoff_with_kernel_raises():
+    regressor = _fitted_regressor()
+    _, _, X_test, _ = _make_data()
+    regressor.infinite_params = {"kernel": "rbf"}
+    with pytest.raises(
+        ValueError,
+        match="Exact computation doesn't support RKHS quantile regression",
+    ):
+        regressor._predict_conditional_cutoff(0.9, X_test[0].reshape(1, -1))
+
+
 def _make_multiclass_data(n=300, seed=0):
     rng = np.random.default_rng(seed)
     X = rng.uniform(-1, 1, size=(n, 2))
