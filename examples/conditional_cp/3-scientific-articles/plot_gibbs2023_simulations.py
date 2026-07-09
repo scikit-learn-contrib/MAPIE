@@ -177,10 +177,6 @@ def shift_feature_map(X):
     return np.column_stack([np.ones(len(x)), gaussian_features])
 
 
-def intercept_feature_map(x):
-    return np.ones((x.shape[0], 1))
-
-
 def fit_split_interval(model, X_calib, y_calib, X_test):
     mapie_split = SplitConformalRegressor(
         model,
@@ -198,8 +194,6 @@ def fit_ccp_interval(
     y_calib,
     X_test,
     feature_map,
-    randomize=False,
-    infinite_params=None,
     seed=0,
 ):
     mapie_ccp = ConditionalSplitConformalRegressor(
@@ -208,8 +202,6 @@ def fit_ccp_interval(
         confidence_level=confidence_level,
         conformity_score=AbsoluteConformityScore(sym=False),
         prefit=True,
-        randomize=randomize,
-        infinite_params=infinite_params,
         seed=seed,
     )
     mapie_ccp.conformalize(X_calib, y_calib)
@@ -232,7 +224,6 @@ def estimate_coverage(feature_map, group_functs=None, seed=0):
         y_calib,
         X_test,
         feature_map,
-        randomize=True,
         seed=seed,
     )
 
@@ -261,7 +252,6 @@ def plot_results(X_test, y_test, n_trials=20, experiment="Groups"):
             for a, b in zip([1, 3], [2, 4])
         ]
         eval_names = ["[1,2]", "[3,4]"]
-        infinite_params = None
     elif experiment == "Shifts":
         feature_map = shift_feature_map
         eval_functions = [
@@ -269,21 +259,10 @@ def plot_results(X_test, y_test, n_trials=20, experiment="Groups"):
             lambda x: norm.pdf(x, loc=3.5, scale=0.2).reshape(-1, 1),
         ]
         eval_names = ["f1", "f2"]
-        infinite_params = None
-    elif experiment == "Agnostic":
-        feature_map = intercept_feature_map
-        eval_functions = [
-            lambda X, a=a, b=b: ((X > a) & (X < b)).astype(float)
-            for a, b in zip([1, 3], [2, 4])
-        ]
-        eval_names = ["[1,2]", "[3,4]"]
-        infinite_params = {"kernel": "rbf", "gamma": 12.5, "lambda": 0.005}
     else:
         raise ValueError("Wron experiment name")
 
-    _, y_pi_ccp = fit_ccp_interval(
-        model, X_calib, y_calib, X_test, feature_map, infinite_params=infinite_params
-    )
+    _, y_pi_ccp = fit_ccp_interval(model, X_calib, y_calib, X_test, feature_map)
 
     marginal_cov = np.zeros((n_trials, 2))
     group_cov = np.zeros((len(eval_functions), n_trials, 2))
@@ -342,7 +321,7 @@ def plot_results(X_test, y_test, n_trials=20, experiment="Groups"):
     ax1.set_ylabel("$Y$", fontsize=16, labelpad=10)
     ax1.set_title("Split calibration", fontsize=18, pad=12)
 
-    if (experiment == "Groups") or (experiment == "Agnostic"):
+    if experiment == "Groups":
         ax1.axvspan(1, 2, facecolor="grey", alpha=0.25)
         ax1.axvspan(3, 4, facecolor="grey", alpha=0.25)
     else:
@@ -373,7 +352,7 @@ def plot_results(X_test, y_test, n_trials=20, experiment="Groups"):
     ax2.set_ylabel("$Y$", fontsize=16, labelpad=10)
     ax2.set_title("Conditional calibration", fontsize=18, pad=12)
 
-    if (experiment == "Groups") or (experiment == "Agnostic"):
+    if experiment == "Groups":
         ax2.axvspan(1, 2, facecolor="grey", alpha=0.25)
         ax2.axvspan(3, 4, facecolor="grey", alpha=0.25)
     else:
@@ -424,7 +403,6 @@ plot_results(X_test, y_test, experiment="Groups")
 
 plot_results(X_test, y_test, experiment="Shifts")
 
-plot_results(X_test, y_test, experiment="Agnostic")
 
 ##############################################################################
 # We successfully reproduced the experiment of the Gibbs et al. paper [1].
