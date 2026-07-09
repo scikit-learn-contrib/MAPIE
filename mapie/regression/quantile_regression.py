@@ -197,13 +197,15 @@ class _QuantileConformalizer:
         alpha = np.atleast_2D(self.quantiles[:1]).T
         y_true = np.asarray(y_true)
         y_pred = np.asarray(y_pred)
-        return np.maximum(alpha * (y_true - y_pred), (alpha - 1) * (y_true - y_pred)).mean(axis=1)
+        return np.maximum(
+            alpha * (y_true - y_pred), (alpha - 1) * (y_true - y_pred)
+        ).mean(axis=1)
 
     def _check_score(self, score):
         """
         Check if the score is a subclass of QuantileRegressionScore.
         """
-        if not issubclass(score, ALLOWED_SCORES):
+        if not issubclass(score, self.ALLOWED_SCORES):
             raise ValueError(
                 "Invalid score. Allowed values are subclasses of QuantileRegressionScore."
             )
@@ -357,7 +359,7 @@ class _QuantileConformalizer:
         }
         self.n_calib_samples: List[int] = []
         self.conformity_scores: List[Iterable[float]] = []
-        self.pinball_losses : List[Iterable[float]] = []
+        self.pinball_losses: List[Iterable[float]] = []
         self.key_mapping = {"lower": 0, "upper": 1, "central": 2}
 
     def _set_quantile_estimator_params(
