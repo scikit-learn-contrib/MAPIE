@@ -185,8 +185,6 @@ estimator = Pipeline(
 ##############################################################################
 # 3. Plotting and adaptativity comparison functions
 # --------------------------------------------------------------------------
-# The old PR used dedicated calibrator classes. With the current API, the same
-# ideas are expressed directly as functions from covariates to feature matrices.
 
 gaussian_centers = np.linspace(-1, 5, 8)
 x_bins = np.array([-1, 0, 1.5, 3.0, 5.0])
