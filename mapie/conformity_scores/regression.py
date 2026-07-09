@@ -7,6 +7,7 @@ from numpy.typing import NDArray
 from mapie._machine_precision import EPSILON
 from mapie.conformity_scores.interface import BaseConformityScore
 from mapie.estimator.regressor import EnsembleRegressor
+from mapie.regression.regression import Conformalizer
 
 
 class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
@@ -72,7 +73,7 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
 
         Returns
         -------
-        NDArray of shape (n_samples,)
+        NDArray of shape (n_samples, )
             Signed conformity scores.
         """
 
@@ -233,7 +234,7 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
         self,
         X: NDArray,
         alpha_np: NDArray,
-        estimator: EnsembleRegressor,
+        estimator: Union[EnsembleRegressor, Conformalizer],
         conformity_scores: NDArray,
         ensemble: bool = False,
         method: str = "base",
