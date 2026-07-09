@@ -31,10 +31,10 @@ from mapie.utils import (
     check_sklearn_user_model_is_fitted,
 )
 
-from .regression import _MapieRegressor, Conformalizer
+from .regression import _MapieRegressor
+from mapie.estimator.regressor import _Conformalizer
 from mapie.conformity_scores import (
-    BaseRegressionScore,
-    check_and_select_conformity_score,
+    BaseRegressionScore
 )
 
 REGRESSOR_TYPE = Union[RegressorMixin, Pipeline]
@@ -114,7 +114,7 @@ class AbsoluteQuantileRegressionScore(QuantileRegressionScore):
         return np.maximum(conformity_scores[0], conformity_scores[1])
 
 
-class _QuantileConformalizer(Conformalizer):
+class _QuantileConformalizer(_Conformalizer):
     quantile_estimator_params = {
         "GradientBoostingRegressor": {"loss_name": "loss", "alpha_name": "alpha"},
         "QuantileRegressor": {"loss_name": "quantile", "alpha_name": "quantile"},
@@ -562,10 +562,10 @@ class CrossConformalizedQuantileRegressor(_QuantileConformalizer):
             cv=cv,
             n_jobs=n_jobs,
             verbose=verbose,
-            conformity_score=check_and_select_conformity_score(
-                conformity_score,
-                BaseRegressionScore,
-            ),
+            conformity_score=BaseRegressionScore,#check_and_select_conformity_score(
+            #    conformity_score,
+            #    BaseRegressionScore,
+            #),
             random_state=random_state,
         )
 

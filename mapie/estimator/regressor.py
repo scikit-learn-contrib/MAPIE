@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import List, Optional, Tuple, Union, cast
 
 import numpy as np
+from abc import ABC, abstractmethod
 from joblib import Parallel, delayed
 from numpy.typing import ArrayLike, NDArray
 from sklearn.base import RegressorMixin, clone
@@ -19,7 +20,23 @@ from mapie.utils import (
 )
 
 
-class EnsembleRegressor:
+
+class _Conformalizer(ABC):
+    """
+    Abstract base class for conformalizers.
+    """
+
+    @abstractmethod
+    def _predict(
+        self,
+        X: ArrayLike,
+        ensemble: bool = False,
+        return_multi_pred: bool = True,
+        **predict_params,
+    ) -> Union[NDArray, Tuple[NDArray, NDArray, NDArray]]:
+        pass
+
+class EnsembleRegressor(_Conformalizer):
     """
     This class implements methods to handle the training and usage of the
     estimator. This estimator can be unique or composed by cross validated
@@ -526,6 +543,19 @@ class EnsembleRegressor:
         self._is_fitted = True
 
         return self
+
+    #TODO: harmonize for _Conformalizer
+    def _predict(self,
+        X: ArrayLike,
+        ensemble: bool = False,
+        return_multi_pred: bool = True,
+        **predict_params) -> Union[NDArray, Tuple[NDArray, NDArray, NDArray]]:
+        return self.predict(
+            X,
+            ensemble=ensemble,
+            return_multi_pred=return_multi_pred,
+            **predict_params
+        )
 
     def predict(
         self,

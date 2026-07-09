@@ -6,8 +6,7 @@ from numpy.typing import NDArray
 
 from mapie._machine_precision import EPSILON
 from mapie.conformity_scores.interface import BaseConformityScore
-from mapie.estimator.regressor import EnsembleRegressor
-from mapie.regression.regression import Conformalizer
+from mapie.estimator.regressor import _Conformalizer
 
 
 class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
@@ -234,7 +233,7 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
         self,
         X: NDArray,
         alpha_np: NDArray,
-        estimator: Union[EnsembleRegressor, Conformalizer],
+        estimator: _Conformalizer,
         conformity_scores: NDArray,
         ensemble: bool = False,
         method: str = "base",
@@ -243,7 +242,7 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
     ) -> Tuple[NDArray, NDArray, NDArray]:
         """
         Compute bounds of the prediction intervals from the observed values,
-        the estimator of type `EnsembleRegressor` and the conformity scores.
+        the estimator of type `_Conformalizer` and the conformity scores.
 
         Parameters
         ----------
@@ -254,7 +253,7 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
             NDArray of floats between `0` and `1`, represents the
             uncertainty of the confidence interval.
 
-        estimator: EnsembleRegressor
+        estimator: _Conformalizer
             Estimator that is fitted to predict y from X.
 
         conformity_scores: NDArray of shape (n_samples,)
@@ -304,7 +303,7 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
                 + "symmetrical conformity score function."
             )
 
-        y_pred, y_pred_low, y_pred_up = estimator.predict(X, ensemble)
+        y_pred, y_pred_low, y_pred_up = estimator._predict(X, ensemble)
         signed = -1 if self.sym else 1
 
         if optimize_beta:
