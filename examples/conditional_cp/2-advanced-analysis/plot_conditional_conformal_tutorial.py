@@ -1,551 +1,638 @@
 """
-Group-conditional prediction sets (advanced)
-============================================
+Conditional conformal prediction for regression
+===============================================
 
-The tutorial will explain how to use the CCP method, and
-will compare it with the other methods available in MAPIE. The CCP method
-implements the method described in the Gibbs et al. (2023) paper [1].
-
-We will see in this tutorial how to use the method. It has a lot of advantages:
-
-- It is model agnostic (it doesn't depend on the model but only on the
-  predictions, unlike `CQR`)
-- It can create very adaptative intervals (with a varying width which truly
-  reflects the model uncertainty)
-- while providing coverage guarantee on all sub-groups of interest
-  (avoiding biases)
-- with the possibility to inject prior knowledge about the data or the model
-
-However, we will also see its disadvantages:
-
-- The adaptativity depends on the calibrator we use: It can be difficult to
-  choose the correct calibrator,
-  with the best parameters (this tutorial will try to help you with this task).
-- The calibration and even more the inference are much longer than for the
-  other methods.
-
-Conclusion on the method:
-
-It can create more adaptative intervals than the other methods, but it can be
-difficult to find the best settings (calibrator type and parameters)
-and can have a big computational time.
-
-----
-
-In this tutorial, we will use a synthetic toy dataset.
-The estimator will be ``Pipeline``
-with ``PolynomialFeatures`` and
-``LinearRegression`` (or
-``QuantileRegressor`` for CQR).
-
-We will compare the different available feature maps of the CCP method
-(using
-``ConditionalSplitConformalRegressor``),
-with the standard split-conformal method, the CV+ method
-(``CrossConformalRegressor``) and CQR
-(``ConformalizedQuantileRegressor``)
-
-Recall that the ``alpha`` is ``1 - target coverage``.
-
-[1] Isaac Gibbs, John J. Cherian, and Emmanuel J. Candès,
-"Conformal Prediction With Conditional Guarantees",
-[arXiv](https://arxiv.org/abs/2305.12616), 2023.
+Tutorial and comparison with other methods on "Communities and Crimes" Dataset.
 """
 
+# In[1]:
+
+import logging
+import warnings
+from copy import deepcopy
+from urllib.request import urlopen
+
 import matplotlib.colors as mcolors
+import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
-from scipy.stats import norm
-from sklearn.base import clone
-from sklearn.linear_model import LinearRegression, QuantileRegressor
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import PolynomialFeatures
+import pandas as pd
+from lightgbm import LGBMRegressor
+from sklearn.metrics import pairwise_distances
+from sklearn.preprocessing import StandardScaler
+from tqdm import tqdm
 
 from mapie.conditional_conformal_prediction import ConditionalSplitConformalRegressor
-from mapie.regression import (
-    ConformalizedQuantileRegressor,
-    CrossConformalRegressor,
-    SplitConformalRegressor,
+from mapie.regression import ConformalizedQuantileRegressor, SplitConformalRegressor
+
+warnings.filterwarnings("ignore")
+warnings.filterwarnings("ignore", category=UserWarning)
+logging.disable(logging.INFO)
+
+random_state = 1
+np.random.seed(random_state)
+
+
+# ## Getting the data
+
+# In[2]:
+
+
+with urlopen(
+    "https://archive.ics.uci.edu/ml/machine-learning-databases/communities/communities.names",
+    timeout=30,
+) as response:
+    names_text = response.read().decode("latin-1")
+column_names = [
+    line.strip().split()[1]
+    for line in names_text.splitlines()
+    if line.strip().startswith("@attribute")
+]
+communities_and_crime = pd.read_csv(
+    "https://archive.ics.uci.edu/ml/machine-learning-databases/communities/communities.data",
+    names=column_names,
+    na_values="?",
 )
+y = communities_and_crime["ViolentCrimesPerPop"].to_numpy()
+X = communities_and_crime.drop(columns=["communityname", "ViolentCrimesPerPop"])
+X = X.loc[:, X.isna().sum() == 0]
+col_names = list(X.columns)
 
-random_state = 42
-rng = np.random.default_rng(random_state)
-
-ALPHA = 0.1
-confidence_level = 1 - ALPHA
-
-##############################################################################
-# 1. Data generation
-# --------------------------------------------------------------------------
-# Let's start by creating some synthetic data with different domains and
-# distributions to evaluate the adaptativity of the methods:
-#  - baseline distribution of ``x*sin(x)``
-#  - Add noise :
-#   - between -1 and 0: uniform distribution of the points around the baseline
-#   - between 0 and 5: normal distribution with a noise value which
-#     increase with ``x``
-#
-# We use reduced sample sizes compared with the paper-scale experiment so that
-# the documentation example remains fast enough to execute.
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X.to_numpy())
 
 
-def x_sinx(x):
-    """One-dimensional x*sin(x) function."""
-    return x * np.sin(x)
+# We normalize the data, to simplify the following (even if the used model doesn't requires it)
+
+# In[3]:
 
 
-def get_1d_data_with_heteroscedastic_noise(
-    min_x=-1,
-    max_x=5,
-    n_samples=1400,
-    noise=0.8,
-    power=2,
-    seed=42,
-):
-    data_rng = np.random.default_rng(seed)
-    X = data_rng.uniform(min_x, max_x, size=n_samples)
-    normal_scale = noise * (np.maximum(X, 0) / max_x) ** power * max_x
-    y = x_sinx(X) + data_rng.normal(0, normal_scale)
-    y += data_rng.uniform(-noise * 3, noise * 3, size=n_samples) * (X < 0)
+def generate_data(seed, n_train, n_calib, n_test):
+    """
+    Return a new split (x_train, y_train, x_calib, y_calib, x_test, y_test)
+    of the dataset, based on the ``seed`` value.
+    """
+    np.random.seed(seed)
+    if n_train + n_calib + n_test > len(X):
+        raise ValueError(
+            f"n_train + n_calib + n_test = {n_train} + {n_calib} + {n_test}"
+            f" = {n_train + n_calib + n_test} > len(total_dataset) = {len(X)}"
+        )
 
-    true_pi = np.column_stack([x_sinx(X), x_sinx(X)])
-    true_pi[X < 0, 0] -= noise * 3 * confidence_level
-    true_pi[X < 0, 1] += noise * 3 * confidence_level
-    normal_half_width = norm.ppf((1 + confidence_level) / 2) * normal_scale
-    true_pi[X >= 0, 0] -= normal_half_width[X >= 0]
-    true_pi[X >= 0, 1] += normal_half_width[X >= 0]
+    indexes = list(range(len(X)))
+    train_indexes = np.random.choice(indexes, n_train, replace=False)
+    indexes = list(set(indexes) - set(train_indexes))
+    calib_indexes = np.random.choice(indexes, n_calib, replace=False)
+    indexes = list(set(indexes) - set(calib_indexes))
+    test_indexes = np.random.choice(indexes, n_test, replace=False)
 
-    return X.reshape(-1, 1), y, true_pi
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(X)
 
-
-def generate_data(n_train=500, n_calib=500, n_test=350, seed=42):
-    X, y, true_pi = get_1d_data_with_heteroscedastic_noise(
-        n_samples=n_train + n_calib + n_test,
-        seed=seed,
-    )
-    permutation = rng.permutation(len(X))
-    train_indexes = permutation[:n_train]
-    calib_indexes = permutation[n_train : n_train + n_calib]
-    test_indexes = permutation[n_train + n_calib :]
     return (
-        X[train_indexes],
+        X_scaled[train_indexes, :],
         y[train_indexes],
-        X[calib_indexes],
+        X_scaled[calib_indexes, :],
         y[calib_indexes],
-        X[test_indexes],
+        X_scaled[test_indexes, :],
         y[test_indexes],
-        true_pi[test_indexes],
     )
 
 
-X_train, y_train, X_calib, y_calib, X_test, y_test, test_pi = generate_data()
+# ## The goal:
 
-plt.scatter(X_train, y_train, color="C0", alpha=0.5, s=6, label="Training data")
-sort_order = np.argsort(X_train[:, 0])
-x_sorted = X_train[sort_order]
-plt.plot(
-    x_sorted[:, 0],
-    x_sinx(x_sorted[:, 0]),
-    "k-",
-    label="Baseline",
+# - We will try to have an adaptative prediction interval using the ``ConditionalSplitConformalRegressor``. We will compare it with standard ``SplitConformalRegressor``, and ``ConformalizedQuantileRegressor``.
+#
+# - The adaptativity will be evaluated by looking at the conditional coverage over groups of target values, and groups on features of interest.
+#
+# - The groups are the 10 target groups (see the histogram below), and the 4 quantiles (with thresholds at Q1, Q2 and Q3) on features of interest (``'racepctblack', 'racePctWhite', 'racePctAsian', 'racePctHisp'``).
+# Those features were chosen to make sure there is no bias toward one or the other ethnicity.
+
+# In[4]:
+
+
+thres = (
+    [0]
+    + [round(x, 2) for x in np.sort(y)[[int(len(y) / 10 * i) for i in range(1, 10)]]]
+    + [1]
 )
-plt.plot(
-    x_sorted[:, 0],
-    x_sinx(x_sorted[:, 0]) - 0.8 * 3 * confidence_level,
-    "k--",
-    label=f"Uniform-noise interval (alpha={ALPHA})",
-)
-plt.plot(x_sorted[:, 0], x_sinx(x_sorted[:, 0]) + 0.8 * 3 * confidence_level, "k--")
-plt.xlabel("x")
-plt.ylabel("y")
-plt.title("Data")
-plt.legend()
+fig, ax = plt.subplots(1, 1, figsize=(5, 5))
+for t in thres:
+    ax.axvline(t, linestyle="--", c="r", label="10% quantiles" * int(t == 0))
+ax.hist(y, bins=60)
+ax.set_xlabel("Normalized Per Capita Violent Crime")
+ax.set_title("Histogram")
+ax.legend()
 plt.show()
 
 
-##############################################################################
-# 2. Model: polynomial regression
-# --------------------------------------------------------------------------
+# By doing so, we create 10 groups based on the target value, where each group has the same number of samples.
 
-polynomial_degree = 4
-quantile_estimator = Pipeline(
-    [
-        ("poly", PolynomialFeatures(degree=polynomial_degree)),
-        ("linear", QuantileRegressor(solver="highs", alpha=0)),
-    ]
-)
-estimator = Pipeline(
-    [
-        ("poly", PolynomialFeatures(degree=polynomial_degree)),
-        ("linear", LinearRegression()),
-    ]
-)
+# ## Evaluation functions
+
+# In[5]:
 
 
-##############################################################################
-# 3. Plotting and adaptativity comparison functions
-# --------------------------------------------------------------------------
-# The old PR used dedicated calibrator classes. With the current API, the same
-# ideas are expressed directly as functions from covariates to feature matrices.
+def estimate_scores(
+    mapie_regressors,
+    group_functions,
+    score_functions,
+    n_train=2000,
+    n_calib=2000,
+    n_test=500,
+    seed=1,
+):
+    """
+    Sample a new data split, train the estimator on the training set, then
+    fit the calibration on the new calibration set. The scores corresponding
+    to ``score_functions`` are computing on each group of ``group_functions``.
+    """
 
-gaussian_centers = np.linspace(-1, 5, 8)
-x_bins = np.array([-1, 0, 1.5, 3.0, 5.0])
-
-
-def constant_feature_map(X):
-    X = np.asarray(X)
-    return np.ones((len(X), 1))
-
-
-def binned_feature_map(X):
-    x = np.asarray(X).reshape(-1)
-    bin_indexes = np.digitize(x, x_bins[1:-1], right=False)
-    features = np.zeros((len(x), len(x_bins) - 1))
-    features[np.arange(len(x)), bin_indexes] = 1
-    return features
-
-
-def polynomial_feature_map(X):
-    x = np.asarray(X).reshape(-1)
-    return np.column_stack([np.ones(len(x)), x, x**2, x**3])
-
-
-def gaussian_feature_map(X, sigma=0.55):
-    x = np.asarray(X).reshape(-1)
-    squared_distances = (x[:, np.newaxis] - gaussian_centers[np.newaxis, :]) ** 2
-    return np.column_stack(
-        [np.ones(len(x)), np.exp(-squared_distances / (2 * sigma**2))]
+    x_train, y_train, x_calib, y_calib, x_test, y_test = generate_data(
+        seed=seed, n_train=n_train, n_calib=n_calib, n_test=n_test
     )
+    scores = np.zeros((3, len(score_functions), len(group_functions)))
+    for i, mapie_regressor in enumerate(mapie_regressors):
+        mapie_regressor = deepcopy(mapie_regressor)
+        mapie_regressor.fit(x_train, y_train).conformalize(x_calib, y_calib)
+        _, y_pi = mapie_regressor.predict_interval(x_test)
+        for group_num, group_fn in enumerate(group_functions):
+            x_filter = group_fn(x_test, y_test)
+            for score_num, score_fn in enumerate(score_functions):
+                scores[i, score_num, group_num] = score_fn(
+                    y=y_test[x_filter],
+                    lower=y_pi[:, 0, 0][x_filter],
+                    upper=y_pi[:, 1, 0][x_filter],
+                )
+
+    return scores
 
 
-def grouped_polynomial_feature_map(X):
-    x = np.asarray(X).reshape(-1)
-    left = (x < 0).astype(float)
-    right = (x >= 0).astype(float)
-    return np.column_stack(
-        [
-            left,
-            right,
-            right * x,
-            right * x**2,
-            right * x**3,
-        ]
-    )
+def get_scores_n_trials(
+    mapies,
+    n_trials,
+    group_functions,
+    group_names,
+    score_functions,
+    score_names,
+    n_train=2000,
+    n_calib=2000,
+    n_test=500,
+):
+    """
+    Compute ``n_trials`` evaluation scores on different dataset splits.
+    """
+
+    scores = np.zeros((n_trials, 3, len(score_functions), len(group_functions)))
+
+    for trial in tqdm(range(n_trials), disable=True):
+        scores[trial, :, :, :] = estimate_scores(
+            mapies, group_functions, score_functions, n_train, n_calib, n_test, trial
+        )
+
+    method_names = ["Split", "CQR", "CCP"]
+
+    scores_df = pd.DataFrame()
+    for group_num, group_name in enumerate([e for g in group_names for e in g]):
+        for method_num, method_name in enumerate(method_names):
+            temp_df = pd.DataFrame(
+                {
+                    "Method": [method_name] * n_trials,
+                    "Group name": [group_name] * n_trials,
+                }
+            )
+            for score_num, score_name in enumerate(score_names):
+                temp_df[score_name] = scores[:, method_num, score_num, group_num]
+
+            scores_df = pd.concat([scores_df, temp_df], axis=0)
+
+    return scores_df.reset_index(drop=True)
+
+
+# ## Plotting functions
+
+# In[6]:
 
 
 def plot_subplot(
     ax,
-    X,
-    y,
-    mapie,
-    y_pred,
-    y_pi,
+    y_test_sorted,
+    y_pred_sorted,
+    upper_pi,
+    lower_pi,
+    lw,
     color_rgb,
-    show_transform=False,
-    ax_transform=None,
+    xlabel,
+    ylabel,
+    title,
+    showlegend=False,
 ):
-    """Plot the prediction interval and, optionally, feature-map components."""
-    sort_order = np.argsort(X[:, 0])
     color = mcolors.rgb2hex(color_rgb)
-    x_sorted = X[sort_order]
-    y_sorted = y[sort_order]
-    y_pred_sorted = y_pred[sort_order]
-    lower_pi_sorted = y_pi[sort_order, 0, 0]
-    upper_pi_sorted = y_pi[sort_order, 1, 0]
-
-    ax.scatter(
-        x_sorted[:, 0],
-        y_sorted,
-        s=3,
-        alpha=0.3,
-        color="darkblue",
-        label="Test data",
+    ax.plot(
+        y_test_sorted,
+        y_pred_sorted,
+        lw=lw,
+        color="black",
+        label="Prediction" if showlegend else "",
     )
-    ax.plot(x_sorted[:, 0], y_pred_sorted, lw=1, color="black", label="Prediction")
     ax.fill_between(
-        x_sorted[:, 0],
-        lower_pi_sorted,
-        upper_pi_sorted,
+        y_test_sorted,
+        upper_pi,
+        lower_pi,
         color=color,
         alpha=0.3,
-        label="Prediction interval",
+        label="Prediction interval" if showlegend else "",
     )
-    ax.plot(x_sorted[:, 0], lower_pi_sorted, lw=1, color=color)
-    ax.plot(x_sorted[:, 0], upper_pi_sorted, lw=1, color=color)
+    ax.plot(y_test_sorted, upper_pi, lw=lw, color=color)
+    ax.plot(y_test_sorted, lower_pi, lw=lw, color=color)
     ax.plot(
-        x_sorted[:, 0],
-        test_pi[sort_order, 0],
-        "--k",
-        lw=1,
-        label="True interval",
+        [0, 1],
+        [0, 1],
+        lw=lw,
+        color="black",
+        linestyle="--",
+        label="Perfect Prediction" if showlegend else "",
     )
-    ax.plot(x_sorted[:, 0], test_pi[sort_order, 1], "--k", lw=1)
-
-    if show_transform and isinstance(mapie, ConditionalSplitConformalRegressor):
-        transform = mapie.feature_map(x_sorted)
-        for column in range(transform.shape[1]):
-            ax_transform.plot(x_sorted[:, 0], transform[:, column], lw=1, color=color)
+    ax.set_ylim([-0.1, 1.1])
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    ax.set_title(title)
 
 
-def plot_figure(mapies, y_preds, y_pis, titles, show_components=False):
-    """Plot the prediction intervals of all MAPIE instances."""
-    cp = plt.get_cmap("tab10").colors
-    ncols = min(3, len(titles))
-    nrows = int(np.ceil(len(titles) / ncols))
+def plot_score_boxplot(ax, df, score_name, group_names, color_discrete_map):
+    flatten_group_names = [item for sub in group_names for item in sub]
+    for i, method in enumerate(["Split", "CQR", "CCP"]):
+        df_method = df[df["Method"] == method]
+        color = color_discrete_map[method]
 
-    if show_components:
-        fig, axes = plt.subplots(
-            nrows=2 * nrows,
-            ncols=ncols,
-            figsize=(ncols * 4, nrows * 5.2),
-            height_ratios=[3, 1] * nrows,
+        ax.boxplot(
+            [
+                df_method[df_method["Group name"] == g][score_name]
+                for g in flatten_group_names
+            ],
+            positions=np.arange(len(flatten_group_names)) + (i - 1) * 0.2,
+            widths=0.2,
+            patch_artist=True,
+            boxprops=dict(facecolor=color),
+            medianprops=dict(color="black"),
+            labels=[g if i == 1 else "" for g in flatten_group_names],
         )
-        axes = np.asarray(axes).reshape(2 * nrows, ncols)
-        main_axes = axes[::2].flatten()
-        transform_axes = axes[1::2].flatten()
-    else:
-        fig, axes = plt.subplots(
-            nrows=nrows, ncols=ncols, figsize=(ncols * 4, nrows * 4)
-        )
-        main_axes = np.asarray(axes).reshape(nrows, ncols).flatten()
-        transform_axes = np.full(main_axes.shape, None)
 
-    for axis_index in range(len(mapies), len(main_axes)):
-        fig.delaxes(main_axes[axis_index])
-        if transform_axes[axis_index] is not None:
-            fig.delaxes(transform_axes[axis_index])
+    for g in group_names[1:]:
+        ax.axvline(x=flatten_group_names.index(g[0]) - 0.5, color="black", linewidth=2)
+    ax.tick_params(axis="x", rotation=-45)
+    ax.set_xticks(np.arange(len(flatten_group_names)))
+    ax.set_xticklabels(flatten_group_names, ha="left", rotation_mode="anchor")
 
-    for index, (m_ax, t_ax, mapie, y_pred, y_pi, title) in enumerate(
-        zip(main_axes, transform_axes, mapies, y_preds, y_pis, titles)
-    ):
+
+# In[7]:
+
+
+def plot_intervals(mapie_regressors, n_train, n_calib, n_test):
+    x_train, y_train, x_calib, y_calib, x_test, y_test = generate_data(
+        seed=1, n_train=n_train, n_calib=n_calib, n_test=n_test
+    )
+
+    sort_order = np.argsort(y_test)
+    x_test_sorted = x_test[sort_order, :]
+    y_test_sorted = y_test[sort_order]
+
+    fig, axes = plt.subplots(1, 3, figsize=(20, 5))
+    for i, mapie_regressor in enumerate(mapie_regressors):
+        mapie_regressor = deepcopy(mapie_regressor)
+        mapie_regressor.fit(x_train, y_train).conformalize(x_calib, y_calib)
+        y_pred_split, y_pis_split = mapie_regressor.predict_interval(x_test_sorted)
+        split_lower = y_pis_split[:, 0, 0]
+        split_upper = y_pis_split[:, 1, 0]
         plot_subplot(
-            m_ax,
-            X_test,
-            y_test,
-            mapie,
-            y_pred,
-            y_pi,
-            cp[index],
-            show_transform=show_components,
-            ax_transform=t_ax,
+            axes[i],
+            y_test_sorted,
+            y_pred_split,
+            split_upper,
+            split_lower,
+            1,
+            f"C{i}",
+            "True Price",
+            "Predicted Price",
+            "Split",
+            showlegend=True,
         )
-        m_ax.set_title(title)
-        m_ax.set_xlabel("X")
-        if index % ncols == 0:
-            m_ax.set_ylabel("Y")
-        m_ax.legend(fontsize=8)
-        if t_ax is not None:
-            t_ax.set_title("Feature-map components")
-            t_ax.set_xlabel("X")
-            if index % ncols == 0:
-                t_ax.set_ylabel("Value")
 
-    fig.tight_layout()
+        lines_labels = [ax.get_legend_handles_labels() for ax in fig.axes]
+        lines, labels = [sum(lol, []) for lol in zip(*lines_labels)]
+        fig.legend(lines, labels, loc="upper right")
+
+    plt.subplots_adjust(top=0.95, right=0.9)
     plt.show()
 
 
-def compute_conditional_coverage(X, y, y_pi, bins_width=0.5):
-    """Compute conditional coverage on bins of X."""
-    bin_edges = np.arange(np.min(X), np.max(X) + bins_width, bins_width)
-    coverage = np.zeros(len(bin_edges) - 1)
-
-    for bin_index in range(len(bin_edges) - 1):
-        in_bin = (X[:, 0] >= bin_edges[bin_index]) & (
-            X[:, 0] < bin_edges[bin_index + 1]
+def plot_coverage_width(
+    mapie_regressors,
+    n_trials,
+    group_functions,
+    group_names,
+    score_functions,
+    score_names,
+    n_train,
+    n_calib,
+    n_test,
+):
+    scores_df = get_scores_n_trials(
+        mapie_regressors,
+        n_trials,
+        group_functions,
+        group_names,
+        score_functions,
+        score_names,
+        n_train,
+        n_calib,
+        n_test,
+    )
+    # ============================ Plot results ============================
+    for score_name in score_names:
+        fig, ax = plt.subplots(figsize=(30, 10))
+        cp = plt.get_cmap("tab10").colors
+        color_discrete_map = dict(
+            zip(["Split", "CQR", "CCP"], [mcolors.rgb2hex(c) for c in cp[:3]])
         )
-        if np.any(in_bin):
-            coverage[bin_index] = np.mean(
-                (y[in_bin] >= y_pi[in_bin, 0, 0]) & (y[in_bin] <= y_pi[in_bin, 1, 0])
-            )
-        else:
-            coverage[bin_index] = np.nan
 
-    bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
-    return bin_centers, coverage
+        plot_score_boxplot(ax, scores_df, score_name, group_names, color_discrete_map)
 
+        if score_name == "Coverage":
+            ax.axhline(confidence_level, color="red", linewidth=3)
 
-def plot_evaluation(titles, y_pis, X, y):
-    """Plot conditional coverages and interval widths."""
-    sort_order = np.argsort(X[:, 0])
-    cp = plt.get_cmap("tab10").colors
+        ax.set_title(score_name, fontsize=22)
+        ax.set_xlabel("Groups", fontsize=20)
+        ax.set_ylabel(score_name, fontsize=20)
+        ax.tick_params(axis="both", which="major", labelsize=20)
 
-    fig, axs = plt.subplots(nrows=1, ncols=2, figsize=(10, 4))
-    for index, pi in enumerate(y_pis):
-        color = mcolors.rgb2hex(cp[index])
-        bin_centers, coverage = compute_conditional_coverage(X, y, pi)
-        axs[0].plot(bin_centers, coverage, lw=2, color=color, label=titles[index])
-        width = pi[sort_order, 1, 0] - pi[sort_order, 0, 0]
-        axs[1].plot(X[sort_order, 0], width, lw=2, color=color, label=titles[index])
+        legend_handles = [
+            mpatches.Patch(color=color, label=method)
+            for method, color in color_discrete_map.items()
+        ]
+        fig.legend(handles=legend_handles, loc="upper right", fontsize=18)
 
-    perfect_width = test_pi[sort_order, 1] - test_pi[sort_order, 0]
-    axs[1].plot(
-        X[sort_order, 0],
-        perfect_width,
-        lw=2,
-        color="black",
-        linestyle="--",
-        label="True width",
-    )
-    axs[0].axhline(
-        y=confidence_level,
-        color="black",
-        linestyle="--",
-        label=f"target={confidence_level}",
-    )
-    axs[0].legend(fontsize=8)
-    axs[0].set_title("Conditional coverage")
-    axs[0].set_xlabel("X (bins of 0.5 width)")
-    axs[0].set_ylabel("Coverage")
-    axs[0].set_ylim([0.55, 1.05])
-    axs[1].legend(fontsize=8)
-    axs[1].set_title("Prediction interval width")
-    axs[1].set_xlabel("X")
-    axs[1].set_ylabel("Width")
-    plt.tight_layout()
-    plt.show()
+        plt.tight_layout()
+        plt.show()
 
 
-##############################################################################
-# 4. Creation of Mapie instances
-# --------------------------------------------------------------------------
-# We are going to test different methods : ``CV+``, ``CQR`` and ``CCP``
-# (with default parameters)
+# ## Evaluation methods and configuration
 
-estimator_split = clone(estimator).fit(X_train, y_train)
+# In[8]:
+
+
+# scores functions
+def coverage_funct(y, lower, upper):
+    return np.mean((lower <= y) & (y <= upper))
+
+
+def width_funct(y, lower, upper):
+    return np.mean(np.abs(upper - lower))
+
+
+score_functions = [coverage_funct, width_funct]
+score_names = ["Coverage", "Width"]
+
+# Groups functions: the scores will be evaluated on each one of these groups.
+thres = thres = (
+    [0]
+    + [round(x, 2) for x in np.sort(y)[[int(len(y) / 10 * i) for i in range(1, 10)]]]
+    + [1]
+)
+
+# index of the 4 columns of interest:
+# 'racepctblack', 'racePctWhite', 'racePctAsian', 'racePctHisp'
+group_cols = [4, 5, 6, 7]
+
+group_functions = (
+    # all dataset, for marginal evaluation
+    [lambda x, y: np.ones(len(x)).astype(bool)]
+    # 10 target groups
+    + [
+        lambda x, y, i=i: np.logical_and(y >= thres[i], y <= thres[i + 1])
+        for i in range(10)
+    ]
+    # groups on ethnicity features
+    + [
+        lambda x, y, c=c, q1=q1, q2=q2: np.logical_and(
+            x[:, c] >= np.sort(X_scaled[:, c])[int(len(X_scaled) * q1)],
+            x[:, c] <= np.sort(X_scaled[:, c])[int(len(X_scaled) * q2) - 1],
+        )
+        for c in group_cols
+        for (q1, q2) in zip([0, 0.25, 0.5, 0.75], [0.25, 0.5, 0.75, 1])
+    ]
+)
+group_names = (
+    [["MARGINAL"]]
+    + [[f"Crime: {thres[i]} - {thres[i + 1]}" for i in range(10)]]
+    + [
+        [
+            f"{col_names[c]} : {q1}-{q2}%"
+            for (q1, q2) in zip([0, 25, 50, 75], [25, 50, 75, 100])
+        ]
+        for c in group_cols
+    ]
+)
+
+
+# # Experiments and results:
+
+# In[9]:
+
+
+confidence_level = 0.8
+# These values are smaller than in the original notebook so that the gallery
+# example keeps the same narrative while running quickly in documentation builds.
+n_train, n_calib, n_test = 400, 250, 150
+n_trials = 3
+
+# Define the model
+estimator = LGBMRegressor(
+    objective="quantile",
+    alpha=0.5,
+    n_estimators=35,
+    num_leaves=15,
+    min_child_samples=12,
+    learning_rate=0.08,
+    random_state=random_state,
+    verbose=-1,
+    n_jobs=1,
+)
+
+# ================= Split =================
 mapie_split = SplitConformalRegressor(
-    estimator=estimator_split,
+    estimator=deepcopy(estimator),
     confidence_level=confidence_level,
     conformity_score="absolute",
-    prefit=True,
-).conformalize(X_calib, y_calib)
-y_pred_split, y_pi_split = mapie_split.predict_interval(X_test)
-
-mapie_cv = CrossConformalRegressor(
-    estimator=clone(estimator),
-    confidence_level=confidence_level,
-    method="plus",
-    cv=3,
+    prefit=False,
 )
-mapie_cv.fit_conformalize(
-    np.vstack([X_train, X_calib]),
-    np.hstack([y_train, y_calib]),
-)
-y_pred_cv, y_pi_cv = mapie_cv.predict_interval(X_test)
 
+# ================= CQR =================
 mapie_cqr = ConformalizedQuantileRegressor(
-    estimator=clone(quantile_estimator),
+    estimator=deepcopy(estimator),
     confidence_level=confidence_level,
 )
-mapie_cqr.fit(X_train, y_train).conformalize(X_calib, y_calib)
-y_pred_cqr, y_pi_cqr = mapie_cqr.predict_interval(X_test)
+
+
+# ---
+
+# ## 1. Using gaussian feature map for adaptativity <u>without prior knowledge on the dataset or biases</u>
+
+# In[10]:
+
+
+def make_gaussian_ccp_feature_map(n_centers=12, seed=random_state):
+    """
+    Build a Gaussian feature map for CCP.
+
+    The centers and bandwidth are initialized lazily on the first call to
+    ``feature_map``. In this notebook, that first call happens during
+    ``conformalize(X_calib, y_calib)``, so the centers are sampled from the
+    calibration set. The bandwidth is set to the median pairwise distance
+    between centers, which adapts the Gaussian scale to the current data split.
+
+    The returned features contain an intercept column plus raw Gaussian
+    similarities to the sampled centers. We avoid row-normalizing these
+    similarities so that their magnitude still reflects how close a point is to
+    the centers.
+    """
+    rng = np.random.default_rng(seed)
+    centers = None
+    sigma = None
+
+    def feature_map(X):
+        nonlocal centers, sigma
+
+        X = np.asarray(X, dtype=float)
+        if X.ndim == 1:
+            X = X.reshape(1, -1)
+
+        if centers is None:
+            n_selected = min(n_centers, len(X))
+            center_idx = rng.choice(len(X), size=n_selected, replace=False)
+            centers = X[center_idx]
+
+            sigma = np.median(pairwise_distances(centers))
+            sigma = max(sigma, 1e-12)
+
+        squared_distances = ((X[:, None, :] - centers[None, :, :]) ** 2).sum(axis=2)
+        gaussian_features = np.exp(-squared_distances / (2 * sigma**2))
+
+        return np.column_stack([np.ones(len(X)), gaussian_features])
+
+    return feature_map
+
 
 mapie_ccp = ConditionalSplitConformalRegressor(
-    gaussian_feature_map,
-    estimator=estimator_split,
+    make_gaussian_ccp_feature_map(n_centers=6, seed=random_state),
+    estimator=deepcopy(estimator),
     confidence_level=confidence_level,
     conformity_score="absolute",
-    prefit=True,
-).conformalize(X_calib, y_calib)
-y_pred_ccp, y_pi_ccp = mapie_ccp.predict_interval(X_test)
-
-mapies = [mapie_split, mapie_cv, mapie_cqr, mapie_ccp]
-y_preds = [y_pred_split, y_pred_cv, y_pred_cqr, y_pred_ccp]
-y_pis = [y_pi_split, y_pi_cv, y_pi_cqr, y_pi_ccp]
-titles = ["Basic split", "CV+", "CQR", "CCP Gaussian feature map"]
-
-plot_figure(mapies, y_preds, y_pis, titles)
-plot_evaluation(titles, y_pis, X_test, y_test)
+    prefit=False,
+)
 
 
-##############################################################################
-# The ``ConditionalSplitConformalRegressor``
-# has is a very adaptative method, even with default
-# parameters values. If the dataset is more complex, the default parameters
-# may not be enough to get the best performances. In this case, we can use
-# more advanced settings, described below.
+# ### Plotting the result
+
+# In[11]:
 
 
-##############################################################################
-# 5. How to improve the results?
-# --------------------------------------------------------------------------
+plot_intervals((mapie_split, mapie_cqr, mapie_ccp), n_train, n_calib, n_test)
+plot_coverage_width(
+    (mapie_split, mapie_cqr, mapie_ccp),
+    n_trials,
+    group_functions,
+    group_names,
+    score_functions,
+    score_names,
+    n_train,
+    n_calib,
+    n_test,
+)
+
+
+# - The method which is the more adaptative is the one with the most constant coverage.
+# - Here, the ``CCP`` method is the best one. We can see that the basic ``Split`` method has a strong over-coverage for small target values, and under-coverage for big target values. Moreover, it seems to have a <u>strong bias</u> on the ``'racepctblack'`` and ``'racePctWhite'``.
+# - The ``CQR`` method is better than the ``Split`` but suffers from the same issues.
 #
-# 5.1. How does the ``CCP`` method works ?
-# --------------------------------------------------------------------------
-# The CCP method is based on a function which create some features(vector of
-# d dimensions), based on ``X`` (and potentially the prediction ``y_pred``).
+# $\to$ We managed, with ``ConditionalSplitConformalRegressor``, to have a more <u>homogenous coverage</u> on the target value, and a much <u>smaller bias on the ethnicity groups</u>.
 #
-# These features should be able to represente the distribuion of the
-# conformity scores, which is here (by default) the absolute residual:
-# ``|y_true - y_pred|``
+# $\to$ However its prediction time is longer than the other CP methods as it contains an optimization process.
 
-##############################################################################
-# Examples of basic functions:
-# --------------------------------------------------------------------------
+# ---
+
+# ## 2. Using prior knowledge about the biases we want to avoid
+# We saw previously, that there was a strong bias on the ethnicity features (with over or under coverage for some values).
 #
-##############################################################################
-
-##############################################################################
-#  1) ``f : X -> (1)``, will try to estimate the absolute residual with a
-#  constant, and will results in a prediction interval of constant width
-#  (like the basic split CP)
+# $\to$ We can use this information in ``ConditionalSplitConformalRegressor`` to fix it. Let's define a feature map with those features, to guarantee a homogenous coverage on those.
+# We could just add, as custom functions definition, indicatrice functions for each of the 4 groups (split using Q1, mediane and Q3 values), for each ethnicity feature.
 #
-#  2) ``f : X -> (1, X)``, will result in a prediction interval of width
-#  equal to: a constant + a value proportional to the value of ``X``
-#  (it seems a good idea here, as the uncertainty increase with ``X``)
-#
-#  3) ``f : X -> (1_{X in bin_1}, ..., 1_{X in bin_k})`` defines a simple
-#  group-conditional feature map. It is useful when the subgroups of interest
-#  are known in advance.
-#
-# In the current API, these are passed as ``feature_map`` callables.
+# However, as the coverage seems to be proportional to the ethnicity value, we will also pass the specific ``X`` value.
 
-feature_maps = [
-    constant_feature_map,
-    polynomial_feature_map,
-    gaussian_feature_map,
-    binned_feature_map,
-    grouped_polynomial_feature_map,
-]
-feature_map_titles = [
-    "CCP constant",
-    "CCP polynomial",
-    "CCP Gaussian",
-    "CCP binned groups",
-    "CCP grouped polynomial",
-]
-
-ccp_mapies = []
-ccp_y_preds = []
-ccp_y_pis = []
-for feature_map in feature_maps:
-    mapie = ConditionalSplitConformalRegressor(
-        feature_map,
-        estimator=estimator_split,
-        confidence_level=confidence_level,
-        conformity_score="absolute",
-        prefit=True,
-    ).conformalize(X_calib, y_calib)
-    y_pred, y_pi = mapie.predict_interval(X_test)
-    ccp_mapies.append(mapie)
-    ccp_y_preds.append(y_pred)
-    ccp_y_pis.append(y_pi)
-
-plot_figure(ccp_mapies, ccp_y_preds, ccp_y_pis, feature_map_titles, True)
-plot_evaluation(feature_map_titles, ccp_y_pis, X_test, y_test)
+# In[12]:
 
 
-##############################################################################
-##############################################################################
-# 6. Conclusion:
-# --------------------------------------------------------------------------
-# The goal is to get prediction intervals that are as adaptive as possible while
-# still keeping the target coverage. Perfect adaptativity whould result in a
-# perfectly constant conditional coverage.
+def ethnicity_feature_map(X):
+    """
+    Build custom CCP features targeting the ethnicity groups used in the
+    diagnostics.
+
+    For each selected ethnicity feature, we split the feature values into four
+    empirical quartile groups. Inside each group, the feature value itself is
+    kept, and outside the group it is set to zero. This lets CCP adapt intervals
+    differently across the ethnicity ranges where coverage imbalance may appear.
+
+    The first column is an intercept, which keeps a global calibration component
+    in the conditional problem. We do not row-normalize the features, so their
+    scale still reflects the original standardized feature values.
+    """
+    X = np.asarray(X, dtype=float)
+    features = [np.ones(len(X))]
+
+    for c in group_cols:
+        edges = np.quantile(X_scaled[:, c], np.linspace(0, 1, 5))
+        for i, (left, right) in enumerate(zip(edges[:-1], edges[1:])):
+            if i == len(edges) - 2:
+                mask = (X[:, c] >= left) & (X[:, c] <= right)
+            else:
+                mask = (X[:, c] >= left) & (X[:, c] < right)
+            features.append(X[:, c] * mask)
+
+    return np.column_stack(features)
+
+
+mapie_ccp = ConditionalSplitConformalRegressor(
+    ethnicity_feature_map,
+    estimator=deepcopy(estimator),
+    confidence_level=confidence_level,
+    conformity_score="absolute",
+    prefit=False,
+)
+
+
+# ### Plotting the result
+
+# In[13]:
+
+
+plot_intervals((mapie_split, mapie_cqr, mapie_ccp), n_train, n_calib, n_test)
+plot_coverage_width(
+    (mapie_split, mapie_cqr, mapie_ccp),
+    n_trials,
+    group_functions,
+    group_names,
+    score_functions,
+    score_names,
+    n_train,
+    n_calib,
+    n_test,
+)
+
+
+# As we expected, the coverage is now more <u>homogenous on the ethnicity groups</u>. To achieve it, the prediction intervals are now even wider than before for previously under-covered samples, and smaller on previously over-covered samples.
 #
-# This is the power of the ``CCP`` method: combining prior knowledge and
-# generic features (gaussian kernels) to have a great overall adaptativity.
+# $\to$ ``ConditionalSplitConformalRegressor`` can guarantee a homogenous coverage on groups of interest (thus <u>remove bias</u>), by giving to the calibrator an adapted feature map.
 #
-# However, it can be difficult to find the best calibrator and parameters.
-# Sometimes, a simpler method (standard ``split`` with ``GammaConformityScore``
-# for example) can be enough. Don't forget to try at first the simpler method,
-# and move on with the more advanced if it is necessary.
+# $\to$ Fixing this bias, almost fixed the non-homogeneity of the coverage, on the target value.
+#
+# <u>Next steps</u>: the only issue to achieve an almost perfect adaptativity, is to fix the under-coverage for the biggest 10% target crime values. One idea may be to combine the two approachs we used (with indicator functions to avoid the biases and gaussian kernels for overall adaptativity), or add a new column to the calibrator, with the ``y_pred`` value to have a bigger interval for high predictions, without changing too much the smaller predictions.
