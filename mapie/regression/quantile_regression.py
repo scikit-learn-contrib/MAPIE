@@ -31,7 +31,7 @@ from mapie.utils import (
     check_sklearn_user_model_is_fitted,
 )
 
-from .regression import _MapieRegressor
+from .regression import _MapieRegressor, Conformalizer
 from mapie.conformity_scores import (
     BaseRegressionScore,
     check_and_select_conformity_score,
@@ -114,7 +114,7 @@ class AbsoluteQuantileRegressionScore(QuantileRegressionScore):
         return np.maximum(conformity_scores[0], conformity_scores[1])
 
 
-class _QuantileConformalizer:
+class _QuantileConformalizer(Conformalizer):
     quantile_estimator_params = {
         "GradientBoostingRegressor": {"loss_name": "loss", "alpha_name": "alpha"},
         "QuantileRegressor": {"loss_name": "quantile", "alpha_name": "quantile"},
@@ -458,6 +458,7 @@ class _QuantileConformalizer:
         )
 
         self.pinball_losses.append(self.pinball_loss(y_calib, pred))
+        self.n_calib_samples.append(_num_samples(y_calib))
 
     # ------------------------------ Predict
     def pinball_weighted_mean(self, y_preds):
@@ -520,7 +521,7 @@ class _QuantileConformalizer:
         return self.estimators_["central"][index].predict(X, **predict_params).ravel()
 
 
-class CrossConformalizedQuantileRegressor:
+class CrossConformalizedQuantileRegressor(_QuantileConformalizer):
     """
     Computes prediction intervals using the cross-conformalized quantile regression technique.
 

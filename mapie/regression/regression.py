@@ -4,6 +4,7 @@ import warnings
 from typing import Any, Iterable, Optional, Tuple, Union, cast
 
 import numpy as np
+from ABC import ABC
 from numpy.typing import ArrayLike, NDArray
 from sklearn.base import BaseEstimator, RegressorMixin, clone
 from sklearn.linear_model import LinearRegression
@@ -46,6 +47,12 @@ from mapie.utils import (
     check_is_fitted,
     check_sklearn_user_model_is_fitted,
 )
+
+
+class Conformalizer(ABC):
+    """
+    Abstract base class for conformalizers.
+    """
 
 
 class SplitConformalRegressor:
