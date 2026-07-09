@@ -1,5 +1,5 @@
 from abc import ABCMeta, abstractmethod
-from typing import Tuple, cast
+from typing import Tuple, cast, Union
 
 import numpy as np
 from numpy.typing import NDArray
