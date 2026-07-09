@@ -529,7 +529,6 @@ mapie_ccp = ConditionalSplitConformalRegressor(
     confidence_level=confidence_level,
     conformity_score="absolute",
     prefit=False,
-    randomize=True,
 )
 
 
