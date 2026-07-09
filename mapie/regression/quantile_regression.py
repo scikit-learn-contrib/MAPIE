@@ -60,7 +60,7 @@ class QuantileRegressionScore(BaseRegressionScore):
 
         Parameters
         ----------
-        y: NDArray of shape (n_samples, 2)
+        y: NDArray of shape (2, n_samples)
             Observed target values.
 
         y_pred: NDArray of shape (n_samples,)
@@ -71,7 +71,7 @@ class QuantileRegressionScore(BaseRegressionScore):
         NDArray of shape (n_samples, 2)
             Signed conformity scores.
         """
-        return np.column_stack(y_pred[:0] - y, y - y_pred[1])
+        return np.vstack(y_pred[0] - y, y - y_pred[1])
 
     def get_estimation_distribution(
         self, y_pred: ArrayLike, conformity_scores: ArrayLike, **kwargs
@@ -111,7 +111,7 @@ class AbsoluteQuantileRegressionScore(QuantileRegressionScore):
 
         if self.consistency_check:
             self.check_consistency(y, y_pred, conformity_scores, **kwargs)
-        return np.maximum(conformity_scores[:, 0], conformity_scores[:, 1])
+        return np.maximum(conformity_scores[0], conformity_scores[1])
 
 
 class _QuantileConformalizer:
@@ -125,7 +125,7 @@ class _QuantileConformalizer:
         "LGBMRegressor": {"loss_name": "objective", "alpha_name": "alpha"},
     }
 
-    allowed_scores = [QuantileRegressionScore]
+    ALLOWED_SCORES = QuantileRegressionScore
 
     def _check_alpha(
         self,
@@ -194,16 +194,16 @@ class _QuantileConformalizer:
         NDArray
             Pinball loss values.
         """
-        alpha = self.alpha
+        alpha = np.atleast_2D(self.quantiles[:1]).T
         y_true = np.asarray(y_true)
         y_pred = np.asarray(y_pred)
-        return np.maximum(alpha * (y_true - y_pred), (alpha - 1) * (y_true - y_pred))
+        return np.maximum(alpha * (y_true - y_pred), (alpha - 1) * (y_true - y_pred)).mean(axis=1)
 
     def _check_score(self, score):
         """
         Check if the score is a subclass of QuantileRegressionScore.
         """
-        if not issubclass(score, QuantileRegressionScore):
+        if not issubclass(score, ALLOWED_SCORES):
             raise ValueError(
                 "Invalid score. Allowed values are subclasses of QuantileRegressionScore."
             )
@@ -357,7 +357,8 @@ class _QuantileConformalizer:
         }
         self.n_calib_samples: List[int] = []
         self.conformity_scores: List[Iterable[float]] = []
-        self.key_mapping = {0: "lower", 1: "upper", 2: "central"}
+        self.pinball_losses : List[Iterable[float]] = []
+        self.key_mapping = {"lower": 0, "upper": 1, "central": 2}
 
     def _set_quantile_estimator_params(
         self, estimator: REGRESSOR_TYPE, alpha: float, alpha_name: str, **params
@@ -450,43 +451,11 @@ class _QuantileConformalizer:
 
         self.n_calib_samples.append(_num_samples(y_calib))
         pred = self._predict_quantiles(X, index)
-        pred -1
-
-    # From MapieQuantileRegressor
-    def conformalize(  # type: ignore[override]
-        self,
-        X: ArrayLike,
-        y: ArrayLike,
-        sample_weight: Optional[ArrayLike] = None,
-        # Parameter groups kept for compliance with superclass _MapieRegressor
-        groups: Optional[ArrayLike] = None,
-        **kwargs: Any,
-    ) -> _MapieRegressor:
-        if self.cv == "prefit":
-            self._initialize_and_check_prefit_estimators()
-
-        X_calib, y_calib = cast(ArrayLike, X), cast(ArrayLike, y)
-        X_calib, y_calib = indexable(X_calib, y_calib)
-        y_calib = _check_y(y_calib)
-
-        self.n_calib_samples = _num_samples(y_calib)
-        _check_alpha_and_n_samples(self.alpha, self.n_calib_samples)
-
-        y_calib_preds = np.full(shape=(3, self.n_calib_samples), fill_value=np.nan)
-
-        for i, est in enumerate(self.estimators_):
-            y_calib_preds[i] = est.predict(X_calib, **kwargs).ravel()
-
-        self.conformity_scores_ = np.full(
-            shape=(3, self.n_calib_samples), fill_value=np.nan
+        self.conformity_scores.append(
+            self.score.get_conformity_scores(y_calib, pred, **kwargs)
         )
 
-        self.conformity_scores_[0] = y_calib_preds[0] - y_calib
-        self.conformity_scores_[1] = y_calib - y_calib_preds[1]
-        self.conformity_scores_[2] = np.max(
-            [self.conformity_scores_[0], self.conformity_scores_[1]], axis=0
-        )
-        return self
+        self.pinball_losses.append(self.pinball_loss(y_calib, pred))
 
     # ------------------------------ Predict
     # TODO: A structure can handle quantiles fitting and prediction to avoid code duplication between conformalizer
@@ -506,9 +475,9 @@ class _QuantileConformalizer:
         Returns
         -------
         ArrayLike
-            Predicted lower and upper quantiles for the input data X.
+            Predicted lower and upper quantiles for the input data X as distinct lines.
         """
-        return np.column_stack(
+        return np.vstack(
             [
                 self.estimators_["lower"][index].predict(X, **predict_params).ravel(),
                 self.estimators_["upper"][index].predict(X, **predict_params).ravel(),
