@@ -2,15 +2,11 @@
 Group-conditional prediction sets
 =================================
 
-
-This example shows how to use
-``ConditionalSplitConformalClassifier``
+This example shows how to use ``ConditionalSplitConformalClassifier``
 to build prediction sets with conditional guarantees on pre-defined groups.
 
-It is inspired by the synthetic examples from Gibbs, Cherian and Candès (2023)
-and their ``conditional-conformal`` reference implementation. The key idea is to
-provide a basis function ``feature_map`` that identifies the covariate groups on
-which coverage should be controlled.
+The key idea is to provide a basis function ``feature_map`` that
+identifies the covariate groups on which coverage should be controlled.
 """
 
 import matplotlib.pyplot as plt
@@ -32,7 +28,7 @@ from mapie.utils import train_conformalize_test_split
 # The first feature is a difficulty index split into three groups. Labels are
 # almost deterministic when this feature is small and much noisier when it is
 # large. The second feature is the class signal. This creates groups with very
-# different conformity-score distributions, which is exactly where marginal
+# different conformity-score distributions, which is exactly where standard
 # split conformal prediction can hide local undercoverage.
 
 bins = np.linspace(0, 1, 4)
@@ -117,7 +113,6 @@ plt.show()
 # classifier will use these columns to calibrate score cutoffs that are valid on
 # each group, not only on average over the full distribution.
 
-bin_centers = (bins[:-1] + bins[1:]) / 2
 bin_labels = [f"[{left:.2f}, {right:.2f})" for left, right in zip(bins[:-1], bins[1:])]
 bin_labels[-1] = "[0.67, 1.00]"
 
@@ -131,7 +126,7 @@ def feature_map(X):
 
 
 ##############################################################################
-# 4. Fit marginal and conditional conformal classifiers
+# 4. Fit standard and conditional conformal classifiers
 # --------------------------------------------------------------------------
 #
 # Both methods use the same fitted logistic regression model and the same
@@ -141,14 +136,14 @@ def feature_map(X):
 confidence_level = 0.95
 estimator = LogisticRegression(max_iter=1000).fit(X_train, y_train)
 
-mapie_marginal = SplitConformalClassifier(
+mapie_standard = SplitConformalClassifier(
     estimator=estimator,
     confidence_level=confidence_level,
     conformity_score="lac",
     prefit=True,
 )
-mapie_marginal.conformalize(X_conformalize, y_conformalize)
-_, y_pred_set_marginal = mapie_marginal.predict_set(X_test)
+mapie_standard.conformalize(X_conformalize, y_conformalize)
+_, y_pred_set_standard = mapie_standard.predict_set(X_test)
 
 mapie_conditional = ConditionalSplitConformalClassifier(
     feature_map,
@@ -165,13 +160,15 @@ _, y_pred_set_conditional = mapie_conditional.predict_set(X_test)
 # 5. Evaluate and visualize the correction
 # --------------------------------------------------------------------------
 #
-# The marginal classifier has good overall coverage, and its prediction sets
+# The standard classifier has good overall coverage, and its prediction sets
 # already become larger as the base model gets less confident. However, the
 # single global conformal cutoff is still not sufficient for the hardest group.
 # The conditional classifier makes an additional group-level correction:
 # prediction sets become smaller in easier groups and larger in the hardest
 # group. The coverage panel below shows this correction, while the set-size panel
-# explains where the additional uncertainty is allocated.
+# explains where the additional uncertainty is allocated. The first bar group
+# reports the overall score over the full test set, then the remaining bar
+# groups show the same metrics inside each difficulty group.
 
 
 def group_mask(X, bin_index):
@@ -190,54 +187,67 @@ def scores_by_group(y_true, y_pred_set, X):
     return np.asarray(coverages).ravel(), np.asarray(set_sizes).ravel()
 
 
-coverage_marginal_by_group, width_marginal_by_group = scores_by_group(
-    y_test, y_pred_set_marginal, X_test
+coverage_standard_by_group, width_standard_by_group = scores_by_group(
+    y_test, y_pred_set_standard, X_test
 )
 coverage_conditional_by_group, width_conditional_by_group = scores_by_group(
     y_test, y_pred_set_conditional, X_test
 )
 
+coverage_standard = classification_coverage_score(y_test, y_pred_set_standard)
+coverage_conditional = classification_coverage_score(y_test, y_pred_set_conditional)
+width_standard = classification_mean_width_score(y_pred_set_standard)
+width_conditional = classification_mean_width_score(y_pred_set_conditional)
+
 fig, axes = plt.subplots(1, 2, figsize=(11, 4), sharex=True)
-bar_width = 0.09
+score_labels = ["All", *bin_labels]
+group_positions = np.arange(len(score_labels))
+bar_width = 0.35
 
 axes[0].bar(
-    bin_centers - bar_width / 2,
-    coverage_marginal_by_group,
+    group_positions - bar_width / 2,
+    np.r_[coverage_standard, coverage_standard_by_group],
     width=bar_width,
-    label="Marginal",
+    label="Standard",
 )
 axes[0].bar(
-    bin_centers + bar_width / 2,
-    coverage_conditional_by_group,
+    group_positions + bar_width / 2,
+    np.r_[coverage_conditional, coverage_conditional_by_group],
     width=bar_width,
     label="Conditional",
 )
 axes[0].axhline(confidence_level, color="black", linestyle="--", linewidth=1)
 axes[0].set_ylim(0.80, 1.02)
 axes[0].set_ylabel("Coverage")
-axes[0].set_title("Coverage by difficulty group")
+axes[0].set_title("Coverage overall and by difficulty group")
 axes[0].legend()
 
 axes[1].bar(
-    bin_centers - bar_width / 2,
-    width_marginal_by_group,
+    group_positions - bar_width / 2,
+    np.r_[width_standard, width_standard_by_group],
     width=bar_width,
-    label="Marginal",
+    label="Standard",
 )
 axes[1].bar(
-    bin_centers + bar_width / 2,
-    width_conditional_by_group,
+    group_positions + bar_width / 2,
+    np.r_[width_conditional, width_conditional_by_group],
     width=bar_width,
     label="Conditional",
 )
 axes[1].set_ylim(0.75, 2.50)
 axes[1].set_ylabel("Mean prediction set size")
-axes[1].set_title("Set size by difficulty group")
+axes[1].set_title("Set size overall and by difficulty group")
 
 for ax in axes:
     ax.set_xlabel("Difficulty")
-    ax.set_xticks(bin_centers)
-    ax.set_xticklabels(bin_labels, rotation=30, ha="right")
+    ax.set_xticks(group_positions)
+    ax.set_xticklabels(score_labels, rotation=30, ha="right")
 
 plt.tight_layout()
 plt.show()
+
+##############################################################################
+# 6. Go further
+# --------------------------------------------------------------------------
+#
+# Explore the advanced examples to learn how to build richer feature maps.

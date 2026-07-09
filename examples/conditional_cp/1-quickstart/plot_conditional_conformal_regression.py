@@ -2,17 +2,11 @@
 Group-conditional prediction intervals
 ======================================
 
+This example shows how to use ``ConditionalSplitConformalClassifier``
+to build prediction sets with conditional guarantees on pre-defined groups.
 
-This example shows how to use
-``ConditionalSplitConformalRegressor``
-to build prediction intervals with conditional guarantees on pre-defined
-groups.
-
-It is a simple companion to the Gibbs, Cherian and Candès (2023) reproduction
-example in the scientific-articles gallery. Here, the goal is not to reproduce a
-paper figure, but to isolate the main idea on a small synthetic regression
-problem: define ``feature_map`` as group indicators, then compare marginal and
-group-conditional calibration.
+The key idea is to provide a basis function ``feature_map`` that
+identifies the covariate groups on which coverage should be controlled.
 """
 
 import matplotlib.pyplot as plt
@@ -118,8 +112,6 @@ plt.show()
 # regressor uses these columns to calibrate score cutoffs that are valid on each
 # group, not only on average over the full distribution.
 
-bin_centers = (x_bins[:-1] + x_bins[1:]) / 2
-
 
 def feature_map(X):
     x = np.asarray(X).reshape(-1)
@@ -130,11 +122,11 @@ def feature_map(X):
 
 
 ##############################################################################
-# 4. Fit marginal and conditional conformal regressors
+# 4. Fit standard and conditional conformal regressors
 # --------------------------------------------------------------------------
 #
 # Both methods use the same fitted polynomial regressor and the same
-# conformalization data. The marginal regressor uses one residual cutoff for all
+# conformalization data. The standard regressor uses one residual cutoff for all
 # samples, while ``ConditionalSplitConformalRegressor`` receives ``feature_map`` and
 # calibrates the cutoff by ``x`` group.
 
@@ -143,14 +135,14 @@ estimator = make_pipeline(PolynomialFeatures(degree=4), LinearRegression()).fit(
     X_train, y_train
 )
 
-mapie_marginal = SplitConformalRegressor(
+mapie_standard = SplitConformalRegressor(
     estimator=estimator,
     confidence_level=confidence_level,
     conformity_score="absolute",
     prefit=True,
 )
-mapie_marginal.conformalize(X_conformalize, y_conformalize)
-_, y_interval_marginal = mapie_marginal.predict_interval(X_test)
+mapie_standard.conformalize(X_conformalize, y_conformalize)
+_, y_interval_standard = mapie_standard.predict_interval(X_test)
 
 mapie_conditional = ConditionalSplitConformalRegressor(
     feature_map,
@@ -167,11 +159,13 @@ _, y_interval_conditional = mapie_conditional.predict_interval(X_test)
 # 5. Evaluate and visualize the correction
 # --------------------------------------------------------------------------
 #
-# Marginal split conformal prediction has constant interval width with the
+# Standard split conformal prediction has constant interval width with the
 # absolute residual score. This overcovers the low-noise group and undercovers
 # the high-noise groups. Conditional conformal prediction makes an additional
 # group-level correction, narrowing intervals where the problem is easy and
-# widening them where the problem is hard.
+# widening them where the problem is hard. The first bar group reports the
+# overall score over the full test set, then the remaining bar groups show the
+# same metrics inside each ``x`` group.
 
 
 def group_mask(X, bin_index):
@@ -190,55 +184,68 @@ def scores_by_group(y_true, intervals, X):
     return np.asarray(coverages).ravel(), np.asarray(widths).ravel()
 
 
-coverage_marginal_by_group, width_marginal_by_group = scores_by_group(
-    y_test, y_interval_marginal, X_test
+coverage_standard_by_group, width_standard_by_group = scores_by_group(
+    y_test, y_interval_standard, X_test
 )
 coverage_conditional_by_group, width_conditional_by_group = scores_by_group(
     y_test, y_interval_conditional, X_test
 )
 
+coverage_standard = regression_coverage_score(y_test, y_interval_standard)
+coverage_conditional = regression_coverage_score(y_test, y_interval_conditional)
+width_standard = regression_mean_width_score(y_interval_standard)
+width_conditional = regression_mean_width_score(y_interval_conditional)
+
 fig, axes = plt.subplots(1, 2, figsize=(11, 4), sharex=True)
-group_positions = np.arange(len(bin_labels))
+score_labels = ["All", *bin_labels]
+group_positions = np.arange(len(score_labels))
 bar_width = 0.35
 
 axes[0].bar(
     group_positions - bar_width / 2,
-    coverage_marginal_by_group,
+    np.r_[coverage_standard, coverage_standard_by_group],
     width=bar_width,
-    label="Marginal",
+    label="Standard",
 )
 axes[0].bar(
     group_positions + bar_width / 2,
-    coverage_conditional_by_group,
+    np.r_[coverage_conditional, coverage_conditional_by_group],
     width=bar_width,
     label="Conditional",
 )
 axes[0].axhline(confidence_level, color="black", linestyle="--", linewidth=1)
 axes[0].set_ylim(0.60, 1.02)
 axes[0].set_ylabel("Coverage")
-axes[0].set_title("Coverage by x group")
+axes[0].set_title("Coverage overall and by x group")
 axes[0].legend()
 
 axes[1].bar(
     group_positions - bar_width / 2,
-    width_marginal_by_group,
+    np.r_[width_standard, width_standard_by_group],
     width=bar_width,
-    label="Marginal",
+    label="Standard",
 )
 axes[1].bar(
     group_positions + bar_width / 2,
-    width_conditional_by_group,
+    np.r_[width_conditional, width_conditional_by_group],
     width=bar_width,
     label="Conditional",
 )
 axes[1].set_ylim(0.0, 8.5)
 axes[1].set_ylabel("Mean interval width")
-axes[1].set_title("Interval width by x group")
+axes[1].set_title("Interval width overall and by x group")
 
 for ax in axes:
     ax.set_xlabel("x group")
     ax.set_xticks(group_positions)
-    ax.set_xticklabels(bin_labels, rotation=30, ha="right")
+    ax.set_xticklabels(score_labels, rotation=30, ha="right")
 
 plt.tight_layout()
 plt.show()
+
+
+##############################################################################
+# 6. Go further
+# --------------------------------------------------------------------------
+#
+# Explore the advanced examples to learn how to build richer feature maps.
