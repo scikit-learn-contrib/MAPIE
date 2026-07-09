@@ -194,7 +194,7 @@ class _QuantileConformalizer:
         NDArray
             Pinball loss values.
         """
-        alpha = np.atleast_2D(self.quantiles[:1]).T
+        alpha = np.atleast_2D(self.quantiles).T
         y_true = np.asarray(y_true)
         y_pred = np.asarray(y_pred)
         return np.maximum(
@@ -460,6 +460,16 @@ class _QuantileConformalizer:
         self.pinball_losses.append(self.pinball_loss(y_calib, pred))
 
     # ------------------------------ Predict
+    def pinball_weighted_mean(self, y_preds):
+        """
+        Computes the weighted mean of the predicted values using the pinball losses as weights.
+        """
+        weights = self.pinball_losses / self.pinball_losses.sum(axis=0)
+        weighted_values = np.array(
+            [np.atleast_2d(w).T * values for w, values in zip(weights, y_preds)]
+        )
+        return sum(weighted_values)
+
     # TODO: A structure can handle quantiles fitting and prediction to avoid code duplication between conformalizer
     def _predict_quantiles(self, X: ArrayLike, index: int, **predict_params):
         """
@@ -479,12 +489,15 @@ class _QuantileConformalizer:
         ArrayLike
             Predicted lower and upper quantiles for the input data X as distinct lines.
         """
-        return np.vstack(
-            [
-                self.estimators_["lower"][index].predict(X, **predict_params).ravel(),
-                self.estimators_["upper"][index].predict(X, **predict_params).ravel(),
-            ]
-        )
+        preds = [
+            self.estimators_["lower"][index].predict(X, **predict_params).ravel(),
+            self.estimators_["upper"][index].predict(X, **predict_params).ravel(),
+        ]
+        if self.quantiles.size == 3:
+            preds.append(
+                self.estimators_["central"][index].predict(X, **predict_params).ravel()
+            )
+        return np.vstack(preds)
 
     def _predict_center(self, X: ArrayLike, index: int, **predict_params):
         """
