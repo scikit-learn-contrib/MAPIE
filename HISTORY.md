@@ -2,6 +2,7 @@
 
 ## 1.x.x (2026-xx-xx)
 * Add experimental module
+* Add a benchmark notebook for exchangeability tests using the current API.
 * Remove sphinx thumbnail from LAC-APS example
 * Add optional pre-commit hook (format, lint, type-check) via pre-commit; documented in CONTRIBUTING.
 
