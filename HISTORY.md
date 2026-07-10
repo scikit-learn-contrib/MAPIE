@@ -1,7 +1,6 @@
 # History
 
 ## 1.x.x (2026-xx-xx)
-* Add reproducible exchangeability-testing experiment notebook using the public MAPIE API.
 * Add experimental module
 * Remove sphinx thumbnail from LAC-APS example
 * Add optional pre-commit hook (format, lint, type-check) via pre-commit; documented in CONTRIBUTING.
