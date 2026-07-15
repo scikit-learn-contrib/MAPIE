@@ -34,23 +34,80 @@ np.random.seed(random_state)
 ##############################################################################
 # 1. Getting the data
 # --------------------------------------------------------------------------
+#
+# The Communities and Crime dataset is read from a backup committed in the
+# MAPIE repository (``examples/data/communities_and_crime.csv.gz``) so that the
+# example does not depend on the availability of the UCI download server. To
+# fetch the original archive from the UCI Machine Learning Repository instead,
+# call ``get_data(download=True)``.
 
 
-with urlopen(
-    "https://archive.ics.uci.edu/ml/machine-learning-databases/communities/communities.names",
-    timeout=30,
-) as response:
-    names_text = response.read().decode("latin-1")
-column_names = [
-    line.strip().split()[1]
-    for line in names_text.splitlines()
-    if line.strip().startswith("@attribute")
-]
-communities_and_crime = pd.read_csv(
-    "https://archive.ics.uci.edu/ml/machine-learning-databases/communities/communities.data",
-    names=column_names,
-    na_values="?",
+# Backup of the Communities and Crime dataset, committed in the MAPIE
+# repository. See examples/data/README.md for details.
+COMMUNITIES_BACKUP_URL = (
+    "https://raw.githubusercontent.com/scikit-learn-contrib/MAPIE/master/"
+    "examples/data/communities_and_crime.csv.gz"
 )
+
+# Original dataset on the UCI Machine Learning Repository.
+COMMUNITIES_NAMES_URL = (
+    "https://archive.ics.uci.edu/ml/machine-learning-databases/communities/"
+    "communities.names"
+)
+COMMUNITIES_DATA_URL = (
+    "https://archive.ics.uci.edu/ml/machine-learning-databases/communities/"
+    "communities.data"
+)
+
+
+def get_data(download: bool = False) -> pd.DataFrame:
+    """
+    Load the Communities and Crime dataset.
+
+    By default the data is read from a backup committed in the MAPIE repository
+    (``examples/data/communities_and_crime.csv.gz``). Set ``download=True`` to
+    fetch the original dataset from the UCI Machine Learning Repository instead.
+    If the chosen source is unavailable, the other one is tried automatically.
+
+    Parameters
+    ----------
+    download : bool
+        If ``True``, download the original dataset from
+        ``https://archive.ics.uci.edu/`` instead of using the repository
+        backup. By default ``False``.
+
+    Returns
+    -------
+    pd.DataFrame of shape (1994, 128)
+        The Communities and Crime dataset, with ``"?"`` missing values encoded
+        as ``NaN``.
+    """
+    primary = _read_from_uci if download else _read_from_backup
+    fallback = _read_from_backup if download else _read_from_uci
+    try:
+        return primary()
+    except Exception:
+        return fallback()
+
+
+def _read_from_backup() -> pd.DataFrame:
+    """Read the backup CSV committed in the MAPIE repository."""
+    return pd.read_csv(COMMUNITIES_BACKUP_URL)
+
+
+def _read_from_uci() -> pd.DataFrame:
+    """Read the Communities and Crime dataset from the UCI repository."""
+    with urlopen(COMMUNITIES_NAMES_URL, timeout=30) as response:
+        names_text = response.read().decode("latin-1")
+    column_names = [
+        line.strip().split()[1]
+        for line in names_text.splitlines()
+        if line.strip().startswith("@attribute")
+    ]
+    return pd.read_csv(COMMUNITIES_DATA_URL, names=column_names, na_values="?")
+
+
+communities_and_crime = get_data()
 y = communities_and_crime["ViolentCrimesPerPop"].to_numpy()
 X = communities_and_crime.drop(columns=["communityname", "ViolentCrimesPerPop"])
 X = X.loc[:, X.isna().sum() == 0]
