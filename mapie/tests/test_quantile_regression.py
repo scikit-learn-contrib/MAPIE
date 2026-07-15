@@ -811,9 +811,7 @@ def test_quantile_conformalizer_set_estimator_params() -> None:
     conformalizer = DummyQuantileConformalizer()
     estimator = QuantileRegressor(solver="highs-ds", quantile=0.5)
 
-    updated_estimator = conformalizer._set_estimator_params(
-        estimator, quantile=0.3
-    )
+    updated_estimator = conformalizer._set_estimator_params(estimator, quantile=0.3)
 
     assert updated_estimator is estimator
     assert estimator.get_params()["quantile"] == 0.3
@@ -834,7 +832,7 @@ def test_quantile_conformalizer_initialize_fit_conformalize() -> None:
     assert conformalizer.n_calib_samples == []
     assert conformalizer.conformity_scores == []
     assert conformalizer.pinball_losses == []
-    assert conformalizer.key_map == {0: "lower", 1: "upper", 2: "central"}
+    assert conformalizer.key_mapping == {"lower": 0, "upper": 1, "central": 2}
 
 
 def test_quantile_conformalizer_fit_quantiles() -> None:
@@ -914,21 +912,17 @@ def test_quantile_conformalizer_conformalize() -> None:
     assert conformalizer.n_calib_samples == [2]
     assert len(conformalizer.conformity_scores) == 1
     assert len(conformalizer.pinball_losses) == 1
-    np.testing.assert_allclose(
-        conformalizer.conformity_scores[0], np.array([2.0, 1.0])
-    )
+    np.testing.assert_allclose(conformalizer.conformity_scores[0], np.array([2.0, 1.0]))
     np.testing.assert_allclose(
         conformalizer.pinball_losses[0], np.array([0.35, 1.35, 1.25])
     )
 
-    conformalizer._conformalize(X_toy[:2], y_toy[:2], index=0)
+    conformalizer._conformalize(X_toy[:2], y_toy[:2], index=-1)
 
     assert conformalizer.n_calib_samples == [2, 2]
     assert len(conformalizer.conformity_scores) == 2
     assert len(conformalizer.pinball_losses) == 2
-    np.testing.assert_allclose(
-        conformalizer.conformity_scores[1], np.array([2.0, 1.0])
-    )
+    np.testing.assert_allclose(conformalizer.conformity_scores[1], np.array([2.0, 1.0]))
     np.testing.assert_allclose(
         conformalizer.pinball_losses[1], np.array([0.35, 1.35, 1.25])
     )

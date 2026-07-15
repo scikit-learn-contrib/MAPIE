@@ -4,6 +4,7 @@ from typing import Any, Iterable, List, Optional, Tuple, Union, cast
 
 import warnings
 import numpy as np
+from functools import lru_cache
 from numpy.typing import ArrayLike, NDArray
 from sklearn.base import RegressorMixin, clone
 from sklearn.linear_model import QuantileRegressor, LinearRegression
@@ -359,7 +360,19 @@ class _QuantileConformalizer(_Conformalizer):
         self.conformity_scores: List[Iterable[float]] = []
         self.pinball_losses: List[Iterable[float]] = []
         self.key_mapping = {"lower": 0, "upper": 1, "central": 2}
-        self.key_map = {0: "lower", 1: "upper", 2: "central"}
+
+    @property
+    @lru_cache(maxsize=None)
+    def reverse_key_mapping(self) -> dict[int, str]:
+        """
+        Get the reverse mapping of key_mapping.
+
+        Returns
+        -------
+        dict[int, str]
+            The reverse mapping of key_mapping.
+        """
+        return {v: k for k, v in self.key_mapping.items()}
 
     def _set_quantile_estimator_params(
         self, estimator: REGRESSOR_TYPE, alpha: float, alpha_name: str, **params
@@ -412,7 +425,7 @@ class _QuantileConformalizer(_Conformalizer):
                 alpha,
                 alpha_name=alpha_name,
             )
-            self.estimators_[self.key_map[i]].append(
+            self.estimators_[self.reverse_key_mapping[i]].append(
                 _fit_estimator(
                     cloned_estimator_,
                     X,
@@ -422,9 +435,8 @@ class _QuantileConformalizer(_Conformalizer):
                 )
             )
 
-        if self._central_estimator is not None and self.fit_central_estimator:
-            _check_estimator_fit_predict(self._central_estimator)
-            cloned_estimator = clone(self._central_estimator)
+        if self._central_estimator is not None and self.fit_centeral_estimator:
+            cloned_estimator = clone(self._check_estimator(self._central_estimator))
             self.estimators_["central"].append(
                 _fit_estimator(
                     cloned_estimator,
@@ -451,14 +463,13 @@ class _QuantileConformalizer(_Conformalizer):
         X_calib, y_calib = indexable(X_calib, y_calib)
         y_calib = _check_y(y_calib)
 
-        self.n_calib_samples.append(_num_samples(y_calib))
         pred = self._predict_quantiles(X_calib, index)
         self.conformity_scores.append(
             self.score.get_conformity_scores(y_calib, pred, **kwargs)
         )
 
         self.pinball_losses.append(self.pinball_loss(y_calib, pred))
-        return self
+        self.n_calib_samples.append(_num_samples(y_calib))
 
     # ------------------------------ Predict
     def pinball_weighted_mean(self, y_preds):
@@ -550,6 +561,8 @@ class CrossConformalizedQuantileRegressor(_QuantileConformalizer):
         n_jobs: Optional[int] = None,
         verbose: int = 0,
         random_state: Optional[Union[int, np.random.RandomState]] = None,
+        central_estimator: Optional[RegressorMixin] = None,
+        fit_central_estimator: Optional[bool] = True,
     ) -> None:
         _check_if_param_in_allowed_values(
             method, "method", CrossConformalizedQuantileRegressor._VALID_METHODS
@@ -582,8 +595,8 @@ class CrossConformalizedQuantileRegressor(_QuantileConformalizer):
 
         self._predict_params: dict = {}
 
-        self.central_estimator_: Optional[RegressorMixin] = None
-        self.fit_central_estimator: Optional[bool] = True
+        self.central_estimator_: Optional[RegressorMixin] = central_estimator
+        self.fit_central_estimator: Optional[bool] = fit_central_estimator
 
     # ---------------------Fit and Conformalize
     # TODO: Duplicated from CrossConformalRegressor -> should be factorize in next refacto
