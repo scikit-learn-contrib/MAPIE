@@ -988,6 +988,6 @@ def test_quantile_conformalizer_pinball_weighted_mean() -> None:
         ]
     )
 
-    weighted_mean = conformalizer.pinball_weighted_mean(y_preds)
+    weighted_mean = conformalizer._pinball_weighted_mean(y_preds)
 
     np.testing.assert_allclose(weighted_mean, np.array([[25.0, 35.0]]))
