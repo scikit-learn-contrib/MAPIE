@@ -23,9 +23,9 @@ from sklearn.utils.validation import check_is_fitted
 from mapie._venn_abers import VennAbers, VennAbersMultiClass, predict_proba_prefitted_va
 from mapie.calibration import TopLabelCalibrator, VennAbersCalibrator
 from mapie.metrics.calibration import (
+    _get_binning_groups,
     expected_calibration_error,
     top_label_ece,
-    _get_binning_groups,
 )
 
 random_state = 20
@@ -342,12 +342,24 @@ def test_results_with_constant_sample_weights(
 
     Note that the calibration implementations from sklearn `calibration.py`
     file would not pass these tests.
+
+    With scikit-learn 1.9+, RandomForestClassifier handles differently
+    sample_weights None or ones (consumes RNG differently, resulting in
+    different trees), making the test fail. To solve it, a prefit estimator
+    is used so that ``sample_weight`` only flows to the calibrator,
+    isolating its handling of null and constant weights.
     """
     n_samples = len(X)
-    estimator = RandomForestClassifier(random_state=random_state)
-    mapie_clf0 = TopLabelCalibrator(estimator=estimator, calibrator=calibrator)
-    mapie_clf1 = TopLabelCalibrator(estimator=estimator, calibrator=calibrator)
-    mapie_clf2 = TopLabelCalibrator(estimator=estimator, calibrator=calibrator)
+    estimator = RandomForestClassifier(random_state=random_state).fit(X, y)
+    mapie_clf0 = TopLabelCalibrator(
+        estimator=estimator, calibrator=calibrator, cv="prefit"
+    )
+    mapie_clf1 = TopLabelCalibrator(
+        estimator=estimator, calibrator=calibrator, cv="prefit"
+    )
+    mapie_clf2 = TopLabelCalibrator(
+        estimator=estimator, calibrator=calibrator, cv="prefit"
+    )
     mapie_clf0.fit(X, y, sample_weight=None, random_state=random_state)
     mapie_clf1.fit(
         X, y, sample_weight=np.ones(shape=n_samples), random_state=random_state
@@ -360,6 +372,20 @@ def test_results_with_constant_sample_weights(
     y_pred2 = mapie_clf2.predict_proba(X)
     np.testing.assert_allclose(y_pred0, y_pred1)
     np.testing.assert_allclose(y_pred0, y_pred2)
+
+
+def test_fit_with_sample_weight_splits_weights() -> None:
+    """
+    Test that fitting in split mode with sample weights forwards the weights
+    through the train/calibration split and yields valid probabilities.
+    """
+    sample_weight = np.random.RandomState(random_state).uniform(size=len(X))
+    mapie_cal = TopLabelCalibrator(
+        estimator=RandomForestClassifier(random_state=random_state)
+    )
+    mapie_cal.fit(X, y, sample_weight=sample_weight, random_state=random_state)
+    y_pred = mapie_cal.predict_proba(X)
+    assert y_pred.shape == (len(X), len(mapie_cal.classes_))
 
 
 def test_pipeline_compatibility() -> None:
@@ -683,74 +709,80 @@ def test_va_estimator_none_raises_error() -> None:
 @pytest.mark.filterwarnings("ignore:: RuntimeWarning")
 def test_va_sample_weights_constant() -> None:
     """Test that constant sample weights give same results as None."""
-    sklearn.set_config(enable_metadata_routing=True)
-    n_samples = len(X_binary_train)
-    weighted_estimator = GaussianNB().set_fit_request(sample_weight=True)
+    with sklearn.config_context(enable_metadata_routing=True):
+        n_samples = len(X_binary_train)
+        weighted_estimator = GaussianNB().set_fit_request(sample_weight=True)
 
-    va_cal_none = VennAbersCalibrator(
-        estimator=weighted_estimator, inductive=True, random_state=random_state_va
-    )
-    va_cal_none.fit(X_binary_train, y_binary_train, sample_weight=None)
+        va_cal_none = VennAbersCalibrator(
+            estimator=weighted_estimator, inductive=True, random_state=random_state_va
+        )
+        va_cal_none.fit(X_binary_train, y_binary_train, sample_weight=None)
 
-    va_cal_ones = VennAbersCalibrator(
-        estimator=weighted_estimator, inductive=True, random_state=random_state_va
-    )
-    va_cal_ones.fit(X_binary_train, y_binary_train, sample_weight=np.ones(n_samples))
+        va_cal_ones = VennAbersCalibrator(
+            estimator=weighted_estimator, inductive=True, random_state=random_state_va
+        )
+        va_cal_ones.fit(
+            X_binary_train, y_binary_train, sample_weight=np.ones(n_samples)
+        )
 
-    probs_none = va_cal_none.predict_proba(X_binary_test)
-    probs_ones = va_cal_ones.predict_proba(X_binary_test)
-    np.testing.assert_allclose(probs_none, probs_ones, rtol=1e-2, atol=1e-2)
+        probs_none = va_cal_none.predict_proba(X_binary_test)
+        probs_ones = va_cal_ones.predict_proba(X_binary_test)
+        np.testing.assert_allclose(probs_none, probs_ones, rtol=1e-2, atol=1e-2)
 
 
 @pytest.mark.filterwarnings("ignore:: RuntimeWarning")
 def test_va_sample_weights_variable() -> None:
     """Test that variable sample weights affect the results."""
-    sklearn.set_config(enable_metadata_routing=True)
-    n_samples = len(X_binary_train)
+    with sklearn.config_context(enable_metadata_routing=True):
+        n_samples = len(X_binary_train)
 
-    va_cal_uniform = VennAbersCalibrator(
-        estimator=RandomForestClassifier(n_estimators=10, random_state=random_state_va),
-        inductive=True,
-        random_state=random_state_va,
-    )
-    va_cal_uniform.fit(X_binary_train, y_binary_train, sample_weight=None)
+        va_cal_uniform = VennAbersCalibrator(
+            estimator=RandomForestClassifier(
+                n_estimators=10, random_state=random_state_va
+            ),
+            inductive=True,
+            random_state=random_state_va,
+        )
+        va_cal_uniform.fit(X_binary_train, y_binary_train, sample_weight=None)
 
-    sample_weights = np.random.RandomState(random_state_va).uniform(
-        0.1, 2.0, size=n_samples
-    )
-    estimator_weighted = RandomForestClassifier(
-        n_estimators=10, random_state=random_state_va
-    ).set_fit_request(sample_weight=True)
+        sample_weights = np.random.RandomState(random_state_va).uniform(
+            0.1, 2.0, size=n_samples
+        )
+        estimator_weighted = RandomForestClassifier(
+            n_estimators=10, random_state=random_state_va
+        ).set_fit_request(sample_weight=True)
 
-    va_cal_weighted = VennAbersCalibrator(
-        estimator=estimator_weighted, inductive=True, random_state=random_state_va
-    )
-    va_cal_weighted.fit(X_binary_train, y_binary_train, sample_weight=sample_weights)
+        va_cal_weighted = VennAbersCalibrator(
+            estimator=estimator_weighted, inductive=True, random_state=random_state_va
+        )
+        va_cal_weighted.fit(
+            X_binary_train, y_binary_train, sample_weight=sample_weights
+        )
 
-    probs_uniform = va_cal_uniform.predict_proba(X_binary_test)
-    probs_weighted = va_cal_weighted.predict_proba(X_binary_test)
-    assert not np.allclose(probs_uniform, probs_weighted)
+        probs_uniform = va_cal_uniform.predict_proba(X_binary_test)
+        probs_weighted = va_cal_weighted.predict_proba(X_binary_test)
+        assert not np.allclose(probs_uniform, probs_weighted)
 
 
 @pytest.mark.filterwarnings("ignore:: RuntimeWarning")
 def test_va_venn_abers_cv_with_sample_weight() -> None:
     """Test VennAbersCV with sample weights in cross-validation mode."""
-    sklearn.set_config(enable_metadata_routing=True)
-    sample_weight = np.ones(len(y_binary_train))
-    sample_weight[: len(y_binary_train) // 2] = 2.0
+    with sklearn.config_context(enable_metadata_routing=True):
+        sample_weight = np.ones(len(y_binary_train))
+        sample_weight[: len(y_binary_train) // 2] = 2.0
 
-    weighted_estimator = GaussianNB().set_fit_request(sample_weight=True)
-    va_cal = VennAbersCalibrator(
-        estimator=weighted_estimator,
-        inductive=False,
-        n_splits=3,
-        random_state=random_state_va,
-    )
-    va_cal.fit(X_binary_train, y_binary_train, sample_weight=sample_weight)
-    probs = va_cal.predict_proba(X_binary_test)
+        weighted_estimator = GaussianNB().set_fit_request(sample_weight=True)
+        va_cal = VennAbersCalibrator(
+            estimator=weighted_estimator,
+            inductive=False,
+            n_splits=3,
+            random_state=random_state_va,
+        )
+        va_cal.fit(X_binary_train, y_binary_train, sample_weight=sample_weight)
+        probs = va_cal.predict_proba(X_binary_test)
 
-    assert probs.shape == (len(X_binary_test), 2)
-    assert np.allclose(probs.sum(axis=1), 1.0)
+        assert probs.shape == (len(X_binary_test), 2)
+        assert np.allclose(probs.sum(axis=1), 1.0)
 
 
 @pytest.mark.filterwarnings("ignore:: RuntimeWarning")
@@ -1309,3 +1341,79 @@ def test_va_inductive_loss_branch_and_else_branch() -> None:
     va_cal.va_calibrator_.predict_proba = predict_proba_no_loss  # type: ignore[method-assign]
     assert "loss" not in signature(va_cal.va_calibrator_.predict_proba).parameters
     _ = va_cal.predict_proba(X_binary_test, loss="log")
+
+
+@pytest.mark.filterwarnings("ignore:: RuntimeWarning")
+def test_va_calibrator_p0_p1_output_prefit_binary() -> None:
+    """Test VennAbersCalibrator.predict_proba(p0_p1_output=True) in prefit binary mode."""
+    clf = GaussianNB().fit(X_binary_proper, y_binary_proper)
+    va_cal = VennAbersCalibrator(estimator=clf, cv="prefit")
+    va_cal.fit(X_binary_cal, y_binary_cal)
+
+    # Without p0_p1 — returns NDArray
+    probs_only = va_cal.predict_proba(X_binary_test)
+    assert isinstance(probs_only, np.ndarray)
+    assert probs_only.shape == (len(X_binary_test), 2)
+
+    # With p0_p1 — returns tuple
+    result = va_cal.predict_proba(X_binary_test, p0_p1_output=True)
+    assert isinstance(result, tuple)
+    p_prime, p0_p1 = result
+    assert p_prime.shape == (len(X_binary_test), 2)
+    assert isinstance(p0_p1, np.ndarray)
+    assert p0_p1.shape == (len(X_binary_test), 2)
+    np.testing.assert_array_equal(probs_only, p_prime)
+
+
+@pytest.mark.filterwarnings("ignore:: RuntimeWarning")
+def test_va_calibrator_p0_p1_output_prefit_multiclass() -> None:
+    """Test VennAbersCalibrator.predict_proba(p0_p1_output=True) in prefit multiclass mode."""
+    clf = GaussianNB().fit(X_multi_proper, y_multi_proper)
+    va_cal = VennAbersCalibrator(estimator=clf, cv="prefit")
+    va_cal.fit(X_multi_cal, y_multi_cal)
+
+    result = va_cal.predict_proba(X_multi_test, p0_p1_output=True)
+    assert isinstance(result, tuple)
+    p_prime, p0_p1 = result
+    assert p_prime.shape == (len(X_multi_test), 3)
+    assert np.allclose(p_prime.sum(axis=1), 1.0)
+    assert isinstance(p0_p1, list)
+
+
+@pytest.mark.filterwarnings("ignore:: RuntimeWarning")
+def test_va_calibrator_p0_p1_output_inductive_binary() -> None:
+    """Test VennAbersCalibrator.predict_proba(p0_p1_output=True) in inductive binary mode."""
+    va_cal = VennAbersCalibrator(
+        estimator=GaussianNB(), inductive=True, random_state=random_state_va
+    )
+    va_cal.fit(X_binary_train, y_binary_train)
+
+    # Without p0_p1
+    probs_only = va_cal.predict_proba(X_binary_test)
+    assert isinstance(probs_only, np.ndarray)
+
+    # With p0_p1
+    result = va_cal.predict_proba(X_binary_test, p0_p1_output=True)
+    assert isinstance(result, tuple)
+    p_prime, p0_p1 = result
+    assert p_prime.shape == (len(X_binary_test), 2)
+    assert np.allclose(p_prime.sum(axis=1), 1.0)
+    assert isinstance(p0_p1, list)
+
+
+@pytest.mark.filterwarnings("ignore:: RuntimeWarning")
+def test_va_calibrator_p0_p1_output_inductive_multiclass() -> None:
+    """Test VennAbersCalibrator.predict_proba(p0_p1_output=True) in inductive multiclass mode."""
+    va_cal = VennAbersCalibrator(
+        estimator=GaussianNB(), inductive=True, random_state=random_state_va
+    )
+    va_cal.fit(X_multi_train, y_multi_train)
+
+    result = va_cal.predict_proba(X_multi_test, p0_p1_output=True)
+    assert isinstance(result, tuple)
+    p_prime, p0_p1 = result
+    assert p_prime.shape == (len(X_multi_test), 3)
+    assert np.allclose(p_prime.sum(axis=1), 1.0)
+    assert isinstance(p0_p1, list)
+    # Should have C*(C-1)/2 = 3 pairs for 3 classes
+    assert len(p0_p1) == 3

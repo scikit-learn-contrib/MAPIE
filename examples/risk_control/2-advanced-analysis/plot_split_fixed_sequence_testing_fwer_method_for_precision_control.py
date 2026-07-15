@@ -1,7 +1,7 @@
 """
-=========================================================================
 Split Fixed Sequence Testing for Precision Control under Multiple Testing
 =========================================================================
+
 
 This example demonstrates how to control a non-monotonic risk such as
 1 − precision in binary classification using multiple family-wise error
@@ -10,11 +10,11 @@ Testing (SFST).
 
 We compare three approaches:
 
-- ``"bonferroni"``: classical Bonferroni correction, valid under any risk
+- `"bonferroni"`: classical Bonferroni correction, valid under any risk
   structure and parameter space, but generally conservative.
-- ``"bonferroni_holm"``: stepwise multiple testing procedure that is also
+- `"bonferroni_holm"`: stepwise multiple testing procedure that is also
   valid in full generality and typically less conservative than Bonferroni.
-- ``"split_fixed_sequence"``: Split Fixed Sequence Testing (SFST), which
+- `"split_fixed_sequence"`: Split Fixed Sequence Testing (SFST), which
   first learns an order over candidate thresholds on an independent dataset
   and then tests them sequentially on the calibration set.
 
@@ -34,8 +34,8 @@ restrictive the method is: more conservative procedures tend to select
 smaller sets of valid parameters and may lead to solutions achieving a risk
 well below the target level in order to guarantee validity.
 
-Note that Bonferroni is the default FWER control method due to its simplicity
-and broad applicability across problem settings.
+Note that Bonferroni-Holm is now the default FWER control method.
+It remains broadly applicable across problem settings.
 
 +-----------------+------------------------+--------------------+------------------------+----------------+---------------------+
 | **Method**      | **Conservatism level** | **Monotonic risk** | **Non-monotonic risk** | **Multi-risk** | **Multi-parameter** |
@@ -150,19 +150,19 @@ clf = MLPClassifier(max_iter=150, random_state=RANDOM_STATE)
 clf.fit(X_train, y_train)
 
 ##############################################################################
-# Next, we initialize :class:`~mapie.risk_control.BinaryClassificationController`
-# with the estimator probability function ``clf.predict_proba``, the
-# ``"precision"`` performance metric, a target precision level, and a
+# Next, we initialize `BinaryClassificationController`
+# with the estimator probability function `clf.predict_proba`, the
+# `"precision"` performance metric, a target precision level, and a
 # confidence level. We then calibrate it to compute thresholds that are
 # statistically guaranteed to satisfy the target metric on unseen data using
-# different FWER control methods, specified via the ``fwer_method`` parameter
+# different FWER control methods, specified via the `fwer_method` parameter
 # of the controller:
 #
-# - ``"bonferroni"``: classical Bonferroni correction, valid under any risk
+# - `"bonferroni"`: classical Bonferroni correction, valid under any risk
 #   structure and parameter space, but generally conservative.
-# - ``"bonferroni_holm"``: stepwise multiple testing procedure that is also
+# - `"bonferroni_holm"`: stepwise multiple testing procedure that is also
 #   valid in full generality and typically less conservative than Bonferroni.
-# - ``"split_fixed_sequence"``: Split Fixed Sequence Testing (SFST), which
+# - `"split_fixed_sequence"`: Split Fixed Sequence Testing (SFST), which
 #   first learns an order over candidate thresholds on an independent dataset
 #   and then tests them sequentially on the calibration set.
 #
@@ -221,8 +221,8 @@ bcc_sfst.calibrate(X_calib_remaining, y_calib_remaining)
 
 ###############################################################################
 # Note that, in the case of SFST, the controller has first learned a deterministic
-# order of thresholds using ``learn_fixed_sequence_order`` method.
-# Second, during calibration with the ``calibrate`` method,
+# order of thresholds using `learn_fixed_sequence_order` method.
+# Second, during calibration with the `calibrate` method,
 # it has tested them sequentially until rejection.
 #
 # The important difference compared to Bonferroni correction, is that SFST tests only a subset

@@ -11,6 +11,7 @@ from mapie.conformity_scores import (
     BaseRegressionScore,
     GammaConformityScore,
     ResidualNormalisedScore,
+    StdConformityScore,
 )
 from mapie.regression.regression import _MapieRegressor
 from mapie.conformity_scores.utils import check_regression_conformity_score
@@ -254,6 +255,7 @@ def test_residual_normalised_conformity_score_get_conformity_scores(
     np.testing.assert_allclose(conf_scores, expected_signed_conf_scores)
 
 
+@pytest.mark.filterwarnings("ignore:Estimator does not appear fitted:UserWarning")
 def test_residual_normalised_score_prefit_with_notfitted_estim() -> None:
     """Test that a not fitted estimator and prefit=True raises an error."""
     residual_norm_conf_score = ResidualNormalisedScore(
@@ -411,3 +413,200 @@ def test_intervals_shape_with_every_score(
     n_samples = X_toy.shape[0]
     assert y_pred.shape[0] == n_samples
     assert intervals.shape == (n_samples, 2, len(alpha))
+
+
+@pytest.mark.parametrize(
+    "alpha_np",
+    [np.array([0.1]), np.array([0.1, 0.2, 0.5])],
+)
+def test_beta_optimize_shape_and_range(alpha_np: NDArray) -> None:
+    rng = np.random.default_rng(random_state)
+    conformity_scores = rng.standard_normal(50)
+    beta_np = AbsoluteConformityScore._beta_optimize(
+        alpha_np, conformity_scores, conformity_scores
+    )
+    n = len(conformity_scores)
+    assert beta_np.shape == (len(alpha_np),)
+    assert beta_np.dtype == np.float64
+    assert not np.isnan(beta_np).any()
+    for ind, _alpha in enumerate(alpha_np):
+        assert _alpha / (n + 1) <= beta_np[ind] <= _alpha
+
+
+def test_beta_optimize_handles_float32_alpha() -> None:
+    rng = np.random.default_rng(random_state)
+    conformity_scores = rng.standard_normal(50)
+    alpha_np = np.array([0.1, 0.2], dtype=np.float32)
+    beta_np = AbsoluteConformityScore._beta_optimize(
+        alpha_np, conformity_scores, conformity_scores
+    )
+    assert beta_np.shape == (2,)
+    assert not np.isnan(beta_np).any()
+
+
+# ------------------------ StdConformityScore tests ------------------------
+
+
+class DummyStdEstimator:
+    """Minimal estimator implementing predict_with_std for testing."""
+
+    def predict_with_std(self, X, ensemble):
+        n = len(X)
+        y_pred = np.ones(n)
+        y_pred_low = np.ones((n, 1))
+        y_pred_up = np.ones((n, 1))
+        y_std = np.ones((n, 1)) * 0.5
+        return y_pred, y_pred_low, y_pred_up, y_std
+
+
+def test_std_signed_conformity_scores() -> None:
+    score = StdConformityScore()
+
+    y = np.array([3.0, 5.0])
+    y_pred = np.array([2.0, 4.0])
+    y_std = np.array([1.0, 2.0])
+
+    signed = score.get_signed_conformity_scores(y, y_pred, y_std)
+
+    expected = (y - y_pred) / y_std
+    np.testing.assert_allclose(signed, expected)
+
+
+def test_std_conformity_scores_sym() -> None:
+    score = StdConformityScore(sym=True)
+
+    y = np.array([3.0, 5.0])
+    y_pred = np.array([2.0, 4.0])
+    y_std = np.array([1.0, 2.0])
+
+    scores = score.get_conformity_scores(y, y_pred, y_std=y_std)
+
+    expected = np.abs((y - y_pred) / y_std)
+    np.testing.assert_allclose(scores, expected)
+
+
+def test_std_conformity_scores_requires_std() -> None:
+    score = StdConformityScore()
+
+    y = np.array([1.0])
+    y_pred = np.array([1.0])
+
+    with pytest.raises(ValueError):
+        score.get_conformity_scores(y, y_pred)
+
+
+def test_std_estimation_distribution() -> None:
+    score = StdConformityScore()
+
+    y_pred = np.array([1.0, 2.0])
+    conformity = np.array([0.5, -0.5])
+
+    result = score.get_estimation_distribution(y_pred, conformity)
+
+    np.testing.assert_allclose(result, y_pred + conformity)
+
+
+def test_std_bounds_plus() -> None:
+    score = StdConformityScore()
+
+    X = np.arange(5).reshape(-1, 1)
+    estimator = DummyStdEstimator()
+
+    conformity_scores = np.ones((5, 1))
+    alpha = np.array([0.1])
+
+    y_pred, low, up = score.get_bounds(
+        X=X,
+        estimator=estimator,
+        conformity_scores=conformity_scores,
+        alpha_np=alpha,
+        ensemble=False,
+        method="plus",
+    )
+
+    assert y_pred.shape == (5,)
+    assert low.shape[0] == 5
+    assert up.shape[0] == 5
+
+
+def test_std_bounds_base() -> None:
+    score = StdConformityScore()
+
+    X = np.arange(5).reshape(-1, 1)
+    estimator = DummyStdEstimator()
+
+    conformity_scores = np.ones((5, 1))
+    alpha = np.array([0.1])
+
+    y_pred, low, up = score.get_bounds(
+        X=X,
+        estimator=estimator,
+        conformity_scores=conformity_scores,
+        alpha_np=alpha,
+        ensemble=False,
+        method="base",
+    )
+
+    assert y_pred.shape == (5,)
+
+
+def test_std_consistency_check() -> None:
+    score = StdConformityScore()
+    score.consistency_check = True
+
+    y = np.array([2.0])
+    y_pred = np.array([1.0])
+    y_std = np.array([1.0])
+
+    score.get_conformity_scores(y, y_pred, y_std=y_std)
+
+
+def test_std_conformity_scores_nonsym() -> None:
+    score = StdConformityScore(sym=False)
+
+    y = np.array([3.0, 5.0])
+    y_pred = np.array([2.0, 4.0])
+    y_std = np.array([1.0, 2.0])
+
+    scores = score.get_conformity_scores(y, y_pred, y_std=y_std)
+
+    expected = (y - y_pred) / y_std
+    np.testing.assert_allclose(scores, expected)
+
+
+def test_std_predict_set() -> None:
+    score = StdConformityScore()
+
+    X = np.arange(5).reshape(-1, 1)
+    estimator = DummyStdEstimator()
+    conformity_scores = np.ones((5, 1))
+    alpha = np.array([0.1])
+
+    y_pred, low, up = score.predict_set(
+        X=X,
+        alpha_np=alpha,
+        estimator=estimator,
+        conformity_scores=conformity_scores,
+        ensemble=False,
+        method="base",
+    )
+
+    assert y_pred.shape == (5,)
+    assert low.shape[0] == 5
+    assert up.shape[0] == 5
+
+
+def test_std_check_consistency_raises() -> None:
+    score = StdConformityScore()
+
+    def fake_get_estimation_distribution(y_pred, conformity_scores, **kwargs):
+        return np.add(y_pred, conformity_scores) + 1.0
+
+    score.get_estimation_distribution = fake_get_estimation_distribution  # type: ignore[method-assign]
+
+    y = np.array([2.0, 3.0])
+    y_pred = np.array([1.0, 2.0])
+    conformity_scores = np.array([1.0, 1.0])
+
+    with pytest.raises(ValueError, match="are not consistent"):
+        score.check_consistency(y, y_pred, conformity_scores)

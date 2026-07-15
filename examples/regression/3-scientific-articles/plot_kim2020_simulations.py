@@ -1,26 +1,27 @@
 """
-=====================================================================================================
 Predictive inference is free with the Jackknife+-after-Bootstrap, Kim et al. (2020)
-=====================================================================================================
+===================================================================================
 
 
-:class:`~mapie.regression.JackknifeAfterBootstrapRegressor` and
-:class:`~mapie.regression.CrossConformalRegressor` are used to
+
+`JackknifeAfterBootstrapRegressor` and
+`CrossConformalRegressor` are used to
 reproduce the simulations by Kim et al. (2020) [1] in their article
 which introduces the jackknife+-after-bootstrap method.
 
 For a given model, the simulation fits MAPIE regressors with jackknife+ and
-jackknife+-after-bootstrap methods, on different resamplings of a data set
-loaded from 'https://archive.ics.uci.edu/', and compares the coverage levels
-and the width means of the PIs.
+jackknife+-after-bootstrap methods, on different resamplings of the BlogFeedback
+data set (originally from 'https://archive.ics.uci.edu/', loaded by default from
+a backup in the MAPIE repository), and compares the coverage levels and the
+width means of the PIs.
 
 In order to reproduce results from the tutorial notebook of [1], we
-implemented their regression model ``Ridge2``, a variant of `sklearn.Ridge`
+implemented their regression model `Ridge2`, a variant of `sklearn.Ridge`
 with an adaptive regularization parameter (other models can also be tested).
 
 We compare jackknife+ and jackknife+-after-bootstrap, with fixed and random
-numbers of bootstraps, for a given training set of size ``n``, and different
-resampling sets of size ``m``, following the discussion in [1].
+numbers of bootstraps, for a given training set of size `n`, and different
+resampling sets of size `m`, following the discussion in [1].
 
 This simulation is carried out to assert that the jackknife+ and
 jackknife+-after-bootsrap methods implemented in MAPIE give the same
@@ -54,12 +55,38 @@ from mapie.metrics.regression import (
 from mapie.regression import CrossConformalRegressor, JackknifeAfterBootstrapRegressor
 from mapie.subsample import Subsample
 
+# Backup of the BlogFeedback training set, committed in the MAPIE repository.
+# See examples/data/README.md for details.
+BLOG_BACKUP_URL = (
+    "https://raw.githubusercontent.com/scikit-learn-contrib/MAPIE/master/"
+    "examples/data/blogData_train.csv.gz"
+)
 
-def get_X_y() -> Tuple[NDArray, NDArray]:
+# Original dataset on the UCI Machine Learning Repository.
+BLOG_UCI_URL = (
+    "https://archive.ics.uci.edu/ml/machine-learning-databases/00304/BlogFeedback.zip"
+)
+
+# Name of the training CSV inside the UCI zip archive.
+BLOG_CSV_FILE = "blogData_train.csv"
+
+
+def get_X_y(download: bool = False) -> Tuple[NDArray, NDArray]:
     """
-    Downloads the ``blog`` dataset from a zip file on the UCI Machine Learning
-    website, and returns X and y, which are respectively the explicative
-    data and the labels.
+    Loads the `BlogFeedback` dataset and returns X and y, which are
+    respectively the explicative data and the labels.
+
+    By default the data is read from a backup committed in the MAPIE repository
+    (``examples/data/blogData_train.csv.gz``). Set ``download=True`` to fetch
+    the original dataset from the UCI Machine Learning Repository instead.
+    If the chosen source is unavailable, the other one is tried automatically.
+
+    Parameters
+    ----------
+    download : bool
+        If ``True``, download the original dataset from
+        ``https://archive.ics.uci.edu/`` instead of using the repository
+        backup. By default ``False``.
 
     Returns
     -------
@@ -67,18 +94,25 @@ def get_X_y() -> Tuple[NDArray, NDArray]:
     (n_samples, n_features) and (n_samples,)
         Explicative data and labels
     """
-    website = "https://archive.ics.uci.edu/"
-    page = "ml/machine-learning-databases/"
-    folder = "00304/"
-    zip_folder = "BlogFeedback.zip"
-    csv_file = "blogData_train.csv"
-    url = website + page + folder + zip_folder
-    response = requests.get(url)
-    zipfile = ZipFile(BytesIO(response.content))
-    df = pd.read_csv(zipfile.open(csv_file)).to_numpy()
+    primary = BLOG_UCI_URL if download else BLOG_BACKUP_URL
+    fallback = BLOG_BACKUP_URL if download else BLOG_UCI_URL
+    try:
+        df = _read_blog(primary)
+    except Exception:
+        df = _read_blog(fallback)
     X = df[:, :-1]
     y = np.log(1 + df[:, -1])
     return (X, y)
+
+
+def _read_blog(url: str) -> NDArray:
+    """Read the BlogFeedback training data from a gzip CSV or a zip archive."""
+    if url.endswith(".gz"):
+        return pd.read_csv(url, header=None).to_numpy()
+    response = requests.get(url)
+    response.raise_for_status()
+    zipfile = ZipFile(BytesIO(response.content))
+    return pd.read_csv(zipfile.open(BLOG_CSV_FILE), header=None).to_numpy()
 
 
 class Ridge2(RegressorMixin, BaseEstimator):
@@ -89,9 +123,9 @@ class Ridge2(RegressorMixin, BaseEstimator):
     Parameters
     ----------
     ridge_mult : float
-        Multiplicative factor such that the alpha factor of the ``Ridge`` model
-        fitted by ``Ridge2`` is the squared maximum eigenvalue of the training
-        set times ``ridge_mult``.
+        Multiplicative factor such that the alpha factor of the `Ridge` model
+        fitted by `Ridge2` is the squared maximum eigenvalue of the training
+        set times `ridge_mult`.
     """
 
     def __init__(self, ridge_mult: float = 0.001) -> None:
@@ -207,7 +241,7 @@ def compute_PIs(
 def get_coverage_width(PIs: pd.DataFrame, y: NDArray) -> Tuple[float, float]:
     """
     Computes the mean coverage and width of the predictions intervals of a
-    DataFrame given by the ``compute_PIs`` function
+    DataFrame given by the `compute_PIs` function
 
     Parameters
     ----------

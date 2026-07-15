@@ -29,105 +29,105 @@ class EnsembleRegressor:
     ----------
     estimator: Optional[RegressorMixin]
         Any regressor with scikit-learn API
-        (i.e. with ``fit`` and ``predict`` methods).
-        If ``None``, estimator defaults to a ``LinearRegression`` instance.
+        (i.e. with `fit` and `predict` methods).
+        If `None`, estimator defaults to a `LinearRegression` instance.
 
-        By default ``None``.
+        By default `None`.
 
     method: str
         Method to choose for prediction interval estimates.
         Choose among:
 
-        - ``"naive"``, based on training set conformity scores,
-        - ``"base"``, based on validation sets conformity scores,
-        - ``"plus"``, based on validation conformity scores and
+        - `"naive"`, based on training set conformity scores,
+        - `"base"`, based on validation sets conformity scores,
+        - `"plus"`, based on validation conformity scores and
           testing predictions,
-        - ``"minmax"``, based on validation conformity scores and
+        - `"minmax"`, based on validation conformity scores and
           testing predictions (min/max among cross-validation clones).
 
-        By default ``"plus"``.
+        By default `"plus"`.
 
     cv: Optional[Union[int, str, BaseCrossValidator]]
         The cross-validation strategy for computing conformity scores.
         It directly drives the distinction between jackknife and cv variants.
         Choose among:
 
-        - ``None``, to use the default 5-fold cross-validation
+        - `None`, to use the default 5-fold cross-validation
         - integer, to specify the number of folds.
-          If equal to ``-1``, equivalent to
-          ``sklearn.model_selection.LeaveOneOut()``.
-        - CV splitter: any ``sklearn.model_selection.BaseCrossValidator``
+          If equal to `-1`, equivalent to
+          `sklearn.model_selection.LeaveOneOut()`.
+        - CV splitter: any `sklearn.model_selection.BaseCrossValidator`
           Main variants are:
-            - ``sklearn.model_selection.LeaveOneOut`` (jackknife),
-            - ``sklearn.model_selection.KFold`` (cross-validation),
-            - ``subsample.Subsample`` object (bootstrap).
-        - ``"split"``, does not involve cross-validation but a division
+            - `sklearn.model_selection.LeaveOneOut` (jackknife),
+            - `sklearn.model_selection.KFold` (cross-validation),
+            - `subsample.Subsample` object (bootstrap).
+        - `"split"`, does not involve cross-validation but a division
           of the data into training and calibration subsets. The splitter
-          used is the following: ``sklearn.model_selection.ShuffleSplit``.
-        - ``"prefit"``, assumes that ``estimator`` has been fitted already,
-          and the ``method`` parameter is ignored.
-          All data provided in the ``fit`` method is then used
+          used is the following: `sklearn.model_selection.ShuffleSplit`.
+        - `"prefit"`, assumes that `estimator` has been fitted already,
+          and the `method` parameter is ignored.
+          All data provided in the `fit` method is then used
           for computing conformity scores only.
           At prediction time, quantiles of these conformity scores are used
           to provide a prediction interval with fixed width.
           The user has to take care manually that data for model fitting and
           conformity scores estimate are disjoint.
 
-        By default ``None``.
+        By default `None`.
 
     test_size: Optional[Union[int, float]]
-        If ``float``, should be between ``0.0`` and ``1.0`` and represent the
-        proportion of the dataset to include in the test split. If ``int``,
-        represents the absolute number of test samples. If ``None``,
-        it will be set to ``0.1``.
+        If `float`, should be between `0.0` and `1.0` and represent the
+        proportion of the dataset to include in the test split. If `int`,
+        represents the absolute number of test samples. If `None`,
+        it will be set to `0.1`.
 
-        If cv is not ``"split"``, ``test_size`` is ignored.
+        If cv is not `"split"`, `test_size` is ignored.
 
-        By default ``None``.
+        By default `None`.
 
     n_jobs: Optional[int]
         Number of jobs for parallel processing using joblib
         via the "locky" backend.
-        If ``-1`` all CPUs are used.
-        If ``1`` is given, no parallel computing code is used at all,
+        If `-1` all CPUs are used.
+        If `1` is given, no parallel computing code is used at all,
         which is useful for debugging.
-        For ``n_jobs`` below ``-1``, ``(n_cpus + 1 - n_jobs)`` are used.
-        ``None`` is a marker for `unset` that will be interpreted as
-        ``n_jobs=1`` (sequential execution).
+        For `n_jobs` below `-1`, `(n_cpus + 1 - n_jobs)` are used.
+        `None` is a marker for `unset` that will be interpreted as
+        `n_jobs=1` (sequential execution).
 
-        By default ``None``.
+        By default `None`.
 
     agg_function: Optional[str]
         Determines how to aggregate predictions from perturbed models, both at
         training and prediction time.
 
-        If ``None``, it is ignored except if ``cv`` class is ``Subsample``,
+        If `None`, it is ignored except if `cv` class is `Subsample`,
         in which case an error is raised.
-        If ``"mean"`` or ``"median"``, returns the mean or median of the
+        If `"mean"` or `"median"`, returns the mean or median of the
         predictions computed from the out-of-folds models.
-        Note: if you plan to set the ``ensemble`` argument to ``True`` in the
-        ``predict`` method, you have to specify an aggregation function.
+        Note: if you plan to set the `ensemble` argument to `True` in the
+        `predict` method, you have to specify an aggregation function.
         Otherwise an error would be raised.
 
         The Jackknife+ interval can be interpreted as an interval around the
         median prediction, and is guaranteed to lie inside the interval,
         unlike the single estimator predictions.
 
-        When the cross-validation strategy is ``Subsample`` (i.e. for the
+        When the cross-validation strategy is `Subsample` (i.e. for the
         Jackknife+-after-Bootstrap method), this function is also used to
         aggregate the training set in-sample predictions.
 
-        If ``cv`` is ``"prefit"`` or ``"split"``, ``agg_function`` is ignored.
+        If `cv` is `"prefit"` or `"split"`, `agg_function` is ignored.
 
-        By default ``"mean"``.
+        By default `"mean"`.
 
     verbose: int
         The verbosity level, used with joblib for multiprocessing.
         The frequency of the messages increases with the verbosity level.
-        If it more than ``10``, all iterations are reported.
-        Above ``50``, the output is sent to stdout.
+        If it more than `10`, all iterations are reported.
+        Above `50`, the output is sent to stdout.
 
-        By default ``0``.
+        By default `0`.
 
     Attributes
     ----------
@@ -138,7 +138,7 @@ class EnsembleRegressor:
         List of out-of-folds estimators.
 
     k_: ArrayLike
-        - Array of nans, of shape (len(y), 1) if ``cv`` is ``"prefit"``
+        - Array of nans, of shape (len(y), 1) if `cv` is `"prefit"`
             (defined but not used)
         - Dummy array of folds containing each training sample, otherwise.
             Of shape (n_samples_train, cv.get_n_splits(X_train, y_train)).
@@ -205,7 +205,7 @@ class EnsembleRegressor:
 
         sample_weight: Optional[ArrayLike] of shape (n_samples,)
             Sample weights. If None, then samples are equally weighted.
-            By default ``None``.
+            By default `None`.
 
         **fit_params : dict
             Additional fit parameters.
@@ -302,7 +302,7 @@ class EnsembleRegressor:
     def _pred_multi(self, X: ArrayLike, **predict_params) -> NDArray:
         """
         Return a prediction per train sample for each test sample, by
-        aggregation with matrix ``k_``.
+        aggregation with matrix `k_`.
 
         Parameters
         ----------
@@ -321,7 +321,7 @@ class EnsembleRegressor:
         )
         # At this point, y_pred_multi is of shape
         # (n_samples_test, n_estimators_). The method
-        # ``_aggregate_with_mask`` fits it to the right size
+        # `_aggregate_with_mask` fits it to the right size
         # thanks to the shape of k_.
         y_pred_multi = self._aggregate_with_mask(y_pred_multi, self.k_)
         return y_pred_multi
@@ -344,13 +344,13 @@ class EnsembleRegressor:
         y: Optional[ArrayLike] of shape (n_samples_test,)
             Input labels.
 
-            By default ``None``.
+            By default `None`.
 
         groups: Optional[ArrayLike] of shape (n_samples_test,)
             Group labels for the samples used while splitting the dataset into
             train/test set.
 
-            By default ``None``.
+            By default `None`.
 
         **predict_params : dict
             Additional predict parameters.
@@ -410,11 +410,11 @@ class EnsembleRegressor:
         but we kept it for consistency with the public fit() API.
         Prefer using fit_single_estimator and fit_multi_estimators.
 
-        Fit the base estimator under the ``single_estimator_`` attribute.
+        Fit the base estimator under the `single_estimator_` attribute.
         Fit all cross-validated estimator clones
-        and rearrange them into a list, the ``estimators_`` attribute.
+        and rearrange them into a list, the `estimators_` attribute.
         Out-of-fold conformity scores are stored under
-        the ``conformity_scores_`` attribute.
+        the `conformity_scores_` attribute.
 
         Parameters
         ----------
@@ -427,13 +427,13 @@ class EnsembleRegressor:
         sample_weight: Optional[ArrayLike] of shape (n_samples,)
             Sample weights. If None, then samples are equally weighted.
 
-            By default ``None``.
+            By default `None`.
 
         groups: Optional[ArrayLike] of shape (n_samples,)
             Group labels for the samples used while splitting the dataset into
             train/test set.
 
-            By default ``None``.
+            By default `None`.
 
         **fit_params : dict
             Additional fit parameters.
@@ -536,7 +536,7 @@ class EnsembleRegressor:
     ) -> Union[NDArray, Tuple[NDArray, NDArray, NDArray]]:
         """
         Predict target from X. It also computes the prediction per train sample
-        for each test sample according to ``self.method``.
+        for each test sample according to `self.method`.
 
         Parameters
         ----------
@@ -545,19 +545,19 @@ class EnsembleRegressor:
 
         ensemble: bool
             Boolean determining whether the predictions are ensembled or not.
-            If ``False``, predictions are those of the model trained on the
+            If `False`, predictions are those of the model trained on the
             whole training set.
-            If ``True``, predictions from perturbed models are aggregated by
-            the aggregation function specified in the ``agg_function``
+            If `True`, predictions from perturbed models are aggregated by
+            the aggregation function specified in the `agg_function`
             attribute.
 
-            If ``cv`` is ``"prefit"`` or ``"split"``, ``ensemble`` is ignored.
+            If `cv` is `"prefit"` or `"split"`, `ensemble` is ignored.
 
-            By default ``False``.
+            By default `False`.
 
         return_multi_pred: bool
-            If ``True`` the method returns the predictions and the multiple
-            predictions (3 arrays). If ``False`` the method return the
+            If `True` the method returns the predictions and the multiple
+            predictions (3 arrays). If `False` the method return the
             simple predictions only.
 
         **predict_params : dict
@@ -601,5 +601,262 @@ class EnsembleRegressor:
 
         if return_multi_pred:
             return y_pred, y_pred_multi_low, y_pred_multi_up
+        else:
+            return cast(NDArray, y_pred)
+
+
+class EnsembleStdRegressor(EnsembleRegressor):
+    """
+    This class implements methods to handle the training and usage of the
+    estimator if it returns both a prediction and a standard deviation.
+    This estimator can be unique or composed by cross validated
+    estimators.
+    """
+
+    def __init__(
+        self,
+        estimator: Optional[RegressorMixin],
+        method: str,
+        cv: Optional[Union[int, str, BaseCrossValidator]],
+        agg_function: Optional[str],
+        n_jobs: Optional[int],
+        test_size: Optional[Union[int, float]],
+        verbose: int,
+    ):
+        super().__init__(
+            estimator=estimator,
+            method=method,
+            cv=cv,
+            agg_function=agg_function,
+            n_jobs=n_jobs,
+            test_size=test_size,
+            verbose=verbose,
+        )
+        allowed_methods = {"naive", "base", "plus", "minmax"}
+        if self.method not in allowed_methods:
+            raise ValueError(
+                f"method={self.method!r} is not supported by EnsembleStdRegressor. "
+                f"Choose among {allowed_methods}."
+            )
+
+    @staticmethod
+    def _predict_oof_estimator_with_std(
+        estimator: RegressorMixin, X: ArrayLike, val_index: ArrayLike, **predict_params
+    ) -> Tuple[Tuple[NDArray, NDArray], ArrayLike]:
+        """
+        Perform predictions on a single out-of-fold model on a validation set.
+
+        Parameters
+        ----------
+        estimator: RegressorMixin
+            Estimator to train.
+
+        X: ArrayLike of shape (n_samples, n_features)
+            Input data.
+
+        val_index: ArrayLike of shape (n_samples_val)
+            Validation data indices.
+
+        Returns
+        -------
+        Tuple[NDArray, ArrayLike]
+            Predictions of estimator from val_index of X.
+        """
+        X_val = _safe_indexing(X, val_index)
+        if _num_samples(X_val) > 0:
+            y_pred, y_std = estimator.predict(X_val, return_std=True, **predict_params)
+        else:
+            y_pred, y_std = np.array([]), np.array([])
+        return (y_pred, y_std), val_index
+
+    def _pred_multi_with_std(
+        self, X: ArrayLike, **predict_params
+    ) -> Tuple[NDArray, NDArray]:
+        """
+        Return a prediction per train sample for each test sample, by
+        aggregation with matrix ``k_``.
+
+        Parameters
+        ----------
+        X: ArrayLike of shape (n_samples_test, n_features)
+            Input data
+
+        Returns
+        -------
+        NDArray of shape (n_samples_test, n_samples_train)
+        """
+        y_pred = np.array(
+            [
+                list(e.predict(X, return_std=True, **predict_params))
+                for e in self.estimators_
+            ]
+        ).T
+        # y_pred is of shape (n_samples_test, n_estimators_, 2)
+        # We separate predictions and stds
+        y_pred_multi, y_std = y_pred[:, 0, :], y_pred[:, 1, :]
+
+        # At this point, y_pred_multi is of shape
+        # (n_samples_test, n_estimators_). The method
+        # ``_aggregate_with_mask`` fits it to the right size
+        # thanks to the shape of k_.
+        y_pred_multi = self._aggregate_with_mask(y_pred_multi, self.k_)
+        y_std = self._aggregate_with_mask(y_std, self.k_)
+
+        return y_pred_multi, y_std
+
+    def predict_calib_with_std(
+        self,
+        X: ArrayLike,
+        y: Optional[ArrayLike] = None,
+        groups: Optional[ArrayLike] = None,
+        **predict_params,
+    ) -> Tuple[NDArray, NDArray]:
+        """
+        Perform predictions on X : the calibration set.
+
+        Parameters
+        ----------
+        X: ArrayLike of shape (n_samples_test, n_features)
+            Input data
+
+        y: Optional[ArrayLike] of shape (n_samples_test,)
+            Input labels.
+
+            By default ``None``.
+
+        groups: Optional[ArrayLike] of shape (n_samples_test,)
+            Group labels for the samples used while splitting the dataset into
+            train/test set.
+
+            By default ``None``.
+
+        **predict_params : dict
+            Additional predict parameters.
+
+        Returns
+        -------
+        NDArray of shape (n_samples_test, 1)
+            The predictions.
+        """
+        check_is_fitted(self)
+
+        if self.cv == "prefit":
+            y_pred, y_std = self.single_estimator_.predict(
+                X, return_std=True, **predict_params
+            )
+        else:
+            if self.method == "naive":
+                y_pred, y_std = self.single_estimator_.predict(
+                    X, return_std=True, **predict_params
+                )
+            else:
+                cv = cast(BaseCrossValidator, self.cv)
+                outputs = Parallel(n_jobs=self.n_jobs, verbose=self.verbose)(
+                    delayed(self._predict_oof_estimator_with_std)(
+                        estimator,
+                        X,
+                        calib_index,
+                        **predict_params,
+                    )
+                    for (_, calib_index), estimator in zip(
+                        cv.split(X, y, groups), self.estimators_
+                    )
+                )
+                predictions, indices = map(list, zip(*outputs))
+                n_samples = _num_samples(X)
+                pred_matrix = np.full(
+                    shape=(n_samples, cv.get_n_splits(X, y, groups)),
+                    fill_value=np.nan,
+                    dtype=float,
+                )
+                std_matrix = np.full(
+                    shape=(n_samples, cv.get_n_splits(X, y, groups)),
+                    fill_value=np.nan,
+                    dtype=float,
+                )
+                for i, ind in enumerate(indices):
+                    pred_matrix[ind, i] = np.array(predictions[i][0], dtype=float)
+                    std_matrix[ind, i] = np.array(predictions[i][1], dtype=float)
+                    self.k_[ind, i] = 1
+
+                _check_nan_in_aposteriori_prediction(pred_matrix)
+
+                y_pred = aggregate_all(self.agg_function, pred_matrix)
+                y_std = aggregate_all(self.agg_function, std_matrix)
+
+        assert y_std is not None
+        return y_pred, y_std
+
+    def predict_with_std(
+        self,
+        X: ArrayLike,
+        ensemble: bool = False,
+        return_multi_pred: bool = True,
+        **predict_params,
+    ) -> Union[NDArray, Tuple[NDArray, NDArray, NDArray, NDArray]]:
+        """
+        Predict target from X. It also computes the prediction per train sample
+        for each test sample according to ``self.method``.
+
+        Parameters
+        ----------
+        X: ArrayLike of shape (n_samples, n_features)
+            Test data.
+
+        ensemble: bool
+            Boolean determining whether the predictions are ensembled or not.
+            If ``False``, predictions are those of the model trained on the
+            whole training set.
+            If ``True``, predictions from perturbed models are aggregated by
+            the aggregation function specified in the ``agg_function``
+            attribute.
+
+            If ``cv`` is ``"prefit"`` or ``"split"``, ``ensemble`` is ignored.
+
+            By default ``False``.
+
+        return_multi_pred: bool
+            If ``True`` the method returns the predictions and the multiple
+            predictions (3 arrays). If ``False`` the method return the
+            simple predictions only.
+
+        **predict_params : dict
+            Additional predict parameters.
+
+        Returns
+        -------
+        Tuple[NDArray, NDArray, NDArray]
+            - Predictions
+            - The multiple predictions for the lower bound of the intervals.
+            - The multiple predictions for the upper bound of the intervals.
+        """
+        check_is_fitted(self)
+
+        y_pred, y_std = self.single_estimator_.predict(
+            X, return_std=True, **predict_params
+        )
+        if not return_multi_pred and not ensemble:
+            return cast(NDArray, y_pred)
+
+        if self.method in self.no_agg_methods_ or self.cv in self.no_agg_cv_:
+            y_pred_multi_low = y_pred[:, np.newaxis]
+            y_pred_multi_up = y_pred[:, np.newaxis]
+            y_std_multi = y_std[:, np.newaxis]
+        else:
+            y_pred_multi, y_std_multi = self._pred_multi_with_std(X, **predict_params)
+
+            if self.method == "minmax":
+                y_pred_multi_low = np.min(y_pred_multi, axis=1, keepdims=True)
+                y_pred_multi_up = np.max(y_pred_multi, axis=1, keepdims=True)
+
+            else:
+                y_pred_multi_low = y_pred_multi
+                y_pred_multi_up = y_pred_multi
+
+            if ensemble:
+                y_pred = aggregate_all(self.agg_function, y_pred_multi)
+
+        if return_multi_pred:
+            return y_pred, y_pred_multi_low, y_pred_multi_up, y_std_multi
         else:
             return cast(NDArray, y_pred)

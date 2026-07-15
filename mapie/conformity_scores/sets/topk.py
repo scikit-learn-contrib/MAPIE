@@ -7,7 +7,7 @@ from sklearn.model_selection import BaseCrossValidator
 from mapie._machine_precision import EPSILON
 from mapie.conformity_scores.classification import BaseClassificationScore
 from mapie.conformity_scores.sets.utils import get_true_label_position
-from mapie.utils import _compute_quantiles
+from mapie.utils import _compute_classification_quantile
 
 
 class TopKConformityScore(BaseClassificationScore):
@@ -35,7 +35,7 @@ class TopKConformityScore(BaseClassificationScore):
         Pseudo random number generator state.
 
     quantiles_: ArrayLike of shape (n_alpha)
-        The quantiles estimated from ``get_sets`` method.
+        The quantiles estimated from `get_sets` method.
     """
 
     def __init__(self) -> None:
@@ -90,7 +90,7 @@ class TopKConformityScore(BaseClassificationScore):
             Observed feature values (not used since predictions are passed).
 
         alpha_np: NDArray of shape (n_alpha,)
-            NDArray of floats between ``0`` and ``1``, represents the
+            NDArray of floats between `0` and `1`, represents the
             uncertainty of the confidence interval.
 
         y_pred_proba: NDArray
@@ -134,7 +134,7 @@ class TopKConformityScore(BaseClassificationScore):
         NDArray
             Array of quantiles with respect to alpha_np.
         """
-        return _compute_quantiles(conformity_scores, alpha_np)
+        return _compute_classification_quantile(conformity_scores, alpha_np)
 
     def get_prediction_sets(
         self,

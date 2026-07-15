@@ -1,4 +1,3 @@
-import logging
 from abc import ABCMeta, abstractmethod
 from typing import Tuple, cast
 
@@ -8,6 +7,7 @@ from numpy.typing import NDArray
 from mapie._machine_precision import EPSILON
 from mapie.conformity_scores.interface import BaseConformityScore
 from mapie.estimator.regressor import EnsembleRegressor
+from mapie.utils import _compute_regression_quantile
 
 
 class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
@@ -23,20 +23,20 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
 
     consistency_check: bool, optional
         Whether to check the consistency between the methods
-        ``get_estimation_distribution`` and ``get_conformity_scores``.
-        If ``True``, the following equality must be verified::
+        `get_estimation_distribution` and `get_conformity_scores`.
+        If `True`, the following equality must be verified::
 
             y == self.get_estimation_distribution(
                 y_pred,
                 self.get_conformity_scores(y, y_pred, **kwargs),
                 **kwargs)
 
-        By default ``True``.
+        By default `True`.
 
     eps: float, optional
         Threshold to consider when checking the consistency
-        between ``get_estimation_distribution`` and ``get_conformity_scores``.
-        It should be specified if ``consistency_check==True``.
+        between `get_estimation_distribution` and `get_conformity_scores`.
+        It should be specified if `consistency_check==True`.
 
         By default, it is defined by the default precision.
     """
@@ -57,7 +57,7 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
         self, y: NDArray, y_pred: NDArray, **kwargs
     ) -> NDArray:
         """
-        Placeholder for ``get_conformity_scores``.
+        Placeholder for `get_conformity_scores`.
         Subclasses should implement this method!
 
         Compute the sample conformity scores given the predicted and
@@ -107,7 +107,7 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
     ) -> None:
         """
         Check consistency between the following methods:
-        ``get_estimation_distribution`` and ``get_signed_conformity_scores``
+        `get_estimation_distribution` and `get_signed_conformity_scores`
 
         The following equality should be verified::
 
@@ -155,7 +155,7 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
         self, y_pred: NDArray, conformity_scores: NDArray, **kwargs
     ) -> NDArray:
         """
-        Placeholder for ``get_estimation_distribution``.
+        Placeholder for `get_estimation_distribution`.
         Subclasses should implement this method!
 
         Compute samples of the estimation distribution given the predicted
@@ -186,7 +186,7 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
 
         Parameters
         ----------
-        alpha_np: NDArray
+        alpha_np: NDArray of shape (n_alpha,)
             The quantiles to compute.
 
         upper_bounds: NDArray of shape (n_samples,)
@@ -197,45 +197,36 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
 
         Returns
         -------
-        NDArray of shape (n_samples,)
+        NDArray of shape (n_alpha,)
             Array of betas minimizing the differences
-            ``(1-alpha+beta)-quantile - beta-quantile``.
+            `(1-alpha+beta)-quantile - beta-quantile`.
         """
-        # Using logging.warning instead of warnings.warn to avoid warnings during tests
-        logging.warning(
-            "The option to optimize beta (minimize interval width) is not working and "
-            "needs to be fixed. See more details in "
-            "https://github.com/scikit-learn-contrib/MAPIE/issues/588"
-        )
-
+        n = len(lower_bounds)
+        upper_f = upper_bounds.astype(float)
+        lower_f = lower_bounds.astype(float)
         beta_np = cast(
             NDArray[np.float64],
-            np.full(
-                shape=(len(lower_bounds), len(alpha_np)),
-                fill_value=np.nan,
-                dtype=float,
-            ),
+            np.full(shape=(len(alpha_np),), fill_value=np.nan, dtype=float),
         )
         for ind_alpha, _alpha in enumerate(alpha_np):
+            _alpha = float(_alpha)
             betas = np.linspace(
-                _alpha / (len(lower_bounds) + 1),
+                _alpha / (n + 1),
                 _alpha,
-                num=len(lower_bounds),
+                num=n,
                 endpoint=True,
             )
             one_alpha_beta = np.nanquantile(
-                upper_bounds.astype(float),
+                upper_f,
                 1 - _alpha + betas,
-                axis=1,
                 method="higher",
             )
             beta = np.nanquantile(
-                lower_bounds.astype(float),
+                lower_f,
                 betas,
-                axis=1,
                 method="lower",
             )
-            beta_np[:, ind_alpha] = betas[np.argmin(one_alpha_beta - beta, axis=0)]
+            beta_np[ind_alpha] = betas[np.argmin(one_alpha_beta - beta)]
 
         return beta_np
 
@@ -249,10 +240,11 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
         method: str = "base",
         optimize_beta: bool = False,
         allow_infinite_bounds: bool = False,
+        **predict_params,
     ) -> Tuple[NDArray, NDArray, NDArray]:
         """
         Compute bounds of the prediction intervals from the observed values,
-        the estimator of type ``EnsembleRegressor`` and the conformity scores.
+        the estimator of type `EnsembleRegressor` and the conformity scores.
 
         Parameters
         ----------
@@ -260,7 +252,7 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
             Observed feature values.
 
         alpha_np: NDArray of shape (n_alpha,)
-            NDArray of floats between ``0`` and ``1``, represents the
+            NDArray of floats between `0` and `1`, represents the
             uncertainty of the confidence interval.
 
         estimator: EnsembleRegressor
@@ -272,26 +264,26 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
         ensemble: bool
             Boolean determining whether the predictions are ensembled or not.
 
-            By default ``False``.
+            By default `False`.
 
         method: str
             Method to choose for prediction interval estimates.
-            The ``"plus"`` method implies that the quantile is calculated
+            The `"plus"` method implies that the quantile is calculated
             after estimating the bounds, whereas the other methods
-            (among the ``"naive"``, ``"base"`` or ``"minmax"`` methods,
+            (among the `"naive"`, `"base"` or `"minmax"` methods,
             for example) do the opposite.
 
-            By default ``base``.
+            By default `base`.
 
         optimize_beta: bool
             Whether to optimize the PIs' width or not.
 
-            By default ``False``.
+            By default `False`.
 
         allow_infinite_bounds: bool
             Allow infinite prediction intervals to be produced.
 
-            By default ``False``.
+            By default `False`.
 
         Returns
         -------
@@ -313,14 +305,14 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
                 + "symmetrical conformity score function."
             )
 
-        y_pred, y_pred_low, y_pred_up = estimator.predict(X, ensemble)
+        y_pred, y_pred_low, y_pred_up = estimator.predict(X, ensemble, **predict_params)
         signed = -1 if self.sym else 1
 
         if optimize_beta:
             beta_np = self._beta_optimize(
                 alpha_np,
-                conformity_scores.reshape(1, -1),
-                conformity_scores.reshape(1, -1),
+                conformity_scores,
+                conformity_scores,
             )
         else:
             beta_np = alpha_np / 2
@@ -335,21 +327,21 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
             conformity_scores_up = self.get_estimation_distribution(
                 y_pred_up, conformity_scores, X=X
             )
-            bound_low = self.get_quantile(
+            bound_low = _compute_regression_quantile(
                 conformity_scores_low,
                 alpha_low,
                 axis=1,
-                reversed=True,
+                reverse=True,
                 unbounded=allow_infinite_bounds,
             )
-            bound_up = self.get_quantile(
+            bound_up = _compute_regression_quantile(
                 conformity_scores_up, alpha_up, axis=1, unbounded=allow_infinite_bounds
             )
 
         else:
             if self.sym:
                 alpha_ref = 1 - alpha_np
-                quantile_ref = self.get_quantile(
+                quantile_ref = _compute_regression_quantile(
                     conformity_scores[..., np.newaxis], alpha_ref, axis=0
                 )
                 quantile_low, quantile_up = -quantile_ref, quantile_ref
@@ -357,14 +349,14 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
             else:
                 alpha_low, alpha_up = beta_np, 1 - alpha_np + beta_np
 
-                quantile_low = self.get_quantile(
+                quantile_low = _compute_regression_quantile(
                     conformity_scores[..., np.newaxis],
                     alpha_low,
                     axis=0,
-                    reversed=True,
+                    reverse=True,
                     unbounded=allow_infinite_bounds,
                 )
-                quantile_up = self.get_quantile(
+                quantile_up = _compute_regression_quantile(
                     conformity_scores[..., np.newaxis],
                     alpha_up,
                     axis=0,
@@ -394,8 +386,9 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
 
         Returns
         --------
-        The output structure depend on the ``get_bounds`` method.
+        result
             The prediction sets for each sample and each alpha level.
+            The output structure depends on the `get_bounds` method.
         """
         return self.get_bounds(X=X, alpha_np=alpha_np, **kwargs)
 

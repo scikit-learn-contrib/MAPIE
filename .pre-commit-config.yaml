@@ -7,13 +7,13 @@ repos:
     hooks:
       - id: format-fix
         name: format-fix
-        entry: make format-fix
+        entry: uv run make format-fix
         language: system
       - id: lint
         name: lint
-        entry: make lint
+        entry: uv run make lint
         language: system
       - id: type-check
         name: type-check
-        entry: make type-check
+        entry: uv run make type-check
         language: system

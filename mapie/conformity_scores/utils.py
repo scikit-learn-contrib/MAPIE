@@ -1,16 +1,17 @@
 from typing import Optional, no_type_check
 
+from numpy.typing import ArrayLike
 from sklearn.utils.multiclass import (
     check_classification_targets,
     type_of_target,
 )
-
 from .regression import BaseRegressionScore
 from .classification import BaseClassificationScore
 from .bounds import (
     AbsoluteConformityScore,
     GammaConformityScore,
     ResidualNormalisedScore,
+    StdConformityScore,
 )
 from .sets import (
     LACConformityScore,
@@ -19,14 +20,13 @@ from .sets import (
     RAPSConformityScore,
 )
 
-from numpy.typing import ArrayLike
-
 
 CONFORMITY_SCORES_STRING_MAP = {
     BaseRegressionScore: {
         "absolute": AbsoluteConformityScore,
         "gamma": GammaConformityScore,
         "residual_normalized": ResidualNormalisedScore,
+        "std_normalized": StdConformityScore,
     },
     BaseClassificationScore: {
         "lac": LACConformityScore,
@@ -48,11 +48,11 @@ def check_and_select_conformity_score(conformity_score, conformity_score_type):
 
 
 def check_regression_conformity_score(
-    conformity_score: Optional[BaseRegressionScore],
+    conformity_score: Optional[BaseRegressionScore] = None,
     sym: bool = True,
 ) -> BaseRegressionScore:
     """
-    Check parameter ``conformity_score`` for regression task.
+    Check parameter `conformity_score` for regression task.
     By default, return a AbsoluteConformityScore instance.
 
     Parameters
@@ -99,7 +99,7 @@ def check_regression_conformity_score(
 def check_target(conformity_score: BaseClassificationScore, y: ArrayLike) -> None:
     """
     Check that if the type of target is binary,
-    (then the method have to be ``"lac"``), or multi-class.
+    (then the method have to be `"lac"`), or multi-class.
 
     Parameters
     ----------
@@ -112,8 +112,8 @@ def check_target(conformity_score: BaseClassificationScore, y: ArrayLike) -> Non
     Raises
     ------
     ValueError
-        If type of target is binary and method is not ``"lac"``
-        or ``"score"`` or if type of target is not multi-class.
+        If type of target is binary and method is not `"lac"`
+        or `"score"` or if type of target is not multi-class.
     """
     check_classification_targets(y)
     if type_of_target(y) == "binary" and not isinstance(
@@ -128,7 +128,7 @@ def check_classification_conformity_score(
     conformity_score: Optional[BaseClassificationScore] = None,
 ) -> BaseClassificationScore:
     """
-    Check parameter ``conformity_score`` for classification task.
+    Check parameter `conformity_score` for classification task.
     By default, return a LACConformityScore instance.
 
     Parameters

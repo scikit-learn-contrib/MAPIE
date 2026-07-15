@@ -1,7 +1,7 @@
 """
-================================================================================
 Conformal Predictive Distribution
-================================================================================
+=================================
+
 
 """
 
@@ -69,7 +69,7 @@ plt.show()
 #
 # To be able to obtain the cumulative distribution function of
 # a prediction with MAPIE, we propose here to wrap the
-# :class:`~mapie.regression.SplitConformalRegressor` to add a new method named
+# `SplitConformalRegressor` to add a new method named
 # `get_cumulative_distribution_function`.
 
 
@@ -79,9 +79,7 @@ class MapieConformalPredictiveDistribution(SplitConformalRegressor):
 
     def get_cumulative_distribution_function(self, X):
         y_pred, _ = self.predict_interval(X)
-        cs = self._mapie_regressor.conformity_scores_[
-            ~np.isnan(self._mapie_regressor.conformity_scores_)
-        ]
+        cs = self.conformity_scores[~np.isnan(self.conformity_scores)]
         res = self._conformity_score.get_estimation_distribution(
             y_pred.reshape((-1, 1)), cs, X=X
         )
@@ -90,8 +88,8 @@ class MapieConformalPredictiveDistribution(SplitConformalRegressor):
 
 ##############################################################################
 # Now, we propose to use it with two different conformity scores -
-# :class:`~mapie.conformity_scores.AbsoluteConformityScore` and
-# :class:`~mapie.conformity_scores.ResidualNormalisedScore` -
+# `AbsoluteConformityScore` and
+# `ResidualNormalisedScore` -
 # in split-conformal inference.
 
 mapie_regressor_1 = MapieConformalPredictiveDistribution(

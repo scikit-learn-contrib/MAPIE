@@ -233,12 +233,12 @@ def ltt_procedure(
     delta: float,
     n_obs: NDArray,
     binary: bool = False,
-    fwer_method: Union[FWER_METHODS, FWERProcedure] = "bonferroni",
+    fwer_method: Union[FWER_METHODS, FWERProcedure] = "bonferroni_holm",
 ) -> Tuple[List[List[Any]], NDArray]:
     """
     Apply the Learn-Then-Test procedure for risk control.
-    Note that we will do a multiple test for ``r_hat`` that are
-    less than level ``alpha_np``.
+    Note that we will do a multiple test for `r_hat` that are
+    less than level `alpha_np`.
     The procedure follows the instructions in [1]:
         - Calculate p-values for each lambdas discretized
         - Apply a family wise error rate algorithm, here Bonferonni correction
@@ -259,8 +259,6 @@ def ltt_procedure(
         Contains the different alphas control level.
         The empirical risk should be less than alpha with
         probability 1-delta.
-        Note: MAPIE 1.2 does not support multiple risks and multiple alphas
-        simultaneously.
         For MultiLabelClassificationController, the shape should be (1, n_alpha).
         For BinaryClassificationController, the shape should be (n_risks, 1).
 
@@ -278,7 +276,7 @@ def ltt_procedure(
     binary: bool, default=False
         Must be True if the loss associated to the risk is binary.
 
-    fwer_method : {"bonferroni", "bonferroni_holm", "fixed_sequence", "split_fixed_sequence"} or FWERProcedure instance, default="bonferroni"
+    fwer_method : {"bonferroni", "bonferroni_holm", "fixed_sequence", "split_fixed_sequence"} or FWERProcedure instance, default="bonferroni_holm"
         FWER control strategy.
 
     Returns
@@ -319,7 +317,7 @@ def ltt_procedure(
     )  # to handle multiple risks, take max over risks (no effect if mono risk)
 
     # Fixed Sequence Testing (FST) only supports a single monotonic risk.
-    # - If non-monotonic: raise error.
+    # - If non-monotonic: raise warning.
     # - If decreasing: reverse order so FST tests easiest -> hardest;
     #   store permutation to remap indices afterward.
     order = None
@@ -333,7 +331,14 @@ def ltt_procedure(
         direction = _check_risk_monotonicity(r_hat[0])
 
         if direction == "none":
-            raise ValueError("fixed_sequence requires a monotonic risk over lambdas.")
+            warnings.warn(
+                "Fixed sequence testing requires a monotonic risk over lambdas (thresholds) to find "
+                "optimal solutions but this hypothesis is not verified here. "
+                "We recommand you try split_fixed_sequence instead if the hypothesis ordering is not known a priori.",
+                UserWarning,
+            )
+            average_variation = np.mean(np.diff(r_hat[0]))
+            direction = "increasing" if average_variation > 0 else "decreasing"
 
         if direction == "decreasing":
             order = np.arange(len(p_values))[::-1]
@@ -425,7 +430,7 @@ def compute_hoeffding_bentkus_p_value(
     hb_p_value = np.where(
         bentkus_p_value > hoeffding_p_value, hoeffding_p_value, bentkus_p_value
     )
-    return hb_p_value
+    return cast(NDArray, hb_p_value)
 
 
 def _h1(r_hats: NDArray, alphas: NDArray) -> NDArray:

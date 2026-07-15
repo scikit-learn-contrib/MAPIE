@@ -11,15 +11,16 @@ from mapie._machine_precision import EPSILON
 from mapie.conformity_scores.sets.aps import APSConformityScore
 from mapie.conformity_scores.sets.utils import get_true_label_position
 from mapie.metrics.classification import classification_mean_width_score
-from mapie.utils import _check_alpha_and_n_samples, _compute_quantiles
+from mapie.utils import _check_alpha_and_n_samples
+from mapie.utils import _compute_classification_quantile
 
 
 class RAPSConformityScore(APSConformityScore):
     """
     Regularized Adaptive Prediction Sets (RAPS) method-based non-conformity
-    score. It uses the same technique as ``APSConformityScore`` class but with
+    score. It uses the same technique as `APSConformityScore` class but with
     a penalty term to reduce the size of prediction sets. See [1] for more
-    details. For now, this method only works with ``"prefit"`` and ``"split"``
+    details. For now, this method only works with `"prefit"` and `"split"`
     strategies.
 
     References
@@ -44,7 +45,7 @@ class RAPSConformityScore(APSConformityScore):
         Pseudo random number generator state.
 
     quantiles_: ArrayLike of shape (n_alpha)
-        The quantiles estimated from ``get_sets`` method.
+        The quantiles estimated from `get_sets` method.
 
     label_encoder: LabelEncoder
         The label encoder used to encode the labels.
@@ -73,13 +74,13 @@ class RAPSConformityScore(APSConformityScore):
         label_encoder: Optional[LabelEncoder]
             The label encoder used to encode the labels.
 
-            By default ``None``.
+            By default `None`.
 
         size_raps: Optional[float]
             Percentage of the data to be used for choosing lambda_star and
             k_star for the RAPS method.
 
-            By default ``None``.
+            By default `None`.
         """
         super().set_external_attributes(**kwargs)
         self.label_encoder_ = cast(LabelEncoder, label_encoder)
@@ -114,7 +115,7 @@ class RAPSConformityScore(APSConformityScore):
         groups: Optional[NDArray] of shape (n_samples,)
             Group labels for the samples used while splitting the dataset into
             train/test set.
-            By default ``None``.
+            By default `None`.
 
         Returns
         -------
@@ -197,7 +198,7 @@ class RAPSConformityScore(APSConformityScore):
         cutoff: NDArray,
     ) -> NDArray:
         """
-        Regularize the conformity scores with the ``"raps"``
+        Regularize the conformity scores with the `"raps"`
         method. See algo. 2 in [1].
 
         Parameters
@@ -309,8 +310,8 @@ class RAPSConformityScore(APSConformityScore):
         """
         classes = cast(NDArray, self.classes)
 
-        lambda_star = np.zeros(len(alpha_np))
-        best_sizes = np.full(len(alpha_np), np.finfo(np.float64).max)
+        lambda_star: NDArray = np.zeros(len(alpha_np))
+        best_sizes: NDArray = np.full(len(alpha_np), np.finfo(np.float64).max)
 
         for lambda_ in [0.001, 0.01, 0.1, 0.2, 0.5]:  # values given in paper[1]
             true_label_cumsum_proba, cutoff = self.get_true_label_cumsum_proba(
@@ -321,7 +322,9 @@ class RAPSConformityScore(APSConformityScore):
                 k_star, lambda_, true_label_cumsum_proba, cutoff
             )
 
-            quantiles_ = _compute_quantiles(true_label_cumsum_proba_reg, alpha_np)
+            quantiles_ = _compute_classification_quantile(
+                true_label_cumsum_proba_reg, alpha_np
+            )
 
             _, _, y_pred_proba_last = self._get_last_included_proba(
                 y_pred_proba_raps,
@@ -338,7 +341,7 @@ class RAPSConformityScore(APSConformityScore):
             )
 
         if len(lambda_star) == 1:
-            lambda_star = lambda_star[0]
+            return float(lambda_star[0])
 
         return lambda_star
 
@@ -371,16 +374,16 @@ class RAPSConformityScore(APSConformityScore):
             If "mean", the scores are averaged. If "crossval", the scores are
             obtained from cross-validation (not used here).
 
-            By default, ``"mean"``.
+            By default, `"mean"`.
 
         include_last_label: Optional[Union[bool, str]]
             Whether or not to include last label in prediction sets.
-            Choose among ``False``, ``True``  or ``"randomized"``.
+            Choose among `False`, `True`  or `"randomized"`.
 
-            By default, ``True``.
+            By default, `True`.
 
             See the docstring of
-            :meth:`conformity_scores.sets.aps.APSConformityScore.get_prediction_sets`
+            `APSConformityScore.get_prediction_sets`
             for more details.
 
         Returns
@@ -395,7 +398,7 @@ class RAPSConformityScore(APSConformityScore):
         # position_raps = cast(NDArray, position_raps)
 
         _check_alpha_and_n_samples(alpha_np, self.X_raps.shape[0])
-        self.k_star = _compute_quantiles(self.position_raps, alpha_np) + 1
+        self.k_star = _compute_classification_quantile(self.position_raps, alpha_np) + 1
         y_pred_proba_raps = np.repeat(
             self.y_pred_proba_raps[:, :, np.newaxis], len(alpha_np), axis=2
         )
@@ -409,7 +412,9 @@ class RAPSConformityScore(APSConformityScore):
         conformity_scores_regularized = self._regularize_conformity_score(
             self.k_star, self.lambda_star, conformity_scores, self.cutoff
         )
-        quantiles_ = _compute_quantiles(conformity_scores_regularized, alpha_np)
+        quantiles_ = _compute_classification_quantile(
+            conformity_scores_regularized, alpha_np
+        )
 
         return quantiles_
 
@@ -442,10 +447,10 @@ class RAPSConformityScore(APSConformityScore):
 
         prediction_phase: bool
             Whether the function is called during the prediction phase.
-            If ``True``, the function will use the values of ``lambda_star``
-            and ``k_star`` of the object.
+            If `True`, the function will use the values of `lambda_star`
+            and `k_star` of the object.
 
-            By default, ``False``.
+            By default, `False`.
 
         **kwargs: dict, optional
             Additional keyword arguments that might be used.

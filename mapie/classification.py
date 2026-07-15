@@ -28,13 +28,14 @@ from mapie.utils import (
     _check_alpha_and_n_samples,
     _check_cv,
     _check_cv_not_string,
+    _check_deprecated_sample_weight_kwarg,
     _check_estimator_classification,
     _check_n_features_in,
     _check_n_jobs,
     _check_null_weight,
     _check_predict_params,
     _check_verbose,
-    _prepare_fit_params_and_sample_weight,
+    _fit_estimator,
     _prepare_params,
     _raise_error_if_fit_called_in_prefit_mode,
     _raise_error_if_method_already_called,
@@ -49,10 +50,10 @@ class SplitConformalClassifier:
     """
     Computes prediction sets using the split conformal classification technique:
 
-    1. The ``fit`` method (optional) fits the base classifier to the training data.
-    2. The ``conformalize`` method estimates the uncertainty of the base classifier by
+    1. The `fit` method (optional) fits the base classifier to the training data.
+    2. The `conformalize` method estimates the uncertainty of the base classifier by
        computing conformity scores on the conformalization set.
-    3. The ``predict_set`` method predicts labels and sets of labels.
+    3. The `predict_set` method predicts labels and sets of labels.
 
     Parameters
     ----------
@@ -79,13 +80,13 @@ class SplitConformalClassifier:
         A custom score function inheriting from BaseClassificationScore may also
         be provided.
 
-        See :ref:`theoretical_description_classification`.
+        See [theoretical description (classification)](../theory/classification.md).
 
     prefit : bool, default=True
-        If True, the base classifier must be fitted, and the ``fit``
+        If True, the base classifier must be fitted, and the `fit`
         method must be skipped.
 
-        If False, the base classifier will be fitted during the ``fit`` method.
+        If False, the base classifier will be fitted during the `fit` method.
 
     n_jobs : Optional[int], default=None
         The number of jobs to run in parallel when applicable.
@@ -168,7 +169,7 @@ class SplitConformalClassifier:
             Training data targets.
 
         fit_params : Optional[dict], default=None
-            Parameters to pass to the ``fit`` method of the base classifier.
+            Parameters to pass to the `fit` method of the base classifier.
 
         Returns
         -------
@@ -180,7 +181,7 @@ class SplitConformalClassifier:
 
         cloned_estimator = clone(self._estimator)
         fit_params_ = _prepare_params(fit_params)
-        cloned_estimator.fit(X_train, y_train, **fit_params_)
+        _fit_estimator(cloned_estimator, X_train, y_train, **fit_params_)
         self._mapie_classifier.estimator = cloned_estimator
 
         self._is_fitted = True
@@ -205,9 +206,9 @@ class SplitConformalClassifier:
             Targets of the conformalization set.
 
         predict_params : Optional[dict], default=None
-            Parameters to pass to the ``predict`` and ``predict_proba`` methods
+            Parameters to pass to the `predict` and `predict_proba` methods
             of the base classifier. These parameters will also be used in the
-            ``predict_set`` and ``predict`` methods of this SplitConformalClassifier.
+            `predict_set` and `predict` methods of this SplitConformalClassifier.
 
         Returns
         -------
@@ -254,18 +255,18 @@ class SplitConformalClassifier:
         conformity_score_params : Optional[dict], default=None
             Parameters specific to conformity scores, used at prediction time.
 
-            The only example for now is ``include_last_label``, available for `aps`
+            The only example for now is `include_last_label`, available for `aps`
             and `raps` conformity scores. For detailed information on
-            ``include_last_label``, see the docstring of
-            :meth:`conformity_scores.sets.aps.APSConformityScore.get_prediction_sets`.
+            `include_last_label`, see the docstring of
+            `APSConformityScore.get_prediction_sets`.
 
         Returns
         -------
         Tuple[NDArray, NDArray]
             Two arrays:
 
-            - Prediction labels, of shape ``(n_samples,)``
-            - Prediction sets, of shape ``(n_samples, n_class, n_confidence_levels)``
+            - Prediction labels, of shape `(n_samples,)`
+            - Prediction sets, of shape `(n_samples, n_class, n_confidence_levels)`
         """
         _raise_error_if_previous_method_not_called(
             "predict_set",
@@ -293,7 +294,7 @@ class SplitConformalClassifier:
         Returns
         -------
         NDArray
-            Array of predicted labels, with shape ``(n_samples,)``.
+            Array of predicted labels, with shape `(n_samples,)`.
         """
         _raise_error_if_previous_method_not_called(
             "predict",
@@ -307,15 +308,33 @@ class SplitConformalClassifier:
         )
         return _cast_point_predictions_to_ndarray(predictions)
 
+    @property
+    def conformity_scores(self) -> NDArray:
+        """
+        Returns the conformity scores computed by the `conformalize` method
+        on the conformalization set.
+
+        Returns
+        -------
+        NDArray
+            Array of conformity scores, with shape `(n_samples,)`.
+        """
+        _raise_error_if_previous_method_not_called(
+            "conformity_scores",
+            "conformalize",
+            self._is_conformalized,
+        )
+        return cast(NDArray, self._mapie_classifier.conformity_scores_)
+
 
 class CrossConformalClassifier:
     """
     Computes prediction sets using the cross conformal classification technique:
 
-    1. The ``fit_conformalize`` method estimates the uncertainty of the base classifier
+    1. The `fit_conformalize` method estimates the uncertainty of the base classifier
        in a cross-validation style. It fits the base classifier on folds of the dataset
        and computes conformity scores on the out-of-fold data.
-    2. The ``predict_set`` method predicts labels and sets of labels.
+    2. The `predict_set` method predicts labels and sets of labels.
 
     Parameters
     ----------
@@ -339,20 +358,20 @@ class CrossConformalClassifier:
         A custom score function inheriting from BaseClassificationScore may also
         be provided.
 
-        See :ref:`theoretical_description_classification`.
+        See [theoretical description (classification)](../theory/classification.md).
 
     cv : Union[int, BaseCrossValidator], default=5
         The cross-validator used to compute conformity scores.
         Valid options:
 
         - integer, to specify the number of folds
-        - any ``sklearn.model_selection.BaseCrossValidator`` suitable for
+        - any `sklearn.model_selection.BaseCrossValidator` suitable for
           classification, or a custom cross-validator inheriting from it.
 
         Main variants in the cross conformal setting are:
 
-        - ``sklearn.model_selection.KFold`` (vanilla cross conformal)
-        - ``sklearn.model_selection.LeaveOneOut`` (jackknife)
+        - `sklearn.model_selection.KFold` (vanilla cross conformal)
+        - `sklearn.model_selection.LeaveOneOut` (jackknife)
 
     n_jobs : Optional[int], default=None
         The number of jobs to run in parallel when applicable.
@@ -413,6 +432,20 @@ class CrossConformalClassifier:
 
         self._predict_params: dict = {}
 
+    def reset(self) -> CrossConformalClassifier:
+        """
+        Discard previously computed conformity scores so that
+        `fit_conformalize` can be called again with new data.
+
+        Returns
+        -------
+        Self
+            This CrossConformalClassifier instance, reset to its pre-fit state.
+        """
+        self.is_fitted_and_conformalized = False
+        self._predict_params = {}
+        return self
+
     def fit_conformalize(
         self,
         X: ArrayLike,
@@ -426,6 +459,10 @@ class CrossConformalClassifier:
         fits the base classifier on different folds of the dataset
         and computes conformity scores on the corresponding out-of-fold data.
 
+        If called on an instance that has already been fitted, a `UserWarning` is
+        emitted and the previously computed conformity scores are discarded before
+        the new fit. Call `reset()` explicitly to suppress the warning.
+
         Parameters
         ----------
         X : ArrayLike
@@ -438,29 +475,34 @@ class CrossConformalClassifier:
             Groups to pass to the cross-validator.
 
         fit_params : Optional[dict], default=None
-            Parameters to pass to the ``fit`` method of the base classifier.
+            Parameters to pass to the `fit` method of the base classifier.
 
         predict_params : Optional[dict], default=None
-            Parameters to pass to the ``predict`` and ``predict_proba`` methods
+            Parameters to pass to the `predict` and `predict_proba` methods
             of the base classifier. These parameters will also be used in the
-            ``predict_set`` and ``predict`` methods of this CrossConformalClassifier.
+            `predict_set` and `predict` methods of this CrossConformalClassifier.
 
         Returns
         -------
         Self
             This CrossConformalClassifier instance, fitted and conformalized.
         """
-        _raise_error_if_method_already_called(
-            "fit_conformalize",
-            self.is_fitted_and_conformalized,
-        )
+        if self.is_fitted_and_conformalized:
+            warnings.warn(
+                "CrossConformalClassifier.fit_conformalize was already called; "
+                "conformity scores from the previous fit will be discarded. "
+                "Call .reset() explicitly before fit_conformalize to suppress "
+                "this warning.",
+                UserWarning,
+                stacklevel=2,
+            )
+            self.reset()
 
-        fit_params_, sample_weight = _prepare_fit_params_and_sample_weight(fit_params)
+        fit_params_ = _prepare_params(fit_params)
         self._predict_params = _prepare_params(predict_params)
         self._mapie_classifier.fit(
             X=X,
             y=y,
-            sample_weight=sample_weight,
             groups=groups,
             fit_params=fit_params_,
             predict_params=self._predict_params,
@@ -490,10 +532,10 @@ class CrossConformalClassifier:
         conformity_score_params : Optional[dict], default=None
             Parameters specific to conformity scores, used at prediction time.
 
-            The only example for now is ``include_last_label``, available for `aps`
+            The only example for now is `include_last_label`, available for `aps`
             and `raps` conformity scores. For detailed information on
-            ``include_last_label``, see the docstring of
-            :meth:`conformity_scores.sets.aps.APSConformityScore.get_prediction_sets`.
+            `include_last_label`, see the docstring of
+            `APSConformityScore.get_prediction_sets`.
 
         agg_scores : str, default="mean"
             How to aggregate conformity scores.
@@ -513,8 +555,8 @@ class CrossConformalClassifier:
         Tuple[NDArray, NDArray]
             Two arrays:
 
-            - Prediction labels, of shape ``(n_samples,)``
-            - Prediction sets, of shape ``(n_samples, n_class, n_confidence_levels)``
+            - Prediction labels, of shape `(n_samples,)`
+            - Prediction sets, of shape `(n_samples, n_class, n_confidence_levels)`
         """
         _raise_error_if_previous_method_not_called(
             "predict_set",
@@ -544,7 +586,7 @@ class CrossConformalClassifier:
         Returns
         -------
         NDArray
-            Array of predicted labels, with shape ``(n_samples,)``.
+            Array of predicted labels, with shape `(n_samples,)`.
         """
         _raise_error_if_previous_method_not_called(
             "predict",
@@ -557,6 +599,25 @@ class CrossConformalClassifier:
             **self._predict_params,
         )
         return _cast_point_predictions_to_ndarray(predictions)
+
+    @property
+    def conformity_scores(self) -> NDArray:
+        """
+        Returns the conformity scores computed by the `fit_conformalize`
+        method, on the out-of-fold predictions produced during
+        cross-validation.
+
+        Returns
+        -------
+        NDArray
+            Array of conformity scores, with shape `(n_samples,)`.
+        """
+        _raise_error_if_previous_method_not_called(
+            "conformity_scores",
+            "fit_conformalize",
+            self.is_fitted_and_conformalized,
+        )
+        return cast(NDArray, self._mapie_classifier.conformity_scores_)
 
 
 class _MapieClassifier(ClassifierMixin, BaseEstimator):
@@ -577,62 +638,62 @@ class _MapieClassifier(ClassifierMixin, BaseEstimator):
     estimator: Optional[ClassifierMixin]
         Any classifier with scikit-learn API
         (i.e. with fit, predict, and predict_proba methods), by default None.
-        If ``None``, estimator defaults to a ``LogisticRegression`` instance.
+        If `None`, estimator defaults to a `LogisticRegression` instance.
 
     cv: Optional[Union[int, Literal["prefit"], BaseCrossValidator]]
         The cross-validation strategy for computing scores.
         It directly drives the distinction between jackknife and cv variants.
         Choose among:
 
-        - ``None``, to use the default 5-fold cross-validation
+        - `None`, to use the default 5-fold cross-validation
         - integer, to specify the number of folds.
           If equal to -1, equivalent to
-          ``sklearn.model_selection.LeaveOneOut()``.
-        - CV splitter: any ``sklearn.model_selection.BaseCrossValidator``
+          `sklearn.model_selection.LeaveOneOut()`.
+        - CV splitter: any `sklearn.model_selection.BaseCrossValidator`
           Main variants are:
-          - ``sklearn.model_selection.LeaveOneOut`` (jackknife),
-          - ``sklearn.model_selection.KFold`` (cross-validation)
-        - ``"prefit"``, assumes that ``estimator`` has been fitted already.
-          All data provided in the ``fit`` method is then used
+          - `sklearn.model_selection.LeaveOneOut` (jackknife),
+          - `sklearn.model_selection.KFold` (cross-validation)
+        - `"prefit"`, assumes that `estimator` has been fitted already.
+          All data provided in the `fit` method is then used
           to calibrate the predictions through the score computation.
           At prediction time, quantiles of these scores are used to estimate
           prediction sets.
 
-        By default ``None``.
+        By default `None`.
 
     n_jobs: Optional[int]
         Number of jobs for parallel processing using joblib
         via the "locky" backend.
         At this moment, parallel processing is disabled.
-        If ``-1`` all CPUs are used.
-        If ``1`` is given, no parallel computing code is used at all,
+        If `-1` all CPUs are used.
+        If `1` is given, no parallel computing code is used at all,
         which is useful for debugging.
-        For n_jobs below ``-1``, ``(n_cpus + 1 + n_jobs)`` are used.
-        None is a marker for `unset` that will be interpreted as ``n_jobs=1``
+        For n_jobs below `-1`, `(n_cpus + 1 + n_jobs)` are used.
+        None is a marker for `unset` that will be interpreted as `n_jobs=1`
         (sequential execution).
 
-        By default ``None``.
+        By default `None`.
 
     conformity_score: BaseClassificationScore
         Score function that handle all that is related to conformity scores.
 
-        By default ``None``.
+        By default `None`.
 
     random_state: Optional[Union[int, RandomState]]
         Pseudo random number generator state used for random uniform sampling
         for evaluation quantiles and prediction sets.
         Pass an int for reproducible output across multiple function calls.
 
-        By default ``None``.
+        By default `None`.
 
     verbose: int, optional
         The verbosity level, used with joblib for multiprocessing.
         At this moment, parallel processing is disabled.
         The frequency of the messages increases with the verbosity level.
-        If it more than ``10``, all iterations are reported.
-        Above ``50``, the output is sent to stdout.
+        If it more than `10`, all iterations are reported.
+        Above `50`, the output is sent to stdout.
 
-        By default ``0``.
+        By default `0`.
 
     Attributes
     ----------
@@ -649,7 +710,7 @@ class _MapieClassifier(ClassifierMixin, BaseEstimator):
         The conformity scores used to calibrate the prediction sets.
 
     quantiles_: ArrayLike of shape (n_alpha)
-        The quantiles estimated from ``conformity_scores_`` and alpha values.
+        The quantiles estimated from `conformity_scores_` and alpha values.
 
     label_encoder_: LabelEncoder
         Label encoder used to encode the labels.
@@ -806,7 +867,6 @@ class _MapieClassifier(ClassifierMixin, BaseEstimator):
         self,
         X: ArrayLike,
         y: ArrayLike,
-        sample_weight: Optional[ArrayLike] = None,
         groups: Optional[ArrayLike] = None,
     ):
         """
@@ -817,9 +877,13 @@ class _MapieClassifier(ClassifierMixin, BaseEstimator):
         X, y = indexable(X, y)
         y = _check_y(y)
 
-        sample_weight = cast(Optional[NDArray], sample_weight)
-        groups = cast(Optional[NDArray], groups)
+        # Handle sample_weight from fit_params
+        sample_weight = self._fit_params.pop("sample_weight", None)
         sample_weight, X, y = _check_null_weight(sample_weight, X, y)
+        if sample_weight is not None:
+            self._fit_params["sample_weight"] = sample_weight
+
+        groups = cast(Optional[NDArray], groups)
 
         y = cast(NDArray, y)
 
@@ -845,7 +909,7 @@ class _MapieClassifier(ClassifierMixin, BaseEstimator):
 
         # Cast
         X, y_enc, y = cast(NDArray, X), cast(NDArray, y_enc), cast(NDArray, y)
-        sample_weight = cast(NDArray, sample_weight)
+        sample_weight = cast(NDArray, self._fit_params.get("sample_weight"))
         groups = cast(NDArray, groups)
 
         X, y, y_enc, sample_weight, groups = cs_estimator.split_data(
@@ -853,15 +917,18 @@ class _MapieClassifier(ClassifierMixin, BaseEstimator):
         )
         self.n_samples_ = cs_estimator.n_samples_
 
+        # Update fit_params with potentially sliced sample_weight
+        if self._fit_params.get("sample_weight") is not None:
+            self._fit_params["sample_weight"] = sample_weight
+
         check_target(cs_estimator, y)
 
-        return (estimator, cs_estimator, cv, X, y, y_enc, sample_weight, groups)
+        return (estimator, cs_estimator, cv, X, y, y_enc, groups)
 
     def fit(
         self,
         X: ArrayLike,
         y: ArrayLike,
-        sample_weight: Optional[ArrayLike] = None,
         groups: Optional[ArrayLike] = None,
         **kwargs: Any,
     ) -> _MapieClassifier:
@@ -876,30 +943,23 @@ class _MapieClassifier(ClassifierMixin, BaseEstimator):
         y: NDArray of shape (n_samples,)
             Training labels.
 
-        sample_weight: Optional[ArrayLike] of shape (n_samples,)
-            Sample weights for fitting the out-of-fold models.
-            If None, then samples are equally weighted.
-            If some weights are null,
-            their corresponding observations are removed
-            before the fitting process and hence have no prediction sets.
-
-            By default ``None``.
-
         groups: Optional[ArrayLike] of shape (n_samples,)
             Group labels for the samples used while splitting the dataset into
             train/test set.
 
-            By default ``None``.
+            By default `None`.
 
         kwargs : dict
             Additional fit and predict parameters.
+            Sample weights can be passed in ``fit_params={"sample_weight": ...}``.
 
         Returns
         -------
         _MapieClassifier
             The model itself.
         """
-        fit_params = kwargs.pop("fit_params", {})
+        self._fit_params = _prepare_params(kwargs.pop("fit_params", {}))
+        _check_deprecated_sample_weight_kwarg(kwargs)
         predict_params = kwargs.pop("predict_params", {})
 
         if len(predict_params) > 0:
@@ -915,14 +975,16 @@ class _MapieClassifier(ClassifierMixin, BaseEstimator):
             X,
             y,
             y_enc,
-            sample_weight,
             groups,
-        ) = self._check_fit_parameter(X, y, sample_weight, groups)
+        ) = self._check_fit_parameter(X, y, groups)
 
         # Cast
         X, y_enc, y = cast(NDArray, X), cast(NDArray, y_enc), cast(NDArray, y)
-        sample_weight = cast(NDArray, sample_weight)
         groups = cast(NDArray, groups)
+
+        # Extract sample_weight for EnsembleClassifier (needs explicit arg
+        # for per-fold slicing)
+        sample_weight = self._fit_params.pop("sample_weight", None)
 
         # Work
         self.estimator_ = EnsembleClassifier(
@@ -934,7 +996,12 @@ class _MapieClassifier(ClassifierMixin, BaseEstimator):
         )
         # Fit the prediction function
         self.estimator_ = self.estimator_.fit(
-            X, y, y_enc=y_enc, sample_weight=sample_weight, groups=groups, **fit_params
+            X,
+            y,
+            y_enc=y_enc,
+            sample_weight=sample_weight,
+            groups=groups,
+            **self._fit_params,
         )
 
         # Predict on calibration data
@@ -967,10 +1034,10 @@ class _MapieClassifier(ClassifierMixin, BaseEstimator):
         """
         Prediction and prediction sets on new samples based on target
         confidence interval.
-        Prediction sets for a given ``alpha`` are deduced from:
+        Prediction sets for a given `alpha` are deduced from:
 
-        - quantiles of softmax scores (``"lac"`` method)
-        - quantiles of cumulated scores (``"aps"`` method)
+        - quantiles of softmax scores (`"lac"` method)
+        - quantiles of cumulated scores (`"aps"` method)
 
         Parameters
         ----------
@@ -978,13 +1045,13 @@ class _MapieClassifier(ClassifierMixin, BaseEstimator):
             Test data.
 
         alpha: Optional[Union[float, Iterable[float]]]
-            Can be a float, a list of floats, or a ``ArrayLike`` of floats.
+            Can be a float, a list of floats, or a `ArrayLike` of floats.
             Between 0 and 1, represent the uncertainty of the confidence
             interval.
-            Lower ``alpha`` produce larger (more conservative) prediction sets.
-            ``alpha`` is the complement of the target coverage level.
+            Lower `alpha` produce larger (more conservative) prediction sets.
+            `alpha` is the complement of the target coverage level.
 
-            By default ``None``.
+            By default `None`.
 
         include_last_label: Optional[Union[bool, str]]
             Whether or not to include last label in
@@ -999,12 +1066,12 @@ class _MapieClassifier(ClassifierMixin, BaseEstimator):
               number and the difference between the cumulated score of
               the last label and the quantile.
 
-            When set to ``True`` or ``False``, it may result in a coverage
-            higher than ``1 - alpha`` (because contrary to the "randomized"
+            When set to `True` or `False`, it may result in a coverage
+            higher than `1 - alpha` (because contrary to the "randomized"
             setting, none of these methods create empty prediction sets). See
             [2] and [3] for more details.
 
-            By default ``True``.
+            By default `True`.
 
         agg_scores: Optional[str]
 

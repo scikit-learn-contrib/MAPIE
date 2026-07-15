@@ -16,34 +16,12 @@ from mapie.utils import check_valid_ltt_params_index
 
 from .methods import compute_hoeffding_bentkus_p_value, ltt_procedure
 from .risks import (
-    BinaryClassificationRisk,
-    abstention_rate,
-    accuracy,
-    false_positive_rate,
-    negative_predictive_value,
-    positive_predictive_value,
-    precision,
-    predicted_positive_fraction,
-    recall,
+    BinaryRisk,
+    BinaryRiskLike,
+    BinaryRiskNames,
+    _best_predict_param_choice_map,
+    binary_risk_choice_map,
 )
-
-Risk_str = Literal[
-    "precision",
-    "recall",
-    "accuracy",
-    "fpr",
-    "predicted_positive_fraction",
-    "positive_predictive_value",
-    "negative_predictive_value",
-    "abstention_rate",
-]
-Risk = Union[
-    BinaryClassificationRisk,
-    Risk_str,
-    List[BinaryClassificationRisk],
-    List[Risk_str],
-    List[Union[BinaryClassificationRisk, Risk_str]],
-]
 
 
 class BinaryClassificationController:
@@ -77,14 +55,14 @@ class BinaryClassificationController:
         ensemble multiple binary classifiers with different thresholds for each classifier.
         In that case, `predict_params` must be provided.
 
-    risk : Union[BinaryClassificationRisk, str, List[BinaryClassificationRisk, str]]
+    risk : Union[BinaryRisk, str, List[BinaryRisk, str]]
         The risk or performance metric to control.
         Valid options:
 
         - An existing risk defined in `mapie.risk_control` accessible through
           its string equivalent: "precision", "recall", "accuracy",
           "fpr" for false positive rate, or "predicted_positive_fraction".
-        - A custom instance of BinaryClassificationRisk object
+        - A custom instance of BinaryRisk object
 
         Can be a list of risks in the case of multi risk control.
 
@@ -97,7 +75,7 @@ class BinaryClassificationController:
         The confidence level with which the risk (or performance) is controlled.
         Must be between 0 and 1. See the documentation for detailed explanations.
 
-    best_predict_param_choice : Union["auto", BinaryClassificationRisk, str],
+    best_predict_param_choice : Union["auto", BinaryRisk, str],
         default="auto"
         How to select the best threshold from the valid thresholds that control the risk
         (or performance). The BinaryClassificationController will try to minimize
@@ -110,7 +88,7 @@ class BinaryClassificationController:
 
           its string equivalent: "precision", "recall", "accuracy",
           "fpr" for false positive rate, or "predicted_positive_fraction".
-        - A custom instance of BinaryClassificationRisk object
+        - A custom instance of BinaryRisk object
 
     list_predict_params : NDArray, default=np.linspace(0, 0.99, 100)
         The set of parameters (noted λ in [1]) to consider for controlling the risk (or performance).
@@ -120,18 +98,18 @@ class BinaryClassificationController:
         the shape is (n_params, params_dim).
         Note that performance is degraded when `len(predict_params)` is large as it is used by the Bonferroni correction [1].
 
-    fwer_method : {"bonferroni", "bonferroni_holm", "fixed_sequence", "split_fixed_sequence"} or FWERProcedure instance, default="bonferroni"
+    fwer_method : {"bonferroni", "bonferroni_holm", "fixed_sequence", "split_fixed_sequence"} or FWERProcedure instance, default="bonferroni_holm"
         Method used to control the family-wise error rate (FWER).
 
         Supported methods:
-        - ``"bonferroni"`` : Classical Bonferroni correction. This is the default method.
+        - `"bonferroni"` : Classical Bonferroni correction.
         It is valid in all settings but can be conservative, especially when the number of tested parameters is large.
-        - ``"fixed_sequence"`` : Fixed Sequence Testing (FST) with a single start.
-        However, users can use multi-start by instantiating ``FWERFixedSequenceTesting`` with any desired number
+        - `"fixed_sequence"` : Fixed Sequence Testing (FST) with a single start.
+        However, users can use multi-start by instantiating `FWERFixedSequenceTesting` with any desired number
         of starts and passing the instance to control_fwer.
-        - ``"bonferroni_holm"`` : Sequential Graphical Testing corresponding
-        to the Bonferroni–Holm procedure. Suitable for general settings.
-        - ``"split_fixed_sequence"`` : Split Fixed Sequence Testing (SFST).
+        - `"bonferroni_holm"` : Sequential Graphical Testing corresponding
+        to the Bonferroni–Holm procedure. This is the default method and is suitable for general settings.
+        - `"split_fixed_sequence"` : Split Fixed Sequence Testing (SFST).
 
     Attributes
     ----------
@@ -188,50 +166,30 @@ class BinaryClassificationController:
     "Learn Then Test: Calibrating Predictive Algorithms to Achieve Risk Control." (2022)
     """
 
-    _best_predict_param_choice_map = {
-        precision: recall,
-        recall: precision,
-        accuracy: accuracy,
-        false_positive_rate: recall,
-    }
-
-    risk_choice_map = {
-        "precision": precision,
-        "recall": recall,
-        "accuracy": accuracy,
-        "fpr": false_positive_rate,
-        "predicted_positive_fraction": predicted_positive_fraction,
-        "positive_predictive_value": positive_predictive_value,
-        "negative_predictive_value": negative_predictive_value,
-        "abstention_rate": abstention_rate,
-    }
-
     def __init__(
         self,
         predict_function: Callable[[ArrayLike], NDArray],
-        risk: Risk,
+        risk: BinaryRiskLike,
         target_level: Union[float, List[float]],
         confidence_level: float = 0.9,
         best_predict_param_choice: Union[
-            Literal["auto"], Risk_str, BinaryClassificationRisk
+            Literal["auto"], BinaryRiskNames, BinaryRisk
         ] = "auto",
         list_predict_params: NDArray = np.linspace(0, 0.99, 100),
-        fwer_method: Union[FWER_METHODS, FWERProcedure] = "bonferroni",
+        fwer_method: Union[FWER_METHODS, FWERProcedure] = "bonferroni_holm",
     ):
         self.is_multi_risk = self._check_if_multi_risk_control(risk, target_level)
         self._predict_function = predict_function
         risk_list = risk if isinstance(risk, list) else [risk]
         try:
             self._risk = [
-                BinaryClassificationController.risk_choice_map[risk]
-                if isinstance(risk, str)
-                else risk
+                binary_risk_choice_map[risk] if isinstance(risk, str) else risk
                 for risk in risk_list
             ]
         except KeyError as e:
             raise ValueError(
                 "When risk is provided as a string, it must be one of: "
-                f"{list(BinaryClassificationController.risk_choice_map.keys())}"
+                f"{list(binary_risk_choice_map.keys())}"
             ) from e
         target_level_list = (
             target_level if isinstance(target_level, list) else [target_level]
@@ -301,7 +259,7 @@ class BinaryClassificationController:
 
         Notes
         -----
-        When using ``fwer_method="split_fixed_sequence"``,
+        When using `fwer_method="split_fixed_sequence"`,
         the learning step must be performed separately on independent data:
 
         1. bcc.learn_fixed_sequence_order(X_learn, y_learn)
@@ -350,6 +308,7 @@ class BinaryClassificationController:
                 y_calibrate_,
                 predictions_per_param,
                 valid_params_index,
+                risk_values,
             )
 
         self.p_values = p_values
@@ -368,9 +327,9 @@ class BinaryClassificationController:
         Learn an ordered sequence of prediction parameters for split fixed-sequence FWER control.
 
         This method performs the learning step of split fixed-sequence testing.
-        It must be called before ``calibrate`` when ``fwer_method="split_fixed_sequence"``.
+        It must be called before `calibrate` when `fwer_method="split_fixed_sequence"`.
 
-        The data provided here must be independent from the calibration data used later in ``calibrate``.
+        The data provided here must be independent from the calibration data used later in `calibrate`.
         Using the same data would invalidate the statistical guarantees.
 
         A typical workflow is to split your calibration dataset:
@@ -378,7 +337,7 @@ class BinaryClassificationController:
         - one subset for learning the parameter order
         - one subset for calibration
 
-        For each value in ``beta_grid``, the parameter whose p-value vector is
+        For each value in `beta_grid`, the parameter whose p-value vector is
         closest to the constant vector beta is selected. Duplicate parameters are
         removed while preserving order, yielding a deterministic testing sequence.
 
@@ -406,7 +365,7 @@ class BinaryClassificationController:
         -----
         This method does NOT perform risk control.
         It only determines an order of parameters.
-        Statistical guarantees are provided later when calling ``calibrate``.
+        Statistical guarantees are provided later when calling `calibrate`.
         """
         y_learn = np.asarray(y_learn, dtype=int)
         predictions_per_param = self._get_predictions_per_param(
@@ -488,16 +447,16 @@ class BinaryClassificationController:
     def _set_best_predict_param_choice(
         self,
         best_predict_param_choice: Union[
-            Literal["auto"], Risk_str, BinaryClassificationRisk
+            Literal["auto"], BinaryRiskNames, BinaryRisk
         ] = "auto",
-    ) -> BinaryClassificationRisk:
+    ) -> BinaryRisk:
         if best_predict_param_choice == "auto":
             if self.is_multi_risk:
                 # when multi risk, we minimize the first risk in the list
                 return self._risk[0]
             else:
                 try:
-                    return self._best_predict_param_choice_map[self._risk[0]]
+                    return _best_predict_param_choice_map[self._risk[0]]
                 except KeyError:
                     raise ValueError(
                         "When best_predict_param_choice is 'auto', "
@@ -505,16 +464,14 @@ class BinaryClassificationController:
                         "(e.g. precision, accuracy, false_positive_rate)."
                     )
         if isinstance(best_predict_param_choice, str):
-            return BinaryClassificationController.risk_choice_map[
-                best_predict_param_choice
-            ]
-        if isinstance(best_predict_param_choice, BinaryClassificationRisk):
+            return binary_risk_choice_map[best_predict_param_choice]
+        if isinstance(best_predict_param_choice, BinaryRisk):
             return best_predict_param_choice
 
         raise TypeError(
             f"Got object of type {type(best_predict_param_choice)}. "
             "best_predict_param_choice must be either 'auto', "
-            "a BinaryClassificationRisk instance, "
+            "a BinaryRisk instance, "
             "or a risk name (str) among those defined in mapie.risk_control "
             "(e.g. 'precision', 'accuracy', 'false_positive_rate')."
         )
@@ -524,16 +481,24 @@ class BinaryClassificationController:
         y_calibrate_: NDArray,
         predictions_per_param: NDArray,
         valid_params_index: List[Any],
+        risk_values: NDArray,
     ):
         secondary_risks_per_param, _ = self._get_risk_values_and_eff_sample_sizes(
             y_calibrate_,
             predictions_per_param[valid_params_index],
             [self._best_predict_param_choice],
         )
-
-        self.best_predict_param = self.valid_predict_params[
-            np.argmin(secondary_risks_per_param)
-        ]
+        best_index = np.flatnonzero(
+            secondary_risks_per_param == secondary_risks_per_param.min()
+        )
+        if len(best_index) > 1:
+            # When several parameters reach the minimum secondary risk, break ties by
+            # selecting the one that maximizes the first risk (te be less conservative).
+            first_risk_values = risk_values[0, valid_params_index]
+            best_index = best_index[np.argmax(first_risk_values[best_index])]
+        else:
+            best_index = best_index[0]
+        self.best_predict_param = self.valid_predict_params[best_index]
         if isinstance(self.best_predict_param, np.ndarray):
             self.best_predict_param = tuple(self.best_predict_param.tolist())
 
@@ -541,7 +506,7 @@ class BinaryClassificationController:
     def _get_risk_values_and_eff_sample_sizes(
         y_true: NDArray,
         predictions_per_param: NDArray,
-        risks: List[BinaryClassificationRisk],
+        risks: List[BinaryRisk],
     ) -> Tuple[NDArray, NDArray]:
         """
         Compute the values of risks and effective sample sizes for multiple risks
@@ -571,7 +536,7 @@ class BinaryClassificationController:
         n_params = len(params)
         n_samples = len(np.asarray(X))
         if self.is_multi_dimensional_param:
-            y_pred: NDArray[np.float_] = np.empty((n_params, n_samples), dtype=float)
+            y_pred: NDArray[np.float64] = np.empty((n_params, n_samples), dtype=float)
             for i in range(n_params):
                 y_pred[i] = self._predict_function(X, *params[i])
             if is_calibration_step:
@@ -616,7 +581,7 @@ class BinaryClassificationController:
 
     @staticmethod
     def _check_if_multi_risk_control(
-        risk: Risk,
+        risk: BinaryRiskLike,
         target_level: Union[float, List[float]],
     ) -> bool:
         """
@@ -632,15 +597,15 @@ class BinaryClassificationController:
                 return False
             else:
                 return True
-        elif (
-            isinstance(risk, BinaryClassificationRisk) or isinstance(risk, str)
-        ) and isinstance(target_level, float):
+        elif (isinstance(risk, BinaryRisk) or isinstance(risk, str)) and isinstance(
+            target_level, float
+        ):
             return False
         else:
             raise ValueError(
                 "If you provide a list of risks, you must provide "
                 "a list of target levels of the same length and vice versa. "
-                "If you provide a single BinaryClassificationRisk risk, "
+                "If you provide a single BinaryRisk risk, "
                 "you must provide a single float target level."
             )
 

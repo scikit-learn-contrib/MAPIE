@@ -3,7 +3,6 @@ import logging
 import warnings
 from collections.abc import Iterable as IterableType
 from decimal import Decimal
-from inspect import signature
 from math import isclose
 from typing import Any, Iterable, List, Optional, Tuple, Union, cast
 
@@ -242,22 +241,23 @@ def _check_null_weight(
 # TODO back-end: this will be useless in v1 because we'll not distinguish
 # sample_weight from other fit_params
 def _fit_estimator(
-    estimator: Union[RegressorMixin, ClassifierMixin],
+    estimator: Union[RegressorMixin, ClassifierMixin, Pipeline],
     X: ArrayLike,
     y: ArrayLike,
-    sample_weight: Optional[NDArray] = None,
+    sample_weight: Optional[ArrayLike] = None,
     **fit_params,
-) -> Union[RegressorMixin, ClassifierMixin]:
+) -> Union[RegressorMixin, ClassifierMixin, Pipeline]:
     """
-    Fit an estimator on training data by distinguishing two cases:
-    - the estimator supports sample weights and sample weights are provided.
-    - the estimator does not support samples weights or
-      samples weights are not provided.
+    Fit an estimator on training data and optionally pass ``sample_weight``.
+
+    When the estimator is a sklearn ``Pipeline``, the weight is routed to the
+    final step using sklearn's ``stepname__sample_weight`` convention.
 
     Parameters
     ----------
-    estimator: Union[RegressorMixin, ClassifierMixin]
-        Estimator to train.
+    estimator: Union[RegressorMixin, ClassifierMixin, Pipeline]
+        Estimator to train. May be a single estimator or a sklearn
+        ``Pipeline``.
 
     X: ArrayLike of shape (n_samples, n_features)
         Input data.
@@ -274,7 +274,7 @@ def _fit_estimator(
 
     Returns
     -------
-    RegressorMixin
+    Union[RegressorMixin, ClassifierMixin, Pipeline]
         Fitted estimator.
 
     Examples
@@ -289,12 +289,14 @@ def _fit_estimator(
     >>> check_sklearn_user_model_is_fitted(estimator)
     True
     """
-    fit_parameters = signature(estimator.fit).parameters
-    supports_sw = "sample_weight" in fit_parameters
-    if supports_sw and sample_weight is not None:
-        estimator.fit(X, y, sample_weight=sample_weight, **fit_params)
-    else:
-        estimator.fit(X, y, **fit_params)
+    if sample_weight is not None:
+        if isinstance(estimator, Pipeline):
+            final_step_name = estimator.steps[-1][0]
+            sw_key = f"{final_step_name}__sample_weight"
+        else:
+            sw_key = "sample_weight"
+        fit_params[sw_key] = sample_weight
+    estimator.fit(X, y, **fit_params)
     return estimator
 
 
@@ -305,32 +307,32 @@ def _check_cv(
 ) -> Union[str, BaseCrossValidator, BaseShuffleSplit]:
     """
     Check if cross-validator is
-    ``None``, ``int``, ``"prefit"``, ``"split"``, ``BaseCrossValidator`` or
-    ``BaseShuffleSplit``.
-    Return a ``LeaveOneOut`` instance if integer equal to -1.
-    Return a ``KFold`` instance if integer superior or equal to 2.
-    Return a ``KFold`` instance if ``None``.
+    `None`, `int`, `"prefit"`, `"split"`, `BaseCrossValidator` or
+    `BaseShuffleSplit`.
+    Return a `LeaveOneOut` instance if integer equal to -1.
+    Return a `KFold` instance if integer superior or equal to 2.
+    Return a `KFold` instance if `None`.
     Else raise error.
 
     Parameters
     ----------
     cv: Optional[Union[int, str, BaseCrossValidator, BaseShuffleSplit]]
-        Cross-validator to check, by default ``None``.
+        Cross-validator to check, by default `None`.
 
     test_size: Optional[Union[int, float]]
         If float, should be between 0.0 and 1.0 and represent the proportion
         of the dataset to include in the test split. If int, represents the
         absolute number of test samples. If None, it will be set to 0.1.
 
-        If cv is not ``"split"``, ``test_size`` is ignored.
+        If cv is not `"split"`, `test_size` is ignored.
 
-        By default ``None``.
+        By default `None`.
 
     random_state: Optional[Union[int, np.random.RandomState]], optional
         Pseudo random number generator state used for random uniform sampling
         for evaluation quantiles and prediction sets.
         Pass an int for reproducible output across multiple function calls.
-        By default ```None``.
+        By default ``None`.
 
     Returns
     -------
@@ -382,7 +384,7 @@ def _check_no_agg_cv(
     groups: Optional[ArrayLike] = None,
 ) -> bool:
     """
-    Check if cross-validator is ``"prefit"``, ``"split"`` or any split
+    Check if cross-validator is `"prefit"`, `"split"` or any split
     equivalent `BaseCrossValidator` or `BaseShuffleSplit`.
 
     Parameters
@@ -399,13 +401,13 @@ def _check_no_agg_cv(
     y: Optional[ArrayLike] of shape (n_samples,)
         Input labels.
 
-        By default ``None``.
+        By default `None`.
 
     groups: Optional[ArrayLike] of shape (n_samples,)
         Group labels for the samples used while splitting the dataset into
         train/test set.
 
-        By default ``None``.
+        By default `None`.
 
     Returns
     -------
@@ -491,18 +493,18 @@ def _check_n_features_in(
     """
     Check the expected number of training features.
     In general it is simply the number of columns in the data.
-    If ``cv=="prefit"`` however,
-    it can be deduced from the estimator's ``n_features_in_`` attribute.
+    If `cv=="prefit"` however,
+    it can be deduced from the estimator's `n_features_in_` attribute.
     These two values absolutely must coincide.
 
     Parameters
     ----------
     cv: Optional[Union[float, str]]
         The cross-validation strategy for computing scores,
-        by default ``None``.
+        by default `None`.
 
     X: ArrayLike of shape (n_samples, n_features)
-        Data passed into the ``fit`` method.
+        Data passed into the `fit` method.
 
     estimator: RegressorMixin
         Backend estimator of MAPIE.
@@ -583,7 +585,7 @@ def _check_alpha_and_n_samples(
 
 def _check_n_jobs(n_jobs: Optional[int] = None) -> None:
     """
-    Check parameter ``n_jobs``.
+    Check parameter `n_jobs`.
 
     Raises
     ------
@@ -609,7 +611,7 @@ def _check_n_jobs(n_jobs: Optional[int] = None) -> None:
 
 def _check_verbose(verbose: int) -> None:
     """
-    Check parameter ``verbose``.
+    Check parameter `verbose`.
 
     Raises
     ------
@@ -738,42 +740,138 @@ def _check_alpha_and_last_axis(vector: NDArray, alpha_np: NDArray):
         return vector, alpha_np
 
 
-def _compute_quantiles(vector: NDArray, alpha: NDArray) -> NDArray:
-    """Compute the desired quantiles of a vector.
+def _compute_regression_quantile(
+    conformity_scores: NDArray,
+    alpha_np: NDArray,
+    axis: int = 0,
+    reverse: bool = False,
+    unbounded: bool = False,
+) -> NDArray:
+    """Compute the alpha quantile of conformity scores for regression
+    with finite-sample correction.
+
+    Uses a ``ceil()``-based correction formula to ensure finite-sample
+    coverage: quantile level ``ceil(alpha_ref * (n + 1)) / n`` with
+    numpy ``method="lower"``. Operates on signed conformity scores to
+    support directional quantiles via the ``reverse`` parameter.
 
     Parameters
     ----------
-    vector: NDArray of shape Union[(n_samples, 1), (n_samples, 1, n_alphas)]
-        Vector on which compute the quantile. If the vector has 3 dimensions,
-        then each 1-alpha quantile will be computed on its corresping matrix
-        selected on the last axis of the matrix.
-    alpha: NDArray for shape (n_alphas, )
+    conformity_scores: NDArray of shape (n_samples,) or
+        (n_samples, n_estimators)
+        Values from which the quantile is computed.
+
+    alpha_np: NDArray of shape (n_alpha,)
+        NDArray of floats between ``0`` and ``1``, represents the
+        uncertainty of the confidence set.
+
+    axis: int
+        The axis from which to compute the quantile.
+
+        By default ``0``.
+
+    reverse: bool
+        Boolean specifying whether we take the upper or lower
+        quantile. If False, the alpha quantile; otherwise the
+        (1-alpha) quantile.
+
+        By default ``False``.
+
+    unbounded: bool
+        Boolean specifying whether infinite prediction sets
+        could be produced (when alpha_np is greater than or
+        equal to 1.).
+
+        By default ``False``.
+
+    Returns
+    -------
+    NDArray of shape (1, n_alpha) or (n_samples, n_alpha)
+        The quantiles of the conformity scores.
+
+    Raises
+    ------
+    ValueError
+        If all conformity scores are NaN along the reduction axis.
+    """
+    n_ref = conformity_scores.shape[1 - axis] if conformity_scores.ndim > 1 else 1
+    n_calib: int = np.min(np.sum(~np.isnan(conformity_scores), axis=axis))
+    if n_calib == 0:
+        raise ValueError(
+            "All conformity scores are NaN along the reduction axis. "
+            "Cannot compute quantile correction."
+        )
+    signed = 1 - 2 * reverse
+
+    # Adapt alpha w.r.t upper/lower : alpha vs. 1-alpha
+    alpha_ref = (1 - 2 * alpha_np) * reverse + alpha_np
+
+    # Adjust alpha w.r.t quantile correction
+    alpha_cor = np.ceil(alpha_ref * (n_calib + 1)) / n_calib
+    alpha_cor = np.clip(alpha_cor, a_min=0, a_max=1)
+
+    # Compute the target quantiles:
+    # If unbounded is True and alpha is greater than or equal to 1,
+    # the quantile is set to infinity.
+    # Otherwise, the quantile is calculated as the corrected lower
+    # quantile of the signed conformity scores.
+    quantile: NDArray = signed * np.column_stack(
+        [
+            np.nanquantile(
+                signed * conformity_scores,
+                _alpha_cor,
+                axis=axis,
+                method="lower",
+            )
+            if not (unbounded and _alpha >= 1)
+            else np.inf * np.ones(n_ref)
+            for _alpha, _alpha_cor in zip(alpha_ref, alpha_cor)
+        ]
+    )
+    return quantile
+
+
+def _compute_classification_quantile(
+    conformity_scores: NDArray, alpha_np: NDArray
+) -> NDArray:
+    """Compute the desired quantiles of conformity scores for classification.
+
+    Parameters
+    ----------
+    conformity_scores: NDArray of shape Union[(n_samples, 1),
+        (n_samples, 1, n_alphas)]
+        Values from which the quantile is computed. If the array has
+        3 dimensions, then each 1-alpha quantile will be computed on
+        its corresponding matrix selected on the last axis of the matrix.
+    alpha_np: NDArray for shape (n_alphas, )
         Risk levels.
 
     Returns
     -------
     NDArray of shape (n_alphas, )
-        Quantiles of the vector.
+        Quantiles of the conformity scores.
     """
-    n = len(vector)
-    if len(vector.shape) <= 2:
+    n = len(conformity_scores)
+    if len(conformity_scores.shape) <= 2:
         quantiles_ = np.stack(
             [
                 np.quantile(
-                    vector,
+                    conformity_scores,
                     ((n + 1) * (1 - _alpha)) / n,
                     method="higher",
                 )
-                for _alpha in alpha
+                for _alpha in alpha_np
             ]
         )
 
     else:
-        _check_alpha_and_last_axis(vector, alpha)
+        _check_alpha_and_last_axis(conformity_scores, alpha_np)
         quantiles_ = np.stack(
             [
-                _compute_quantiles(vector[:, :, i], np.array([alpha_]))
-                for i, alpha_ in enumerate(alpha)
+                _compute_classification_quantile(
+                    conformity_scores[:, :, i], np.array([alpha_])
+                )
+                for i, alpha_ in enumerate(alpha_np)
             ]
         )[:, 0]
     return cast(NDArray, quantiles_)
@@ -786,9 +884,9 @@ def _check_estimator_classification(
     estimator: Optional[ClassifierMixin],
 ) -> ClassifierMixin:
     """
-    Check if estimator is ``None``,
-    and returns a ``LogisticRegression`` instance if necessary.
-    If the ``cv`` attribute is ``"prefit"``,
+    Check if estimator is `None`,
+    and returns a `LogisticRegression` instance if necessary.
+    If the `cv` attribute is `"prefit"`,
     check if estimator is indeed already fitted.
     Parameters
     ----------
@@ -803,14 +901,14 @@ def _check_estimator_classification(
     Returns
     -------
     ClassifierMixin
-        The estimator itself or a default ``LogisticRegression`` instance.
+        The estimator itself or a default `LogisticRegression` instance.
     Raises
     ------
     ValueError
-        If the estimator is not ``None``
+        If the estimator is not `None`
         and has no fit, predict, nor predict_proba methods.
     NotFittedError
-        If the estimator is not fitted and ``cv`` attribute is "prefit".
+        If the estimator is not fitted and `cv` attribute is "prefit".
     """
     if estimator is None:
         return LogisticRegression().fit(X, y)
@@ -1335,6 +1433,40 @@ def _check_cv_not_string(cv: Union[int, str, BaseCrossValidator]) -> None:
         )
 
 
+def _check_cv_not_subsample(
+    cv: Union[int, str, BaseCrossValidator],
+    caller: str = "CrossConformalRegressor",
+) -> None:
+    """Check that ``cv`` is not a ``Subsample`` instance.
+
+    ``Subsample`` (bootstrap resampling) should not be used with
+    cross-conformal regressors.  Users should use the dedicated
+    ``JackknifeAfterBootstrapRegressor`` class instead.
+
+    Parameters
+    ----------
+    cv : Union[int, str, BaseCrossValidator]
+        The cross-validator to check.
+    caller : str
+        Name of the calling class, used in the error message.
+        By default ``"CrossConformalRegressor"``.
+
+    Raises
+    ------
+    ValueError
+        If ``cv`` is a ``Subsample`` instance.
+    """
+    from mapie.subsample import Subsample
+
+    if isinstance(cv, Subsample):
+        raise ValueError(
+            f"'cv' must not be a Subsample instance in "
+            f"{caller}. "
+            f"Use JackknifeAfterBootstrapRegressor instead for "
+            f"bootstrap-based conformal prediction."
+        )
+
+
 def _cast_point_predictions_to_ndarray(
     point_predictions: Union[NDArray, Tuple[NDArray, NDArray]],
 ) -> NDArray:
@@ -1361,12 +1493,71 @@ def _prepare_params(params: Union[dict, None]) -> dict:
     return copy.deepcopy(params) if params else {}
 
 
-def _prepare_fit_params_and_sample_weight(
-    fit_params: Union[dict, None],
-) -> Tuple[dict, Optional[ArrayLike]]:
-    fit_params_ = _prepare_params(fit_params)
-    sample_weight = fit_params_.pop("sample_weight", None)
-    return fit_params_, sample_weight
+def _check_deprecated_sample_weight_kwarg(kwargs: dict) -> None:
+    """Raise ``TypeError`` if ``sample_weight`` appears in *kwargs*.
+
+    Since the ``sample_weight`` routing refactor,
+    ``sample_weight`` must be passed inside ``fit_params``,
+    e.g. ``fit_params={"sample_weight": ...}``.
+    This helper catches the old calling convention early and
+    gives the caller a clear migration message.
+    """
+    if "sample_weight" in kwargs:
+        raise TypeError(
+            "'sample_weight' must be passed inside 'fit_params', "
+            "e.g., fit_params={'sample_weight': ...}. "
+            "Passing it as a top-level keyword argument is not supported."
+        )
+
+
+class _Unset:
+    """Sentinel type marking a deprecated argument that was not supplied."""
+
+
+_UNSET = _Unset()
+
+
+def _resolve_renamed_parameter(
+    new_name: str,
+    new_value: Any,
+    old_name: str,
+    old_value: Any,
+) -> Any:
+    """Resolve a renamed keyword argument, warning if the old name is used.
+
+    If the deprecated ``old_name`` argument was supplied (i.e. ``old_value``
+    is not the :data:`_UNSET` sentinel), emit a ``FutureWarning`` and return
+    that value. Otherwise return ``new_value`` unchanged.
+
+    Parameters
+    ----------
+    new_name : str
+        Name of the current (non-deprecated) parameter.
+
+    new_value : Any
+        Value passed (or defaulted) for the current parameter.
+
+    old_name : str
+        Name of the deprecated parameter.
+
+    old_value : Any
+        Value passed for the deprecated parameter, or :data:`_UNSET` if it
+        was not supplied.
+
+    Returns
+    -------
+    Any
+        The value to use for the parameter.
+    """
+    if isinstance(old_value, _Unset):
+        return new_value
+    warnings.warn(
+        f"`{old_name}` is deprecated and will be removed in a future release. "
+        f"Use `{new_name}` instead.",
+        FutureWarning,
+        stacklevel=3,
+    )
+    return old_value
 
 
 def _raise_error_if_previous_method_not_called(
@@ -1420,6 +1611,7 @@ FIT_INDICATORS = [
     "tree_",
     "estimators_",
     "fitted_",
+    "is_fitted",
 ]
 
 

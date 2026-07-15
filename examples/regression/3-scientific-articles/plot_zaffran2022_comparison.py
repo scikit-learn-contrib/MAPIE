@@ -1,7 +1,7 @@
 """
-=====================================================================================================
 Adaptive conformal predictions for time series, Zaffran et al. (2022)
-=====================================================================================================
+=====================================================================
+
 
 Note: in this example, we use the following terms employed in the scientific literature:
 
@@ -10,7 +10,7 @@ Note: in this example, we use the following terms employed in the scientific lit
 
 —
 
-:class:`~mapie.regression.TimeSeriesRegressor` is used to reproduce a
+`TimeSeriesRegressor` is used to reproduce a
 part of the paper experiments of Zaffran et al. (2022) in their article [1]
 which we argue that Adaptive Conformal Inference (ACI, Gibbs & Candès, 2021)
 [2], developed for distribution-shift time series, is a good procedure for
@@ -22,7 +22,7 @@ repository https://github.com/mzaffran/AdaptiveConformalPredictionsTimeSeries
 and compares the bounds of the PIs.
 
 In order to reproduce the results of the github repository, we reuse the
-``RandomForestRegressor`` regression model and follow the same conformal
+`RandomForestRegressor` regression model and follow the same conformal
 prediction procedure (see in AdaptiveConformalPredictionsTimeSeries
 project the `models.py` file).
 
@@ -45,13 +45,11 @@ import datetime
 import pickle
 import ssl
 import warnings
-from typing import Tuple
 from urllib.request import urlopen
 
 import numpy as np
 import pandas as pd
 from matplotlib import pylab as plt
-from numpy.typing import NDArray
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import PredefinedSplit
 
@@ -102,14 +100,24 @@ def get_data() -> pd.DataFrame:
     pd.DataFrame
         The DataFrame containing the price data.
     """
-    website = "https://raw.githubusercontent.com/"
-    page = "mzaffran/AdaptiveConformalPredictionsTimeSeries/"
-    folder = "131656fe4c25251bad745f52db3c2d7cb1c24bbb/data_prices/"
-    file = "Prices_2016_2019_extract.csv"
-    url = website + page + folder + file
+    # Backup committed in the MAPIE repository (see examples/data/README.md), so
+    # this example does not depend on the authors' repository. If the backup is
+    # unavailable, the original source is used instead.
+    backup = (
+        "https://raw.githubusercontent.com/scikit-learn-contrib/MAPIE/master/"
+        "examples/data/zaffran2022_prices.csv.gz"
+    )
+    original = (
+        "https://raw.githubusercontent.com/"
+        "mzaffran/AdaptiveConformalPredictionsTimeSeries/"
+        "131656fe4c25251bad745f52db3c2d7cb1c24bbb/data_prices/"
+        "Prices_2016_2019_extract.csv"
+    )
     ssl._create_default_https_context = ssl._create_unverified_context
-    df = pd.read_csv(url)
-    return df
+    try:
+        return pd.read_csv(backup)
+    except Exception:
+        return pd.read_csv(original)
 
 
 #########################################################
@@ -235,32 +243,40 @@ results = y_pis_aci_pfit.copy()
 #########################################################
 
 
-def get_pickle() -> Tuple[NDArray, NDArray]:
+def get_reference_results() -> dict:
     """
-    Get the pickle file containing the loaded data.
+    Get the reference results to reproduce.
 
     Returns
     -------
-    Tuple[NDArray, NDArray]
-        A tuple containing the loaded data.
+    dict
+        A dict containing the reference lower (``Y_inf``) and upper (``Y_sup``)
+        prediction interval bounds.
     """
-    website = "https://github.com/"
-    page = "mzaffran/AdaptiveConformalPredictionsTimeSeries/raw/"
-    folder = "131656fe4c25251bad745f52db3c2d7cb1c24bbb/results/"
-    folder += "Spot_France_Hour_0_train_2019-01-01/"
-    file = "ACP_0.04_RF.pkl"
-    url = website + page + folder + file
+    # Backup committed in the MAPIE repository (see examples/data/README.md), so
+    # this example does not depend on the authors' repository. If the backup is
+    # unavailable, the original pickle is used instead.
+    backup = (
+        "https://raw.githubusercontent.com/scikit-learn-contrib/MAPIE/master/"
+        "examples/data/zaffran2022_aci_reference.csv"
+    )
+    original = (
+        "https://github.com/mzaffran/AdaptiveConformalPredictionsTimeSeries/raw/"
+        "131656fe4c25251bad745f52db3c2d7cb1c24bbb/results/"
+        "Spot_France_Hour_0_train_2019-01-01/ACP_0.04_RF.pkl"
+    )
     ssl._create_default_https_context = ssl._create_unverified_context
     try:
-        loaded_data = pickle.load(urlopen(url))
-    except FileNotFoundError:
-        print(f"The file {file} was not found.")
-    except Exception as e:
-        print(f"An error occurred: {e}")
-    return loaded_data
+        df = pd.read_csv(backup)
+        return {
+            "Y_inf": df["Y_inf"].to_numpy().reshape(1, -1),
+            "Y_sup": df["Y_sup"].to_numpy().reshape(1, -1),
+        }
+    except Exception:
+        return pickle.load(urlopen(original))
 
 
-data_ref = get_pickle()
+data_ref = get_reference_results()
 
 
 #########################################################

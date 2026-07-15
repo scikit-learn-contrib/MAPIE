@@ -27,6 +27,8 @@ When implementing a new method, it should be supported by a journal or conferenc
 
 ## Development environment
 
+> **Using a coding agent?** See [AGENTS.md](AGENTS.md) for a condensed, agent-oriented reference of the dev environment, CI conventions, and architecture.
+
 ### using uv
 We recommend using [uv](https://docs.astral.sh/uv/), an extremely fast Python package and project manager, to create an environment for `mapie`.
 You'll want to activate it every time you want to work on `mapie`.
@@ -36,9 +38,14 @@ The `dev` extra includes development dependencies such as linters and testing to
 
 MacOS users should install `libomp` beforehand if it is not already present (`brew install libomp`) because LightGBM depends on it and is used in the documentation.
 
+```sh
+uv sync --python 3.13 --all-extras
+```
+
+Or if you only need some optional dependencies:
 
 ```sh
-uv sync --python 3.12 --extra dev --extra docs --extra notebooks
+uv sync --python 3.13 --extra dev --extra docs
 ```
 
 Then, either activate the virtual environment created by `uv`:
@@ -148,8 +155,13 @@ In order to build the documentation locally, you need the `docs` dependencies in
 You can then build the documentation locally by running:
 
 ```sh
-make clean-doc
-make doc
+mkdocs build --strict
+```
+
+Or serve it locally with live reload:
+
+```sh
+mkdocs serve
 ```
 
 For each commit pushed to a pull request, the documentation is automatically built and deployed to a temporary URL that you can access from the Continuous Integration (CI) results. This allows you to verify that your changes are correctly documented and you can also look at the diff with the previous version.

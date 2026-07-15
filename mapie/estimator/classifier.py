@@ -27,52 +27,52 @@ class EnsembleClassifier:
     ----------
     estimator: Optional[ClassifierMixin]
         Any classifier with scikit-learn API
-        (i.e. with ``fit`` and ``predict`` methods).
-        If ``None``, estimator defaults to a ``LogisticRegression`` instance.
+        (i.e. with `fit` and `predict` methods).
+        If `None`, estimator defaults to a `LogisticRegression` instance.
 
-        By default ``None``.
+        By default `None`.
 
     cv: Optional[Union[int, Literal["prefit"], BaseCrossValidator]] = None,
         The cross-validation strategy for computing scores.
         It directly drives the distinction between jackknife and cv variants.
         Choose among:
 
-        - ``None``, to use the default 5-fold cross-validation
+        - `None`, to use the default 5-fold cross-validation
         - integer, to specify the number of folds.
             If equal to -1, equivalent to
-            ``sklearn.model_selection.LeaveOneOut()``.
-        - CV splitter: any ``sklearn.model_selection.BaseCrossValidator``
+            `sklearn.model_selection.LeaveOneOut()`.
+        - CV splitter: any `sklearn.model_selection.BaseCrossValidator`
             Main variants are:
-            - ``sklearn.model_selection.LeaveOneOut`` (jackknife),
-            - ``sklearn.model_selection.KFold`` (cross-validation)
-        - ``"prefit"``, assumes that ``estimator`` has been fitted already.
-            All data provided in the ``fit`` method is then used
+            - `sklearn.model_selection.LeaveOneOut` (jackknife),
+            - `sklearn.model_selection.KFold` (cross-validation)
+        - `"prefit"`, assumes that `estimator` has been fitted already.
+            All data provided in the `fit` method is then used
             to calibrate the predictions through the score computation.
             At prediction time, quantiles of these scores are used to estimate
             prediction sets.
 
-        By default ``None``.
+        By default `None`.
 
     n_jobs: Optional[int]
         Number of jobs for parallel processing using joblib
         via the "locky" backend.
-        If ``-1`` all CPUs are used.
-        If ``1`` is given, no parallel computing code is used at all,
+        If `-1` all CPUs are used.
+        If `1` is given, no parallel computing code is used at all,
         which is useful for debugging.
-        For ``n_jobs`` below ``-1``, ``(n_cpus + 1 - n_jobs)`` are used.
-        ``None`` is a marker for `unset` that will be interpreted as
-        ``n_jobs=1`` (sequential execution).
+        For `n_jobs` below `-1`, `(n_cpus + 1 - n_jobs)` are used.
+        `None` is a marker for `unset` that will be interpreted as
+        `n_jobs=1` (sequential execution).
 
-        By default ``None``.
+        By default `None`.
 
     verbose: int, optional
         The verbosity level, used with joblib for multiprocessing.
         At this moment, parallel processing is disabled.
         The frequency of the messages increases with the verbosity level.
-        If it more than ``10``, all iterations are reported.
-        Above ``50``, the output is sent to stdout.
+        If it more than `10`, all iterations are reported.
+        Above `50`, the output is sent to stdout.
 
-        By default ``0``.
+        By default `0`.
 
     Attributes
     ----------
@@ -83,7 +83,7 @@ class EnsembleClassifier:
         List of out-of-folds estimators.
 
     k_: ArrayLike
-        - Array of nans, of shape (len(y), 1) if ``cv`` is ``"prefit"``
+        - Array of nans, of shape (len(y), 1) if `cv` is `"prefit"`
             (defined but not used)
         - Dummy array of folds containing each training sample, otherwise.
             Of shape (n_samples_train, cv.get_n_splits(X_train, y_train)).
@@ -145,7 +145,7 @@ class EnsembleClassifier:
 
         sample_weight: Optional[ArrayLike] of shape (n_samples,)
             Sample weights. If None, then samples are equally weighted.
-            By default ``None``.
+            By default `None`.
 
         **fit_params : dict
             Additional fit parameters.
@@ -295,11 +295,11 @@ class EnsembleClassifier:
         **fit_params,
     ) -> EnsembleClassifier:
         """
-        Fit the base estimator under the ``single_estimator_`` attribute.
+        Fit the base estimator under the `single_estimator_` attribute.
         Fit all cross-validated estimator clones
-        and rearrange them into a list, the ``estimators_`` attribute.
+        and rearrange them into a list, the `estimators_` attribute.
         Out-of-fold conformity scores are stored under
-        the ``conformity_scores_`` attribute.
+        the `conformity_scores_` attribute.
 
         Parameters
         ----------
@@ -312,13 +312,13 @@ class EnsembleClassifier:
         sample_weight: Optional[ArrayLike] of shape (n_samples,)
             Sample weights. If None, then samples are equally weighted.
 
-            By default ``None``.
+            By default `None`.
 
         groups: Optional[ArrayLike] of shape (n_samples,)
             Group labels for the samples used while splitting the dataset into
             train/test set.
 
-            By default ``None``.
+            By default `None`.
 
         **fit_params : dict
             Additional fit parameters.
@@ -385,13 +385,13 @@ class EnsembleClassifier:
         y: Optional[NDArray] of shape (n_samples_test,)
             Input labels.
 
-            By default ``None``.
+            By default `None`.
 
         groups: Optional[NDArray] of shape (n_samples_test,)
             Group labels for the samples used while splitting the dataset into
             train/test set.
 
-            By default ``None``.
+            By default `None`.
 
         **predict_params : dict
             Additional predict parameters.

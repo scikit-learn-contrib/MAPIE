@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import warnings
 from typing import Any, Iterable, Optional, Tuple, Union, cast
 
 import numpy as np
@@ -11,12 +12,16 @@ from sklearn.pipeline import Pipeline
 from sklearn.utils import check_random_state
 from sklearn.utils.validation import _check_y, indexable
 
-from mapie.conformity_scores import BaseRegressionScore, ResidualNormalisedScore
+from mapie.conformity_scores import (
+    BaseRegressionScore,
+    ResidualNormalisedScore,
+    StdConformityScore,
+)
 from mapie.conformity_scores.utils import (
     check_and_select_conformity_score,
     check_regression_conformity_score,
 )
-from mapie.estimator.regressor import EnsembleRegressor
+from mapie.estimator.regressor import EnsembleRegressor, EnsembleStdRegressor
 from mapie.subsample import Subsample
 from mapie.utils import (
     _cast_point_predictions_to_ndarray,
@@ -25,6 +30,8 @@ from mapie.utils import (
     _check_alpha_and_n_samples,
     _check_cv,
     _check_cv_not_string,
+    _check_cv_not_subsample,
+    _check_deprecated_sample_weight_kwarg,
     _check_estimator_fit_predict,
     _check_if_param_in_allowed_values,
     _check_n_features_in,
@@ -32,12 +39,14 @@ from mapie.utils import (
     _check_null_weight,
     _check_predict_params,
     _check_verbose,
-    _prepare_fit_params_and_sample_weight,
+    _fit_estimator,
     _prepare_params,
     _raise_error_if_fit_called_in_prefit_mode,
     _raise_error_if_method_already_called,
     _raise_error_if_previous_method_not_called,
+    _resolve_renamed_parameter,
     _transform_confidence_level_to_alpha_list,
+    _UNSET,
     check_is_fitted,
     check_sklearn_user_model_is_fitted,
 )
@@ -47,10 +56,10 @@ class SplitConformalRegressor:
     """
     Computes prediction intervals using the split conformal regression technique:
 
-    1. The ``fit`` method (optional) fits the base regressor to the training data.
-    2. The ``conformalize`` method estimates the uncertainty of the base regressor by
+    1. The `fit` method (optional) fits the base regressor to the training data.
+    2. The `conformalize` method estimates the uncertainty of the base regressor by
        computing conformity scores on the conformalization set.
-    3. The ``predict_interval`` method predicts points and intervals.
+    3. The `predict_interval` method predicts points and intervals.
 
     Parameters
     ----------
@@ -76,12 +85,13 @@ class SplitConformalRegressor:
         A custom score function inheriting from BaseRegressionScore may also
         be provided.
 
-        See :ref:`theoretical_description_conformity_scores`.
+        See [theoretical description (conformity scores)](../theory/conformity-scores.md).
+
     prefit : bool, default=True
-        If True, the base regressor must be fitted, and the ``fit``
+        If True, the base regressor must be fitted, and the `fit`
         method must be skipped.
 
-        If False, the base regressor will be fitted during the ``fit`` method.
+        If False, the base regressor will be fitted during the `fit` method.
 
     n_jobs : Optional[int], default=None
         The number of jobs to run in parallel when applicable.
@@ -166,7 +176,7 @@ class SplitConformalRegressor:
             Training data targets.
 
         fit_params : Optional[dict], default=None
-            Parameters to pass to the ``fit`` method of the base regressor.
+            Parameters to pass to the `fit` method of the base regressor.
 
         Returns
         -------
@@ -178,7 +188,7 @@ class SplitConformalRegressor:
 
         cloned_estimator = clone(self._estimator)
         fit_params_ = _prepare_params(fit_params)
-        cloned_estimator.fit(X_train, y_train, **fit_params_)
+        _fit_estimator(cloned_estimator, X_train, y_train, **fit_params_)
         self._mapie_regressor.estimator = cloned_estimator
 
         self._is_fitted = True
@@ -203,9 +213,9 @@ class SplitConformalRegressor:
             Targets of the conformalization set.
 
         predict_params : Optional[dict], default=None
-            Parameters to pass to the ``predict`` method of the base regressor.
-            These parameters will also be used in the ``predict_interval``
-            and ``predict`` methods of this SplitConformalRegressor.
+            Parameters to pass to the `predict` method of the base regressor.
+            These parameters will also be used in the `predict_interval`
+            and `predict` methods of this SplitConformalRegressor.
 
         Returns
         -------
@@ -258,8 +268,8 @@ class SplitConformalRegressor:
         Tuple[NDArray, NDArray]
             Two arrays:
 
-            - Prediction points, of shape ``(n_samples,)``
-            - Prediction intervals, of shape ``(n_samples, 2, n_confidence_levels)``
+            - Prediction points, of shape `(n_samples,)`
+            - Prediction intervals, of shape `(n_samples, 2, n_confidence_levels)`
         """
         _raise_error_if_previous_method_not_called(
             "predict_interval",
@@ -302,15 +312,33 @@ class SplitConformalRegressor:
         )
         return _cast_point_predictions_to_ndarray(predictions)
 
+    @property
+    def conformity_scores(self) -> NDArray:
+        """
+        Returns the conformity scores computed by the `conformalize` method
+        on the conformalization set.
+
+        Returns
+        -------
+        NDArray
+            Array of conformity scores, with shape `(n_samples,)`.
+        """
+        _raise_error_if_previous_method_not_called(
+            "conformity_scores",
+            "conformalize",
+            self._is_conformalized,
+        )
+        return cast(NDArray, self._mapie_regressor.conformity_scores_)
+
 
 class CrossConformalRegressor:
     """
     Computes prediction intervals using the cross conformal regression technique:
 
-    1. The ``fit_conformalize`` method estimates the uncertainty of the base regressor
+    1. The `fit_conformalize` method estimates the uncertainty of the base regressor
        in a cross-validation style. It fits the base regressor on folds of the dataset
        and computes conformity scores on the out-of-fold data.
-    2. The ``predict_interval`` computes prediction points and intervals.
+    2. The `predict_interval` computes prediction points and intervals.
 
     Parameters
     ----------
@@ -334,7 +362,7 @@ class CrossConformalRegressor:
         A custom score function inheriting from BaseRegressionScore may also
         be provided.
 
-        See :ref:`theoretical_description_conformity_scores`.
+        See [theoretical description (conformity scores)](../theory/conformity-scores.md).
 
     method : str, default="plus"
         The method used to compute prediction intervals. Options are:
@@ -351,13 +379,13 @@ class CrossConformalRegressor:
         Valid options:
 
         - integer, to specify the number of folds
-        - any ``sklearn.model_selection.BaseCrossValidator`` suitable for
+        - any `sklearn.model_selection.BaseCrossValidator` suitable for
           regression, or a custom cross-validator inheriting from it.
 
         Main variants in the cross conformal setting are:
 
-        - ``sklearn.model_selection.KFold`` (vanilla cross conformal)
-        - ``sklearn.model_selection.LeaveOneOut`` (jackknife)
+        - `sklearn.model_selection.KFold` (vanilla cross conformal)
+        - `sklearn.model_selection.LeaveOneOut` (jackknife)
 
     n_jobs : Optional[int], default=None
         The number of jobs to run in parallel when applicable.
@@ -406,6 +434,7 @@ class CrossConformalRegressor:
             method, "method", CrossConformalRegressor._VALID_METHODS
         )
         _check_cv_not_string(cv)
+        _check_cv_not_subsample(cv)
 
         self._mapie_regressor = _MapieRegressor(
             estimator=estimator,
@@ -425,6 +454,20 @@ class CrossConformalRegressor:
 
         self._predict_params: dict = {}
 
+    def reset(self) -> CrossConformalRegressor:
+        """
+        Discard previously computed conformity scores so that
+        `fit_conformalize` can be called again with new data.
+
+        Returns
+        -------
+        Self
+            This CrossConformalRegressor instance, reset to its pre-fit state.
+        """
+        self.is_fitted_and_conformalized = False
+        self._predict_params = {}
+        return self
+
     def fit_conformalize(
         self,
         X: ArrayLike,
@@ -438,6 +481,10 @@ class CrossConformalRegressor:
         fits the base regressor on different folds of the dataset
         and computes conformity scores on the corresponding out-of-fold data.
 
+        If called on an instance that has already been fitted, a `UserWarning` is
+        emitted and the previously computed conformity scores are discarded before
+        the new fit. Call `reset()` explicitly to suppress the warning.
+
         Parameters
         ----------
         X : ArrayLike
@@ -450,30 +497,35 @@ class CrossConformalRegressor:
             Groups to pass to the cross-validator.
 
         fit_params : Optional[dict], default=None
-            Parameters to pass to the ``fit`` method of the base regressor.
+            Parameters to pass to the `fit` method of the base regressor.
 
         predict_params : Optional[dict], default=None
-            Parameters to pass to the ``predict`` method of the base regressor.
-            These parameters will also be used in the ``predict_interval``
-            and ``predict`` methods of this CrossConformalRegressor.
+            Parameters to pass to the `predict` method of the base regressor.
+            These parameters will also be used in the `predict_interval`
+            and `predict` methods of this CrossConformalRegressor.
 
         Returns
         -------
         Self
             This CrossConformalRegressor instance, fitted and conformalized.
         """
-        _raise_error_if_method_already_called(
-            "fit_conformalize",
-            self.is_fitted_and_conformalized,
-        )
+        if self.is_fitted_and_conformalized:
+            warnings.warn(
+                "CrossConformalRegressor.fit_conformalize was already called; "
+                "conformity scores from the previous fit will be discarded. "
+                "Call .reset() explicitly before fit_conformalize to suppress "
+                "this warning.",
+                UserWarning,
+                stacklevel=2,
+            )
+            self.reset()
 
-        fit_params_, sample_weight = _prepare_fit_params_and_sample_weight(fit_params)
+        fit_params_ = _prepare_params(fit_params)
         self._predict_params = _prepare_params(predict_params)
         self._mapie_regressor.fit(
             X,
             y,
-            sample_weight,
-            groups,
+            groups=groups,
             fit_params=fit_params_,
             predict_params=self._predict_params,
         )
@@ -484,9 +536,10 @@ class CrossConformalRegressor:
     def predict_interval(
         self,
         X: ArrayLike,
-        aggregate_predictions: Optional[str] = "mean",
+        aggregate_point_predictions: Optional[str] = "mean",
         minimize_interval_width: bool = False,
         allow_infinite_bounds: bool = False,
+        aggregate_predictions: Any = _UNSET,
     ) -> Tuple[NDArray, NDArray]:
         """
         Predicts points and intervals.
@@ -495,14 +548,14 @@ class CrossConformalRegressor:
         intervals will be predicted for each sample. See the return signature.
 
         By default, points are predicted using an aggregation.
-        See the ``ensemble`` parameter.
+        See the `aggregate_point_predictions` parameter.
 
         Parameters
         ----------
         X : ArrayLike
             Features
 
-        aggregate_predictions : Optional[str], default="mean"
+        aggregate_point_predictions : Optional[str], default="mean"
             The method to predict a point. Options:
 
             - None: a point is predicted using the regressor trained on the entire data
@@ -517,22 +570,34 @@ class CrossConformalRegressor:
         allow_infinite_bounds : bool, default=False
             If True, allows prediction intervals with infinite bounds.
 
+        aggregate_predictions : Optional[str]
+            .. deprecated::
+                Renamed to `aggregate_point_predictions`. Passing
+                `aggregate_predictions` still works but emits a
+                `FutureWarning` and will be removed in a future release.
+
         Returns
         -------
         Tuple[NDArray, NDArray]
             Two arrays:
 
-            - Prediction points, of shape ``(n_samples,)``
-            - Prediction intervals, of shape ``(n_samples, 2, n_confidence_levels)``
+            - Prediction points, of shape `(n_samples,)`
+            - Prediction intervals, of shape `(n_samples, 2, n_confidence_levels)`
         """
+        aggregate_point_predictions = _resolve_renamed_parameter(
+            "aggregate_point_predictions",
+            aggregate_point_predictions,
+            "aggregate_predictions",
+            aggregate_predictions,
+        )
         _raise_error_if_previous_method_not_called(
             "predict_interval",
             "fit_conformalize",
             self.is_fitted_and_conformalized,
         )
 
-        ensemble = self._set_aggregate_predictions_and_return_ensemble(
-            aggregate_predictions
+        ensemble = self._set_aggregate_point_predictions_and_return_ensemble(
+            aggregate_point_predictions
         )
         predictions = self._mapie_regressor.predict(
             X,
@@ -547,20 +612,21 @@ class CrossConformalRegressor:
     def predict(
         self,
         X: ArrayLike,
-        aggregate_predictions: Optional[str] = "mean",
+        aggregate_point_predictions: Optional[str] = "mean",
+        aggregate_predictions: Any = _UNSET,
     ) -> NDArray:
         """
         Predicts points.
 
         By default, points are predicted using an aggregation.
-        See the ``ensemble`` parameter.
+        See the `aggregate_point_predictions` parameter.
 
         Parameters
         ----------
         X : ArrayLike
             Features
 
-        aggregate_predictions : Optional[str], default="mean"
+        aggregate_point_predictions : Optional[str], default="mean"
             The method to predict a point. Options:
 
             - None: a point is predicted using the regressor trained on the entire data
@@ -569,19 +635,31 @@ class CrossConformalRegressor:
             - "median": Aggregates (using median) the predictions of the regressors
               trained on each cross-validation fold
 
+        aggregate_predictions : Optional[str]
+            .. deprecated::
+                Renamed to `aggregate_point_predictions`. Passing
+                `aggregate_predictions` still works but emits a
+                `FutureWarning` and will be removed in a future release.
+
         Returns
         -------
         NDArray
-            Array of point predictions, with shape ``(n_samples,)``.
+            Array of point predictions, with shape `(n_samples,)`.
         """
+        aggregate_point_predictions = _resolve_renamed_parameter(
+            "aggregate_point_predictions",
+            aggregate_point_predictions,
+            "aggregate_predictions",
+            aggregate_predictions,
+        )
         _raise_error_if_previous_method_not_called(
             "predict",
             "fit_conformalize",
             self.is_fitted_and_conformalized,
         )
 
-        ensemble = self._set_aggregate_predictions_and_return_ensemble(
-            aggregate_predictions
+        ensemble = self._set_aggregate_point_predictions_and_return_ensemble(
+            aggregate_point_predictions
         )
         predictions = self._mapie_regressor.predict(
             X,
@@ -591,27 +669,46 @@ class CrossConformalRegressor:
         )
         return _cast_point_predictions_to_ndarray(predictions)
 
-    def _set_aggregate_predictions_and_return_ensemble(
-        self, aggregate_predictions: Optional[str]
+    def _set_aggregate_point_predictions_and_return_ensemble(
+        self, aggregate_point_predictions: Optional[str]
     ) -> bool:
-        if not aggregate_predictions:
+        if not aggregate_point_predictions:
             ensemble = False
         else:
             ensemble = True
-            self._mapie_regressor._check_agg_function(aggregate_predictions)
+            self._mapie_regressor._check_agg_function(aggregate_point_predictions)
             # A hack here, to allow choosing the aggregation function at prediction time
-            self._mapie_regressor.agg_function = aggregate_predictions
+            self._mapie_regressor.agg_function = aggregate_point_predictions
         return ensemble
+
+    @property
+    def conformity_scores(self) -> NDArray:
+        """
+        Returns the conformity scores computed by the `fit_conformalize`
+        method, on the out-of-fold predictions produced during
+        cross-validation.
+
+        Returns
+        -------
+        NDArray
+            Array of conformity scores, with shape `(n_samples,)`.
+        """
+        _raise_error_if_previous_method_not_called(
+            "conformity_scores",
+            "fit_conformalize",
+            self.is_fitted_and_conformalized,
+        )
+        return cast(NDArray, self._mapie_regressor.conformity_scores_)
 
 
 class JackknifeAfterBootstrapRegressor:
     """
     Computes prediction intervals using the jackknife-after-bootstrap technique:
 
-    1. The ``fit_conformalize`` method estimates the uncertainty of the base regressor
+    1. The `fit_conformalize` method estimates the uncertainty of the base regressor
        using bootstrap sampling. It fits the base regressor on samples of the dataset
        and computes conformity scores on the out-of-sample data.
-    2. The ``predict_interval`` computes prediction points and intervals.
+    2. The `predict_interval` computes prediction points and intervals.
 
     Parameters
     ----------
@@ -636,7 +733,7 @@ class JackknifeAfterBootstrapRegressor:
         A custom score function inheriting from BaseRegressionScore may also
         be provided.
 
-        See :ref:``theoretical_description_conformity_scores``.
+        See [theoretical description (conformity scores)](../theory/conformity-scores.md).
 
     method : str, default="plus"
 
@@ -652,7 +749,7 @@ class JackknifeAfterBootstrapRegressor:
         here.
 
     resampling : Union[int, Subsample], default=30
-        Number of bootstrap resamples or an instance of ``Subsample`` for
+        Number of bootstrap resamples or an instance of `Subsample` for
         custom sampling strategy.
 
     aggregation_method : str, default="mean"
@@ -715,7 +812,7 @@ class JackknifeAfterBootstrapRegressor:
             JackknifeAfterBootstrapRegressor._VALID_AGGREGATION_METHODS,
         )
 
-        cv = self._check_and_convert_resampling_to_cv(resampling)
+        cv = self._check_and_convert_resampling_to_cv(resampling, random_state)
 
         self._mapie_regressor = _MapieRegressor(
             estimator=estimator,
@@ -736,6 +833,21 @@ class JackknifeAfterBootstrapRegressor:
         self.is_fitted_and_conformalized = False
         self._predict_params: dict = {}
 
+    def reset(self) -> JackknifeAfterBootstrapRegressor:
+        """
+        Discard previously computed conformity scores so that
+        `fit_conformalize` can be called again with new data.
+
+        Returns
+        -------
+        Self
+            This JackknifeAfterBootstrapRegressor instance, reset to its
+            pre-fit state.
+        """
+        self.is_fitted_and_conformalized = False
+        self._predict_params = {}
+        return self
+
     def fit_conformalize(
         self,
         X: ArrayLike,
@@ -748,6 +860,10 @@ class JackknifeAfterBootstrapRegressor:
         fits the base regressor on (potentially overlapping) samples of the dataset,
         and computes conformity scores on the corresponding out of samples data.
 
+        If called on an instance that has already been fitted, a `UserWarning` is
+        emitted and the previously computed conformity scores are discarded before
+        the new fit. Call `reset()` explicitly to suppress the warning.
+
         Parameters
         ----------
         X : ArrayLike
@@ -757,29 +873,34 @@ class JackknifeAfterBootstrapRegressor:
             Targets. Must be the same y used in .fit
 
         fit_params : Optional[dict], default=None
-            Parameters to pass to the ``fit`` method of the base regressor.
+            Parameters to pass to the `fit` method of the base regressor.
 
         predict_params : Optional[dict], default=None
-            Parameters to pass to the ``predict`` method of the base regressor.
-            These parameters will also be used in the ``predict_interval``
-            and ``predict`` methods of this JackknifeAfterBootstrapRegressor.
+            Parameters to pass to the `predict` method of the base regressor.
+            These parameters will also be used in the `predict_interval`
+            and `predict` methods of this JackknifeAfterBootstrapRegressor.
 
         Returns
         -------
         Self
             This JackknifeAfterBootstrapRegressor instance, fitted and conformalized.
         """
-        _raise_error_if_method_already_called(
-            "fit_conformalize",
-            self.is_fitted_and_conformalized,
-        )
+        if self.is_fitted_and_conformalized:
+            warnings.warn(
+                "JackknifeAfterBootstrapRegressor.fit_conformalize was already "
+                "called; conformity scores from the previous fit will be "
+                "discarded. Call .reset() explicitly before fit_conformalize "
+                "to suppress this warning.",
+                UserWarning,
+                stacklevel=2,
+            )
+            self.reset()
 
-        fit_params_, sample_weight = _prepare_fit_params_and_sample_weight(fit_params)
+        fit_params_ = _prepare_params(fit_params)
         self._predict_params = _prepare_params(predict_params)
         self._mapie_regressor.fit(
             X,
             y,
-            sample_weight,
             fit_params=fit_params_,
             predict_params=self._predict_params,
         )
@@ -790,9 +911,10 @@ class JackknifeAfterBootstrapRegressor:
     def predict_interval(
         self,
         X: ArrayLike,
-        ensemble: bool = True,
+        aggregate_point_predictions: bool = True,
         minimize_interval_width: bool = False,
         allow_infinite_bounds: bool = False,
+        ensemble: Any = _UNSET,
     ) -> Tuple[NDArray, NDArray]:
         """
         Predicts points and intervals.
@@ -801,17 +923,17 @@ class JackknifeAfterBootstrapRegressor:
         intervals will be predicted for each sample. See the return signature.
 
         By default, points are predicted using an aggregation.
-        See the ``ensemble`` parameter.
+        See the `aggregate_point_predictions` parameter.
 
         Parameters
         ----------
         X : ArrayLike
             Test data for prediction intervals.
 
-        ensemble : bool, default=True
+        aggregate_point_predictions : bool, default=True
             If True, a predicted point is an aggregation of the predictions of the
             regressors trained on each bootstrap samples. This aggregation depends on
-            the ``aggregation_method`` provided during initialisation.
+            the `aggregation_method` provided during initialisation.
 
             If False, a point is predicted using the regressor trained on the entire
             data
@@ -822,14 +944,26 @@ class JackknifeAfterBootstrapRegressor:
         allow_infinite_bounds : bool, default=False
             If True, allows prediction intervals with infinite bounds.
 
+        ensemble : bool
+            .. deprecated::
+                Renamed to `aggregate_point_predictions`. Passing `ensemble`
+                still works but emits a `FutureWarning` and will be removed in
+                a future release.
+
         Returns
         -------
         Tuple[NDArray, NDArray]
             Two arrays:
 
-            - Prediction points, of shape ``(n_samples,)``
-            - Prediction intervals, of shape ``(n_samples, 2, n_confidence_levels)``
+            - Prediction points, of shape `(n_samples,)`
+            - Prediction intervals, of shape `(n_samples, 2, n_confidence_levels)`
         """
+        aggregate_point_predictions = _resolve_renamed_parameter(
+            "aggregate_point_predictions",
+            aggregate_point_predictions,
+            "ensemble",
+            ensemble,
+        )
         _raise_error_if_previous_method_not_called(
             "predict_interval",
             "fit_conformalize",
@@ -841,7 +975,7 @@ class JackknifeAfterBootstrapRegressor:
             alpha=self._alphas,
             optimize_beta=minimize_interval_width,
             allow_infinite_bounds=allow_infinite_bounds,
-            ensemble=ensemble,
+            ensemble=aggregate_point_predictions,
             **self._predict_params,
         )
         return _cast_predictions_to_ndarray_tuple(predictions)
@@ -849,31 +983,44 @@ class JackknifeAfterBootstrapRegressor:
     def predict(
         self,
         X: ArrayLike,
-        ensemble: bool = True,
+        aggregate_point_predictions: bool = True,
+        ensemble: Any = _UNSET,
     ) -> NDArray:
         """
         Predicts points.
 
         By default, points are predicted using an aggregation.
-        See the ``ensemble`` parameter.
+        See the `aggregate_point_predictions` parameter.
 
         Parameters
         ----------
         X : ArrayLike
             Data features for generating point predictions.
 
-        ensemble : bool, default=True
+        aggregate_point_predictions : bool, default=True
             If True, a predicted point is an aggregation of the predictions of the
             regressors trained on each bootstrap samples. This aggregation depends on
-            the ``aggregation_method`` provided during initialisation.
+            the `aggregation_method` provided during initialisation.
             If False, a point is predicted using the regressor trained on the entire
             data
+
+        ensemble : bool
+            .. deprecated::
+                Renamed to `aggregate_point_predictions`. Passing `ensemble`
+                still works but emits a `FutureWarning` and will be removed in
+                a future release.
 
         Returns
         -------
         NDArray
-            Array of point predictions, with shape ``(n_samples,)``.
+            Array of point predictions, with shape `(n_samples,)`.
         """
+        aggregate_point_predictions = _resolve_renamed_parameter(
+            "aggregate_point_predictions",
+            aggregate_point_predictions,
+            "ensemble",
+            ensemble,
+        )
         _raise_error_if_previous_method_not_called(
             "predict",
             "fit_conformalize",
@@ -883,7 +1030,7 @@ class JackknifeAfterBootstrapRegressor:
         predictions = self._mapie_regressor.predict(
             X,
             alpha=None,
-            ensemble=ensemble,
+            ensemble=aggregate_point_predictions,
             **self._predict_params,
         )
         return _cast_point_predictions_to_ndarray(predictions)
@@ -891,14 +1038,34 @@ class JackknifeAfterBootstrapRegressor:
     @staticmethod
     def _check_and_convert_resampling_to_cv(
         resampling: Union[int, Subsample],
+        random_state: Optional[Union[int, np.random.RandomState]] = None,
     ) -> Subsample:
         if isinstance(resampling, int):
-            cv = Subsample(n_resamplings=resampling)
+            cv = Subsample(n_resamplings=resampling, random_state=random_state)
         elif isinstance(resampling, Subsample):
             cv = resampling
         else:
             raise ValueError("resampling must be an integer or a Subsample instance")
         return cv
+
+    @property
+    def conformity_scores(self) -> NDArray:
+        """
+        Returns the conformity scores computed by the `fit_conformalize`
+        method, on the out-of-fold predictions produced during
+        cross-validation.
+
+        Returns
+        -------
+        NDArray
+            Array of conformity scores, with shape `(n_samples,)`.
+        """
+        _raise_error_if_previous_method_not_called(
+            "conformity_scores",
+            "fit_conformalize",
+            self.is_fitted_and_conformalized,
+        )
+        return cast(NDArray, self._mapie_regressor.conformity_scores_)
 
 
 class _MapieRegressor(RegressorMixin, BaseEstimator):
@@ -921,125 +1088,125 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
     ----------
     estimator: Optional[RegressorMixin]
         Any regressor with scikit-learn API
-        (i.e. with ``fit`` and ``predict`` methods).
-        If ``None``, estimator defaults to a ``LinearRegression`` instance.
+        (i.e. with `fit` and `predict` methods).
+        If `None`, estimator defaults to a `LinearRegression` instance.
 
-        By default ``None``.
+        By default `None`.
 
     method: str
         Method to choose for prediction interval estimates.
         Choose among:
 
-        - ``"naive"``, based on training set conformity scores,
-        - ``"base"``, based on validation sets conformity scores,
-        - ``"plus"``, based on validation conformity scores and
+        - `"naive"`, based on training set conformity scores,
+        - `"base"`, based on validation sets conformity scores,
+        - `"plus"`, based on validation conformity scores and
           testing predictions,
-        - ``"minmax"``, based on validation conformity scores and
+        - `"minmax"`, based on validation conformity scores and
           testing predictions (min/max among cross-validation clones).
 
-        By default ``"plus"``.
+        By default `"plus"`.
 
     cv: Optional[Union[int, str, BaseCrossValidator]]
         The cross-validation strategy for computing conformity scores.
         It directly drives the distinction between jackknife and cv variants.
         Choose among:
 
-        - ``None``, to use the default 5-fold cross-validation
+        - `None`, to use the default 5-fold cross-validation
         - integer, to specify the number of folds.
-          If equal to ``-1``, equivalent to
-          ``sklearn.model_selection.LeaveOneOut()``.
-        - CV splitter: any ``sklearn.model_selection.BaseCrossValidator``
+          If equal to `-1`, equivalent to
+          `sklearn.model_selection.LeaveOneOut()`.
+        - CV splitter: any `sklearn.model_selection.BaseCrossValidator`
           Main variants are:
-          - ``sklearn.model_selection.LeaveOneOut`` (jackknife),
-          - ``sklearn.model_selection.KFold`` (cross-validation),
-          - ``subsample.Subsample`` object (bootstrap).
-        - ``"split"``, does not involve cross-validation but a division
+          - `sklearn.model_selection.LeaveOneOut` (jackknife),
+          - `sklearn.model_selection.KFold` (cross-validation),
+          - `subsample.Subsample` object (bootstrap).
+        - `"split"`, does not involve cross-validation but a division
           of the data into training and calibration subsets. The splitter
-          used is the following: ``sklearn.model_selection.ShuffleSplit``.
-          ``method`` parameter is set to ``"base"``.
-        - ``"prefit"``, assumes that ``estimator`` has been fitted already,
-          and the ``method`` parameter is set to ``"base"``.
-          All data provided in the ``fit`` method is then used
+          used is the following: `sklearn.model_selection.ShuffleSplit`.
+          `method` parameter is set to `"base"`.
+        - `"prefit"`, assumes that `estimator` has been fitted already,
+          and the `method` parameter is set to `"base"`.
+          All data provided in the `fit` method is then used
           for computing conformity scores only.
           At prediction time, quantiles of these conformity scores are used
           to provide a prediction interval with fixed width.
           The user has to take care manually that data for model fitting and
           conformity scores estimate are disjoint.
 
-        By default ``None``.
+        By default `None`.
 
     test_size: Optional[Union[int, float]]
-        If ``float``, should be between ``0.0`` and ``1.0`` and represent the
-        proportion of the dataset to include in the test split. If ``int``,
-        represents the absolute number of test samples. If ``None``,
-        it will be set to ``0.1``.
+        If `float`, should be between `0.0` and `1.0` and represent the
+        proportion of the dataset to include in the test split. If `int`,
+        represents the absolute number of test samples. If `None`,
+        it will be set to `0.1`.
 
-        If cv is not ``"split"``, ``test_size`` is ignored.
+        If cv is not `"split"`, `test_size` is ignored.
 
-        By default ``None``.
+        By default `None`.
 
     n_jobs: Optional[int]
         Number of jobs for parallel processing using joblib
         via the "locky" backend.
-        If ``-1`` all CPUs are used.
-        If ``1`` is given, no parallel computing code is used at all,
+        If `-1` all CPUs are used.
+        If `1` is given, no parallel computing code is used at all,
         which is useful for debugging.
-        For ``n_jobs`` below ``-1``, ``(n_cpus + 1 - n_jobs)`` are used.
-        ``None`` is a marker for `unset` that will be interpreted as
-        ``n_jobs=1`` (sequential execution).
+        For `n_jobs` below `-1`, `(n_cpus + 1 - n_jobs)` are used.
+        `None` is a marker for `unset` that will be interpreted as
+        `n_jobs=1` (sequential execution).
 
-        By default ``None``.
+        By default `None`.
 
     agg_function: Optional[str]
         Determines how to aggregate predictions from perturbed models, both at
         training and prediction time.
 
-        If ``None``, it is ignored except if ``cv`` class is ``Subsample``,
+        If `None`, it is ignored except if `cv` class is `Subsample`,
         in which case an error is raised.
-        If ``"mean"`` or ``"median"``, returns the mean or median of the
+        If `"mean"` or `"median"`, returns the mean or median of the
         predictions computed from the out-of-folds models.
-        Note: if you plan to set the ``ensemble`` argument to ``True`` in the
-        ``predict`` method, you have to specify an aggregation function.
+        Note: if you plan to set the `ensemble` argument to `True` in the
+        `predict` method, you have to specify an aggregation function.
         Otherwise an error would be raised.
 
         The Jackknife+ interval can be interpreted as an interval around the
         median prediction, and is guaranteed to lie inside the interval,
         unlike the single estimator predictions.
 
-        When the cross-validation strategy is ``Subsample`` (i.e. for the
+        When the cross-validation strategy is `Subsample` (i.e. for the
         Jackknife+-after-Bootstrap method), this function is also used to
         aggregate the training set in-sample predictions.
 
-        If ``cv`` is ``"prefit"`` or ``"split"``, ``agg_function`` is ignored.
+        If `cv` is `"prefit"` or `"split"`, `agg_function` is ignored.
 
-        By default ``"mean"``.
+        By default `"mean"`.
 
     verbose: int
         The verbosity level, used with joblib for multiprocessing.
         The frequency of the messages increases with the verbosity level.
-        If it more than ``10``, all iterations are reported.
-        Above ``50``, the output is sent to stdout.
+        If it more than `10`, all iterations are reported.
+        Above `50`, the output is sent to stdout.
 
-        By default ``0``.
+        By default `0`.
 
     conformity_score: Optional[BaseRegressionScore]
         BaseRegressionScore instance.
         It defines the link between the observed values, the predicted ones
-        and the conformity scores. For instance, the default ``None`` value
+        and the conformity scores. For instance, the default `None` value
         correspondonds to a conformity score which assumes
         y_obs = y_pred + conformity_score.
 
-        - ``None``, to use the default ``AbsoluteConformityScore`` conformity
+        - `None`, to use the default `AbsoluteConformityScore` conformity
           score
-        - BaseRegressionScore: any ``BaseRegressionScore`` class
+        - BaseRegressionScore: any `BaseRegressionScore` class
 
-        By default ``None``.
+        By default `None`.
 
     random_state: Optional[Union[int, RandomState]]
         Pseudo random number generator state used for random sampling.
         Pass an int for reproducible output across multiple function calls.
 
-        By default ``None``.
+        By default `None`.
 
     Attributes
     ----------
@@ -1053,10 +1220,10 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
         Score function that handle all that is related to conformity scores.
 
     conformity_scores_: ArrayLike of shape (n_samples_train,)
-        Conformity scores between ``y_train`` and ``y_pred``.
+        Conformity scores between `y_train` and `y_pred`.
 
     n_features_in_: int
-        Number of features passed to the ``fit`` method.
+        Number of features passed to the `fit` method.
 
     References
     ----------
@@ -1149,7 +1316,7 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
 
     def _check_method(self, method: str) -> str:
         """
-        Check if ``method`` is correct.
+        Check if `method` is correct.
 
         Parameters
         ----------
@@ -1159,12 +1326,12 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
         Returns
         -------
         str
-            ``method`` itself.
+            `method` itself.
 
         Raises
         ------
         ValueError
-            If ``method`` is not in ``self.valid_methods_``.
+            If `method` is not in `self.valid_methods_`.
         """
         if method not in self.valid_methods_:
             raise ValueError(
@@ -1175,24 +1342,24 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
 
     def _check_agg_function(self, agg_function: Optional[str] = None) -> Optional[str]:
         """
-        Check if ``agg_function`` is correct, and consistent with other
+        Check if `agg_function` is correct, and consistent with other
         arguments.
 
         Parameters
         ----------
         agg_function: Optional[str]
-            Aggregation function's name to check, by default ``None``.
+            Aggregation function's name to check, by default `None`.
 
         Returns
         -------
         str
-            ``agg_function`` itself or ``"mean"``.
+            `agg_function` itself or `"mean"`.
 
         Raises
         ------
         ValueError
-            If ``agg_function`` is not in [``None``, ``"mean"``, ``"median"``],
-            or is ``None`` while cv class is in ``cv_need_agg_function_``.
+            If `agg_function` is not in [`None`, `"mean"`, `"median"`],
+            or is `None` while cv class is in `cv_need_agg_function_`.
         """
         if agg_function not in self.valid_agg_functions_:
             raise ValueError(
@@ -1212,30 +1379,30 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
         self, estimator: Optional[RegressorMixin] = None
     ) -> RegressorMixin:
         """
-        Check if estimator is ``None``,
-        and returns a ``LinearRegression`` instance if necessary.
-        If the ``cv`` attribute is ``"prefit"``,
+        Check if estimator is `None`,
+        and returns a `LinearRegression` instance if necessary.
+        If the `cv` attribute is `"prefit"`,
         check if estimator is indeed already fitted.
 
         Parameters
         ----------
         estimator: Optional[RegressorMixin]
-            Estimator to check, by default ``None``.
+            Estimator to check, by default `None`.
 
         Returns
         -------
         RegressorMixin
-            The estimator itself or a default ``LinearRegression`` instance.
+            The estimator itself or a default `LinearRegression` instance.
 
         Raises
         ------
         ValueError
-            If the estimator is not ``None``
-            and has no ``fit`` nor ``predict`` methods.
+            If the estimator is not `None`
+            and has no `fit` nor `predict` methods.
 
         NotFittedError
             If the estimator is not fitted
-            and ``cv`` attribute is ``"prefit"``.
+            and `cv` attribute is `"prefit"`.
         """
         if estimator is None:
             return LinearRegression()
@@ -1253,19 +1420,19 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
         ensemble: bool,
     ) -> None:
         """
-        Check if ``ensemble`` is ``False`` and if ``self.agg_function``
-        is ``None``. Else raise error.
+        Check if `ensemble` is `False` and if `self.agg_function`
+        is `None`. Else raise error.
 
         Parameters
         ----------
         ensemble: bool
-            ``ensemble`` argument to check the coherennce with
-            ``self.agg_function``.
+            `ensemble` argument to check the coherennce with
+            `self.agg_function`.
 
         Raises
         ------
         ValueError
-            If ``ensemble`` is ``True`` and ``self.agg_function`` is ``None``.
+            If `ensemble` is `True` and `self.agg_function` is `None`.
         """
         if ensemble and (self.agg_function is None):
             raise ValueError(
@@ -1276,7 +1443,6 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
         self,
         X: ArrayLike,
         y: ArrayLike,
-        sample_weight: Optional[ArrayLike] = None,
         groups: Optional[ArrayLike] = None,
     ):
         """
@@ -1290,23 +1456,20 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
         y: ArrayLike
             Target values.
 
-        sample_weight: Optional[NDArray] of shape (n_samples,)
-            Non-null sample weights.
-
         groups: Optional[ArrayLike] of shape (n_samples,)
             Group labels for the samples used while splitting the dataset into
             train/test set.
-            By default ``None``.
+            By default `None`.
 
         Raises
         ------
         ValueError
             If conformity score is FittedResidualNormalizing score and method
-            is neither ``"prefit"`` or ``"split"``.
+            is neither `"prefit"` or `"split"`.
 
         ValueError
-            If ``cv`` is `"prefit"`` or ``"split"`` and ``method`` is not
-            ``"base"``.
+            If `cv` is `"prefit"` or `"split"` and `method` is not
+            `"base"`.
         """
         # Checking
         self._check_parameters()
@@ -1330,12 +1493,20 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
         ]:
             raise ValueError(
                 "The ResidualNormalisedScore can be used only with "
-                "``SplitConformalRegressor``"
+                "`SplitConformalRegressor`"
             )
 
         X, y = indexable(X, y)
-        y = _check_y(y)
+        y = np.asarray(y)
+        multi_output = getattr(self.conformity_score, "multi_output", False)
+        y = _check_y(y, multi_output=multi_output)
+
+        # Handle sample_weight from fit_params
+        sample_weight = self._fit_params.pop("sample_weight", None)
         sample_weight, X, y = _check_null_weight(sample_weight, X, y)
+        if sample_weight is not None:
+            self._fit_params["sample_weight"] = sample_weight
+
         self.n_features_in_ = _check_n_features_in(X)
 
         # Casting
@@ -1345,16 +1516,14 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
         agg_function = cast(Optional[str], agg_function)
         X = cast(NDArray, X)
         y = cast(NDArray, y)
-        sample_weight = cast(Optional[NDArray], sample_weight)
         groups = cast(Optional[NDArray], groups)
 
-        return (estimator, cs_estimator, agg_function, cv, X, y, sample_weight, groups)
+        return (estimator, cs_estimator, agg_function, cv, X, y, groups)
 
     def fit(
         self,
         X: ArrayLike,
         y: ArrayLike,
-        sample_weight: Optional[ArrayLike] = None,
         groups: Optional[ArrayLike] = None,
         **kwargs: Any,
     ) -> _MapieRegressor:
@@ -1373,24 +1542,14 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
         y: ArrayLike of shape (n_samples,)
             Training labels.
 
-        sample_weight: Optional[ArrayLike] of shape (n_samples,)
-            Sample weights for fitting the out-of-fold models.
-            If ``None``, then samples are equally weighted.
-            If some weights are null,
-            their corresponding observations are removed
-            before the fitting process and hence have no conformity scores.
-            If weights are non-uniform,
-            conformity scores are still uniformly weighted.
-
-            By default ``None``.
-
         groups: Optional[ArrayLike] of shape (n_samples,)
             Group labels for the samples used while splitting the dataset into
             train/test set.
-            By default ``None``.
+            By default `None`.
 
         kwargs : dict
             Additional fit and predict parameters.
+            Sample weights can be passed in ``fit_params={"sample_weight": ...}``.
 
         Returns
         -------
@@ -1398,12 +1557,10 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
             The model itself.
         """
 
-        X, y, sample_weight, groups = self.init_fit(
-            X, y, sample_weight, groups, **kwargs
-        )
+        X, y, groups = self.init_fit(X, y, groups, **kwargs)
 
-        self.fit_estimator(X, y, sample_weight, groups)
-        self.conformalize(X, y, sample_weight, groups, **kwargs)
+        self.fit_estimator(X, y, groups)
+        self.conformalize(X, y, groups, **kwargs)
 
         self._is_fitted = True
 
@@ -1413,11 +1570,11 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
         self,
         X: ArrayLike,
         y: ArrayLike,
-        sample_weight: Optional[ArrayLike] = None,
         groups: Optional[ArrayLike] = None,
         **kwargs: Any,
     ):
-        self._fit_params = kwargs.pop("fit_params", {})
+        self._fit_params = _prepare_params(kwargs.pop("fit_params", {}))
+        _check_deprecated_sample_weight_kwarg(kwargs)
 
         # Checks
         (
@@ -1427,11 +1584,15 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
             cv,
             X,
             y,
-            sample_weight,
             groups,
-        ) = self._check_fit_parameters(X, y, sample_weight, groups)
+        ) = self._check_fit_parameters(X, y, groups)
 
-        self.estimator_ = EnsembleRegressor(
+        my_regressor = (
+            EnsembleStdRegressor
+            if isinstance(self.conformity_score_function_, StdConformityScore)
+            else EnsembleRegressor
+        )
+        self.estimator_ = my_regressor(
             estimator,
             self.method,
             cv,
@@ -1441,18 +1602,15 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
             self.verbose,
         )
 
-        return (X, y, sample_weight, groups)
+        return (X, y, groups)
 
     def fit_estimator(
         self,
         X: ArrayLike,
         y: ArrayLike,
-        sample_weight: Optional[ArrayLike] = None,
         groups: Optional[ArrayLike] = None,
     ) -> _MapieRegressor:
-        self.estimator_.fit_single_estimator(
-            X, y, sample_weight=sample_weight, groups=groups, **self._fit_params
-        )
+        self.estimator_.fit_single_estimator(X, y, groups=groups, **self._fit_params)
 
         return self
 
@@ -1460,23 +1618,30 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
         self,
         X: ArrayLike,
         y: ArrayLike,
-        sample_weight: Optional[ArrayLike] = None,
         groups: Optional[ArrayLike] = None,
         **kwargs: Any,
     ) -> _MapieRegressor:
         predict_params = kwargs.pop("predict_params", {})
         self._predict_params = len(predict_params) > 0
 
-        self.estimator_.fit_multi_estimators(
-            X, y, sample_weight, groups, **self._fit_params
-        )
+        self.estimator_.fit_multi_estimators(X, y, groups=groups, **self._fit_params)
 
         # Predict on calibration data
-        y_pred = self.estimator_.predict_calib(X, y=y, groups=groups, **predict_params)
+        conformity_score_params = {}
+        if isinstance(self.conformity_score_function_, StdConformityScore):
+            estimator = cast(EnsembleStdRegressor, self.estimator_)
+            y_pred, y_std = estimator.predict_calib_with_std(
+                X, y=y, groups=groups, **predict_params
+            )
+            conformity_score_params["y_std"] = y_std
+        else:
+            y_pred = self.estimator_.predict_calib(
+                X, y=y, groups=groups, **predict_params
+            )
 
         # Compute the conformity scores (manage jk-ab case)
         self.conformity_scores_ = self.conformity_score_function_.get_conformity_scores(
-            y, y_pred, X=X
+            y, y_pred, X=X, **conformity_score_params
         )
 
         return self
@@ -1494,12 +1659,12 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
         Predict target on new samples with confidence intervals.
         Conformity scores from the training set and predictions
         from the model clones are central to the computation.
-        Prediction Intervals for a given ``alpha`` are deduced from either
+        Prediction Intervals for a given `alpha` are deduced from either
 
-        - quantiles of conformity scores (``naive`` and ``base`` methods),
-        - quantiles of (predictions +/- conformity scores) (``plus`` method),
+        - quantiles of conformity scores (`naive` and `base` methods),
+        - quantiles of (predictions +/- conformity scores) (`plus` method),
         - quantiles of (max/min(predictions) +/- conformity scores)
-          (``minmax`` method).
+          (`minmax` method).
 
         Parameters
         ----------
@@ -1508,35 +1673,35 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
 
         ensemble: bool
             Boolean determining whether the predictions are ensembled or not.
-            If ``False``, predictions are those of the model trained on the
+            If `False`, predictions are those of the model trained on the
             whole training set.
-            If ``True``, predictions from perturbed models are aggregated by
-            the aggregation function specified in the ``agg_function``
+            If `True`, predictions from perturbed models are aggregated by
+            the aggregation function specified in the `agg_function`
             attribute.
 
-            If ``cv`` is ``"prefit"`` or ``"split"``, ``ensemble`` is ignored.
+            If `cv` is `"prefit"` or `"split"`, `ensemble` is ignored.
 
-            By default ``False``.
+            By default `False`.
 
         alpha: Optional[Union[float, Iterable[float]]]
-            Can be a float, a list of floats, or a ``ArrayLike`` of floats.
-            Between ``0`` and ``1``, represents the uncertainty of the
+            Can be a float, a list of floats, or a `ArrayLike` of floats.
+            Between `0` and `1`, represents the uncertainty of the
             confidence interval.
-            Lower ``alpha`` produce larger (more conservative) prediction
+            Lower `alpha` produce larger (more conservative) prediction
             intervals.
-            ``alpha`` is the complement of the target coverage level.
+            `alpha` is the complement of the target coverage level.
 
-            By default ``None``.
+            By default `None`.
 
         optimize_beta: bool
             Whether to optimize the PIs' width or not.
 
-            By default ``False``.
+            By default `False`.
 
         allow_infinite_bounds: bool
             Allow infinite prediction intervals to be produced.
 
-            By default ``False``.
+            By default `False`.
 
         predict_params : dict
             Additional predict parameters.
@@ -1544,9 +1709,9 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
         Returns
         -------
         Union[NDArray, Tuple[NDArray, NDArray]]
-            - NDArray of shape (n_samples,) if ``alpha`` is ``None``.
+            - NDArray of shape (n_samples,) if `alpha` is `None`.
             - Tuple[NDArray, NDArray] of shapes (n_samples,) and
-              (n_samples, 2, n_alpha) if ``alpha`` is not ``None``.
+              (n_samples, 2, n_alpha) if `alpha` is not `None``.
               - [:, 0, :]: Lower bound of the prediction interval.
               - [:, 1, :]: Upper bound of the prediction interval.
         """
@@ -1583,6 +1748,7 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
                 method=self.method,
                 optimize_beta=optimize_beta,
                 allow_infinite_bounds=allow_infinite_bounds,
+                **predict_params,
             )
             y_pred, y_pred_low, y_pred_up = outputs
 

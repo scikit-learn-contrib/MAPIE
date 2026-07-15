@@ -8,7 +8,7 @@ from unittest.mock import patch
 import numpy as np
 import pytest
 from numpy.typing import ArrayLike, NDArray
-from sklearn.datasets import make_regression
+from sklearn.datasets import make_classification, make_regression
 from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.model_selection import BaseCrossValidator, KFold, LeaveOneOut, ShuffleSplit
 from sklearn.pipeline import Pipeline
@@ -36,9 +36,9 @@ from mapie.utils import (
     _check_number_bins,
     _check_split_strategy,
     _check_verbose,
-    _compute_quantiles,
+    _compute_classification_quantile,
+    _compute_regression_quantile,
     _fit_estimator,
-    _prepare_fit_params_and_sample_weight,
     _prepare_params,
     _raise_error_if_fit_called_in_prefit_mode,
     _raise_error_if_method_already_called,
@@ -356,6 +356,29 @@ def test_check_cv_not_string():
         _check_cv_not_string("string")
 
 
+class TestCheckCvNotSubsample:
+    def test_raises_error_for_subsample(self):
+        from mapie.subsample import Subsample
+        from mapie.utils import _check_cv_not_subsample
+
+        with pytest.raises(
+            ValueError,
+            match=r".*Subsample.*CrossConformalRegressor.*"
+            r"JackknifeAfterBootstrapRegressor.*",
+        ):
+            _check_cv_not_subsample(Subsample())
+
+    def test_accepts_int(self):
+        from mapie.utils import _check_cv_not_subsample
+
+        assert _check_cv_not_subsample(5) is None
+
+    def test_accepts_kfold(self):
+        from mapie.utils import _check_cv_not_subsample
+
+        assert _check_cv_not_subsample(KFold()) is None
+
+
 class TestCastPointPredictionsToNdarray:
     def test_error(self, point_and_interval_predictions):
         with pytest.raises(TypeError):
@@ -387,24 +410,6 @@ class TestCastPredictionsToNdarrayTuple:
 def test_prepare_params(params, expected):
     assert _prepare_params(params) == expected
     assert _prepare_params(params) is not params
-
-
-class TestPrepareFitParamsAndSampleWeight:
-    def test_uses_prepare_params(self):
-        with patch("mapie.utils._prepare_params") as mock_prepare_params:
-            _prepare_fit_params_and_sample_weight({"param1": 1})
-            mock_prepare_params.assert_called()
-
-    def test_with_sample_weight(self):
-        fit_params = {"sample_weight": [0.1, 0.2, 0.3]}
-        assert _prepare_fit_params_and_sample_weight(fit_params) == (
-            {},
-            [0.1, 0.2, 0.3],
-        )
-
-    def test_without_sample_weight(self):
-        params = {"param1": 1}
-        assert _prepare_fit_params_and_sample_weight(params) == (params, None)
 
 
 class TestRaiseErrorIfPreviousMethodNotCalled:
@@ -492,11 +497,16 @@ def test_check_null_weight_with_zeros() -> None:
     "ignore:Estimator exposes fitted-like attributes.*:UserWarning"
 )
 @pytest.mark.parametrize("estimator", [LinearRegression(), DumbEstimator()])
-@pytest.mark.parametrize("sample_weight", [None, np.ones_like(y_toy)])
-def test_fit_estimator(estimator: Any, sample_weight: Optional[NDArray]) -> None:
+def test_fit_estimator(estimator: Any) -> None:
     """Test that the returned estimator is always fitted."""
-    estimator = _fit_estimator(estimator, X_toy, y_toy, sample_weight)
+    estimator = _fit_estimator(estimator, X_toy, y_toy)
     check_sklearn_user_model_is_fitted(estimator)
+
+
+def test_fit_estimator_raises_with_unsupported_sample_weight() -> None:
+    """Test that unsupported sample_weight raises estimator TypeError."""
+    with pytest.raises(TypeError):
+        _fit_estimator(DumbEstimator(), X_toy, y_toy, np.ones_like(y_toy))
 
 
 def test_fit_estimator_sample_weight() -> None:
@@ -510,6 +520,130 @@ def test_fit_estimator_sample_weight() -> None:
     y_pred_2 = estimator_2.predict(X)
     with pytest.raises(AssertionError):
         np.testing.assert_almost_equal(y_pred_1, y_pred_2)
+
+
+def test_fit_estimator_pipeline_sample_weight() -> None:
+    """Test that sample_weight is correctly routed through a Pipeline.
+
+    Regression test for https://github.com/scikit-learn-contrib/MAPIE/issues/798
+    """
+    from sklearn.preprocessing import PolynomialFeatures
+    from sklearn.pipeline import Pipeline
+
+    X = np.array([[1], [2], [3], [4], [5], [6], [7], [8]], dtype=float)
+    y = np.array([2.1, 3.9, 6.2, 7.8, 10.1, 12.3, 14.0, 16.1])
+    sw = np.array([100, 100, 100, 100, 0.01, 0.01, 0.01, 0.01])
+
+    # Plain estimator with sample_weight
+    est_plain = _fit_estimator(LinearRegression(), X, y, sw)
+
+    # Pipeline with sample_weight — should produce identical results
+    pipe = Pipeline(
+        [
+            ("poly", PolynomialFeatures(degree=1, include_bias=False)),
+            ("lr", LinearRegression()),
+        ]
+    )
+    est_pipe = _fit_estimator(pipe, X, y, sw)
+
+    np.testing.assert_allclose(est_plain.coef_, est_pipe[-1].coef_, rtol=1e-10)
+    np.testing.assert_allclose(
+        est_plain.intercept_, est_pipe[-1].intercept_, rtol=1e-10
+    )
+
+    # Verify weights actually affected the result vs unweighted
+    est_unweighted = _fit_estimator(LinearRegression(), X, y)
+    with pytest.raises(AssertionError):
+        np.testing.assert_almost_equal(est_plain.coef_, est_unweighted.coef_)
+
+
+def test_split_conformal_regressor_pipeline_sample_weight() -> None:
+    """Test that SplitConformalRegressor.fit() correctly routes sample_weight
+    through a Pipeline estimator.
+
+    Regression test for https://github.com/scikit-learn-contrib/MAPIE/issues/798
+    """
+    from sklearn.datasets import make_regression
+    from sklearn.preprocessing import PolynomialFeatures
+    from sklearn.pipeline import Pipeline
+    from mapie.regression import SplitConformalRegressor
+    from mapie.utils import train_conformalize_test_split
+
+    X, y = make_regression(n_samples=500, n_features=5, noise=20, random_state=42)
+    (X_train, X_conf, X_test, y_train, y_conf, y_test) = train_conformalize_test_split(
+        X,
+        y,
+        train_size=0.6,
+        conformalize_size=0.2,
+        test_size=0.2,
+        random_state=42,
+    )
+    sw = np.random.RandomState(42).rand(len(X_train))
+
+    pipeline = Pipeline(
+        [
+            ("poly", PolynomialFeatures(degree=1, include_bias=False)),
+            ("lr", LinearRegression()),
+        ]
+    )
+    mapie_reg = SplitConformalRegressor(
+        estimator=pipeline,
+        confidence_level=0.95,
+        prefit=False,
+    )
+    # This should not raise ValueError
+    mapie_reg.fit(X_train, y_train, {"sample_weight": sw})
+    mapie_reg.conformalize(X_conf, y_conf)
+    points, intervals = mapie_reg.predict_interval(X_test)
+    assert points.shape == (len(X_test),)
+    assert intervals.shape[0] == len(X_test)
+
+
+def test_split_conformal_classifier_pipeline_sample_weight() -> None:
+    """Test that SplitConformalClassifier.fit() routes sample_weight in Pipeline.
+
+    Regression test for https://github.com/scikit-learn-contrib/MAPIE/issues/798
+    """
+    from sklearn.pipeline import Pipeline
+    from sklearn.preprocessing import StandardScaler
+
+    from mapie.classification import SplitConformalClassifier
+    from mapie.utils import train_conformalize_test_split
+
+    X, y = make_classification(
+        n_samples=500,
+        n_features=10,
+        n_informative=5,
+        n_redundant=1,
+        random_state=42,
+    )
+    (X_train, X_conf, X_test, y_train, y_conf, y_test) = train_conformalize_test_split(
+        X,
+        y,
+        train_size=0.6,
+        conformalize_size=0.2,
+        test_size=0.2,
+        random_state=42,
+    )
+    sw = np.random.RandomState(42).rand(len(X_train))
+
+    pipeline = Pipeline(
+        [
+            ("scaler", StandardScaler()),
+            ("lr", LogisticRegression(max_iter=1000)),
+        ]
+    )
+    mapie_clf = SplitConformalClassifier(
+        estimator=pipeline,
+        confidence_level=0.95,
+        prefit=False,
+    )
+    # This should not raise ValueError
+    mapie_clf.fit(X_train, y_train, {"sample_weight": sw})
+    mapie_clf.conformalize(X_conf, y_conf)
+    points, pred_sets = mapie_clf.predict_set(X_test)
+    assert points.shape == (len(X_test),)
+    assert pred_sets.shape[0] == len(X_test)
 
 
 @pytest.mark.parametrize("alpha", [-1, 0, 1, 2, 2.5, "a", ["a", "b"]])
@@ -664,7 +798,97 @@ def test_alpha_in_predict() -> None:
         mapie_reg.predict(X, ensemble=True)
 
 
-def test_compute_quantiles_value_error():
+class TestComputeRegressionQuantile:
+    """Tests for the _compute_regression_quantile function."""
+
+    def test_basic(self):
+        """Test regression path produces finite quantiles."""
+        scores = np.random.rand(100, 1)
+        alpha = np.array([0.1, 0.2])
+        result = _compute_regression_quantile(scores, alpha, axis=0)
+        assert result.shape == (1, 2)
+        assert np.all(np.isfinite(result))
+
+    def test_reverse_flag(self):
+        """Test reverse=True computes (1-alpha) quantile."""
+        scores = np.arange(1, 101, dtype=float).reshape(-1, 1)
+        alpha = np.array([0.1])
+        normal = _compute_regression_quantile(scores, alpha)
+        rev = _compute_regression_quantile(scores, alpha, reverse=True)
+        assert normal[0, 0] != rev[0, 0]
+        assert rev[0, 0] < normal[0, 0]
+
+    def test_unbounded_returns_inf(self):
+        """Test unbounded=True with alpha >= 1 returns infinity."""
+        scores = np.random.rand(50, 1)
+        alpha = np.array([1.0])
+        result = _compute_regression_quantile(scores, alpha, unbounded=True)
+        assert np.all(np.isinf(result))
+
+    def test_unbounded_normal_alpha(self):
+        """Test unbounded=True with alpha < 1 returns finite value."""
+        scores = np.random.rand(50, 1)
+        alpha = np.array([0.5])
+        result = _compute_regression_quantile(scores, alpha, unbounded=True)
+        assert np.all(np.isfinite(result))
+
+    def test_nan_handling(self):
+        """Test NaN-containing scores are handled via nanquantile."""
+        scores = np.array([[1.0], [2.0], [np.nan], [4.0], [5.0]])
+        alpha = np.array([0.5])
+        result = _compute_regression_quantile(scores, alpha)
+        assert np.all(np.isfinite(result))
+
+    def test_axis_parameter(self):
+        """Test axis=1 computes quantile along columns."""
+        scores = np.random.rand(3, 100)
+        alpha = np.array([0.5])
+        result = _compute_regression_quantile(scores, alpha, axis=1)
+        assert result.shape == (3, 1)
+
+    def test_1d_input(self):
+        """Test works with 1D input arrays."""
+        scores = np.random.rand(100)
+        alpha = np.array([0.1, 0.2])
+        result = _compute_regression_quantile(scores, alpha, axis=0)
+        assert result.shape[0] == 1
+        assert result.shape[1] == 2
+        assert np.all(np.isfinite(result))
+
+    def test_all_nan_raises_value_error(self):
+        """Test that all-NaN scores raise ValueError."""
+        scores = np.full((10, 1), np.nan)
+        alpha = np.array([0.5])
+        with pytest.raises(ValueError, match="All conformity scores are NaN"):
+            _compute_regression_quantile(scores, alpha)
+
+
+class TestComputeClassificationQuantile:
+    """Tests for the _compute_classification_quantile function."""
+
+    def test_basic(self):
+        """Test classification path produces finite quantiles."""
+        scores = np.random.rand(100, 1)
+        alpha = np.array([0.1, 0.2])
+        result = _compute_classification_quantile(scores, alpha)
+        assert len(result) == 2
+        assert np.all(np.isfinite(result))
+
+    def test_matches_old_formula(self):
+        """Test that the function reproduces the old classification
+        quantile formula: quantile(v, (n+1)*(1-a)/n, 'higher')."""
+        np.random.seed(0)
+        for n in [50, 100, 500]:
+            scores = np.random.rand(n, 1)
+            alpha = np.array([0.1, 0.2, 0.5])
+            result = _compute_classification_quantile(scores, alpha)
+            for i, a in enumerate(alpha):
+                level = ((n + 1) * (1 - a)) / n
+                expected = np.quantile(scores, level, method="higher")
+                np.testing.assert_allclose(result[i], expected.ravel())
+
+
+def test_compute_classification_quantile_value_error():
     """Test that if the size of the last axis of vector
     is different from the number of aphas an error is raised.
     """
@@ -672,11 +896,11 @@ def test_compute_quantiles_value_error():
     alphas = [0.1, 0.2, 0.3]
 
     with pytest.raises(ValueError, match=r".*In case of the vector .*"):
-        _compute_quantiles(vector, alphas)
+        _compute_classification_quantile(vector, alphas)
 
 
 @pytest.mark.parametrize("alphas", ALPHAS)
-def test_compute_quantiles_2D_shape(alphas: NDArray):
+def test_compute_classification_quantile_2D_shape(alphas: NDArray):
     """Test that the number of quantiles is equal to
     the number of alphas for a 2D input vector
 
@@ -686,33 +910,33 @@ def test_compute_quantiles_2D_shape(alphas: NDArray):
         Levels of confidence.
     """
     vector = np.random.rand(1000, 1)
-    quantiles = _compute_quantiles(vector, alphas)
+    quantiles = _compute_classification_quantile(vector, alphas)
 
     assert len(quantiles) == len(alphas)
 
 
 @pytest.mark.parametrize("alphas", ALPHAS)
-def test_compute_quantiles_3D_shape(alphas: NDArray):
+def test_compute_classification_quantile_3D_shape(alphas: NDArray):
     """Test that the number of quantiles is equal to
     the number of alphas for a 3D input vector
     """
     vector = np.random.rand(1000, 1)
     vector = np.repeat(vector, len(alphas), axis=1)
-    quantiles = _compute_quantiles(vector, alphas)
+    quantiles = _compute_classification_quantile(vector, alphas)
 
     assert len(quantiles) == len(alphas)
 
 
 @pytest.mark.parametrize("alphas", ALPHAS)
-def test_compute_quantiles_2D_and_3D(alphas: NDArray):
+def test_compute_classification_quantile_2D_and_3D(alphas: NDArray):
     """Test that if to matrices are equal (modulo one dimension)
     then there quantiles are the same.
     """
     vector1 = np.random.rand(1000, 1)
     vector2 = np.repeat(vector1, len(alphas), axis=1)
 
-    quantiles1 = _compute_quantiles(vector1, alphas)
-    quantiles2 = _compute_quantiles(vector2, alphas)
+    quantiles1 = _compute_classification_quantile(vector1, alphas)
+    quantiles2 = _compute_classification_quantile(vector2, alphas)
 
     assert (quantiles1 == quantiles2).all()
 
