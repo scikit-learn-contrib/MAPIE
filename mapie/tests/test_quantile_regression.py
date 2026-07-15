@@ -624,13 +624,11 @@ def test_fit_parameters_passing(strategy: str) -> None:
         else:
             return False
 
-    mapie.fit(
-        X_train,
-        y_train,
-        X_calib=X_calib,
-        y_calib=y_calib,
-        monitor=early_stopping_monitor,
-    )
+    mapie._initialize_fit_conformalize()
+    mapie._fit_estimators(X_train, y_train, monitor=early_stopping_monitor)
 
     for estimator in mapie.estimators_:
         assert estimator.estimators_.shape[0] == 3
+
+
+#------------------------------ Test new implementation

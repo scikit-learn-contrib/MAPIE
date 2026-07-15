@@ -1259,6 +1259,7 @@ class _MapieQuantileRegressor(_MapieRegressor):
         self.alpha = alpha
         self._is_fitted = False
         self._is_fitted = True if self.cv == "prefit" else False
+        self._central_predictor = None
 
     @property
     def is_fitted(self):
@@ -1306,9 +1307,7 @@ class _MapieQuantileRegressor(_MapieRegressor):
                     "Invalid confidence_level. Allowed values are between 0.0 and 1.0."
                 )
             else:
-                alpha_values = [alpha / 2, 1 - alpha / 2]
-                if self._central_predictor is None:
-                    alpha_values.append(0.5)
+                alpha_values = [alpha / 2, 1 - alpha / 2, 0.5]
                 alpha_np = np.array(alpha_values)
         else:
             raise ValueError("Invalid confidence_level. Allowed values are float.")
@@ -1526,10 +1525,6 @@ class _MapieQuantileRegressor(_MapieRegressor):
         self._check_prefit_params(estimator)
         self.estimators_ = list(estimator)
         self.single_estimator_ = self.estimators_[2]
-
-    @property
-    def _central_predictor(self) -> Optional[RegressorMixin]:
-        return self.single_estimator
 
     def _prepare_train_calib(
         self,
