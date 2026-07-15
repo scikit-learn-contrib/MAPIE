@@ -1,6 +1,6 @@
 """
-Group-conditional prediction sets
-=================================
+Group-conditional prediction sets (classification)
+==================================================
 
 This example shows how to use ``ConditionalSplitConformalClassifier``
 to build prediction sets with conditional guarantees on pre-defined groups.
@@ -8,6 +8,8 @@ to build prediction sets with conditional guarantees on pre-defined groups.
 The key idea is to provide a basis function ``feature_map`` that
 identifies the covariate groups on which coverage should be controlled.
 """
+
+# sphinx_gallery_thumbnail_number = 2
 
 import matplotlib.pyplot as plt
 import numpy as np

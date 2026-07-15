@@ -1,6 +1,6 @@
 """
-Group-conditional prediction intervals
-======================================
+Group-conditional prediction intervals (regression)
+===================================================
 
 This example shows how to use ``ConditionalSplitConformalClassifier``
 to build prediction sets with conditional guarantees on pre-defined groups.
@@ -8,6 +8,8 @@ to build prediction sets with conditional guarantees on pre-defined groups.
 The key idea is to provide a basis function ``feature_map`` that
 identifies the covariate groups on which coverage should be controlled.
 """
+
+# sphinx_gallery_thumbnail_number = 2
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -156,16 +158,58 @@ _, y_interval_conditional = mapie_conditional.predict_interval(X_test)
 
 
 ##############################################################################
-# 5. Evaluate and visualize the correction
+# 5. Visualize the prediction intervals
 # --------------------------------------------------------------------------
 #
-# Standard split conformal prediction has constant interval width with the
-# absolute residual score. This overcovers the low-noise group and undercovers
-# the high-noise groups. Conditional conformal prediction makes an additional
-# group-level correction, narrowing intervals where the problem is easy and
-# widening them where the problem is hard. The first bar group reports the
-# overall score over the full test set, then the remaining bar groups show the
-# same metrics inside each ``x`` group.
+# Predicting intervals on a fine grid of ``x`` makes the correction visible.
+# The standard regressor produces a single constant-width band everywhere,
+# which is too wide in the low-noise region and too narrow in the high-noise
+# region. The conditional regressor adapts the band to each ``x`` group:
+# narrower where the data is tight and wider where the noise grows.
+
+X_grid = grid.reshape(-1, 1)
+_, y_interval_standard_grid = mapie_standard.predict_interval(X_grid)
+_, y_interval_conditional_grid = mapie_conditional.predict_interval(X_grid)
+
+fig, ax = plt.subplots(figsize=(7, 4))
+for intervals, color, label in (
+    (y_interval_standard_grid, "tab:blue", "Standard interval"),
+    (y_interval_conditional_grid, "tab:orange", "Conditional interval"),
+):
+    ax.fill_between(
+        grid,
+        intervals[:, 0, 0],
+        intervals[:, 1, 0],
+        color=color,
+        alpha=0.25,
+    )
+    ax.plot(grid, intervals[:, 0, 0], color=color, linewidth=1.5, label=label)
+    ax.plot(grid, intervals[:, 1, 0], color=color, linewidth=1.5)
+for group_index, label in enumerate(bin_labels):
+    mask = group_indexes == group_index
+    ax.scatter(
+        X[mask, 0],
+        y[mask],
+        s=18,
+        alpha=0.2,
+        label=f"x in {label}",
+    )
+ax.plot(grid, mean_function(grid), color="black", linewidth=2)
+ax.set_xlabel("x")
+ax.set_ylabel("Target")
+ax.set_title("Standard vs conditional prediction intervals")
+ax.legend()
+plt.tight_layout()
+plt.show()
+
+
+##############################################################################
+# 6. Evaluate the correction by group
+# --------------------------------------------------------------------------
+#
+# The bar charts below summarize the effect on coverage and interval width.
+# The first bar group reports the overall score over the full test set, then
+# the remaining bar groups show the same metrics inside each ``x`` group.
 
 
 def group_mask(X, bin_index):
@@ -245,7 +289,7 @@ plt.show()
 
 
 ##############################################################################
-# 6. Go further
+# 7. Go further
 # --------------------------------------------------------------------------
 #
 # Explore the advanced examples to learn how to build richer feature maps.
