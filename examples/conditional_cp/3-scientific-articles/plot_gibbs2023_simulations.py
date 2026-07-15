@@ -1,6 +1,6 @@
 """
-Reproduction of part of the paper experiments of Gibbs et al. (2023)
-======================================================================
+Reproduction of experiments of Gibbs et al. (2023)
+==================================================
 
 ``ConditionalSplitConformalRegressor``
 is used to reproduce a part of the paper experiments of Gibbs et al. (2023) in
@@ -59,7 +59,7 @@ def init_model():
 
 
 ###############################################################################
-# 2. Generate and present data
+# 2. Generate and show data
 # -----------------------------------------------------------------------------
 
 
@@ -146,8 +146,7 @@ plt.show()
 # In this experiment, we will use the
 # ``SplitConformalRegressor`` and
 # ``ConditionalSplitConformalRegressor``
-# to compute prediction intervals with the basic SplitConformalRegressor method and the paper
-# conditional method.
+# to compute prediction intervals.
 
 eval_locs = np.array([1.5, 3.5])
 eval_scale = 0.2
@@ -398,6 +397,9 @@ def plot_results(X_test, y_test, n_trials=20, experiment="Groups"):
 ##############################################################################
 # 5. Reproduce experiment and results
 # -----------------------------------------------------------------------------
+# The first experiments consists in performing group-conditional conformal
+# prediction. Groups are defined with intervals of $x$. The second experiment
+# illustrates the case of covariate shift.
 
 plot_results(X_test, y_test, experiment="Groups")
 
