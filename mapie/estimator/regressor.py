@@ -25,6 +25,10 @@ class _Conformalizer(ABC):
     Abstract base class for conformalizers.
     """
 
+    alpha: float
+    conformity_scores_: NDArray[float]
+    n_calib_samples: List[int]
+
     @abstractmethod
     def _predict(
         self,
@@ -33,6 +37,17 @@ class _Conformalizer(ABC):
         return_multi_pred: bool = True,
         **predict_params,
     ) -> Union[NDArray, Tuple[NDArray, NDArray, NDArray]]:
+        pass
+
+    @abstractmethod
+    def fit(
+        self,
+        X: ArrayLike,
+        y: ArrayLike,
+        sample_weight: Optional[ArrayLike] = None,
+        groups: Optional[ArrayLike] = None,
+        **fit_params,
+    ) -> _Conformalizer:
         pass
 
 

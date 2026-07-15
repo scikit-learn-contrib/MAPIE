@@ -4,13 +4,14 @@ from typing import Any, Iterable, List, Optional, Tuple, Union, cast
 
 import warnings
 import numpy as np
+from abc import ABC
 from functools import lru_cache
 from numpy.typing import ArrayLike, NDArray
 from sklearn.base import RegressorMixin, clone
 from sklearn.linear_model import QuantileRegressor, LinearRegression
 from sklearn.model_selection import train_test_split, BaseCrossValidator
 from sklearn.pipeline import Pipeline
-from sklearn.utils import check_random_state
+from sklearn.utils import check_random_state, _safe_indexing
 from sklearn.utils.validation import _check_y, _num_samples, indexable
 
 from mapie.utils import (
@@ -48,8 +49,8 @@ class QuantileRegressionScore(BaseRegressionScore):
         super().__init__(sym=sym, consistency_check=consistency_check)
 
     def get_signed_conformity_scores(
-        self, y: NDArray, y_pred: NDArray, **kwargs
-    ) -> NDArray:
+        self, y: NDArray[float], y_pred: NDArray[float], **kwargs
+    ) -> NDArray[np.float64]:
         """
         Placeholder for `get_conformity_scores`.
         Subclasses should implement this method!
@@ -59,22 +60,22 @@ class QuantileRegressionScore(BaseRegressionScore):
 
         Parameters
         ----------
-        y: NDArray of shape (2, n_samples)
+        y: NDArray[float] of shape (2, n_samples)
             Observed target values.
 
-        y_pred: NDArray of shape (n_samples,)
+        y_pred: NDArray[float] of shape (n_samples,)
             Predicted target values.
 
         Returns
         -------
-        NDArray of shape (n_samples, 2)
+        NDArray[float] of shape (n_samples, 2)
             Signed conformity scores.
         """
         return np.vstack((y_pred[0] - y, y - y_pred[1]))
 
     def get_estimation_distribution(
-        self, y_pred: ArrayLike, conformity_scores: ArrayLike, **kwargs
-    ) -> NDArray:
+        self, y_pred: NDArray[float], conformity_scores: NDArray[float], **kwargs
+    ) -> NDArray[np.float64]:
         """
         Compute samples of the estimation distribution from the predicted
         values and the conformity scores, from the following formula:
@@ -99,8 +100,8 @@ class AbsoluteQuantileRegressionScore(QuantileRegressionScore):
         super().__init__(sym=sym, consistency_check=False)
 
     def get_conformity_scores(
-        self, y: ArrayLike, y_pred: ArrayLike, **kwargs
-    ) -> NDArray:
+        self, y: NDArray[float], y_pred: NDArray[float], **kwargs
+    ) -> NDArray[np.float64]:
         """
         Compute the conformity scores from the predicted values
         and the observed ones, from the following formula:
@@ -113,7 +114,7 @@ class AbsoluteQuantileRegressionScore(QuantileRegressionScore):
         return np.maximum(conformity_scores[0], conformity_scores[1])
 
 
-class _QuantileConformalizer(_Conformalizer):
+class _QuantileConformalizer(_Conformalizer, ABC):
     quantile_estimator_params = {
         "GradientBoostingRegressor": {"loss_name": "loss", "alpha_name": "alpha"},
         "QuantileRegressor": {"loss_name": "quantile", "alpha_name": "quantile"},
@@ -125,6 +126,13 @@ class _QuantileConformalizer(_Conformalizer):
     }
 
     ALLOWED_SCORES = QuantileRegressionScore
+
+    _central_estimator: Optional[RegressorMixin]
+    estimators_: dict[str, List[RegressorMixin]]
+    estimator: RegressorMixin
+    quantiles: NDArray[float]
+    _alphas: NDArray[float]
+    score: ALLOWED_SCORES
 
     def _check_alpha(
         self,
@@ -196,9 +204,11 @@ class _QuantileConformalizer(_Conformalizer):
         alpha = np.atleast_2d(self.quantiles).T
         y_true = np.asarray(y_true)
         y_pred = np.asarray(y_pred)
-        return np.maximum(
-            alpha * (y_true - y_pred), (alpha - 1) * (y_true - y_pred)
-        ).mean(axis=1)
+        return np.array(
+            np.maximum(alpha * (y_true - y_pred), (alpha - 1) * (y_true - y_pred)).mean(
+                axis=1
+            )
+        )
 
     def _check_score(self, score):
         """
@@ -320,8 +330,8 @@ class _QuantileConformalizer(_Conformalizer):
             The name of the estimator class.
         """
         if isinstance(self.estimator, Pipeline):
-            return self.estimator[-1].__class__.__name__
-        return self.estimator.__class__.__name__
+            return str(self.estimator[-1].__class__.__name__)
+        return str(self.estimator.__class__.__name__)
 
     def _set_estimator_params(
         self, estimator: REGRESSOR_TYPE, **params
@@ -399,18 +409,64 @@ class _QuantileConformalizer(_Conformalizer):
         return self._set_estimator_params(cloned_estimator_, **params)
 
     # -------------------------------------- Fit
+    # TODO: Nearly duplicated from EnsemblRegressor _fit_oof_estimator -> should be factorize in next refacto
+    def _fit_cv_estimator(
+        self,
+        X: ArrayLike,
+        y: ArrayLike,
+        train_index: ArrayLike,
+        sample_weight: Optional[ArrayLike] = None,
+        **fit_params,
+    ) -> None:
+        """Fit the cross-validated estimator.
+        Parameters
+        ----------
+        estimator: RegressorMixin
+            Estimator to train.
+
+        X: ArrayLike of shape (n_samples, n_features)
+            Input data.
+
+        y: ArrayLike of shape (n_samples,)
+            Input labels.
+
+        train_index: ArrayLike of shape (n_samples_train)
+            Training data indices.
+
+        sample_weight: Optional[ArrayLike] of shape (n_samples,)
+            Sample weights. If None, then samples are equally weighted.
+            By default `None`.
+
+        **fit_params : dict
+            Additional fit parameters.
+        """
+        # The interest of this method is the safe indexing
+        # TODO back-end: avoid using private utilities from sklearn like
+        # _safe_indexing (may break anytime without notice)
+        X_train = _safe_indexing(X, train_index)
+        y_train = _safe_indexing(y, train_index)
+        if sample_weight is not None:
+            sample_weight = _safe_indexing(sample_weight, train_index)
+            sample_weight = cast(NDArray, sample_weight)
+        self._fit_quantiles(
+            X_train,
+            y_train,
+            sample_weight=sample_weight,
+            **fit_params,
+        )
+
     # TODO: A structure can handle quantiles fitting and prediction to avoid code duplication between conformalizer
     def _fit_quantiles(
         self,
         X: ArrayLike,
         y: ArrayLike,
+        sample_weight: Optional[ArrayLike] = None,
         **fit_params,
     ) -> None:
         """
         Fits the estimators with provided training data
         and stores them in self.estimators_.
         """
-        sample_weight = fit_params.pop("sample_weight", None)
         checked_estimator = self._check_quantile_estimator(self.estimator)
 
         X, y = indexable(X, y)
@@ -449,6 +505,41 @@ class _QuantileConformalizer(_Conformalizer):
         elif self._central_estimator is not None and not self.fit_central_estimator:
             self.estimators_["central"].append(self._central_estimator)
 
+    def fit(
+        self,
+        X: ArrayLike,
+        y: ArrayLike,
+        sample_weight: Optional[ArrayLike] = None,
+        groups: Optional[ArrayLike] = None,
+        **fit_params,
+    ) -> _Conformalizer:
+        """
+        Fits the estimators with provided training data
+        and stores them in self.estimators_.
+
+        Parameters
+        ----------
+        X : ArrayLike of shape (n_samples, n_features)
+            Input data.
+
+        y : ArrayLike of shape (n_samples,)
+            Input labels.
+
+        sample_weight : Optional[ArrayLike] of shape (n_samples,), default=None
+            Sample weights. If None, then samples are equally weighted.
+
+        **fit_params : dict
+            Additional fit parameters.
+
+        Returns
+        -------
+        Self
+            This _QuantileConformalizer instance, fitted.
+        """
+        self._fit_quantiles(X, y, sample_weight=sample_weight, **fit_params)
+        self._is_fitted = True
+        return self
+
     # ---------------------Conformalizer
     def _conformalize(
         self,
@@ -470,6 +561,7 @@ class _QuantileConformalizer(_Conformalizer):
 
         self.pinball_losses.append(self.pinball_loss(y_calib, pred))
         self.n_calib_samples.append(_num_samples(y_calib))
+        return self
 
     # ------------------------------ Predict
     def pinball_weighted_mean(self, y_preds):
@@ -554,7 +646,7 @@ class CrossConformalizedQuantileRegressor(_QuantileConformalizer):
     def __init__(
         self,
         estimator: RegressorMixin = LinearRegression(),
-        confidence_level: Union[float, Iterable[float]] = 0.9,
+        confidence_level: float = 0.9,
         conformity_score: Union[str, BaseRegressionScore] = "absolute",
         method: str = "plus",
         cv: Union[int, BaseCrossValidator] = 5,
@@ -832,26 +924,6 @@ class CrossConformalizedQuantileRegressor(_QuantileConformalizer):
             # A hack here, to allow choosing the aggregation function at prediction time
             self._mapie_regressor.agg_function = aggregate_point_predictions
         return ensemble
-
-    # TODO: Duplicated from CrossConformalRegressor -> should be factorize in next refacto
-    @property
-    def conformity_scores(self) -> NDArray:
-        """
-        Returns the conformity scores computed by the `fit_conformalize`
-        method, on the out-of-fold predictions produced during
-        cross-validation.
-
-        Returns
-        -------
-        NDArray
-            Array of conformity scores, with shape `(n_samples,)`.
-        """
-        _raise_error_if_previous_method_not_called(
-            "conformity_scores",
-            "fit_conformalize",
-            self.is_fitted_and_conformalized,
-        )
-        return cast(NDArray, self._mapie_regressor.conformity_scores_)
 
 
 class ConformalizedQuantileRegressor:
