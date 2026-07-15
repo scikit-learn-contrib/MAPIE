@@ -19,6 +19,8 @@ predicted softmax, to keep all the classes above the threshold
 (``alpha`` is ``1 - target coverage``).
 """
 
+# sphinx_gallery_thumbnail_number = 3
+
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.patches import Patch
