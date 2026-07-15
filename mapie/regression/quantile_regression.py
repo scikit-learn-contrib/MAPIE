@@ -597,7 +597,7 @@ class _QuantileConformalizer(_Conformalizer, ABC):
         return self
 
     # ------------------------------ Predict
-    def pinball_weighted_mean(self, y_preds):
+    def _pinball_weighted_mean(self, y_preds):
         """
         Computes the weighted mean of the predicted values using the pinball losses as weights.
         """

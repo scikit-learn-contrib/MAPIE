@@ -26,8 +26,9 @@ class _Conformalizer(ABC):
     """
 
     alpha: float
-    conformity_scores_: NDArray[float]
+    conformity_scores_: NDArray[np.float64]
     n_calib_samples: List[int]
+    cv: BaseCrossValidator
 
     @abstractmethod
     def _predict(
@@ -49,6 +50,46 @@ class _Conformalizer(ABC):
         **fit_params,
     ) -> _Conformalizer:
         pass
+
+     def _aggregate_with_mask(self, x: NDArray, k: NDArray) -> NDArray:
+        """
+        Take the array of predictions, made by the refitted estimators,
+        on the testing set, and the 1-or-nan array indicating for each training
+        sample which one to integrate, and aggregate to produce phi-{t}(x_t)
+        for each training sample x_t.
+
+        Parameters
+        ----------
+        x: ArrayLike of shape (n_samples_test, n_estimators)
+            Array of predictions, made by the refitted estimators,
+            for each sample of the testing set.
+
+        k: ArrayLike of shape (n_samples_training, n_estimators)
+            1-or-nan array: indicates whether to integrate the prediction
+            of a given estimator into the aggregation, for each training
+            sample.
+
+        Returns
+        -------
+        ArrayLike of shape (n_samples_test,)
+            Array of aggregated predictions for each testing sample.
+        """
+        if self.method in self.no_agg_methods_ or self.use_split_method_ or self.method not in self.ALLOWED_AGG:
+            raise ValueError("There should not be aggregation of predictions.")
+        elif self.agg_function == "median":
+            return cast(NDArray, phi2D(A=x, B=k, fun=lambda x: np.nanmedian(x, axis=1)))
+        # To aggregate with mean() the aggregation coud be done
+        # with phi2D(A=x, B=k, fun=lambda x: np.nanmean(x, axis=1).
+        # However, phi2D contains a np.apply_along_axis loop which
+        # is much slower than the matrices multiplication that can
+        # be used to compute the means.
+        elif self.agg_function in ["mean", None]:
+            K = np.nan_to_num(k, nan=0.0)
+            return cast(NDArray, np.matmul(x, (K / (K.sum(axis=1, keepdims=True))).T))
+        elif self.agg_function == "pinball_weighted_mean":
+            return self._pinball_weighted_mean(x)
+        else:
+            raise ValueError("The value of the aggregation function is not correct")
 
 
 class EnsembleRegressor(_Conformalizer):
