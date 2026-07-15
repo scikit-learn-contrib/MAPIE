@@ -836,7 +836,7 @@ def test_quantile_conformalizer_initialize_fit_conformalize() -> None:
 
 
 def test_quantile_conformalizer_fit_quantiles() -> None:
-    """Test quantile estimator fitting and storage."""
+    """Test quantile estimator fitting returns populated estimators dict."""
     conformalizer = DummyQuantileConformalizer()
     conformalizer.cv = None
     conformalizer.alpha = 0.2
@@ -845,14 +845,63 @@ def test_quantile_conformalizer_fit_quantiles() -> None:
     conformalizer.fit_central_estimator = True
     conformalizer._initialize_fit_conformalize()
 
-    conformalizer._fit_quantiles(X_train_toy, y_train_toy)
+    fitted_estimators = conformalizer._fit_quantiles(X_train_toy, y_train_toy)
 
-    assert len(conformalizer.estimators_["lower"]) == 1
-    assert len(conformalizer.estimators_["upper"]) == 1
-    assert len(conformalizer.estimators_["central"]) == 1
-    assert conformalizer.estimators_["lower"][0].get_params()["quantile"] == 0.1
-    assert conformalizer.estimators_["upper"][0].get_params()["quantile"] == 0.9
-    assert conformalizer.estimators_["central"][0].get_params()["quantile"] == 0.5
+    # _fit_quantiles returns a new dict and does not mutate self.estimators_.
+    assert conformalizer.estimators_ == {"lower": [], "upper": [], "central": []}
+
+    assert fitted_estimators.get("lower") is not None
+    assert fitted_estimators.get("upper") is not None
+    assert fitted_estimators.get("central") is not None
+    assert fitted_estimators["lower"][0].get_params()["quantile"] == 0.1
+    assert fitted_estimators["upper"][0].get_params()["quantile"] == 0.9
+    assert fitted_estimators["central"][0].get_params()["quantile"] == 0.5
+
+
+def test_quantile_conformalizer_fit_cv_estimator() -> None:
+    """Test CV fitting helper returns one fitted estimator per quantile."""
+    conformalizer = DummyQuantileConformalizer()
+    conformalizer.cv = None
+    conformalizer.alpha = 0.2
+    conformalizer.estimator = QuantileRegressor(solver="highs-ds")
+    conformalizer._central_estimator = None
+    conformalizer.fit_central_estimator = True
+    conformalizer._initialize_fit_conformalize()
+
+    fitted_estimators = conformalizer._fit_cv_estimator(
+        X_train_toy,
+        y_train_toy,
+        train_index=np.array([0, 1, 2, 3]),
+    )
+
+    assert fitted_estimators.get("lower") is not None
+    assert fitted_estimators.get("upper") is not None
+    assert fitted_estimators.get("central") is not None
+    assert fitted_estimators["lower"][0].get_params()["quantile"] == 0.1
+    assert fitted_estimators["upper"][0].get_params()["quantile"] == 0.9
+    assert fitted_estimators["central"][0].get_params()["quantile"] == 0.5
+
+
+def test_quantile_conformalizer_fit() -> None:
+    """Test fit populates CV estimators and k_ matrix."""
+    conformalizer = DummyQuantileConformalizer()
+    conformalizer.cv = KFold(n_splits=3)
+    conformalizer.alpha = 0.2
+    conformalizer.estimator = QuantileRegressor(solver="highs-ds")
+    conformalizer._central_estimator = None
+    conformalizer.fit_central_estimator = True
+    conformalizer.n_jobs = 1
+    conformalizer.verbose = 0
+    conformalizer._initialize_fit_conformalize()
+
+    fitted_conformalizer = conformalizer.fit(X_train_toy, y_train_toy)
+
+    assert fitted_conformalizer is conformalizer
+    assert conformalizer.is_fitted is True
+    assert conformalizer.k_.shape == (len(y_train_toy), 3)
+    assert len(conformalizer.estimators_["lower"]) == 3
+    assert len(conformalizer.estimators_["upper"]) == 3
+    assert len(conformalizer.estimators_["central"]) == 3
 
 
 def test_quantile_conformalizer_predict_quantiles() -> None:

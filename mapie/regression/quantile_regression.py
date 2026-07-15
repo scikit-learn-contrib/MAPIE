@@ -3,9 +3,11 @@ from __future__ import annotations
 from typing import Any, Iterable, List, Optional, Tuple, Union, cast
 
 import warnings
+import copy
 import numpy as np
 from abc import ABC
 from functools import lru_cache
+from joblib import Parallel, delayed
 from numpy.typing import ArrayLike, NDArray
 from sklearn.base import RegressorMixin, clone
 from sklearn.linear_model import QuantileRegressor, LinearRegression
@@ -132,7 +134,7 @@ class _QuantileConformalizer(_Conformalizer, ABC):
     estimator: RegressorMixin
     quantiles: NDArray[float]
     _alphas: NDArray[float]
-    score: ALLOWED_SCORES
+    score: QuantileRegressionScore
 
     def _check_alpha(
         self,
@@ -417,7 +419,7 @@ class _QuantileConformalizer(_Conformalizer, ABC):
         train_index: ArrayLike,
         sample_weight: Optional[ArrayLike] = None,
         **fit_params,
-    ) -> None:
+    ) -> dict[str, List[RegressorMixin]]:
         """Fit the cross-validated estimator.
         Parameters
         ----------
@@ -440,7 +442,7 @@ class _QuantileConformalizer(_Conformalizer, ABC):
         **fit_params : dict
             Additional fit parameters.
         """
-        # The interest of this method is the safe indexing
+        # The interest of this method is the safe indexing, can be converted into a checking function
         # TODO back-end: avoid using private utilities from sklearn like
         # _safe_indexing (may break anytime without notice)
         X_train = _safe_indexing(X, train_index)
@@ -448,7 +450,7 @@ class _QuantileConformalizer(_Conformalizer, ABC):
         if sample_weight is not None:
             sample_weight = _safe_indexing(sample_weight, train_index)
             sample_weight = cast(NDArray, sample_weight)
-        self._fit_quantiles(
+        return self._fit_quantiles(
             X_train,
             y_train,
             sample_weight=sample_weight,
@@ -462,7 +464,7 @@ class _QuantileConformalizer(_Conformalizer, ABC):
         y: ArrayLike,
         sample_weight: Optional[ArrayLike] = None,
         **fit_params,
-    ) -> None:
+    ) -> dict[str, List[RegressorMixin]]:
         """
         Fits the estimators with provided training data
         and stores them in self.estimators_.
@@ -472,6 +474,7 @@ class _QuantileConformalizer(_Conformalizer, ABC):
         X, y = indexable(X, y)
         y = _check_y(y)
 
+        estimators_ = copy.deepcopy(self.estimators_)
         sample_weight, X, y = _check_null_weight(sample_weight, X, y)
         estimator_name = self.get_estimator_name()
         alpha_name = self.quantile_estimator_params[estimator_name]["alpha_name"]
@@ -481,7 +484,7 @@ class _QuantileConformalizer(_Conformalizer, ABC):
                 alpha,
                 alpha_name=alpha_name,
             )
-            self.estimators_[self.reverse_key_mapping[i]].append(
+            estimators_[self.reverse_key_mapping[i]].append(
                 _fit_estimator(
                     cloned_estimator_,
                     X,
@@ -493,7 +496,7 @@ class _QuantileConformalizer(_Conformalizer, ABC):
 
         if self._central_estimator is not None and self.fit_centeral_estimator:
             cloned_estimator = clone(self._check_estimator(self._central_estimator))
-            self.estimators_["central"].append(
+            estimators_["central"].append(
                 _fit_estimator(
                     cloned_estimator,
                     X,
@@ -503,7 +506,9 @@ class _QuantileConformalizer(_Conformalizer, ABC):
                 )
             )
         elif self._central_estimator is not None and not self.fit_central_estimator:
-            self.estimators_["central"].append(self._central_estimator)
+            estimators_["central"].append(self._central_estimator)
+
+        return estimators_
 
     def fit(
         self,
@@ -536,7 +541,35 @@ class _QuantileConformalizer(_Conformalizer, ABC):
         Self
             This _QuantileConformalizer instance, fitted.
         """
-        self._fit_quantiles(X, y, sample_weight=sample_weight, **fit_params)
+        n_samples = _num_samples(y)
+
+        if self.cv == "prefit":
+            # Create a placeholder attribute 'k_' filled with NaN values
+            # This attribute is defined for consistency but
+            # is not used in prefit mode
+            self.k_ = np.full(shape=(n_samples, 1), fill_value=np.nan, dtype=float)
+
+        else:
+            cv = cast(BaseCrossValidator, self.cv)
+            self.k_ = np.full(
+                shape=(n_samples, cv.get_n_splits(X, y, groups)),
+                fill_value=np.nan,
+                dtype=float,
+            )
+            list_estimators = Parallel(self.n_jobs, verbose=self.verbose)(
+                delayed(self._fit_cv_estimator)(
+                    X,
+                    y,
+                    train_index,
+                    sample_weight,
+                    **fit_params,
+                )
+                for train_index, _ in cv.split(X, y, groups)
+            )
+            for dict_estimator in list_estimators:
+                for key in self.estimators_.keys():
+                    self.estimators_[key].extend(dict_estimator[key])
+
         self._is_fitted = True
         return self
 
