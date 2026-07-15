@@ -1,6 +1,6 @@
 """
-Conditional conformal prediction for regression
-===============================================
+Conditional conformal prediction (real data)
+============================================
 
 Tutorial and comparison with other methods on "Communities and Crimes" Dataset.
 """

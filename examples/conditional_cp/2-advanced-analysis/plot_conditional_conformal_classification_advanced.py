@@ -1,6 +1,6 @@
 """
-Conditional conformal prediction for classification
-===================================================
+Group-conditional prediction sets (advanced)
+============================================
 
 The tutorial explains how to use ``ConditionalSplitConformalClassifier`` for
 classification. In particular, a gaussian feature map is compared to groups
