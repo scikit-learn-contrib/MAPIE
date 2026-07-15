@@ -43,8 +43,8 @@ class QuantileRegressionScore(BaseRegressionScore):
     Quantile conformity score for quantile regression.
     """
 
-    def __init__(self, sym: bool = False):
-        super().__init__(sym=sym, consistency_check=True)
+    def __init__(self, sym: bool = False, consistency_check: bool = True) -> None:
+        super().__init__(sym=sym, consistency_check=consistency_check)
 
     def get_signed_conformity_scores(
         self, y: NDArray, y_pred: NDArray, **kwargs
@@ -69,7 +69,7 @@ class QuantileRegressionScore(BaseRegressionScore):
         NDArray of shape (n_samples, 2)
             Signed conformity scores.
         """
-        return np.vstack(y_pred[0] - y, y - y_pred[1])
+        return np.vstack((y_pred[0] - y, y - y_pred[1]))
 
     def get_estimation_distribution(
         self, y_pred: ArrayLike, conformity_scores: ArrayLike, **kwargs
@@ -95,7 +95,7 @@ class AbsoluteQuantileRegressionScore(QuantileRegressionScore):
         self,
         sym: bool = True,
     ) -> None:
-        super().__init__(sym=sym, consistency_check=True)
+        super().__init__(sym=sym, consistency_check=False)
 
     def get_conformity_scores(
         self, y: ArrayLike, y_pred: ArrayLike, **kwargs

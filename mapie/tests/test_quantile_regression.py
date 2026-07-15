@@ -18,7 +18,11 @@ from sklearn.preprocessing import OneHotEncoder
 from typing_extensions import TypedDict
 
 from mapie.metrics.regression import regression_coverage_score
-from mapie.regression.quantile_regression import _MapieQuantileRegressor
+from mapie.regression.quantile_regression import (
+    AbsoluteQuantileRegressionScore,
+    QuantileRegressionScore,
+    _MapieQuantileRegressor,
+)
 from mapie.utils import check_is_fitted
 
 X_toy = np.array(
@@ -631,4 +635,51 @@ def test_fit_parameters_passing(strategy: str) -> None:
         assert estimator.estimators_.shape[0] == 3
 
 
-#------------------------------ Test new implementation
+# ------------------------------ Test new implementation
+
+
+def test_quantile_regression_score_signed_conformity_scores() -> None:
+    """Test signed conformity scores for quantile regression score."""
+    score = QuantileRegressionScore()
+    y = np.array([2.0, 5.0, 8.0])
+    y_pred = np.array(
+        [
+            [1.0, 4.0, 7.0],
+            [3.0, 6.0, 9.0],
+        ]
+    )
+
+    signed_scores = score.get_signed_conformity_scores(y, y_pred)
+
+    expected_scores = np.vstack((y_pred[0] - y, y - y_pred[1]))
+    np.testing.assert_allclose(signed_scores, expected_scores)
+
+
+def test_quantile_regression_score_estimation_distribution() -> None:
+    """Test estimation distribution reconstruction from scores."""
+    score = QuantileRegressionScore()
+    y_pred = np.array([1.0, 2.0, 3.0])
+    conformity_scores = np.array([0.5, -0.5, 1.5])
+
+    estimation_distribution = score.get_estimation_distribution(
+        y_pred, conformity_scores
+    )
+
+    np.testing.assert_allclose(estimation_distribution, y_pred + conformity_scores)
+
+
+def test_absolute_quantile_regression_score_conformity_scores() -> None:
+    """Test absolute conformity score as pointwise max of signed scores."""
+    score = AbsoluteQuantileRegressionScore()
+    y = np.array([2.0, 5.0, 8.0])
+    y_pred = np.array(
+        [
+            [1.5, 4.5, 7.5],
+            [2.5, 5.5, 8.5],
+        ]
+    )
+
+    conformity_scores = score.get_conformity_scores(y, y_pred)
+
+    expected_scores = np.maximum(y_pred[0] - y, y - y_pred[1])
+    np.testing.assert_allclose(conformity_scores, expected_scores)
