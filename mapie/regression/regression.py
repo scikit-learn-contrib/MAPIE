@@ -48,7 +48,6 @@ from mapie.utils import (
 )
 
 
-
 class SplitConformalRegressor:
     """
     Computes prediction intervals using the split conformal regression technique:

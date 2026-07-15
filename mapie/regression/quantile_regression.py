@@ -33,9 +33,7 @@ from mapie.utils import (
 
 from .regression import _MapieRegressor
 from mapie.estimator.regressor import _Conformalizer
-from mapie.conformity_scores import (
-    BaseRegressionScore
-)
+from mapie.conformity_scores import BaseRegressionScore
 
 REGRESSOR_TYPE = Union[RegressorMixin, Pipeline]
 
@@ -562,10 +560,10 @@ class CrossConformalizedQuantileRegressor(_QuantileConformalizer):
             cv=cv,
             n_jobs=n_jobs,
             verbose=verbose,
-            conformity_score=BaseRegressionScore,#check_and_select_conformity_score(
+            conformity_score=BaseRegressionScore,  # check_and_select_conformity_score(
             #    conformity_score,
             #    BaseRegressionScore,
-            #),
+            # ),
             random_state=random_state,
         )
 
@@ -1528,6 +1526,10 @@ class _MapieQuantileRegressor(_MapieRegressor):
         self._check_prefit_params(estimator)
         self.estimators_ = list(estimator)
         self.single_estimator_ = self.estimators_[2]
+
+    @property
+    def _central_predictor(self) -> Optional[RegressorMixin]:
+        return self.single_estimator
 
     def _prepare_train_calib(
         self,

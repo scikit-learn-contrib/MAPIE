@@ -20,7 +20,6 @@ from mapie.utils import (
 )
 
 
-
 class _Conformalizer(ABC):
     """
     Abstract base class for conformalizers.
@@ -35,6 +34,7 @@ class _Conformalizer(ABC):
         **predict_params,
     ) -> Union[NDArray, Tuple[NDArray, NDArray, NDArray]]:
         pass
+
 
 class EnsembleRegressor(_Conformalizer):
     """
@@ -544,17 +544,16 @@ class EnsembleRegressor(_Conformalizer):
 
         return self
 
-    #TODO: harmonize for _Conformalizer
-    def _predict(self,
+    # TODO: harmonize for _Conformalizer
+    def _predict(
+        self,
         X: ArrayLike,
         ensemble: bool = False,
         return_multi_pred: bool = True,
-        **predict_params) -> Union[NDArray, Tuple[NDArray, NDArray, NDArray]]:
+        **predict_params,
+    ) -> Union[NDArray, Tuple[NDArray, NDArray, NDArray]]:
         return self.predict(
-            X,
-            ensemble=ensemble,
-            return_multi_pred=return_multi_pred,
-            **predict_params
+            X, ensemble=ensemble, return_multi_pred=return_multi_pred, **predict_params
         )
 
     def predict(
