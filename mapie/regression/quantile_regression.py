@@ -192,7 +192,7 @@ class _QuantileConformalizer(_Conformalizer):
         NDArray
             Pinball loss values.
         """
-        alpha = np.atleast_2D(self.quantiles).T
+        alpha = np.atleast_2d(self.quantiles).T
         y_true = np.asarray(y_true)
         y_pred = np.asarray(y_pred)
         return np.maximum(
@@ -359,6 +359,7 @@ class _QuantileConformalizer(_Conformalizer):
         self.conformity_scores: List[Iterable[float]] = []
         self.pinball_losses: List[Iterable[float]] = []
         self.key_mapping = {"lower": 0, "upper": 1, "central": 2}
+        self.key_map = {0: "lower", 1: "upper", 2: "central"}
 
     def _set_quantile_estimator_params(
         self, estimator: REGRESSOR_TYPE, alpha: float, alpha_name: str, **params
@@ -421,8 +422,9 @@ class _QuantileConformalizer(_Conformalizer):
                 )
             )
 
-        if self._central_estimator is not None and self.fit_centeral_estimator:
-            cloned_estimator = clone(self._check_estimator(self._central_estimator))
+        if self._central_estimator is not None and self.fit_central_estimator:
+            _check_estimator_fit_predict(self._central_estimator)
+            cloned_estimator = clone(self._central_estimator)
             self.estimators_["central"].append(
                 _fit_estimator(
                     cloned_estimator,
@@ -432,7 +434,7 @@ class _QuantileConformalizer(_Conformalizer):
                     **fit_params,
                 )
             )
-        elif self._central_estimator is not None and not self.fit_centeral_estimator:
+        elif self._central_estimator is not None and not self.fit_central_estimator:
             self.estimators_["central"].append(self._central_estimator)
 
     # ---------------------Conformalizer
@@ -450,20 +452,21 @@ class _QuantileConformalizer(_Conformalizer):
         y_calib = _check_y(y_calib)
 
         self.n_calib_samples.append(_num_samples(y_calib))
-        pred = self._predict_quantiles(X, index)
+        pred = self._predict_quantiles(X_calib, index)
         self.conformity_scores.append(
             self.score.get_conformity_scores(y_calib, pred, **kwargs)
         )
 
         self.pinball_losses.append(self.pinball_loss(y_calib, pred))
-        self.n_calib_samples.append(_num_samples(y_calib))
+        return self
 
     # ------------------------------ Predict
     def pinball_weighted_mean(self, y_preds):
         """
         Computes the weighted mean of the predicted values using the pinball losses as weights.
         """
-        weights = self.pinball_losses / self.pinball_losses.sum(axis=0)
+        pinball_losses = np.asarray(self.pinball_losses)
+        weights = pinball_losses / pinball_losses.sum(axis=0)
         weighted_values = np.array(
             [np.atleast_2d(w).T * values for w, values in zip(weights, y_preds)]
         )

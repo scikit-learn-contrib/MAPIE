@@ -18,9 +18,11 @@ from sklearn.preprocessing import OneHotEncoder
 from typing_extensions import TypedDict
 
 from mapie.metrics.regression import regression_coverage_score
+from mapie.conformity_scores import BaseRegressionScore
 from mapie.regression.quantile_regression import (
     AbsoluteQuantileRegressionScore,
     QuantileRegressionScore,
+    _QuantileConformalizer,
     _MapieQuantileRegressor,
 )
 from mapie.utils import check_is_fitted
@@ -107,6 +109,25 @@ class NoAlphaParameterEstimator(BaseEstimator):
 
     def predict(self, *args: Any) -> None:
         """Dummy predict."""
+
+
+class DummyQuantileConformalizer(_QuantileConformalizer):
+    def _check_cv(self, cv: Any) -> str:
+        return "split" if cv is None else cv
+
+    def _predict(self, *args: Any, **kwargs: Any) -> Any:
+        raise NotImplementedError
+
+
+class FixedPredictor(BaseEstimator):
+    def __init__(self, prediction: NDArray):
+        self.prediction = np.asarray(prediction)
+
+    def fit(self, X: Any, y: Any) -> FixedPredictor:
+        return self
+
+    def predict(self, X: Any, **kwargs: Any) -> NDArray:
+        return self.prediction
 
 
 def test_default_parameters() -> None:
@@ -683,3 +704,247 @@ def test_absolute_quantile_regression_score_conformity_scores() -> None:
 
     expected_scores = np.maximum(y_pred[0] - y, y - y_pred[1])
     np.testing.assert_allclose(conformity_scores, expected_scores)
+
+
+def test_quantile_conformalizer_check_alpha_without_central_estimator() -> None:
+    """Test alpha conversion when the central estimator is absent."""
+    conformalizer = DummyQuantileConformalizer()
+    conformalizer._central_estimator = None
+
+    alpha_np = conformalizer._check_alpha(0.2)
+
+    np.testing.assert_allclose(alpha_np, np.array([0.1, 0.9, 0.5]))
+
+
+def test_quantile_conformalizer_check_alpha_with_central_estimator() -> None:
+    """Test alpha conversion when a central estimator already exists."""
+    conformalizer = DummyQuantileConformalizer()
+    conformalizer._central_estimator = LinearRegression()
+
+    alpha_np = conformalizer._check_alpha(0.2)
+
+    np.testing.assert_allclose(alpha_np, np.array([0.1, 0.9]))
+
+
+def test_quantile_conformalizer_check_score() -> None:
+    """Test score validation against QuantileRegressionScore subclasses."""
+    conformalizer = DummyQuantileConformalizer()
+
+    conformalizer._check_score(AbsoluteQuantileRegressionScore)
+
+    with pytest.raises(
+        ValueError,
+        match=r".*Invalid score. Allowed values are subclasses of QuantileRegressionScore.*",
+    ):
+        conformalizer._check_score(BaseRegressionScore)
+
+
+def test_quantile_conformalizer_pinball_loss() -> None:
+    """Test pinball loss computation for lower and upper quantiles."""
+    conformalizer = DummyQuantileConformalizer()
+    conformalizer.quantiles = np.array([0.1, 0.9])
+    y_true = np.array([1.0, 3.0])
+    y_pred = np.array(
+        [
+            [0.0, 4.0],
+            [2.0, 2.0],
+        ]
+    )
+
+    pinball_losses = conformalizer.pinball_loss(y_true, y_pred)
+
+    expected_losses = np.array([0.5, 0.5])
+    np.testing.assert_allclose(pinball_losses, expected_losses)
+
+
+def test_quantile_conformalizer_set_quantile_estimator_params() -> None:
+    """Test that quantile parameters are set on a clone, not in place."""
+    conformalizer = DummyQuantileConformalizer()
+    estimator = QuantileRegressor(solver="highs-ds", quantile=0.5)
+
+    updated_estimator = conformalizer._set_quantile_estimator_params(
+        estimator,
+        alpha=0.2,
+        alpha_name="quantile",
+    )
+
+    assert updated_estimator is not estimator
+    assert updated_estimator.get_params()["quantile"] == 0.2
+    assert estimator.get_params()["quantile"] == 0.5
+
+
+def test_quantile_conformalizer_check_quantile_estimator_default() -> None:
+    """Test default quantile estimator creation."""
+    conformalizer = DummyQuantileConformalizer()
+
+    estimator = conformalizer._check_quantile_estimator()
+
+    assert isinstance(estimator, QuantileRegressor)
+    assert estimator.get_params()["solver"] == "highs-ds"
+
+
+def test_quantile_conformalizer_check_quantile_estimator_pipeline() -> None:
+    """Test quantile estimator validation through a pipeline."""
+    conformalizer = DummyQuantileConformalizer()
+    estimator = make_pipeline(SimpleImputer(), QuantileRegressor(solver="highs-ds"))
+
+    checked_estimator = conformalizer._check_quantile_estimator(estimator)
+
+    assert isinstance(checked_estimator, Pipeline)
+    assert checked_estimator[-1] is estimator[-1]
+
+
+def test_quantile_conformalizer_get_estimator_name() -> None:
+    """Test estimator name extraction for plain estimators and pipelines."""
+    conformalizer = DummyQuantileConformalizer()
+    conformalizer.estimator = QuantileRegressor(solver="highs-ds")
+    assert conformalizer.get_estimator_name() == "QuantileRegressor"
+
+    conformalizer.estimator = make_pipeline(
+        SimpleImputer(), QuantileRegressor(solver="highs-ds")
+    )
+    assert conformalizer.get_estimator_name() == "QuantileRegressor"
+
+
+def test_quantile_conformalizer_set_estimator_params() -> None:
+    """Test in-place estimator parameter update."""
+    conformalizer = DummyQuantileConformalizer()
+    estimator = QuantileRegressor(solver="highs-ds", quantile=0.5)
+
+    updated_estimator = conformalizer._set_estimator_params(
+        estimator, quantile=0.3
+    )
+
+    assert updated_estimator is estimator
+    assert estimator.get_params()["quantile"] == 0.3
+
+
+def test_quantile_conformalizer_initialize_fit_conformalize() -> None:
+    """Test conformalizer initialization state."""
+    conformalizer = DummyQuantileConformalizer()
+    conformalizer.cv = None
+    conformalizer.alpha = 0.2
+    conformalizer._central_estimator = None
+
+    conformalizer._initialize_fit_conformalize()
+
+    assert conformalizer.cv == "split"
+    np.testing.assert_allclose(conformalizer.quantiles, np.array([0.1, 0.9, 0.5]))
+    assert conformalizer.estimators_ == {"lower": [], "upper": [], "central": []}
+    assert conformalizer.n_calib_samples == []
+    assert conformalizer.conformity_scores == []
+    assert conformalizer.pinball_losses == []
+    assert conformalizer.key_map == {0: "lower", 1: "upper", 2: "central"}
+
+
+def test_quantile_conformalizer_fit_quantiles() -> None:
+    """Test quantile estimator fitting and storage."""
+    conformalizer = DummyQuantileConformalizer()
+    conformalizer.cv = None
+    conformalizer.alpha = 0.2
+    conformalizer.estimator = QuantileRegressor(solver="highs-ds")
+    conformalizer._central_estimator = None
+    conformalizer.fit_central_estimator = True
+    conformalizer._initialize_fit_conformalize()
+
+    conformalizer._fit_quantiles(X_train_toy, y_train_toy)
+
+    assert len(conformalizer.estimators_["lower"]) == 1
+    assert len(conformalizer.estimators_["upper"]) == 1
+    assert len(conformalizer.estimators_["central"]) == 1
+    assert conformalizer.estimators_["lower"][0].get_params()["quantile"] == 0.1
+    assert conformalizer.estimators_["upper"][0].get_params()["quantile"] == 0.9
+    assert conformalizer.estimators_["central"][0].get_params()["quantile"] == 0.5
+
+
+def test_quantile_conformalizer_predict_quantiles() -> None:
+    """Test stacked lower, upper and central quantile predictions."""
+    conformalizer = DummyQuantileConformalizer()
+    conformalizer.quantiles = np.array([0.1, 0.9, 0.5])
+    conformalizer.estimators_ = {
+        "lower": [FixedPredictor(np.array([1.0, 2.0]))],
+        "upper": [FixedPredictor(np.array([3.0, 4.0]))],
+        "central": [FixedPredictor(np.array([2.0, 3.0]))],
+    }
+
+    predictions = conformalizer._predict_quantiles(X_toy[:2], 0)
+
+    np.testing.assert_allclose(
+        predictions,
+        np.array(
+            [
+                [1.0, 2.0],
+                [3.0, 4.0],
+                [2.0, 3.0],
+            ]
+        ),
+    )
+
+
+def test_quantile_conformalizer_predict_center() -> None:
+    """Test central predictor dispatch."""
+    conformalizer = DummyQuantileConformalizer()
+    conformalizer.estimators_ = {
+        "lower": [],
+        "upper": [],
+        "central": [FixedPredictor(np.array([2.0, 3.0]))],
+    }
+
+    predictions = conformalizer._predict_center(X_toy[:2], 0)
+
+    np.testing.assert_allclose(predictions, np.array([2.0, 3.0]))
+
+
+def test_quantile_conformalizer_conformalize() -> None:
+    """Test conformity score and pinball loss accumulation."""
+    conformalizer = DummyQuantileConformalizer()
+    conformalizer.quantiles = np.array([0.1, 0.9, 0.5])
+    conformalizer.estimators_ = {
+        "lower": [FixedPredictor(np.array([1.0, 4.0]))],
+        "upper": [FixedPredictor(np.array([3.0, 6.0]))],
+        "central": [FixedPredictor(np.array([2.0, 5.0]))],
+    }
+    conformalizer.n_calib_samples = []
+    conformalizer.conformity_scores = []
+    conformalizer.pinball_losses = []
+    conformalizer.score = AbsoluteQuantileRegressionScore()
+
+    conformalizer._conformalize(X_toy[:2], y_toy[:2], index=0)
+
+    assert conformalizer.n_calib_samples == [2]
+    assert len(conformalizer.conformity_scores) == 1
+    assert len(conformalizer.pinball_losses) == 1
+    np.testing.assert_allclose(
+        conformalizer.conformity_scores[0], np.array([2.0, 1.0])
+    )
+    np.testing.assert_allclose(
+        conformalizer.pinball_losses[0], np.array([0.35, 1.35, 1.25])
+    )
+
+    conformalizer._conformalize(X_toy[:2], y_toy[:2], index=0)
+
+    assert conformalizer.n_calib_samples == [2, 2]
+    assert len(conformalizer.conformity_scores) == 2
+    assert len(conformalizer.pinball_losses) == 2
+    np.testing.assert_allclose(
+        conformalizer.conformity_scores[1], np.array([2.0, 1.0])
+    )
+    np.testing.assert_allclose(
+        conformalizer.pinball_losses[1], np.array([0.35, 1.35, 1.25])
+    )
+
+
+def test_quantile_conformalizer_pinball_weighted_mean() -> None:
+    """Test weighted aggregation from pinball losses."""
+    conformalizer = DummyQuantileConformalizer()
+    conformalizer.pinball_losses = np.array([1.0, 3.0])
+    y_preds = np.array(
+        [
+            [10.0, 20.0],
+            [30.0, 40.0],
+        ]
+    )
+
+    weighted_mean = conformalizer.pinball_weighted_mean(y_preds)
+
+    np.testing.assert_allclose(weighted_mean, np.array([[25.0, 35.0]]))
