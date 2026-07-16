@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from types import MethodType
 from typing import Any, Tuple
 
 import numpy as np
@@ -754,6 +755,7 @@ def test_quantile_conformalizer_pinball_loss() -> None:
     pinball_losses = conformalizer.pinball_loss(y_true, y_pred)
 
     expected_losses = np.array([0.5, 0.5])
+    assert pinball_losses.shape == (2,)
     np.testing.assert_allclose(pinball_losses, expected_losses)
 
 
@@ -897,7 +899,7 @@ def test_quantile_conformalizer_fit() -> None:
     fitted_conformalizer = conformalizer.fit(X_train_toy, y_train_toy)
 
     assert fitted_conformalizer is conformalizer
-    assert conformalizer.is_fitted is True
+    assert conformalizer.is_fitted
     assert conformalizer.k_.shape == (len(y_train_toy), 3)
     assert len(conformalizer.estimators_["lower"]) == 3
     assert len(conformalizer.estimators_["upper"]) == 3
@@ -916,6 +918,7 @@ def test_quantile_conformalizer_predict_quantiles() -> None:
 
     predictions = conformalizer._predict_quantiles(X_toy[:2], 0)
 
+    assert predictions.shape == (3, 2)
     np.testing.assert_allclose(
         predictions,
         np.array(
@@ -939,42 +942,8 @@ def test_quantile_conformalizer_predict_center() -> None:
 
     predictions = conformalizer._predict_center(X_toy[:2], 0)
 
+    assert predictions.shape == (2,)
     np.testing.assert_allclose(predictions, np.array([2.0, 3.0]))
-
-
-def test_quantile_conformalizer_conformalize() -> None:
-    """Test conformity score and pinball loss accumulation."""
-    conformalizer = DummyQuantileConformalizer()
-    conformalizer.quantiles = np.array([0.1, 0.9, 0.5])
-    conformalizer.estimators_ = {
-        "lower": [FixedPredictor(np.array([1.0, 4.0]))],
-        "upper": [FixedPredictor(np.array([3.0, 6.0]))],
-        "central": [FixedPredictor(np.array([2.0, 5.0]))],
-    }
-    conformalizer.n_calib_samples = []
-    conformalizer.conformity_scores = []
-    conformalizer.pinball_losses = []
-    conformalizer.score = AbsoluteQuantileRegressionScore()
-
-    conformalizer._conformalize(X_toy[:2], y_toy[:2], index=0)
-
-    assert conformalizer.n_calib_samples == [2]
-    assert len(conformalizer.conformity_scores) == 1
-    assert len(conformalizer.pinball_losses) == 1
-    np.testing.assert_allclose(conformalizer.conformity_scores[0], np.array([2.0, 1.0]))
-    np.testing.assert_allclose(
-        conformalizer.pinball_losses[0], np.array([0.35, 1.35, 1.25])
-    )
-
-    conformalizer._conformalize(X_toy[:2], y_toy[:2], index=-1)
-
-    assert conformalizer.n_calib_samples == [2, 2]
-    assert len(conformalizer.conformity_scores) == 2
-    assert len(conformalizer.pinball_losses) == 2
-    np.testing.assert_allclose(conformalizer.conformity_scores[1], np.array([2.0, 1.0]))
-    np.testing.assert_allclose(
-        conformalizer.pinball_losses[1], np.array([0.35, 1.35, 1.25])
-    )
 
 
 def test_quantile_conformalizer_pinball_weighted_mean() -> None:
@@ -991,3 +960,255 @@ def test_quantile_conformalizer_pinball_weighted_mean() -> None:
     weighted_mean = conformalizer._pinball_weighted_mean(y_preds)
 
     np.testing.assert_allclose(weighted_mean, np.array([[25.0, 35.0]]))
+
+
+def test_quantile_conformalizer_fit_prefit_sets_state() -> None:
+    """Test fit in prefit mode initializes k_ and fitted state."""
+    conformalizer = DummyQuantileConformalizer()
+    conformalizer.cv = "prefit"
+    conformalizer.alpha = 0.2
+    conformalizer._central_estimator = None
+    conformalizer._initialize_fit_conformalize()
+
+    fitted_conformalizer = conformalizer.fit(X_train_toy, y_train_toy)
+
+    assert fitted_conformalizer is conformalizer
+    assert conformalizer.is_fitted
+    assert conformalizer.k_.shape == (len(y_train_toy), 1)
+    assert np.isnan(conformalizer.k_).all()
+
+
+def test_quantile_conformalizer_fit_twice_warns_and_resets() -> None:
+    """Test second fit emits warning and clears previous conformalization state."""
+    conformalizer = DummyQuantileConformalizer()
+    conformalizer.cv = "prefit"
+    conformalizer.alpha = 0.2
+    conformalizer._central_estimator = None
+    conformalizer._initialize_fit_conformalize()
+    conformalizer.fit(X_train_toy, y_train_toy)
+
+    conformalizer.is_conformalized = True
+    conformalizer.conformity_scores = [np.array([42.0])]
+    conformalizer.pinball_losses = [np.array([1.0, 2.0, 3.0])]
+
+    with pytest.warns(
+        UserWarning,
+        match=r".*fit method has already been called.*",
+    ):
+        conformalizer.fit(X_train_toy, y_train_toy)
+
+    assert conformalizer.is_fitted
+    assert not conformalizer.is_conformalized
+    assert conformalizer.conformity_scores == []
+    assert conformalizer.pinball_losses == []
+
+
+def test_quantile_conformalizer_predict_oof_empty_validation() -> None:
+    """Test _predict_oof returns an empty array for empty validation index."""
+    conformalizer = DummyQuantileConformalizer()
+
+    predictions = conformalizer._predict_oof(
+        X_toy[:2],
+        np.array([], dtype=int),
+        index=0,
+    )
+
+    assert predictions.size == 0
+
+
+def test_quantile_conformalizer_predict_oof_calls_predict_quantiles() -> None:
+    """Test _predict_oof delegates to predict_quantiles with provided index."""
+    conformalizer = DummyQuantileConformalizer()
+    call_args = {}
+
+    def _mock_predict_quantiles(self: DummyQuantileConformalizer, X: NDArray, index: int, **kwargs: Any) -> NDArray:
+        call_args["X"] = X
+        call_args["index"] = index
+        call_args["kwargs"] = kwargs
+        return np.array([[1.0], [2.0], [3.0]])
+
+    conformalizer.predict_quantiles = MethodType(_mock_predict_quantiles, conformalizer)  # type: ignore[attr-defined]
+
+    predictions = conformalizer._predict_oof(X_toy[:2], np.array([1]), index=7, a=1)
+
+    assert predictions.shape == (3, 1)
+    np.testing.assert_allclose(predictions, np.array([[1.0], [2.0], [3.0]]))
+    np.testing.assert_allclose(call_args["X"], X_toy[[1]])
+    assert call_args["index"] == 7
+    assert call_args["kwargs"] == {"a": 1}
+
+
+def test_quantile_conformalizer_conformalize_requires_fit() -> None:
+    """Test conformalize raises when called before fit."""
+    conformalizer = DummyQuantileConformalizer()
+    conformalizer.is_fitted = False
+
+    with pytest.raises(ValueError, match=r".*Incorrect method order*"):
+        conformalizer.conformalize(X_toy[:2], y_toy[:2])
+
+
+def test_quantile_conformalizer_conformalize_twice_warns_and_overwrites() -> None:
+    """Test second conformalize call warns and overwrites previous scores."""
+    conformalizer = DummyQuantileConformalizer()
+    conformalizer.is_fitted = True
+    conformalizer.is_conformalized = True
+    conformalizer.score = AbsoluteQuantileRegressionScore()
+    conformalizer.conformity_scores = [np.array([99.0])]
+
+    def _mock_predict_calib(self: DummyQuantileConformalizer, X: NDArray, y: NDArray, groups: Any = None, **kwargs: Any) -> NDArray:
+        return np.array(
+            [
+                [1.0, 4.0],
+                [3.0, 6.0],
+                [2.0, 5.0],
+            ]
+        )
+
+    conformalizer._predict_calib = MethodType(_mock_predict_calib, conformalizer)
+
+    with pytest.warns(
+        UserWarning,
+        match=r".*conformalize method has already been called.*",
+    ):
+        conformalizer.conformalize(X_toy[:2], y_toy[:2])
+
+    assert conformalizer.is_conformalized
+    assert len(conformalizer.conformity_scores) == 1
+    assert conformalizer.conformity_scores[0].shape == (2,)
+    np.testing.assert_allclose(conformalizer.conformity_scores[0], np.array([2.0, 1.0]))
+
+
+def test_quantile_conformalizer_fit_cv_estimator_indexes_sample_weight() -> None:
+    """Test _fit_cv_estimator forwards indexed sample_weight to _fit_quantiles."""
+    conformalizer = DummyQuantileConformalizer()
+    observed: dict[str, NDArray] = {}
+
+    def _mock_fit_quantiles(
+        self: DummyQuantileConformalizer,
+        X: NDArray,
+        y: NDArray,
+        sample_weight: NDArray,
+        **fit_params: Any,
+    ) -> dict[str, list]:
+        observed["X"] = np.asarray(X)
+        observed["y"] = np.asarray(y)
+        observed["sample_weight"] = np.asarray(sample_weight)
+        observed["fit_params"] = fit_params
+        return {"lower": [], "upper": [], "central": []}
+
+    conformalizer._fit_quantiles = MethodType(_mock_fit_quantiles, conformalizer)
+
+    train_index = np.array([0, 2, 4])
+    sample_weight = np.array([1.0, 10.0, 2.0, 20.0, 3.0, 30.0])
+
+    conformalizer._fit_cv_estimator(
+        X_toy[:6],
+        y_toy[:6],
+        train_index=train_index,
+        sample_weight=sample_weight,
+        dummy=123,
+    )
+
+    np.testing.assert_allclose(observed["X"], X_toy[:6][train_index])
+    np.testing.assert_allclose(observed["y"], y_toy[:6][train_index])
+    np.testing.assert_allclose(observed["sample_weight"], sample_weight[train_index])
+    assert observed["fit_params"] == {"dummy": 123}
+
+
+def test_quantile_conformalizer_conformalize_forwards_groups_and_params() -> None:
+    """Test conformalize forwards groups and predict kwargs to _predict_calib."""
+    conformalizer = DummyQuantileConformalizer()
+    observed: dict[str, Any] = {}
+    conformalizer.is_fitted = True
+    conformalizer.is_conformalized = False
+    conformalizer.score = AbsoluteQuantileRegressionScore()
+    conformalizer.conformity_scores = []
+
+    def _mock_predict_calib(
+        self: DummyQuantileConformalizer,
+        X: NDArray,
+        y: NDArray,
+        groups: NDArray,
+        **predict_params: Any,
+    ) -> NDArray:
+        observed["X"] = np.asarray(X)
+        observed["y"] = np.asarray(y)
+        observed["groups"] = np.asarray(groups)
+        observed["predict_params"] = predict_params
+        return np.array(
+            [
+                [1.0, 4.0],
+                [3.0, 6.0],
+                [2.0, 5.0],
+            ]
+        )
+
+    conformalizer._predict_calib = MethodType(_mock_predict_calib, conformalizer)
+
+    groups = np.array([10, 11])
+    conformalizer.conformalize(X_toy[:2], y_toy[:2], groups=groups, foo="bar")
+
+    np.testing.assert_allclose(observed["X"], X_toy[:2])
+    np.testing.assert_allclose(observed["y"], y_toy[:2])
+    np.testing.assert_allclose(observed["groups"], groups)
+    assert observed["predict_params"] == {"foo": "bar"}
+    assert conformalizer.is_conformalized
+    assert len(conformalizer.conformity_scores) == 1
+    assert conformalizer.conformity_scores[0].shape == (2,)
+    np.testing.assert_allclose(conformalizer.conformity_scores[0], np.array([2.0, 1.0]))
+
+
+def test_quantile_conformalizer_conformalize_score_shape_matches_n_samples() -> None:
+    """Test conformity score shape matches calibration sample count."""
+    conformalizer = DummyQuantileConformalizer()
+    conformalizer.is_fitted = True
+    conformalizer.is_conformalized = False
+    conformalizer.score = AbsoluteQuantileRegressionScore()
+    conformalizer.conformity_scores = []
+
+    y_local = y_toy[:4]
+
+    def _mock_predict_calib(
+        self: DummyQuantileConformalizer,
+        X: NDArray,
+        y: NDArray,
+        groups: Any = None,
+        **kwargs: Any,
+    ) -> NDArray:
+        return np.array(
+            [
+                [4.0, 5.0, 6.0, 7.0],
+                [6.0, 7.0, 8.0, 9.0],
+                [5.0, 6.0, 7.0, 8.0],
+            ]
+        )
+
+    conformalizer._predict_calib = MethodType(_mock_predict_calib, conformalizer)
+
+    conformalizer.conformalize(X_toy[:4], y_local)
+
+    assert len(conformalizer.conformity_scores) == 1
+    assert conformalizer.conformity_scores[0].shape == (4,)
+
+
+def test_quantile_conformalizer_reset_clears_runtime_state() -> None:
+    """Test reset clears all runtime state fields used by fit/conformalize."""
+    conformalizer = DummyQuantileConformalizer()
+    conformalizer.is_fitted = True
+    conformalizer.is_conformalized = True
+    conformalizer.estimators_ = {"lower": [object()], "upper": [object()], "central": [object()]}
+    conformalizer.n_calib_samples = [2, 3]
+    conformalizer.conformity_scores = [np.array([1.0])]
+    conformalizer.pinball_losses = [np.array([0.1, 0.2])]
+    conformalizer._predict_params = {"x": 1}
+
+    returned = conformalizer.reset()
+
+    assert returned is conformalizer
+    assert not conformalizer.is_fitted
+    assert not conformalizer.is_conformalized
+    assert conformalizer.estimators_ == {"lower": [], "upper": [], "central": []}
+    assert conformalizer.n_calib_samples == []
+    assert conformalizer.conformity_scores == []
+    assert conformalizer.pinball_losses == []
+    assert conformalizer._predict_params == {}

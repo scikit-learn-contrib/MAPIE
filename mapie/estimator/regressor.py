@@ -29,6 +29,12 @@ class _Conformalizer(ABC):
     conformity_scores_: NDArray[np.float64]
     n_calib_samples: List[int]
     cv: BaseCrossValidator
+    njobs: Optional[int]
+    verbose: Optional[bool]
+    is_fitted: bool
+    is_conformalized: bool
+
+    ALLOWED_AGG = ["mean", "median"]
 
     @abstractmethod
     def _predict(
@@ -51,7 +57,7 @@ class _Conformalizer(ABC):
     ) -> _Conformalizer:
         pass
 
-     def _aggregate_with_mask(self, x: NDArray, k: NDArray) -> NDArray:
+    def _aggregate_with_mask(self, x: NDArray, k: NDArray) -> NDArray:
         """
         Take the array of predictions, made by the refitted estimators,
         on the testing set, and the 1-or-nan array indicating for each training
@@ -74,7 +80,11 @@ class _Conformalizer(ABC):
         ArrayLike of shape (n_samples_test,)
             Array of aggregated predictions for each testing sample.
         """
-        if self.method in self.no_agg_methods_ or self.use_split_method_ or self.method not in self.ALLOWED_AGG:
+        if (
+            self.method in self.no_agg_methods_
+            or self.use_split_method_
+            or self.method not in self.ALLOWED_AGG
+        ):
             raise ValueError("There should not be aggregation of predictions.")
         elif self.agg_function == "median":
             return cast(NDArray, phi2D(A=x, B=k, fun=lambda x: np.nanmedian(x, axis=1)))
@@ -334,44 +344,6 @@ class EnsembleRegressor(_Conformalizer):
             y_pred = np.array([])
         return y_pred, val_index
 
-    def _aggregate_with_mask(self, x: NDArray, k: NDArray) -> NDArray:
-        """
-        Take the array of predictions, made by the refitted estimators,
-        on the testing set, and the 1-or-nan array indicating for each training
-        sample which one to integrate, and aggregate to produce phi-{t}(x_t)
-        for each training sample x_t.
-
-        Parameters
-        ----------
-        x: ArrayLike of shape (n_samples_test, n_estimators)
-            Array of predictions, made by the refitted estimators,
-            for each sample of the testing set.
-
-        k: ArrayLike of shape (n_samples_training, n_estimators)
-            1-or-nan array: indicates whether to integrate the prediction
-            of a given estimator into the aggregation, for each training
-            sample.
-
-        Returns
-        -------
-        ArrayLike of shape (n_samples_test,)
-            Array of aggregated predictions for each testing sample.
-        """
-        if self.method in self.no_agg_methods_ or self.use_split_method_:
-            raise ValueError("There should not be aggregation of predictions.")
-        elif self.agg_function == "median":
-            return cast(NDArray, phi2D(A=x, B=k, fun=lambda x: np.nanmedian(x, axis=1)))
-        # To aggregate with mean() the aggregation coud be done
-        # with phi2D(A=x, B=k, fun=lambda x: np.nanmean(x, axis=1).
-        # However, phi2D contains a np.apply_along_axis loop which
-        # is much slower than the matrices multiplication that can
-        # be used to compute the means.
-        elif self.agg_function in ["mean", None]:
-            K = np.nan_to_num(k, nan=0.0)
-            return cast(NDArray, np.matmul(x, (K / (K.sum(axis=1, keepdims=True))).T))
-        else:
-            raise ValueError("The value of the aggregation function is not correct")
-
     def _pred_multi(self, X: ArrayLike, **predict_params) -> NDArray:
         """
         Return a prediction per train sample for each test sample, by
@@ -438,6 +410,7 @@ class EnsembleRegressor(_Conformalizer):
         if self.cv == "prefit":
             y_pred = self.single_estimator_.predict(X)
         else:
+            # TODO: Naive method is fitting and conformalizing on the same dataset, this can be suppressed
             if self.method == "naive":
                 y_pred = self.single_estimator_.predict(X)
             else:

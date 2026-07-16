@@ -137,6 +137,11 @@ class _QuantileConformalizer(_Conformalizer, ABC):
     _alphas: NDArray[float]
     score: QuantileRegressionScore
 
+    def __init__(self) -> None:
+        # Provide a sane default state for lightweight subclasses.
+        self.is_fitted = False
+        self.is_conformalized = False
+
     def _check_alpha(
         self,
         alpha: float = 0.1,
@@ -316,11 +321,6 @@ class _QuantileConformalizer(_Conformalizer, ABC):
                         f"{self.quantile_estimator_params.keys()} "
                         "Or, add your base model to" + " `quantile_estimator_params`."
                     )
-
-    @property
-    def is_fitted(self):
-        """Returns True if the estimator is fitted"""
-        return self._is_fitted
 
     # Potential caching here
     def get_estimator_name(self) -> str:
@@ -522,7 +522,7 @@ class _QuantileConformalizer(_Conformalizer, ABC):
         Self
             This CrossConformalRegressor instance, reset to its pre-fit state.
         """
-        self._is_fitted = False
+        self.is_fitted = False
         self.is_conformalized = False
         self.estimators_ = {"lower": [], "upper": [], "central": []}
         self.n_calib_samples = []
@@ -598,7 +598,7 @@ class _QuantileConformalizer(_Conformalizer, ABC):
                 for key in self.estimators_.keys():
                     self.estimators_[key].extend(dict_estimator[key])
 
-        self._is_fitted = True
+        self.is_fitted = True
         return self
 
     # ---------------------Conformalizer
@@ -719,7 +719,7 @@ class _QuantileConformalizer(_Conformalizer, ABC):
         _raise_error_if_previous_method_not_called(
             "conformalize",
             "fit",
-            self._is_fitted,
+            self.is_fitted,
         )
         if self.is_conformalized:
             warnings.warn(
@@ -849,7 +849,7 @@ class CrossConformalizedQuantileRegressor(_QuantileConformalizer):
         )
 
         self._alpha = _transform_confidence_level_to_alpha(confidence_level)
-        self._is_fitted = self.is_conformalized = False
+        self.is_fitted = self.is_conformalized = False
 
         self._predict_params: dict = {}
 
@@ -924,7 +924,7 @@ class CrossConformalizedQuantileRegressor(_QuantileConformalizer):
     @property
     def is_fitted_and_conformalized(self) -> bool:
         """Returns True if the estimator is fitted and conformalized"""
-        return self._is_fitted and self.is_conformalized
+        return self.is_fitted and self.is_conformalized
 
     # --------------------- Prediction
     # TODO: Duplicated from CrossConformalRegressor
@@ -1157,8 +1157,8 @@ class ConformalizedQuantileRegressor:
     ) -> None:
         self._alpha = _transform_confidence_level_to_alpha(confidence_level)
         self._prefit = prefit
-        self._is_fitted = prefit
-        self._is_conformalized = False
+        self.is_fitted = prefit
+        self.is_conformalized = False
         self.cv = "prefit" if prefit else "split"
 
         self._mapie_quantile_regressor = _MapieQuantileRegressor(
@@ -1204,7 +1204,7 @@ class ConformalizedQuantileRegressor:
 
         _raise_error_if_method_already_called(
             "conformalize",
-            self._is_conformalized,
+            self.is_conformalized,
         )
 
         self._predict_params = _prepare_params(predict_params)
@@ -1212,7 +1212,7 @@ class ConformalizedQuantileRegressor:
             X_conformalize, y_conformalize, **self._predict_params
         )
 
-        self._is_conformalized = True
+        self.is_conformalized = True
         return self
 
     def predict_interval(
@@ -1260,7 +1260,7 @@ class ConformalizedQuantileRegressor:
         _raise_error_if_previous_method_not_called(
             "predict_interval",
             "conformalize",
-            self._is_conformalized,
+            self.is_conformalized,
         )
 
         predictions = self._mapie_quantile_regressor.predict(
@@ -1292,7 +1292,7 @@ class ConformalizedQuantileRegressor:
         _raise_error_if_previous_method_not_called(
             "predict",
             "conformalize",
-            self._is_conformalized,
+            self.is_conformalized,
         )
 
         estimator = self._mapie_quantile_regressor
