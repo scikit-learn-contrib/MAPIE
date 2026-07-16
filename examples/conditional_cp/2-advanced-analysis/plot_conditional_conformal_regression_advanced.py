@@ -277,10 +277,11 @@ def plot_subplot(
             ax_transform.plot(x_sorted[:, 0], transform[:, column], lw=1, color=color)
 
 
-def plot_figure(mapies, y_preds, y_pis, titles, show_components=False):
+def plot_figure(mapies, y_preds, y_pis, titles, show_components=False, ncols=None):
     """Plot the prediction intervals of all MAPIE instances."""
     cp = plt.get_cmap("tab10").colors
-    ncols = min(3, len(titles))
+    if ncols is None:
+        ncols = min(3, len(titles))
     nrows = int(np.ceil(len(titles) / ncols))
 
     if show_components:
@@ -429,21 +430,21 @@ mapie_cqr = ConformalizedQuantileRegressor(
 mapie_cqr.fit(X_train, y_train).conformalize(X_calib, y_calib)
 y_pred_cqr, y_pi_cqr = mapie_cqr.predict_interval(X_test)
 
-mapie_ccp = ConditionalSplitConformalRegressor(
+mapie_conditional = ConditionalSplitConformalRegressor(
     gaussian_feature_map,
     estimator=estimator_split,
     confidence_level=confidence_level,
     conformity_score="absolute",
     prefit=True,
 ).conformalize(X_calib, y_calib)
-y_pred_ccp, y_pi_ccp = mapie_ccp.predict_interval(X_test)
+y_pred_conditional, y_pi_conditional = mapie_conditional.predict_interval(X_test)
 
-mapies = [mapie_split, mapie_cv, mapie_cqr, mapie_ccp]
-y_preds = [y_pred_split, y_pred_cv, y_pred_cqr, y_pred_ccp]
-y_pis = [y_pi_split, y_pi_cv, y_pi_cqr, y_pi_ccp]
+mapies = [mapie_split, mapie_cv, mapie_cqr, mapie_conditional]
+y_preds = [y_pred_split, y_pred_cv, y_pred_cqr, y_pred_conditional]
+y_pis = [y_pi_split, y_pi_cv, y_pi_cqr, y_pi_conditional]
 titles = ["Basic split", "CV+", "CQR", "Conditional - Gaussian feature map"]
 
-plot_figure(mapies, y_preds, y_pis, titles)
+plot_figure(mapies, y_preds, y_pis, titles, ncols=2)
 plot_evaluation(titles, y_pis, X_test, y_test)
 
 
@@ -504,9 +505,9 @@ feature_map_titles = [
     "Conditional - grouped polynomial",
 ]
 
-ccp_mapies = []
-ccp_y_preds = []
-ccp_y_pis = []
+conditional_mapies = []
+conditional_y_preds = []
+conditional_y_pis = []
 for feature_map in feature_maps:
     mapie = ConditionalSplitConformalRegressor(
         feature_map,
@@ -516,12 +517,12 @@ for feature_map in feature_maps:
         prefit=True,
     ).conformalize(X_calib, y_calib)
     y_pred, y_pi = mapie.predict_interval(X_test)
-    ccp_mapies.append(mapie)
-    ccp_y_preds.append(y_pred)
-    ccp_y_pis.append(y_pi)
+    conditional_mapies.append(mapie)
+    conditional_y_preds.append(y_pred)
+    conditional_y_pis.append(y_pi)
 
-plot_figure(ccp_mapies, ccp_y_preds, ccp_y_pis, feature_map_titles, True)
-plot_evaluation(feature_map_titles, ccp_y_pis, X_test, y_test)
+plot_figure(conditional_mapies, conditional_y_preds, conditional_y_pis, feature_map_titles, True)
+plot_evaluation(feature_map_titles, conditional_y_pis, X_test, y_test)
 
 
 ##############################################################################
