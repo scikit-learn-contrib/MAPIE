@@ -1016,7 +1016,7 @@ class CrossConformalizedQuantileRegressor(_QuantileConformalizer):
             X,
             y,
             groups=groups,
-            fit_params=fit_params_,
+            **fit_params_,
         )
         self.conformalize(X, y, groups, predict_params=predict_params)
         return self
