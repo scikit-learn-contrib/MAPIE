@@ -17,7 +17,7 @@ MAPIE gives the same results as [1], and that the bounds of the intervals are
 obtained.
 
 [1] Isaac Gibbs, John J. Cherian, Emmanuel J. Candès (2023).
-Conformal Prediction With Conditional Guarantees
+[Conformal Prediction With Conditional Guarantees](https://arxiv.org/abs/2305.12616).
 
 [2] Yaniv Romano, Evan Patterson, Emmanuel J. Candès (2019).
 Conformalized Quantile Regression.
