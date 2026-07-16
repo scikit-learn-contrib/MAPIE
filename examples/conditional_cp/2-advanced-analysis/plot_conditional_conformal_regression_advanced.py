@@ -2,33 +2,27 @@
 Group-conditional prediction intervals (advanced)
 =================================================
 
-The tutorial will explain how to use the CCP method, and
-will compare it with the other methods available in MAPIE. The CCP method
+The tutorial will explain how to use the conditional conformal prediction
+for regression with ``ConditionalSplitConformalRegressor``, and
+will compare it with the other methods available in MAPIE. The conditional method
 implements the method described in the Gibbs et al. (2023) paper [1].
-
-We will see in this tutorial how to use the method. It has a lot of advantages:
+It has a lot of advantages:
 
 - It is model agnostic (it doesn't depend on the model but only on the
-  predictions, unlike `CQR`)
+  predictions, unlike conformalized quantile regression (CQR)),
 - It can create very adaptative intervals (with a varying width which truly
-  reflects the model uncertainty)
+  reflects the model uncertainty),
 - while providing coverage guarantee on all sub-groups of interest
-  (avoiding biases)
-- with the possibility to inject prior knowledge about the data or the model
+  (avoiding biases),
+- with the possibility to inject prior knowledge about the data or the model.
 
 However, we will also see its disadvantages:
 
-- The adaptativity depends on the calibrator we use: It can be difficult to
-  choose the correct calibrator,
-  with the best parameters (this tutorial will try to help you with this task).
-- The calibration and even more the inference are much longer than for the
-  other methods.
+- The adaptativity depends on the feature map used, which can be difficult
+to define,
+- The inference step (``predict_interval``) takes much longer than for the
+  other methods, as an optimization process is solved for each test point.
 
-Conclusion on the method:
-
-It can create more adaptative intervals than the other methods, but it can be
-difficult to find the best settings (calibrator type and parameters)
-and can have a big computational time.
 
 ----
 
@@ -38,14 +32,10 @@ with ``PolynomialFeatures`` and
 ``LinearRegression`` (or
 ``QuantileRegressor`` for CQR).
 
-We will compare the different available feature maps of the CCP method
-(using
-``ConditionalSplitConformalRegressor``),
+We will compare the different available feature maps of the conditional method
+(using ``ConditionalSplitConformalRegressor``),
 with the standard split-conformal method, the CV+ method
-(``CrossConformalRegressor``) and CQR
-(``ConformalizedQuantileRegressor``)
-
-Recall that the ``alpha`` is ``1 - target coverage``.
+(``CrossConformalRegressor``) and CQR (``ConformalizedQuantileRegressor``)
 
 [1] Isaac Gibbs, John J. Cherian, and Emmanuel J. Candès,
 "Conformal Prediction With Conditional Guarantees",
@@ -404,9 +394,9 @@ def plot_evaluation(titles, y_pis, X, y):
 
 
 ##############################################################################
-# 4. Creation of Mapie instances
+# 4. Creation of MAPIE instances
 # --------------------------------------------------------------------------
-# We are going to test different methods : ``CV+``, ``CQR`` and ``CCP``
+# We are going to test different methods : ``CV+``, ``CQR`` and ``Conditional``
 # (with default parameters)
 
 estimator_split = clone(estimator).fit(X_train, y_train)
@@ -449,7 +439,7 @@ y_pred_ccp, y_pi_ccp = mapie_ccp.predict_interval(X_test)
 mapies = [mapie_split, mapie_cv, mapie_cqr, mapie_ccp]
 y_preds = [y_pred_split, y_pred_cv, y_pred_cqr, y_pred_ccp]
 y_pis = [y_pi_split, y_pi_cv, y_pi_cqr, y_pi_ccp]
-titles = ["Basic split", "CV+", "CQR", "CCP Gaussian feature map"]
+titles = ["Basic split", "CV+", "CQR", "Conditional - Gaussian feature map"]
 
 plot_figure(mapies, y_preds, y_pis, titles)
 plot_evaluation(titles, y_pis, X_test, y_test)
@@ -457,7 +447,7 @@ plot_evaluation(titles, y_pis, X_test, y_test)
 
 ##############################################################################
 # The ``ConditionalSplitConformalRegressor``
-# has is a very adaptative method, even with default
+# is a very adaptative method, even with default
 # parameters values. If the dataset is more complex, the default parameters
 # may not be enough to get the best performances. In this case, we can use
 # more advanced settings, described below.
@@ -467,12 +457,12 @@ plot_evaluation(titles, y_pis, X_test, y_test)
 # 5. How to improve the results?
 # --------------------------------------------------------------------------
 #
-# 5.1. How does the ``CCP`` method works ?
+# 5.1. How does the conditional method works ?
 # --------------------------------------------------------------------------
-# The CCP method is based on a function which create some features(vector of
-# d dimensions), based on ``X`` (and potentially the prediction ``y_pred``).
+# The conditional method is based on a function which create some features (vector of
+# d dimensions), based on ``X``.
 #
-# These features should be able to represente the distribuion of the
+# These features should be able to represente the distribution of the
 # conformity scores, which is here (by default) the absolute residual:
 # ``|y_true - y_pred|``
 
@@ -505,11 +495,11 @@ feature_maps = [
     grouped_polynomial_feature_map,
 ]
 feature_map_titles = [
-    "CCP constant",
-    "CCP polynomial",
-    "CCP Gaussian",
-    "CCP binned groups",
-    "CCP grouped polynomial",
+    "Conditional - constant",
+    "Conditional - polynomial",
+    "Conditional - Gaussian",
+    "Conditional - binned groups",
+    "Conditional - grouped polynomial",
 ]
 
 ccp_mapies = []
@@ -540,10 +530,9 @@ plot_evaluation(feature_map_titles, ccp_y_pis, X_test, y_test)
 # still keeping the target coverage. Perfect adaptativity whould result in a
 # perfectly constant conditional coverage.
 #
-# This is the power of the ``CCP`` method: combining prior knowledge and
+# This is the power of the conditional method: use prior knowledge or
 # generic features (gaussian kernels) to have a great overall adaptativity.
 #
-# However, it can be difficult to find the best calibrator and parameters.
-# Sometimes, a simpler method (standard ``split`` with ``GammaConformityScore``
-# for example) can be enough. Don't forget to try at first the simpler method,
-# and move on with the more advanced if it is necessary.
+# However, it can be difficult to find the best feature map.
+# Sometimes, a simpler method can be enough. Don't forget to try at first
+# the simpler method, and move on with the more advanced if it is necessary.
