@@ -24,7 +24,7 @@ Conformalized Quantile Regression.
 33rd Conference on Neural Information Processing Systems (NeurIPS 2019).
 """
 
-# mkdocs_gallery_thumbnail_number = 2
+# mkdocs_gallery_thumbnail_number = 3
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -397,18 +397,20 @@ def plot_results(X_test, y_test, n_trials=20, experiment="Groups"):
 ##############################################################################
 # 5. Reproduce experiment and results
 # -----------------------------------------------------------------------------
-# The first experiments consists in performing group-conditional conformal
-# prediction. Groups are defined with intervals of $x$. The second experiment
-# illustrates the case of covariate shift.
 
 ###############################################################################
 # Group-conditional experiment
 # -----------------------------------------------------------------------------
+# This first experiments consists in performing group-conditional conformal
+# prediction. Groups are defined with intervals of $x$.
+
 plot_results(X_test, y_test, experiment="Groups")
 
 ###############################################################################
 # Covariate shift experiment
 # -----------------------------------------------------------------------------
+# This second experiment illustrates the case of covariate shift.
+
 plot_results(X_test, y_test, experiment="Shifts")
 
 
