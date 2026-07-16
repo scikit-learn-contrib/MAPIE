@@ -8,6 +8,8 @@
 - Add `reset()` method on `CrossConformalRegressor` and allow refitting via `fit_conformalize` (now emits a `UserWarning` and discards prior conformity scores instead of raising). Same pattern can be propagated to other conformal classes in follow-up PRs. (issue #710)
 - Add `reset()` method on `JackknifeAfterBootstrapRegressor` and allow refitting via `fit_conformalize` (mirrors the pattern landed for `CrossConformalRegressor` in #931).
 - Add `reset()` method on `CrossConformalClassifier` and allow refitting via `fit_conformalize` (mirrors the pattern landed in #931 and #936); completes the warn-on-refit pattern across all Cross/Jackknife conformal techniques.
+- Add `CrossConformalizedQuantileRegressor` reproducing functionnalities from `CrossConformalRegressor`
+- Add `QuantileRegressionScore` for quantile regression
 
 ### Improvements and refactoring
 
