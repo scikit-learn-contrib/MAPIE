@@ -1003,7 +1003,9 @@ def test_quantile_conformalizer_predict_returns_center_lower_upper() -> None:
         "central": [FixedPredictor(np.array([2.0, 3.0]))],
     }
 
-    y_pred_center, y_pred_low, y_pred_up = conformalizer._predict(X_toy[:2], ensemble=True)
+    y_pred_center, y_pred_low, y_pred_up = conformalizer._predict(
+        X_toy[:2], ensemble=True
+    )
 
     assert y_pred_center.shape == (2,)
     assert y_pred_low.shape == (2,)
@@ -1034,7 +1036,9 @@ def test_quantile_conformalizer_predict_multiple_predictions_mean_aggregation() 
         ],
     }
 
-    y_pred_center, y_pred_low, y_pred_up = conformalizer._predict(X_toy[:2], ensemble=True)
+    y_pred_center, y_pred_low, y_pred_up = conformalizer._predict(
+        X_toy[:2], ensemble=True
+    )
 
     np.testing.assert_allclose(y_pred_center, np.array([3.0, 4.0]))
     np.testing.assert_allclose(y_pred_low, np.array([2.0, 3.0]))
@@ -1062,7 +1066,9 @@ def test_quantile_conformalizer_predict_multiple_predictions_minmax() -> None:
         ],
     }
 
-    y_pred_center, y_pred_low, y_pred_up = conformalizer._predict(X_toy[:2], ensemble=True)
+    y_pred_center, y_pred_low, y_pred_up = conformalizer._predict(
+        X_toy[:2], ensemble=True
+    )
 
     np.testing.assert_allclose(y_pred_center, np.array([3.0, 4.0]))
     np.testing.assert_allclose(y_pred_low, np.array([1.0, 2.0]))
@@ -1175,7 +1181,9 @@ def test_quantile_conformalizer_predict_oof_calls_predict_quantiles() -> None:
         call_args["kwargs"] = kwargs
         return np.array([[1.0], [2.0], [3.0]])
 
-    conformalizer._predict_quantiles = MethodType(_mock_predict_quantiles, conformalizer)
+    conformalizer._predict_quantiles = MethodType(
+        _mock_predict_quantiles, conformalizer
+    )
 
     predictions = conformalizer._predict_oof(X_toy[:2], np.array([1]), index=7, a=1)
 
@@ -1398,7 +1406,9 @@ def test_quantile_conformalizer_predict_calib_prefit_shape_and_forwarding() -> N
             ]
         )
 
-    conformalizer._predict_quantiles = MethodType(_mock_predict_quantiles, conformalizer)
+    conformalizer._predict_quantiles = MethodType(
+        _mock_predict_quantiles, conformalizer
+    )
 
     y_pred = conformalizer._predict_calib(X_toy[:4], y_toy[:4], key="value")
 
@@ -1408,11 +1418,16 @@ def test_quantile_conformalizer_predict_calib_prefit_shape_and_forwarding() -> N
     assert observed["index"] == 0
     assert observed["predict_params"] == {"key": "value"}
 
-def test_cross_conformalized_quantile_regressor_predict_interval_returns_expected_shape() -> None:
+
+def test_cross_conformalized_quantile_regressor_predict_interval_returns_expected_shape() -> (
+    None
+):
     """Test predict_interval returns (point, interval) arrays with expected shapes."""
 
     class StubScore:
-        def predict_set(self, X: NDArray, alpha: NDArray, **kwargs: Any) -> tuple[NDArray, NDArray, NDArray]:
+        def predict_set(
+            self, X: NDArray, alpha: NDArray, **kwargs: Any
+        ) -> tuple[NDArray, NDArray, NDArray]:
             n_samples = X.shape[0]
             return (
                 np.full(n_samples, 2.0),
