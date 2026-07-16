@@ -121,6 +121,9 @@ Following these steps, we have the coverage guarantee, \(\forall f \in \mathcal{
 
 ---
 
+### Limitations of the current implementation
+
+
 ## How to use it in practice?
 
 ### Creating a class of functions adapted to our needs
