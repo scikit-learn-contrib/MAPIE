@@ -15,8 +15,8 @@ with the standard method, using for both, the LAC conformity score
 (``LACConformityScore``).
 
 Recall that the ``LAC`` method consists on applying a threshold on the
-predicted softmax, to keep all the classes above the threshold
-(``alpha`` is ``1 - target coverage``).
+predicted class probabilities, to keep in the set all the classes with predicted
+probabilities above the threshold.
 """
 
 # mkdocs_gallery_thumbnail_number = 3
@@ -30,13 +30,13 @@ from mapie.classification import SplitConformalClassifier
 from mapie.conditional_conformal_prediction import ConditionalSplitConformalClassifier
 
 random_state = 1
-CONFIDENCE_LEVEL = 0.8
+CONFIDENCE_LEVEL = 0.8  # 1 - alpha
 N_CLASSES = 5
 
 ##############################################################################
 # 1. Data generation
 # --------------------------------------------------------------------------
-# Let's start by creating some synthetic data with 5 gaussian distributions
+# Let's start by creating some synthetic data with 5 gaussian distributions.
 
 centers = np.array(
     [
@@ -117,7 +117,8 @@ def gaussian_feature_map(X):
     squared_distances = ((X[:, np.newaxis, :] - centers[np.newaxis, :, :]) ** 2).sum(
         axis=2
     )
-    gaussian_features = np.exp(-squared_distances / (2 * 1.5**2))
+    sigma = 1.5
+    gaussian_features = np.exp(-squared_distances / (2 * sigma**2))
     return np.column_stack([np.ones(len(X)), gaussian_features])
 
 
@@ -131,7 +132,7 @@ def fit_methods(x_train, y_train, x_calib, y_calib):
         prefit=True,
     ).conformalize(x_calib, y_calib)
 
-    mapie_ccp_y_pred = ConditionalSplitConformalClassifier(
+    mapie_conditional_y_pred = ConditionalSplitConformalClassifier(
         predicted_class_feature_map(estimator),
         estimator=estimator,
         confidence_level=CONFIDENCE_LEVEL,
@@ -139,7 +140,7 @@ def fit_methods(x_train, y_train, x_calib, y_calib):
         prefit=True,
     ).conformalize(x_calib, y_calib)
 
-    mapie_ccp_gauss = ConditionalSplitConformalClassifier(
+    mapie_conditional_gauss = ConditionalSplitConformalClassifier(
         gaussian_feature_map,
         estimator=estimator,
         confidence_level=CONFIDENCE_LEVEL,
@@ -147,7 +148,7 @@ def fit_methods(x_train, y_train, x_calib, y_calib):
         prefit=True,
     ).conformalize(x_calib, y_calib)
 
-    return [mapie_lac, mapie_ccp_y_pred, mapie_ccp_gauss]
+    return [mapie_lac, mapie_conditional_y_pred, mapie_conditional_gauss]
 
 
 def evaluate_conditional_coverage(mapies, x_test, y_test):
@@ -363,12 +364,13 @@ plot_cond_coverage(scores, names)
 
 ##############################################################################
 # A pefectly adaptative method whould result in a homogenous coverage
-# for all classes. We can see that the ``CCP`` method, with the predicted
+# for all classes. We can see that the conditional method, with the predicted
 # classes as groups, is more adaptative than the standard method.
 #
 # To conclude, the conditional method offer adaptative prediction sets.
-# We can inject prior knowledge or groups on which we want to avois bias
+# We can inject prior knowledge or groups on which we want to avois bias.
 # Groups can be defined from different features from X, including the
 # predicted class.
 # Using gaussian kernels, with a correct sigma parameter
-# can be the easiest and best solution to have very adaptative prdiction sets.
+# can be the easiest and best solution to have very adaptative prediction sets
+# for this dataset.
