@@ -30,6 +30,7 @@ logging.disable(logging.INFO)
 random_state = 1
 np.random.seed(random_state)
 
+# mkdocs_gallery_thumbnail_number = 3
 
 ##############################################################################
 # 1. Getting the data

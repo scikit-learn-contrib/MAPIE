@@ -42,6 +42,8 @@ with the standard split-conformal method, the CV+ method
 [arXiv](https://arxiv.org/abs/2305.12616), 2023.
 """
 
+# mkdocs_gallery_thumbnail_number = 4
+
 import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 import numpy as np
@@ -522,7 +524,6 @@ plot_figure(ccp_mapies, ccp_y_preds, ccp_y_pis, feature_map_titles, True)
 plot_evaluation(feature_map_titles, ccp_y_pis, X_test, y_test)
 
 
-##############################################################################
 ##############################################################################
 # 6. Conclusion:
 # --------------------------------------------------------------------------
