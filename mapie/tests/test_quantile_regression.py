@@ -1490,7 +1490,9 @@ def test_cross_conformalized_quantile_regressor_predict_pinball_weighted_mean() 
     reg.is_fitted = True
     reg.is_conformalized = True
     reg.pinball_losses = np.array([[0.5, 0.5, 1.0], [0.5, 0.5, 3.0]])
-    reg.quantiles = np.array([0.05, 0.95, 0.5])  # taille 3 → branche pinball_weighted_mean active
+    reg.quantiles = np.array(
+        [0.05, 0.95, 0.5]
+    )  # taille 3 → branche pinball_weighted_mean active
     reg.estimators_ = {
         "lower": [],
         "upper": [],
@@ -1506,7 +1508,9 @@ def test_cross_conformalized_quantile_regressor_predict_pinball_weighted_mean() 
     np.testing.assert_allclose(y_pred, np.array([25.0, 35.0]))
 
 
-def test_cross_conformalized_quantile_regressor_predict_interval_mean_aggregation() -> None:
+def test_cross_conformalized_quantile_regressor_predict_interval_mean_aggregation() -> (
+    None
+):
     """Test predict_interval forwards mean aggregation as ensemble=True."""
     observed: dict[str, Any] = {}
 
@@ -1547,7 +1551,9 @@ def test_cross_conformalized_quantile_regressor_predict_interval_mean_aggregatio
     np.testing.assert_allclose(y_pis[:, 1], np.array([6.0, 6.0, 6.0]))
 
 
-def test_cross_conformalized_quantile_regressor_predict_interval_pinball_weighted_mean() -> None:
+def test_cross_conformalized_quantile_regressor_predict_interval_pinball_weighted_mean() -> (
+    None
+):
     """Test predict_interval accepts pinball_weighted_mean aggregation."""
     observed: dict[str, Any] = {}
 
@@ -1588,7 +1594,9 @@ def test_cross_conformalized_quantile_regressor_predict_interval_pinball_weighte
     np.testing.assert_allclose(y_pis[:, 1], np.array([9.0, 9.0, 9.0]))
 
 
-def test_cross_conformalized_quantile_regressor_predict_interval_invalid_aggregation() -> None:
+def test_cross_conformalized_quantile_regressor_predict_interval_invalid_aggregation() -> (
+    None
+):
     """Test predict_interval raises on unsupported aggregation value."""
     reg = CrossConformalizedQuantileRegressor(
         estimator=qt,
