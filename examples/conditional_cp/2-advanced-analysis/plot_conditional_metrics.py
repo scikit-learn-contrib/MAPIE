@@ -8,10 +8,8 @@ to compare MAPIE's conditional coverage metrics on marginal and
 conditionally-calibrated conformal regressors.
 
 The two regressors use the same fitted polynomial model and the same
-conformalization data. The marginal
-:class:`~mapie.regression.SplitConformalRegressor` uses one global residual
-cutoff, while
-:class:`~mapie.conditional_conformal_prediction.ConditionalSplitConformalRegressor`
+conformalization data. The marginal ``SplitConformalRegressor`` uses
+one global residual cutoff, while ``ConditionalSplitConformalRegressor``
 uses interval indicators in ``X`` as its conditional feature map. The goal is to
 show which metrics detect the local undercoverage of the marginal intervals.
 
@@ -243,15 +241,15 @@ with pd.option_context("display.max_columns", None):
 # The two regressors have similar marginal coverage, close to the target 0.90.
 # The group-aware metrics tell a different story:
 #
-# - ``CovGap`` and ``WCovGap`` are much larger for the marginal regressor,
+# - ``CovGap`` and ``WCovGap`` (lower is better) are much larger for the marginal regressor,
 #   because some ``X`` groups are overcovered while the high-noise groups are
 #   undercovered.
-# - ``WSC`` is also lower for the marginal regressor; it searches geometric
+# - ``WSC`` (higher is better) is lower for the marginal regressor; it searches geometric
 #   slabs in feature space and finds a poorly-covered region.
-# - ``ERT`` is a learned conditional-coverage diagnostic. A lower loss means the
+# - ``ERT`` (lower is better) is lower for the confitional regressor: the
 #   conditional coverage is closer to the target across ``X``.
 # - ``SSC`` and ``HSIC`` only look at coverage as a function of interval width.
-#   They are not enough to diagnose a constant-width marginal interval (returning NaN).
+#   They are not enough to diagnose a constant-width marginal interval (returning NaN or 0).
 
 
 ##############################################################################
