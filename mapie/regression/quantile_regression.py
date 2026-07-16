@@ -18,6 +18,7 @@ from sklearn.utils.validation import _check_y, _num_samples, indexable
 from mapie.utils import (
     _cast_predictions_to_ndarray_tuple,
     _check_alpha_and_n_samples,
+    _check_cv,
     _check_cv_not_string,
     _check_cv_not_subsample,
     _check_estimator_fit_predict,
@@ -925,7 +926,7 @@ class CrossConformalizedQuantileRegressor(_QuantileConformalizer):
         self,
         estimator: RegressorMixin = LinearRegression(),
         confidence_level: float = 0.9,
-        conformity_score: Union[str, BaseRegressionScore] = "absolute",
+        conformity_score: QuantileRegressionScore = AbsoluteQuantileRegressionScore,
         method: str = "plus",
         cv: Union[int, BaseCrossValidator] = 5,
         n_jobs: Optional[int] = None,
@@ -945,7 +946,7 @@ class CrossConformalizedQuantileRegressor(_QuantileConformalizer):
         self.score = conformity_score
         self.estimator = estimator
         self.method = method
-        self.cv = cv
+        self.cv = _check_cv(cv)
         self.n_jobs = n_jobs
         self.verbose = verbose
         self.alpha = _transform_confidence_level_to_alpha(confidence_level)
