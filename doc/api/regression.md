@@ -18,4 +18,8 @@ Conformal prediction methods for regression tasks.
 
 ---
 
+::: mapie.regression.CrossConformalizedQuantileRegressor
+
+---
+
 ::: mapie.regression.TimeSeriesRegressor
