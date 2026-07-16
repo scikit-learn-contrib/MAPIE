@@ -34,7 +34,6 @@ class _Conformalizer(ABC):
     is_fitted: bool
     is_conformalized: bool
 
-
     ALLOWED_AGG_FUNCTIONS = ["mean", "median"]
     cv_need_agg_function_ = ["Subsample"]
     no_agg_cv_ = ["prefit", "split"]
@@ -85,10 +84,7 @@ class _Conformalizer(ABC):
         if self.agg_function not in self.ALLOWED_AGG_FUNCTIONS:
             raise ValueError("The value of the aggregation function is not correct")
 
-        if (
-            self.method in self.no_agg_methods_
-            or self.use_split_method_
-        ):
+        if self.method in self.no_agg_methods_ or self.use_split_method_:
             raise ValueError("There should not be aggregation of predictions.")
         elif self.agg_function == "median":
             return cast(NDArray, phi2D(A=x, B=k, fun=lambda x: np.nanmedian(x, axis=1)))
