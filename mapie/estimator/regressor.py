@@ -34,14 +34,16 @@ class _Conformalizer(ABC):
     is_fitted: bool
     is_conformalized: bool
 
-    ALLOWED_AGG = ["mean", "median"]
+
+    ALLOWED_AGG_FUNCTIONS = ["mean", "median"]
+    cv_need_agg_function_ = ["Subsample"]
+    no_agg_cv_ = ["prefit", "split"]
 
     @abstractmethod
     def _predict(
         self,
         X: ArrayLike,
         ensemble: bool = False,
-        return_multi_pred: bool = True,
         **predict_params,
     ) -> Union[NDArray, Tuple[NDArray, NDArray, NDArray]]:
         pass
@@ -80,10 +82,12 @@ class _Conformalizer(ABC):
         ArrayLike of shape (n_samples_test,)
             Array of aggregated predictions for each testing sample.
         """
+        if self.agg_function not in self.ALLOWED_AGG_FUNCTIONS:
+            raise ValueError("The value of the aggregation function is not correct")
+
         if (
             self.method in self.no_agg_methods_
             or self.use_split_method_
-            or self.method not in self.ALLOWED_AGG
         ):
             raise ValueError("There should not be aggregation of predictions.")
         elif self.agg_function == "median":

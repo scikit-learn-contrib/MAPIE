@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import Any, Iterable, List, Optional, Tuple, Union, cast
 
 import warnings
-import copy
 import numpy as np
 from abc import ABC
 from functools import lru_cache
@@ -27,11 +26,13 @@ from mapie.utils import (
     _check_null_weight,
     _fit_estimator,
     _prepare_params,
+    _raise_error_if_fit_called_in_prefit_mode,
     _raise_error_if_method_already_called,
     _raise_error_if_previous_method_not_called,
     _transform_confidence_level_to_alpha,
     check_is_fitted,
     check_sklearn_user_model_is_fitted,
+    _check_nan_in_aposteriori_prediction,
 )
 
 from mapie.aggregation_functions import aggregate_all
@@ -138,7 +139,7 @@ class _QuantileConformalizer(_Conformalizer, ABC):
     score: QuantileRegressionScore
 
     def __init__(self) -> None:
-        # Provide a sane default state for lightweight subclasses.
+        # For testing
         self.is_fitted = False
         self.is_conformalized = False
 
@@ -475,7 +476,7 @@ class _QuantileConformalizer(_Conformalizer, ABC):
         X, y = indexable(X, y)
         y = _check_y(y)
 
-        estimators_ = copy.deepcopy(self.estimators_)
+        estimators_ = {"lower": [], "upper": [], "central": []}
         sample_weight, X, y = _check_null_weight(sample_weight, X, y)
         estimator_name = self.get_estimator_name()
         alpha_name = self.quantile_estimator_params[estimator_name]["alpha_name"]
@@ -598,6 +599,10 @@ class _QuantileConformalizer(_Conformalizer, ABC):
                 for key in self.estimators_.keys():
                     self.estimators_[key].extend(dict_estimator[key])
 
+            if self.method == "base":
+                self._base_estimator_ = self._fit_quantiles(
+                    X, y, sample_weight=sample_weight, **fit_params
+                )
         self.is_fitted = True
         return self
 
@@ -630,7 +635,7 @@ class _QuantileConformalizer(_Conformalizer, ABC):
         """
         X_val = _safe_indexing(X, val_index)
         if _num_samples(X_val) > 0:
-            y_pred = self.predict_quantiles(X_val, index=index, **predict_params)
+            y_pred = self._predict_quantiles(X_val, index=index, **predict_params)
         else:
             y_pred = np.array([])
         return y_pred
@@ -678,7 +683,7 @@ class _QuantileConformalizer(_Conformalizer, ABC):
         self.n_calib_samples = [len(calib_index) for calib_index in indices]
 
         if self.cv == "prefit":
-            y_pred = self.predict_quantiles(X, index=0)
+            y_pred = self._predict_quantiles(X, index=0, **predict_params)
         else:
             pred_matrix = np.full(
                 shape=(n_samples, n_splits, len(self.quantiles)),
@@ -687,7 +692,7 @@ class _QuantileConformalizer(_Conformalizer, ABC):
             )
             outputs = Parallel(n_jobs=self.n_jobs, verbose=self.verbose)(
                 delayed(self._predict_oof)(
-                    X, calib_index, index=index, **predict_params
+                    X, calib_index, index=model_index, **predict_params
                 )
                 for calib_index, model_index in zip(indices, range(n_splits))
             )
@@ -697,7 +702,7 @@ class _QuantileConformalizer(_Conformalizer, ABC):
             )
 
             for i, ind in enumerate(indices):
-                pred_matrix[ind, i, :] = np.array(predictions[i], dtype=float)
+                pred_matrix[ind, i, :] = np.array(outputs[i], dtype=float)
                 self.k_[ind, i] = 1
 
             _check_nan_in_aposteriori_prediction(pred_matrix)
@@ -741,12 +746,17 @@ class _QuantileConformalizer(_Conformalizer, ABC):
         """
         Computes the weighted mean of the predicted values using the pinball losses as weights.
         """
-        pinball_losses = np.asarray(self.pinball_losses)
-        weights = pinball_losses / pinball_losses.sum(axis=0)
-        weighted_values = np.array(
-            [np.atleast_2d(w).T * values for w, values in zip(weights, y_preds)]
-        )
-        return sum(weighted_values)
+        pinball_losses = np.asarray(self.pinball_losses, dtype=float)
+        y_preds = np.asarray(y_preds, dtype=float)
+
+        if pinball_losses.ndim == 1:
+            weights = pinball_losses / pinball_losses.sum()
+            weighted_values = np.sum(np.atleast_2d(weights).T * y_preds, axis=0)
+        else:
+            weights = pinball_losses / pinball_losses.sum(axis=0, keepdims=True)
+            weighted_values = np.sum(weights * y_preds, axis=0)
+
+        return np.asarray(weighted_values).reshape(-1, 1)
 
     # TODO: A structure can handle quantiles fitting and prediction to avoid code duplication between conformalizer
     def _predict_quantiles(self, X: ArrayLike, index: int, **predict_params):
@@ -797,6 +807,66 @@ class _QuantileConformalizer(_Conformalizer, ABC):
         """
         return self.estimators_["central"][index].predict(X, **predict_params).ravel()
 
+    def _predict(
+        self, X: ArrayLike, ensemble: bool, **predict_params
+    ) -> Tuple[NDArray, NDArray, NDArray]:
+        """
+        Predicts the lower and upper quantiles for the given input data X.
+
+        Parameters
+        ----------
+        X : ArrayLike
+            Input data for which to predict quantiles.
+        ensemble : Optional[bool], default=None
+            Whether to use the ensemble of estimators for prediction (for compatibility with scores).
+        **predict_params : Any
+            Additional parameters to pass to the predict method of the estimators.
+
+        Returns
+        -------
+        Tuple[NDArray, NDArray, NDArray]
+            Predicted lower, upper, and central quantiles for the input data X.
+        """
+
+        if self.method == "base":
+            y_pred_low = self._base_estimators_[self.key_mapping["lower"]].predict(
+                X, **predict_params
+            )
+            y_pred_up = self._base_estimators_[self.key_mapping["upper"]].predict(
+                X, **predict_params
+            )
+            y_pred_center = self._base_estimators_[self.key_mapping["central"]].predict(
+                X, **predict_params
+            )
+            return y_pred_center, y_pred_low, y_pred_up
+
+        n_split = len(self.estimators_["lower"])
+        n_quantiles = len(self.quantiles)
+        pred_matrix = np.full(
+            shape=(X.shape[0], n_split, 3),
+            fill_value=np.nan,
+            dtype=float,
+        )
+        for i in range(n_split):
+            pred_matrix[:, i, :n_quantiles] = self._predict_quantiles(
+                X, index=i, **predict_params
+            )
+            if n_quantiles < 3:
+                pred_matrix[:, i, 2] = self._predict_center(
+                    X, index=i, **predict_params
+                )
+
+        if self.method == "minmax":
+            y_pred_multi_low = np.min(pred_matrix[:, :, 0], axis=1, keepdims=True)
+            y_pred_multi_up = np.max(pred_matrix[:, :, 1], axis=1, keepdims=True)
+            y_pred_multi_center = np.mean(pred_matrix[:, :, 2], axis=1, keepdims=True)
+            y_pred = np.hstack((y_pred_multi_low, y_pred_multi_up, y_pred_multi_center))
+
+        else:
+            y_pred = aggregate_all(self.agg_function, pred_matrix)
+
+        return y_pred[2], y_pred[0], y_pred[1]
+
 
 class CrossConformalizedQuantileRegressor(_QuantileConformalizer):
     """
@@ -815,6 +885,7 @@ class CrossConformalizedQuantileRegressor(_QuantileConformalizer):
     """
 
     _VALID_METHODS = ["base", "plus", "minmax"]
+    ALLOWED_AGG_FUNCTIONS = ["mean", "median", "pinball_weighted_mean"]
 
     def __init__(
         self,
@@ -834,25 +905,20 @@ class CrossConformalizedQuantileRegressor(_QuantileConformalizer):
         )
         _check_cv_not_string(cv)
         _check_cv_not_subsample(cv)
-
-        self._mapie_regressor = _MapieRegressor(
-            estimator=estimator,
-            method=method,
-            cv=cv,
-            n_jobs=n_jobs,
-            verbose=verbose,
-            conformity_score=BaseRegressionScore,  # check_and_select_conformity_score(
-            #    conformity_score,
-            #    BaseRegressionScore,
-            # ),
-            random_state=random_state,
+        self._check_quantile_estimator(estimator)
+        self._check_score(
+            conformity_score, CrossConformalizedQuantileRegressor.ALLOWED_SCORES
         )
 
+        self.estimator = estimator
+        self.method = method
+        self.cv = cv
+        self.n_jobs = n_jobs
+        self.verbose = verbose
         self._alpha = _transform_confidence_level_to_alpha(confidence_level)
         self.is_fitted = self.is_conformalized = False
 
         self._predict_params: dict = {}
-
         self.central_estimator_: Optional[RegressorMixin] = central_estimator
         self.fit_central_estimator: Optional[bool] = fit_central_estimator
 
@@ -927,14 +993,13 @@ class CrossConformalizedQuantileRegressor(_QuantileConformalizer):
         return self.is_fitted and self.is_conformalized
 
     # --------------------- Prediction
-    # TODO: Duplicated from CrossConformalRegressor
+    # TODO: Nearly duplicated from CrossConformalRegressor
     def predict_interval(
         self,
         X: ArrayLike,
         aggregate_point_predictions: Optional[str] = "mean",
         minimize_interval_width: bool = False,
         allow_infinite_bounds: bool = False,
-        aggregate_predictions: Any = None,  # _UNSET,
     ) -> Tuple[NDArray, NDArray]:
         """
         Predicts points and intervals.
@@ -958,6 +1023,9 @@ class CrossConformalizedQuantileRegressor(_QuantileConformalizer):
                 cross-validation fold
             - "median": Aggregates (using median) the predictions of the regressors
                 trained on each cross-validation fold
+            - "pinball_weighted_mean": Aggregates the predictions of the regressors
+                trained on each cross-validation fold using a weighted mean, where the
+                weights are the pinball losses of each fold.
 
         minimize_interval_width : bool, default=False
             If True, attempts to minimize the interval width.
@@ -965,11 +1033,6 @@ class CrossConformalizedQuantileRegressor(_QuantileConformalizer):
         allow_infinite_bounds : bool, default=False
             If True, allows prediction intervals with infinite bounds.
 
-        aggregate_predictions : Optional[str]
-            .. deprecated::
-                Renamed to `aggregate_point_predictions`. Passing
-                `aggregate_predictions` still works but emits a
-                `FutureWarning` and will be removed in a future release.
 
         Returns
         -------
@@ -979,37 +1042,40 @@ class CrossConformalizedQuantileRegressor(_QuantileConformalizer):
             - Prediction points, of shape `(n_samples,)`
             - Prediction intervals, of shape `(n_samples, 2, n_confidence_levels)`
         """
-        # aggregate_point_predictions = _resolve_renamed_parameter(
-        #     "aggregate_point_predictions",
-        #     aggregate_point_predictions,
-        #     "aggregate_predictions",
-        #     aggregate_predictions,
-        # )
         _raise_error_if_previous_method_not_called(
             "predict_interval",
-            "fit_conformalize",
-            self.is_fitted_and_conformalized,
+            "conformalize",
+            self.is_conformalized,
         )
+
+        alpha_np = cast(NDArray, self.alpha)
+        if not allow_infinite_bounds:
+            n = self.score.get_effective_calibration_samples(self.conformity_scores_)
+            _check_alpha_and_n_samples(alpha_np, n)
 
         ensemble = self._set_aggregate_point_predictions_and_return_ensemble(
             aggregate_point_predictions
         )
-        predictions = self._mapie_regressor.predict(
+
+        # Predict the target with confidence intervals
+        y_pred, y_pred_low, y_pred_up = self.score.predict_set(
             X,
-            alpha=self._alphas,
+            alpha_np,
+            estimator=self,
+            conformity_scores=self.conformity_scores_,
+            ensemble=ensemble,
+            method=self.method,
             optimize_beta=minimize_interval_width,
             allow_infinite_bounds=allow_infinite_bounds,
-            ensemble=ensemble,
-            **self._predict_params,
         )
-        return predictions  # _cast_predictions_to_ndarray_tuple(predictions)
+
+        return np.array(y_pred), np.stack([y_pred_low, y_pred_up], axis=1)
 
     # TODO: Duplicated from CrossConformalRegressor
     def predict(
         self,
         X: ArrayLike,
         aggregate_point_predictions: Optional[str] = "mean",
-        aggregate_predictions: Any = None,  # _UNSET,
     ) -> NDArray:
         """
         Predicts points.
@@ -1030,24 +1096,15 @@ class CrossConformalizedQuantileRegressor(_QuantileConformalizer):
               cross-validation fold
             - "median": Aggregates (using median) the predictions of the regressors
               trained on each cross-validation fold
-
-        aggregate_predictions : Optional[str]
-            .. deprecated::
-                Renamed to `aggregate_point_predictions`. Passing
-                `aggregate_predictions` still works but emits a
-                `FutureWarning` and will be removed in a future release.
+            - "pinball_weighted_mean": Aggregates the predictions of the regressors
+              trained on each cross-validation fold using a weighted mean, where the
+              weights are the pinball losses of each fold.
 
         Returns
         -------
         NDArray
             Array of point predictions, with shape `(n_samples,)`.
         """
-        # aggregate_point_predictions = _resolve_renamed_parameter(
-        #     "aggregate_point_predictions",
-        #     aggregate_point_predictions,
-        #     "aggregate_predictions",
-        #     aggregate_predictions,
-        # )
         _raise_error_if_previous_method_not_called(
             "predict",
             "fit_conformalize",
@@ -1074,9 +1131,9 @@ class CrossConformalizedQuantileRegressor(_QuantileConformalizer):
             ensemble = False
         else:
             ensemble = True
-            self._mapie_regressor._check_agg_function(aggregate_point_predictions)
+            self._check_agg_function(aggregate_point_predictions)
             # A hack here, to allow choosing the aggregation function at prediction time
-            self._mapie_regressor.agg_function = aggregate_point_predictions
+            self.agg_function = aggregate_point_predictions
         return ensemble
 
 
@@ -1157,9 +1214,8 @@ class ConformalizedQuantileRegressor:
     ) -> None:
         self._alpha = _transform_confidence_level_to_alpha(confidence_level)
         self._prefit = prefit
-        self.is_fitted = prefit
-        self.is_conformalized = False
-        self.cv = "prefit" if prefit else "split"
+        self._is_fitted = prefit
+        self._is_conformalized = False
 
         self._mapie_quantile_regressor = _MapieQuantileRegressor(
             estimator=estimator,
@@ -1170,8 +1226,48 @@ class ConformalizedQuantileRegressor:
 
         self._predict_params: dict = {}
 
-        self.central_predictor_: Optional[RegressorMixin] = None
-        self.fit_central_predictor: Optional[bool] = True
+    def fit(
+        self,
+        X_train: ArrayLike,
+        y_train: ArrayLike,
+        fit_params: Optional[dict] = None,
+    ) -> ConformalizedQuantileRegressor:
+        """
+        Fits three models using the regressor provided at initialisation:
+
+        - a model to predict the target
+        - a model to predict the upper quantile of the target
+        - a model to predict the lower quantile of the target
+
+        Parameters
+        ----------
+        X_train : ArrayLike
+            Training data features.
+
+        y_train : ArrayLike
+            Training data targets.
+
+        fit_params : Optional[dict], default=None
+            Parameters to pass to the `fit` method of the regressors.
+
+        Returns
+        -------
+        Self
+            The fitted ConformalizedQuantileRegressor instance.
+        """
+        _raise_error_if_fit_called_in_prefit_mode(self._prefit)
+        _raise_error_if_method_already_called("fit", self._is_fitted)
+
+        fit_params_ = _prepare_params(fit_params)
+        self._mapie_quantile_regressor._initialize_fit_conformalize()
+        self._mapie_quantile_regressor._fit_estimators(
+            X=X_train,
+            y=y_train,
+            **fit_params_,
+        )
+
+        self._is_fitted = True
+        return self
 
     def conformalize(
         self,
@@ -1201,10 +1297,14 @@ class ConformalizedQuantileRegressor:
         Self
             The ConformalizedQuantileRegressor instance.
         """
-
+        _raise_error_if_previous_method_not_called(
+            "conformalize",
+            "fit",
+            self._is_fitted,
+        )
         _raise_error_if_method_already_called(
             "conformalize",
-            self.is_conformalized,
+            self._is_conformalized,
         )
 
         self._predict_params = _prepare_params(predict_params)
@@ -1212,7 +1312,7 @@ class ConformalizedQuantileRegressor:
             X_conformalize, y_conformalize, **self._predict_params
         )
 
-        self.is_conformalized = True
+        self._is_conformalized = True
         return self
 
     def predict_interval(
@@ -1260,7 +1360,7 @@ class ConformalizedQuantileRegressor:
         _raise_error_if_previous_method_not_called(
             "predict_interval",
             "conformalize",
-            self.is_conformalized,
+            self._is_conformalized,
         )
 
         predictions = self._mapie_quantile_regressor.predict(
@@ -1292,12 +1392,35 @@ class ConformalizedQuantileRegressor:
         _raise_error_if_previous_method_not_called(
             "predict",
             "conformalize",
-            self.is_conformalized,
+            self._is_conformalized,
         )
 
         estimator = self._mapie_quantile_regressor
         predictions, _ = estimator.predict(X, **self._predict_params)
         return predictions
+
+    @property
+    def conformity_scores(self) -> NDArray:
+        """
+        Returns the conformity scores computed by the `conformalize` method
+        on the conformalization set.
+
+        For conformalized quantile regression, three scores are stored per
+        sample: the signed residual against the lower-quantile estimator,
+        the signed residual against the upper-quantile estimator, and their
+        pointwise maximum.
+
+        Returns
+        -------
+        NDArray
+            Array of conformity scores, with shape `(3, n_samples)`.
+        """
+        _raise_error_if_previous_method_not_called(
+            "conformity_scores",
+            "conformalize",
+            self._is_conformalized,
+        )
+        return cast(NDArray, self._mapie_quantile_regressor.conformity_scores_)
 
 
 class _MapieQuantileRegressor(_MapieRegressor):

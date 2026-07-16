@@ -303,14 +303,20 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
                 + "symmetrical conformity score function."
             )
 
+        conformity_scores_low = conformity_scores_up = conformity_scores
+
+        if conformity_scores.ndim > 1:
+            conformity_scores_low = conformity_scores[0, ...]
+            conformity_scores_up = conformity_scores[1, ...]
+
         y_pred, y_pred_low, y_pred_up = estimator._predict(X, ensemble)
         signed = -1 if self.sym else 1
 
         if optimize_beta:
             beta_np = self._beta_optimize(
                 alpha_np,
-                conformity_scores,
-                conformity_scores,
+                conformity_scores_low,
+                conformity_scores_up,
             )
         else:
             beta_np = alpha_np / 2
