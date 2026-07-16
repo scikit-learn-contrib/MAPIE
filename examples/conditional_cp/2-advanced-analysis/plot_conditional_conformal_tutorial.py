@@ -119,7 +119,7 @@ X_scaled = scaler.fit_transform(X.to_numpy())
 
 ##############################################################################
 # We normalize the data, to simplify the following (even if the used model
-# doesn't requires it)
+# doesn't require it)
 
 
 def generate_data(seed, n_train, n_calib, n_test):
@@ -158,11 +158,11 @@ def generate_data(seed, n_train, n_calib, n_test):
 # 2. The goal
 # --------------------------------------------------------------------------
 #
-# - We will try to have adaptative prediction intervals using the
+# - We will try to have adaptive prediction intervals using the
 #   ``ConditionalSplitConformalRegressor``. We will compare with standard
 #   ``SplitConformalRegressor``, and ``ConformalizedQuantileRegressor``.
 #
-# - The adaptativity will be evaluated by looking at the conditional coverage
+# - The adaptivity will be evaluated by looking at the conditional coverage
 #   over groups of target values, and groups on features of interest.
 #
 # - The groups are the 10 target groups (see the histogram below), and the 4
@@ -209,7 +209,7 @@ def estimate_scores(
     """
     Sample a new data split, train the estimator on the training set, then
     fit the calibration on the new calibration set. The scores corresponding
-    to ``score_functions`` are computing on each group of ``group_functions``.
+    to ``score_functions`` are computed on each group of ``group_functions``.
     """
 
     x_train, y_train, x_calib, y_calib, x_test, y_test = generate_data(
@@ -454,7 +454,7 @@ score_functions = [coverage_funct, width_funct]
 score_names = ["Coverage", "Width"]
 
 # Groups functions: the scores will be evaluated on each one of these groups.
-thres = thres = (
+thres = (
     [0]
     + [round(x, 2) for x in np.sort(y)[[int(len(y) / 10 * i) for i in range(1, 10)]]]
     + [1]
@@ -532,7 +532,7 @@ mapie_cqr = ConformalizedQuantileRegressor(
 
 
 ##############################################################################
-# 6.1. Using gaussian feature map for adaptativity without prior knowledge on
+# 6.1. Using Gaussian feature map for adaptivity without prior knowledge on
 # the dataset or biases
 # --------------------------------------------------------------------------
 
@@ -606,7 +606,7 @@ plot_coverage_width(
 
 
 ##############################################################################
-# - The method which is the more adaptative is the one with the most constant
+# - The method which is the more adaptive is the one with the most constant
 #   coverage.
 # - Here, the conditional method is the best one. We can see that the basic
 #   ``Split`` method has a strong over-coverage for small target values, and
@@ -616,7 +616,7 @@ plot_coverage_width(
 #   issues.
 #
 # $\to$ We managed, with ``ConditionalSplitConformalRegressor``, to have a more
-#   homogenous coverage on the target value, and a much smaller bias
+#   homogeneous coverage on the target value, and a much smaller bias
 #   on the ethnicity groups.
 #
 # $\to$ However its prediction time is longer than the other methods as it
@@ -631,9 +631,9 @@ plot_coverage_width(
 #
 # $\to$ We can use this information in
 #   ``ConditionalSplitConformalRegressor`` to fix it. Let's define a feature
-#   map with those features, to guarantee a homogenous coverage on those.
+#   map with those features, to guarantee a homogeneous coverage on those.
 # We could just add, as custom functions definition, indicatrice functions for
-# each of the 4 groups (split using Q1, mediane and Q3 values), for each
+# each of the 4 groups (split using Q1, median and Q3 values), for each
 # ethnicity feature.
 #
 # However, as the coverage seems to be proportional to the ethnicity value, we
@@ -696,19 +696,19 @@ plot_coverage_width(
 
 
 ##############################################################################
-# As we expected, the coverage is now more homogenous on the ethnicity
+# As we expected, the coverage is now more homogeneous on the ethnicity
 # groups. To achieve it, the prediction intervals are now even wider than
 # before for previously under-covered samples, and smaller on previously
 # over-covered samples.
 #
-# $\to$ ``ConditionalSplitConformalRegressor`` can guarantee a homogenous
-#   coverage on groups of interest (thus remove bias), by giving
-#    an adapted feature map.
+# $\to$ ``ConditionalSplitConformalRegressor`` can guarantee a homogeneous
+#   coverage on groups of interest (thus removing bias), by providing
+#   an adapted feature map.
 #
-# $\to$ Fixing this bias, almost fixed the non-homogeneity of the coverage, on
+# $\to$ Fixing this bias almost fixed the non-homogeneity of the coverage on
 #   the target value.
 #
-# Next steps: the only issue to achieve an almost perfect adaptativity,
+# Next steps: the only issue to achieve almost perfect adaptivity
 # is to fix the under-coverage for the biggest 10% target crime values. One
-# idea may be to combine the two approachs we used (with indicator functions to
-# avoid the biases and gaussian kernels for overall adaptativity, or the predicted class).
+# idea may be to combine the two approaches we used (with indicator functions to
+# avoid the biases and Gaussian kernels for overall adaptivity, or the predicted class).

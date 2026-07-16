@@ -4,8 +4,8 @@ Reproduction of experiments of Gibbs et al. (2023)
 
 ``ConditionalSplitConformalRegressor``
 is used to reproduce a part of the paper experiments of Gibbs et al. (2023) in
-their article [1] which we argue is a good procedure to get adaptative
-prediction intervals and a guaranteed coverage on all sub groups of
+their article [1] which we argue is a good procedure to get adaptive
+prediction intervals and a guaranteed coverage on all subgroups of
 interest.
 
 For a given model, the simulation uses the
@@ -259,7 +259,7 @@ def plot_results(X_test, y_test, n_trials=20, experiment="Groups"):
         ]
         eval_names = ["f1", "f2"]
     else:
-        raise ValueError("Wron experiment name")
+        raise ValueError("Wrong experiment name")
 
     _, y_pi_ccp = fit_ccp_interval(model, X_calib, y_calib, X_test, feature_map)
 
@@ -401,7 +401,7 @@ def plot_results(X_test, y_test, n_trials=20, experiment="Groups"):
 ###############################################################################
 # Group-conditional experiment
 # -----------------------------------------------------------------------------
-# This first experiments consists in performing group-conditional conformal
+# This first experiment consists in performing group-conditional conformal
 # prediction. Groups are defined with intervals of $x$.
 
 plot_results(X_test, y_test, experiment="Groups")

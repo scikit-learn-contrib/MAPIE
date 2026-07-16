@@ -2,7 +2,7 @@
 Group-conditional prediction intervals (regression)
 ===================================================
 
-This example shows how to use ``ConditionalSplitConformalClassifier``
+This example shows how to use ``ConditionalSplitConformalRegressor``
 to build prediction intervals with conditional guarantees on pre-defined groups.
 
 The key idea is to provide a basis function ``feature_map`` that

@@ -10,16 +10,16 @@ It has a lot of advantages:
 
 - It is model agnostic (it doesn't depend on the model but only on the
   predictions, unlike conformalized quantile regression (CQR)),
-- It can create very adaptative intervals (with a varying width which truly
+- It can create very adaptive intervals (with a varying width which truly
   reflects the model uncertainty),
-- while providing coverage guarantee on all sub-groups of interest
+- while providing coverage guarantee on all subgroups of interest
   (avoiding biases),
 - with the possibility to inject prior knowledge about the data or the model.
 
 However, we will also see its disadvantages:
 
-- The adaptativity depends on the feature map used, which can be difficult
-to define,
+- The adaptivity depends on the feature map used, which can be difficult
+  to define,
 - The inference step (``predict_interval``) takes much longer than for the
   other methods, as an optimization process is solved for each test point.
 
@@ -68,7 +68,7 @@ confidence_level = 1 - ALPHA
 # 1. Data generation
 # --------------------------------------------------------------------------
 # Let's start by creating some synthetic data with different domains and
-# distributions to evaluate the adaptativity of the methods:
+# distributions to evaluate the adaptivity of the methods:
 #  - baseline distribution of ``x*sin(x)``
 #  - Add noise :
 #   - between -1 and 0: uniform distribution of the points around the baseline
@@ -173,7 +173,7 @@ estimator = Pipeline(
 
 
 ##############################################################################
-# 3. Plotting and adaptativity comparison functions
+# 3. Plotting and adaptivity comparison functions
 # --------------------------------------------------------------------------
 
 gaussian_centers = np.linspace(-1, 5, 8)
@@ -447,9 +447,9 @@ plot_evaluation(titles, y_pis, X_test, y_test)
 
 ##############################################################################
 # The ``ConditionalSplitConformalRegressor``
-# is a very adaptative method, even with default
-# parameters values. If the dataset is more complex, the default parameters
-# may not be enough to get the best performances. In this case, we can use
+# is a very adaptive method, even with default
+# parameter values. If the dataset is more complex, the default parameters
+# may not be enough to get the best performance. In this case, we can use
 # more advanced settings, described below.
 
 
@@ -457,12 +457,12 @@ plot_evaluation(titles, y_pis, X_test, y_test)
 # 5. How to improve the results?
 # --------------------------------------------------------------------------
 #
-# 5.1. How does the conditional method works ?
+# 5.1. How does the conditional method work?
 # --------------------------------------------------------------------------
-# The conditional method is based on a function which create some features (vector of
+# The conditional method is based on a function which creates some features (vector of
 # d dimensions), based on ``X``.
 #
-# These features should be able to represente the distribution of the
+# These features should be able to represent the distribution of the
 # conformity scores, which is here (by default) the absolute residual:
 # ``|y_true - y_pred|``
 
@@ -474,12 +474,12 @@ plot_evaluation(titles, y_pis, X_test, y_test)
 
 ##############################################################################
 #  1) ``f : X -> (1)``, will try to estimate the absolute residual with a
-#  constant, and will results in a prediction interval of constant width
+#  constant, and will result in a prediction interval of constant width
 #  (like the basic split CP)
 #
 #  2) ``f : X -> (1, X)``, will result in a prediction interval of width
 #  equal to: a constant + a value proportional to the value of ``X``
-#  (it seems a good idea here, as the uncertainty increase with ``X``)
+#  (it seems a good idea here, as the uncertainty increases with ``X``)
 #
 #  3) ``f : X -> (1_{X in bin_1}, ..., 1_{X in bin_k})`` defines a simple
 #  group-conditional feature map. It is useful when the subgroups of interest
@@ -527,11 +527,11 @@ plot_evaluation(feature_map_titles, ccp_y_pis, X_test, y_test)
 # 6. Conclusion:
 # --------------------------------------------------------------------------
 # The goal is to get prediction intervals that are as adaptive as possible while
-# still keeping the target coverage. Perfect adaptativity whould result in a
+# still keeping the target coverage. Perfect adaptivity would result in a
 # perfectly constant conditional coverage.
 #
 # This is the power of the conditional method: use prior knowledge or
-# generic features (gaussian kernels) to have a great overall adaptativity.
+# generic features (Gaussian kernels) to have a great overall adaptivity.
 #
 # However, it can be difficult to find the best feature map.
 # Sometimes, a simpler method can be enough. Don't forget to try at first

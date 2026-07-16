@@ -246,7 +246,7 @@ with pd.option_context("display.max_columns", None):
 #   undercovered.
 # - ``WSC`` (higher is better) is lower for the marginal regressor; it searches geometric
 #   slabs in feature space and finds a poorly-covered region.
-# - ``ERT`` (lower is better) is lower for the confitional regressor: the
+# - ``ERT`` (lower is better) is lower for the conditional regressor: the
 #   conditional coverage is closer to the target across ``X``.
 # - ``SSC`` and ``HSIC`` only look at coverage as a function of interval width.
 #   They are not enough to diagnose a constant-width marginal interval (returning NaN or 0).

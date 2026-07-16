@@ -3,7 +3,7 @@ Group-conditional prediction sets (advanced)
 ============================================
 
 The tutorial explains how to use ``ConditionalSplitConformalClassifier`` for
-classification. In particular, a gaussian feature map is compared to groups
+classification. In particular, a Gaussian feature map is compared to groups
 defined from the predicted class.
 
 In this tutorial, the classifier will be
@@ -14,7 +14,7 @@ We will compare the conditional method
 with the standard method, using for both, the LAC conformity score
 (``LACConformityScore``).
 
-Recall that the ``LAC`` method consists on applying a threshold on the
+Recall that the ``LAC`` method consists in applying a threshold on the
 predicted class probabilities, to keep in the set all the classes with predicted
 probabilities above the threshold.
 """
@@ -36,7 +36,7 @@ N_CLASSES = 5
 ##############################################################################
 # 1. Data generation
 # --------------------------------------------------------------------------
-# Let's start by creating some synthetic data with 5 gaussian distributions.
+# Let's start by creating some synthetic data with 5 Gaussian distributions.
 
 centers = np.array(
     [
@@ -98,7 +98,7 @@ plt.show()
 
 
 ##############################################################################
-# 2. Plotting and adaptativity comparison functions
+# 2. Plotting and adaptivity comparison functions
 # --------------------------------------------------------------------------
 # The current API receives the conditional class of functions through a
 # ``feature_map`` callable.
@@ -314,8 +314,8 @@ def plot_cond_coverage(scores, names):
 # We are going to compare the standard ``LAC`` method with:
 #
 # - The conditional method using the predicted classes as groups (to have a
-#   homogenous coverage on each class).
-# - The conditional method with gaussian kernels, to have adaptative prediction
+#   homogeneous coverage on each class).
+# - The conditional method with Gaussian kernels, to have adaptive prediction
 #   sets, without prior knowledge or information.
 
 
@@ -335,25 +335,25 @@ run_exp(names)
 # We can see that the conditional method seems to create better
 # prediction sets than the standard method. Indeed, where the
 # classes distributions overlap (especially for class 3 and 4),
-# the size of the sets should increase, to correctly represente the model
+# the size of the sets should increase, to correctly represent the model
 # uncertainty on those samples.
 #
 # The middle of all the classes distributions, where points could
 # belong to any class, should have the biggest prediction sets (with almost
-# all the clases in the sets, as we are very uncertain). The feature map
-# with gaussian kernels represented this uncertainty, with big sets
+# all the classes in the sets, as we are very uncertain). The feature map
+# with Gaussian kernels represented this uncertainty, with big sets
 # for the middle points.
 #
-# Thus, between the two conditional methods, the one using gaussian kernels
-# seems the most adaptative.
+# Thus, between the two conditional methods, the one using Gaussian kernels
+# seems the most adaptive.
 
 
 ##############################################################################
-# 5. Evaluate the adaptativity
+# 5. Evaluate the adaptivity
 # --------------------------------------------------------------------------
-# If we can, at first, assess the adaptativity of the methods just looking at
-# the prediction sets, the most accurate way is to look if the coverage is
-# homogenous on sub parts of the data (on each class for instance).
+# While we can get a first sense of the adaptivity of the methods just by
+# looking at the prediction sets, the most accurate way is to check whether the
+# coverage is homogeneous on subparts of the data (on each class for instance).
 
 N_TRIALS = 4
 scores = np.zeros((N_TRIALS, len(names), N_CLASSES + 1))
@@ -363,14 +363,14 @@ for trial in range(N_TRIALS):
 plot_cond_coverage(scores, names)
 
 ##############################################################################
-# A pefectly adaptative method whould result in a homogenous coverage
+# A perfectly adaptive method would result in a homogeneous coverage
 # for all classes. We can see that the conditional method, with the predicted
-# classes as groups, is more adaptative than the standard method.
+# classes as groups, is more adaptive than the standard method.
 #
-# To conclude, the conditional method offer adaptative prediction sets.
-# We can inject prior knowledge or groups on which we want to avois bias.
+# To conclude, the conditional method offers adaptive prediction sets.
+# We can inject prior knowledge or groups on which we want to avoid bias.
 # Groups can be defined from different features from X, including the
 # predicted class.
-# Using gaussian kernels, with a correct sigma parameter
-# can be the easiest and best solution to have very adaptative prediction sets
+# Using Gaussian kernels, with a correct sigma parameter
+# can be the easiest and best solution to have very adaptive prediction sets
 # for this dataset.
