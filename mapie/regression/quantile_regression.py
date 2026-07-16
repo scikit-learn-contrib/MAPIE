@@ -874,16 +874,48 @@ class CrossConformalizedQuantileRegressor(_QuantileConformalizer):
     """
     Computes prediction intervals using the cross-conformalized quantile regression technique.
 
-    1. The `fit` method fits three models to the training folds data using the provided
-       regressor: a model to predict the target, and models to predict upper
-       and lower quantiles around the target.
-    2. The `conformalize` method estimates the uncertainty of the quantile models
-       using the conformalization set.
-    3. The `predict_interval` computes prediction points and intervals.
+    The estimator fits a cross-validated set of quantile regressors and then
+    calibrates them on a conformalization set to produce prediction intervals.
+    The `fit_conformalize` convenience method performs both steps in sequence.
 
     Parameters
     ----------
-    estimator : Union[`RegressorMixin`, `Pipeline`,
+    estimator : RegressorMixin, default=LinearRegression()
+        Base regressor used to estimate the lower, upper and central quantiles.
+
+    confidence_level : float, default=0.9
+        Target confidence level of the prediction intervals.
+
+    conformity_score : Union[str, BaseRegressionScore], default="absolute"
+        Conformity score used to calibrate the quantile estimates.
+
+    method : str, default="plus"
+        Cross-conformalization strategy. Allowed values are
+        `"base"`, `"plus"` and `"minmax"`.
+
+    cv : int or BaseCrossValidator, default=5
+        Cross-validation splitter used to build the ensemble of estimators.
+
+    n_jobs : Optional[int], default=None
+        Number of jobs used for parallel fitting.
+
+    verbose : int, default=0
+        Verbosity level passed to the underlying parallel fitting routine.
+
+    random_state : Optional[int or np.random.RandomState], default=None
+        Controls randomness for the internal cross-validation procedures.
+
+    central_estimator : Optional[RegressorMixin], default=None
+        Optional estimator used to predict the central value directly.
+
+    fit_central_estimator : bool, default=True
+        Whether to fit an estimator dedicated to the central prediction.
+
+    References
+    ----------
+    Yaniv Romano, Evan Patterson and Emmanuel J. Candès.
+    "Conformalized Quantile Regression"
+    Advances in neural information processing systems 32 (2019).
     """
 
     _VALID_METHODS = ["base", "plus", "minmax"]
@@ -1219,6 +1251,12 @@ class ConformalizedQuantileRegressor:
     ... ).fit(X_train, y_train).conformalize(X_conformalize, y_conformalize)
 
     >>> predicted_points, predicted_intervals = mapie_regressor.predict_interval(X_test)
+
+    References
+    ----------
+    Yaniv Romano, Evan Patterson and Emmanuel J. Candès.
+    "Conformalized Quantile Regression"
+    Advances in neural information processing systems 32 (2019).
     """
 
     def __init__(
@@ -1510,31 +1548,6 @@ class _MapieQuantileRegressor(_MapieRegressor):
     Yaniv Romano, Evan Patterson and Emmanuel J. Candès.
     "Conformalized Quantile Regression"
     Advances in neural information processing systems 32 (2019).
-
-    Examples
-    --------
-    >>> import numpy as np
-    >>> from mapie.regression.quantile_regression import _MapieQuantileRegressor
-    >>> X_train = np.array([[0], [1], [2], [3], [4], [5]])
-    >>> y_train = np.array([5, 7.5, 9.5, 10.5, 12.5, 15])
-    >>> X_calib = np.array([[0], [1], [2], [3], [4], [5], [6], [7], [8], [9]])
-    >>> y_calib = np.array([5, 7, 9, 4, 8, 1, 5, 7.5, 9.5, 12])
-    >>> mapie_reg = _MapieQuantileRegressor().fit(
-    ...     X_train,
-    ...     y_train,
-    ...     X_calib=X_calib,
-    ...     y_calib=y_calib
-    ... )
-    >>> y_pred, y_pis = mapie_reg.predict(X_train)
-    >>> print(y_pis[:, :, 0])
-    [[-8.16666667 19.        ]
-     [-6.33333333 20.83333333]
-     [-4.5        22.66666667]
-     [-2.66666667 24.5       ]
-     [-0.83333333 26.33333333]
-     [ 1.         28.16666667]]
-    >>> print(y_pred)
-    [ 5.  7.  9. 11. 13. 15.]
     """
 
     valid_methods_ = ["quantile"]
