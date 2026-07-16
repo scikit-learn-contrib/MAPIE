@@ -1133,7 +1133,7 @@ class CrossConformalizedQuantileRegressor(_QuantileConformalizer):
         ):
             central_losses = np.asarray(self.pinball_losses, dtype=float)[:, 2]
             weights = central_losses / central_losses.sum()
-            return (np.atleast_2d(weights).T * y_pred_multi).sum(axis=0)
+            return np.sum((np.atleast_2d(weights).T * y_pred_multi), axis=0)
         if aggregate_point_predictions == "median":
             return np.median(y_pred_multi, axis=0)
         return np.mean(y_pred_multi, axis=0)
