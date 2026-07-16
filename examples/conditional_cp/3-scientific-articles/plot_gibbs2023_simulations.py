@@ -5,15 +5,15 @@ Reproduction of experiments of Gibbs et al. (2023)
 ``ConditionalSplitConformalRegressor``
 is used to reproduce a part of the paper experiments of Gibbs et al. (2023) in
 their article [1] which we argue is a good procedure to get adaptative
-prediction intervals (PI) and a guaranteed coverage on all sub groups of
+prediction intervals and a guaranteed coverage on all sub groups of
 interest.
 
 For a given model, the simulation uses the
 ``ConditionalSplitConformalRegressor`` class, on a synthetic dataset first considered by Romano et al. (2019)
-[2], and compares the bounds of the PIs with the standard SplitConformalRegressor.
+[2], and compares the bounds of the intervals with the standard ``SplitConformalRegressor``.
 
 This simulation is carried out to check that the conditional method implemented in
-MAPIE gives the same results as [1], and that the bounds of the PIs are
+MAPIE gives the same results as [1], and that the bounds of the intervals are
 obtained.
 
 [1] Isaac Gibbs, John J. Cherian, Emmanuel J. Candès (2023).
@@ -24,7 +24,7 @@ Conformalized Quantile Regression.
 33rd Conference on Neural Information Processing Systems (NeurIPS 2019).
 """
 
-# sphinx_gallery_thumbnail_number = 2
+# mkdocs_gallery_thumbnail_number = 2
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -401,8 +401,14 @@ def plot_results(X_test, y_test, n_trials=20, experiment="Groups"):
 # prediction. Groups are defined with intervals of $x$. The second experiment
 # illustrates the case of covariate shift.
 
+###############################################################################
+# Group-conditional experiment
+# -----------------------------------------------------------------------------
 plot_results(X_test, y_test, experiment="Groups")
 
+###############################################################################
+# Covariate shift experiment
+# -----------------------------------------------------------------------------
 plot_results(X_test, y_test, experiment="Shifts")
 
 
