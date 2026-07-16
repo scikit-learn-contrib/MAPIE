@@ -234,8 +234,7 @@ metrics = pd.DataFrame(
     ]
 ).set_index("Regressor")
 
-with pd.option_context("display.max_columns", None):
-    print(metrics.round(3))
+metrics.round(3).style.format("{:.3f}")
 
 ##############################################################################
 # The two regressors have similar marginal coverage, close to the target 0.90.
