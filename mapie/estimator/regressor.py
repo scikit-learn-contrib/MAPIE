@@ -33,10 +33,13 @@ class _Conformalizer(ABC):
     verbose: Optional[bool]
     is_fitted: bool
     is_conformalized: bool
+    agg_function: Optional[str]
+    method: Optional[str]
 
     ALLOWED_AGG_FUNCTIONS = ["mean", "median"]
     cv_need_agg_function_ = ["Subsample"]
     no_agg_cv_ = ["prefit", "split"]
+    no_agg_methods_ = ["prefit", "split"]
 
     @abstractmethod
     def _predict(
