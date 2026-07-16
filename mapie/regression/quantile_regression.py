@@ -27,7 +27,6 @@ from mapie.utils import (
     _check_null_weight,
     _fit_estimator,
     _prepare_params,
-    _raise_error_if_fit_called_in_prefit_mode,
     _raise_error_if_method_already_called,
     _raise_error_if_previous_method_not_called,
     _transform_confidence_level_to_alpha,
@@ -35,6 +34,7 @@ from mapie.utils import (
     check_sklearn_user_model_is_fitted,
 )
 
+from mapie.aggregation_functions import aggregate_all
 from .regression import _MapieRegressor
 from mapie.estimator.regressor import _Conformalizer
 from mapie.conformity_scores import BaseRegressionScore
@@ -128,6 +128,7 @@ class _QuantileConformalizer(_Conformalizer, ABC):
     }
 
     ALLOWED_SCORES = QuantileRegressionScore
+    ALLOWED_AGG = ["mean", "median", "pinball_weighted_mean"]
 
     _central_estimator: Optional[RegressorMixin]
     estimators_: dict[str, List[RegressorMixin]]
@@ -510,6 +511,26 @@ class _QuantileConformalizer(_Conformalizer, ABC):
 
         return estimators_
 
+    # TODO: Duplicated from CrossConformalRegressor -> should be factorize in next refacto
+    def reset(self) -> "CrossConformalizedQuantileRegressor":
+        """
+        Discard previously computed conformity scores so that
+        `fit_conformalize` can be called again with new data.
+
+        Returns
+        -------
+        Self
+            This CrossConformalRegressor instance, reset to its pre-fit state.
+        """
+        self._is_fitted = False
+        self.is_conformalized = False
+        self.estimators_ = {"lower": [], "upper": [], "central": []}
+        self.n_calib_samples = []
+        self.conformity_scores = []
+        self.pinball_losses = []
+        self._predict_params = {}
+        return self
+
     def fit(
         self,
         X: ArrayLike,
@@ -541,6 +562,13 @@ class _QuantileConformalizer(_Conformalizer, ABC):
         Self
             This _QuantileConformalizer instance, fitted.
         """
+        if self.is_fitted:
+            warnings.warn(
+                "The fit method has already been called. "
+                "Calling it again will overwrite the previous fitted estimators."
+            )
+            self.reset()
+
         n_samples = _num_samples(y)
 
         if self.cv == "prefit":
@@ -574,26 +602,138 @@ class _QuantileConformalizer(_Conformalizer, ABC):
         return self
 
     # ---------------------Conformalizer
-    def _conformalize(
+    # TODO: Nearly duplicated from EnsemblRegressor _predict_oof_estimator -> should be factorize in next refacto
+    def _predict_oof(
+        self, X: ArrayLike, val_index: ArrayLike, index: int, **predict_params
+    ) -> NDArray:
+        """
+        Perform predictions on a single out-of-fold model on a validation set.
+
+        Parameters
+        ----------
+        index: int
+            Index of the estimator to use.
+
+        X: ArrayLike of shape (n_samples, n_features)
+            Input data.
+
+        val_index: ArrayLike of shape (n_samples_val)
+            Validation data indices.
+
+        **predict_params : dict
+            Additional predict parameters.
+
+        Returns
+        -------
+        NDArray
+            Predictions of estimator from val_index of X.
+        """
+        X_val = _safe_indexing(X, val_index)
+        if _num_samples(X_val) > 0:
+            y_pred = self.predict_quantiles(X_val, index=index, **predict_params)
+        else:
+            y_pred = np.array([])
+        return y_pred
+
+    # TODO: Nearly duplicated from EnsemblRegressor predict_calib -> should be factorize in next refacto
+    def _predict_calib(
+        self,
+        X: ArrayLike,
+        y: Optional[ArrayLike] = None,
+        groups: Optional[ArrayLike] = None,
+        **predict_params,
+    ) -> NDArray:
+        """
+        Perform predictions on X : the calibration set.
+
+        Parameters
+        ----------
+        X: ArrayLike of shape (n_samples_test, n_features)
+            Input data
+
+        y: ArrayLike of shape (n_samples_test,)
+            Input labels.
+
+            By default `None`.
+
+        groups: Optional[ArrayLike] of shape (n_samples_test,)
+            Group labels for the samples used while splitting the dataset into
+            train/test set.
+
+            By default `None`.
+
+        **predict_params : dict
+            Additional predict parameters.
+
+        Returns
+        -------
+        NDArray of shape (n_samples_test, 1)
+            The predictions.
+        """
+        check_is_fitted(self)
+
+        n_samples = _num_samples(X)
+        n_splits = self.cv.get_n_splits(X, y, groups)
+        indices = [calib_index for _, calib_index in self.cv.split(X, y, groups)]
+        self.n_calib_samples = [len(calib_index) for calib_index in indices]
+
+        if self.cv == "prefit":
+            y_pred = self.predict_quantiles(X, index=0)
+        else:
+            pred_matrix = np.full(
+                shape=(n_samples, n_splits, len(self.quantiles)),
+                fill_value=np.nan,
+                dtype=float,
+            )
+            outputs = Parallel(n_jobs=self.n_jobs, verbose=self.verbose)(
+                delayed(self._predict_oof)(
+                    X, calib_index, index=index, **predict_params
+                )
+                for calib_index, model_index in zip(indices, range(n_splits))
+            )
+            self.pinball_losses = Parallel(n_jobs=self.n_jobs, verbose=self.verbose)(
+                delayed(self.pinball_loss)(_safe_indexing(y, calib_index), output)
+                for calib_index, output in zip(indices, outputs)
+            )
+
+            for i, ind in enumerate(indices):
+                pred_matrix[ind, i, :] = np.array(predictions[i], dtype=float)
+                self.k_[ind, i] = 1
+
+            _check_nan_in_aposteriori_prediction(pred_matrix)
+            y_pred = aggregate_all(self.agg_function, pred_matrix)
+
+        return cast(NDArray, y_pred)
+
+    def conformalize(
         self,
         X: ArrayLike,
         y: ArrayLike,
-        index=int,
-        sample_weight: Optional[ArrayLike] = None,
         groups: Optional[ArrayLike] = None,
-        **kwargs: Any,
+        **predict_params: Any,
     ) -> _QuantileConformalizer:
         X_calib, y_calib = cast(ArrayLike, X), cast(ArrayLike, y)
         X_calib, y_calib = indexable(X_calib, y_calib)
         y_calib = _check_y(y_calib)
 
-        pred = self._predict_quantiles(X_calib, index)
+        _raise_error_if_previous_method_not_called(
+            "conformalize",
+            "fit",
+            self._is_fitted,
+        )
+        if self.is_conformalized:
+            warnings.warn(
+                "The conformalize method has already been called. "
+                "Calling it again will overwrite the previous conformity scores."
+            )
+            self.conformity_scores = []
+
+        pred = self._predict_calib(X_calib, y_calib, groups, **predict_params)
         self.conformity_scores.append(
-            self.score.get_conformity_scores(y_calib, pred, **kwargs)
+            self.score.get_conformity_scores(y_calib, pred, X=X_calib)
         )
 
-        self.pinball_losses.append(self.pinball_loss(y_calib, pred))
-        self.n_calib_samples.append(_num_samples(y_calib))
+        self.is_conformalized = True
         return self
 
     # ------------------------------ Predict
@@ -709,14 +849,7 @@ class CrossConformalizedQuantileRegressor(_QuantileConformalizer):
         )
 
         self._alpha = _transform_confidence_level_to_alpha(confidence_level)
-        self._is_fitted_and_conformalized = False
-
-        self._mapie_quantile_regressor = _MapieQuantileRegressor(
-            estimator=estimator,
-            method="quantile",
-            cv=cv,
-            alpha=self._alpha,
-        )
+        self._is_fitted = self.is_conformalized = False
 
         self._predict_params: dict = {}
 
@@ -724,21 +857,6 @@ class CrossConformalizedQuantileRegressor(_QuantileConformalizer):
         self.fit_central_estimator: Optional[bool] = fit_central_estimator
 
     # ---------------------Fit and Conformalize
-    # TODO: Duplicated from CrossConformalRegressor -> should be factorize in next refacto
-    def reset(self) -> "CrossConformalizedQuantileRegressor":
-        """
-        Discard previously computed conformity scores so that
-        `fit_conformalize` can be called again with new data.
-
-        Returns
-        -------
-        Self
-            This CrossConformalRegressor instance, reset to its pre-fit state.
-        """
-        self.is_fitted_and_conformalized = False
-        self._predict_params = {}
-        return self
-
     # TODO: Nearly duplicated from CrossConformalRegressor -> should be factorize in next refacto
     def fit_conformalize(
         self,
@@ -794,16 +912,19 @@ class CrossConformalizedQuantileRegressor(_QuantileConformalizer):
 
         fit_params_ = _prepare_params(fit_params)
         self._predict_params = _prepare_params(predict_params)
-        self._mapie_regressor.fit(
+        self.fit(
             X,
             y,
             groups=groups,
             fit_params=fit_params_,
-            predict_params=self._predict_params,
         )
-
-        self.is_fitted_and_conformalized = True
+        self.conformalize(X, y, groups, predict_params=predict_params)
         return self
+
+    @property
+    def is_fitted_and_conformalized(self) -> bool:
+        """Returns True if the estimator is fitted and conformalized"""
+        return self._is_fitted and self.is_conformalized
 
     # --------------------- Prediction
     # TODO: Duplicated from CrossConformalRegressor
@@ -1052,49 +1173,6 @@ class ConformalizedQuantileRegressor:
         self.central_predictor_: Optional[RegressorMixin] = None
         self.fit_central_predictor: Optional[bool] = True
 
-    def fit(
-        self,
-        X_train: ArrayLike,
-        y_train: ArrayLike,
-        fit_params: Optional[dict] = None,
-    ) -> ConformalizedQuantileRegressor:
-        """
-        Fits three models using the regressor provided at initialisation:
-
-        - a model to predict the target
-        - a model to predict the upper quantile of the target
-        - a model to predict the lower quantile of the target
-
-        Parameters
-        ----------
-        X_train : ArrayLike
-            Training data features.
-
-        y_train : ArrayLike
-            Training data targets.
-
-        fit_params : Optional[dict], default=None
-            Parameters to pass to the `fit` method of the regressors.
-
-        Returns
-        -------
-        Self
-            The fitted ConformalizedQuantileRegressor instance.
-        """
-        _raise_error_if_fit_called_in_prefit_mode(self._prefit)
-        _raise_error_if_method_already_called("fit", self._is_fitted)
-
-        fit_params_ = _prepare_params(fit_params)
-        self._mapie_quantile_regressor._initialize_fit_conformalize()
-        self._mapie_quantile_regressor._fit_estimators(
-            X=X_train,
-            y=y_train,
-            **fit_params_,
-        )
-
-        self._is_fitted = True
-        return self
-
     def conformalize(
         self,
         X_conformalize: ArrayLike,
@@ -1123,11 +1201,7 @@ class ConformalizedQuantileRegressor:
         Self
             The ConformalizedQuantileRegressor instance.
         """
-        _raise_error_if_previous_method_not_called(
-            "conformalize",
-            "fit",
-            self._is_fitted,
-        )
+
         _raise_error_if_method_already_called(
             "conformalize",
             self._is_conformalized,
@@ -1224,29 +1298,6 @@ class ConformalizedQuantileRegressor:
         estimator = self._mapie_quantile_regressor
         predictions, _ = estimator.predict(X, **self._predict_params)
         return predictions
-
-    @property
-    def conformity_scores(self) -> NDArray:
-        """
-        Returns the conformity scores computed by the `conformalize` method
-        on the conformalization set.
-
-        For conformalized quantile regression, three scores are stored per
-        sample: the signed residual against the lower-quantile estimator,
-        the signed residual against the upper-quantile estimator, and their
-        pointwise maximum.
-
-        Returns
-        -------
-        NDArray
-            Array of conformity scores, with shape `(3, n_samples)`.
-        """
-        _raise_error_if_previous_method_not_called(
-            "conformity_scores",
-            "conformalize",
-            self._is_conformalized,
-        )
-        return cast(NDArray, self._mapie_quantile_regressor.conformity_scores_)
 
 
 class _MapieQuantileRegressor(_MapieRegressor):
