@@ -704,7 +704,7 @@ class _QuantileConformalizer(_Conformalizer, ABC):
             )
 
             for i, ind in enumerate(indices):
-                pred_matrix[ind, i, :] = np.array(outputs[i], dtype=float)
+                pred_matrix[ind, i, :] = np.array(outputs[i], dtype=float).T
                 self.k_[ind, i] = 1
 
             _check_nan_in_aposteriori_prediction(pred_matrix)
