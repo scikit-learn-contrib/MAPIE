@@ -955,6 +955,7 @@ class CrossConformalizedQuantileRegressor(_QuantileConformalizer):
         self._central_estimator: Optional[RegressorMixin] = central_estimator
         self.fit_central_estimator: Optional[bool] = fit_central_estimator
         self.quantiles = self._check_alpha(self.alpha)
+        self.agg_function = "mean"
 
     # ---------------------Fit and Conformalize
     # TODO: Nearly duplicated from CrossConformalRegressor -> should be factorize in next refacto
