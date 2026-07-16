@@ -835,13 +835,11 @@ def test_quantile_conformalizer_set_estimator_params() -> None:
 def test_quantile_conformalizer_initialize_fit_conformalize() -> None:
     """Test conformalizer initialization state."""
     conformalizer = DummyQuantileConformalizer()
-    conformalizer.cv = None
     conformalizer.alpha = 0.2
     conformalizer._central_estimator = None
 
     conformalizer._initialize_fit_conformalize()
 
-    assert conformalizer.cv == "split"
     np.testing.assert_allclose(conformalizer.quantiles, np.array([0.1, 0.9, 0.5]))
     assert conformalizer.estimators_ == {"lower": [], "upper": [], "central": []}
     assert conformalizer.n_calib_samples == []

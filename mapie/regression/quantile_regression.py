@@ -364,7 +364,6 @@ class _QuantileConformalizer(_Conformalizer, ABC):
         return estimator
 
     def _initialize_fit_conformalize(self) -> None:
-        self.cv = self._check_cv(cast(str, self.cv))
         self.quantiles = self._check_alpha(self.alpha)
         self.estimators_: dict[str, List[RegressorMixin]] = {
             "lower": [],
