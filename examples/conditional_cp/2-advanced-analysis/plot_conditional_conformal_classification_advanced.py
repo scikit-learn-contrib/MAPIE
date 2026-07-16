@@ -329,7 +329,7 @@ names = [
     "Conditional with Gaussian kernel",
 ]
 
-run_exp(names)
+scores = run_exp(names)
 
 ##############################################################################
 # We can see that the conditional method seems to create better
