@@ -158,8 +158,8 @@ def generate_data(seed, n_train, n_calib, n_test):
 # 2. The goal
 # --------------------------------------------------------------------------
 #
-# - We will try to have an adaptative prediction interval using the
-#   ``ConditionalSplitConformalRegressor``. We will compare it with standard
+# - We will try to have adaptative prediction intervals using the
+#   ``ConditionalSplitConformalRegressor``. We will compare with standard
 #   ``SplitConformalRegressor``, and ``ConformalizedQuantileRegressor``.
 #
 # - The adaptativity will be evaluated by looking at the conditional coverage
@@ -254,7 +254,7 @@ def get_scores_n_trials(
             mapies, group_functions, score_functions, n_train, n_calib, n_test, trial
         )
 
-    method_names = ["Split", "CQR", "CCP"]
+    method_names = ["Split", "CQR", "Conditional"]
 
     scores_df = pd.DataFrame()
     for group_num, group_name in enumerate([e for g in group_names for e in g]):
@@ -325,7 +325,7 @@ def plot_subplot(
 
 def plot_score_boxplot(ax, df, score_name, group_names, color_discrete_map):
     flatten_group_names = [item for sub in group_names for item in sub]
-    for i, method in enumerate(["Split", "CQR", "CCP"]):
+    for i, method in enumerate(["Split", "CQR", "Conditional"]):
         df_method = df[df["Method"] == method]
         color = color_discrete_map[method]
 
@@ -414,7 +414,7 @@ def plot_coverage_width(
         fig, ax = plt.subplots(figsize=(30, 10))
         cp = plt.get_cmap("tab10").colors
         color_discrete_map = dict(
-            zip(["Split", "CQR", "CCP"], [mcolors.rgb2hex(c) for c in cp[:3]])
+            zip(["Split", "CQR", "Conditional"], [mcolors.rgb2hex(c) for c in cp[:3]])
         )
 
         plot_score_boxplot(ax, scores_df, score_name, group_names, color_discrete_map)
@@ -438,9 +438,8 @@ def plot_coverage_width(
 
 
 ##############################################################################
-# 5. Evaluation methods and configuration
+# 5. Evaluation methods and groups definition
 # --------------------------------------------------------------------------
-# scores functions
 
 
 def coverage_funct(y, lower, upper):
@@ -501,8 +500,6 @@ group_names = (
 # --------------------------------------------------------------------------
 
 confidence_level = 0.8
-# These values are smaller than in the original notebook so that the gallery
-# example keeps the same narrative while running quickly in documentation builds.
 n_train, n_calib, n_test = 400, 250, 150
 n_trials = 3
 
@@ -521,7 +518,7 @@ estimator = LGBMRegressor(
 
 # ================= Split =================
 mapie_split = SplitConformalRegressor(
-    estimator=deepcopy(estimator),
+    estimator=estimator,
     confidence_level=confidence_level,
     conformity_score="absolute",
     prefit=False,
@@ -529,7 +526,7 @@ mapie_split = SplitConformalRegressor(
 
 # ================= CQR =================
 mapie_cqr = ConformalizedQuantileRegressor(
-    estimator=deepcopy(estimator),
+    estimator=estimator,
     confidence_level=confidence_level,
 )
 
@@ -540,9 +537,9 @@ mapie_cqr = ConformalizedQuantileRegressor(
 # --------------------------------------------------------------------------
 
 
-def make_gaussian_ccp_feature_map(n_centers=12, seed=random_state):
+def make_gaussian_feature_map(n_centers=12, seed=random_state):
     """
-    Build a Gaussian feature map for CCP.
+    Build a Gaussian feature map.
 
     The centers and bandwidth are initialized lazily on the first call to
     ``feature_map``. In this notebook, that first call happens during
@@ -582,9 +579,9 @@ def make_gaussian_ccp_feature_map(n_centers=12, seed=random_state):
     return feature_map
 
 
-mapie_ccp = ConditionalSplitConformalRegressor(
-    make_gaussian_ccp_feature_map(n_centers=6, seed=random_state),
-    estimator=deepcopy(estimator),
+mapie_conditional = ConditionalSplitConformalRegressor(
+    make_gaussian_feature_map(n_centers=6, seed=random_state),
+    estimator=estimator,
     confidence_level=confidence_level,
     conformity_score="absolute",
     prefit=False,
@@ -594,9 +591,9 @@ mapie_ccp = ConditionalSplitConformalRegressor(
 ##############################################################################
 # Plotting the result
 
-plot_intervals((mapie_split, mapie_cqr, mapie_ccp), n_train, n_calib, n_test)
+plot_intervals((mapie_split, mapie_cqr, mapie_conditional), n_train, n_calib, n_test)
 plot_coverage_width(
-    (mapie_split, mapie_cqr, mapie_ccp),
+    (mapie_split, mapie_cqr, mapie_conditional),
     n_trials,
     group_functions,
     group_names,
@@ -611,18 +608,18 @@ plot_coverage_width(
 ##############################################################################
 # - The method which is the more adaptative is the one with the most constant
 #   coverage.
-# - Here, the ``CCP`` method is the best one. We can see that the basic
+# - Here, the conditional method is the best one. We can see that the basic
 #   ``Split`` method has a strong over-coverage for small target values, and
 #   under-coverage for big target values. Moreover, it seems to have a
-#   <u>strong bias</u> on the ``'racepctblack'`` and ``'racePctWhite'``.
+#   strong bias on the ``'racepctblack'`` and ``'racePctWhite'``.
 # - The ``CQR`` method is better than the ``Split`` but suffers from the same
 #   issues.
 #
 # $\to$ We managed, with ``ConditionalSplitConformalRegressor``, to have a more
-#   <u>homogenous coverage</u> on the target value, and a much <u>smaller bias
-#   on the ethnicity groups</u>.
+#   homogenous coverage on the target value, and a much smaller bias
+#   on the ethnicity groups.
 #
-# $\to$ However its prediction time is longer than the other CP methods as it
+# $\to$ However its prediction time is longer than the other methods as it
 #   contains an optimization process.
 
 
@@ -645,12 +642,12 @@ plot_coverage_width(
 
 def ethnicity_feature_map(X):
     """
-    Build custom CCP features targeting the ethnicity groups used in the
+    Build custom features targeting the ethnicity groups used in the
     diagnostics.
 
     For each selected ethnicity feature, we split the feature values into four
     empirical quartile groups. Inside each group, the feature value itself is
-    kept, and outside the group it is set to zero. This lets CCP adapt intervals
+    kept, and outside the group it is set to zero. Intervals are then adapted
     differently across the ethnicity ranges where coverage imbalance may appear.
 
     The first column is an intercept, which keeps a global calibration component
@@ -672,9 +669,9 @@ def ethnicity_feature_map(X):
     return np.column_stack(features)
 
 
-mapie_ccp = ConditionalSplitConformalRegressor(
+mapie_conditional = ConditionalSplitConformalRegressor(
     ethnicity_feature_map,
-    estimator=deepcopy(estimator),
+    estimator=estimator,
     confidence_level=confidence_level,
     conformity_score="absolute",
     prefit=False,
@@ -684,9 +681,9 @@ mapie_ccp = ConditionalSplitConformalRegressor(
 ##############################################################################
 # Plotting the result
 
-plot_intervals((mapie_split, mapie_cqr, mapie_ccp), n_train, n_calib, n_test)
+plot_intervals((mapie_split, mapie_cqr, mapie_conditional), n_train, n_calib, n_test)
 plot_coverage_width(
-    (mapie_split, mapie_cqr, mapie_ccp),
+    (mapie_split, mapie_cqr, mapie_conditional),
     n_trials,
     group_functions,
     group_names,
@@ -699,21 +696,19 @@ plot_coverage_width(
 
 
 ##############################################################################
-# As we expected, the coverage is now more <u>homogenous on the ethnicity
-# groups</u>. To achieve it, the prediction intervals are now even wider than
+# As we expected, the coverage is now more homogenous on the ethnicity
+# groups. To achieve it, the prediction intervals are now even wider than
 # before for previously under-covered samples, and smaller on previously
 # over-covered samples.
 #
 # $\to$ ``ConditionalSplitConformalRegressor`` can guarantee a homogenous
-#   coverage on groups of interest (thus <u>remove bias</u>), by giving to the
-#   calibrator an adapted feature map.
+#   coverage on groups of interest (thus remove bias), by giving
+#    an adapted feature map.
 #
 # $\to$ Fixing this bias, almost fixed the non-homogeneity of the coverage, on
 #   the target value.
 #
-# <u>Next steps</u>: the only issue to achieve an almost perfect adaptativity,
+# Next steps: the only issue to achieve an almost perfect adaptativity,
 # is to fix the under-coverage for the biggest 10% target crime values. One
 # idea may be to combine the two approachs we used (with indicator functions to
-# avoid the biases and gaussian kernels for overall adaptativity), or add a new
-# column to the calibrator, with the ``y_pred`` value to have a bigger interval
-# for high predictions, without changing too much the smaller predictions.
+# avoid the biases and gaussian kernels for overall adaptativity, or the predicted class).

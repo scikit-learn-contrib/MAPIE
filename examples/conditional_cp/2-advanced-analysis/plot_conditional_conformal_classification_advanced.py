@@ -340,7 +340,7 @@ run_exp(names)
 #
 # The middle of all the classes distributions, where points could
 # belong to any class, should have the biggest prediction sets (with almost
-# all the clases in the sets, as we are very uncertain). The calibrator
+# all the clases in the sets, as we are very uncertain). The feature map
 # with gaussian kernels represented this uncertainty, with big sets
 # for the middle points.
 #
