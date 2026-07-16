@@ -10,7 +10,7 @@ residual normalised score works and show the multiple ways of using it.
 We will explicit the experimental setup below.
 """
 
-# sphinx_gallery_thumbnail_number = 2
+# mkdocs_gallery_thumbnail_number = 2
 
 import warnings
 
