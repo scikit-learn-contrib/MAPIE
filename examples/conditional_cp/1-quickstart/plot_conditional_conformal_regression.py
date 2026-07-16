@@ -3,7 +3,7 @@ Group-conditional prediction intervals (regression)
 ===================================================
 
 This example shows how to use ``ConditionalSplitConformalClassifier``
-to build prediction sets with conditional guarantees on pre-defined groups.
+to build prediction intervals with conditional guarantees on pre-defined groups.
 
 The key idea is to provide a basis function ``feature_map`` that
 identifies the covariate groups on which coverage should be controlled.
@@ -26,13 +26,15 @@ from mapie.regression import SplitConformalRegressor
 from mapie.utils import train_conformalize_test_split
 
 ##############################################################################
-# 1. Generate grouped regression data
+# 1. Generate grouped regression data and fit the model
 # --------------------------------------------------------------------------
 #
 # This one-dimensional regression problem follows the same shape as the advanced
 # tutorial: the baseline is ``x * sin(x)``, and the noise gets harder as ``x``
 # increases. We use bins of ``x`` as the conditional groups, so the same covariate
-# drives both the prediction task and the difficulty level.
+# drives both the prediction task and the difficulty level. The data is split into
+# train / conformalize / test sets, and a polynomial regressor is fitted on the
+# training set.
 
 x_bins = np.array([-1.0, 0.0, 1.5, 3.0, 5.0])
 
@@ -41,7 +43,7 @@ def mean_function(x):
     return x * np.sin(x)
 
 
-def generate_grouped_regression_data(n_samples=1600, random_state=42):
+def generate_grouped_regression_data(n_samples=2500, random_state=42):
     rng = np.random.default_rng(random_state)
     x = rng.uniform(x_bins[0], x_bins[-1], size=n_samples)
 
@@ -65,42 +67,49 @@ X, y = generate_grouped_regression_data()
 ) = train_conformalize_test_split(
     X,
     y,
-    train_size=0.35,
-    conformalize_size=0.45,
-    test_size=0.20,
+    train_size=0.4,
+    conformalize_size=0.3,
+    test_size=0.3,
     random_state=42,
+)
+
+estimator = make_pipeline(PolynomialFeatures(degree=4), LinearRegression()).fit(
+    X_train, y_train
 )
 
 
 ##############################################################################
-# 2. Plot the data
+# 2. Visualize the fitted model
 # --------------------------------------------------------------------------
 #
-# The scatter plot shows that the vertical spread increases across ``x`` regions,
-# which makes the right-hand side of the problem harder than the left-hand side.
+# Overlaying the predictions of the fitted polynomial regressor on the test data
+# gives the curve that the conformal regressors will wrap with intervals.
 
-group_indexes = np.digitize(X[:, 0], x_bins[1:-1], right=False)
 bin_labels = [
     f"[{left:.2f}, {right:.2f})" for left, right in zip(x_bins[:-1], x_bins[1:])
 ]
 bin_labels[-1] = f"[{x_bins[-2]:.2f}, {x_bins[-1]:.2f}]"
 
+grid = np.linspace(X[:, 0].min(), X[:, 0].max(), 300)
+X_grid = grid.reshape(-1, 1)
+y_pred_grid = estimator.predict(X_grid)
+
+group_indexes_test = np.digitize(X_test[:, 0], x_bins[1:-1], right=False)
+
 fig, ax = plt.subplots(figsize=(7, 4))
 for group_index, label in enumerate(bin_labels):
-    mask = group_indexes == group_index
+    mask = group_indexes_test == group_index
     ax.scatter(
-        X[mask, 0],
-        y[mask],
+        X_test[mask, 0],
+        y_test[mask],
         s=18,
         alpha=0.45,
         label=f"x in {label}",
     )
-
-grid = np.linspace(X[:, 0].min(), X[:, 0].max(), 300)
-ax.plot(grid, mean_function(grid), color="black", linewidth=2)
+ax.plot(grid, y_pred_grid, color="black", linewidth=2, label="Model prediction")
 ax.set_xlabel("x")
 ax.set_ylabel("Target")
-ax.set_title("One-dimensional heteroscedastic regression data")
+ax.set_title("Fitted polynomial regressor and test data")
 ax.legend()
 plt.tight_layout()
 plt.show()
@@ -133,9 +142,6 @@ def feature_map(X):
 # calibrates the cutoff by ``x`` group.
 
 confidence_level = 0.90
-estimator = make_pipeline(PolynomialFeatures(degree=4), LinearRegression()).fit(
-    X_train, y_train
-)
 
 mapie_standard = SplitConformalRegressor(
     estimator=estimator,
@@ -167,11 +173,20 @@ _, y_interval_conditional = mapie_conditional.predict_interval(X_test)
 # region. The conditional regressor adapts the band to each ``x`` group:
 # narrower where the data is tight and wider where the noise grows.
 
-X_grid = grid.reshape(-1, 1)
 _, y_interval_standard_grid = mapie_standard.predict_interval(X_grid)
 _, y_interval_conditional_grid = mapie_conditional.predict_interval(X_grid)
 
 fig, ax = plt.subplots(figsize=(7, 4))
+for group_index, label in enumerate(bin_labels):
+    mask = group_indexes_test == group_index
+    ax.scatter(
+        X_test[mask, 0],
+        y_test[mask],
+        s=18,
+        alpha=0.2,
+        label=f"x in {label}",
+    )
+ax.plot(grid, y_pred_grid, color="black", linewidth=2, label="Model prediction")
 for intervals, color, label in (
     (y_interval_standard_grid, "tab:blue", "Standard interval"),
     (y_interval_conditional_grid, "tab:orange", "Conditional interval"),
@@ -185,16 +200,6 @@ for intervals, color, label in (
     )
     ax.plot(grid, intervals[:, 0, 0], color=color, linewidth=1.5, label=label)
     ax.plot(grid, intervals[:, 1, 0], color=color, linewidth=1.5)
-for group_index, label in enumerate(bin_labels):
-    mask = group_indexes == group_index
-    ax.scatter(
-        X[mask, 0],
-        y[mask],
-        s=18,
-        alpha=0.2,
-        label=f"x in {label}",
-    )
-ax.plot(grid, mean_function(grid), color="black", linewidth=2)
 ax.set_xlabel("x")
 ax.set_ylabel("Target")
 ax.set_title("Standard vs conditional prediction intervals")
