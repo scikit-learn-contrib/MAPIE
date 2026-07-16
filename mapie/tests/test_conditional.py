@@ -190,7 +190,7 @@ def test_infinite_bounds_when_basis_degenerate():
     assert not np.isfinite(intervals[0, 1, 0])
 
 
-def test_rkhs_kernel_path():
+def test_rkhs_kernel_path_raises():
     X_conf, y_conf, X_test, _ = _make_data(n=120)
     regressor = ConditionalSplitConformalRegressor(
         feature_map=_phi,
@@ -200,8 +200,8 @@ def test_rkhs_kernel_path():
         infinite_params={"kernel": "rbf", "gamma": 0.1, "lambda": 1},
     )
     regressor.conformalize(X_conf, y_conf)
-    _, intervals = regressor.predict_interval(X_test[:5])
-    assert np.all(intervals[:, 0, 0] <= intervals[:, 1, 0])
+    with pytest.raises(NotImplementedError, match="infinite-dimensional"):
+        regressor.predict_interval(X_test[:5])
 
 
 def test_exact_with_kernel_raises():
@@ -214,7 +214,7 @@ def test_exact_with_kernel_raises():
         infinite_params={"kernel": "rbf", "gamma": 0.1, "lambda": 1},
     )
     regressor.conformalize(X_conf, y_conf)
-    with pytest.raises(ValueError, match="RKHS"):
+    with pytest.raises(NotImplementedError, match="infinite-dimensional"):
         regressor.predict_interval(X_test[:2])
 
 
