@@ -117,9 +117,6 @@ class DummyQuantileConformalizer(_QuantileConformalizer):
     def _check_cv(self, cv: Any) -> str:
         return "split" if cv is None else cv
 
-    def _predict(self, *args: Any, **kwargs: Any) -> Any:
-        raise NotImplementedError
-
 
 class FixedPredictor(BaseEstimator):
     def __init__(self, prediction: NDArray):
@@ -1003,14 +1000,14 @@ def test_quantile_conformalizer_predict_returns_center_lower_upper() -> None:
         "central": [FixedPredictor(np.array([2.0, 3.0]))],
     }
 
-    y_pred_center, y_pred_low, y_pred_up = conformalizer._predict(
+    y_pred_central, y_pred_low, y_pred_up = conformalizer._predict(
         X_toy[:2], ensemble=True
     )
 
-    assert y_pred_center.shape == (2,)
+    assert y_pred_central.shape == (2,)
     assert y_pred_low.shape == (2,)
     assert y_pred_up.shape == (2,)
-    np.testing.assert_allclose(y_pred_center, np.array([2.0, 3.0]))
+    np.testing.assert_allclose(y_pred_central, np.array([2.0, 3.0]))
     np.testing.assert_allclose(y_pred_low, np.array([1.0, 2.0]))
     np.testing.assert_allclose(y_pred_up, np.array([3.0, 4.0]))
 
@@ -1036,11 +1033,11 @@ def test_quantile_conformalizer_predict_multiple_predictions_mean_aggregation() 
         ],
     }
 
-    y_pred_center, y_pred_low, y_pred_up = conformalizer._predict(
+    y_pred_central, y_pred_low, y_pred_up = conformalizer._predict(
         X_toy[:2], ensemble=True
     )
 
-    np.testing.assert_allclose(y_pred_center, np.array([3.0, 4.0]))
+    np.testing.assert_allclose(y_pred_central, np.array([3.0, 4.0]))
     np.testing.assert_allclose(y_pred_low, np.array([2.0, 3.0]))
     np.testing.assert_allclose(y_pred_up, np.array([6.0, 7.0]))
 
@@ -1066,11 +1063,11 @@ def test_quantile_conformalizer_predict_multiple_predictions_minmax() -> None:
         ],
     }
 
-    y_pred_center, y_pred_low, y_pred_up = conformalizer._predict(
+    y_pred_central, y_pred_low, y_pred_up = conformalizer._predict(
         X_toy[:2], ensemble=True
     )
 
-    np.testing.assert_allclose(y_pred_center, np.array([3.0, 4.0]))
+    np.testing.assert_allclose(y_pred_central, np.array([3.0, 4.0]))
     np.testing.assert_allclose(y_pred_low, np.array([1.0, 2.0]))
     np.testing.assert_allclose(y_pred_up, np.array([7.0, 8.0]))
 
@@ -1435,7 +1432,11 @@ def test_cross_conformalized_quantile_regressor_predict_interval_returns_expecte
                 np.full(n_samples, 3.0),
             )
 
-    reg = CrossConformalizedQuantileRegressor(estimator=qt, cv=KFold(n_splits=2))
+    reg = CrossConformalizedQuantileRegressor(
+        estimator=qt,
+        cv=KFold(n_splits=2),
+        conformity_score=AbsoluteQuantileRegressionScore,
+    )
     reg.is_conformalized = True
     reg.alpha = np.array([0.1])
     reg.conformity_scores_ = np.array([0.2, 0.3])
@@ -1443,13 +1444,170 @@ def test_cross_conformalized_quantile_regressor_predict_interval_returns_expecte
     reg.score = StubScore()  # type: ignore[assignment]
 
     y_pred, y_pis = reg.predict_interval(
-        X_toy[:2],
+        X_toy[:3],
         aggregate_point_predictions=None,
         allow_infinite_bounds=True,
     )
 
+    assert y_pred.shape == (3,)
+    assert y_pis.shape == (3, 2)
+    np.testing.assert_allclose(y_pred, np.array([2.0, 2.0, 2.0]))
+    np.testing.assert_allclose(y_pis[:, 0], np.array([1.0, 1.0, 1.0]))
+    np.testing.assert_allclose(y_pis[:, 1], np.array([3.0, 3.0, 3.0]))
+
+
+def test_cross_conformalized_quantile_regressor_predict_mean_aggregation() -> None:
+    """Test predict aggregates central fold predictions with a mean."""
+    reg = CrossConformalizedQuantileRegressor(
+        estimator=qt,
+        cv=KFold(n_splits=2),
+        conformity_score=AbsoluteQuantileRegressionScore,
+    )
+    reg.is_fitted = True
+    reg.is_conformalized = True
+    reg.estimators_ = {
+        "lower": [],
+        "upper": [],
+        "central": [
+            FixedPredictor(np.array([2.0, 3.0])),
+            FixedPredictor(np.array([4.0, 5.0])),
+        ],
+    }
+
+    y_pred = reg.predict(X_toy[:2], aggregate_point_predictions="mean")
+
     assert y_pred.shape == (2,)
-    assert y_pis.shape == (2, 2, 1)
-    np.testing.assert_allclose(y_pred, np.array([2.0, 2.0]))
-    np.testing.assert_allclose(y_pis[:, 0, 0], np.array([1.0, 1.0]))
-    np.testing.assert_allclose(y_pis[:, 1, 0], np.array([3.0, 3.0]))
+    np.testing.assert_allclose(y_pred, np.array([3.0, 4.0]))
+
+
+def test_cross_conformalized_quantile_regressor_predict_pinball_weighted_mean() -> None:
+    """Test predict aggregates central fold predictions weighted by pinball losses on central quantile."""
+    reg = CrossConformalizedQuantileRegressor(
+        estimator=qt,
+        cv=KFold(n_splits=2),
+        conformity_score=AbsoluteQuantileRegressionScore,
+    )
+    reg.is_fitted = True
+    reg.is_conformalized = True
+    # pinball_losses: shape (n_folds, n_quantiles) — colonne 2 = quantile central (0.5)
+    # fold 0: perte centrale = 1.0, fold 1: perte centrale = 3.0  → poids [0.25, 0.75]
+    reg.pinball_losses = np.array([[0.5, 0.5, 1.0], [0.5, 0.5, 3.0]])
+    reg.quantiles = np.array([0.05, 0.95, 0.5])  # taille 3 → branche pinball_weighted_mean active
+    reg.estimators_ = {
+        "lower": [],
+        "upper": [],
+        "central": [
+            FixedPredictor(np.array([10.0, 20.0])),
+            FixedPredictor(np.array([30.0, 40.0])),
+        ],
+    }
+
+    y_pred = reg.predict(X_toy[:2], aggregate_point_predictions="pinball_weighted_mean")
+
+    # poids = [1/4, 3/4] → résultats = 0.25*[10,20] + 0.75*[30,40] = [25, 35]
+    assert y_pred.shape == (2,)
+    np.testing.assert_allclose(y_pred, np.array([25.0, 35.0]))
+
+
+def test_cross_conformalized_quantile_regressor_predict_interval_mean_aggregation() -> None:
+    """Test predict_interval forwards mean aggregation as ensemble=True."""
+    observed: dict[str, Any] = {}
+
+    class StubScore:
+        def predict_set(
+            self, X: NDArray, alpha: NDArray, **kwargs: Any
+        ) -> tuple[NDArray, NDArray, NDArray]:
+            observed["kwargs"] = kwargs
+            n_samples = X.shape[0]
+            return (
+                np.full(n_samples, 5.0),
+                np.full(n_samples, 4.0),
+                np.full(n_samples, 6.0),
+            )
+
+    reg = CrossConformalizedQuantileRegressor(
+        estimator=qt,
+        cv=KFold(n_splits=2),
+        conformity_score=AbsoluteQuantileRegressionScore,
+    )
+    reg.is_conformalized = True
+    reg.alpha = np.array([0.1])
+    reg.conformity_scores_ = np.array([0.2, 0.3])
+    reg.method = "plus"
+    reg.score = StubScore()  # type: ignore[assignment]
+
+    y_pred, y_pis = reg.predict_interval(
+        X_toy[:3],
+        aggregate_point_predictions="mean",
+        allow_infinite_bounds=True,
+    )
+
+    assert observed["kwargs"]["ensemble"] is True
+    assert y_pred.shape == (3,)
+    assert y_pis.shape == (3, 2)
+    np.testing.assert_allclose(y_pred, np.array([5.0, 5.0, 5.0]))
+    np.testing.assert_allclose(y_pis[:, 0], np.array([4.0, 4.0, 4.0]))
+    np.testing.assert_allclose(y_pis[:, 1], np.array([6.0, 6.0, 6.0]))
+
+
+def test_cross_conformalized_quantile_regressor_predict_interval_pinball_weighted_mean() -> None:
+    """Test predict_interval accepts pinball_weighted_mean aggregation."""
+    observed: dict[str, Any] = {}
+
+    class StubScore:
+        def predict_set(
+            self, X: NDArray, alpha: NDArray, **kwargs: Any
+        ) -> tuple[NDArray, NDArray, NDArray]:
+            observed["kwargs"] = kwargs
+            n_samples = X.shape[0]
+            return (
+                np.full(n_samples, 8.0),
+                np.full(n_samples, 7.0),
+                np.full(n_samples, 9.0),
+            )
+
+    reg = CrossConformalizedQuantileRegressor(
+        estimator=qt,
+        cv=KFold(n_splits=2),
+        conformity_score=AbsoluteQuantileRegressionScore,
+    )
+    reg.is_conformalized = True
+    reg.alpha = np.array([0.1])
+    reg.conformity_scores_ = np.array([0.2, 0.3])
+    reg.method = "plus"
+    reg.score = StubScore()  # type: ignore[assignment]
+
+    y_pred, y_pis = reg.predict_interval(
+        X_toy[:3],
+        aggregate_point_predictions="pinball_weighted_mean",
+        allow_infinite_bounds=True,
+    )
+
+    assert observed["kwargs"]["ensemble"] is True
+    assert y_pred.shape == (3,)
+    assert y_pis.shape == (3, 2)
+    np.testing.assert_allclose(y_pred, np.array([8.0, 8.0, 8.0]))
+    np.testing.assert_allclose(y_pis[:, 0], np.array([7.0, 7.0, 7.0]))
+    np.testing.assert_allclose(y_pis[:, 1], np.array([9.0, 9.0, 9.0]))
+
+
+def test_cross_conformalized_quantile_regressor_predict_interval_invalid_aggregation() -> None:
+    """Test predict_interval raises on unsupported aggregation value."""
+    reg = CrossConformalizedQuantileRegressor(
+        estimator=qt,
+        cv=KFold(n_splits=2),
+        conformity_score=AbsoluteQuantileRegressionScore,
+    )
+    reg.is_conformalized = True
+    reg.alpha = np.array([0.1])
+    reg.conformity_scores_ = np.array([0.2, 0.3])
+
+    with pytest.raises(
+        ValueError,
+        match=r".*The value of the aggregation function is not correct.*",
+    ):
+        reg.predict_interval(
+            X_toy[:3],
+            aggregate_point_predictions="unknown",
+            allow_infinite_bounds=True,
+        )

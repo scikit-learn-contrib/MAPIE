@@ -570,6 +570,8 @@ class _QuantileConformalizer(_Conformalizer, ABC):
             )
             self.reset()
 
+        self._initialize_fit_conformalize()
+
         n_samples = _num_samples(y)
 
         if self.cv == "prefit":
@@ -850,7 +852,7 @@ class _QuantileConformalizer(_Conformalizer, ABC):
         for i in range(n_split):
             pred_matrix[:, i, :n_quantiles] = self._predict_quantiles(
                 X, index=i, **predict_params
-            )
+            ).T
             if n_quantiles < 3:
                 pred_matrix[:, i, 2] = self._predict_center(
                     X, index=i, **predict_params
@@ -865,7 +867,7 @@ class _QuantileConformalizer(_Conformalizer, ABC):
         else:
             y_pred = aggregate_all(self.agg_function, pred_matrix)
 
-        return y_pred[2], y_pred[0], y_pred[1]
+        return y_pred[:, 2], y_pred[:, 0], y_pred[:, 1]
 
 
 class CrossConformalizedQuantileRegressor(_QuantileConformalizer):
@@ -906,21 +908,21 @@ class CrossConformalizedQuantileRegressor(_QuantileConformalizer):
         _check_cv_not_string(cv)
         _check_cv_not_subsample(cv)
         self._check_quantile_estimator(estimator)
-        self._check_score(
-            conformity_score, CrossConformalizedQuantileRegressor.ALLOWED_SCORES
-        )
+        self._check_score(conformity_score)
 
+        self.score = conformity_score
         self.estimator = estimator
         self.method = method
         self.cv = cv
         self.n_jobs = n_jobs
         self.verbose = verbose
-        self._alpha = _transform_confidence_level_to_alpha(confidence_level)
+        self.alpha = _transform_confidence_level_to_alpha(confidence_level)
         self.is_fitted = self.is_conformalized = False
 
         self._predict_params: dict = {}
-        self.central_estimator_: Optional[RegressorMixin] = central_estimator
+        self._central_estimator: Optional[RegressorMixin] = central_estimator
         self.fit_central_estimator: Optional[bool] = fit_central_estimator
+        self.quantiles = self._check_alpha(self.alpha)
 
     # ---------------------Fit and Conformalize
     # TODO: Nearly duplicated from CrossConformalRegressor -> should be factorize in next refacto
@@ -1069,7 +1071,7 @@ class CrossConformalizedQuantileRegressor(_QuantileConformalizer):
             allow_infinite_bounds=allow_infinite_bounds,
         )
 
-        return np.array(y_pred), np.stack([y_pred_low, y_pred_up], axis=1)
+        return np.array(y_pred), np.column_stack([y_pred_low, y_pred_up])
 
     # TODO: Duplicated from CrossConformalRegressor
     def predict(
@@ -1114,27 +1116,42 @@ class CrossConformalizedQuantileRegressor(_QuantileConformalizer):
         ensemble = self._set_aggregate_point_predictions_and_return_ensemble(
             aggregate_point_predictions
         )
-        predictions = self._mapie_regressor.predict(
-            X,
-            alpha=None,
-            ensemble=ensemble,
-            **self._predict_params,
+
+        if not ensemble:
+            return np.asarray(self._predict_center(X, index=0, **self._predict_params))
+
+        y_pred_multi = np.vstack(
+            [
+                self._predict_center(X, index=i, **self._predict_params)
+                for i in range(len(self.estimators_["central"]))
+            ]
         )
-        return predictions
-        # return _cast_point_predictions_to_ndarray(predictions)
+
+        if (
+            aggregate_point_predictions == "pinball_weighted_mean"
+            and self.quantiles.size == 3
+        ):
+            central_losses = np.asarray(self.pinball_losses, dtype=float)[:, 2]
+            weights = central_losses / central_losses.sum()
+            return (np.atleast_2d(weights).T * y_pred_multi).sum(axis=0)
+        if aggregate_point_predictions == "median":
+            return np.median(y_pred_multi, axis=0)
+        return np.mean(y_pred_multi, axis=0)
 
     # TODO: Duplicated from CrossConformalRegressor
     def _set_aggregate_point_predictions_and_return_ensemble(
         self, aggregate_point_predictions: Optional[str]
     ) -> bool:
-        if not aggregate_point_predictions:
-            ensemble = False
-        else:
-            ensemble = True
-            self._check_agg_function(aggregate_point_predictions)
-            # A hack here, to allow choosing the aggregation function at prediction time
-            self.agg_function = aggregate_point_predictions
-        return ensemble
+        if aggregate_point_predictions is None:
+            return False
+        if (
+            aggregate_point_predictions
+            not in CrossConformalizedQuantileRegressor.ALLOWED_AGG_FUNCTIONS
+        ):
+            raise ValueError("The value of the aggregation function is not correct")
+
+        self.agg_function = aggregate_point_predictions
+        return True
 
 
 class ConformalizedQuantileRegressor:
