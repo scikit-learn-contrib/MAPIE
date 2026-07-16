@@ -521,7 +521,9 @@ for feature_map in feature_maps:
     conditional_y_preds.append(y_pred)
     conditional_y_pis.append(y_pi)
 
-plot_figure(conditional_mapies, conditional_y_preds, conditional_y_pis, feature_map_titles, True)
+plot_figure(
+    conditional_mapies, conditional_y_preds, conditional_y_pis, feature_map_titles, True
+)
 plot_evaluation(feature_map_titles, conditional_y_pis, X_test, y_test)
 
 
