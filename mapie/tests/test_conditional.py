@@ -191,31 +191,16 @@ def test_infinite_bounds_when_basis_degenerate():
 
 
 def test_rkhs_kernel_path_raises():
-    X_conf, y_conf, X_test, _ = _make_data(n=120)
-    regressor = ConditionalSplitConformalRegressor(
-        feature_map=_phi,
-        estimator=LinearRegression().fit(X_conf, y_conf),
-        confidence_level=0.9,
-        exact=False,
-        infinite_params={"kernel": "rbf", "gamma": 0.1, "lambda": 1},
-    )
-    regressor.conformalize(X_conf, y_conf)
+    X_conf, y_conf, _, _ = _make_data(n=120)
+    # The infinite-dimensional (RKHS) path is unimplemented, so requesting a
+    # kernel fails fast at construction rather than at prediction time.
     with pytest.raises(NotImplementedError, match="infinite-dimensional"):
-        regressor.predict_interval(X_test[:5])
-
-
-def test_exact_with_kernel_raises():
-    X_conf, y_conf, X_test, _ = _make_data(n=120)
-    regressor = ConditionalSplitConformalRegressor(
-        feature_map=_phi,
-        estimator=LinearRegression().fit(X_conf, y_conf),
-        confidence_level=0.9,
-        exact=True,
-        infinite_params={"kernel": "rbf", "gamma": 0.1, "lambda": 1},
-    )
-    regressor.conformalize(X_conf, y_conf)
-    with pytest.raises(NotImplementedError, match="infinite-dimensional"):
-        regressor.predict_interval(X_test[:2])
+        ConditionalSplitConformalRegressor(
+            feature_map=_phi,
+            estimator=LinearRegression().fit(X_conf, y_conf),
+            confidence_level=0.9,
+            infinite_params={"kernel": "rbf", "gamma": 0.1, "lambda": 1},
+        )
 
 
 def _make_multiclass_data(n=300, seed=0):
