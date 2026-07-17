@@ -1090,7 +1090,7 @@ class CrossConformalizedQuantileRegressor(_QuantileConformalizer):
 
         alpha_np = cast(NDArray, self.alpha)
         if not allow_infinite_bounds:
-            n = self.score.get_effective_calibration_samples(self.conformity_scores_)
+            n = self.score.get_effective_calibration_samples(self.conformity_scores)
             _check_alpha_and_n_samples(alpha_np, n)
 
         ensemble = self._set_aggregate_point_predictions_and_return_ensemble(
@@ -1102,7 +1102,7 @@ class CrossConformalizedQuantileRegressor(_QuantileConformalizer):
             X,
             alpha_np,
             estimator=self,
-            conformity_scores=self.conformity_scores_,
+            conformity_scores=self.conformity_scores,
             ensemble=ensemble,
             method=self.method,
             optimize_beta=minimize_interval_width,
@@ -1559,7 +1559,7 @@ class _MapieQuantileRegressor(_MapieRegressor):
     valid_methods_ = ["quantile"]
     fit_attributes = [
         "estimators_",
-        "conformity_scores_",
+        "conformity_scores",
         "n_calib_samples",
     ]
 
@@ -1958,7 +1958,7 @@ class _MapieQuantileRegressor(_MapieRegressor):
         for i, est in enumerate(self.estimators_):
             y_calib_preds[i] = est.predict(X_calib, **kwargs).ravel()
 
-        self.conformity_scores_ = np.full(
+        self.conformity_scores = np.full(
             shape=(3, self.n_calib_samples), fill_value=np.nan
         )
 
