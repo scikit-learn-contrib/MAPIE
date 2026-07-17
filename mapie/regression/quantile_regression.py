@@ -371,7 +371,7 @@ class _QuantileConformalizer(_Conformalizer, ABC):
             "central": [],
         }
         self.n_calib_samples: List[int] = []
-        self.conformity_scores: List[Iterable[float]] = []
+        self.conformity_scores: NDArray[np.float64] = np.array([])
         self.pinball_losses: List[Iterable[float]] = []
         self.key_mapping = {"lower": 0, "upper": 1, "central": 2}
 
@@ -736,9 +736,7 @@ class _QuantileConformalizer(_Conformalizer, ABC):
             self.conformity_scores = []
 
         pred = self._predict_calib(X_calib, y_calib, groups, **predict_params)
-        self.conformity_scores.append(
-            self.score.get_conformity_scores(y_calib, pred.T, X=X_calib)
-        )
+        self.conformity_scores = self.score.get_conformity_scores(y_calib, pred.T, X=X_calib)
 
         self.is_conformalized = True
         return self
