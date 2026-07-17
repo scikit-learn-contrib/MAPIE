@@ -277,11 +277,10 @@ def plot_subplot(
             ax_transform.plot(x_sorted[:, 0], transform[:, column], lw=1, color=color)
 
 
-def plot_figure(mapies, y_preds, y_pis, titles, show_components=False, ncols=None):
+def plot_figure(mapies, y_preds, y_pis, titles, show_components=False):
     """Plot the prediction intervals of all MAPIE instances."""
     cp = plt.get_cmap("tab10").colors
-    if ncols is None:
-        ncols = min(3, len(titles))
+    ncols = min(3, len(titles))
     nrows = int(np.ceil(len(titles) / ncols))
 
     if show_components:
@@ -399,8 +398,8 @@ def plot_evaluation(titles, y_pis, X, y):
 ##############################################################################
 # 4. Creation of MAPIE instances
 # --------------------------------------------------------------------------
-# We are going to test different methods : ``CV+``, ``CQR`` and ``Conditional``
-# (with default parameters)
+# We are going to test different methods : ``CV+``, ``CQR``, ``Conditional``
+# (with default parameters) and the ``residual_normalized`` conformity score
 
 estimator_split = clone(estimator).fit(X_train, y_train)
 mapie_split = SplitConformalRegressor(
@@ -430,6 +429,14 @@ mapie_cqr = ConformalizedQuantileRegressor(
 mapie_cqr.fit(X_train, y_train).conformalize(X_calib, y_calib)
 y_pred_cqr, y_pi_cqr = mapie_cqr.predict_interval(X_test)
 
+mapie_residual = SplitConformalRegressor(
+    estimator=estimator_split,
+    confidence_level=confidence_level,
+    conformity_score="residual_normalized",
+    prefit=True,
+).conformalize(X_calib, y_calib)
+y_pred_residual, y_pi_residual = mapie_residual.predict_interval(X_test)
+
 mapie_conditional = ConditionalSplitConformalRegressor(
     gaussian_feature_map,
     estimator=estimator_split,
@@ -439,12 +446,18 @@ mapie_conditional = ConditionalSplitConformalRegressor(
 ).conformalize(X_calib, y_calib)
 y_pred_conditional, y_pi_conditional = mapie_conditional.predict_interval(X_test)
 
-mapies = [mapie_split, mapie_cv, mapie_cqr, mapie_conditional]
-y_preds = [y_pred_split, y_pred_cv, y_pred_cqr, y_pred_conditional]
-y_pis = [y_pi_split, y_pi_cv, y_pi_cqr, y_pi_conditional]
-titles = ["Basic split", "CV+", "CQR", "Conditional - Gaussian feature map"]
+mapies = [mapie_split, mapie_cv, mapie_cqr, mapie_residual, mapie_conditional]
+y_preds = [y_pred_split, y_pred_cv, y_pred_cqr, y_pred_residual, y_pred_conditional]
+y_pis = [y_pi_split, y_pi_cv, y_pi_cqr, y_pi_residual, y_pi_conditional]
+titles = [
+    "Basic split",
+    "CV+",
+    "CQR",
+    "Residual normalized",
+    "Conditional - Gaussian feature map",
+]
 
-plot_figure(mapies, y_preds, y_pis, titles, ncols=2)
+plot_figure(mapies, y_preds, y_pis, titles)
 plot_evaluation(titles, y_pis, X_test, y_test)
 
 
