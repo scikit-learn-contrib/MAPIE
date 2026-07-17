@@ -737,7 +737,7 @@ class _QuantileConformalizer(_Conformalizer, ABC):
 
         pred = self._predict_calib(X_calib, y_calib, groups, **predict_params)
         self.conformity_scores.append(
-            self.score.get_conformity_scores(y_calib, pred, X=X_calib)
+            self.score.get_conformity_scores(y_calib, pred.T, X=X_calib)
         )
 
         self.is_conformalized = True
