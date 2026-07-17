@@ -942,7 +942,11 @@ class CrossConformalizedQuantileRegressor(_QuantileConformalizer):
         self._check_quantile_estimator(estimator)
         self._check_score(conformity_score)
 
-        self.score = conformity_score
+        # Instantiate conformity score if it's a class
+        if isinstance(conformity_score, type):
+            self.score = conformity_score()
+        else:
+            self.score = conformity_score
         self.estimator = estimator
         self.method = method
         self.cv = _check_cv(cv)
