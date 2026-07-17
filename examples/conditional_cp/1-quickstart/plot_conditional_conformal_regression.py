@@ -104,11 +104,11 @@ for group_index, label in enumerate(bin_labels):
         y_test[mask],
         s=18,
         alpha=0.45,
-        label=f"x in {label}",
+        label=f"y for x in {label}",
     )
 ax.plot(grid, y_pred_grid, color="black", linewidth=2, label="Model prediction")
 ax.set_xlabel("x")
-ax.set_ylabel("Target")
+ax.set_ylabel("y")
 ax.set_title("Fitted polynomial regressor and test data")
 ax.legend()
 plt.tight_layout()
@@ -184,7 +184,7 @@ for group_index, label in enumerate(bin_labels):
         y_test[mask],
         s=18,
         alpha=0.2,
-        label=f"x in {label}",
+        label=f"y for x in {label}",
     )
 ax.plot(grid, y_pred_grid, color="black", linewidth=2, label="Model prediction")
 for intervals, color, label in (
@@ -201,7 +201,7 @@ for intervals, color, label in (
     ax.plot(grid, intervals[:, 0, 0], color=color, linewidth=1.5, label=label)
     ax.plot(grid, intervals[:, 1, 0], color=color, linewidth=1.5)
 ax.set_xlabel("x")
-ax.set_ylabel("Target")
+ax.set_ylabel("y")
 ax.set_title("Standard vs conditional prediction intervals")
 ax.legend()
 plt.tight_layout()
