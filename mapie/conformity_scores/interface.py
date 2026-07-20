@@ -126,6 +126,7 @@ class BaseConformityScore(metaclass=ABCMeta):
         NDArray of shape (1, n_alpha) or (n_samples, n_alpha)
             The quantiles of the conformity scores.
         """
+        alpha_np = np.atleast_1d(np.asarray(alpha_np, dtype=float))
         n_ref = conformity_scores.shape[1 - axis]
         n_calib: int = np.min(np.sum(~np.isnan(conformity_scores), axis=axis))
         signed = 1 - 2 * reversed
