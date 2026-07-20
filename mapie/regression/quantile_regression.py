@@ -751,24 +751,26 @@ class _QuantileConformalizer(_Conformalizer, ABC):
         return self
 
     # ------------------------------ Predict
-    def _pinball_weighted_mean(self, y_preds):
+    def _pinball_weighted_mean(self, y_preds: ArrayLike) -> NDArray:
         """
         Computes the weighted mean of the predicted values using the pinball losses as weights.
         """
-        pinball_losses = np.asarray(self.pinball_losses, dtype=float)
+        pinball_weights = 1 / np.asarray(self.pinball_losses, dtype=float)
         y_preds = np.asarray(y_preds, dtype=float)
 
-        if pinball_losses.ndim == 1:
-            weights = pinball_losses / pinball_losses.sum()
+        if pinball_weights.ndim == 1:
+            weights = pinball_weights / pinball_weights.sum()
             weighted_values = np.sum(np.atleast_2d(weights).T * y_preds, axis=0)
         else:
-            weights = pinball_losses / pinball_losses.sum(axis=0, keepdims=True)
+            weights = pinball_weights / pinball_weights.sum(axis=0, keepdims=True)
             weighted_values = np.sum(weights * y_preds, axis=0)
 
         return np.asarray(weighted_values).reshape(-1, 1)
 
     # TODO: A structure can handle quantiles fitting and prediction to avoid code duplication between conformalizer
-    def _predict_quantiles(self, X: ArrayLike, index: int, **predict_params):
+    def _predict_quantiles(
+        self, X: ArrayLike, index: int, **predict_params
+    ) -> ArrayLike:
         """
         Predicts the lower and upper quantiles for the given input data X using the specified index.
 
@@ -796,7 +798,7 @@ class _QuantileConformalizer(_Conformalizer, ABC):
             )
         return np.vstack(preds)
 
-    def _predict_center(self, X: ArrayLike, index: int, **predict_params):
+    def _predict_center(self, X: ArrayLike, index: int, **predict_params) -> ArrayLike:
         """
         Predicts the central quantile for the given input data X using the specified index.
 
@@ -838,15 +840,11 @@ class _QuantileConformalizer(_Conformalizer, ABC):
         """
 
         if self.method == "base":
-            y_pred_low = self._base_estimators_[self.key_mapping["lower"]][0].predict(
+            y_pred_low = self._base_estimator_["lower"][0].predict(X, **predict_params)
+            y_pred_up = self._base_estimator_["upper"][0].predict(X, **predict_params)
+            y_pred_center = self._base_estimator_["central"][0].predict(
                 X, **predict_params
             )
-            y_pred_up = self._base_estimators_[self.key_mapping["upper"]][0].predict(
-                X, **predict_params
-            )
-            y_pred_center = self._base_estimators_[self.key_mapping["central"]][
-                0
-            ].predict(X, **predict_params)
             return y_pred_center, y_pred_low, y_pred_up
 
         n_split = len(self.estimators_["lower"])
@@ -869,6 +867,13 @@ class _QuantileConformalizer(_Conformalizer, ABC):
             y_pred_multi_low = np.min(pred_matrix[:, :, 0], axis=1, keepdims=True)
             y_pred_multi_up = np.max(pred_matrix[:, :, 1], axis=1, keepdims=True)
             y_pred_multi_center = np.mean(pred_matrix[:, :, 2], axis=1, keepdims=True)
+            y_pred = np.hstack((y_pred_multi_low, y_pred_multi_up, y_pred_multi_center))
+
+        elif self.agg_function == "pinball_weighted_mean":
+            # pinball_weighted_mean works with (n_splits, n_samples) layout
+            y_pred_multi_low = self._pinball_weighted_mean(pred_matrix[:, :, 0].T)
+            y_pred_multi_up = self._pinball_weighted_mean(pred_matrix[:, :, 1].T)
+            y_pred_multi_center = self._pinball_weighted_mean(pred_matrix[:, :, 2].T)
             y_pred = np.hstack((y_pred_multi_low, y_pred_multi_up, y_pred_multi_center))
 
         else:
