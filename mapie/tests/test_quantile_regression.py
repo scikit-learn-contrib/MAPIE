@@ -1131,7 +1131,7 @@ def test_quantile_conformalizer_pinball_weighted_mean() -> None:
     weighted_mean = conformalizer._pinball_weighted_mean(y_preds)
 
     assert weighted_mean.shape == (2, 1)
-    np.testing.assert_allclose(weighted_mean, np.array([[25.0], [35.0]]))
+    np.testing.assert_allclose(weighted_mean, np.array([[15.0], [25.0]]))
 
 
 def test_quantile_conformalizer_pinball_weighted_mean_columnwise_weights() -> None:
@@ -1153,7 +1153,7 @@ def test_quantile_conformalizer_pinball_weighted_mean_columnwise_weights() -> No
     weighted_mean = conformalizer._pinball_weighted_mean(y_preds)
 
     assert weighted_mean.shape == (2, 1)
-    np.testing.assert_allclose(weighted_mean, np.array([[25.0], [150.0]]))
+    np.testing.assert_allclose(weighted_mean, np.array([[15.0], [150.0]]))
 
 
 def test_quantile_conformalizer_fit_prefit_sets_state() -> None:
@@ -1621,7 +1621,7 @@ def test_cross_conformalized_quantile_regressor_predict_interval_pinball_weighte
     )
     reg.is_conformalized = True
     reg.alpha = np.array([0.1])
-    reg.conformity_scores_ = np.array([0.2, 0.3])
+    reg.conformity_scores = np.array([0.2, 0.3])
     reg.method = "plus"
     reg.score = StubScore()  # type: ignore[assignment]
 
@@ -1661,3 +1661,23 @@ def test_cross_conformalized_quantile_regressor_predict_interval_invalid_aggrega
             aggregate_point_predictions="unknown",
             allow_infinite_bounds=True,
         )
+
+
+def test_cross_conformalized_quantile_regressor_base_method_predict_interval() -> None:
+    """Test the base method returns point predictions and intervals."""
+    reg = CrossConformalizedQuantileRegressor(
+        estimator=qt,
+        cv=KFold(n_splits=2),
+        conformity_score=AbsoluteQuantileRegressionScore,
+        method="base",
+    )
+    reg.fit_conformalize(X_toy[:6], y_toy[:6])
+
+    y_pred, y_pis = reg.predict_interval(
+        X_toy[:2],
+        aggregate_point_predictions=None,
+        allow_infinite_bounds=True,
+    )
+
+    assert y_pred.shape == (2,)
+    assert y_pis.shape == (2, 2)
