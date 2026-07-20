@@ -289,8 +289,8 @@ def test_results_with_constant_sample_weights(
     mapie2._fit_estimators(X_train, y_train, sample_weight=np.ones(shape=n_samples) * 5)
     mapie2.conformalize(X_calib, y_calib)
 
-    np.testing.assert_allclose(mapie0.conformity_scores_, mapie1.conformity_scores_)
-    np.testing.assert_allclose(mapie0.conformity_scores_, mapie2.conformity_scores_)
+    np.testing.assert_allclose(mapie0.conformity_scores, mapie1.conformity_scores)
+    np.testing.assert_allclose(mapie0.conformity_scores, mapie2.conformity_scores)
 
     y_pred0, y_pis0 = mapie0.predict(X)
     y_pred1, y_pis1 = mapie1.predict(X)
@@ -463,7 +463,7 @@ def test_conformity_len(
     mapie_regressor._initialize_fit_conformalize()
     mapie_regressor._fit_estimators(X_t, y_t)
     mapie_regressor.conformalize(X_c, y_c)
-    assert mapie_regressor.conformity_scores_[0].shape[0] == n_samples
+    assert mapie_regressor.conformity_scores[0].shape[0] == n_samples
 
 
 # Working but want to add both symmetry and different estimators
@@ -701,6 +701,53 @@ def test_quantile_regression_score_estimation_distribution() -> None:
     )
 
     np.testing.assert_allclose(estimation_distribution, y_pred + conformity_scores)
+
+
+def test_quantile_regression_score_estimation_distribution_broadcasts() -> None:
+    """Test estimation distribution broadcasting on test and calibration sizes."""
+    score = QuantileRegressionScore()
+    y_pred = np.array([1.0, 2.0])
+    conformity_scores = np.array([0.5, -0.5, 1.5])
+
+    estimation_distribution = score.get_estimation_distribution(
+        y_pred, conformity_scores
+    )
+
+    expected_distribution = np.array(
+        [
+            [1.5, 0.5, 2.5],
+            [2.5, 1.5, 3.5],
+        ]
+    )
+    assert estimation_distribution.shape == (2, 3)
+    np.testing.assert_allclose(estimation_distribution, expected_distribution)
+
+
+def test_quantile_regression_score_get_quantile_accepts_scalar_alpha() -> None:
+    """Test scalar alpha is normalized to a one-element array in get_quantile."""
+    score = QuantileRegressionScore()
+    conformity_scores = np.array(
+        [
+            [1.0, 2.0, 3.0],
+            [4.0, 5.0, 6.0],
+        ]
+    )
+
+    scalar_quantile = score.get_quantile(
+        conformity_scores,
+        0.2,
+        axis=1,
+        reversed=True,
+    )
+    array_quantile = score.get_quantile(
+        conformity_scores,
+        np.array([0.2]),
+        axis=1,
+        reversed=True,
+    )
+
+    assert scalar_quantile.shape == (2, 1)
+    np.testing.assert_allclose(scalar_quantile, array_quantile)
 
 
 def test_absolute_quantile_regression_score_conformity_scores() -> None:

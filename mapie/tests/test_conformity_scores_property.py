@@ -113,7 +113,7 @@ class TestConformityScoresProperty:
         assert estimator.conformity_scores.shape[0] == 3
         assert (
             estimator.conformity_scores
-            is estimator._mapie_quantile_regressor.conformity_scores_
+            is estimator._mapie_quantile_regressor.conformity_scores
         )
 
     def test_time_series_regressor(self, regression_data):
