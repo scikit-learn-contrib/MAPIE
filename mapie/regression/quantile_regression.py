@@ -30,6 +30,7 @@ from mapie.utils import (
     _raise_error_if_fit_called_in_prefit_mode,
     _raise_error_if_method_already_called,
     _raise_error_if_previous_method_not_called,
+    _transform_confidence_level_to_alpha_list,
     _transform_confidence_level_to_alpha,
     check_is_fitted,
     check_sklearn_user_model_is_fitted,
@@ -964,7 +965,7 @@ class CrossConformalizedQuantileRegressor(_QuantileConformalizer):
         self.cv = _check_cv(cv)
         self.n_jobs = n_jobs
         self.verbose = verbose
-        self.alpha = _transform_confidence_level_to_alpha(confidence_level)
+        self.alpha = _transform_confidence_level_to_alpha_list(confidence_level)
         self.is_fitted = self.is_conformalized = False
 
         self._predict_params: dict = {}
@@ -1181,8 +1182,8 @@ class CrossConformalizedQuantileRegressor(_QuantileConformalizer):
             aggregate_point_predictions == "pinball_weighted_mean"
             and self.quantiles.size == 3
         ):
-            central_losses = np.asarray(self.pinball_losses, dtype=float)[:, 2]
-            weights = central_losses / central_losses.sum()
+            central_weights = 1 / np.asarray(self.pinball_losses, dtype=float)[:, 2]
+            weights = central_weights / central_weights.sum()
             return np.sum((np.atleast_2d(weights).T * y_pred_multi), axis=0)
         if aggregate_point_predictions == "median":
             return np.median(y_pred_multi, axis=0)
