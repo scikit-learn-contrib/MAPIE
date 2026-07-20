@@ -844,9 +844,9 @@ class _QuantileConformalizer(_Conformalizer, ABC):
             y_pred_up = self._base_estimators_[self.key_mapping["upper"]][0].predict(
                 X, **predict_params
             )
-            y_pred_center = self._base_estimators_[self.key_mapping["central"]][0].predict(
-                X, **predict_params
-            )
+            y_pred_center = self._base_estimators_[self.key_mapping["central"]][
+                0
+            ].predict(X, **predict_params)
             return y_pred_center, y_pred_low, y_pred_up
 
         n_split = len(self.estimators_["lower"])
