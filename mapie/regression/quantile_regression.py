@@ -89,6 +89,13 @@ class QuantileRegressionScore(BaseRegressionScore):
         `conformity_scores` can be either the conformity scores or
         the quantile of the conformity scores.
         """
+        y_pred = np.asarray(y_pred)
+        conformity_scores = np.asarray(conformity_scores)
+
+        if y_pred.ndim == 1 and conformity_scores.ndim == 1:
+            if y_pred.shape[0] != conformity_scores.shape[0]:
+                return np.add(y_pred[:, np.newaxis], conformity_scores)
+
         return np.add(y_pred, conformity_scores)
 
 
@@ -736,7 +743,9 @@ class _QuantileConformalizer(_Conformalizer, ABC):
             self.conformity_scores = []
 
         pred = self._predict_calib(X_calib, y_calib, groups, **predict_params)
-        self.conformity_scores = self.score.get_conformity_scores(y_calib, pred.T, X=X_calib)
+        self.conformity_scores = self.score.get_conformity_scores(
+            y_calib, pred.T, X=X_calib
+        )
 
         self.is_conformalized = True
         return self
@@ -829,13 +838,13 @@ class _QuantileConformalizer(_Conformalizer, ABC):
         """
 
         if self.method == "base":
-            y_pred_low = self._base_estimators_[self.key_mapping["lower"]].predict(
+            y_pred_low = self._base_estimators_[self.key_mapping["lower"]][0].predict(
                 X, **predict_params
             )
-            y_pred_up = self._base_estimators_[self.key_mapping["upper"]].predict(
+            y_pred_up = self._base_estimators_[self.key_mapping["upper"]][0].predict(
                 X, **predict_params
             )
-            y_pred_center = self._base_estimators_[self.key_mapping["central"]].predict(
+            y_pred_center = self._base_estimators_[self.key_mapping["central"]][0].predict(
                 X, **predict_params
             )
             return y_pred_center, y_pred_low, y_pred_up
@@ -1479,7 +1488,7 @@ class ConformalizedQuantileRegressor:
             "conformalize",
             self._is_conformalized,
         )
-        return cast(NDArray, self._mapie_quantile_regressor.conformity_scores_)
+        return cast(NDArray, self._mapie_quantile_regressor.conformity_scores)
 
 
 class _MapieQuantileRegressor(_MapieRegressor):
@@ -1960,10 +1969,10 @@ class _MapieQuantileRegressor(_MapieRegressor):
             shape=(3, self.n_calib_samples), fill_value=np.nan
         )
 
-        self.conformity_scores_[0] = y_calib_preds[0] - y_calib
-        self.conformity_scores_[1] = y_calib - y_calib_preds[1]
-        self.conformity_scores_[2] = np.max(
-            [self.conformity_scores_[0], self.conformity_scores_[1]], axis=0
+        self.conformity_scores[0] = y_calib_preds[0] - y_calib
+        self.conformity_scores[1] = y_calib - y_calib_preds[1]
+        self.conformity_scores[2] = np.max(
+            [self.conformity_scores[0], self.conformity_scores[1]], axis=0
         )
         return self
 
@@ -2084,13 +2093,13 @@ class _MapieQuantileRegressor(_MapieRegressor):
         _check_lower_upper_bounds(y_preds[0], y_preds[1], y_preds[2])
         if symmetry:
             quantile = np.full(
-                2, np.quantile(self.conformity_scores_[2], q, method="higher")
+                2, np.quantile(self.conformity_scores[2], q, method="higher")
             )
         else:
             quantile = np.array(
                 [
-                    np.quantile(self.conformity_scores_[0], q, method="higher"),
-                    np.quantile(self.conformity_scores_[1], q, method="higher"),
+                    np.quantile(self.conformity_scores[0], q, method="higher"),
+                    np.quantile(self.conformity_scores[1], q, method="higher"),
                 ]
             )
         y_pred_low = y_preds[0][:, np.newaxis] - quantile[0]
