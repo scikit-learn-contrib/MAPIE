@@ -27,6 +27,7 @@ We recall that the standard split conformal prediction set is defined as
 $$
 \hat{C}_{\textrm{split}}(X_{n+1}) = \{y: S(X_{n+1}, y) \leq S^*\}
 $$
+
 with $S^*$ the quantile of the conformity scores evaluated on the calibration set, corresponding to the chosen confidence level.
 
 One of the insights of the paper is that finding the quantile can be done as an intercept-only quantile regression using the pinball loss. Then, instead of using a fixed quantile, it becomes possible to use a function that estimates conditional quantiles of $Y | X$, i.e., replacing $S^*$ by a function $\hat{g}_{S(X_{n+1}, y)}(X_{n+1})$.
