@@ -971,7 +971,7 @@ class CrossConformalizedQuantileRegressor(_QuantileConformalizer):
         self._predict_params: dict = {}
         self._central_estimator: Optional[RegressorMixin] = central_estimator
         self.fit_central_estimator: Optional[bool] = fit_central_estimator
-        self.quantiles = self._check_alpha(self.alpha)
+        self.quantiles = [self._check_alpha(alpha) for alpha in self.alpha]
         self.agg_function = "mean"
 
     # ---------------------Fit and Conformalize
