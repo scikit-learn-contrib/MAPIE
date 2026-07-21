@@ -23,6 +23,7 @@ To conclude, it can create more adaptative intervals than the other methods, but
 ### Method's intuition
 
 We recall that the standard split conformal prediction set is defined as
+
 $$
 \hat{C}_{\textrm{split}}(X_{n+1}) = \{y: S(X_{n+1}, y) \leq S^*\}
 $$
