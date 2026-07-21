@@ -83,7 +83,7 @@ docs = [
     "pytorch-lightning>=2.0",
     "albumentations>=1.4",
     "opencv-python>=4.8",
-    "huggingface-hub>=0.20",
+    "huggingface-hub==1.18.0",
     "tqdm>=4.66",
 ]
 notebooks = [
