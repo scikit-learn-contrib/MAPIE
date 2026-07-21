@@ -6,9 +6,6 @@ on:
       - "v*"
       - "!v*rc*"
 
-permissions:
-  contents: write
-
 jobs:
   build:
     name: Build distribution 📦
@@ -84,52 +81,6 @@ jobs:
             sleep 20
           done
           python -c "import mapie; print(mapie.__version__)"
-
-  update-citation:
-    name: Update CITATION.cff
-    needs: [smoke-test-pypi]
-    if: needs.smoke-test-pypi.result == 'success'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout master
-        uses: actions/checkout@v4
-        with:
-          ref: master
-
-      - name: Update CITATION version and release date
-        env:
-          RELEASE_VERSION: ${{ github.ref_name }}
-        run: |
-          export VERSION="${RELEASE_VERSION#v}"
-          export TODAY="$(date -u +%Y-%m-%d)"
-          python3 - <<'PY'
-          import os
-          import re
-          from pathlib import Path
-
-          path = Path("CITATION.cff")
-          text = path.read_text(encoding="utf-8")
-          version = os.environ["VERSION"]
-          today = os.environ["TODAY"]
-
-          text = re.sub(r"^version:\s*.*$", f"version: {version}", text, count=1, flags=re.MULTILINE)
-          text = re.sub(r"^date-released:\s*.*$", f"date-released: {today}", text, count=1, flags=re.MULTILINE)
-          path.write_text(text, encoding="utf-8")
-          PY
-
-      - name: Commit and push if changed
-        env:
-          VERSION: ${{ github.ref_name }}
-        run: |
-          if git diff --quiet -- CITATION.cff; then
-            echo "No CITATION.cff changes to commit."
-            exit 0
-          fi
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add CITATION.cff
-          git commit -m "Update CITATION.cff for ${VERSION#v} release"
-          git push origin master
 
 # Notes:
 # - Make sure to update the pypi and testpypi Trusted Publishers in the settings of your PyPI and TestPyPI accounts.
