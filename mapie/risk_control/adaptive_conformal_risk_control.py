@@ -5,6 +5,14 @@ import torch
 
 from mapie.utils import _transform_confidence_level_to_alpha
 
+DEVICE = torch.device(
+    "cuda"
+    if torch.cuda.is_available()
+    else "mps"
+    if torch.backends.mps.is_available()
+    else "cpu"
+)
+
 
 class AutoAdaptiveConformalRiskControl:
     def __init__(
@@ -56,10 +64,12 @@ class AutoAdaptiveConformalRiskControl:
     def predict(self, X, n_epochs=2, batch_size=256):
         # compute probabilities
         y_pred_proba = self.predict_function(X)
+        
+        X_embedded = self.feature_map(X)
         y_pred = np.zeros_like(y_pred_proba)
-
         for i in range(len(X)):
-            # compute thresholds (predict_param)
+            # compute the conditional threshold for this test point
+            x_n_plus_1 = X_embedded[i : i + 1]
             model = _train_model(
                 self.base_model,
                 self.y_conformalize,
@@ -70,11 +80,11 @@ class AutoAdaptiveConformalRiskControl:
                 n_epochs=n_epochs,
                 batch_size=batch_size,
                 alpha=self._alpha,
-                x_n_plus_1=self.feature_map(X),
+                x_n_plus_1=x_n_plus_1,
             )
             best_predict_param = model(
-                torch.tensor(test_emb.astype(np.float32)).to("cuda")
-            )
+                torch.tensor(x_n_plus_1.astype(np.float32)).to(DEVICE)
+            ).item()
             # compute predictions
             y_pred[i] = (y_pred_proba[i] >= best_predict_param).astype(int)
 
@@ -95,8 +105,8 @@ def _train_model(
 ):
     masks = torch.tensor(masks.astype(np.float32))
     masks_pred = torch.tensor(masks_pred.astype(np.float32))
-    embeddings = torch.tensor(embeddings.astype(np.float32)).to("cuda")
-    model = model.to("cuda")
+    embeddings = torch.tensor(embeddings.astype(np.float32)).to(DEVICE)
+    model = model.to(DEVICE)
     model.train()
     optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
     criterion = CustomLoss(alpha, batch_size)
@@ -110,7 +120,7 @@ def _train_model(
             embeddings_batch = embeddings[i : i + batch_size]
             optimizer.zero_grad()
             ths_pred = model(embeddings_batch)
-            th_n_plus_1 = model(torch.tensor(x_n_plus_1).to("cuda"))
+            th_n_plus_1 = model(torch.tensor(x_n_plus_1).to(DEVICE))
             loss = criterion(masks_batch, masks_pred_batch, ths_pred, th_n_plus_1)
             losses.append(loss.item())
             # print(f"Epoch {epoch} / {n_epochs} -- Loss: {loss.item()} -- min th: {ths_pred.min().item()} -- max th: {ths_pred.max().item()}", end="\r")
@@ -150,8 +160,8 @@ class CustomLoss(torch.nn.Module):
     def _I_gpu(self, masks, masks_pred, preds_th, steps_trapz=100):
         integrals = []  # Use a list to accumulate the results
         for i in range(len(masks)):
-            mask = torch.clone(masks[i]).cuda()
-            mask_pred = torch.clone(masks_pred[i]).cuda()
+            mask = torch.clone(masks[i]).to(DEVICE)
+            mask_pred = torch.clone(masks_pred[i]).to(DEVICE)
             pred_th = preds_th[i]
 
             mask = torch.repeat_interleave(mask[None, :, :], steps_trapz, dim=0)
