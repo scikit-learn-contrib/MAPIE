@@ -13,7 +13,7 @@ class AutoAdaptiveConformalRiskControl:
         feature_map,
         confidence_level,
         risk,
-        base_model=None,  # lambda= base_model=LinearModel() by default TODO: find good name. If None, is initialized as a linear model from the features
+        base_model=None,  # lambda= base_model=LogisticHead() by default TODO: find good name. If None, is initialized as a logistic regression model from the features
         learning_rate=1e-4,
         weight_decay=1e-5,
     ):
@@ -39,7 +39,7 @@ class AutoAdaptiveConformalRiskControl:
         x_n_plus_1 = X_conformalize[random_idx]
 
         if self.base_model is None:
-            self.base_model = LinearModel(self.X_conformalize_embedded.shape[1])
+            self.base_model = LogisticHead(self.X_conformalize_embedded.shape[1])
         self.base_model = _train_model(
             self.base_model,
             self.y_conformalize,
@@ -122,15 +122,15 @@ def _train_model(
     return best_model.eval()
 
 
-class LinearModel(torch.nn.Module):
+class LogisticHead(torch.nn.Module):
     def __init__(self, input_size):
-        super(LinearModel, self).__init__()
-        self.fc1 = torch.nn.Linear(input_size, int(input_size / 2))
+        super(LogisticHead, self).__init__()
+        self.fc = torch.nn.Linear(input_size, 1)
 
     def forward(self, x):
-        x = self.fc1(x)
-        x = torch.sigmoid(x)
-        return x[:, 0]
+        x = self.fc(x)
+        y = torch.sigmoid(x)
+        return y
 
 
 class CustomLoss(torch.nn.Module):
