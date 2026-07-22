@@ -1,5 +1,6 @@
 # History
 ## 1.x.x (2026-xx-xx)
+- Add `AutoAdaptiveConformalRiskControl` (experimental, PyTorch-based) in `mapie.risk_control.adaptive_conformal_risk_control`, which controls a recall-type risk with a learned, input-dependent decision threshold. Imported from its module path so it does not make PyTorch a hard dependency of the core package.
 - Add `StdConformityScore` for regression models that expose prediction standard deviations through `predict(..., return_std=True)`, enabling standard-deviation-normalized conformal prediction intervals such as J+GP.
 - Add a scientific article example reproducing the Jaber et al. (2025) Gaussian-process surrogate experiment and comparing GP credibility intervals, J+GP, and standard Jackknife+ intervals.
 - Add a dedicated Conditional Conformal Prediction gallery section with examples adapted to the v1 `ConditionalSplitConformalRegressor` and `ConditionalSplitConformalClassifier` APIs.
