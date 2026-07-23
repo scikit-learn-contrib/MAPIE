@@ -290,11 +290,9 @@ def _train_model(
     torch.nn.Module
         The trained threshold model, in evaluation mode.
     """
-    masks_tensor = torch.tensor(np.asarray(masks, dtype=np.float32))
-    masks_pred_tensor = torch.tensor(np.asarray(masks_pred, dtype=np.float32))
-    embeddings_tensor = torch.tensor(np.asarray(embeddings, dtype=np.float32)).to(
-        DEVICE
-    )
+    masks = torch.tensor(np.asarray(masks, dtype=np.float32))
+    masks_pred = torch.tensor(np.asarray(masks_pred, dtype=np.float32))
+    embeddings = torch.tensor(np.asarray(embeddings, dtype=np.float32)).to(DEVICE)
     model = model.to(DEVICE)
     model.train()
     optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
@@ -303,10 +301,10 @@ def _train_model(
     best_model = deepcopy(model)
     best_loss: float = np.inf
     for epoch in range(n_epochs):
-        for i in range(0, len(masks_tensor), batch_size):
-            masks_batch = masks_tensor[i : i + batch_size]
-            masks_pred_batch = masks_pred_tensor[i : i + batch_size]
-            embeddings_batch = embeddings_tensor[i : i + batch_size]
+        for i in range(0, len(masks), batch_size):
+            masks_batch = masks[i : i + batch_size]
+            masks_pred_batch = masks_pred[i : i + batch_size]
+            embeddings_batch = embeddings[i : i + batch_size]
             optimizer.zero_grad()
             ths_pred = model(embeddings_batch)
             th_n_plus_1 = model(
