@@ -26,7 +26,28 @@ from .risks import (
 )
 from .semantic_segmentation import SemanticSegmentationController
 
+# ``AutoAdaptiveConformalRiskControl`` depends on PyTorch (the ``conditional``
+# extra). It is imported lazily so that importing ``mapie.risk_control`` does not
+# require PyTorch; the import (and a helpful error if PyTorch is missing) only
+# fires when the class is actually accessed.
+_LAZY_IMPORTS = {
+    "AutoAdaptiveConformalRiskControl": "mapie.risk_control.adaptive_conformal_risk_control",
+}
+
+
+def __getattr__(name):
+    if name in _LAZY_IMPORTS:
+        from importlib import import_module
+
+        module = import_module(_LAZY_IMPORTS[name])
+        value = getattr(module, name)
+        globals()[name] = value
+        return value
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+
 __all__ = [
+    "AutoAdaptiveConformalRiskControl",
     "MultiLabelClassificationController",
     "SemanticSegmentationController",
     "BinaryClassificationController",

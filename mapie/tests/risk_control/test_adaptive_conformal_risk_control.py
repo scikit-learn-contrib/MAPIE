@@ -1,11 +1,14 @@
 import numpy as np
+import pytest
 import torch
 
+from mapie.risk_control import adaptive_conformal_risk_control as acrc_module
 from mapie.risk_control.adaptive_conformal_risk_control import (
     AutoAdaptiveConformalRiskControl,
     CustomLoss,
     DEVICE,
     LogisticHead,
+    _import_torch,
     _train_model,
 )
 
@@ -159,3 +162,39 @@ def test_custom_loss_forward_and_integral():
     assert loss.numel() == 1
     integrals = loss_fn._I_gpu(masks, masks_pred, preds_th)
     assert tuple(integrals.shape) == (4,)
+
+
+def test_import_torch_raises_without_torch(monkeypatch):
+    import builtins
+
+    real_import = builtins.__import__
+
+    def fake_import(name, *args, **kwargs):
+        if name == "torch":
+            raise ImportError("simulated missing torch")
+        return real_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "__import__", fake_import)
+    with pytest.raises(ImportError, match="mapie\\[conditional\\]"):
+        _import_torch()
+
+
+def test_import_torch_returns_module():
+    assert _import_torch() is torch
+
+
+def test_risk_control_lazy_getattr_loads_class():
+    import mapie.risk_control as rc
+
+    # Drop any cached value so the lazy loader runs.
+    rc.__dict__.pop("AutoAdaptiveConformalRiskControl", None)
+    loaded = rc.AutoAdaptiveConformalRiskControl
+    assert loaded is AutoAdaptiveConformalRiskControl
+    assert loaded is acrc_module.AutoAdaptiveConformalRiskControl
+
+
+def test_risk_control_getattr_unknown_name_raises():
+    import mapie.risk_control as rc
+
+    with pytest.raises(AttributeError, match="has no attribute"):
+        rc.DefinitelyNotARealExport  # noqa: B018

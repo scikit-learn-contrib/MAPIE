@@ -1,12 +1,37 @@
+from __future__ import annotations
+
 from copy import deepcopy
 from typing import Any, Callable, Optional
 
 import numpy as np
-import torch
 from numpy.typing import ArrayLike, NDArray
 
 from mapie.utils import _transform_confidence_level_to_alpha
 
+
+def _import_torch():
+    """Import PyTorch lazily, raising a helpful error if it is not installed.
+
+    PyTorch is an optional dependency of MAPIE (the ``conditional`` extra), so
+    it is imported only when this module (and thus
+    :class:`AutoAdaptiveConformalRiskControl`) is actually accessed.
+    ``mapie.risk_control`` loads this module lazily, so importing it stays cheap
+    and free of a hard PyTorch dependency.
+    """
+    try:
+        import torch
+    except ImportError as e:
+        raise ImportError(
+            "PyTorch is required for AutoAdaptiveConformalRiskControl. "
+            "Install it with: pip install mapie[conditional]"
+        ) from e
+    return torch
+
+
+# This module is imported lazily (see ``risk_control/__init__.py``), so importing
+# PyTorch here does not make it a dependency of ``mapie.risk_control``. If it is
+# missing, ``_import_torch`` raises an actionable error pointing at the extra.
+torch = _import_torch()
 DEVICE = torch.device(
     "cuda"
     if torch.cuda.is_available()
@@ -35,9 +60,10 @@ class AutoAdaptiveConformalRiskControl:
     segmentation), where ``predict_function`` returns predicted probability maps
     and ``feature_map`` returns a vector embedding summarising each input.
 
-    This implementation relies on PyTorch and is not exported from
-    ``mapie.risk_control``; import it explicitly from its module to avoid making
-    PyTorch a hard dependency of the core package.
+    This implementation relies on PyTorch (an optional dependency, installable
+    via ``pip install mapie[conditional]``). PyTorch is imported lazily, so it
+    is only required when this class is actually accessed; importing
+    ``mapie.risk_control`` itself does not require PyTorch.
 
     Parameters
     ----------
@@ -120,7 +146,7 @@ class AutoAdaptiveConformalRiskControl:
         feature_map: Callable[[ArrayLike], NDArray],
         confidence_level: float,
         risk: Any,
-        base_model: Optional[torch.nn.Module] = None,
+        base_model: Optional["torch.nn.Module"] = None,
         learning_rate: float = 1e-4,
         weight_decay: float = 1e-5,
     ) -> None:
@@ -245,7 +271,7 @@ class AutoAdaptiveConformalRiskControl:
 
 
 def _train_model(
-    model: torch.nn.Module,
+    model: "torch.nn.Module",
     masks: ArrayLike,
     masks_pred: ArrayLike,
     embeddings: ArrayLike,
@@ -255,7 +281,7 @@ def _train_model(
     batch_size: int,
     alpha: float,
     x_n_plus_1: ArrayLike,
-) -> torch.nn.Module:
+) -> "torch.nn.Module":
     """
     Train the threshold model on the conformalization set.
 
@@ -266,22 +292,31 @@ def _train_model(
     ----------
     model : torch.nn.Module
         Threshold model to train.
+
     masks : ArrayLike
         Targets of the conformalization set.
+
     masks_pred : ArrayLike
         Predicted probabilities of the conformalization set.
+
     embeddings : ArrayLike
         Embeddings of the conformalization set.
+
     lr : float
         Learning rate of the optimiser.
+
     weight_decay : float
         Weight decay of the optimiser.
+
     n_epochs : int
         Number of training epochs.
+
     batch_size : int
         Mini-batch size.
+
     alpha : float
         Target risk level.
+
     x_n_plus_1 : ArrayLike
         Embedding of the new input whose threshold must be controlled.
 
@@ -338,7 +373,7 @@ class LogisticHead(torch.nn.Module):
         super().__init__()
         self.fc = torch.nn.Linear(input_size, 1)
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: "torch.Tensor") -> "torch.Tensor":
         return torch.sigmoid(self.fc(x))
 
 
@@ -356,6 +391,7 @@ class CustomLoss(torch.nn.Module):
     ----------
     alpha : float
         Target risk level.
+
     n : int
         Number of conformalization points (used to normalise the loss).
     """
@@ -367,11 +403,11 @@ class CustomLoss(torch.nn.Module):
 
     def forward(
         self,
-        masks: torch.Tensor,
-        masks_pred: torch.Tensor,
-        preds_th: torch.Tensor,
-        th_n_plus_1: torch.Tensor,
-    ) -> torch.Tensor:
+        masks: "torch.Tensor",
+        masks_pred: "torch.Tensor",
+        preds_th: "torch.Tensor",
+        th_n_plus_1: "torch.Tensor",
+    ) -> "torch.Tensor":
         integrals = self._I_gpu(masks, masks_pred, preds_th)
         return torch.sum(integrals) / (self.n + 1) + (1 - self.alpha) * th_n_plus_1 / (
             self.n + 1
@@ -379,13 +415,13 @@ class CustomLoss(torch.nn.Module):
 
     def _I_gpu(
         self,
-        masks: torch.Tensor,
-        masks_pred: torch.Tensor,
-        preds_th: torch.Tensor,
+        masks: "torch.Tensor",
+        masks_pred: "torch.Tensor",
+        preds_th: "torch.Tensor",
         steps_trapz: int = 100,
-    ) -> torch.Tensor:
+    ) -> "torch.Tensor":
         # Use a list to accumulate the differentiable integrals
-        integrals: list[torch.Tensor] = []
+        integrals: list = []
         for i in range(len(masks)):
             mask = torch.clone(masks[i]).to(DEVICE)
             mask_pred = torch.clone(masks_pred[i]).to(DEVICE)
