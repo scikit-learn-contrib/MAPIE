@@ -4,9 +4,9 @@ import torch
 
 from mapie.risk_control import adaptive_conformal_risk_control as acrc_module
 from mapie.risk_control.adaptive_conformal_risk_control import (
+    DEVICE,
     AutoAdaptiveConformalRiskControl,
     CustomLoss,
-    DEVICE,
     LogisticHead,
     _import_torch,
     _train_model,
@@ -160,7 +160,7 @@ def test_custom_loss_forward_and_integral():
     th_n_plus_1 = torch.rand(1, 1, device=DEVICE)
     loss = loss_fn(masks, masks_pred, preds_th, th_n_plus_1)
     assert loss.numel() == 1
-    integrals = loss_fn._I_gpu(masks, masks_pred, preds_th)
+    integrals = loss_fn._compute_integrals(masks, masks_pred, preds_th)
     assert tuple(integrals.shape) == (4,)
 
 
