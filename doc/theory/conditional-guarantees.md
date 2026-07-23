@@ -22,102 +22,102 @@ To conclude, it can create more adaptative intervals than the other methods, but
 
 ### Method's intuition
 
-We recall that the *standard split method* estimates the absolute residuals by a constant \(\hat{q}_{n, \alpha}^+\) (which is the quantile of \(\{|Y_i-\hat{\mu}(X_i)|\}_{1 \leq i \leq n}\)). Then, the prediction interval is:
+We recall that the *standard split method* estimates the absolute residuals by a constant $\hat{q}_{n, \alpha}^+$ (which is the quantile of $\{|Y_i-\hat{\mu}(X_i)|\}_{1 \leq i \leq n}$). Then, the prediction interval is:
 
-\[
+$$
 \hat{C}_{n, \alpha}^{\textrm{split}}(X_{n+1}) = \hat{\mu}(X_{n+1}) \pm \hat{q}_{n, \alpha}^+
-\]
+$$
 
-The idea of the *CCP* method is to learn, not a constant, but a function \(q(X)\), to have a different interval width depending on the \(X\) value. Then, we would have:
+The idea of the *CCP* method is to learn, not a constant, but a function $q(X)$, to have a different interval width depending on the $X$ value. Then, we would have:
 
-\[
+$$
 \hat{C}_{n, \alpha}^{\textrm{CCP}}(X_{n+1}) = \hat{\mu}(X_{n+1}) \pm \hat{q}(X_{n+1})
-\]
+$$
 
-To be able to find the best function, while having some coverage guarantees, we should select this function inside some defined class of functions \(\mathcal{F}\).
+To be able to find the best function, while having some coverage guarantees, we should select this function inside some defined class of functions $\mathcal{F}$.
 
 This method is motivated by the following equivalence:
 
-\[
+$$
 \begin{array}{c}
 \mathbb{P}(Y_{n+1} \in \hat{C} \; | \; X_{n+1}=x) = 1 - \alpha, \quad \text{for all x} \\
 \Longleftrightarrow \\
 \mathbb{E} \left[ f(X_{n+1}) \mathbb{I} \left\{ Y_{n+1} \in \hat{C}(X_{n+1}) \right\} \right] = 0, \quad \text{for all measurable f} \\
 \end{array}
-\]
+$$
 
-This is the equation corresponding to the perfect conditional coverage, which is theoretically impossible to obtain. Then, relaxing this objective by replacing "all measurable f" with "all f belonging to some class \(\mathcal{F}\)" seems a way to get close to the perfect conditional coverage.
+This is the equation corresponding to the perfect conditional coverage, which is theoretically impossible to obtain. Then, relaxing this objective by replacing "all measurable f" with "all f belonging to some class $\mathcal{F}$" seems a way to get close to the perfect conditional coverage.
 
 ### The method follows 3 steps
 
-1. Choose a class of functions. The simple approach is to choose a class of finite dimension \(d \in \mathbb{N}\), using, for any \(\Phi \; : \; \mathbb{R}^d \to \mathbb{R}\) (chosen by the user):
+1. Choose a class of functions. The simple approach is to choose a class of finite dimension $d \in \mathbb{N}$, using, for any $\Phi \; : \; \mathbb{R}^d \to \mathbb{R}$ (chosen by the user):
 
-    \[
+    $$
     \mathcal{F} = \left\{ \Phi (\cdot)^T \beta  :  \beta \in \mathbb{R}^d \right\}
-    \]
+    $$
 
 2. Find the best function of this class by solving the following optimization problem:
 
     !!! note
-        It is actually a quantile regression between the transformation \(\Phi (X)\) and the conformity scores \(S\).
+        It is actually a quantile regression between the transformation $\Phi (X)$ and the conformity scores $S$.
 
-    Considering an upper bound \(M\) of the conformity scores, such as \(S_{n+1} < M\):
+    Considering an upper bound $M$ of the conformity scores, such as $S_{n+1} < M$:
 
-    \[
+    $$
     \hat{g}_M^{n+1} := \arg\min_{g \in \mathcal{F}} \; \frac{1}{n+1} \sum_{i=1}^n{l_{\alpha} (g(X_i), S_i)} \; + \frac{1}{n+1}l_{\alpha} (g(X_{n+1}), M)
-    \]
+    $$
 
     !!! warning
-        In the API, we use by default \(M=\max(\{S_i\}_{i\leq n})\), the maximum conformity score of the calibration set, but you can specify it yourself if a bound is known, considering your data, model and conformity score.
+        In the API, we use by default $M=\max(\{S_i\}_{i\leq n})$, the maximum conformity score of the calibration set, but you can specify it yourself if a bound is known, considering your data, model and conformity score.
 
-        Moreover, it means that there are still small computations which are done for each test point \(X_{n+1}\). If you want to avoid that, you can use `unsafe_approximation=True`, which only considers:
+        Moreover, it means that there are still small computations which are done for each test point $X_{n+1}$. If you want to avoid that, you can use `unsafe_approximation=True`, which only considers:
 
-        \[
+        $$
         \hat{g} := \arg\min_{g \in \mathcal{F}} \; \frac{1}{n} \sum_{i=1}^n{l_{\alpha} (g(X_i), S_i)}
-        \]
+        $$
 
         However, it may result in a small miscoverage. It is recommended to empirically check the resulting coverage on the test set.
 
-3. We use this optimized function \(\hat{g}_M^{n+1}\) to compute the prediction intervals:
+3. We use this optimized function $\hat{g}_M^{n+1}$ to compute the prediction intervals:
 
-    \[
+    $$
     \hat{C}_M^{n+1}(X_{n+1}) = \{ y : S(X_{n+1}, \: y) \leq \hat{g}_M^{n+1}(X_{n+1}) \}
-    \]
+    $$
 
     !!! note
         The formulas are generic and work with all conformity scores. But in the case of the absolute residuals, we get:
 
-        \[
+        $$
         \hat{C}(X_{n+1}) = \hat{\mu}(X_{n+1}) \pm \hat{g}_M^{n+1}(X_{n+1})
-        \]
+        $$
 
 ### Coverage guarantees
 
 !!! warning
-    The following guarantees assume that the approximation described above is not used, and that the chosen bound \(M\) is indeed such as \(\forall \text{ test index } i, \; S_i < M\).
+    The following guarantees assume that the approximation described above is not used, and that the chosen bound $M$ is indeed such as $\forall \text{ test index } i, \; S_i < M$.
 
-Following these steps, we have the coverage guarantee, \(\forall f \in \mathcal{F}\):
+Following these steps, we have the coverage guarantee, $\forall f \in \mathcal{F}$:
 
-\[
+$$
 \mathbb{P}_f(Y_{n+1} \in \hat{C}_M^{n+1}(X_{n+1})) \geq 1 - \alpha
-\]
+$$
 
-\[
+$$
 \text{and} \quad \left | \mathbb{E} \left[ f(X_{n+1}) \left(\mathbb{I} \left\{ Y_{n+1} \in \hat{C}_M^{n+1}(X_{n+1}) \right\} - (1 - \alpha) \right) \right] \right |
 \leq \frac{d}{n+1} \mathbb{E} \left[ \max_{1 \leq i \leq n+1} \left|f(X_i)\right| \right]
-\]
+$$
 
 !!! note
-    If we want to have a homogeneous coverage on some given groups in \(\mathcal{G}\), we can use \(\mathcal{F} = \{ x \mapsto \sum_{G \in \mathcal{G}} \; \beta_G \mathbb{I} \{ x \in G \} : \beta_G \in \mathbb{R} \}\), then we have \(\forall G \in \mathcal{G}\):
+    If we want to have a homogeneous coverage on some given groups in $\mathcal{G}$, we can use $\mathcal{F} = \{ x \mapsto \sum_{G \in \mathcal{G}} \; \beta_G \mathbb{I} \{ x \in G \} : \beta_G \in \mathbb{R} \}$, then we have $\forall G \in \mathcal{G}$:
 
-    \[
+    $$
     \begin{aligned}
     1 - \alpha
     &\leq \mathbb{P} \left( Y_{n+1} \in \hat{C}_M^{n+1}(X_{n+1}) \; | \; X_{n+1} \in G \right) \\
     &\leq 1- \alpha + \frac{|\mathcal{G}|}{(n+1) \mathbb{P}(X_{n+1} \in G)} \\
     &= 1- \alpha + \frac{\text{number of groups in } \mathcal{G}}{\text{number of samples of } \{X_i\} \text{ in } G}
     \end{aligned}
-    \]
+    $$
 
 ---
 
@@ -130,7 +130,7 @@ examples, see the regression and classification examples using
 `ConditionalSplitConformalRegressor` and `ConditionalSplitConformalClassifier`.
 
 1. The class of functions is defined with `feature_map`, passed directly to the
-   conditional estimator. This function returns the \(\Phi(X)\) matrix used by
+   conditional estimator. This function returns the $\Phi(X)$ matrix used by
    the method.
 
 2. If you want to avoid bias on sub-groups and ensure a homogeneous coverage on
@@ -147,9 +147,9 @@ examples, see the regression and classification examples using
 ### Avoid miscoverage
 
 - To guarantee marginal coverage, you need to have an intercept term in the
-  \(\Phi\) function (meaning, a feature equal to \(1\) for all \(X_i\)).
+  $\Phi$ function (meaning, a feature equal to $1$ for all $X_i$).
 
-- Keep the number of dimensions \(d\) reasonable compared with the
+- Keep the number of dimensions $d$ reasonable compared with the
   conformalization set size.
 
 ---

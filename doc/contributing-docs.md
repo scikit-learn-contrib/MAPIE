@@ -247,9 +247,11 @@ MathJax is configured for rendering LaTeX math.
 - **Inline**: `$\alpha$` renders as $\alpha$
 - **Block**:
   ```markdown
+
   $$
   \hat{q}_{1-\alpha} = \text{Quantile}\left(1 - \alpha; \frac{1}{n} \sum_{i=1}^{n} \delta_{s_i}\right)
   $$
+
   ```
 
 ## Using Admonitions
