@@ -383,7 +383,7 @@ class CustomLoss(torch.nn.Module):
 
     For each conformalization point, the integral of the (smoothed)
     per-threshold risk minus ``alpha`` is approximated by trapezoidal rule
-    (:meth:`_I_gpu`). The loss is the average of these integrals plus the
+    (:meth:`_compute_integrals`). The loss is the average of these integrals plus the
     threshold of the new input, scaled so that minimising it controls the risk at
     level ``alpha``.
 
@@ -408,12 +408,12 @@ class CustomLoss(torch.nn.Module):
         preds_th: "torch.Tensor",
         th_n_plus_1: "torch.Tensor",
     ) -> "torch.Tensor":
-        integrals = self._I_gpu(masks, masks_pred, preds_th)
+        integrals = self._compute_integrals(masks, masks_pred, preds_th)
         return torch.sum(integrals) / (self.n + 1) + (1 - self.alpha) * th_n_plus_1 / (
             self.n + 1
         )
 
-    def _I_gpu(
+    def _compute_integrals(
         self,
         masks: "torch.Tensor",
         masks_pred: "torch.Tensor",
