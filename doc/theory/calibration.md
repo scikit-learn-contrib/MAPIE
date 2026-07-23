@@ -1,14 +1,5 @@
 # Calibration — Theoretical Description
 
-!!! note "Terminology"
-    In theoretical parts of the documentation:
-
-    - `alpha` is equivalent to `1 - confidence_level` — it can be seen as a *risk level*.
-    - *calibrate* and *calibration* are equivalent to *conformalize* and *conformalization*.
-
----
-
-One method for multi-class calibration has been implemented in MAPIE: **Top-Label Calibration** [^1].
 
 ## Goal
 
