@@ -34,6 +34,12 @@ Risk-controlling prediction methods.
 
 ---
 
+::: mapie.risk_control.ContinuousRisk
+    options:
+      heading_level: 3
+
+---
+
 ## FWER Procedures
 
 ::: mapie.risk_control.FWERProcedure
@@ -69,6 +75,30 @@ Risk-controlling prediction methods.
 ---
 
 ::: mapie.risk_control.false_positive_rate
+    options:
+      heading_level: 3
+
+---
+
+::: mapie.risk_control.mae
+    options:
+      heading_level: 3
+
+---
+
+::: mapie.risk_control.mean_absolute_error
+    options:
+      heading_level: 3
+
+---
+
+::: mapie.risk_control.mse
+    options:
+      heading_level: 3
+
+---
+
+::: mapie.risk_control.mean_squared_error
     options:
       heading_level: 3
 

@@ -78,7 +78,14 @@ Complete API documentation for MAPIE v1.
 
 ---
 
-## Conditional Conformal Prediction
+## [Conditional Conformal Prediction](conditional-conformal-prediction.md)
+
+### Conformalizers
+
+| Class | Description |
+|---|---|
+| [`ConditionalSplitConformalRegressor`](conditional-conformal-prediction.md#mapie.conditional_conformal_prediction.ConditionalSplitConformalRegressor) | Split conformal regression with conditional validity guarantees |
+| [`ConditionalSplitConformalClassifier`](conditional-conformal-prediction.md#mapie.conditional_conformal_prediction.ConditionalSplitConformalClassifier) | Split conformal classification with conditional validity guarantees |
 
 ### Metrics
 
@@ -90,7 +97,18 @@ Complete API documentation for MAPIE v1.
 
 ---
 
+## [Uncertainty Metrics](metrics.md#uncertainty)
+
+| Function | Description |
+|---|---|
+| [`auroc`](metrics.md#mapie.metrics.uncertainty.auroc) | Area under the ROC curve for confidence-ranked correctness |
+| [`auarc`](metrics.md#mapie.metrics.uncertainty.auarc) | Area under the accuracy-rejection curve |
+
+---
+
 ## [Risk Control](risk-control.md)
+
+### Controllers and Risks
 
 | Class | Description |
 |---|---|
@@ -99,6 +117,34 @@ Complete API documentation for MAPIE v1.
 | [`SemanticSegmentationController`](risk-control.md#mapie.risk_control.SemanticSegmentationController) | Risk control for semantic segmentation |
 | [`BinaryRisk`](risk-control.md#mapie.risk_control.BinaryRisk) | Binary classification risk utilities |
 | [`BinaryClassificationRisk`](risk-control.md#mapie.risk_control.BinaryClassificationRisk) | Deprecated alias for `BinaryRisk` |
+| [`ContinuousRisk`](risk-control.md#mapie.risk_control.ContinuousRisk) | Continuous-valued risk utilities |
+
+### FWER Procedures
+
+| Item | Description |
+|---|---|
+| [`FWERProcedure`](risk-control.md#mapie.risk_control.FWERProcedure) | Base interface for family-wise error rate procedures |
+| [`FWERBonferroniHolm`](risk-control.md#mapie.risk_control.FWERBonferroniHolm) | Bonferroni-Holm procedure |
+| [`FWERFixedSequenceTesting`](risk-control.md#mapie.risk_control.FWERFixedSequenceTesting) | Fixed-sequence testing procedure |
+| [`FWERBonferroniCorrection`](risk-control.md#mapie.risk_control.FWERBonferroniCorrection) | Bonferroni correction |
+| [`control_fwer`](risk-control.md#mapie.risk_control.control_fwer) | Control FWER for a sequence of p-values |
+
+### Risk Functions
+
+| Function | Description |
+|---|---|
+| [`accuracy`](risk-control.md#mapie.risk_control.accuracy) | Binary accuracy risk |
+| [`false_positive_rate`](risk-control.md#mapie.risk_control.false_positive_rate) | False-positive rate |
+| [`mae`](risk-control.md#mapie.risk_control.mae) | Mean absolute error risk |
+| [`mean_absolute_error`](risk-control.md#mapie.risk_control.mean_absolute_error) | Alias for mean absolute error risk |
+| [`mse`](risk-control.md#mapie.risk_control.mse) | Mean squared error risk |
+| [`mean_squared_error`](risk-control.md#mapie.risk_control.mean_squared_error) | Alias for mean squared error risk |
+| [`precision`](risk-control.md#mapie.risk_control.precision) | Precision risk |
+| [`recall`](risk-control.md#mapie.risk_control.recall) | Recall risk |
+| [`predicted_positive_fraction`](risk-control.md#mapie.risk_control.predicted_positive_fraction) | Fraction of positive predictions |
+| [`positive_predictive_value`](risk-control.md#mapie.risk_control.positive_predictive_value) | Positive predictive value |
+| [`negative_predictive_value`](risk-control.md#mapie.risk_control.negative_predictive_value) | Negative predictive value |
+| [`abstention_rate`](risk-control.md#mapie.risk_control.abstention_rate) | Abstention rate |
 
 ---
 
@@ -118,11 +164,27 @@ Complete API documentation for MAPIE v1.
 | [`expected_calibration_error`](metrics.md#mapie.metrics.calibration.expected_calibration_error) | ECE metric |
 | [`top_label_ece`](metrics.md#mapie.metrics.calibration.top_label_ece) | Top-label ECE for multi-class |
 | [`kolmogorov_smirnov_statistic`](metrics.md#mapie.metrics.calibration.kolmogorov_smirnov_statistic) | KS statistic |
+| [`kolmogorov_smirnov_cdf`](metrics.md#mapie.metrics.calibration.kolmogorov_smirnov_cdf) | KS limiting cumulative distribution function |
 | [`kolmogorov_smirnov_p_value`](metrics.md#mapie.metrics.calibration.kolmogorov_smirnov_p_value) | KS p-value |
 | [`kuiper_statistic`](metrics.md#mapie.metrics.calibration.kuiper_statistic) | Kuiper statistic |
+| [`kuiper_cdf`](metrics.md#mapie.metrics.calibration.kuiper_cdf) | Kuiper limiting cumulative distribution function |
 | [`kuiper_p_value`](metrics.md#mapie.metrics.calibration.kuiper_p_value) | Kuiper p-value |
 | [`spiegelhalter_statistic`](metrics.md#mapie.metrics.calibration.spiegelhalter_statistic) | Spiegelhalter statistic |
 | [`spiegelhalter_p_value`](metrics.md#mapie.metrics.calibration.spiegelhalter_p_value) | Spiegelhalter p-value |
+
+---
+
+## [Exchangeability Testing](exchangeability-testing.md)
+
+| Class | Description |
+|---|---|
+| [`FixedDatasetExchangeabilityTest`](exchangeability-testing.md#mapie.exchangeability_testing.FixedDatasetExchangeabilityTest) | Run one or more exchangeability tests on a fixed dataset |
+| [`OnlineExchangeabilityTest`](exchangeability-testing.md#mapie.exchangeability_testing.OnlineExchangeabilityTest) | Run one or more exchangeability tests on a data stream |
+| [`RiskMonitoring`](exchangeability-testing.md#mapie.exchangeability_testing.RiskMonitoring) | Monitor deployed-model risk for harmful shifts |
+| [`OnlineMartingaleTest`](exchangeability-testing.md#mapie.exchangeability_testing.OnlineMartingaleTest) | Sequential martingale-based exchangeability test |
+| [`PermutationTest`](exchangeability-testing.md#mapie.exchangeability_testing.PermutationTest) | Base class for permutation tests |
+| [`PValuePermutationTest`](exchangeability-testing.md#mapie.exchangeability_testing.PValuePermutationTest) | Permutation test based on a Monte Carlo p-value |
+| [`SequentialMonteCarloTest`](exchangeability-testing.md#mapie.exchangeability_testing.SequentialMonteCarloTest) | Anytime-valid sequential Monte Carlo permutation test |
 
 ---
 

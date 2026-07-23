@@ -1,6 +1,7 @@
 # Metrics
 
-Evaluation metrics for conformal prediction.
+Evaluation metrics for conformal prediction, calibration, and uncertainty
+estimation.
 
 ## Regression
 
@@ -87,6 +88,20 @@ Evaluation metrics for conformal prediction.
 ---
 
 ::: mapie.metrics.conditional.excess_risk_target_coverage
+    options:
+      heading_level: 3
+
+---
+
+## Uncertainty
+
+::: mapie.metrics.uncertainty.auroc
+    options:
+      heading_level: 3
+
+---
+
+::: mapie.metrics.uncertainty.auarc
     options:
       heading_level: 3
 
