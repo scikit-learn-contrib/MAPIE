@@ -7,8 +7,9 @@
 - Add CovGap and WCovGap documentation for conditional coverage diagnostics.
 - Add WSC (`worst_slab_coverage`) for slab-based conditional coverage diagnostics.
 - Add ERT (`excess_risk_target_coverage`) for model-based conditional coverage diagnostics.
-- Complete the MkDocs API reference navigation and coverage for conditional
-  conformal prediction, metrics, risk control, and exchangeability testing.
+- Generate the MkDocs API reference and navigation automatically from MAPIE's
+  public Python objects, including conditional conformal prediction, metrics,
+  risk control, and exchangeability testing.
 
 ## 1.x.x (2026-xx-xx)
 
