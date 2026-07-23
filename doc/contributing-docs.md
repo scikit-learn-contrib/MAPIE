@@ -39,7 +39,7 @@ examples/
 ├── classification/
 ├── calibration/
 ├── risk_control/
-└── mondrian/
+└── conditional_cp/
 ```
 
 ## Adding a New Documentation Page

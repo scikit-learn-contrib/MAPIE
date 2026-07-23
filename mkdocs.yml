@@ -77,7 +77,6 @@ plugins:
         - examples/calibration
         - examples/risk_control
         - examples/exchangeability_testing
-        - examples/mondrian
       ignore_pattern: "(utils\\.py)$"
       gallery_dirs:
         - doc/generated/regression
@@ -86,7 +85,6 @@ plugins:
         - doc/generated/calibration
         - doc/generated/risk_control
         - doc/generated/exchangeability_testing
-        - doc/generated/mondrian
       within_subsection_order: FileNameSortKey
       plot_gallery: true
       run_stale_examples: true

@@ -46,11 +46,4 @@ Exchangeability testing and deployed-model monitoring examples.
 [Open Exchangeability Testing examples](../generated/exchangeability_testing/index.md)
 </div>
 
-<div class="card" markdown>
-### :material-account-group: Mondrian
-Group-conditional conformal prediction examples.
-
-[Open Mondrian examples](../generated/mondrian/index.md)
-</div>
-
 </div>
