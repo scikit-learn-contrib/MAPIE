@@ -93,6 +93,7 @@ plugins:
       only_warn_on_example_error: false
 
 hooks:
+  - doc/hooks/api_reference.py
   - doc/hooks/gallery_nav_fix.py
 
 markdown_extensions:
@@ -181,13 +182,7 @@ nav:
   - All Examples: all-examples/index.md
   - Q&A:
     - Mondrian: theory/mondrian.md
-  - API Reference:
-    - Overview: api/index.md
-    - Regression: api/regression.md
-    - Classification: api/classification.md
-    - Conformity Scores: api/conformity-scores.md
-    - Risk Control: api/risk-control.md
-    - Calibration: api/calibration.md
-    - Utilities: api/utils.md
+  # Populated from the public Python API by doc/hooks/api_reference.py.
+  - API Reference: []
   - Contributing:
     - Documentation Guide: contributing-docs.md

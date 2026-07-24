@@ -484,6 +484,9 @@ class ConditionalSplitConformalRegressor(
         infinite_params : dict, optional
             Parameters for the RKHS component of the fit. Valid keys are
             ``kernel``, ``gamma``, and ``lambda``.
+
+        seed : int, default=0
+            Seed controlling randomized threshold selection.
         """
         super().__init__(
             estimator=estimator,
@@ -688,6 +691,9 @@ class ConditionalSplitConformalClassifier(
         infinite_params : dict, optional
             Parameters for the RKHS component of the fit. Valid keys are
             ``kernel``, ``gamma``, and ``lambda``.
+
+        seed : int, default=0
+            Seed controlling randomized threshold selection.
         """
         super().__init__(
             estimator=estimator,

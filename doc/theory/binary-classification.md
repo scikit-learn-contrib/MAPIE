@@ -15,9 +15,9 @@ The binary classification case relates three approaches for uncertainty quantifi
 
 The goal is to transform a non-probability score into a **true probability**:
 
-\[
+$$
 \Pr(Y = 1 \mid h(X) = q) = q
-\]
+$$
 
 [:material-arrow-right: Full calibration documentation](calibration.md)
 
@@ -27,9 +27,9 @@ The goal is to transform a non-probability score into a **true probability**:
 
 Construct **conformal prediction sets** with a marginal coverage guarantee:
 
-\[
+$$
 P \{Y_{n+1} \in \hat{C}_{n, \alpha}(X_{n+1}) \} \geq 1 - \alpha
-\]
+$$
 
 [:material-arrow-right: Full classification documentation](classification.md)
 

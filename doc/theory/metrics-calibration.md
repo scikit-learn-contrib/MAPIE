@@ -9,14 +9,14 @@ This document provides detailed descriptions of various metrics used to evaluate
 
 Measures the difference between **predicted confidence levels and actual accuracy**:
 
-\[
+$$
 \text{ECE} = \sum_{m=1}^M \frac{|B_m|}{n} \left| \text{acc}(B_m) - \text{conf}(B_m) \right|
-\]
+$$
 
 where:
 
-- \(\text{acc}(B_m) = \frac{1}{|B_m|} \sum_{i \in B_m} y_i\) — accuracy within bin \(m\)
-- \(\text{conf}(B_m) = \frac{1}{|B_m|} \sum_{i \in B_m} \hat{f}(x_i)\) — average confidence in bin \(m\)
+- $\text{acc}(B_m) = \frac{1}{|B_m|} \sum_{i \in B_m} y_i$ — accuracy within bin $m$
+- $\text{conf}(B_m) = \frac{1}{|B_m|} \sum_{i \in B_m} \hat{f}(x_i)$ — average confidence in bin $m$
 
 !!! tip
     The lower the ECE, the better the calibration.
@@ -27,15 +27,15 @@ where:
 
 Extends ECE to **multi-class** settings, focusing on calibration of the **most confident prediction** (top-label):
 
-\[
+$$
 \text{Top-Label ECE} = \frac{1}{L} \sum_{j=1}^L \sum_{i=1}^B \frac{|B_{i,j}|}{n_j} \left| \text{acc}(B_{i,j}) - \text{conf}(B_{i,j}) \right|
-\]
+$$
 
 where:
 
-- \(L\) = number of unique labels
-- \(B_{i,j}\) = indices in bin \(i\) for label \(j\)
-- \(n_j\) = total samples for label \(j\)
+- $L$ = number of unique labels
+- $B_{i,j}$ = indices in bin $i$ for label $j$
+- $n_j$ = total samples for label $j$
 
 ---
 
@@ -43,9 +43,9 @@ where:
 
 Calculates the **cumulative differences** between sorted true values and prediction scores [^2]:
 
-\[
+$$
 \text{Cumulative Differences} = \frac{1}{n} \sum_{i=1}^{n} (y_{\sigma_1(i)} - \hat{y}_{\sigma_2(i)})
-\]
+$$
 
 ---
 

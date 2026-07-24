@@ -11,11 +11,15 @@
 - Add CovGap and WCovGap documentation for conditional coverage diagnostics.
 - Add WSC (`worst_slab_coverage`) for slab-based conditional coverage diagnostics.
 - Add ERT (`excess_risk_target_coverage`) for model-based conditional coverage diagnostics.
+- Generate the MkDocs API reference and navigation automatically from MAPIE's
+  public Python objects, including conditional conformal prediction, metrics,
+  risk control, and exchangeability testing.
 
 ## 1.x.x (2026-xx-xx)
 
 - Add `ConditionalSplitConformalRegressor` and `ConditionalSplitConformalClassifier`, implementing conformal prediction with conditional guarantees (Gibbs et al., 2023), adapted from https://github.com/jjcherian/conditional-conformal.
 - Add experimental multivariate standardized residuals
+- Add `aucroc_score` and `auarc_score` to `mapie/metrics/uncertainty.py` for uncertainty evaluation following Lin et al. (2023); resolves #551.
 
 ## 1.4.1 (2026-06-08)
 
