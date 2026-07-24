@@ -25,7 +25,7 @@ Calibration section of the documentation or by using the
 or `TopLabelCalibrator` proposed in MAPIE).
 """
 
-# sphinx_gallery_thumbnail_number = 3
+# mkdocs_gallery_thumbnail_number = 3
 
 from typing import List
 

@@ -10,11 +10,11 @@
 
 **Mondrian Conformal Prediction (MCP)** [^1] is a method that builds prediction sets with a **group-conditional coverage guarantee**:
 
-\[
+$$
 P \{Y_{n+1} \in \hat{C}_{n, \alpha}(X_{n+1}) \mid G_{n+1} = g\} \geq 1 - \alpha
-\]
+$$
 
-where \(G_{n+1}\) is the group of the new test point.
+where $G_{n+1}$ is the group of the new test point.
 
 ## When to Use Mondrian
 
@@ -32,11 +32,11 @@ MCP simply:
 
 The quantile for each group:
 
-\[
+$$
 \hat{q}^g = \text{Quantile}\left(s_1, \ldots, s_{n^g}, \frac{\lceil(n^{(g)} + 1)(1-\alpha)\rceil}{n^{(g)}}\right)
-\]
+$$
 
-where \(s_1, \ldots, s_{n^g}\) are the conformity scores of training points in group \(g\).
+where $s_1, \ldots, s_{n^g}$ are the conformity scores of training points in group $g$.
 
 <figure markdown>
   ![Mondrian](../images/mondrian.png){ width="600" }
