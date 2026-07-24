@@ -1195,6 +1195,7 @@ def test_quantile_conformalizer_fit_twice_warns_and_resets() -> None:
     conformalizer.alpha = [0.2]
     conformalizer.method = "base"
     conformalizer._central_estimator = None
+    level = str(conformalizer.alpha[0])
     conformalizer._initialize_fit_conformalize()
     conformalizer.fit(X_train_toy, y_train_toy)
 
@@ -1211,7 +1212,7 @@ def test_quantile_conformalizer_fit_twice_warns_and_resets() -> None:
     assert conformalizer.is_fitted
     assert not conformalizer.is_conformalized
     np.testing.assert_array_equal(conformalizer.conformity_scores, np.array([]))
-    assert conformalizer.pinball_losses == []
+    assert conformalizer.pinball_losses == {level: []}
 
 
 def test_quantile_conformalizer_predict_oof_empty_validation() -> None:
