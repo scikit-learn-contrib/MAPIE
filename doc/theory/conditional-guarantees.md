@@ -65,12 +65,18 @@ This is the equation corresponding to the perfect conditional coverage, which is
     In practice, because computing the set defined below requires to fit $\hat{g}_S$ for all $S \in \mathbb{R}$, which appears to be intractable, a dual formulation of the optimization problem is solved instead.
 
 
-3. We use this optimized function $\hat{g}_S$ to compute the prediction intervals:
+3. We use this optimized function \(\hat{g}_M^{n+1}\) to compute the prediction intervals:
 
-    $$
-    \hat{C}(X_{n+1}) = \{ y : S(X_{n+1}, \: y) \leq \hat{g}_{S(X_{n+1}, y)}(X_{n+1}) \}
-    $$
+    \[
+    \hat{C}_M^{n+1}(X_{n+1}) = \{ y : S(X_{n+1}, \: y) \leq \hat{g}_M^{n+1}(X_{n+1}) \}
+    \]
 
+    !!! note
+        The formulas are generic and work with all conformity scores. But in the case of the absolute residuals, we get:
+
+        \[
+        \hat{C}(X_{n+1}) = \hat{\mu}(X_{n+1}) \pm \hat{g}_M^{n+1}(X_{n+1})
+        \]
 
 ### Coverage guarantees
 
@@ -134,4 +140,4 @@ examples, see the regression and classification examples using
 
 ## References
 
-[^1]: Isaac Gibbs, John J. Cherian, and Emmanuel J. Candès (2023). *Conformal Prediction With Conditional Guarantees.* [arXiv:2305.12616](https://arxiv.org/abs/2305.12616).
+[^1]: Isaac Gibbs, John J Cherian, Emmanuel J Candès, Conformal prediction with conditional guarantees, Journal of the Royal Statistical Society Series B: Statistical Methodology, Volume 87, Issue 4, September 2025, Pages 1100–1126, [https://doi.org/10.1093/jrsssb/qkaf008](https://doi.org/10.1093/jrsssb/qkaf008).

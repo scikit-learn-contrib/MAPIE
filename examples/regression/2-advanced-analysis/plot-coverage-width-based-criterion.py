@@ -11,7 +11,7 @@ The coverage width based criterion is computed with the function
 `coverage_width_based`
 """
 
-# sphinx_gallery_thumbnail_number = 2
+# mkdocs_gallery_thumbnail_number = 2
 
 import os
 import warnings

@@ -204,18 +204,34 @@ def test_rkhs_kernel_path():
     assert np.all(intervals[:, 0, 0] <= intervals[:, 1, 0])
 
 
-def test_exact_with_kernel_raises():
+def test_exact_with_kernel_warns_and_sets_exact_false():
     X_conf, y_conf, X_test, _ = _make_data(n=120)
-    regressor = ConditionalSplitConformalRegressor(
-        feature_map=_phi,
-        estimator=LinearRegression().fit(X_conf, y_conf),
-        confidence_level=0.9,
-        exact=True,
-        infinite_params={"kernel": "rbf", "gamma": 0.1, "lambda": 1},
-    )
+    with pytest.warns(
+        UserWarning,
+        match="Exact computation doesn't support RKHS quantile regression",
+    ):
+        regressor = ConditionalSplitConformalRegressor(
+            feature_map=_phi,
+            estimator=LinearRegression().fit(X_conf, y_conf),
+            confidence_level=0.9,
+            exact=True,
+            infinite_params={"kernel": "rbf", "gamma": 0.1, "lambda": 1},
+        )
+    assert regressor.exact is False
     regressor.conformalize(X_conf, y_conf)
-    with pytest.raises(ValueError, match="RKHS"):
-        regressor.predict_interval(X_test[:2])
+    _, intervals = regressor.predict_interval(X_test[:2])
+    assert np.all(intervals[:, 0, 0] <= intervals[:, 1, 0])
+
+
+def test_exact_cutoff_with_kernel_raises():
+    regressor = _fitted_regressor()
+    _, _, X_test, _ = _make_data()
+    regressor.infinite_params = {"kernel": "rbf"}
+    with pytest.raises(
+        ValueError,
+        match="Exact computation doesn't support RKHS quantile regression",
+    ):
+        regressor._predict_conditional_cutoff(0.9, X_test[0].reshape(1, -1))
 
 
 def _make_multiclass_data(n=300, seed=0):

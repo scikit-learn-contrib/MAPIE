@@ -73,18 +73,18 @@ plugins:
       examples_dirs:
         - examples/regression
         - examples/classification
+        - examples/conditional_cp
         - examples/calibration
         - examples/risk_control
         - examples/exchangeability_testing
-        - examples/mondrian
       ignore_pattern: "(utils\\.py)$"
       gallery_dirs:
         - doc/generated/regression
         - doc/generated/classification
+        - doc/generated/conditional_cp
         - doc/generated/calibration
         - doc/generated/risk_control
         - doc/generated/exchangeability_testing
-        - doc/generated/mondrian
       within_subsection_order: FileNameSortKey
       plot_gallery: true
       run_stale_examples: true
@@ -166,6 +166,7 @@ nav:
     - Metrics: theory/metrics-conformal.md
     - Metrics for Conditional Conformal Prediction: theory/metrics-conditional-conformal.md
     - Conditional Guarantees: theory/conditional-guarantees.md
+    - Conditional CP Examples: generated/conditional_cp
   - Risk Control:
     - Getting Started: theory/risk-control.md
     - LLM Risk Control: theory/llm-risk-control.md

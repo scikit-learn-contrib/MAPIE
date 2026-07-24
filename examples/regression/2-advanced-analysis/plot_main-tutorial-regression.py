@@ -24,7 +24,7 @@ For conservative prediction interval estimates, you can alternatively
 use the CV-minmax strategies.**
 """
 
-# sphinx_gallery_thumbnail_number = 2
+# mkdocs_gallery_thumbnail_number = 2
 
 import os
 import warnings

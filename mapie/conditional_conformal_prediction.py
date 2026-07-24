@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import warnings
 from functools import lru_cache, partial
 from typing import Any, Callable, Iterable, Optional, Tuple, Union
 
@@ -64,6 +65,17 @@ class _ConditionalConformalMixin:
         self.exact = exact
         self.infinite_params = {} if infinite_params is None else infinite_params
         self.rng = np.random.default_rng(seed=seed)
+
+        if self.exact and self.infinite_params.get(
+            "kernel", FUNCTION_DEFAULTS["kernel"]
+        ):
+            warnings.warn(
+                "Exact computation doesn't support RKHS quantile regression for now. "
+                "Continuing with exact=False",
+                UserWarning,
+                stacklevel=2,
+            )
+            self.exact = False
 
     def _conformalize_conditional(
         self, x_calib: NDArray, scores_calib: NDArray
@@ -458,7 +470,12 @@ class ConditionalSplitConformalRegressor(
             Verbosity level.
 
         randomize : bool, default=False
-            Randomize the dual threshold for exact (non-conservative) coverage.
+            Whether to use randomization to make coverage exact rather than
+            conservative.
+
+            If False, predictions are deterministic and coverage may be slightly above
+            the target level. If True, predictions use auxiliary randomness to match the
+            target coverage level more exactly.
 
         exact : bool, default=True
             Compute the conditional score cutoff exactly rather than by binary
@@ -660,7 +677,12 @@ class ConditionalSplitConformalClassifier(
             Verbosity level.
 
         randomize : bool, default=False
-            Randomize the dual threshold for exact (non-conservative) coverage.
+            Whether to use randomization to make coverage exact rather than
+            conservative.
+
+            If False, predictions are deterministic and coverage may be slightly above
+            the target level. If True, predictions use auxiliary randomness to match the
+            target coverage level more exactly.
 
         exact : bool, default=True
             Compute the conditional score cutoff exactly rather than by binary
