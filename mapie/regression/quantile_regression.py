@@ -396,6 +396,19 @@ class _QuantileConformalizer(_Conformalizer, ABC):
         self.key_mapping = {"lower": 0, "upper": 1, "central": 2}
         self.__central_is_fitted = False
 
+        if self.method == "base":
+            self._base_estimator_: dict[
+            str, Union[dict[str, List[RegressorMixin]], List[RegressorMixin]]
+            ] = {
+                str(alpha): {
+                 "lower": [],
+                    "upper": [],
+                }
+                for alpha in self.alpha
+            }
+            self._base_estimator_["central"] = []
+
+
     @property
     @lru_cache(maxsize=None)
     def reverse_key_mapping(self) -> dict[int, str]:
@@ -649,7 +662,7 @@ class _QuantileConformalizer(_Conformalizer, ABC):
                     )
                     for key in base_estimators_.keys():
                         if key != "central":
-                            self._base_estimator_[alpha][key].extend(
+                            self._base_estimator_[level][key].extend(
                                 base_estimators_[key]
                             )
                         elif not self.__central_fitted:
