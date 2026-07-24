@@ -190,48 +190,17 @@ def test_infinite_bounds_when_basis_degenerate():
     assert not np.isfinite(intervals[0, 1, 0])
 
 
-def test_rkhs_kernel_path():
-    X_conf, y_conf, X_test, _ = _make_data(n=120)
-    regressor = ConditionalSplitConformalRegressor(
-        feature_map=_phi,
-        estimator=LinearRegression().fit(X_conf, y_conf),
-        confidence_level=0.9,
-        exact=False,
-        infinite_params={"kernel": "rbf", "gamma": 0.1, "lambda": 1},
-    )
-    regressor.conformalize(X_conf, y_conf)
-    _, intervals = regressor.predict_interval(X_test[:5])
-    assert np.all(intervals[:, 0, 0] <= intervals[:, 1, 0])
-
-
-def test_exact_with_kernel_warns_and_sets_exact_false():
-    X_conf, y_conf, X_test, _ = _make_data(n=120)
-    with pytest.warns(
-        UserWarning,
-        match="Exact computation doesn't support RKHS quantile regression",
-    ):
-        regressor = ConditionalSplitConformalRegressor(
+def test_rkhs_kernel_path_raises():
+    X_conf, y_conf, _, _ = _make_data(n=120)
+    # The infinite-dimensional (RKHS) path is unimplemented, so requesting a
+    # kernel fails fast at construction rather than at prediction time.
+    with pytest.raises(NotImplementedError, match="infinite-dimensional"):
+        ConditionalSplitConformalRegressor(
             feature_map=_phi,
             estimator=LinearRegression().fit(X_conf, y_conf),
             confidence_level=0.9,
-            exact=True,
             infinite_params={"kernel": "rbf", "gamma": 0.1, "lambda": 1},
         )
-    assert regressor.exact is False
-    regressor.conformalize(X_conf, y_conf)
-    _, intervals = regressor.predict_interval(X_test[:2])
-    assert np.all(intervals[:, 0, 0] <= intervals[:, 1, 0])
-
-
-def test_exact_cutoff_with_kernel_raises():
-    regressor = _fitted_regressor()
-    _, _, X_test, _ = _make_data()
-    regressor.infinite_params = {"kernel": "rbf"}
-    with pytest.raises(
-        ValueError,
-        match="Exact computation doesn't support RKHS quantile regression",
-    ):
-        regressor._predict_conditional_cutoff(0.9, X_test[0].reshape(1, -1))
 
 
 def _make_multiclass_data(n=300, seed=0):
@@ -369,3 +338,26 @@ def test_finish_dual_setup_without_kernel():
     x_row = X_conf[0].reshape(1, -1)
     out = finish_dual_setup(problem, 0.5, x_row, 0.9, _phi(x_row), X_conf, {})
     assert out.param_dict["quantile"].value == 0.9
+
+
+def test_setup_cvx_problem_with_kernel():
+    # The RKHS-fitting branch is unreachable from the public API (guarded by
+    # _raise_if_infinite_dimensional), so exercise it directly here.
+    X_conf, _, _, _ = _make_data()
+    scores = np.abs(np.random.default_rng(0).normal(size=len(X_conf)))
+    problem = setup_cvx_problem(
+        X_conf, scores, _phi(X_conf), infinite_params={"kernel": "rbf", "gamma": 0.1}
+    )
+    assert "radius" in problem.param_dict
+    assert "L_21_22" in problem.param_dict
+
+
+def test_get_kernel_matrix():
+    from mapie.conditional_conformal_prediction import _get_kernel_matrix
+
+    X_conf, _, _, _ = _make_data()
+    K, K_chol = _get_kernel_matrix(X_conf, "rbf", 0.1)
+    assert K.shape == (len(X_conf), len(X_conf))
+    assert K_chol.shape == K.shape
+    # Cholesky factor reconstructs the kernel: L @ L.T == K.
+    np.testing.assert_allclose(K_chol @ K_chol.T, K, atol=1e-4)

@@ -64,18 +64,27 @@ class _ConditionalConformalMixin:
         self.randomize = randomize
         self.exact = exact
         self.infinite_params = {} if infinite_params is None else infinite_params
+        self._raise_if_infinite_dimensional()
         self.rng = np.random.default_rng(seed=seed)
 
-        if self.exact and self.infinite_params.get(
-            "kernel", FUNCTION_DEFAULTS["kernel"]
-        ):
-            warnings.warn(
-                "Exact computation doesn't support RKHS quantile regression for now. "
-                "Continuing with exact=False",
-                UserWarning,
-                stacklevel=2,
+    def _raise_if_infinite_dimensional(self) -> None:
+        """Raise ``NotImplementedError`` if the RKHS path is requested.
+
+        Called from ``_init_conditional`` so that requesting an
+        infinite-dimensional (RKHS) component fails fast at construction.
+        The RKHS component of the conditional conformal procedure is not
+        correctly implemented yet. The supporting code is kept in place
+        (see ``_get_primal_solution``, ``_get_threshold``, ``_solve_dual``
+        and ``setup_cvx_problem``) for future work, but it is not
+        reachable until this is resolved.
+        """
+        if self.infinite_params.get("kernel", FUNCTION_DEFAULTS["kernel"]):
+            raise NotImplementedError(
+                "The infinite-dimensional (RKHS) component of the conditional "
+                "conformal procedure is not implemented yet. The supporting "
+                "code is retained for future work; in the meantime use a "
+                "finite feature_map without an infinite_params kernel."
             )
-            self.exact = False
 
     def _conformalize_conditional(
         self, x_calib: NDArray, scores_calib: NDArray
@@ -335,7 +344,11 @@ class _ConditionalConformalMixin:
             threshold = quantile
 
         if self.exact:
-            if self.infinite_params.get("kernel", FUNCTION_DEFAULTS["kernel"]):
+            # Guarded at construction time by _raise_if_infinite_dimensional;
+            # retained for the day the RKHS path is implemented.
+            if self.infinite_params.get(  # pragma: no cover
+                "kernel", FUNCTION_DEFAULTS["kernel"]
+            ):
                 raise ValueError(
                     "Exact computation doesn't support RKHS quantile regression for now."
                 )
@@ -370,7 +383,11 @@ class _ConditionalConformalMixin:
         return float(np.ravel(score_cutoff)[0])
 
     def _get_primal_solution(self, S: float, x: np.ndarray, quantiles: np.ndarray):
-        if self.infinite_params.get("kernel", FUNCTION_DEFAULTS["kernel"]):
+        # RKHS branch retained for future work; currently unreachable because
+        # _raise_if_infinite_dimensional guards construction.
+        if self.infinite_params.get(
+            "kernel", FUNCTION_DEFAULTS["kernel"]
+        ):  # pragma: no cover
             cp = _import_cvxpy()
             prob = finish_dual_setup(
                 self.cvx_problem,
@@ -409,7 +426,11 @@ class _ConditionalConformalMixin:
         beta, weights = self._get_primal_solution(S, x, quantiles)
 
         threshold = self.feature_map(x) @ beta
-        if self.infinite_params.get("kernel", FUNCTION_DEFAULTS["kernel"]):
+        # RKHS branch retained for future work; currently unreachable because
+        # _raise_if_infinite_dimensional guards construction.
+        if self.infinite_params.get(
+            "kernel", FUNCTION_DEFAULTS["kernel"]
+        ):  # pragma: no cover
             K = pairwise_kernels(
                 X=np.concatenate([self.x_calib, x.reshape(1, -1)], axis=0),
                 Y=np.concatenate([self.x_calib, x.reshape(1, -1)], axis=0),
@@ -483,10 +504,10 @@ class ConditionalSplitConformalRegressor(
 
         infinite_params : dict, optional
             Parameters for the RKHS component of the fit. Valid keys are
-            ``kernel``, ``gamma``, and ``lambda``.
-
-        seed : int, default=0
-            Seed controlling randomized threshold selection.
+            ``kernel``, ``gamma``, and ``lambda``. Currently the
+            infinite-dimensional (RKHS) component is not implemented:
+            requesting a ``kernel`` raises ``NotImplementedError`` at
+            construction time. The supporting code is retained for future work.
         """
         super().__init__(
             estimator=estimator,
@@ -690,10 +711,10 @@ class ConditionalSplitConformalClassifier(
 
         infinite_params : dict, optional
             Parameters for the RKHS component of the fit. Valid keys are
-            ``kernel``, ``gamma``, and ``lambda``.
-
-        seed : int, default=0
-            Seed controlling randomized threshold selection.
+            ``kernel``, ``gamma``, and ``lambda``. Currently the
+            infinite-dimensional (RKHS) component is not implemented:
+            requesting a ``kernel`` raises ``NotImplementedError`` at
+            construction time. The supporting code is retained for future work.
         """
         super().__init__(
             estimator=estimator,
@@ -851,7 +872,9 @@ def binary_search(func, min, max, tol=1e-3):
 
 
 def _solve_dual(S, gcc, x_test, quantiles, threshold=None):
-    if gcc.infinite_params.get("kernel", None):
+    # RKHS branch retained for future work; currently unreachable because
+    # _raise_if_infinite_dimensional guards construction.
+    if gcc.infinite_params.get("kernel", None):  # pragma: no cover
         cp = _import_cvxpy()
         prob = finish_dual_setup(
             gcc.cvx_problem,
@@ -972,7 +995,9 @@ def finish_dual_setup(
     gamma = infinite_params.get("gamma", FUNCTION_DEFAULTS["gamma"])
     radius = 1 / infinite_params.get("lambda", FUNCTION_DEFAULTS["lambda"])
 
-    if kernel is not None:
+    # RKHS branch retained for future work; currently unreachable because
+    # _raise_if_infinite_dimensional guards construction.
+    if kernel is not None:  # pragma: no cover
         K_12 = pairwise_kernels(
             X=np.concatenate([x_calib, X.reshape(1, -1)], axis=0),
             Y=X.reshape(1, -1),
