@@ -398,16 +398,15 @@ class _QuantileConformalizer(_Conformalizer, ABC):
 
         if self.method == "base":
             self._base_estimator_: dict[
-            str, Union[dict[str, List[RegressorMixin]], List[RegressorMixin]]
+                str, Union[dict[str, List[RegressorMixin]], List[RegressorMixin]]
             ] = {
                 str(alpha): {
-                 "lower": [],
+                    "lower": [],
                     "upper": [],
                 }
                 for alpha in self.alpha
             }
             self._base_estimator_["central"] = []
-
 
     @property
     @lru_cache(maxsize=None)
@@ -576,8 +575,12 @@ class _QuantileConformalizer(_Conformalizer, ABC):
         }
         self.estimators_["central"] = []
         self.n_calib_samples = []
-        self.conformity_scores = []
-        self.pinball_losses = []
+        self.conformity_scores = dict[str, NDArray[np.float64]](
+            {str(alpha): np.array([]) for alpha in self.alpha}
+        )
+        self.pinball_losses = dict[str, NDArray[np.float64]](
+            {str(alpha): np.array([]) for alpha in self.alpha}
+        )
         self._predict_params = {}
         return self
 
@@ -676,7 +679,7 @@ class _QuantileConformalizer(_Conformalizer, ABC):
     # ---------------------Conformalizer
     # TODO: Nearly duplicated from EnsemblRegressor _predict_oof_estimator -> should be factorize in next refacto
     def _predict_oof(
-        self, X: ArrayLike, val_index: ArrayLike, index: int, **predict_params
+        self, X: ArrayLike, val_index: ArrayLike, index: int, level: str, **predict_params
     ) -> NDArray:
         """
         Perform predictions on a single out-of-fold model on a validation set.
@@ -692,6 +695,9 @@ class _QuantileConformalizer(_Conformalizer, ABC):
         val_index: ArrayLike of shape (n_samples_val)
             Validation data indices.
 
+        level: str
+            The quantile level to predict.
+
         **predict_params : dict
             Additional predict parameters.
 
@@ -702,7 +708,7 @@ class _QuantileConformalizer(_Conformalizer, ABC):
         """
         X_val = _safe_indexing(X, val_index)
         if _num_samples(X_val) > 0:
-            y_pred = self._predict_quantiles(X_val, index=index, **predict_params)
+            y_pred = self._predict_quantiles(X_val, index=index, level=level, **predict_params)
         else:
             y_pred = np.array([])
         return y_pred
@@ -711,6 +717,7 @@ class _QuantileConformalizer(_Conformalizer, ABC):
     def _predict_calib(
         self,
         X: ArrayLike,
+        level: str,
         y: Optional[ArrayLike] = None,
         groups: Optional[ArrayLike] = None,
         **predict_params,
@@ -750,7 +757,7 @@ class _QuantileConformalizer(_Conformalizer, ABC):
         self.n_calib_samples = [len(calib_index) for calib_index in indices]
 
         if self.cv == "prefit":
-            y_pred = self._predict_quantiles(X, index=0, **predict_params)
+            y_pred = self._predict_quantiles(X, level=level, index=0, **predict_params)
         else:
             pred_matrix = np.full(
                 shape=(n_samples, n_splits, len(self.quantiles)),
@@ -759,11 +766,11 @@ class _QuantileConformalizer(_Conformalizer, ABC):
             )
             outputs = Parallel(n_jobs=self.n_jobs, verbose=self.verbose)(
                 delayed(self._predict_oof)(
-                    X, calib_index, index=model_index, **predict_params
+                    X, calib_index, level=level, index=model_index, **predict_params
                 )
                 for calib_index, model_index in zip(indices, range(n_splits))
             )
-            self.pinball_losses = Parallel(n_jobs=self.n_jobs, verbose=self.verbose)(
+            self.pinball_losses[level] = Parallel(n_jobs=self.n_jobs, verbose=self.verbose)(
                 delayed(self.pinball_loss)(_safe_indexing(y, calib_index), output)
                 for calib_index, output in zip(indices, outputs)
             )
@@ -800,20 +807,22 @@ class _QuantileConformalizer(_Conformalizer, ABC):
             )
             self.conformity_scores = []
 
-        pred = self._predict_calib(X_calib, y_calib, groups, **predict_params)
-        self.conformity_scores = self.score.get_conformity_scores(
-            y_calib, pred.T, X=X_calib
-        )
+        for alpha in self.alpha:
+            level = str(alpha)
+            pred = self._predict_calib(X_calib, y_calib, level, groups, **predict_params)
+            self.conformity_scores[level] = self.score.get_conformity_scores(
+                y_calib, pred.T, X=X_calib
+            )
 
         self.is_conformalized = True
         return self
 
     # ------------------------------ Predict
-    def _pinball_weighted_mean(self, y_preds: ArrayLike) -> NDArray:
+    def _pinball_weighted_mean(self, y_preds: ArrayLike, level: str) -> NDArray:
         """
         Computes the weighted mean of the predicted values using the pinball losses as weights.
         """
-        pinball_weights = 1 / np.asarray(self.pinball_losses, dtype=float)
+        pinball_weights = 1 / np.asarray(self.pinball_losses[level], dtype=float)
         y_preds = np.asarray(y_preds, dtype=float)
 
         if pinball_weights.ndim == 1:
@@ -943,8 +952,8 @@ class _QuantileConformalizer(_Conformalizer, ABC):
 
         elif self.agg_function == "pinball_weighted_mean":
             # pinball_weighted_mean works with (n_splits, n_samples) layout
-            y_pred_multi_low = self._pinball_weighted_mean(pred_matrix[:, :, 0].T)
-            y_pred_multi_up = self._pinball_weighted_mean(pred_matrix[:, :, 1].T)
+            y_pred_multi_low = self._pinball_weighted_mean(pred_matrix[:, :, 0].T, level)
+            y_pred_multi_up = self._pinball_weighted_mean(pred_matrix[:, :, 1].T, level)
             y_pred_multi_center = self._pinball_weighted_mean(pred_matrix[:, :, 2].T)
             y_pred = np.hstack((y_pred_multi_low, y_pred_multi_up, y_pred_multi_center))
 
