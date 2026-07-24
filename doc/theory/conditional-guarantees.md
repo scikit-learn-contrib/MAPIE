@@ -22,17 +22,15 @@ To conclude, it can create more adaptative intervals than the other methods, but
 
 ### Method's intuition
 
-We recall that the *standard split method* estimates the absolute residuals by a constant $\hat{q}_{n, \alpha}^+$ (which is the quantile of $\{|Y_i-\hat{\mu}(X_i)|\}_{1 \leq i \leq n}$). Then, the prediction interval is:
+We recall that the standard split conformal prediction set is defined as
 
 $$
-\hat{C}_{n, \alpha}^{\textrm{split}}(X_{n+1}) = \hat{\mu}(X_{n+1}) \pm \hat{q}_{n, \alpha}^+
+\hat{C}_{\textrm{split}}(X_{n+1}) = \{y: S(X_{n+1}, y) \leq S^*\}
 $$
 
-The idea of the *CCP* method is to learn, not a constant, but a function $q(X)$, to have a different interval width depending on the $X$ value. Then, we would have:
+with $S^*$ the quantile of the conformity scores evaluated on the calibration set, corresponding to the chosen confidence level.
 
-$$
-\hat{C}_{n, \alpha}^{\textrm{CCP}}(X_{n+1}) = \hat{\mu}(X_{n+1}) \pm \hat{q}(X_{n+1})
-$$
+One of the insights of the paper is that finding the quantile can be done as an intercept-only quantile regression using the pinball loss. Then, instead of using a fixed quantile, it becomes possible to use a function that estimates conditional quantiles of $Y | X$, i.e., replacing $S^*$ by a function $\hat{g}_{S(X_{n+1}, y)}(X_{n+1})$.
 
 To be able to find the best function, while having some coverage guarantees, we should select this function inside some defined class of functions $\mathcal{F}$.
 
@@ -65,18 +63,12 @@ This is the equation corresponding to the perfect conditional coverage, which is
     In practice, because computing the set defined below requires to fit $\hat{g}_S$ for all $S \in \mathbb{R}$, which appears to be intractable, a dual formulation of the optimization problem is solved instead.
 
 
-3. We use this optimized function \(\hat{g}_M^{n+1}\) to compute the prediction intervals:
+3. We use this optimized function $\hat{g}_S$ to compute the prediction intervals:
 
-    \[
-    \hat{C}_M^{n+1}(X_{n+1}) = \{ y : S(X_{n+1}, \: y) \leq \hat{g}_M^{n+1}(X_{n+1}) \}
-    \]
+    $$
+    \hat{C}(X_{n+1}) = \{ y : S(X_{n+1}, \: y) \leq \hat{g}_{S(X_{n+1}, y)}(X_{n+1}) \}
+    $$
 
-    !!! note
-        The formulas are generic and work with all conformity scores. But in the case of the absolute residuals, we get:
-
-        \[
-        \hat{C}(X_{n+1}) = \hat{\mu}(X_{n+1}) \pm \hat{g}_M^{n+1}(X_{n+1})
-        \]
 
 ### Coverage guarantees
 
