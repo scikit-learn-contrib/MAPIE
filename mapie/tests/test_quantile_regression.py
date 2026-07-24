@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from types import MethodType
-from typing import Any, Tuple
+from typing import Any, Tuple, Optional
 
 import numpy as np
 import pandas as pd
@@ -895,8 +895,8 @@ def test_quantile_conformalizer_initialize_fit_conformalize() -> None:
     assert conformalizer.pinball_losses[level] == []
     assert conformalizer.key_mapping == {"lower": 0, "upper": 1, "central": 2}
     assert conformalizer._base_estimator_ == {
-        level: {'lower': [], 'upper': []},
-        "central": []
+        level: {"lower": [], "upper": []},
+        "central": [],
     }
 
 
@@ -935,7 +935,7 @@ def test_quantile_conformalizer_fit_cv_estimator() -> None:
     conformalizer.estimator = QuantileRegressor(solver="highs-ds")
     conformalizer._central_estimator = None
     conformalizer.fit_central_estimator = True
-    conformalizer.method="base"
+    conformalizer.method = "base"
     conformalizer._initialize_fit_conformalize()
     level = str(conformalizer.alpha[0])
 
@@ -1193,7 +1193,7 @@ def test_quantile_conformalizer_fit_twice_warns_and_resets() -> None:
     conformalizer = DummyQuantileConformalizer()
     conformalizer.cv = "prefit"
     conformalizer.alpha = [0.2]
-    conformalizer.method = 'base'
+    conformalizer.method = "base"
     conformalizer._central_estimator = None
     conformalizer._initialize_fit_conformalize()
     conformalizer.fit(X_train_toy, y_train_toy)
