@@ -26,12 +26,12 @@ from .risks import (
 )
 from .semantic_segmentation import SemanticSegmentationController
 
-# ``AutoAdaptiveConformalRiskControl`` depends on PyTorch (the ``conditional``
+# ``ConditionalRiskController`` depends on PyTorch (the ``conditional``
 # extra). It is imported lazily so that importing ``mapie.risk_control`` does not
 # require PyTorch; the import (and a helpful error if PyTorch is missing) only
 # fires when the class is actually accessed.
 _LAZY_IMPORTS = {
-    "AutoAdaptiveConformalRiskControl": "mapie.risk_control.adaptive_conformal_risk_control",
+    "ConditionalRiskController": "mapie.risk_control.adaptive_conformal_risk_control",
 }
 
 
@@ -47,7 +47,7 @@ def __getattr__(name):
 
 
 __all__ = [
-    "AutoAdaptiveConformalRiskControl",
+    "ConditionalRiskController",
     "MultiLabelClassificationController",
     "SemanticSegmentationController",
     "BinaryClassificationController",

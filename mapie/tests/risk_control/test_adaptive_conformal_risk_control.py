@@ -5,8 +5,8 @@ import torch
 from mapie.risk_control import adaptive_conformal_risk_control as acrc_module
 from mapie.risk_control.adaptive_conformal_risk_control import (
     DEVICE,
-    AutoAdaptiveConformalRiskControl,
-    CustomLoss,
+    AACRCLoss,
+    ConditionalRiskController,
     LogisticHead,
     _import_torch,
     _train_model,
@@ -32,7 +32,7 @@ def _predict_function(X):
 
 
 def test_init_stores_parameters():
-    crc = AutoAdaptiveConformalRiskControl(
+    crc = ConditionalRiskController(
         predict_function=_predict_function,
         feature_map=_feature_map,
         confidence_level=0.9,
@@ -54,7 +54,7 @@ def test_conformalize_initializes_default_base_model():
     np.random.seed(0)
     torch.manual_seed(0)
     X, y = _make_data()
-    crc = AutoAdaptiveConformalRiskControl(
+    crc = ConditionalRiskController(
         predict_function=_predict_function,
         feature_map=_feature_map,
         confidence_level=0.9,
@@ -71,7 +71,7 @@ def test_conformalize_uses_provided_base_model():
     np.random.seed(0)
     torch.manual_seed(0)
     X, y = _make_data()
-    crc = AutoAdaptiveConformalRiskControl(
+    crc = ConditionalRiskController(
         predict_function=_predict_function,
         feature_map=_feature_map,
         confidence_level=0.9,
@@ -86,7 +86,7 @@ def test_predict_returns_binary_masks():
     np.random.seed(0)
     torch.manual_seed(0)
     X, y = _make_data()
-    crc = AutoAdaptiveConformalRiskControl(
+    crc = ConditionalRiskController(
         predict_function=_predict_function,
         feature_map=_feature_map,
         confidence_level=0.9,
@@ -153,7 +153,7 @@ def test_logistic_head_output_range():
 
 def test_custom_loss_forward_and_integral():
     torch.manual_seed(0)
-    loss_fn = CustomLoss(alpha=0.1, n=4)
+    loss_fn = AACRCLoss(alpha=0.1, n=4)
     masks = torch.rand(4, 3, 3, device=DEVICE)
     masks_pred = torch.rand(4, 3, 3, device=DEVICE)
     preds_th = torch.rand(4, 1, device=DEVICE)
@@ -187,10 +187,10 @@ def test_risk_control_lazy_getattr_loads_class():
     import mapie.risk_control as rc
 
     # Drop any cached value so the lazy loader runs.
-    rc.__dict__.pop("AutoAdaptiveConformalRiskControl", None)
-    loaded = rc.AutoAdaptiveConformalRiskControl
-    assert loaded is AutoAdaptiveConformalRiskControl
-    assert loaded is acrc_module.AutoAdaptiveConformalRiskControl
+    rc.__dict__.pop("ConditionalRiskController", None)
+    loaded = rc.ConditionalRiskController
+    assert loaded is ConditionalRiskController
+    assert loaded is acrc_module.ConditionalRiskController
 
 
 def test_risk_control_getattr_unknown_name_raises():

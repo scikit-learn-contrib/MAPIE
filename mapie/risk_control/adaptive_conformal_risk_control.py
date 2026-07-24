@@ -14,7 +14,7 @@ def _import_torch():
 
     PyTorch is an optional dependency of MAPIE (the ``conditional`` extra), so
     it is imported only when this module (and thus
-    :class:`AutoAdaptiveConformalRiskControl`) is actually accessed.
+    :class:`ConditionalRiskController`) is actually accessed.
     ``mapie.risk_control`` loads this module lazily, so importing it stays cheap
     and free of a hard PyTorch dependency.
     """
@@ -22,7 +22,7 @@ def _import_torch():
         import torch
     except ImportError as e:
         raise ImportError(
-            "PyTorch is required for AutoAdaptiveConformalRiskControl. "
+            "PyTorch is required for ConditionalRiskController. "
             "Install it with: pip install mapie[conditional]"
         ) from e
     return torch
@@ -41,12 +41,12 @@ DEVICE = torch.device(
 )
 
 
-class AutoAdaptiveConformalRiskControl:
+class ConditionalRiskController:
     """
     Conformal risk control with a learned, input-dependent decision threshold.
 
     Unlike threshold-based controllers that select a single global decision
-    threshold, ``AutoAdaptiveConformalRiskControl`` learns a smooth function of
+    threshold, ``ConditionalRiskController`` learns a smooth function of
     the input (its embedding) that returns a per-input decision threshold in
     ``[0, 1]``. The threshold model is trained on the conformalization set so
     that a recall-type risk is controlled at the target level
@@ -118,7 +118,7 @@ class AutoAdaptiveConformalRiskControl:
     --------
     >>> import numpy as np
     >>> from mapie.risk_control.adaptive_conformal_risk_control import (
-    ...     AutoAdaptiveConformalRiskControl,
+    ...     ConditionalRiskController,
     ... )
     >>> rng = np.random.default_rng(42)
     >>> X = rng.random((8, 4, 4))
@@ -128,7 +128,7 @@ class AutoAdaptiveConformalRiskControl:
     ...     return X.reshape(1, -1) if X.ndim == 2 else X.reshape(X.shape[0], -1)
     >>> def predict_function(X):
     ...     return np.asarray(X)
-    >>> crc = AutoAdaptiveConformalRiskControl(
+    >>> crc = ConditionalRiskController(
     ...     predict_function=predict_function,
     ...     feature_map=feature_map,
     ...     confidence_level=0.9,
@@ -285,7 +285,7 @@ def _train_model(
     """
     Train the threshold model on the conformalization set.
 
-    The model is optimised against :class:`CustomLoss` and the parameters that
+    The model is optimised against :class:`AACRCLoss` and the parameters that
     achieved the lowest loss are returned in evaluation mode.
 
     Parameters
@@ -331,7 +331,7 @@ def _train_model(
     model = model.to(DEVICE)
     model.train()
     optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
-    criterion = CustomLoss(alpha, batch_size)
+    criterion = AACRCLoss(alpha, batch_size)
     losses = []
     best_model = deepcopy(model)
     best_loss: float = np.inf
@@ -377,7 +377,7 @@ class LogisticHead(torch.nn.Module):
         return torch.sigmoid(self.fc(x))
 
 
-class CustomLoss(torch.nn.Module):
+class AACRCLoss(torch.nn.Module):
     """
     Differentiable surrogate of the conformal risk.
 
