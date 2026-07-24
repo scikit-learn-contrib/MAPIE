@@ -874,15 +874,20 @@ def test_quantile_conformalizer_set_estimator_params() -> None:
 def test_quantile_conformalizer_initialize_fit_conformalize() -> None:
     """Test conformalizer initialization state."""
     conformalizer = DummyQuantileConformalizer()
-    conformalizer.alpha = [ 0.2 ]
+    conformalizer.alpha = [0.2]
     conformalizer._central_estimator = None
     level = str(conformalizer.alpha[0])
 
     conformalizer._initialize_fit_conformalize()
 
-    np.testing.assert_allclose(conformalizer.quantiles[level], np.array([0.1, 0.9, 0.5]))
+    np.testing.assert_allclose(
+        conformalizer.quantiles[level], np.array([0.1, 0.9, 0.5])
+    )
     assert list(conformalizer.estimators_.keys()) == [level, "central"]
-    assert conformalizer.estimators_ == {level: {"lower": [], "upper": []}, "central": []}
+    assert conformalizer.estimators_ == {
+        level: {"lower": [], "upper": []},
+        "central": [],
+    }
     assert conformalizer.estimators_[level] == {"lower": [], "upper": []}
     assert conformalizer.n_calib_samples == []
     np.testing.assert_array_equal(conformalizer.conformity_scores[level], np.array([]))
@@ -928,10 +933,7 @@ def test_quantile_conformalizer_fit_cv_estimator() -> None:
     level = str(conformalizer.alpha[0])
 
     fitted_estimators = conformalizer._fit_cv_estimator(
-        X_train_toy,
-        y_train_toy,
-        train_index=np.array([0, 1, 2, 3]),
-        level=level
+        X_train_toy, y_train_toy, train_index=np.array([0, 1, 2, 3]), level=level
     )
 
     assert fitted_estimators.get("lower") is not None
@@ -1070,8 +1072,8 @@ def test_quantile_conformalizer_predict_multiple_predictions_mean_aggregation() 
     conformalizer.estimators_ = {
         "0.2": {
             "lower": [
-            FixedPredictor(np.array([1.0, 2.0])),
-            FixedPredictor(np.array([3.0, 4.0])),
+                FixedPredictor(np.array([1.0, 2.0])),
+                FixedPredictor(np.array([3.0, 4.0])),
             ],
             "upper": [
                 FixedPredictor(np.array([5.0, 6.0])),

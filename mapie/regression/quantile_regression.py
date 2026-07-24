@@ -394,6 +394,7 @@ class _QuantileConformalizer(_Conformalizer, ABC):
             str(alpha): [] for alpha in self.alpha
         }
         self.key_mapping = {"lower": 0, "upper": 1, "central": 2}
+        self.__central_is_fitted = False
 
     @property
     @lru_cache(maxsize=None)
@@ -639,8 +640,8 @@ class _QuantileConformalizer(_Conformalizer, ABC):
                     for key in dict_estimator.keys():
                         if key != "central":
                             self.estimators_[level][key].extend(dict_estimator[key])
-                        if not self.__central_fitted:
-                            self.estimators_["central"].extend(dict_estimator[key])
+                        elif not self.__central_fitted:
+                            self.estimators_[key].extend(dict_estimator[key])
 
                 if self.method == "base":
                     base_estimators_ = self._fit_quantiles(
@@ -648,9 +649,11 @@ class _QuantileConformalizer(_Conformalizer, ABC):
                     )
                     for key in base_estimators_.keys():
                         if key != "central":
-                            self.estimators_[alpha][key].extend(base_estimators_[key])
-                        if not self.__central_fitted:
-                            self.estimators_[key].extend(base_estimators_[key])
+                            self._base_estimator_[alpha][key].extend(
+                                base_estimators_[key]
+                            )
+                        elif not self.__central_fitted:
+                            self._base_estimator_[key].extend(base_estimators_[key])
 
                 self.__central_fitted = True
 
@@ -1160,7 +1163,7 @@ class CrossConformalizedQuantileRegressor(_QuantileConformalizer):
             aggregate_point_predictions
         )
 
-        y_pred: Optional[NDArray] = None
+        predictions: Optional[NDArray] = None
         intervalles: List[NDArray] = []
 
         for alpha in self.alpha:
