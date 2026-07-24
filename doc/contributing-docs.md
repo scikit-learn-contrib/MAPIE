@@ -191,31 +191,40 @@ To add an entirely new gallery section (e.g., `examples/time_series/`):
 
 ## Editing API Documentation
 
-API pages are auto-generated from Python docstrings using [mkdocstrings](https://mkdocstrings.github.io/).
+API pages and their navigation are generated at build time by
+`doc/hooks/api_reference.py`. The hook uses
+[mkdocstrings](https://mkdocstrings.github.io/) to render the Python
+docstrings.
 
 ### How It Works
 
-Each API page in `doc/api/` contains directives like:
+The hook creates virtual Markdown pages containing directives like:
 
 ```markdown
 ::: mapie.regression.SplitConformalRegressor
 ```
 
-This renders the class documentation directly from the source code docstrings.
+The generated pages exist only during the MkDocs build, so running the
+documentation does not modify the working tree.
 
-### Adding a New Class to API Docs
+### Adding a Public Class or Function
 
-1. Open the relevant API file (e.g., `doc/api/regression.md`).
-2. Add a mkdocstrings directive:
-  ```markdown
-   ::: mapie.my_module.MyNewClass
-  ```
-3. For pages with subsections (like conformity-scores, metrics), use `heading_level: 3`:
-  ```markdown
-   ::: mapie.my_module.MyNewClass
-       options:
-         heading_level: 3
-  ```
+1. Add the object to the module's `__all__` list when the module defines one.
+   The generator treats `__all__` as authoritative.
+2. In modules without `__all__`, define the public class or function at module
+   level without a leading underscore. Objects imported from another module are
+   ignored.
+3. Build the documentation. The object is automatically added to its API page,
+   the overview, and the left navigation.
+
+Internal objects whose names cannot yet be made private are listed in the
+generator's narrow `INTERNAL_SYMBOLS` exclusion map. New metric submodules
+should also be exported from `mapie.metrics.__all__`; each exported submodule
+gets its own generated section. Optional metric modules that cannot be imported
+by the base installation belong in `OPTIONAL_METRIC_MODULES` instead.
+
+Adding an entirely new API category still requires one page-level entry in
+`api_pages()`, where its title, description, and source module are declared.
 
 ### Docstring Format
 
@@ -247,9 +256,11 @@ MathJax is configured for rendering LaTeX math.
 - **Inline**: `$\alpha$` renders as $\alpha$
 - **Block**:
   ```markdown
+
   $$
   \hat{q}_{1-\alpha} = \text{Quantile}\left(1 - \alpha; \frac{1}{n} \sum_{i=1}^{n} \delta_{s_i}\right)
   $$
+
   ```
 
 ## Using Admonitions

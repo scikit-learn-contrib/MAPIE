@@ -22,15 +22,17 @@ To conclude, it can create more adaptative intervals than the other methods, but
 
 ### Method's intuition
 
-We recall that the standard split conformal prediction set is defined as
+We recall that the *standard split method* estimates the absolute residuals by a constant $\hat{q}_{n, \alpha}^+$ (which is the quantile of $\{|Y_i-\hat{\mu}(X_i)|\}_{1 \leq i \leq n}$). Then, the prediction interval is:
 
 $$
-\hat{C}_{\textrm{split}}(X_{n+1}) = \{y: S(X_{n+1}, y) \leq S^*\}
+\hat{C}_{n, \alpha}^{\textrm{split}}(X_{n+1}) = \hat{\mu}(X_{n+1}) \pm \hat{q}_{n, \alpha}^+
 $$
 
-with $S^*$ the quantile of the conformity scores evaluated on the calibration set, corresponding to the chosen confidence level.
+The idea of the *CCP* method is to learn, not a constant, but a function $q(X)$, to have a different interval width depending on the $X$ value. Then, we would have:
 
-One of the insights of the paper is that finding the quantile can be done as an intercept-only quantile regression using the pinball loss. Then, instead of using a fixed quantile, it becomes possible to use a function that estimates conditional quantiles of $Y | X$, i.e., replacing $S^*$ by a function $\hat{g}_{S(X_{n+1}, y)}(X_{n+1})$.
+$$
+\hat{C}_{n, \alpha}^{\textrm{CCP}}(X_{n+1}) = \hat{\mu}(X_{n+1}) \pm \hat{q}(X_{n+1})
+$$
 
 To be able to find the best function, while having some coverage guarantees, we should select this function inside some defined class of functions $\mathcal{F}$.
 
