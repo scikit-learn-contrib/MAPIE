@@ -1178,6 +1178,7 @@ def test_quantile_conformalizer_fit_prefit_sets_state() -> None:
     conformalizer.cv = "prefit"
     conformalizer.alpha = [0.2]
     conformalizer._central_estimator = None
+    conformalizer.method = 'plus'
     conformalizer._initialize_fit_conformalize()
 
     fitted_conformalizer = conformalizer.fit(X_train_toy, y_train_toy)
@@ -1419,6 +1420,7 @@ def test_quantile_conformalizer_reset_clears_runtime_state() -> None:
     conformalizer = DummyQuantileConformalizer()
     conformalizer.is_fitted = True
     conformalizer.is_conformalized = True
+    conformalizer.alpha = [0.2]
     conformalizer.estimators_ = {
         "lower": [object()],
         "upper": [object()],
@@ -1428,13 +1430,14 @@ def test_quantile_conformalizer_reset_clears_runtime_state() -> None:
     conformalizer.conformity_scores = [np.array([1.0])]
     conformalizer.pinball_losses = [np.array([0.1, 0.2])]
     conformalizer._predict_params = {"x": 1}
+    level = str(conformalizer.alpha[0])
 
     returned = conformalizer.reset()
 
     assert returned is conformalizer
     assert not conformalizer.is_fitted
     assert not conformalizer.is_conformalized
-    assert conformalizer.estimators_ == {"lower": [], "upper": [], "central": []}
+    assert conformalizer.estimators_ == {level: {"lower": [], "upper": []}, "central": []}
     assert conformalizer.n_calib_samples == []
     np.testing.assert_array_equal(conformalizer.conformity_scores, np.array([]))
     assert conformalizer.pinball_losses == []
