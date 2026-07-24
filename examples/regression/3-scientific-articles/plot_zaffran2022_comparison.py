@@ -39,7 +39,7 @@ distribution shift.
 Advances in Neural Information Processing Systems, 34, 1660-1672.
 """
 
-# sphinx_gallery_thumbnail_number = 2
+# mkdocs_gallery_thumbnail_number = 2
 
 import datetime
 import pickle

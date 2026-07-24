@@ -38,7 +38,7 @@ A naive approach: evaluate how precision varies with different thresholds on a v
 !!! danger "The Problem"
     While the chosen threshold works on validation data, it offers **no guarantee on new, unseen data**.
 
-**Risk control** adjusts a model parameter \(\lambda\) so that a given risk stays below a desired level **with high probability on unseen data**.
+**Risk control** adjusts a model parameter $\lambda$ so that a given risk stays below a desired level **with high probability on unseen data**.
 
 <figure markdown>
   ![With risk control](../images/example_with_risk_control.png){ width="600" }
@@ -47,8 +47,8 @@ A naive approach: evaluate how precision varies with different thresholds on a v
 
 ### Mathematical Formulation
 
-- \(\alpha\): target level below which we want the risk to remain
-- \(\delta\): confidence level associated with the risk control
+- $\alpha$: target level below which we want the risk to remain
+- $\delta$: confidence level associated with the risk control
 
 <figure markdown>
   ![Alpha plot](../images/plot_alpha.png){ width="600" }
@@ -56,8 +56,8 @@ A naive approach: evaluate how precision varies with different thresholds on a v
 
 The three methods provide different guarantees:
 
-- **CRC**: Requires **exchangeable** data → \(\mathbb{E}(R) \leq \alpha\)
-- **RCPS** and **LTT**: Require **i.i.d.** data → \(\mathbb{P}(R \leq \alpha) \geq 1 - \delta\)
+- **CRC**: Requires **exchangeable** data → $\mathbb{E}(R) \leq \alpha$
+- **RCPS** and **LTT**: Require **i.i.d.** data → $\mathbb{P}(R \leq \alpha) \geq 1 - \delta$
 
 <figure markdown>
   ![Risk distribution](../images/risk_distribution.png){ width="600" }
@@ -72,52 +72,52 @@ The three methods provide different guarantees:
 
 #### General Settings
 
-- \(\mathcal{T}_{\hat{\lambda}}: X \to Y'\) — a set-valued function indexed by \(\lambda\) with nesting:
+- $\mathcal{T}_{\hat{\lambda}}: X \to Y'$ — a set-valued function indexed by $\lambda$ with nesting:
 
-\[
+$$
 \lambda_1 < \lambda_2 \Rightarrow \mathcal{T}_{\lambda_1}(x) \subset \mathcal{T}_{\lambda_2}(x)
-\]
+$$
 
-- \(L: Y \times Y' \to \mathbb{R}^+\) — a loss function with:
+- $L: Y \times Y' \to \mathbb{R}^+$ — a loss function with:
 
-\[
+$$
 S_1 \subset S_2 \Rightarrow L(y, S_1) \geq L(y, S_2)
-\]
+$$
 
-The goal is to compute an **Upper Confidence Bound** \(\hat{R}^+(\lambda)\) and find:
+The goal is to compute an **Upper Confidence Bound** $\hat{R}^+(\lambda)$ and find:
 
-\[
+$$
 \hat{\lambda} = \inf\{\lambda \in \Lambda: \hat{R}^+(\lambda') < \alpha, \;\forall \lambda' \geq \lambda\}
-\]
+$$
 
 <figure markdown>
   ![R hat plus](../images/r_hat_plus.png){ width="600" }
 </figure>
 
 !!! success "Guarantee"
-    \(\mathbb{P}(R(\mathcal{T}_{\hat{\lambda}}) \leq \alpha) \geq 1 - \delta\)
+    $\mathbb{P}(R(\mathcal{T}_{\hat{\lambda}}) \leq \alpha) \geq 1 - \delta$
 
 #### Bounds
 
-The empirical risk: \(\hat{R}(\lambda) = \frac{1}{n}\sum_{i=1}^n L(Y_i, T_{\lambda}(X_i))\)
+The empirical risk: $\hat{R}(\lambda) = \frac{1}{n}\sum_{i=1}^n L(Y_i, T_{\lambda}(X_i))$
 
 **Hoeffding Bound:**
 
-\[
+$$
 \hat{R}_{\text{Hoeffding}}^+(\lambda) = \hat{R}(\lambda) + \sqrt{\frac{1}{2n}\log\frac{1}{\delta}}
-\]
+$$
 
 **Bernstein Bound:**
 
-\[
+$$
 \hat{R}_{\text{Bernstein}}^+(\lambda) = \hat{R}(\lambda) + \hat{\sigma}(\lambda)\sqrt{\frac{2\log(2/\delta)}{n}} + \frac{7\log(2/\delta)}{3(n-1)}
-\]
+$$
 
 **Waudby-Smith–Ramdas** (recommended for bounded losses):
 
-\[
+$$
 \hat{R}_{\text{WSR}}^+(\lambda) = \inf \left\{ R \geq 0 : \max_{i=1,\ldots,n} K_i(R, \lambda) > \frac{1}{\delta}\right\}
-\]
+$$
 
 ---
 
@@ -125,15 +125,15 @@ The empirical risk: \(\hat{R}(\lambda) = \frac{1}{n}\sum_{i=1}^n L(Y_i, T_{\lamb
 
 Controls any **monotone and bounded** loss:
 
-\[
+$$
 \mathbb{E}\left[L_{n+1}(\hat{\lambda})\right] \leq \alpha
-\]
+$$
 
-To find \(\hat{\lambda}\):
+To find $\hat{\lambda}$:
 
-\[
+$$
 \hat{\lambda} = \inf \left\{ \lambda: \frac{n}{n+1}\hat{R}_n(\lambda) + \frac{B}{n+1} \leq \alpha \right\}
-\]
+$$
 
 ---
 
@@ -141,17 +141,17 @@ To find \(\hat{\lambda}\):
 
 Controls **any loss** (including non-monotonic) through multiple hypothesis testing:
 
-For each \(\lambda_j\) in a discrete set \(\Lambda = \{\lambda_1, \ldots, \lambda_n\}\):
+For each $\lambda_j$ in a discrete set $\Lambda = \{\lambda_1, \ldots, \lambda_n\}$:
 
 1. Estimate the risk on calibration data.
-2. Associate hypothesis \(\mathcal{H}_j: R(\lambda_j) > \alpha\).
+2. Associate hypothesis $\mathcal{H}_j: R(\lambda_j) > \alpha$.
 3. Compute p-value using Hoeffding-Bentkus.
 4. Apply FWER control (e.g., Bonferroni correction).
 
-Return \(\hat{\Lambda} = \mathcal{A}(\{p_j\})\) — the set of \(\lambda\) values that control the risk.
+Return $\hat{\Lambda} = \mathcal{A}(\{p_j\})$ — the set of $\lambda$ values that control the risk.
 
 !!! success "Guarantee"
-    \(\mathbb{P}(R(\mathcal{T}_{\lambda}) \leq \alpha) \geq 1 - \delta\) for all \(\lambda \in \hat{\Lambda}\).
+    $\mathbb{P}(R(\mathcal{T}_{\lambda}) \leq \alpha) \geq 1 - \delta$ for all $\lambda \in \hat{\Lambda}$.
 
 ---
 

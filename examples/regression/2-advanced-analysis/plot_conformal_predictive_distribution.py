@@ -5,7 +5,7 @@ Conformal Predictive Distribution
 
 """
 
-# sphinx_gallery_thumbnail_number = 3
+# mkdocs_gallery_thumbnail_number = 3
 
 ##############################################################################
 # In this advanced analysis, we propose to use MAPIE for Conformal Predictive

@@ -68,7 +68,7 @@ a risk in binary classification.
 # - compare their selected best thresholds,
 # - visualize agreement and differences between procedures.
 
-# sphinx_gallery_thumbnail_number = 2
+# mkdocs_gallery_thumbnail_number = 2
 
 import matplotlib.pyplot as plt
 import numpy as np

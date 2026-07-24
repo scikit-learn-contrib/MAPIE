@@ -17,7 +17,7 @@ regression needs to be from a quantile regressor.
 We then compare the coverage and the intervals width.
 """
 
-# sphinx_gallery_thumbnail_number = 3
+# mkdocs_gallery_thumbnail_number = 3
 
 import warnings
 

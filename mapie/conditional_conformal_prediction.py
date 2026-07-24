@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import warnings
 from functools import lru_cache, partial
 from typing import Any, Callable, Iterable, Optional, Tuple, Union
 
@@ -490,7 +491,12 @@ class ConditionalSplitConformalRegressor(
             Verbosity level.
 
         randomize : bool, default=False
-            Randomize the dual threshold for exact (non-conservative) coverage.
+            Whether to use randomization to make coverage exact rather than
+            conservative.
+
+            If False, predictions are deterministic and coverage may be slightly above
+            the target level. If True, predictions use auxiliary randomness to match the
+            target coverage level more exactly.
 
         exact : bool, default=True
             Compute the conditional score cutoff exactly rather than by binary
@@ -692,7 +698,12 @@ class ConditionalSplitConformalClassifier(
             Verbosity level.
 
         randomize : bool, default=False
-            Randomize the dual threshold for exact (non-conservative) coverage.
+            Whether to use randomization to make coverage exact rather than
+            conservative.
+
+            If False, predictions are deterministic and coverage may be slightly above
+            the target level. If True, predictions use auxiliary randomness to match the
+            target coverage level more exactly.
 
         exact : bool, default=True
             Compute the conditional score cutoff exactly rather than by binary
