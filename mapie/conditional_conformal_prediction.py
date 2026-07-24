@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import warnings
 from functools import lru_cache, partial
 from typing import Any, Callable, Iterable, Optional, Tuple, Union
 
