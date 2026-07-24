@@ -874,16 +874,19 @@ def test_quantile_conformalizer_set_estimator_params() -> None:
 def test_quantile_conformalizer_initialize_fit_conformalize() -> None:
     """Test conformalizer initialization state."""
     conformalizer = DummyQuantileConformalizer()
-    conformalizer.alpha = 0.2
+    conformalizer.alpha = [ 0.2 ]
     conformalizer._central_estimator = None
+    level = str(conformalizer.alpha[0])
 
     conformalizer._initialize_fit_conformalize()
 
-    np.testing.assert_allclose(conformalizer.quantiles, np.array([0.1, 0.9, 0.5]))
-    assert conformalizer.estimators_ == {"lower": [], "upper": [], "central": []}
+    np.testing.assert_allclose(conformalizer.quantiles[level], np.array([0.1, 0.9, 0.5]))
+    assert list(conformalizer.estimators_.keys()) == [level, "central"]
+    assert conformalizer.estimators_ == {level: {"lower": [], "upper": []}, "central": []}
+    assert conformalizer.estimators_[level] == {"lower": [], "upper": []}
     assert conformalizer.n_calib_samples == []
-    np.testing.assert_array_equal(conformalizer.conformity_scores, np.array([]))
-    assert conformalizer.pinball_losses == []
+    np.testing.assert_array_equal(conformalizer.conformity_scores[level], np.array([]))
+    assert conformalizer.pinball_losses[level] == []
     assert conformalizer.key_mapping == {"lower": 0, "upper": 1, "central": 2}
 
 
@@ -891,16 +894,19 @@ def test_quantile_conformalizer_fit_quantiles() -> None:
     """Test quantile estimator fitting returns populated estimators dict."""
     conformalizer = DummyQuantileConformalizer()
     conformalizer.cv = None
-    conformalizer.alpha = 0.2
+    conformalizer.alpha = [0.2]
     conformalizer.estimator = QuantileRegressor(solver="highs-ds")
     conformalizer._central_estimator = None
     conformalizer.fit_central_estimator = True
     conformalizer._initialize_fit_conformalize()
 
-    fitted_estimators = conformalizer._fit_quantiles(X_train_toy, y_train_toy)
+    level = str(conformalizer.alpha[0])
+
+    fitted_estimators = conformalizer._fit_quantiles(X_train_toy, y_train_toy, level)
 
     # _fit_quantiles returns a new dict and does not mutate self.estimators_.
-    assert conformalizer.estimators_ == {"lower": [], "upper": [], "central": []}
+    assert conformalizer.estimators_[level] == {"lower": [], "upper": []}
+    assert list(conformalizer.estimators_.keys()) == [level, "central"]
 
     assert fitted_estimators.get("lower") is not None
     assert fitted_estimators.get("upper") is not None
@@ -914,16 +920,18 @@ def test_quantile_conformalizer_fit_cv_estimator() -> None:
     """Test CV fitting helper returns one fitted estimator per quantile."""
     conformalizer = DummyQuantileConformalizer()
     conformalizer.cv = None
-    conformalizer.alpha = 0.2
+    conformalizer.alpha = [0.2]
     conformalizer.estimator = QuantileRegressor(solver="highs-ds")
     conformalizer._central_estimator = None
     conformalizer.fit_central_estimator = True
     conformalizer._initialize_fit_conformalize()
+    level = str(conformalizer.alpha[0])
 
     fitted_estimators = conformalizer._fit_cv_estimator(
         X_train_toy,
         y_train_toy,
         train_index=np.array([0, 1, 2, 3]),
+        level=level
     )
 
     assert fitted_estimators.get("lower") is not None
@@ -939,7 +947,7 @@ def test_quantile_conformalizer_fit() -> None:
     conformalizer = DummyQuantileConformalizer()
     conformalizer.cv = KFold(n_splits=3)
     conformalizer.method = "plus"
-    conformalizer.alpha = 0.2
+    conformalizer.alpha = [0.2]
     conformalizer.estimator = QuantileRegressor(solver="highs-ds")
     conformalizer._central_estimator = None
     conformalizer.fit_central_estimator = True
@@ -947,13 +955,15 @@ def test_quantile_conformalizer_fit() -> None:
     conformalizer.verbose = 0
     conformalizer._initialize_fit_conformalize()
 
+    level = str(conformalizer.alpha[0])
+
     fitted_conformalizer = conformalizer.fit(X_train_toy, y_train_toy)
 
     assert fitted_conformalizer is conformalizer
     assert conformalizer.is_fitted
     assert conformalizer.k_.shape == (len(y_train_toy), 3)
-    assert len(conformalizer.estimators_["lower"]) == 3
-    assert len(conformalizer.estimators_["upper"]) == 3
+    assert len(conformalizer.estimators_[level]["lower"]) == 3
+    assert len(conformalizer.estimators_[level]["upper"]) == 3
     assert len(conformalizer.estimators_["central"]) == 3
 
 
@@ -962,7 +972,7 @@ def test_quantile_conformalizer_fit_with_base_method() -> None:
     conformalizer = DummyQuantileConformalizer()
     conformalizer.cv = KFold(n_splits=3)
     conformalizer.method = "base"
-    conformalizer.alpha = 0.2
+    conformalizer.alpha = [0.2]
     conformalizer.estimator = QuantileRegressor(solver="highs-ds")
     conformalizer._central_estimator = None
     conformalizer.fit_central_estimator = True
@@ -988,14 +998,16 @@ def test_quantile_conformalizer_fit_with_base_method() -> None:
 def test_quantile_conformalizer_predict_quantiles() -> None:
     """Test stacked lower, upper and central quantile predictions."""
     conformalizer = DummyQuantileConformalizer()
-    conformalizer.quantiles = np.array([0.1, 0.9, 0.5])
+    conformalizer.quantiles = {"0.2": np.array([0.1, 0.9, 0.5])}
     conformalizer.estimators_ = {
-        "lower": [FixedPredictor(np.array([1.0, 2.0]))],
-        "upper": [FixedPredictor(np.array([3.0, 4.0]))],
-        "central": [FixedPredictor(np.array([2.0, 3.0]))],
+        "0.2": {
+            "lower": [FixedPredictor(np.array([1.0, 2.0]))],
+            "upper": [FixedPredictor(np.array([3.0, 4.0]))],
+            "central": [FixedPredictor(np.array([2.0, 3.0]))],
+        }
     }
 
-    predictions = conformalizer._predict_quantiles(X_toy[:2], 0)
+    predictions = conformalizer._predict_quantiles(X_toy[:2], 0, level="0.2")
 
     assert predictions.shape == (3, 2)
     np.testing.assert_allclose(
@@ -1028,7 +1040,7 @@ def test_quantile_conformalizer_predict_center() -> None:
 def test_quantile_conformalizer_predict_returns_center_lower_upper() -> None:
     """Test _predict returns center, lower, upper predictions in that order."""
     conformalizer = DummyQuantileConformalizer()
-    conformalizer.quantiles = np.array([0.1, 0.9, 0.5])
+    conformalizer.quantiles = {"0.2": np.array([0.1, 0.9, 0.5])}
     conformalizer.method = "plus"
     conformalizer.agg_function = "mean"
     conformalizer.estimators_ = {
@@ -1052,18 +1064,20 @@ def test_quantile_conformalizer_predict_returns_center_lower_upper() -> None:
 def test_quantile_conformalizer_predict_multiple_predictions_mean_aggregation() -> None:
     """Test _predict with multiple estimators aggregates predictions as expected."""
     conformalizer = DummyQuantileConformalizer()
-    conformalizer.quantiles = np.array([0.1, 0.9, 0.5])
+    conformalizer.quantiles = {"0.2": np.array([0.1, 0.9, 0.5])}
     conformalizer.method = "plus"
     conformalizer.agg_function = "mean"
     conformalizer.estimators_ = {
-        "lower": [
+        "0.2": {
+            "lower": [
             FixedPredictor(np.array([1.0, 2.0])),
             FixedPredictor(np.array([3.0, 4.0])),
-        ],
-        "upper": [
-            FixedPredictor(np.array([5.0, 6.0])),
-            FixedPredictor(np.array([7.0, 8.0])),
-        ],
+            ],
+            "upper": [
+                FixedPredictor(np.array([5.0, 6.0])),
+                FixedPredictor(np.array([7.0, 8.0])),
+            ],
+        },
         "central": [
             FixedPredictor(np.array([2.0, 3.0])),
             FixedPredictor(np.array([4.0, 5.0])),
@@ -1152,7 +1166,7 @@ def test_quantile_conformalizer_fit_prefit_sets_state() -> None:
     """Test fit in prefit mode initializes k_ and fitted state."""
     conformalizer = DummyQuantileConformalizer()
     conformalizer.cv = "prefit"
-    conformalizer.alpha = 0.2
+    conformalizer.alpha = [0.2]
     conformalizer._central_estimator = None
     conformalizer._initialize_fit_conformalize()
 
@@ -1168,7 +1182,7 @@ def test_quantile_conformalizer_fit_twice_warns_and_resets() -> None:
     """Test second fit emits warning and clears previous conformalization state."""
     conformalizer = DummyQuantileConformalizer()
     conformalizer.cv = "prefit"
-    conformalizer.alpha = 0.2
+    conformalizer.alpha = [0.2]
     conformalizer._central_estimator = None
     conformalizer._initialize_fit_conformalize()
     conformalizer.fit(X_train_toy, y_train_toy)
@@ -1381,7 +1395,9 @@ def test_quantile_conformalizer_conformalize_score_shape_matches_n_samples() -> 
     conformalizer.conformalize(X_toy[:4], y_local)
 
     assert conformalizer.conformity_scores.shape == (4,)
-    np.testing.assert_allclose(conformalizer.conformity_scores, np.array([1.0, 0.0, -1.0, -2.0]))
+    np.testing.assert_allclose(
+        conformalizer.conformity_scores, np.array([-1.0, 0.0, 1.0, 2.0])
+    )
 
 
 def test_quantile_conformalizer_reset_clears_runtime_state() -> None:
