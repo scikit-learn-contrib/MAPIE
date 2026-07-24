@@ -13,7 +13,9 @@ Exchangeability is a formal way of expressing the idea that "order doesn't matte
 
 In mathematical terms, for any permutation $\sigma$ of indices:
 
-$$P(X_1, \ldots, X_n) = P(X_{\sigma(1)}, \ldots, X_{\sigma(n)})$$
+$$
+P(X_1, \ldots, X_n) = P(X_{\sigma(1)}, \ldots, X_{\sigma(n)})
+$$
 
 This simply means: if you pick any $n$ observations from different positions in your sequence and measure them, you get the same statistical properties no matter which positions you picked. This assumption allows conformal prediction methods to provide formal guarantees about prediction coverage.
 
@@ -43,7 +45,9 @@ Under the exchangeability hypothesis, most statistics we implemented in MAPIE **
 
 A **martingale** is a mathematical object that captures the idea of a "fair game." Imagine a betting game where you have some current wealth $M_n$. Under a martingale property:
 
-$$\mathbb{E}[M_{n+1} \mid \text{all past information}] = M_n$$
+$$
+\mathbb{E}[M_{n+1} \mid \text{all past information}] = M_n
+$$
 
 This means: knowing everything that happened before, your expected wealth tomorrow equals your wealth today. You're not expected to gain or lose—it's completely fair.
 
@@ -98,7 +102,9 @@ The challenge: how do you maintain valid statistical guarantees when you're runn
 
 A **conformal p-value** extends the permutation test idea to the online setting. For each new observation that arrives, you compute:
 
-$$p_n = \frac{\#\{i \leq n : s_i \geq s_n\}}{n}$$
+$$
+p_n = \frac{\#\{i \leq n : s_i \geq s_n\}}{n}
+$$
 
 where $s_i$ represents how "conforming" observation $i$ is (how well it fits the pattern established by previous data). These p-values are transformed into e-values using a betting function. These e-values then form a multiplicative martingale. This means you can accumulate them over time without inflating your error rate.
 
