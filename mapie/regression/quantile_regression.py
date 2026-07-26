@@ -679,7 +679,12 @@ class _QuantileConformalizer(_Conformalizer, ABC):
     # ---------------------Conformalizer
     # TODO: Nearly duplicated from EnsemblRegressor _predict_oof_estimator -> should be factorize in next refacto
     def _predict_oof(
-        self, X: ArrayLike, val_index: ArrayLike, index: int, level: str, **predict_params
+        self,
+        X: ArrayLike,
+        val_index: ArrayLike,
+        index: int,
+        level: str,
+        **predict_params,
     ) -> NDArray:
         """
         Perform predictions on a single out-of-fold model on a validation set.
@@ -708,7 +713,9 @@ class _QuantileConformalizer(_Conformalizer, ABC):
         """
         X_val = _safe_indexing(X, val_index)
         if _num_samples(X_val) > 0:
-            y_pred = self._predict_quantiles(X_val, index=index, level=level, **predict_params)
+            y_pred = self._predict_quantiles(
+                X_val, index=index, level=level, **predict_params
+            )
         else:
             y_pred = np.array([])
         return y_pred
@@ -754,7 +761,8 @@ class _QuantileConformalizer(_Conformalizer, ABC):
         n_samples = _num_samples(X)
         n_splits = self.cv.get_n_splits(X, y, groups)
         indices = [calib_index for _, calib_index in self.cv.split(X, y, groups)]
-        self.n_calib_samples = [len(calib_index) for calib_index in indices]
+        if len(self.n_calib_samples) < n_splits:
+            self.n_calib_samples = [len(calib_index) for calib_index in indices]
 
         if self.cv == "prefit":
             y_pred = self._predict_quantiles(X, level=level, index=0, **predict_params)
@@ -770,7 +778,9 @@ class _QuantileConformalizer(_Conformalizer, ABC):
                 )
                 for calib_index, model_index in zip(indices, range(n_splits))
             )
-            self.pinball_losses[level] = Parallel(n_jobs=self.n_jobs, verbose=self.verbose)(
+            self.pinball_losses[level] = Parallel(
+                n_jobs=self.n_jobs, verbose=self.verbose
+            )(
                 delayed(self.pinball_loss)(_safe_indexing(y, calib_index), output)
                 for calib_index, output in zip(indices, outputs)
             )
@@ -805,11 +815,13 @@ class _QuantileConformalizer(_Conformalizer, ABC):
                 "The conformalize method has already been called. "
                 "Calling it again will overwrite the previous conformity scores."
             )
-            self.conformity_scores = []
+            self.conformity_scores = {str(alpha): np.array([]) for alpha in self.alpha}
 
         for alpha in self.alpha:
             level = str(alpha)
-            pred = self._predict_calib(X_calib, y_calib, level, groups, **predict_params)
+            pred = self._predict_calib(
+                X_calib, y_calib, level, groups, **predict_params
+            )
             self.conformity_scores[level] = self.score.get_conformity_scores(
                 y_calib, pred.T, X=X_calib
             )
@@ -867,9 +879,7 @@ class _QuantileConformalizer(_Conformalizer, ABC):
         ]
         if self.quantiles[level].size == 3:
             preds.append(
-                self.estimators_[level]["central"][index]
-                .predict(X, **predict_params)
-                .ravel()
+                self.estimators_["central"][index].predict(X, **predict_params).ravel()
             )
         return np.vstack(preds)
 
@@ -952,7 +962,9 @@ class _QuantileConformalizer(_Conformalizer, ABC):
 
         elif self.agg_function == "pinball_weighted_mean":
             # pinball_weighted_mean works with (n_splits, n_samples) layout
-            y_pred_multi_low = self._pinball_weighted_mean(pred_matrix[:, :, 0].T, level)
+            y_pred_multi_low = self._pinball_weighted_mean(
+                pred_matrix[:, :, 0].T, level
+            )
             y_pred_multi_up = self._pinball_weighted_mean(pred_matrix[:, :, 1].T, level)
             y_pred_multi_center = self._pinball_weighted_mean(pred_matrix[:, :, 2].T)
             y_pred = np.hstack((y_pred_multi_low, y_pred_multi_up, y_pred_multi_center))
@@ -1185,13 +1197,15 @@ class CrossConformalizedQuantileRegressor(_QuantileConformalizer):
             aggregate_point_predictions
         )
 
-        predictions: Optional[NDArray] = None
+        predictions: List[NDArray] = []
         intervalles: List[NDArray] = []
 
         for alpha in self.alpha:
             alpha_np = cast(NDArray, alpha)
+            level = str(alpha)
+            scores = self.conformity_scores[level]
             if not allow_infinite_bounds:
-                n = self.score.get_effective_calibration_samples(self.conformity_scores)
+                n = self.score.get_effective_calibration_samples(scores)
                 _check_alpha_and_n_samples(alpha_np, n)
 
             # Predict the target with confidence intervals
@@ -1199,7 +1213,7 @@ class CrossConformalizedQuantileRegressor(_QuantileConformalizer):
                 X,
                 alpha_np,
                 estimator=self,
-                conformity_scores=self.conformity_scores,
+                conformity_scores=scores,
                 ensemble=ensemble,
                 method=self.method,
                 optimize_beta=minimize_interval_width,

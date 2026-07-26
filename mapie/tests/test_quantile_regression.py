@@ -1321,7 +1321,7 @@ def test_quantile_conformalizer_fit_cv_estimator_indexes_sample_weight() -> None
     conformalizer = DummyQuantileConformalizer()
     observed: dict[str, NDArray] = {}
     conformalizer.alpha = [0.2]
-    level=str(conformalizer.alpha[0])
+    level = str(conformalizer.alpha[0])
 
     def _mock_fit_quantiles(
         self: DummyQuantileConformalizer,
@@ -1371,7 +1371,7 @@ def test_quantile_conformalizer_conformalize_forwards_groups_and_params() -> Non
     def _mock_predict_calib(
         self: DummyQuantileConformalizer,
         X: NDArray,
-        level:str,
+        level: str,
         y: NDArray,
         groups: NDArray,
         **predict_params: Any,
@@ -1478,6 +1478,7 @@ def test_quantile_conformalizer_predict_calib_prefit_shape_and_forwarding() -> N
     conformalizer.is_fitted = True
     conformalizer.cv = PrefitLikeCV()
     conformalizer.quantiles = np.array([0.1, 0.9, 0.5])
+    conformalizer.n_calib_samples = [2, 2]
 
     observed: dict[str, Any] = {}
 
@@ -1485,6 +1486,7 @@ def test_quantile_conformalizer_predict_calib_prefit_shape_and_forwarding() -> N
         self: DummyQuantileConformalizer,
         X: NDArray,
         index: int,
+        level: str,
         **predict_params: Any,
     ) -> NDArray:
         observed["X"] = np.asarray(X)
