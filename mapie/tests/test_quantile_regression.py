@@ -1013,8 +1013,8 @@ def test_quantile_conformalizer_predict_quantiles() -> None:
         "0.2": {
             "lower": [FixedPredictor(np.array([1.0, 2.0]))],
             "upper": [FixedPredictor(np.array([3.0, 4.0]))],
-            "central": [FixedPredictor(np.array([2.0, 3.0]))],
-        }
+        },
+        "central": [FixedPredictor(np.array([2.0, 3.0]))],
     }
 
     predictions = conformalizer._predict_quantiles(X_toy[:2], 0, level="0.2")
@@ -1076,7 +1076,7 @@ def test_quantile_conformalizer_predict_returns_center_lower_upper() -> None:
 
 def test_quantile_conformalizer_predict_multiple_predictions_mean_aggregation() -> None:
     """Test _predict with multiple estimators aggregates predictions as expected."""
-    level="0.2"
+    level = "0.2"
     conformalizer = DummyQuantileConformalizer()
     conformalizer.quantiles = {level: np.array([0.1, 0.9, 0.5])}
     conformalizer.method = "plus"
@@ -1125,10 +1125,10 @@ def test_quantile_conformalizer_predict_multiple_predictions_minmax() -> None:
                 FixedPredictor(np.array([7.0, 8.0])),
             ],
         },
-         "central": [
-                FixedPredictor(np.array([2.0, 3.0])),
-                FixedPredictor(np.array([4.0, 5.0])),
-        ]
+        "central": [
+            FixedPredictor(np.array([2.0, 3.0])),
+            FixedPredictor(np.array([4.0, 5.0])),
+        ],
     }
 
     y_pred_central, y_pred_low, y_pred_up = conformalizer._predict(
@@ -1160,12 +1160,14 @@ def test_quantile_conformalizer_pinball_weighted_mean() -> None:
 def test_quantile_conformalizer_pinball_weighted_mean_columnwise_weights() -> None:
     """Test weighting behavior when pinball losses are 2D."""
     conformalizer = DummyQuantileConformalizer()
-    conformalizer.pinball_losses = {"0.2": np.array(
-        [
-            [1.0, 1.0],
-            [3.0, 1.0],
-        ]
-    )}
+    conformalizer.pinball_losses = {
+        "0.2": np.array(
+            [
+                [1.0, 1.0],
+                [3.0, 1.0],
+            ]
+        )
+    }
     y_preds = np.array(
         [
             [10.0, 100.0],
@@ -1228,10 +1230,7 @@ def test_quantile_conformalizer_predict_oof_empty_validation() -> None:
     conformalizer = DummyQuantileConformalizer()
 
     predictions = conformalizer._predict_oof(
-        X_toy[:2],
-        np.array([], dtype=int),
-        index=0,
-        level="0.2"
+        X_toy[:2], np.array([], dtype=int), index=0, level="0.2"
     )
 
     assert predictions.size == 0
@@ -1243,7 +1242,11 @@ def test_quantile_conformalizer_predict_oof_calls_predict_quantiles() -> None:
     call_args = {}
 
     def _mock_predict_quantiles(
-        self: DummyQuantileConformalizer, X: NDArray, index: int, level: str, **kwargs: Any
+        self: DummyQuantileConformalizer,
+        X: NDArray,
+        index: int,
+        level: str,
+        **kwargs: Any,
     ) -> NDArray:
         call_args["X"] = X
         call_args["index"] = index
@@ -1255,7 +1258,9 @@ def test_quantile_conformalizer_predict_oof_calls_predict_quantiles() -> None:
         _mock_predict_quantiles, conformalizer
     )
 
-    predictions = conformalizer._predict_oof(X_toy[:2], np.array([1]), index=7, level="0.2", a=1)
+    predictions = conformalizer._predict_oof(
+        X_toy[:2], np.array([1]), index=7, level="0.2", a=1
+    )
 
     assert predictions.shape == (3, 1)
     np.testing.assert_allclose(predictions, np.array([[1.0], [2.0], [3.0]]))
@@ -1280,11 +1285,13 @@ def test_quantile_conformalizer_conformalize_twice_warns_and_overwrites() -> Non
     conformalizer.is_fitted = True
     conformalizer.is_conformalized = True
     conformalizer.score = AbsoluteQuantileRegressionScore()
-    conformalizer.conformity_scores = [np.array([99.0])]
+    conformalizer.conformity_scores = {"0.2": np.array([99.0])}
+    conformalizer.alpha = [0.2]
 
     def _mock_predict_calib(
         self: DummyQuantileConformalizer,
         X: NDArray,
+        level: str,
         y: NDArray,
         groups: Any = None,
         **kwargs: Any,
@@ -1313,6 +1320,8 @@ def test_quantile_conformalizer_fit_cv_estimator_indexes_sample_weight() -> None
     """Test _fit_cv_estimator forwards indexed sample_weight to _fit_quantiles."""
     conformalizer = DummyQuantileConformalizer()
     observed: dict[str, NDArray] = {}
+    conformalizer.alpha = [0.2]
+    level=str(conformalizer.alpha[0])
 
     def _mock_fit_quantiles(
         self: DummyQuantileConformalizer,
@@ -1326,7 +1335,7 @@ def test_quantile_conformalizer_fit_cv_estimator_indexes_sample_weight() -> None
         observed["y"] = np.asarray(y)
         observed["sample_weight"] = np.asarray(sample_weight)
         observed["fit_params"] = fit_params
-        return {"lower": [], "upper": [], "central": []}
+        return {level: {"lower": [], "upper": []}, "central": []}
 
     conformalizer._fit_quantiles = MethodType(_mock_fit_quantiles, conformalizer)
 
@@ -1356,10 +1365,13 @@ def test_quantile_conformalizer_conformalize_forwards_groups_and_params() -> Non
     conformalizer.is_conformalized = False
     conformalizer.score = AbsoluteQuantileRegressionScore()
     conformalizer.conformity_scores = []
+    conformalizer.alpha = [0.2]
+    level = str(conformalizer.alpha[0])
 
     def _mock_predict_calib(
         self: DummyQuantileConformalizer,
         X: NDArray,
+        level:str,
         y: NDArray,
         groups: NDArray,
         **predict_params: Any,
@@ -1396,12 +1408,15 @@ def test_quantile_conformalizer_conformalize_score_shape_matches_n_samples() -> 
     conformalizer.is_conformalized = False
     conformalizer.score = AbsoluteQuantileRegressionScore()
     conformalizer.conformity_scores = []
+    conformalizer.alpha = [0.2]
+    level = str(conformalizer.alpha[0])
 
     y_local = y_toy[:4]
 
     def _mock_predict_calib(
         self: DummyQuantileConformalizer,
         X: NDArray,
+        level: str,
         y: NDArray,
         groups: Any = None,
         **kwargs: Any,
@@ -1431,16 +1446,15 @@ def test_quantile_conformalizer_reset_clears_runtime_state() -> None:
     conformalizer.is_fitted = True
     conformalizer.is_conformalized = True
     conformalizer.alpha = [0.2]
+    level = str(conformalizer.alpha[0])
     conformalizer.estimators_ = {
-        "lower": [object()],
-        "upper": [object()],
+        level: {"lower": [object()], "upper": [object()]},
         "central": [object()],
     }
     conformalizer.n_calib_samples = [2, 3]
-    conformalizer.conformity_scores = [np.array([1.0])]
-    conformalizer.pinball_losses = [np.array([0.1, 0.2])]
+    conformalizer.conformity_scores = {level: np.array([1.0])}
+    conformalizer.pinball_losses = {level: np.array([0.1, 0.2])}
     conformalizer._predict_params = {"x": 1}
-    level = str(conformalizer.alpha[0])
 
     returned = conformalizer.reset()
 
@@ -1452,8 +1466,9 @@ def test_quantile_conformalizer_reset_clears_runtime_state() -> None:
         "central": [],
     }
     assert conformalizer.n_calib_samples == []
-    np.testing.assert_array_equal(conformalizer.conformity_scores, np.array([]))
-    assert conformalizer.pinball_losses == []
+    np.testing.assert_array_equal(conformalizer.conformity_scores[level], np.array([]))
+    assert list(conformalizer.pinball_losses.keys()) == [level]
+    assert np.array_equal(conformalizer.pinball_losses[level], np.array([]))
     assert conformalizer._predict_params == {}
 
 
