@@ -11,18 +11,21 @@ from .risks import (
     BinaryRisk,
     BinaryClassificationRisk,
     ContinuousRisk,
+    RiskLoss,
     abstention_rate,
     accuracy,
     false_positive_rate,
     mae,
     mean_absolute_error,
     mean_squared_error,
+    miscoverage_loss,
     mse,
     negative_predictive_value,
     positive_predictive_value,
     precision,
     predicted_positive_fraction,
     recall,
+    recall_loss,
 )
 from .semantic_segmentation import SemanticSegmentationController
 
@@ -48,12 +51,15 @@ def __getattr__(name):
 
 __all__ = [
     "ConditionalRiskController",
+    "miscoverage_loss",
+    "recall_loss",
     "MultiLabelClassificationController",
     "SemanticSegmentationController",
     "BinaryClassificationController",
     "BinaryRisk",
     "BinaryClassificationRisk",
     "ContinuousRisk",
+    "RiskLoss",
     "accuracy",
     "false_positive_rate",
     "mae",

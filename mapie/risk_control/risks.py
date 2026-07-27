@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 import warnings
-from typing import Callable, List, Literal, Tuple, Union, cast
+from typing import TYPE_CHECKING, Any, Callable, List, Literal, Tuple, Union, cast
 
 import numpy as np
 from numpy.typing import NDArray
+
+if TYPE_CHECKING:
+    import torch
 
 
 class _BaseRisk:
@@ -448,3 +451,110 @@ continuous_risk_choice_map = {
     "mae": mae,
     "mse": mse,
 }
+
+
+class RiskLoss:
+    """
+    Define a differentiable loss for automatically adaptive CRC (AA-CRC).
+
+    Parameters
+    ----------
+    loss_function : Callable
+        Differentiable PyTorch function taking ``y_true``, raw ``y_pred`` and
+        the prediction parameter. It must return one value in ``[0, 1]`` per
+        prediction parameter. Use string names when selecting losses defined
+        by MAPIE; this class is the extension point for custom losses.
+
+    higher_is_better : bool
+        Whether ``loss_function`` is a performance metric (``True``) or a loss
+        (``False``). As for :class:`BinaryRisk`, performance values are
+        converted to losses with ``1 - value``.
+
+    Attributes
+    ----------
+    higher_is_better : bool
+        See params.
+
+    Examples
+    --------
+    >>> import torch
+    >>> metric = RiskLoss(
+    ...     lambda y_true, y_pred, param: param,
+    ...     higher_is_better=True,
+    ... )
+    >>> param = torch.tensor([0.2], requires_grad=True)
+    >>> loss = metric(None, None, param)
+    >>> bool(torch.allclose(loss, torch.tensor([0.8])))
+    True
+    >>> loss.sum().backward()
+    >>> param.grad is not None
+    True
+    """
+
+    def __init__(
+        self,
+        loss_function: Callable[[Any, Any, Any], Any],
+        higher_is_better: bool,
+    ) -> None:
+        self._loss_function = loss_function
+        self.higher_is_better = higher_is_better
+
+    def __call__(self, y_true: Any, y_pred: Any, predict_param: Any) -> Any:
+        values = self._loss_function(y_true, y_pred, predict_param)
+        return 1 - values if self.higher_is_better else values
+
+
+RiskLossNames = Literal["recall", "miscoverage"]
+RiskLossLike = Union[RiskLoss, RiskLossNames]
+
+
+def _recall(
+    y_true: "torch.Tensor",
+    y_pred: "torch.Tensor",
+    predict_param: "torch.Tensor",
+) -> "torch.Tensor":
+    """Compute differentiable recall for AA-CRC."""
+    import torch
+
+    y_pred_set = torch.sigmoid(1000 * (y_pred - predict_param))
+    y_true_ = y_true.reshape(len(y_true), -1)
+    y_pred_set_ = y_pred_set.reshape(len(y_pred_set), -1)
+    denominator = y_true_.sum(dim=1).clamp_min(torch.finfo(y_true.dtype).eps)
+    return (y_pred_set_ * y_true_).sum(dim=1) / denominator
+
+
+recall_loss = RiskLoss(_recall, higher_is_better=True)
+
+
+def _miscoverage(
+    y_true: "torch.Tensor",
+    y_pred: "torch.Tensor",
+    predict_param: "torch.Tensor",
+) -> "torch.Tensor":
+    """Compute differentiable symmetric-interval miscoverage for AA-CRC."""
+    import torch
+
+    losses = torch.sigmoid(1000 * (torch.abs(y_true - y_pred) - predict_param))
+    return losses.reshape(len(losses), -1).mean(dim=1)
+
+
+miscoverage_loss = RiskLoss(_miscoverage, higher_is_better=False)
+
+_RISK_LOSS_CHOICE_MAP = {
+    "recall": recall_loss,
+    "miscoverage": miscoverage_loss,
+}
+
+
+def _resolve_risk(risk: RiskLossLike) -> RiskLoss:
+    if isinstance(risk, str):
+        try:
+            return _RISK_LOSS_CHOICE_MAP[risk]
+        except KeyError as error:
+            raise ValueError(
+                "When `risk` is provided as a string, it must be one of: "
+                f"{list(_RISK_LOSS_CHOICE_MAP)}."
+            ) from error
+    if isinstance(risk, RiskLoss):
+        return risk
+    raise TypeError("`risk` must be a string or a RiskLoss instance.")
