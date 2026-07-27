@@ -1367,9 +1367,9 @@ def test_quantile_conformalizer_conformalize_forwards_groups_and_params() -> Non
     conformalizer.is_fitted = True
     conformalizer.is_conformalized = False
     conformalizer.score = AbsoluteQuantileRegressionScore()
-    conformalizer.conformity_scores = []
     conformalizer.alpha = [0.2]
     level = str(conformalizer.alpha[0])
+    conformalizer.conformity_scores = {level: []}
 
     def _mock_predict_calib(
         self: DummyQuantileConformalizer,
@@ -1400,8 +1400,8 @@ def test_quantile_conformalizer_conformalize_forwards_groups_and_params() -> Non
     np.testing.assert_allclose(observed["groups"], groups)
     assert observed["predict_params"] == {"foo": "bar"}
     assert conformalizer.is_conformalized
-    assert conformalizer.conformity_scores.shape == (2,)
-    np.testing.assert_allclose(conformalizer.conformity_scores, np.array([2.0, 1.0]))
+    assert conformalizer.conformity_scores[level].shape == (2,)
+    np.testing.assert_allclose(conformalizer.conformity_scores[level], np.array([2.0, 1.0]))
 
 
 def test_quantile_conformalizer_conformalize_score_shape_matches_n_samples() -> None:
@@ -1410,9 +1410,9 @@ def test_quantile_conformalizer_conformalize_score_shape_matches_n_samples() -> 
     conformalizer.is_fitted = True
     conformalizer.is_conformalized = False
     conformalizer.score = AbsoluteQuantileRegressionScore()
-    conformalizer.conformity_scores = []
     conformalizer.alpha = [0.2]
     level = str(conformalizer.alpha[0])
+    conformalizer.conformity_scores = {level: []}
 
     y_local = y_toy[:4]
 
@@ -1437,9 +1437,9 @@ def test_quantile_conformalizer_conformalize_score_shape_matches_n_samples() -> 
 
     conformalizer.conformalize(X_toy[:4], y_local)
 
-    assert conformalizer.conformity_scores.shape == (4,)
+    assert conformalizer.conformity_scores[level].shape == (4,)
     np.testing.assert_allclose(
-        conformalizer.conformity_scores, np.array([-1.0, 0.0, 1.0, 2.0])
+        conformalizer.conformity_scores[level], np.array([-1.0, 0.0, 1.0, 2.0])
     )
 
 
@@ -1586,11 +1586,11 @@ def test_cross_conformalized_quantile_regressor_predict_pinball_weighted_mean() 
         estimator=qt,
         cv=KFold(n_splits=2),
         conformity_score=AbsoluteQuantileRegressionScore,
-        confidence_level=0.9
+        confidence_level=0.9,
     )
     reg.is_fitted = True
     reg.is_conformalized = True
-    reg.pinball_losses = { "0.1": np.array([[0.5, 0.5, 1.0], [0.5, 0.5, 3.0]]) }
+    reg.pinball_losses = {"0.1": np.array([[0.5, 0.5, 1.0], [0.5, 0.5, 3.0]])}
     reg.quantiles = np.array(
         [0.05, 0.95, 0.5]
     )  # taille 3 → branche pinball_weighted_mean active
@@ -1634,7 +1634,7 @@ def test_cross_conformalized_quantile_regressor_predict_interval_mean_aggregatio
     )
     reg.is_conformalized = True
     reg.alpha = np.array([0.1])
-    reg.conformity_scores_ = np.array([0.2, 0.3])
+    reg.conformity_scores = {"0.1": np.array([0.2, 0.3])}
     reg.method = "plus"
     reg.score = StubScore()  # type: ignore[assignment]
 
@@ -1677,7 +1677,7 @@ def test_cross_conformalized_quantile_regressor_predict_interval_pinball_weighte
     )
     reg.is_conformalized = True
     reg.alpha = np.array([0.1])
-    reg.conformity_scores = np.array([0.2, 0.3])
+    reg.conformity_scores = {"0.1": np.array([0.2, 0.3])}
     reg.method = "plus"
     reg.score = StubScore()  # type: ignore[assignment]
 
