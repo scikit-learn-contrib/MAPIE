@@ -202,7 +202,7 @@ class _QuantileConformalizer(_Conformalizer, ABC):
             raise ValueError("Invalid confidence_level. Allowed values are float.")
         return alpha_np
 
-    def pinball_loss(self, y_true: ArrayLike, y_pred: ArrayLike) -> NDArray:
+    def pinball_loss(self, y_true: ArrayLike, y_pred: ArrayLike, level:str) -> NDArray:
         """
         Compute the pinball loss for quantile regression.
 
@@ -212,15 +212,15 @@ class _QuantileConformalizer(_Conformalizer, ABC):
             True target values.
         y_pred : ArrayLike
             Predicted target values.
-        alpha : float
-            Quantile level.
+        level : str
+            Quantile level as a string key to access the corresponding alpha value.
 
         Returns
         -------
         NDArray
             Pinball loss values.
         """
-        alpha = np.atleast_2d(self.quantiles).T
+        alpha = np.atleast_2d(self.quantiles[level]).T
         y_true = np.asarray(y_true)
         y_pred = np.asarray(y_pred)
         return np.array(
@@ -781,7 +781,7 @@ class _QuantileConformalizer(_Conformalizer, ABC):
             self.pinball_losses[level] = Parallel(
                 n_jobs=self.n_jobs, verbose=self.verbose
             )(
-                delayed(self.pinball_loss)(_safe_indexing(y, calib_index), output)
+                delayed(self.pinball_loss)(_safe_indexing(y, calib_index), output, level)
                 for calib_index, output in zip(indices, outputs)
             )
 
@@ -820,7 +820,7 @@ class _QuantileConformalizer(_Conformalizer, ABC):
         for alpha in self.alpha:
             level = str(alpha)
             pred = self._predict_calib(
-                X_calib, y_calib, level, groups, **predict_params
+                X_calib, level, y_calib, groups, **predict_params
             )
             self.conformity_scores[level] = self.score.get_conformity_scores(
                 y_calib, pred.T, X=X_calib

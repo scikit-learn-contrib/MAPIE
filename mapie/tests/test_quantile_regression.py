@@ -795,7 +795,7 @@ def test_quantile_conformalizer_check_score() -> None:
 def test_quantile_conformalizer_pinball_loss() -> None:
     """Test pinball loss computation for lower and upper quantiles."""
     conformalizer = DummyQuantileConformalizer()
-    conformalizer.quantiles = np.array([0.1, 0.9])
+    conformalizer.quantiles = {'a': np.array([0.1, 0.9])}
     y_true = np.array([1.0, 3.0])
     y_pred = np.array(
         [
@@ -804,7 +804,7 @@ def test_quantile_conformalizer_pinball_loss() -> None:
         ]
     )
 
-    pinball_losses = conformalizer.pinball_loss(y_true, y_pred)
+    pinball_losses = conformalizer.pinball_loss(y_true, y_pred, level='a')
 
     expected_losses = np.array([0.5, 0.5])
     assert pinball_losses.shape == (2,)
@@ -1314,7 +1314,9 @@ def test_quantile_conformalizer_conformalize_twice_warns_and_overwrites() -> Non
 
     assert conformalizer.is_conformalized
     assert conformalizer.conformity_scores[level].shape == (2,)
-    np.testing.assert_allclose(conformalizer.conformity_scores[level], np.array([2.0, 1.0]))
+    np.testing.assert_allclose(
+        conformalizer.conformity_scores[level], np.array([2.0, 1.0])
+    )
 
 
 def test_quantile_conformalizer_fit_cv_estimator_indexes_sample_weight() -> None:
@@ -1723,6 +1725,7 @@ def test_cross_conformalized_quantile_regressor_base_method_predict_interval() -
         cv=KFold(n_splits=2),
         conformity_score=AbsoluteQuantileRegressionScore,
         method="base",
+        confidence_level=0.9
     )
     reg.fit_conformalize(X_toy[:6], y_toy[:6])
 
@@ -1733,4 +1736,4 @@ def test_cross_conformalized_quantile_regressor_base_method_predict_interval() -
     )
 
     assert y_pred.shape == (2,)
-    assert y_pis.shape == (2, 2)
+    assert y_pis.shape == (2, 2, 1)
