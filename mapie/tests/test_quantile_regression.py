@@ -1349,7 +1349,7 @@ def test_quantile_conformalizer_fit_cv_estimator_indexes_sample_weight() -> None
         X_toy[:6],
         y_toy[:6],
         train_index=train_index,
-        level="0.2",
+        level=level,
         sample_weight=sample_weight,
         dummy=123,
     )
@@ -1401,7 +1401,9 @@ def test_quantile_conformalizer_conformalize_forwards_groups_and_params() -> Non
     assert observed["predict_params"] == {"foo": "bar"}
     assert conformalizer.is_conformalized
     assert conformalizer.conformity_scores[level].shape == (2,)
-    np.testing.assert_allclose(conformalizer.conformity_scores[level], np.array([2.0, 1.0]))
+    np.testing.assert_allclose(
+        conformalizer.conformity_scores[level], np.array([2.0, 1.0])
+    )
 
 
 def test_quantile_conformalizer_conformalize_score_shape_matches_n_samples() -> None:
@@ -1539,7 +1541,7 @@ def test_cross_conformalized_quantile_regressor_predict_interval_returns_expecte
     )
     reg.is_conformalized = True
     reg.alpha = np.array([0.1])
-    reg.conformity_scores_ = np.array([0.2, 0.3])
+    reg.conformity_scores = {"0.1": np.array([0.2, 0.3])}
     reg.method = "plus"
     reg.score = StubScore()  # type: ignore[assignment]
 
@@ -1550,10 +1552,10 @@ def test_cross_conformalized_quantile_regressor_predict_interval_returns_expecte
     )
 
     assert y_pred.shape == (3,)
-    assert y_pis.shape == (3, 2)
+    assert y_pis.shape == (3, 2, 1)
     np.testing.assert_allclose(y_pred, np.array([2.0, 2.0, 2.0]))
-    np.testing.assert_allclose(y_pis[:, 0], np.array([1.0, 1.0, 1.0]))
-    np.testing.assert_allclose(y_pis[:, 1], np.array([3.0, 3.0, 3.0]))
+    np.testing.assert_allclose(y_pis[:, 0].flatten(), np.array([1.0, 1.0, 1.0]))
+    np.testing.assert_allclose(y_pis[:, 1].flatten(), np.array([3.0, 3.0, 3.0]))
 
 
 def test_cross_conformalized_quantile_regressor_predict_mean_aggregation() -> None:
@@ -1646,10 +1648,10 @@ def test_cross_conformalized_quantile_regressor_predict_interval_mean_aggregatio
 
     assert observed["kwargs"]["ensemble"] is True
     assert y_pred.shape == (3,)
-    assert y_pis.shape == (3, 2)
+    assert y_pis.shape == (3, 2, 1)
     np.testing.assert_allclose(y_pred, np.array([5.0, 5.0, 5.0]))
-    np.testing.assert_allclose(y_pis[:, 0], np.array([4.0, 4.0, 4.0]))
-    np.testing.assert_allclose(y_pis[:, 1], np.array([6.0, 6.0, 6.0]))
+    np.testing.assert_allclose(y_pis[:, 0].flatten(), np.array([4.0, 4.0, 4.0]))
+    np.testing.assert_allclose(y_pis[:, 1].flatten(), np.array([6.0, 6.0, 6.0]))
 
 
 def test_cross_conformalized_quantile_regressor_predict_interval_pinball_weighted_mean() -> (
@@ -1689,10 +1691,10 @@ def test_cross_conformalized_quantile_regressor_predict_interval_pinball_weighte
 
     assert observed["kwargs"]["ensemble"] is True
     assert y_pred.shape == (3,)
-    assert y_pis.shape == (3, 2)
+    assert y_pis.shape == (3, 2, 1)
     np.testing.assert_allclose(y_pred, np.array([8.0, 8.0, 8.0]))
-    np.testing.assert_allclose(y_pis[:, 0], np.array([7.0, 7.0, 7.0]))
-    np.testing.assert_allclose(y_pis[:, 1], np.array([9.0, 9.0, 9.0]))
+    np.testing.assert_allclose(y_pis[:, 0].flatten(), np.array([7.0, 7.0, 7.0]))
+    np.testing.assert_allclose(y_pis[:, 1].flatten(), np.array([9.0, 9.0, 9.0]))
 
 
 def test_cross_conformalized_quantile_regressor_predict_interval_invalid_aggregation() -> (

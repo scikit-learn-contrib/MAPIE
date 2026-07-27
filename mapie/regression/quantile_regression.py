@@ -968,7 +968,7 @@ class _QuantileConformalizer(_Conformalizer, ABC):
                 pred_matrix[:, :, 0].T, level
             )
             y_pred_multi_up = self._pinball_weighted_mean(pred_matrix[:, :, 1].T, level)
-            y_pred_multi_center = self._pinball_weighted_mean(pred_matrix[:, :, 2].T)
+            y_pred_multi_center = self._pinball_weighted_mean(pred_matrix[:, :, 2].T, level)
             y_pred = np.hstack((y_pred_multi_low, y_pred_multi_up, y_pred_multi_center))
 
         else:
@@ -1199,7 +1199,6 @@ class CrossConformalizedQuantileRegressor(_QuantileConformalizer):
             aggregate_point_predictions
         )
 
-        predictions: List[NDArray] = []
         intervalles: List[NDArray] = []
 
         for alpha in self.alpha:
@@ -1221,10 +1220,9 @@ class CrossConformalizedQuantileRegressor(_QuantileConformalizer):
                 optimize_beta=minimize_interval_width,
                 allow_infinite_bounds=allow_infinite_bounds,
             )
-            predictions.append(y_pred)
             intervalles.append(np.column_stack([y_pred_low, y_pred_up]))
 
-        return np.array(predictions), np.array(intervalles)
+        return y_pred, np.dstack(intervalles)
 
     # TODO: Duplicated from CrossConformalRegressor
     def predict(
