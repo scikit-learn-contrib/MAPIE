@@ -202,7 +202,7 @@ class _QuantileConformalizer(_Conformalizer, ABC):
             raise ValueError("Invalid confidence_level. Allowed values are float.")
         return alpha_np
 
-    def pinball_loss(self, y_true: ArrayLike, y_pred: ArrayLike, level:str) -> NDArray:
+    def pinball_loss(self, y_true: ArrayLike, y_pred: ArrayLike, level: str) -> NDArray:
         """
         Compute the pinball loss for quantile regression.
 
@@ -781,7 +781,9 @@ class _QuantileConformalizer(_Conformalizer, ABC):
             self.pinball_losses[level] = Parallel(
                 n_jobs=self.n_jobs, verbose=self.verbose
             )(
-                delayed(self.pinball_loss)(_safe_indexing(y, calib_index), output, level)
+                delayed(self.pinball_loss)(
+                    _safe_indexing(y, calib_index), output, level
+                )
                 for calib_index, output in zip(indices, outputs)
             )
 
@@ -1282,7 +1284,8 @@ class CrossConformalizedQuantileRegressor(_QuantileConformalizer):
             aggregate_point_predictions == "pinball_weighted_mean"
             and self.quantiles.size == 3
         ):
-            central_weights = 1 / np.asarray(self.pinball_losses, dtype=float)[:, 2]
+            level = str(self.alpha[0])
+            central_weights = 1 / np.asarray(self.pinball_losses[level], dtype=float)[:, 2]
             weights = central_weights / central_weights.sum()
             return np.sum((np.atleast_2d(weights).T * y_pred_multi), axis=0)
         if aggregate_point_predictions == "median":

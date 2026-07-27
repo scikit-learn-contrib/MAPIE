@@ -795,7 +795,7 @@ def test_quantile_conformalizer_check_score() -> None:
 def test_quantile_conformalizer_pinball_loss() -> None:
     """Test pinball loss computation for lower and upper quantiles."""
     conformalizer = DummyQuantileConformalizer()
-    conformalizer.quantiles = {'a': np.array([0.1, 0.9])}
+    conformalizer.quantiles = {"a": np.array([0.1, 0.9])}
     y_true = np.array([1.0, 3.0])
     y_pred = np.array(
         [
@@ -804,7 +804,7 @@ def test_quantile_conformalizer_pinball_loss() -> None:
         ]
     )
 
-    pinball_losses = conformalizer.pinball_loss(y_true, y_pred, level='a')
+    pinball_losses = conformalizer.pinball_loss(y_true, y_pred, level="a")
 
     expected_losses = np.array([0.5, 0.5])
     assert pinball_losses.shape == (2,)
@@ -1586,10 +1586,11 @@ def test_cross_conformalized_quantile_regressor_predict_pinball_weighted_mean() 
         estimator=qt,
         cv=KFold(n_splits=2),
         conformity_score=AbsoluteQuantileRegressionScore,
+        confidence_level=0.9
     )
     reg.is_fitted = True
     reg.is_conformalized = True
-    reg.pinball_losses = np.array([[0.5, 0.5, 1.0], [0.5, 0.5, 3.0]])
+    reg.pinball_losses = { "0.1": np.array([[0.5, 0.5, 1.0], [0.5, 0.5, 3.0]]) }
     reg.quantiles = np.array(
         [0.05, 0.95, 0.5]
     )  # taille 3 → branche pinball_weighted_mean active
@@ -1605,7 +1606,7 @@ def test_cross_conformalized_quantile_regressor_predict_pinball_weighted_mean() 
     y_pred = reg.predict(X_toy[:2], aggregate_point_predictions="pinball_weighted_mean")
 
     assert y_pred.shape == (2,)
-    np.testing.assert_allclose(y_pred, np.array([25.0, 35.0]))
+    np.testing.assert_allclose(y_pred, np.array([15.0, 25.0]))
 
 
 def test_cross_conformalized_quantile_regressor_predict_interval_mean_aggregation() -> (
@@ -1725,7 +1726,7 @@ def test_cross_conformalized_quantile_regressor_base_method_predict_interval() -
         cv=KFold(n_splits=2),
         conformity_score=AbsoluteQuantileRegressionScore,
         method="base",
-        confidence_level=0.9
+        confidence_level=0.9,
     )
     reg.fit_conformalize(X_toy[:6], y_toy[:6])
 
