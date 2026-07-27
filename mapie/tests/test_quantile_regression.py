@@ -1287,6 +1287,7 @@ def test_quantile_conformalizer_conformalize_twice_warns_and_overwrites() -> Non
     conformalizer.score = AbsoluteQuantileRegressionScore()
     conformalizer.conformity_scores = {"0.2": np.array([99.0])}
     conformalizer.alpha = [0.2]
+    level = str(conformalizer.alpha[0])
 
     def _mock_predict_calib(
         self: DummyQuantileConformalizer,
@@ -1312,8 +1313,8 @@ def test_quantile_conformalizer_conformalize_twice_warns_and_overwrites() -> Non
         conformalizer.conformalize(X_toy[:2], y_toy[:2])
 
     assert conformalizer.is_conformalized
-    assert conformalizer.conformity_scores.shape == (2,)
-    np.testing.assert_allclose(conformalizer.conformity_scores, np.array([2.0, 1.0]))
+    assert conformalizer.conformity_scores[level].shape == (2,)
+    np.testing.assert_allclose(conformalizer.conformity_scores[level], np.array([2.0, 1.0]))
 
 
 def test_quantile_conformalizer_fit_cv_estimator_indexes_sample_weight() -> None:
