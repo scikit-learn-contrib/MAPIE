@@ -1910,6 +1910,45 @@ def test_cross_conformalized_quantile_regressor_asymmetric_score(method: str) ->
     assert widths == sorted(widths)
 
 
+def test_get_bounds_narrows_multi_level_predictions_to_the_requested_alpha() -> None:
+    """
+    Test `get_bounds` calibrates the bounds of the requested confidence level when the
+    conformalizer predicts one column per level, as `_QuantileConformalizer` does.
+    """
+    levels = np.array([0.2, 0.1, 0.05])
+    bounds_low, bounds_up = np.array([-1.0, -2.0, -3.0]), np.array([1.0, 2.0, 3.0])
+
+    class MultiLevelConformalizer:
+        """Conformalizer predicting the bounds of every confidence level at once."""
+
+        alpha = levels
+
+        def _predict(
+            self, X: NDArray, ensemble: bool
+        ) -> Tuple[NDArray, NDArray, NDArray]:
+            n_samples = np.asarray(X).shape[0]
+            return (
+                np.zeros(n_samples),
+                np.tile(bounds_low, (n_samples, 1)),
+                np.tile(bounds_up, (n_samples, 1)),
+            )
+
+    for index, alpha in enumerate(levels):
+        _, bound_low, bound_up = AbsoluteQuantileRegressionScore().predict_set(
+            np.zeros((4, 1)),
+            np.array([alpha]),
+            estimator=MultiLevelConformalizer(),
+            conformity_scores=np.zeros(100),
+            ensemble=False,
+            method="base",
+            optimize_beta=False,
+            allow_infinite_bounds=False,
+        )
+        # Zero conformity scores leave the predicted bounds of the level untouched.
+        np.testing.assert_allclose(bound_low, np.full((4, 1), bounds_low[index]))
+        np.testing.assert_allclose(bound_up, np.full((4, 1), bounds_up[index]))
+
+
 Y_PRED_LOW_ASYM, Y_PRED_UP_ASYM = -1.5, 3.0
 
 

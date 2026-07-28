@@ -999,7 +999,8 @@ class _QuantileConformalizer(_Conformalizer, ABC):
         Returns
         -------
         Tuple[NDArray, NDArray, NDArray]
-            Predicted lower, upper, and central quantiles for the input data X.
+            Predicted lower, upper, and central quantiles for the input data X,
+            the bounds holding one column per confidence level of `self.alpha`.
         """
 
         centers, lowers, uppers = [], [], []
@@ -1046,38 +1047,6 @@ class _QuantileConformalizer(_Conformalizer, ABC):
             y_pred = self._predict_aggregate(X, level=level, **predict_params)
 
         return y_pred[:, 2], y_pred[:, 0], y_pred[:, 1]
-
-
-class _SingleLevelConformalizer:
-    """
-    Exposes a single confidence level of a conformalizer to a conformity score.
-
-    `BaseRegressionScore.get_bounds` expects `estimator._predict(X, ensemble)` to return
-    the bounds of a single confidence level, whereas `_QuantileConformalizer._predict`
-    returns those of every level at once. This adapter narrows the latter to the former
-    so that `get_bounds` can be called once per level.
-    """
-
-    def __init__(
-        self,
-        conformalizer: _QuantileConformalizer,
-        level: str,
-        predict_params: dict,
-    ) -> None:
-        self._conformalizer = conformalizer
-        self._level = level
-        self._predict_params = predict_params
-
-    def _predict(
-        self, X: ArrayLike, ensemble: bool
-    ) -> Tuple[NDArray, NDArray, NDArray]:
-        y_pred, y_pred_low, y_pred_up = self._conformalizer._predict_level(
-            X, self._level, ensemble, **self._predict_params
-        )
-        # Bounds are returned as column vectors, as `EnsembleRegressor.predict` does:
-        # `get_bounds` broadcasts them against a quantile of shape (1, n_alpha) for the
-        # "base" method, which silently transposes the result if they are 1-dimensional.
-        return y_pred, y_pred_low[:, np.newaxis], y_pred_up[:, np.newaxis]
 
 
 class CrossConformalizedQuantileRegressor(_QuantileConformalizer):
@@ -1322,12 +1291,13 @@ class CrossConformalizedQuantileRegressor(_QuantileConformalizer):
             y_pred, y_pred_low, y_pred_up = self.score.predict_set(
                 X,
                 alpha_np,
-                estimator=_SingleLevelConformalizer(self, level, self._predict_params),
+                estimator=self,
                 conformity_scores=scores,
                 ensemble=ensemble,
                 method=self.method,
                 optimize_beta=minimize_interval_width,
                 allow_infinite_bounds=allow_infinite_bounds,
+                predict_params=self._predict_params,
             )
             # A single level is requested per call, so `get_bounds` returns bounds of
             # shape (n_samples, 1); drop that axis before stacking the levels.

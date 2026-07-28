@@ -1,5 +1,5 @@
 from abc import ABCMeta, abstractmethod
-from typing import Tuple, cast
+from typing import Optional, Tuple, cast
 
 import numpy as np
 from numpy.typing import NDArray
@@ -229,6 +229,119 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
 
         return beta_np
 
+    def _get_predictions(
+        self,
+        X: NDArray,
+        alpha_np: NDArray,
+        estimator: _Conformalizer,
+        ensemble: bool,
+        predict_params: Optional[dict] = None,
+    ) -> Tuple[NDArray, NDArray, NDArray]:
+        """
+        Predict the point predictions and the bounds to calibrate.
+
+        `_Conformalizer._predict` implementations do not share a single output
+        layout: the point predictions may be returned alone, and the bounds may
+        hold one column per estimator, as `EnsembleRegressor` does for the
+        `"plus"` method, or one column per confidence level, as
+        `_QuantileConformalizer` does. This method narrows every layout to the
+        one `get_bounds` calibrates.
+
+        Parameters
+        ----------
+        X: NDArray of shape (n_samples, n_features)
+            Observed feature values.
+
+        alpha_np: NDArray of shape (n_alpha,)
+            NDArray of floats between `0` and `1`, represents the
+            uncertainty of the confidence interval.
+
+        estimator: _Conformalizer
+            Estimator that is fitted to predict y from X.
+
+        ensemble: bool
+            Boolean determining whether the predictions are ensembled or not.
+
+        predict_params: Optional[dict]
+            Parameters to pass to the `predict` method of the regressors held by
+            the estimator.
+
+            By default `None`.
+
+        Returns
+        -------
+        Tuple[NDArray, NDArray, NDArray]
+            - The point predictions of shape (n_samples,).
+            - The lower bounds to calibrate, of shape (n_samples, n_predictions).
+            - The upper bounds to calibrate, of shape (n_samples, n_predictions).
+        """
+        predictions = estimator._predict(X, ensemble, **(predict_params or {}))
+
+        # `_predict` may return the point predictions alone, which then also carry
+        # the bounds to calibrate.
+        y_pred, y_pred_low, y_pred_up = (
+            predictions if isinstance(predictions, tuple) else (predictions,) * 3
+        )
+
+        return (
+            np.asarray(y_pred),
+            self._narrow_bounds_to_alpha(y_pred_low, alpha_np, estimator),
+            self._narrow_bounds_to_alpha(y_pred_up, alpha_np, estimator),
+        )
+
+    @staticmethod
+    def _narrow_bounds_to_alpha(
+        bounds: NDArray, alpha_np: NDArray, estimator: _Conformalizer
+    ) -> NDArray:
+        """
+        Narrow predicted bounds to the confidence levels of `alpha_np`.
+
+        Bounds are handled as column vectors, as `EnsembleRegressor.predict`
+        returns them: they are broadcast against quantiles of shape
+        (1, n_alpha) for the `"base"` method, which silently transposes the
+        result if they are 1-dimensional.
+
+        Conformalizers fitting one set of quantile estimators per confidence
+        level, such as `_QuantileConformalizer`, return one column per level of
+        `estimator.alpha`, in that order: only the columns of the requested
+        levels are kept. Any other layout, such as the one column per estimator
+        of the `"plus"` method, is left untouched.
+
+        Parameters
+        ----------
+        bounds: NDArray of shape (n_samples,) or (n_samples, n_predictions)
+            Predicted bounds of one side of the intervals.
+
+        alpha_np: NDArray of shape (n_alpha,)
+            NDArray of floats between `0` and `1`, represents the
+            uncertainty of the confidence interval.
+
+        estimator: _Conformalizer
+            Estimator the bounds were predicted with.
+
+        Returns
+        -------
+        NDArray of shape (n_samples, n_predictions)
+            Bounds of the requested confidence levels.
+        """
+        bounds_np = np.asarray(bounds)
+        if bounds_np.ndim == 1:
+            return bounds_np[:, np.newaxis]
+
+        levels = getattr(estimator, "alpha", None)
+        if levels is None:
+            return bounds_np
+
+        levels_np = np.ravel(np.asarray(levels, dtype=float))
+        if levels_np.size < 2 or bounds_np.shape[1] != levels_np.size:
+            return bounds_np
+
+        columns = [np.flatnonzero(np.isclose(levels_np, alpha)) for alpha in alpha_np]
+        if any(column.size == 0 for column in columns):
+            return bounds_np
+
+        return bounds_np[:, [int(column[0]) for column in columns]]
+
     def get_bounds(
         self,
         X: NDArray,
@@ -239,6 +352,7 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
         method: str = "base",
         optimize_beta: bool = False,
         allow_infinite_bounds: bool = False,
+        predict_params: Optional[dict] = None,
     ) -> Tuple[NDArray, NDArray, NDArray]:
         """
         Compute bounds of the prediction intervals from the observed values,
@@ -283,6 +397,12 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
 
             By default `False`.
 
+        predict_params: Optional[dict]
+            Parameters to pass to the `predict` method of the regressors held by
+            the estimator.
+
+            By default `None`.
+
         Returns
         -------
         Tuple[NDArray, NDArray, NDArray]
@@ -313,7 +433,9 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
             conformity_scores_low = conformity_scores[0, ...]
             conformity_scores_up = conformity_scores[1, ...]
 
-        y_pred, y_pred_low, y_pred_up = estimator._predict(X, ensemble)
+        y_pred, y_pred_low, y_pred_up = self._get_predictions(
+            X, alpha_np, estimator, ensemble, predict_params
+        )
         signed = -1 if self.sym else 1
 
         if optimize_beta:
