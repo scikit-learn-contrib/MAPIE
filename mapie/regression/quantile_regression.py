@@ -858,18 +858,38 @@ class _QuantileConformalizer(_Conformalizer, ABC):
     def _pinball_weighted_mean(self, y_preds: ArrayLike, level: str) -> NDArray:
         """
         Computes the weighted mean of the predicted values using the pinball losses as weights.
+
+        The weight of a fold is the reciprocal of its pinball loss, so that folds
+        predicting a quantile accurately weigh more. Weights are normalized over the
+        folds, independently for each quantile.
+
+        Parameters
+        ----------
+        y_preds : ArrayLike of shape (n_samples, n_split, n_quantiles)
+            Predictions of the estimator of each cross-validation fold, one column
+            per quantile.
+
+        level : str
+            The confidence level whose pinball losses are used as weights.
+
+        Returns
+        -------
+        NDArray of shape (n_samples, n_quantiles)
+            Fold predictions aggregated for each sample and each quantile.
         """
         pinball_weights = 1 / np.asarray(self.pinball_losses[level], dtype=float)
         y_preds = np.asarray(y_preds, dtype=float)
 
+        # Losses are of shape (n_split, n_quantiles), one per fold and per quantile.
+        # A single loss per fold is broadcast to every quantile.
         if pinball_weights.ndim == 1:
-            weights = pinball_weights / pinball_weights.sum()
-            weighted_values = np.sum(np.atleast_2d(weights).T * y_preds, axis=0)
-        else:
-            weights = pinball_weights / pinball_weights.sum(axis=0, keepdims=True)
-            weighted_values = np.sum(weights * y_preds, axis=0)
+            pinball_weights = pinball_weights[:, np.newaxis]
+        weights = pinball_weights / pinball_weights.sum(axis=0, keepdims=True)
 
-        return np.asarray(weighted_values).reshape(-1, 1)
+        # Reduce the fold axis, keeping one prediction per sample and per quantile.
+        weighted_values = np.sum(weights[np.newaxis, :, :] * y_preds, axis=1)
+
+        return np.asarray(weighted_values)
 
     # TODO: A structure can handle quantiles fitting and prediction to avoid code duplication between conformalizer
     def _predict_quantiles(
@@ -968,9 +988,7 @@ class _QuantileConformalizer(_Conformalizer, ABC):
             y_pred = np.hstack((y_pred_multi_low, y_pred_multi_up, y_pred_multi_center))
 
         elif self.agg_function == "pinball_weighted_mean":
-            y_pred = self._pinball_weighted_mean(
-                pred_matrix[:, :, :n_quantiles].T, level
-            )
+            y_pred = self._pinball_weighted_mean(pred_matrix[:, :, :n_quantiles], level)
             if n_quantiles < 3:
                 y_pred_multi_center = np.mean(
                     pred_matrix[:, :, 2], axis=1, keepdims=True

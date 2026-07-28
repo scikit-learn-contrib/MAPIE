@@ -1146,25 +1146,40 @@ def test_quantile_conformalizer_predict_multiple_predictions_minmax() -> None:
 
 
 def test_quantile_conformalizer_pinball_weighted_mean() -> None:
-    """Test weighted aggregation from pinball losses."""
+    """Test weighted aggregation from pinball losses, one loss per fold."""
     conformalizer = DummyQuantileConformalizer()
+    # A single loss per fold is broadcast to every quantile: weights are 0.75 and 0.25.
     conformalizer.pinball_losses = {"0.2": np.array([1.0, 3.0])}
+    # Shape (n_samples, n_split, n_quantiles) = (3, 2, 4). The three dimensions are
+    # deliberately distinct, so that reducing the wrong axis cannot pass this test.
+    # The second fold is offset by 40, hence an aggregate offset by 0.25 * 40 = 10.
     y_preds = np.array(
         [
-            [10.0, 20.0],
-            [30.0, 40.0],
+            [[10.0, 20.0, 30.0, 40.0], [50.0, 60.0, 70.0, 80.0]],
+            [[110.0, 120.0, 130.0, 140.0], [150.0, 160.0, 170.0, 180.0]],
+            [[210.0, 220.0, 230.0, 240.0], [250.0, 260.0, 270.0, 280.0]],
         ]
     )
 
     weighted_mean = conformalizer._pinball_weighted_mean(y_preds, level="0.2")
 
-    assert weighted_mean.shape == (2, 1)
-    np.testing.assert_allclose(weighted_mean, np.array([[15.0], [25.0]]))
+    assert weighted_mean.shape == (3, 4)
+    np.testing.assert_allclose(
+        weighted_mean,
+        np.array(
+            [
+                [20.0, 30.0, 40.0, 50.0],
+                [120.0, 130.0, 140.0, 150.0],
+                [220.0, 230.0, 240.0, 250.0],
+            ]
+        ),
+    )
 
 
 def test_quantile_conformalizer_pinball_weighted_mean_columnwise_weights() -> None:
-    """Test weighting behavior when pinball losses are 2D."""
+    """Test weighting behavior when pinball losses are 2D, one loss per fold and quantile."""
     conformalizer = DummyQuantileConformalizer()
+    # Weights are 0.75/0.25 for the first quantile, 0.5/0.5 for the second one.
     conformalizer.pinball_losses = {
         "0.2": np.array(
             [
@@ -1173,17 +1188,18 @@ def test_quantile_conformalizer_pinball_weighted_mean_columnwise_weights() -> No
             ]
         )
     }
+    # Shape (n_samples, n_split, n_quantiles).
     y_preds = np.array(
         [
-            [10.0, 100.0],
-            [30.0, 200.0],
+            [[10.0, 100.0], [30.0, 200.0]],
+            [[50.0, 1000.0], [150.0, 2000.0]],
         ]
     )
 
     weighted_mean = conformalizer._pinball_weighted_mean(y_preds, level="0.2")
 
-    assert weighted_mean.shape == (2, 1)
-    np.testing.assert_allclose(weighted_mean, np.array([[15.0], [150.0]]))
+    assert weighted_mean.shape == (2, 2)
+    np.testing.assert_allclose(weighted_mean, np.array([[15.0, 150.0], [75.0, 1500.0]]))
 
 
 def test_quantile_conformalizer_fit_prefit_sets_state() -> None:
@@ -1700,6 +1716,44 @@ def test_cross_conformalized_quantile_regressor_predict_interval_pinball_weighte
     np.testing.assert_allclose(y_pred, np.array([8.0, 8.0, 8.0, 8.0]))
     np.testing.assert_allclose(y_pis[:, 0].flatten(), np.array([7.0, 7.0, 7.0, 7.0]))
     np.testing.assert_allclose(y_pis[:, 1].flatten(), np.array([9.0, 9.0, 9.0, 9.0]))
+
+
+def test_cross_conformalized_quantile_regressor_pinball_weighted_mean_end_to_end() -> (
+    None
+):
+    """Test predict_interval with pinball_weighted_mean on the real aggregation path.
+
+    The stubbed test above bypasses the conformity score, hence `_predict_aggregate`.
+    Here the whole pipeline runs, so the pinball weights are actually applied to the
+    fold predictions.
+    """
+    reg = CrossConformalizedQuantileRegressor(
+        estimator=gb,
+        confidence_level=0.8,
+        cv=KFold(n_splits=3, shuffle=True, random_state=random_state),
+        method="plus",
+    )
+    reg.fit_conformalize(X_train, y_train)
+
+    y_pred, y_pis = reg.predict_interval(
+        X_calib, aggregate_point_predictions="pinball_weighted_mean"
+    )
+
+    assert y_pred.shape == (X_calib.shape[0],)
+    assert y_pis.shape == (X_calib.shape[0], 2, 1)
+    assert np.all(np.isfinite(y_pred))
+    assert np.all(np.isfinite(y_pis))
+    # Lower bounds stay below upper bounds.
+    assert np.all(y_pis[:, 0, 0] <= y_pis[:, 1, 0])
+
+    # Weights are normalized, so the aggregate stays within the range of the folds it
+    # aggregates instead of being scaled by the number of folds.
+    n_split = len(reg.estimators_["central"])
+    fold_centers = np.vstack(
+        [reg._predict_center(X_calib, index=i) for i in range(n_split)]
+    )
+    assert np.all(y_pred >= fold_centers.min(axis=0) - 1e-8)
+    assert np.all(y_pred <= fold_centers.max(axis=0) + 1e-8)
 
 
 def test_cross_conformalized_quantile_regressor_predict_interval_invalid_aggregation() -> (
