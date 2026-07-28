@@ -7,7 +7,8 @@ et al. (2025) [1].
 
 A polynomial regression supplies point predictions, while indicators of fixed
 intervals of the input space form the embedding used by
-``ConditionalRiskController``. The controller learns input-dependent interval
+``ConditionalExpectedRiskController``. The controller learns input-dependent
+interval
 widths using the differentiable PyTorch ``miscoverage_loss``.
 
 The top panel compares automatically adaptive conformal risk control (AA-CRC)
@@ -29,7 +30,7 @@ from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import PolynomialFeatures
 
 from mapie.regression import SplitConformalRegressor
-from mapie.risk_control import ConditionalRiskController
+from mapie.risk_control import ConditionalExpectedRiskController
 from mapie.utils import train_conformalize_test_split
 
 RANDOM_STATE = 42
@@ -127,7 +128,7 @@ controller_params = dict(
 
 np.random.seed(RANDOM_STATE)
 torch.manual_seed(RANDOM_STATE)
-aa_controller = ConditionalRiskController(**controller_params)
+aa_controller = ConditionalExpectedRiskController(**controller_params)
 aa_controller.conformalize(X_calib, y_calib, n_epochs=200)
 
 y_interval_aa = aa_controller.predict(X_test, n_epochs=1)
