@@ -1944,9 +1944,7 @@ def _asymmetric_scores(n_calib: int = 500) -> NDArray:
     """Signed scores as QuantileRegressionScore builds them, of shape (2, n_calib)."""
     rng = np.random.RandomState(random_state)
     y_calib_asym = rng.exponential(2.0, size=n_calib)
-    return np.vstack(
-        (y_calib_asym - Y_PRED_LOW_ASYM, y_calib_asym - Y_PRED_UP_ASYM)
-    )
+    return np.vstack((y_calib_asym - Y_PRED_LOW_ASYM, y_calib_asym - Y_PRED_UP_ASYM))
 
 
 def test_asymmetric_lower_scores_only_move_the_lower_bound() -> None:
@@ -1989,9 +1987,7 @@ def test_asymmetric_bounds_split_the_miscoverage_between_both_sides() -> None:
     alpha = 0.1
     rng = np.random.RandomState(random_state)
     y_calib_asym = rng.exponential(2.0, size=5000)
-    scores = np.vstack(
-        (y_calib_asym - Y_PRED_LOW_ASYM, y_calib_asym - Y_PRED_UP_ASYM)
-    )
+    scores = np.vstack((y_calib_asym - Y_PRED_LOW_ASYM, y_calib_asym - Y_PRED_UP_ASYM))
 
     bound_low, bound_up = _asymmetric_bounds(scores, alpha=alpha)
     y_test_asym = rng.exponential(2.0, size=100000)
