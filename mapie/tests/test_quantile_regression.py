@@ -19,10 +19,12 @@ from sklearn.preprocessing import OneHotEncoder
 from typing_extensions import TypedDict
 
 from mapie.metrics.regression import regression_coverage_score
-from mapie.conformity_scores import BaseRegressionScore
-from mapie.regression.quantile_regression import (
+from mapie.conformity_scores import (
     AbsoluteQuantileRegressionScore,
+    BaseRegressionScore,
     QuantileRegressionScore,
+)
+from mapie.regression.quantile_regression import (
     CrossConformalizedQuantileRegressor,
     _QuantileConformalizer,
     _MapieQuantileRegressor,
