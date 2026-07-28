@@ -1105,7 +1105,11 @@ class CrossConformalizedQuantileRegressor(_QuantileConformalizer):
         Verbosity level passed to the underlying parallel fitting routine.
 
     random_state : Optional[int or np.random.RandomState], default=None
-        Controls randomness for the internal cross-validation procedures.
+        Controls randomness for the internal cross-validation procedures: it seeds
+        the shuffling of the `KFold` built when `cv` is an integer. Pass an integer
+        for reproducible folds. If `None`, the seed is drawn from the global numpy
+        random state, so the folds differ from one instance to the next. Ignored
+        when `cv` is a cross-validator, which carries its own randomness.
 
     central_estimator : Optional[RegressorMixin], default=None
         Optional estimator used to predict the central value directly.
@@ -1143,6 +1147,7 @@ class CrossConformalizedQuantileRegressor(_QuantileConformalizer):
         _check_cv_not_subsample(cv)
         self._check_quantile_estimator(estimator)
         self._check_score(conformity_score)
+        check_random_state(random_state)
 
         # Instantiate conformity score if it's a class
         if isinstance(conformity_score, type):
@@ -1151,7 +1156,11 @@ class CrossConformalizedQuantileRegressor(_QuantileConformalizer):
             self.score = conformity_score
         self.estimator = estimator
         self.method = method
-        self.cv = _check_cv(cv)
+        self.random_state = random_state
+        # `random_state` seeds the shuffling of the `KFold` that an integer `cv` is
+        # turned into. Without it `_check_cv` draws a seed from the global numpy
+        # random state, making the folds differ from one instance to the next.
+        self.cv = _check_cv(cv, random_state=random_state)
         self.n_jobs = n_jobs
         self.verbose = verbose
         self.alpha = _transform_confidence_level_to_alpha_list(confidence_level)

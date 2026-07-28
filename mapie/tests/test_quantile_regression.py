@@ -1901,6 +1901,79 @@ def test_cross_conformalized_quantile_regressor_base_method_predict_interval() -
     assert y_pis.shape == (2, 2, 1)
 
 
+def test_cross_conformalized_quantile_regressor_random_state_is_stored() -> None:
+    """Test `random_state` is kept unmodified and seeds the folds built from `cv`."""
+    reg = CrossConformalizedQuantileRegressor(estimator=qt, cv=3, random_state=3)
+
+    assert reg.random_state == 3
+    assert reg.cv.random_state == 3
+
+    rs = np.random.RandomState(0)
+    assert (
+        CrossConformalizedQuantileRegressor(
+            estimator=qt, cv=3, random_state=rs
+        ).random_state
+        is rs
+    )
+
+
+@pytest.mark.parametrize("method", ["base", "plus", "minmax"])
+def test_cross_conformalized_quantile_regressor_random_state_reproducibility(
+    method: str,
+) -> None:
+    """Test an integer `random_state` makes two separate instances agree.
+
+    An integer `cv` is turned into a shuffled `KFold`, whose seed comes from the
+    global numpy random state when `random_state` is not forwarded to it.
+    """
+
+    def fit_predict(random_state: int) -> Tuple[NDArray, NDArray]:
+        reg = CrossConformalizedQuantileRegressor(
+            estimator=qt,
+            cv=3,
+            method=method,
+            confidence_level=0.9,
+            random_state=random_state,
+        )
+        reg.fit_conformalize(X[:100], y[:100])
+        return reg.predict_interval(X[:20])
+
+    y_pred, y_pis = fit_predict(1)
+    y_pred_again, y_pis_again = fit_predict(1)
+
+    np.testing.assert_array_equal(y_pred, y_pred_again)
+    np.testing.assert_array_equal(y_pis, y_pis_again)
+
+    # A different seed must actually change the folds, otherwise the test above
+    # would also pass with `random_state` ignored altogether. The intervals are
+    # compared rather than the points: `base` predicts points with an estimator
+    # fitted on the whole data, which no choice of folds can change.
+    _, y_pis_other = fit_predict(7)
+    assert not np.array_equal(y_pis, y_pis_other)
+
+
+def test_cross_conformalized_quantile_regressor_random_state_ignored_for_cv_object() -> (
+    None
+):
+    """Test an explicit cross-validator keeps its own randomness."""
+    reg = CrossConformalizedQuantileRegressor(
+        estimator=qt,
+        cv=KFold(n_splits=3, shuffle=True, random_state=99),
+        random_state=1,
+    )
+
+    assert reg.cv.random_state == 99
+
+
+def test_cross_conformalized_quantile_regressor_invalid_random_state() -> None:
+    """Test an unusable `random_state` is rejected at construction."""
+    with pytest.raises(ValueError, match=r".*cannot be used to seed.*"):
+        CrossConformalizedQuantileRegressor(
+            estimator=qt,
+            random_state="nonsense",  # type: ignore[arg-type]
+        )
+
+
 MULTI_CONFIDENCE_LEVELS = [0.8, 0.9, 0.95]
 
 
