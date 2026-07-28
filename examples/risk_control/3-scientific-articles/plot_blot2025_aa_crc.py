@@ -30,6 +30,7 @@ from sklearn.preprocessing import PolynomialFeatures
 
 from mapie.regression import SplitConformalRegressor
 from mapie.risk_control import ConditionalExpectedRiskController
+from mapie.risk_control.adaptive_conformal_risk_control import _LogisticHead
 from mapie.utils import train_conformalize_test_split
 
 RANDOM_STATE = 42
@@ -125,12 +126,19 @@ def interval_prediction(X, widths=None):
 np.random.seed(RANDOM_STATE)
 torch.manual_seed(RANDOM_STATE)
 
+logistic_head = _LogisticHead(
+    input_size=feature_map(X_calib[:1]).shape[1],
+    predict_param_range=(0.0, MAX_WIDTH),
+)
+torch.nn.init.zeros_(logistic_head.fc.weight)
+torch.nn.init.zeros_(logistic_head.fc.bias)
 aa_controller = ConditionalExpectedRiskController(
     predict_function=interval_prediction,
     feature_map=feature_map,
-    confidence_level=1 - ALPHA,
+    target_level=ALPHA,
     risk="miscoverage",
     predict_param_range=(0.0, MAX_WIDTH),
+    base_model=logistic_head,
     learning_rate=1.3e-1,
     weight_decay=1e-5,
 )

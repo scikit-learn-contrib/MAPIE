@@ -526,7 +526,12 @@ class RiskLoss:
 
     def __call__(self, y_true: Any, y_pred: Any, predict_param: Any) -> Any:
         values = self._loss_function(y_true, y_pred, predict_param)
-        return 1 - values if self.higher_is_better else values
+        loss = 1 - values if self.higher_is_better else values
+        if not bool(loss.isfinite().all()):
+            raise ValueError("The risk must return only finite values.")
+        if bool(((loss < 0) | (loss > 1)).any()):
+            raise ValueError("The risk values must lie in [0, 1].")
+        return loss
 
 
 RiskLossNames = Literal["recall", "miscoverage"]

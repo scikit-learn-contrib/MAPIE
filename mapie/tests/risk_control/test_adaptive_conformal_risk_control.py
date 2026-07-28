@@ -41,21 +41,20 @@ def test_init_stores_parameters():
     crc = ConditionalExpectedRiskController(
         predict_function=_predict_function,
         feature_map=_feature_map,
-        confidence_level=0.9,
+        target_level=0.1,
         risk="recall",
         learning_rate=1e-3,
         weight_decay=1e-4,
     )
     assert crc.predict_function is _predict_function
     assert crc.feature_map is _feature_map
-    assert crc.confidence_level == 0.9
+    assert crc.target_level == 0.1
     assert crc.risk == "recall"
     assert crc._risk is recall_loss
     assert crc.predict_param_range == (0.0, 1.0)
     assert crc._risk.higher_is_better
     assert crc._risk.monotonicity == "increasing"
     assert crc._risk.objective_sign == 1.0
-    assert np.isclose(crc._alpha, 0.1)
     assert crc.base_model is None
     assert crc.learning_rate == 1e-3
     assert crc.weight_decay == 1e-4
@@ -68,29 +67,78 @@ def test_conformalize_initializes_default_base_model():
     crc = ConditionalExpectedRiskController(
         predict_function=_predict_function,
         feature_map=_feature_map,
-        confidence_level=0.9,
+        target_level=0.1,
         risk="recall",
     )
     crc.conformalize(X, y, n_epochs=2, batch_size=3)
     assert crc.X_conformalize_embedded.shape == (6, 9)
     np.testing.assert_array_equal(crc.y_conformalize, y)
     np.testing.assert_array_equal(crc.y_conformalize_pred, X)
-    assert isinstance(crc.base_model, _LogisticHead)
+    assert isinstance(crc.base_model, _LinearHead)
 
 
 def test_conformalize_uses_provided_base_model():
     np.random.seed(0)
     torch.manual_seed(0)
     X, y = _make_data()
+    head = _LogisticHead(9)
+    with torch.no_grad():
+        head.fc.weight.fill_(0.25)
+        head.fc.bias.fill_(-0.5)
     crc = ConditionalExpectedRiskController(
         predict_function=_predict_function,
         feature_map=_feature_map,
-        confidence_level=0.9,
+        target_level=0.1,
         risk="recall",
-        base_model=_LogisticHead(9),
+        base_model=head,
     )
-    crc.conformalize(X, y, n_epochs=1, batch_size=6)
+    crc.conformalize(X, y, n_epochs=0, batch_size=6)
     assert isinstance(crc.base_model, _LogisticHead)
+    np.testing.assert_allclose(
+        crc.base_model.fc.weight.detach().cpu().numpy(),
+        0.25,
+    )
+    np.testing.assert_allclose(
+        crc.base_model.fc.bias.detach().cpu().numpy(),
+        -0.5,
+    )
+
+
+@pytest.mark.parametrize(
+    "target_level",
+    [True, 1, 0.0, 1.0, -0.1, 1.1, np.nan, np.inf],
+)
+def test_init_rejects_invalid_target_level(target_level):
+    with pytest.raises(ValueError, match="`target_level` must be a float"):
+        ConditionalExpectedRiskController(
+            predict_function=_predict_function,
+            feature_map=_feature_map,
+            target_level=target_level,
+            risk="recall",
+        )
+
+
+@pytest.mark.parametrize(
+    "risk_value, message",
+    [
+        (-0.1, r"lie in \[0, 1\]"),
+        (1.1, r"lie in \[0, 1\]"),
+        (np.nan, "finite"),
+        (np.inf, "finite"),
+    ],
+)
+def test_risk_loss_rejects_values_outside_unit_interval(risk_value, message):
+    def invalid_risk(y_true, y_pred, predict_param):
+        return predict_param.squeeze(-1) * 0 + risk_value
+
+    risk = RiskLoss(
+        invalid_risk,
+        higher_is_better=False,
+        monotonicity="increasing",
+    )
+
+    with pytest.raises(ValueError, match=message):
+        risk(None, None, torch.tensor([[0.5]]))
 
 
 def test_predict_returns_binary_masks():
@@ -100,7 +148,7 @@ def test_predict_returns_binary_masks():
     crc = ConditionalExpectedRiskController(
         predict_function=_predict_function,
         feature_map=_feature_map,
-        confidence_level=0.9,
+        target_level=0.1,
         risk="recall",
     )
     crc.conformalize(X, y, n_epochs=2, batch_size=3)
@@ -457,7 +505,7 @@ def test_conformalize_input_validation(overrides, error, message):
     params = {
         "predict_function": _predict_function,
         "feature_map": _feature_map,
-        "confidence_level": 0.9,
+        "target_level": 0.1,
         "risk": "recall",
     }
     params.update(overrides)
@@ -480,7 +528,7 @@ def test_custom_risk_loss():
     crc = ConditionalExpectedRiskController(
         predict_function=_predict_function,
         feature_map=_feature_map,
-        confidence_level=0.9,
+        target_level=0.1,
         risk=RiskLoss(
             constant_loss,
             higher_is_better=False,
@@ -507,7 +555,7 @@ def test_custom_prediction_function_for_regression_intervals():
     crc = ConditionalExpectedRiskController(
         predict_function=interval_function,
         feature_map=lambda X: np.column_stack([np.ones(len(X)), np.asarray(X)]),
-        confidence_level=0.9,
+        target_level=0.1,
         risk="miscoverage",
         predict_param_range=(0.5, 2.0),
     )

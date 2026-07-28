@@ -7,7 +7,6 @@ import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
 from mapie.risk_control.risks import RiskLoss, RiskLossLike, _resolve_risk, recall_loss
-from mapie.utils import _transform_confidence_level_to_alpha
 
 
 def _import_torch():
@@ -54,7 +53,7 @@ class ConditionalExpectedRiskController:
     the input (its embedding) that returns a per-input prediction parameter.
     The prediction-parameter model is trained on the conformalization set so
     that a user-provided bounded, monotone risk is controlled at the target
-    level ``alpha = 1 - confidence_level``.
+    risk level.
 
     The loss is evaluated in PyTorch inside the AA-CRC objective [1]_, so its
     gradient with respect to the prediction parameter is preserved.
@@ -76,9 +75,8 @@ class ConditionalExpectedRiskController:
         ``(n_samples, n_features)``. The same function must accept a single input
         and return an embedding of shape ``(1, n_features)``.
 
-    confidence_level : float
-        Confidence level with which the risk is controlled. Must be in ``(0, 1)``.
-        The target risk level is ``alpha = 1 - confidence_level``.
+    target_level : float
+        Target risk level. Must be in ``(0, 1)``.
 
     risk : {"recall", "miscoverage"} or RiskLoss
         Differentiable loss or performance metric to control.
@@ -91,10 +89,11 @@ class ConditionalExpectedRiskController:
         Lower and upper bounds of the learned prediction parameter.
 
     base_model : torch.nn.Module, optional
-        Mapping from an embedding to the requested prediction-parameter range.
-        If ``None`` (default), a logistic head sized to the embedding dimension
-        is created during :meth:`conformalize`. Its sigmoid output is scaled to
-        ``predict_param_range``.
+        Mapping from an embedding to a prediction parameter. If ``None``
+        (default), a single linear layer sized to the embedding dimension is
+        created during :meth:`conformalize`. A user-provided model retains its
+        initialization, so custom initialization should be applied to the model
+        before it is passed to the controller.
 
     learning_rate : float, default=1e-4
         Learning rate of the Adam optimiser used to train the
@@ -117,9 +116,7 @@ class ConditionalExpectedRiskController:
         :meth:`conformalize`.
 
     base_model : torch.nn.Module
-        The fitted prediction-parameter model. Set by :meth:`conformalize`. By
-        default, this is a logistic head whose output is bounded by
-        ``predict_param_range``.
+        The fitted prediction-parameter model. Set by :meth:`conformalize`.
 
     References
     ----------
@@ -150,7 +147,7 @@ class ConditionalExpectedRiskController:
     >>> crc = ConditionalExpectedRiskController(
     ...     predict_function=predict_function,
     ...     feature_map=feature_map,
-    ...     confidence_level=0.9,
+    ...     target_level=0.1,
     ...     risk="recall",
     ... )
     >>> crc.conformalize(X, y, n_epochs=3, batch_size=4)
@@ -163,7 +160,7 @@ class ConditionalExpectedRiskController:
         self,
         predict_function: Callable[..., NDArray],
         feature_map: Callable[[ArrayLike], NDArray],
-        confidence_level: float,
+        target_level: float,
         risk: RiskLossLike,
         predict_param_range: Tuple[float, float] = (0.0, 1.0),
         base_model: Optional["torch.nn.Module"] = None,
@@ -172,11 +169,16 @@ class ConditionalExpectedRiskController:
     ) -> None:
         self.predict_function = predict_function
         self.feature_map = feature_map
-        self.confidence_level = confidence_level
+        if (
+            isinstance(target_level, bool)
+            or not isinstance(target_level, (float, np.floating))
+            or not 0 < target_level < 1
+        ):
+            raise ValueError("`target_level` must be a float strictly between 0 and 1.")
+        self.target_level = target_level
         self.risk = risk
         self._risk = _resolve_risk(risk)
         self.predict_param_range = predict_param_range
-        self._alpha = _transform_confidence_level_to_alpha(confidence_level)
 
         self.base_model = base_model
         self.learning_rate = learning_rate
@@ -194,7 +196,7 @@ class ConditionalExpectedRiskController:
 
         Stores the embedded inputs, targets and raw predictions, then trains
         the parameter model (:attr:`base_model`) so that the risk is controlled
-        at the level ``alpha = 1 - confidence_level``.
+        at :attr:`target_level`.
 
         Parameters
         ----------
@@ -229,12 +231,9 @@ class ConditionalExpectedRiskController:
         x_n_plus_1 = X_conformalize_[random_idx]
 
         if self.base_model is None:
-            self.base_model = _LogisticHead(
-                self.X_conformalize_embedded.shape[1],
-                predict_param_range=self.predict_param_range,
-            )
+            self.base_model = _LinearHead(self.X_conformalize_embedded.shape[1])
             torch.nn.init.zeros_(self.base_model.fc.weight)
-            torch.nn.init.zeros_(self.base_model.fc.bias)
+            torch.nn.init.constant_(self.base_model.fc.bias, (lower + upper) / 2)
         self.base_model = _train_model(
             self.base_model,
             self.y_conformalize,
@@ -244,7 +243,7 @@ class ConditionalExpectedRiskController:
             weight_decay=self.weight_decay,
             n_epochs=n_epochs,
             batch_size=batch_size,
-            alpha=self._alpha,
+            alpha=self.target_level,
             x_n_plus_1=self.feature_map(x_n_plus_1),
             risk=self._risk,
             integration_start=lower,
@@ -293,7 +292,7 @@ class ConditionalExpectedRiskController:
                 weight_decay=self.weight_decay,
                 n_epochs=n_epochs,
                 batch_size=batch_size,
-                alpha=self._alpha,
+                alpha=self.target_level,
                 x_n_plus_1=x_n_plus_1,
                 risk=self._risk,
                 integration_start=self.predict_param_range[0],
