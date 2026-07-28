@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from types import MethodType
-from typing import Any, Tuple, Optional
+from typing import Any, Tuple, Optional, cast
 
 import numpy as np
 import pandas as pd
@@ -1563,7 +1563,8 @@ def test_cross_conformalized_quantile_regressor_predict_interval_returns_expecte
     reg.is_conformalized = True
     reg.alpha = np.array([0.1])
     reg.conformity_scores = {"0.1": np.array([0.2, 0.3])}
-    reg.method = "plus"
+    # `aggregate_point_predictions=None` is only valid with method="base".
+    reg.method = "base"
     reg.score = StubScore()  # type: ignore[assignment]
 
     y_pred, y_pis = reg.predict_interval(
@@ -1614,9 +1615,9 @@ def test_cross_conformalized_quantile_regressor_predict_pinball_weighted_mean() 
     reg.is_fitted = True
     reg.is_conformalized = True
     reg.pinball_losses = {"0.1": np.array([[0.5, 0.5, 1.0], [0.5, 0.5, 3.0]])}
-    reg.quantiles = np.array(
-        [0.05, 0.95, 0.5]
-    )  # taille 3 → branche pinball_weighted_mean active
+    # `quantiles` is keyed by level, as `_initialize_fit_conformalize` builds it.
+    # Size 3 → the pinball_weighted_mean branch is active.
+    reg.quantiles = {"0.1": np.array([0.05, 0.95, 0.5])}  # type: ignore[assignment]
     reg.estimators_ = {
         "lower": [],
         "upper": [],
@@ -1778,6 +1779,105 @@ def test_cross_conformalized_quantile_regressor_predict_interval_invalid_aggrega
             aggregate_point_predictions="unknown",
             allow_infinite_bounds=True,
         )
+
+
+@pytest.mark.parametrize("method", ["plus", "minmax"])
+def test_cross_conformalized_quantile_regressor_none_aggregation_rejected(
+    method: str,
+) -> None:
+    """Test None is rejected by the methods that aggregate the folds.
+
+    None predicts points with an estimator fitted on the entire data, which only
+    the base method fits.
+    """
+    reg = CrossConformalizedQuantileRegressor(
+        estimator=qt,
+        cv=KFold(n_splits=2),
+        method=method,
+        confidence_level=0.9,
+    )
+    reg.fit_conformalize(X_toy[:10], y_toy[:10])
+
+    with pytest.raises(ValueError, match=r".*only method='base' fits.*"):
+        reg.predict_interval(X_toy[:2], aggregate_point_predictions=None)
+    with pytest.raises(ValueError, match=r".*only method='base' fits.*"):
+        reg.predict(X_toy[:2], aggregate_point_predictions=None)
+
+
+@pytest.mark.parametrize("aggregation", ["mean", "median", "pinball_weighted_mean"])
+def test_cross_conformalized_quantile_regressor_base_rejects_aggregation(
+    aggregation: str,
+) -> None:
+    """Test the base method rejects the fold aggregations, which it cannot honour."""
+    reg = CrossConformalizedQuantileRegressor(
+        estimator=qt,
+        cv=KFold(n_splits=2),
+        method="base",
+        confidence_level=0.9,
+    )
+    reg.fit_conformalize(X_toy[:10], y_toy[:10])
+
+    with pytest.raises(ValueError, match=r".*does not aggregate.*"):
+        reg.predict_interval(X_toy[:2], aggregate_point_predictions=aggregation)
+    with pytest.raises(ValueError, match=r".*does not aggregate.*"):
+        reg.predict(X_toy[:2], aggregate_point_predictions=aggregation)
+
+
+@pytest.mark.parametrize("method", ["base", "plus", "minmax"])
+def test_cross_conformalized_quantile_regressor_auto_aggregation(method: str) -> None:
+    """Test the "auto" default resolves to the aggregation the method supports."""
+    reg = CrossConformalizedQuantileRegressor(
+        estimator=qt,
+        cv=KFold(n_splits=3),
+        method=method,
+        confidence_level=0.9,
+    )
+    reg.fit_conformalize(X[:100], y[:100])
+
+    expected = None if method == "base" else "pinball_weighted_mean"
+
+    y_pred_auto, y_pis_auto = reg.predict_interval(X[:20])
+    y_pred_exp, y_pis_exp = reg.predict_interval(
+        X[:20], aggregate_point_predictions=expected
+    )
+
+    np.testing.assert_allclose(y_pred_auto, y_pred_exp)
+    np.testing.assert_allclose(y_pis_auto, y_pis_exp)
+    # `predict` resolves the sentinel the same way. Compared against `predict` itself,
+    # since for `minmax` it does not agree with `predict_interval` on the point value.
+    np.testing.assert_allclose(
+        reg.predict(X[:20]),
+        reg.predict(X[:20], aggregate_point_predictions=expected),
+    )
+
+
+def test_cross_conformalized_quantile_regressor_predict_none_uses_full_data_estimator() -> (
+    None
+):
+    """Test None predicts with the estimator fitted on the entire data.
+
+    It must not fall back on the first fold's estimator, and `predict` must agree
+    with `predict_interval`.
+    """
+    reg = CrossConformalizedQuantileRegressor(
+        estimator=qt,
+        cv=KFold(n_splits=3),
+        method="base",
+        confidence_level=0.9,
+    )
+    reg.fit_conformalize(X[:100], y[:100])
+
+    y_pred = reg.predict(X[:20], aggregate_point_predictions=None)
+
+    base_central = cast(Any, reg._base_estimator_["central"])
+    full_data_pred = base_central[0].predict(X[:20]).ravel()
+    np.testing.assert_allclose(y_pred, full_data_pred)
+
+    first_fold_pred = np.asarray(reg._predict_center(X[:20], index=0))
+    assert not np.allclose(y_pred, first_fold_pred)
+
+    y_pred_interval, _ = reg.predict_interval(X[:20], aggregate_point_predictions=None)
+    np.testing.assert_allclose(y_pred, y_pred_interval)
 
 
 def test_cross_conformalized_quantile_regressor_base_method_predict_interval() -> None:

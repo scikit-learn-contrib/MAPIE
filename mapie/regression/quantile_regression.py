@@ -44,6 +44,11 @@ from mapie.conformity_scores import BaseRegressionScore
 
 REGRESSOR_TYPE = Union[RegressorMixin, Pipeline]
 
+# Default of `aggregate_point_predictions`: no single value suits every method, since
+# `"base"` predicts points without aggregating the folds while `"plus"` and `"minmax"`
+# require an aggregation. This sentinel resolves to the one the method supports.
+AGGREGATE_POINT_PREDICTIONS_AUTO = "auto"
+
 
 class QuantileRegressionScore(BaseRegressionScore):
     """
@@ -1234,7 +1239,7 @@ class CrossConformalizedQuantileRegressor(_QuantileConformalizer):
     def predict_interval(
         self,
         X: ArrayLike,
-        aggregate_point_predictions: Optional[str] = "mean",
+        aggregate_point_predictions: Optional[str] = AGGREGATE_POINT_PREDICTIONS_AUTO,
         minimize_interval_width: bool = False,
         allow_infinite_bounds: bool = False,
     ) -> Tuple[NDArray, NDArray]:
@@ -1252,10 +1257,15 @@ class CrossConformalizedQuantileRegressor(_QuantileConformalizer):
         X : ArrayLike
             Features
 
-        aggregate_point_predictions : Optional[str], default="mean"
-            The method to predict a point. Options:
+        aggregate_point_predictions : Optional[str], default="auto"
+            The method to predict a point. The valid options depend on `method`,
+            since only `method="base"` fits an estimator on the entire data while
+            `"plus"` and `"minmax"` aggregate the cross-validation folds. Options:
 
-            - None: a point is predicted using the regressor trained on the entire data
+            - "auto": resolves to `None` if `method="base"`, to
+                `"pinball_weighted_mean"` otherwise
+            - None: a point is predicted using the regressor trained on the entire
+                data. Only valid with `method="base"`
             - "mean": Averages the predictions of the regressors trained on each
                 cross-validation fold
             - "median": Aggregates (using median) the predictions of the regressors
@@ -1263,6 +1273,8 @@ class CrossConformalizedQuantileRegressor(_QuantileConformalizer):
             - "pinball_weighted_mean": Aggregates the predictions of the regressors
                 trained on each cross-validation fold using a weighted mean, where the
                 weights are the pinball losses of each fold.
+
+            The three aggregations above are invalid with `method="base"`.
 
         minimize_interval_width : bool, default=False
             If True, attempts to minimize the interval width.
@@ -1332,7 +1344,7 @@ class CrossConformalizedQuantileRegressor(_QuantileConformalizer):
     def predict(
         self,
         X: ArrayLike,
-        aggregate_point_predictions: Optional[str] = "mean",
+        aggregate_point_predictions: Optional[str] = AGGREGATE_POINT_PREDICTIONS_AUTO,
     ) -> NDArray:
         """
         Predicts points.
@@ -1345,10 +1357,15 @@ class CrossConformalizedQuantileRegressor(_QuantileConformalizer):
         X : ArrayLike
             Features
 
-        aggregate_point_predictions : Optional[str], default="mean"
-            The method to predict a point. Options:
+        aggregate_point_predictions : Optional[str], default="auto"
+            The method to predict a point. The valid options depend on `method`,
+            since only `method="base"` fits an estimator on the entire data while
+            `"plus"` and `"minmax"` aggregate the cross-validation folds. Options:
 
-            - None: a point is predicted using the regressor trained on the entire data
+            - "auto": resolves to `None` if `method="base"`, to
+              `"pinball_weighted_mean"` otherwise
+            - None: a point is predicted using the regressor trained on the entire
+              data. Only valid with `method="base"`
             - "mean": Averages the predictions of the regressors trained on each
               cross-validation fold
             - "median": Aggregates (using median) the predictions of the regressors
@@ -1356,6 +1373,8 @@ class CrossConformalizedQuantileRegressor(_QuantileConformalizer):
             - "pinball_weighted_mean": Aggregates the predictions of the regressors
               trained on each cross-validation fold using a weighted mean, where the
               weights are the pinball losses of each fold.
+
+            The three aggregations above are invalid with `method="base"`.
 
         Returns
         -------
@@ -1372,8 +1391,12 @@ class CrossConformalizedQuantileRegressor(_QuantileConformalizer):
             aggregate_point_predictions
         )
 
+        # Reached only with `method="base"
         if not ensemble:
-            return np.asarray(self._predict_center(X, index=0, **self._predict_params))
+            base_central = cast(List[RegressorMixin], self._base_estimator_["central"])
+            return np.asarray(
+                base_central[0].predict(X, **self._predict_params).ravel()
+            )
 
         y_pred_multi = np.vstack(
             [
@@ -1382,17 +1405,18 @@ class CrossConformalizedQuantileRegressor(_QuantileConformalizer):
             ]
         )
 
-        if (
-            aggregate_point_predictions == "pinball_weighted_mean"
-            and self.quantiles.size == 3
+        # `aggregate_point_predictions` may be the `"auto"` sentinel, so read the
+        # aggregation resolved above rather than the argument.
+        level = str(self.alpha[0])
+        if self.agg_function == "pinball_weighted_mean" and (
+            cast(dict, self.quantiles)[level].size == 3
         ):
-            level = str(self.alpha[0])
             central_weights = (
                 1 / np.asarray(self.pinball_losses[level], dtype=float)[:, 2]
             )
             weights = central_weights / central_weights.sum()
             return np.sum((np.atleast_2d(weights).T * y_pred_multi), axis=0)
-        if aggregate_point_predictions == "median":
+        if self.agg_function == "median":
             return np.median(y_pred_multi, axis=0)
         return np.mean(y_pred_multi, axis=0)
 
@@ -1400,8 +1424,50 @@ class CrossConformalizedQuantileRegressor(_QuantileConformalizer):
     def _set_aggregate_point_predictions_and_return_ensemble(
         self, aggregate_point_predictions: Optional[str]
     ) -> bool:
+        """
+        Resolves the point aggregation and checks it against the method.
+
+        `None` means that no aggregation happens: the point is predicted by the
+        estimator fitted on the entire data, which only the `"base"` method fits.
+        Conversely `"plus"` and `"minmax"` aggregate the cross-validation folds, so
+        they require an aggregation function. `"auto"` resolves to whichever of the
+        two the method supports.
+
+        Parameters
+        ----------
+        aggregate_point_predictions : Optional[str]
+            The aggregation asked for, possibly `"auto"`.
+
+        Returns
+        -------
+        bool
+            Whether the cross-validation folds must be aggregated, that is the
+            `ensemble` flag passed down to the conformity score.
+        """
+        if aggregate_point_predictions == AGGREGATE_POINT_PREDICTIONS_AUTO:
+            aggregate_point_predictions = (
+                None if self.method == "base" else "pinball_weighted_mean"
+            )
+
         if aggregate_point_predictions is None:
+            if self.method != "base":
+                raise ValueError(
+                    "aggregate_point_predictions=None predicts points with an "
+                    "estimator fitted on the entire data, which only method='base' "
+                    f"fits. Got method='{self.method}', which aggregates the "
+                    "cross-validation folds: pass one of "
+                    f"{CrossConformalizedQuantileRegressor.ALLOWED_AGG_FUNCTIONS}."
+                )
             return False
+
+        if self.method == "base":
+            raise ValueError(
+                "method='base' predicts points with the estimator fitted on the "
+                "entire data, so it does not aggregate the cross-validation folds. "
+                "Only aggregate_point_predictions=None is valid, got "
+                f"'{aggregate_point_predictions}'."
+            )
+
         if (
             aggregate_point_predictions
             not in CrossConformalizedQuantileRegressor.ALLOWED_AGG_FUNCTIONS
