@@ -425,6 +425,11 @@ def _train_model(
     torch.nn.Module
         The trained prediction-parameter model, in evaluation mode.
     """
+    if isinstance(batch_size, bool) or not isinstance(batch_size, (int, np.integer)):
+        raise TypeError("`batch_size` must be an integer.")
+    if batch_size <= 0:
+        raise ValueError("`batch_size` must be strictly positive.")
+
     y_true_tensor = torch.tensor(np.asarray(y_true, dtype=np.float32), device=DEVICE)
     y_pred_tensor = torch.tensor(np.asarray(y_pred, dtype=np.float32), device=DEVICE)
     embeddings_tensor = torch.tensor(np.asarray(embeddings, dtype=np.float32)).to(
@@ -435,7 +440,7 @@ def _train_model(
     optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
     criterion = _AACRCLoss(
         alpha,
-        batch_size,
+        len(y_true_tensor),
         risk,
         integration_start,
         objective_sign,
@@ -443,10 +448,12 @@ def _train_model(
     best_model = deepcopy(model)
     best_loss: float = np.inf
     for _ in range(n_epochs):
+        indices = torch.randperm(len(y_true_tensor), device=DEVICE)
         for i in range(0, len(y_true_tensor), batch_size):
-            y_true_batch = y_true_tensor[i : i + batch_size]
-            y_pred_batch = y_pred_tensor[i : i + batch_size]
-            embeddings_batch = embeddings_tensor[i : i + batch_size]
+            batch_indices = indices[i : i + batch_size]
+            y_true_batch = y_true_tensor[batch_indices]
+            y_pred_batch = y_pred_tensor[batch_indices]
+            embeddings_batch = embeddings_tensor[batch_indices]
             optimizer.zero_grad()
             predict_params = model(embeddings_batch)
             predict_param_n_plus_1 = model(
@@ -556,10 +563,14 @@ class _AACRCLoss(torch.nn.Module):
         predict_param_n_plus_1: "torch.Tensor",
     ) -> "torch.Tensor":
         integrals = self._compute_integrals(y_true, y_pred, predict_params)
+        current_batch_size = len(y_true)
+        batch_scale = self.n / current_batch_size
         worst_case_integral = (1 - self.alpha) * (
             predict_param_n_plus_1.squeeze() - self.integration_start
         )
-        objective = (torch.sum(integrals) + worst_case_integral) / (self.n + 1)
+        objective = (batch_scale * torch.sum(integrals) + worst_case_integral) / (
+            self.n + 1
+        )
         return self.objective_sign * objective
 
     def _compute_integrals(

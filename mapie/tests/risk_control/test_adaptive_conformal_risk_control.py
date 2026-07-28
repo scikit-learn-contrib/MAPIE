@@ -155,6 +155,35 @@ def test_train_model_no_improvement_branch():
     assert not trained.training
 
 
+@pytest.mark.parametrize(
+    "batch_size, error, message",
+    [
+        (0, ValueError, "must be strictly positive"),
+        (-1, ValueError, "must be strictly positive"),
+        (1.5, TypeError, "must be an integer"),
+        (True, TypeError, "must be an integer"),
+    ],
+)
+def test_train_model_rejects_invalid_batch_size(batch_size, error, message):
+    X, y = _make_data()
+    embeddings = _feature_map(X)
+    with pytest.raises(error, match=message):
+        _train_model(
+            _LogisticHead(embeddings.shape[1]),
+            y,
+            X,
+            embeddings,
+            lr=1e-2,
+            weight_decay=0.0,
+            n_epochs=1,
+            batch_size=batch_size,
+            alpha=0.1,
+            x_n_plus_1=embeddings[0:1],
+            risk=recall_loss,
+            integration_start=0.0,
+        )
+
+
 def test_logistic_head_output_range():
     torch.manual_seed(0)
     head = _LogisticHead(4)
@@ -265,6 +294,32 @@ def test_aacrc_loss_with_nonzero_integration_start():
         predict_param_n_plus_1.grad.squeeze(),
         torch.tensor(0.45, device=DEVICE),
     )
+
+
+def test_aacrc_loss_scales_minibatch_to_full_objective():
+    def constant_loss(y_true, y_pred, predict_param):
+        return torch.full(
+            (len(predict_param),),
+            0.5,
+            dtype=y_pred.dtype,
+            device=y_pred.device,
+        )
+
+    loss = _AACRCLoss(
+        alpha=0.1,
+        n=6,
+        risk=RiskLoss(constant_loss, higher_is_better=False),
+    )(
+        torch.ones(2, 1, device=DEVICE),
+        torch.ones(2, 1, device=DEVICE),
+        torch.ones(2, 1, device=DEVICE),
+        torch.ones(1, 1, device=DEVICE),
+    )
+
+    # Each integral is 0.4. Scaling the two-sample mini-batch by 6 / 2
+    # recovers the six calibration terms in the full AA-CRC objective.
+    expected = torch.tensor((6 * 0.4 + 0.9) / 7, device=DEVICE)
+    assert torch.isclose(loss, expected)
 
 
 def test_aacrc_loss_negates_objective_for_decreasing_risk():
