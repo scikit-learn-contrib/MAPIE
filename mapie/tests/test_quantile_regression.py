@@ -1049,8 +1049,10 @@ def test_quantile_conformalizer_predict_center() -> None:
 
 def test_quantile_conformalizer_predict_returns_center_lower_upper() -> None:
     """Test _predict returns center, lower, upper predictions in that order."""
-    level = "0.2"
+
     conformalizer = DummyQuantileConformalizer()
+    conformalizer.alpha = [0.2]
+    level = str(conformalizer.alpha[0])
     conformalizer.quantiles = {level: np.array([0.1, 0.9, 0.5])}
     conformalizer.method = "plus"
     conformalizer.agg_function = "mean"
@@ -1063,21 +1065,22 @@ def test_quantile_conformalizer_predict_returns_center_lower_upper() -> None:
     }
 
     y_pred_central, y_pred_low, y_pred_up = conformalizer._predict(
-        X_toy[:2], level=level, ensemble=True
+        X_toy[:2], ensemble=True
     )
 
     assert y_pred_central.shape == (2,)
-    assert y_pred_low.shape == (2,)
-    assert y_pred_up.shape == (2,)
+    assert y_pred_low.shape == (2, 1)
+    assert y_pred_up.shape == (2, 1)
     np.testing.assert_allclose(y_pred_central, np.array([2.0, 3.0]))
-    np.testing.assert_allclose(y_pred_low, np.array([1.0, 2.0]))
-    np.testing.assert_allclose(y_pred_up, np.array([3.0, 4.0]))
+    np.testing.assert_allclose(y_pred_low, np.array([[1.0], [2.0]]))
+    np.testing.assert_allclose(y_pred_up, np.array([[3.0], [4.0]]))
 
 
 def test_quantile_conformalizer_predict_multiple_predictions_mean_aggregation() -> None:
     """Test _predict with multiple estimators aggregates predictions as expected."""
-    level = "0.2"
     conformalizer = DummyQuantileConformalizer()
+    conformalizer.alpha = [0.2]
+    level = str(conformalizer.alpha[0])
     conformalizer.quantiles = {level: np.array([0.1, 0.9, 0.5])}
     conformalizer.method = "plus"
     conformalizer.agg_function = "mean"
@@ -1099,18 +1102,19 @@ def test_quantile_conformalizer_predict_multiple_predictions_mean_aggregation() 
     }
 
     y_pred_central, y_pred_low, y_pred_up = conformalizer._predict(
-        X_toy[:2], level=level, ensemble=True
+        X_toy[:2], ensemble=True
     )
 
     np.testing.assert_allclose(y_pred_central, np.array([3.0, 4.0]))
-    np.testing.assert_allclose(y_pred_low, np.array([2.0, 3.0]))
-    np.testing.assert_allclose(y_pred_up, np.array([6.0, 7.0]))
+    np.testing.assert_allclose(y_pred_low, np.array([[2.0], [3.0]]))
+    np.testing.assert_allclose(y_pred_up, np.array([[6.0], [7.0]]))
 
 
 def test_quantile_conformalizer_predict_multiple_predictions_minmax() -> None:
     """Test _predict minmax uses min lower, max upper and mean central predictions."""
     conformalizer = DummyQuantileConformalizer()
-    level = "0.2"
+    conformalizer.alpha = [0.2]
+    level = str(conformalizer.alpha[0])
     conformalizer.quantiles = {level: np.array([0.1, 0.9, 0.5])}
     conformalizer.method = "minmax"
     conformalizer.agg_function = "mean"
@@ -1132,12 +1136,12 @@ def test_quantile_conformalizer_predict_multiple_predictions_minmax() -> None:
     }
 
     y_pred_central, y_pred_low, y_pred_up = conformalizer._predict(
-        X_toy[:2], level=level, ensemble=True
+        X_toy[:2], ensemble=True
     )
 
     np.testing.assert_allclose(y_pred_central, np.array([3.0, 4.0]))
-    np.testing.assert_allclose(y_pred_low, np.array([1.0, 2.0]))
-    np.testing.assert_allclose(y_pred_up, np.array([7.0, 8.0]))
+    np.testing.assert_allclose(y_pred_low, np.array([[1.0], [2.0]]))
+    np.testing.assert_allclose(y_pred_up, np.array([[7.0], [8.0]]))
 
 
 def test_quantile_conformalizer_pinball_weighted_mean() -> None:
@@ -1641,17 +1645,17 @@ def test_cross_conformalized_quantile_regressor_predict_interval_mean_aggregatio
     reg.score = StubScore()  # type: ignore[assignment]
 
     y_pred, y_pis = reg.predict_interval(
-        X_toy[:3],
+        X_toy[:4],
         aggregate_point_predictions="mean",
         allow_infinite_bounds=True,
     )
 
     assert observed["kwargs"]["ensemble"] is True
-    assert y_pred.shape == (3,)
-    assert y_pis.shape == (3, 2, 1)
-    np.testing.assert_allclose(y_pred, np.array([5.0, 5.0, 5.0]))
-    np.testing.assert_allclose(y_pis[:, 0].flatten(), np.array([4.0, 4.0, 4.0]))
-    np.testing.assert_allclose(y_pis[:, 1].flatten(), np.array([6.0, 6.0, 6.0]))
+    assert y_pred.shape == (4,)
+    assert y_pis.shape == (4, 2, 1)
+    np.testing.assert_allclose(y_pred, np.array([5.0, 5.0, 5.0, 5.0]))
+    np.testing.assert_allclose(y_pis[:, 0].flatten(), np.array([4.0, 4.0, 4.0, 4.0]))
+    np.testing.assert_allclose(y_pis[:, 1].flatten(), np.array([6.0, 6.0, 6.0, 6.0]))
 
 
 def test_cross_conformalized_quantile_regressor_predict_interval_pinball_weighted_mean() -> (
@@ -1684,17 +1688,17 @@ def test_cross_conformalized_quantile_regressor_predict_interval_pinball_weighte
     reg.score = StubScore()  # type: ignore[assignment]
 
     y_pred, y_pis = reg.predict_interval(
-        X_toy[:3],
+        X_toy[:4],
         aggregate_point_predictions="pinball_weighted_mean",
         allow_infinite_bounds=True,
     )
 
     assert observed["kwargs"]["ensemble"] is True
-    assert y_pred.shape == (3,)
-    assert y_pis.shape == (3, 2, 1)
-    np.testing.assert_allclose(y_pred, np.array([8.0, 8.0, 8.0]))
-    np.testing.assert_allclose(y_pis[:, 0].flatten(), np.array([7.0, 7.0, 7.0]))
-    np.testing.assert_allclose(y_pis[:, 1].flatten(), np.array([9.0, 9.0, 9.0]))
+    assert y_pred.shape == (4,)
+    assert y_pis.shape == (4, 2, 1)
+    np.testing.assert_allclose(y_pred, np.array([8.0, 8.0, 8.0, 8.0]))
+    np.testing.assert_allclose(y_pis[:, 0].flatten(), np.array([7.0, 7.0, 7.0, 7.0]))
+    np.testing.assert_allclose(y_pis[:, 1].flatten(), np.array([9.0, 9.0, 9.0, 9.0]))
 
 
 def test_cross_conformalized_quantile_regressor_predict_interval_invalid_aggregation() -> (
@@ -1730,7 +1734,7 @@ def test_cross_conformalized_quantile_regressor_base_method_predict_interval() -
         method="base",
         confidence_level=0.9,
     )
-    reg.fit_conformalize(X_toy[:6], y_toy[:6])
+    reg.fit_conformalize(X_toy[:10], y_toy[:10])
 
     y_pred, y_pis = reg.predict_interval(
         X_toy[:2],
@@ -1740,3 +1744,105 @@ def test_cross_conformalized_quantile_regressor_base_method_predict_interval() -
 
     assert y_pred.shape == (2,)
     assert y_pis.shape == (2, 2, 1)
+
+
+MULTI_CONFIDENCE_LEVELS = [0.8, 0.9, 0.95]
+
+
+@pytest.mark.parametrize("method", ["base", "plus", "minmax"])
+def test_cross_conformalized_quantile_regressor_multiple_confidence_levels(
+    method: str,
+) -> None:
+    """
+    Test predict_interval with several confidence levels returns intervals with an
+    alpha axis of the expected size, ordered bounds, and widths growing with the
+    confidence level.
+    """
+    reg = CrossConformalizedQuantileRegressor(
+        estimator=qt,
+        cv=KFold(n_splits=3),
+        conformity_score=AbsoluteQuantileRegressionScore,
+        method=method,
+        confidence_level=MULTI_CONFIDENCE_LEVELS,
+    )
+    reg.fit_conformalize(X[:100], y[:100])
+
+    y_pred, y_pis = reg.predict_interval(X[:20])
+
+    n_levels = len(MULTI_CONFIDENCE_LEVELS)
+    assert y_pred.shape == (20,)
+    assert y_pis.shape == (20, 2, n_levels)
+
+    for k in range(n_levels):
+        assert np.all(y_pis[:, 0, k] <= y_pis[:, 1, k])
+
+    widths = [float(np.mean(y_pis[:, 1, k] - y_pis[:, 0, k])) for k in range(n_levels)]
+    assert widths == sorted(widths)
+
+
+@pytest.mark.parametrize("method", ["base", "plus", "minmax"])
+def test_cross_conformalized_quantile_regressor_multiple_levels_match_single_level(
+    method: str,
+) -> None:
+    """
+    Test each column of a multi-level prediction matches the interval obtained when
+    conformalizing that confidence level alone, so that the alpha axis stays aligned
+    with `confidence_level`.
+    """
+    reg = CrossConformalizedQuantileRegressor(
+        estimator=qt,
+        cv=KFold(n_splits=3),
+        conformity_score=AbsoluteQuantileRegressionScore,
+        method=method,
+        confidence_level=MULTI_CONFIDENCE_LEVELS,
+    )
+    reg.fit_conformalize(X[:100], y[:100])
+
+    _, y_pis = reg.predict_interval(X[:20])
+
+    for k, confidence_level in enumerate(MULTI_CONFIDENCE_LEVELS):
+        single = CrossConformalizedQuantileRegressor(
+            estimator=qt,
+            cv=KFold(n_splits=3),
+            conformity_score=AbsoluteQuantileRegressionScore,
+            method=method,
+            confidence_level=confidence_level,
+        )
+        single.fit_conformalize(X[:100], y[:100])
+
+        _, y_pis_single = single.predict_interval(X[:20])
+
+        assert y_pis_single.shape == (20, 2, 1)
+        np.testing.assert_allclose(y_pis[:, :, k], y_pis_single[:, :, 0])
+
+
+@pytest.mark.parametrize("method", ["base", "plus", "minmax"])
+def test_cross_conformalized_quantile_regressor_point_predictions_ignore_levels(
+    method: str,
+) -> None:
+    """
+    Test point predictions do not depend on the confidence levels, as the central
+    estimator is shared across them.
+    """
+    multi = CrossConformalizedQuantileRegressor(
+        estimator=qt,
+        cv=KFold(n_splits=3),
+        conformity_score=AbsoluteQuantileRegressionScore,
+        method=method,
+        confidence_level=MULTI_CONFIDENCE_LEVELS,
+    )
+    multi.fit_conformalize(X[:100], y[:100])
+
+    single = CrossConformalizedQuantileRegressor(
+        estimator=qt,
+        cv=KFold(n_splits=3),
+        conformity_score=AbsoluteQuantileRegressionScore,
+        method=method,
+        confidence_level=MULTI_CONFIDENCE_LEVELS[0],
+    )
+    single.fit_conformalize(X[:100], y[:100])
+
+    y_pred_multi, _ = multi.predict_interval(X[:20])
+    y_pred_single, _ = single.predict_interval(X[:20])
+
+    np.testing.assert_allclose(y_pred_multi, y_pred_single)

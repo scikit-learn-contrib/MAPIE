@@ -737,6 +737,9 @@ class _QuantileConformalizer(_Conformalizer, ABC):
         X: ArrayLike of shape (n_samples_test, n_features)
             Input data
 
+        level: str
+            The quantile level to predict.
+
         y: ArrayLike of shape (n_samples_test,)
             Input labels.
 
@@ -768,7 +771,7 @@ class _QuantileConformalizer(_Conformalizer, ABC):
             y_pred = self._predict_quantiles(X, level=level, index=0, **predict_params)
         else:
             pred_matrix = np.full(
-                shape=(n_samples, n_splits, len(self.quantiles)),
+                shape=(n_samples, n_splits, len(self.quantiles[level])),
                 fill_value=np.nan,
                 dtype=float,
             )
@@ -905,41 +908,23 @@ class _QuantileConformalizer(_Conformalizer, ABC):
         """
         return self.estimators_["central"][index].predict(X, **predict_params).ravel()
 
-    def _predict(
-        self, X: ArrayLike, ensemble: bool, level: str, **predict_params
-    ) -> Tuple[NDArray, NDArray, NDArray]:
+    def _predict_base(self, X: ArrayLike, level: str, **predict_params):
         """
-        Predicts the lower and upper quantiles for the given input data X.
-
-        Parameters
-        ----------
-        X : ArrayLike
-            Input data for which to predict quantiles.
-        ensemble : Optional[bool], default=None
-            Whether to use the ensemble of estimators for prediction (for compatibility with scores).
-        level: str
-            The quantile level to predict.
-        **predict_params : Any
-            Additional parameters to pass to the predict method of the estimators.
-
-        Returns
-        -------
-        Tuple[NDArray, NDArray, NDArray]
-            Predicted lower, upper, and central quantiles for the input data X.
+        Predicts for base strategy the lower and upper quantiles for the given input data X using the base estimator.
         """
+        y_pred_low = self._base_estimator_[level]["lower"][0].predict(
+            X, **predict_params
+        )
+        y_pred_up = self._base_estimator_[level]["upper"][0].predict(
+            X, **predict_params
+        )
+        y_pred_center = self._base_estimator_["central"][0].predict(X, **predict_params)
+        return np.column_stack((y_pred_low, y_pred_up, y_pred_center))
 
-        if self.method == "base":
-            y_pred_low = self._base_estimator_[level]["lower"][0].predict(
-                X, **predict_params
-            )
-            y_pred_up = self._base_estimator_[level]["upper"][0].predict(
-                X, **predict_params
-            )
-            y_pred_center = self._base_estimator_["central"][0].predict(
-                X, **predict_params
-            )
-            return y_pred_center, y_pred_low, y_pred_up
-
+    def _predict_aggregate(self, X: ArrayLike, level: str, **predict_params):
+        """
+        Predicts the lower and upper quantiles for the given input data X using the specified level and aggregation function.
+        """
         n_split = len(self.estimators_[level]["lower"])
         n_quantiles = len(self.quantiles[level])
         pred_matrix = np.full(
@@ -963,18 +948,116 @@ class _QuantileConformalizer(_Conformalizer, ABC):
             y_pred = np.hstack((y_pred_multi_low, y_pred_multi_up, y_pred_multi_center))
 
         elif self.agg_function == "pinball_weighted_mean":
-            # pinball_weighted_mean works with (n_splits, n_samples) layout
-            y_pred_multi_low = self._pinball_weighted_mean(
-                pred_matrix[:, :, 0].T, level
+            y_pred = self._pinball_weighted_mean(
+                pred_matrix[:, :, :n_quantiles].T, level
             )
-            y_pred_multi_up = self._pinball_weighted_mean(pred_matrix[:, :, 1].T, level)
-            y_pred_multi_center = self._pinball_weighted_mean(pred_matrix[:, :, 2].T, level)
-            y_pred = np.hstack((y_pred_multi_low, y_pred_multi_up, y_pred_multi_center))
-
+            if n_quantiles < 3:
+                y_pred_multi_center = np.mean(
+                    pred_matrix[:, :, 2], axis=1, keepdims=True
+                )
+                y_pred = np.hstack((y_pred, y_pred_multi_center))
         else:
             y_pred = aggregate_all(self.agg_function, pred_matrix)
 
+        return y_pred
+
+    def _predict(
+        self, X: ArrayLike, ensemble: bool, **predict_params
+    ) -> Tuple[NDArray, NDArray, NDArray]:
+        """
+        Predicts the lower and upper quantiles for the given input data X.
+
+        Parameters
+        ----------
+        X : ArrayLike
+            Input data for which to predict quantiles.
+        ensemble : Optional[bool], default=None
+            Whether to use the ensemble of estimators for prediction (for compatibility with scores).
+        **predict_params : Any
+            Additional parameters to pass to the predict method of the estimators.
+
+        Returns
+        -------
+        Tuple[NDArray, NDArray, NDArray]
+            Predicted lower, upper, and central quantiles for the input data X.
+        """
+
+        centers, lowers, uppers = [], [], []
+
+        for alpha in self.alpha:
+            center, lower, upper = self._predict_level(
+                X, str(alpha), ensemble, **predict_params
+            )
+            centers.append(center)
+            lowers.append(lower)
+            uppers.append(upper)
+
+        # The central estimator is shared across confidence levels, so every entry of
+        # `centers` is identical: return it once, without an alpha axis.
+        return centers[0], np.stack(lowers, axis=-1), np.stack(uppers, axis=-1)
+
+    def _predict_level(
+        self, X: ArrayLike, level: str, ensemble: bool, **predict_params
+    ) -> Tuple[NDArray, NDArray, NDArray]:
+        """
+        Predicts the central, lower and upper quantiles for a single confidence level.
+
+        Parameters
+        ----------
+        X : ArrayLike
+            Input data for which to predict quantiles.
+        level : str
+            The confidence level to predict.
+        ensemble : bool
+            Whether to use the ensemble of estimators for prediction (for
+            compatibility with scores).
+        **predict_params : Any
+            Additional parameters to pass to the predict method of the estimators.
+
+        Returns
+        -------
+        Tuple[NDArray, NDArray, NDArray]
+            Predicted central, lower and upper quantiles, each of shape
+            `(n_samples,)`.
+        """
+        if self.method == "base":
+            y_pred = self._predict_base(X, level=level, **predict_params)
+        else:
+            y_pred = self._predict_aggregate(X, level=level, **predict_params)
+
         return y_pred[:, 2], y_pred[:, 0], y_pred[:, 1]
+
+
+class _SingleLevelConformalizer:
+    """
+    Exposes a single confidence level of a conformalizer to a conformity score.
+
+    `BaseRegressionScore.get_bounds` expects `estimator._predict(X, ensemble)` to return
+    the bounds of a single confidence level, whereas `_QuantileConformalizer._predict`
+    returns those of every level at once. This adapter narrows the latter to the former
+    so that `get_bounds` can be called once per level.
+    """
+
+    def __init__(
+        self,
+        conformalizer: _QuantileConformalizer,
+        level: str,
+        predict_params: dict,
+    ) -> None:
+        self._conformalizer = conformalizer
+        self._level = level
+        self._predict_params = predict_params
+
+    def _predict(
+        self, X: ArrayLike, ensemble: bool
+    ) -> Tuple[NDArray, NDArray, NDArray]:
+        y_pred, y_pred_low, y_pred_up = self._conformalizer._predict_level(
+            X, self._level, ensemble, **self._predict_params
+        )
+        # Bounds are returned as column vectors, as `EnsembleRegressor.predict` does:
+        # `get_bounds` broadcasts them against a quantile of shape (1, n_alpha) for the
+        # "base" method, which silently transposes the result if they are 1-dimensional.
+        return y_pred, y_pred_low[:, np.newaxis], y_pred_up[:, np.newaxis]
 
 
 class CrossConformalizedQuantileRegressor(_QuantileConformalizer):
@@ -1199,12 +1282,18 @@ class CrossConformalizedQuantileRegressor(_QuantileConformalizer):
             aggregate_point_predictions
         )
 
-        intervalles: List[NDArray] = []
+        # `get_bounds` vectorizes over the confidence levels of `alpha_np`, but it takes
+        # a single conformity score array and a single pair of predicted bounds, shared
+        # across those levels. Here every level has its own quantile estimators and its
+        # own scores, so the bounds are computed level by level and stacked afterwards.
+        bounds_low, bounds_up = [], []
+        y_pred = None
 
         for alpha in self.alpha:
-            alpha_np = cast(NDArray, alpha)
             level = str(alpha)
+            alpha_np = np.array([alpha], dtype=float)
             scores = self.conformity_scores[level]
+
             if not allow_infinite_bounds:
                 n = self.score.get_effective_calibration_samples(scores)
                 _check_alpha_and_n_samples(alpha_np, n)
@@ -1213,16 +1302,23 @@ class CrossConformalizedQuantileRegressor(_QuantileConformalizer):
             y_pred, y_pred_low, y_pred_up = self.score.predict_set(
                 X,
                 alpha_np,
-                estimator=self,
+                estimator=_SingleLevelConformalizer(self, level, self._predict_params),
                 conformity_scores=scores,
                 ensemble=ensemble,
                 method=self.method,
                 optimize_beta=minimize_interval_width,
                 allow_infinite_bounds=allow_infinite_bounds,
             )
-            intervalles.append(np.column_stack([y_pred_low, y_pred_up]))
+            # A single level is requested per call, so `get_bounds` returns bounds of
+            # shape (n_samples, 1); drop that axis before stacking the levels.
+            bounds_low.append(np.reshape(y_pred_low, -1))
+            bounds_up.append(np.reshape(y_pred_up, -1))
 
-        return y_pred, np.dstack(intervalles)
+        intervalles = np.stack(
+            [np.stack(bounds_low, axis=-1), np.stack(bounds_up, axis=-1)], axis=1
+        )
+
+        return y_pred, intervalles
 
     # TODO: Duplicated from CrossConformalRegressor
     def predict(
