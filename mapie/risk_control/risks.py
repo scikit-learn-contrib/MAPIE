@@ -470,10 +470,23 @@ class RiskLoss:
         (``False``). As for :class:`BinaryRisk`, performance values are
         converted to losses with ``1 - value``.
 
+    monotonicity : {"increasing", "decreasing"}
+        Direction of the controlled loss with respect to the prediction
+        parameter. This describes the values returned by this ``RiskLoss``
+        instance, after converting a performance metric to a loss when
+        ``higher_is_better=True``.
+
     Attributes
     ----------
     higher_is_better : bool
         See params.
+
+    monotonicity : {"increasing", "decreasing"}
+        See params.
+
+    objective_sign : float
+        Sign used to orient the AA-CRC minimization objective: ``1`` for an
+        increasing loss and ``-1`` for a decreasing loss.
 
     Examples
     --------
@@ -481,6 +494,7 @@ class RiskLoss:
     >>> metric = RiskLoss(
     ...     lambda y_true, y_pred, param: param,
     ...     higher_is_better=True,
+    ...     monotonicity="decreasing",
     ... )
     >>> param = torch.tensor([0.2], requires_grad=True)
     >>> loss = metric(None, None, param)
@@ -495,9 +509,20 @@ class RiskLoss:
         self,
         loss_function: Callable[[Any, Any, Any], Any],
         higher_is_better: bool,
+        monotonicity: Literal["increasing", "decreasing"],
     ) -> None:
+        if monotonicity not in ("increasing", "decreasing"):
+            raise ValueError(
+                "`monotonicity` must be either 'increasing' or 'decreasing'."
+            )
         self._loss_function = loss_function
         self.higher_is_better = higher_is_better
+        self.monotonicity = monotonicity
+
+    @property
+    def objective_sign(self) -> float:
+        """Return the sign that orients the AA-CRC minimization objective."""
+        return 1.0 if self.monotonicity == "increasing" else -1.0
 
     def __call__(self, y_true: Any, y_pred: Any, predict_param: Any) -> Any:
         values = self._loss_function(y_true, y_pred, predict_param)
@@ -523,7 +548,11 @@ def _recall(
     return (y_pred_set_ * y_true_).sum(dim=1) / denominator
 
 
-recall_loss = RiskLoss(_recall, higher_is_better=True)
+recall_loss = RiskLoss(
+    _recall,
+    higher_is_better=True,
+    monotonicity="increasing",
+)
 
 
 def _miscoverage(
@@ -538,7 +567,11 @@ def _miscoverage(
     return losses.reshape(len(losses), -1).mean(dim=1)
 
 
-miscoverage_loss = RiskLoss(_miscoverage, higher_is_better=False)
+miscoverage_loss = RiskLoss(
+    _miscoverage,
+    higher_is_better=False,
+    monotonicity="decreasing",
+)
 
 _RISK_LOSS_CHOICE_MAP = {
     "recall": recall_loss,
