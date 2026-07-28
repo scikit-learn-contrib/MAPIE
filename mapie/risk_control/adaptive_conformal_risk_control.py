@@ -57,7 +57,7 @@ class ConditionalExpectedRiskController:
     that a user-provided bounded, monotone risk is controlled at the target
     level ``alpha = 1 - confidence_level``.
 
-    The loss is evaluated in PyTorch inside the AA-CRC objective, so its
+    The loss is evaluated in PyTorch inside the AA-CRC objective [1]_, so its
     gradient with respect to the prediction parameter is preserved.
 
     This implementation relies on PyTorch (an optional dependency, installable
@@ -118,6 +118,14 @@ class ConditionalExpectedRiskController:
 
     base_model : torch.nn.Module
         The fitted prediction-parameter model. Set by :meth:`conformalize`.
+
+    References
+    ----------
+    .. [1] Blot, V., Angelopoulos, A. N., Jordan, M. I., & Brunel, N. J-B.
+        (2025). "Automatically Adaptive Conformal Risk Control."
+        Proceedings of The 28th International Conference on Artificial
+        Intelligence and Statistics, PMLR 258:19-27.
+        https://arxiv.org/abs/2406.17819v4
 
     Examples
     --------

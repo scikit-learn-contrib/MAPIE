@@ -10,17 +10,18 @@
 
 ## Overview
 
-Three methods of risk control have been implemented in MAPIE: **RCPS** (Risk-Controlling Prediction Sets) [^1], **CRC** (Conformal Risk Control) [^2], and **LTT** (Learn Then Test) [^3].
+Four methods of risk control have been implemented in MAPIE: **RCPS** (Risk-Controlling Prediction Sets) [^1], **CRC** (Conformal Risk Control) [^2], **AA-CRC** (Automatically Adaptive Conformal Risk Control) [^3], and **LTT** (Learn Then Test) [^4].
 
-MAPIE supports risk control for **binary classification** and **multi-label classification** (including image segmentation).
+MAPIE supports risk control for **binary classification** and **multi-label classification** (including image segmentation). AA-CRC can also be used to construct input-adaptive regression intervals.
 
 | Risk Control Method | Type of Control | Assumption | Non-monotonic Risks | Binary Classification | Multi-label Classification |
 |---|---|---|---|---|---|
 | **RCPS** | Probability | i.i.d. | :material-close: | :material-close: | :material-check: |
 | **CRC** | Expectation | Exchangeable | :material-close: | :material-close: | :material-check: |
+| **AA-CRC** | Approximate conditional expectation | Exchangeable | :material-close: | :material-check: | :material-check: |
 | **LTT** | Probability | i.i.d. | :material-check: | :material-check: | :material-check: |
 
-For multi-label classification: CRC and RCPS are used for **recall control**, while LTT is used for **precision control**.
+For multi-label classification: CRC, AA-CRC, and RCPS are used for **recall control**, while LTT is used for **precision control**.
 
 ---
 
@@ -54,9 +55,10 @@ A naive approach: evaluate how precision varies with different thresholds on a v
   ![Alpha plot](../images/plot_alpha.png){ width="600" }
 </figure>
 
-The three methods provide different guarantees:
+The four methods provide different guarantees:
 
 - **CRC**: Requires **exchangeable** data → $\mathbb{E}(R) \leq \alpha$
+- **AA-CRC**: Requires **exchangeable** data → approximate conditional risk control
 - **RCPS** and **LTT**: Require **i.i.d.** data → $\mathbb{P}(R \leq \alpha) \geq 1 - \delta$
 
 <figure markdown>
@@ -137,7 +139,39 @@ $$
 
 ---
 
-### 2.3 Learn Then Test (LTT)
+### 2.3 Automatically Adaptive Conformal Risk Control (AA-CRC)
+
+Standard CRC selects one prediction parameter $\lambda$ for every input. AA-CRC instead learns an input-dependent function $\lambda(x)$, so that easier and harder inputs can receive different prediction sets while the risk remains controlled.
+
+Let $\mathcal{C}_u(x)$ be a nested family of prediction sets and let $\ell(x,y,u)$ be a bounded loss that is monotone in $u$. For a target risk $\alpha$, AA-CRC defines the integrated loss
+
+$$
+I(x,y,u) = \int^u \left(\ell(x,y,u') - \alpha\right)\,du'.
+$$
+
+This is Equation 10 of [^3]. For a new input $X_{n+1}$, the method finds the function $\widetilde{\lambda}$ by minimizing
+
+$$
+\widetilde{\lambda}
+=
+\underset{\lambda \in \Lambda}{\operatorname{argmin}}
+\left[
+\frac{1}{n+1}\sum_{i=1}^{n}
+I\left(X_i,Y_i,\lambda(X_i)\right)
++
+\frac{1-\alpha}{n+1}\lambda(X_{n+1})
++
+R(\lambda)
+\right],
+$$
+
+where $\Lambda$ is the learned function class and $R$ is an optional regularizer. This is Equation 24 of [^3]. The last term involving $X_{n+1}$ is a worst-case correction: it lets the method compute $\widetilde{\lambda}(X_{n+1})$ without knowing the test label.
+
+In practice, a neural network maps an embedding $\Phi(x)$ to the prediction parameter $\lambda(x)$. MAPIE first trains this parameter model on the conformalization data. At prediction time, it makes a copy of the model and fine-tunes it separately for each test point using the objective above. The resulting value $\widetilde{\lambda}(X_{n+1})$ is then used to construct that point's prediction set or interval.
+
+---
+
+### 2.4 Learn Then Test (LTT)
 
 Controls **any loss** (including non-monotonic) through multiple hypothesis testing:
 
@@ -159,4 +193,5 @@ Return $\hat{\Lambda} = \mathcal{A}(\{p_j\})$ — the set of $\lambda$ values th
 
 [^1]: Bates, S., Angelopoulos, A., Lei, L., Malik, J., & Jordan, M. "Distribution-free, risk-controlling prediction sets." *CoRR*, 2021.
 [^2]: Angelopoulos, A. N., Bates, S., Fisch, A., Lei, L., & Schuster, T. "Conformal Risk Control." 2022.
-[^3]: Angelopoulos, A. N., Bates, S., Candès, E. J., Jordan, M. I., & Lei, L. "Learn then test: Calibrating predictive algorithms to achieve risk control." 2021.
+[^3]: Blot, V., Angelopoulos, A. N., Jordan, M. I., & Brunel, N. J-B. "Automatically Adaptive Conformal Risk Control." *AISTATS*, 2025. [arXiv:2406.17819v4](https://arxiv.org/abs/2406.17819v4).
+[^4]: Angelopoulos, A. N., Bates, S., Candès, E. J., Jordan, M. I., & Lei, L. "Learn then test: Calibrating predictive algorithms to achieve risk control." 2021.
