@@ -104,20 +104,6 @@ def feature_map(X):
     return np.column_stack([x, group_membership(x)])
 
 
-class BoundedWidthHead(torch.nn.Module):
-    """Map the embedding to an interval width between zero and ``max_width``."""
-
-    def __init__(self, n_features, max_width):
-        super().__init__()
-        self.linear = torch.nn.Linear(n_features, 1)
-        self.max_width = max_width
-        torch.nn.init.zeros_(self.linear.weight)
-        torch.nn.init.zeros_(self.linear.bias)
-
-    def forward(self, X):
-        return self.max_width * torch.sigmoid(self.linear(X))
-
-
 ##############################################################################
 # Define the interval prediction function
 # ---------------------------------------
@@ -145,10 +131,6 @@ aa_controller = ConditionalExpectedRiskController(
     confidence_level=1 - ALPHA,
     risk="miscoverage",
     predict_param_range=(0.0, MAX_WIDTH),
-    base_model=BoundedWidthHead(
-        n_features=feature_map(X_calib[:1]).shape[1],
-        max_width=MAX_WIDTH,
-    ),
     learning_rate=1.3e-1,
     weight_decay=1e-5,
 )
