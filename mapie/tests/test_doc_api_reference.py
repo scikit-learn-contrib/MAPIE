@@ -42,6 +42,10 @@ def test_api_pages_cover_every_discovered_symbol_once() -> None:
     assert "mapie.metrics.uncertainty.auroc" in paths
     assert "mapie.metrics.conditional.coverage_gap" in paths
     assert "mapie.exchangeability_testing.RiskMonitoring" in paths
+    assert (
+        "mapie.risk_control.adaptive_conformal_risk_control."
+        "ConditionalExpectedRiskController"
+    ) in paths
 
 
 def test_generated_markdown_references_every_public_symbol() -> None:

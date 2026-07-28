@@ -16,7 +16,7 @@ def _import_torch():
 
     PyTorch is an optional dependency of MAPIE (the ``conditional`` extra), so
     it is imported only when this module (and thus
-    :class:`ConditionalRiskController`) is actually accessed.
+    :class:`ConditionalExpectedRiskController`) is actually accessed.
     ``mapie.risk_control`` loads this module lazily, so importing it stays cheap
     and free of a hard PyTorch dependency.
     """
@@ -24,7 +24,7 @@ def _import_torch():
         import torch
     except ImportError as e:
         raise ImportError(
-            "PyTorch is required for ConditionalRiskController. "
+            "PyTorch is required for ConditionalExpectedRiskController. "
             "Install it with: pip install mapie[conditional]"
         ) from e
     return torch
@@ -46,12 +46,12 @@ DEVICE = torch.device(
 )
 
 
-class ConditionalRiskController:
+class ConditionalExpectedRiskController:
     """
     Conformal risk control with a learned, input-dependent prediction parameter.
 
     Unlike threshold-based controllers that select a single global decision
-    threshold, ``ConditionalRiskController`` learns a smooth function of
+    threshold, ``ConditionalExpectedRiskController`` learns a smooth function of
     the input (its embedding) that returns a per-input prediction parameter.
     The prediction-parameter model is trained on the conformalization set so
     that a user-provided bounded, monotone risk is controlled at the target
@@ -123,7 +123,7 @@ class ConditionalRiskController:
     --------
     >>> import numpy as np
     >>> from mapie.risk_control.adaptive_conformal_risk_control import (
-    ...     ConditionalRiskController,
+    ...     ConditionalExpectedRiskController,
     ... )
     >>> rng = np.random.default_rng(42)
     >>> X = rng.random((8, 4, 4))
@@ -137,7 +137,7 @@ class ConditionalRiskController:
     ...         return X
     ...     shape = (len(predict_param),) + (1,) * (X.ndim - 1)
     ...     return X >= np.asarray(predict_param).reshape(shape)
-    >>> crc = ConditionalRiskController(
+    >>> crc = ConditionalExpectedRiskController(
     ...     predict_function=predict_function,
     ...     feature_map=feature_map,
     ...     confidence_level=0.9,
@@ -151,7 +151,7 @@ class ConditionalRiskController:
 
     def __init__(
         self,
-        predict_function: Callable[[ArrayLike], NDArray],
+        predict_function: Callable[..., NDArray],
         feature_map: Callable[[ArrayLike], NDArray],
         confidence_level: float,
         risk: RiskLossLike,
