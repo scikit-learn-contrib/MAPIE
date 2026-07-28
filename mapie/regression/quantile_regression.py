@@ -48,9 +48,16 @@ REGRESSOR_TYPE = Union[RegressorMixin, Pipeline]
 class QuantileRegressionScore(BaseRegressionScore):
     """
     Quantile conformity score for quantile regression.
+
+    Notes
+    -----
+    `consistency_check` defaults to `False`: the check inherited from
+    `BaseRegressionScore` verifies that `y` can be recovered from a single `y_pred` and
+    its conformity score, whereas a quantile score is defined against *two* predictions,
+    the lower and the upper quantile. The relation it asserts therefore cannot hold here.
     """
 
-    def __init__(self, sym: bool = False, consistency_check: bool = True) -> None:
+    def __init__(self, sym: bool = False, consistency_check: bool = False) -> None:
         super().__init__(sym=sym, consistency_check=consistency_check)
 
     def get_signed_conformity_scores(
@@ -62,6 +69,11 @@ class QuantileRegressionScore(BaseRegressionScore):
 
         Compute the sample conformity scores given the predicted and
         observed targets.
+
+        Both rows follow the `y - y_pred` orientation shared by the other regression
+        scores, so that `get_estimation_distribution` reconstructs `y` from either of
+        them: the first row is scored against the lower quantile, the second against the
+        upper one.
 
         Parameters
         ----------
@@ -76,7 +88,7 @@ class QuantileRegressionScore(BaseRegressionScore):
         NDArray[float] of shape (n_samples, 2)
             Signed conformity scores.
         """
-        return np.vstack((y_pred[0] - y, y - y_pred[1]))
+        return np.vstack((y - y_pred[0], y - y_pred[1]))
 
     def get_estimation_distribution(
         self, y_pred: NDArray[float], conformity_scores: NDArray[float], **kwargs
@@ -118,12 +130,16 @@ class AbsoluteQuantileRegressionScore(QuantileRegressionScore):
         Compute the conformity scores from the predicted values
         and the observed ones, from the following formula:
         conformity score = max(y_pred_lower - y, y - y_pred_upper)
+
+        Both signed rows follow the `y - y_pred` orientation, so the lower one is
+        negated to turn it into a distance above the lower quantile before taking the
+        maximum.
         """
         conformity_scores = self.get_signed_conformity_scores(y, y_pred, **kwargs)
 
         if self.consistency_check:
             self.check_consistency(y, y_pred, conformity_scores, **kwargs)
-        return np.maximum(conformity_scores[0], conformity_scores[1])
+        return np.maximum(-conformity_scores[0], conformity_scores[1])
 
 
 class _QuantileConformalizer(_Conformalizer, ABC):
@@ -232,8 +248,12 @@ class _QuantileConformalizer(_Conformalizer, ABC):
     def _check_score(self, score):
         """
         Check if the score is a subclass of QuantileRegressionScore.
+
+        Both a class and an already instantiated score are accepted, so that options
+        such as `sym` can be set by the caller.
         """
-        if not issubclass(score, self.ALLOWED_SCORES):
+        score_class = score if isinstance(score, type) else type(score)
+        if not issubclass(score_class, self.ALLOWED_SCORES):
             raise ValueError(
                 "Invalid score. Allowed values are subclasses of QuantileRegressionScore."
             )

@@ -303,6 +303,10 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
                 + "symmetrical conformity score function."
             )
 
+        # Scores are one-dimensional when a single distribution calibrates both bounds,
+        # and hold one row per side otherwise. Every row follows the same `y - y_pred`
+        # orientation, so both cases share the formulas below; only the array each side
+        # reads from differs.
         conformity_scores_low = conformity_scores_up = conformity_scores
 
         if conformity_scores.ndim > 1:
@@ -315,8 +319,8 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
         if optimize_beta:
             beta_np = self._beta_optimize(
                 alpha_np,
-                conformity_scores_low,
                 conformity_scores_up,
+                conformity_scores_low,
             )
         else:
             beta_np = alpha_np / 2
@@ -325,21 +329,21 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
             alpha_low = alpha_np if self.sym else beta_np
             alpha_up = 1 - alpha_np if self.sym else 1 - alpha_np + beta_np
 
-            conformity_scores_low = self.get_estimation_distribution(
-                y_pred_low, signed * conformity_scores, X=X
+            distribution_low = self.get_estimation_distribution(
+                y_pred_low, signed * conformity_scores_low, X=X
             )
-            conformity_scores_up = self.get_estimation_distribution(
-                y_pred_up, conformity_scores, X=X
+            distribution_up = self.get_estimation_distribution(
+                y_pred_up, conformity_scores_up, X=X
             )
             bound_low = self.get_quantile(
-                conformity_scores_low,
+                distribution_low,
                 alpha_low,
                 axis=1,
                 reversed=True,
                 unbounded=allow_infinite_bounds,
             )
             bound_up = self.get_quantile(
-                conformity_scores_up, alpha_up, axis=1, unbounded=allow_infinite_bounds
+                distribution_up, alpha_up, axis=1, unbounded=allow_infinite_bounds
             )
 
         else:
@@ -351,17 +355,19 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
                 quantile_low, quantile_up = -quantile_ref, quantile_ref
 
             else:
+                # Each side gets its own one-sided coverage, `beta` below and
+                # `1 - alpha + beta` above, read from its own conformity scores.
                 alpha_low, alpha_up = beta_np, 1 - alpha_np + beta_np
 
                 quantile_low = self.get_quantile(
-                    conformity_scores[..., np.newaxis],
+                    conformity_scores_low[..., np.newaxis],
                     alpha_low,
                     axis=0,
                     reversed=True,
                     unbounded=allow_infinite_bounds,
                 )
                 quantile_up = self.get_quantile(
-                    conformity_scores[..., np.newaxis],
+                    conformity_scores_up[..., np.newaxis],
                     alpha_up,
                     axis=0,
                     unbounded=allow_infinite_bounds,

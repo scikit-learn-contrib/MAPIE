@@ -685,7 +685,8 @@ def test_quantile_regression_score_signed_conformity_scores() -> None:
 
     signed_scores = score.get_signed_conformity_scores(y, y_pred)
 
-    expected_scores = np.vstack((y_pred[0] - y, y - y_pred[1]))
+    # Both rows follow the `y - y_pred` orientation shared by the other scores.
+    expected_scores = np.vstack((y - y_pred[0], y - y_pred[1]))
     assert signed_scores.shape == (2, 3)
     np.testing.assert_allclose(signed_scores, expected_scores)
 
@@ -1846,3 +1847,158 @@ def test_cross_conformalized_quantile_regressor_point_predictions_ignore_levels(
     y_pred_single, _ = single.predict_interval(X[:20])
 
     np.testing.assert_allclose(y_pred_multi, y_pred_single)
+
+
+def test_quantile_regression_score_is_asymmetric_without_consistency_check() -> None:
+    """
+    Test the asymmetric score keeps both sides of the conformity scores, and that the
+    consistency check is off, being inapplicable to a two-sided score.
+    """
+    score = QuantileRegressionScore()
+
+    assert score.sym is False
+    assert score.consistency_check is False
+
+    y = np.array([2.0, 5.0, 8.0])
+    y_pred = np.array([[1.0, 4.0, 7.0], [3.0, 6.0, 9.0]])
+
+    assert score.get_conformity_scores(y, y_pred).shape == (2, 3)
+
+
+def test_quantile_conformalizer_check_score_accepts_an_instance() -> None:
+    """Test score validation accepts an instance, so that `sym` can be set."""
+    conformalizer = DummyQuantileConformalizer()
+
+    conformalizer._check_score(QuantileRegressionScore())
+    conformalizer._check_score(AbsoluteQuantileRegressionScore())
+
+    with pytest.raises(
+        ValueError,
+        match=r".*Invalid score. Allowed values are subclasses of QuantileRegressionScore.*",
+    ):
+        conformalizer._check_score(LinearRegression())
+
+
+@pytest.mark.parametrize("method", ["base", "plus", "minmax"])
+def test_cross_conformalized_quantile_regressor_asymmetric_score(method: str) -> None:
+    """
+    Test the asymmetric score produces ordered intervals of the expected shape, for
+    several confidence levels, keeping both sides of the conformity scores.
+    """
+    reg = CrossConformalizedQuantileRegressor(
+        estimator=qt,
+        cv=KFold(n_splits=3),
+        conformity_score=QuantileRegressionScore(),
+        method=method,
+        confidence_level=MULTI_CONFIDENCE_LEVELS,
+    )
+    reg.fit_conformalize(X[:100], y[:100])
+
+    for level_scores in reg.conformity_scores.values():
+        assert np.asarray(level_scores).shape[0] == 2
+
+    y_pred, y_pis = reg.predict_interval(X[:20])
+
+    n_levels = len(MULTI_CONFIDENCE_LEVELS)
+    assert y_pred.shape == (20,)
+    assert y_pis.shape == (20, 2, n_levels)
+
+    for k in range(n_levels):
+        assert np.all(y_pis[:, 0, k] <= y_pis[:, 1, k])
+
+    widths = [float(np.mean(y_pis[:, 1, k] - y_pis[:, 0, k])) for k in range(n_levels)]
+    assert widths == sorted(widths)
+
+
+Y_PRED_LOW_ASYM, Y_PRED_UP_ASYM = -1.5, 3.0
+
+
+def _asymmetric_bounds(scores: NDArray, alpha: float = 0.1) -> Tuple[float, float]:
+    """Compute a single pair of asymmetric bounds for fixed quantile predictions."""
+
+    class FixedBounds:
+        def _predict(
+            self, X: NDArray, ensemble: bool
+        ) -> Tuple[NDArray, NDArray, NDArray]:
+            n = X.shape[0]
+            return (
+                np.zeros(n),
+                np.full((n, 1), Y_PRED_LOW_ASYM),
+                np.full((n, 1), Y_PRED_UP_ASYM),
+            )
+
+    _, bound_low, bound_up = QuantileRegressionScore().predict_set(
+        np.zeros((1, 1)),
+        np.array([alpha]),
+        estimator=FixedBounds(),
+        conformity_scores=scores,
+        ensemble=False,
+        method="base",
+        optimize_beta=False,
+        allow_infinite_bounds=True,
+    )
+    return float(np.reshape(bound_low, -1)[0]), float(np.reshape(bound_up, -1)[0])
+
+
+def _asymmetric_scores(n_calib: int = 500) -> NDArray:
+    """Signed scores as QuantileRegressionScore builds them, of shape (2, n_calib)."""
+    rng = np.random.RandomState(random_state)
+    y_calib_asym = rng.exponential(2.0, size=n_calib)
+    return np.vstack(
+        (y_calib_asym - Y_PRED_LOW_ASYM, y_calib_asym - Y_PRED_UP_ASYM)
+    )
+
+
+def test_asymmetric_lower_scores_only_move_the_lower_bound() -> None:
+    """
+    Test the lower bound is calibrated on the lower scores alone, and widens downwards
+    when they report larger violations below the lower quantile.
+    """
+    scores = _asymmetric_scores()
+    bound_low, bound_up = _asymmetric_bounds(scores)
+
+    shifted = scores.copy()
+    shifted[0] -= 5.0
+    shifted_low, shifted_up = _asymmetric_bounds(shifted)
+
+    assert shifted_low < bound_low
+    assert shifted_up == bound_up
+
+
+def test_asymmetric_upper_scores_only_move_the_upper_bound() -> None:
+    """
+    Test the upper bound is calibrated on the upper scores alone, and widens upwards
+    when they report larger violations above the upper quantile.
+    """
+    scores = _asymmetric_scores()
+    bound_low, bound_up = _asymmetric_bounds(scores)
+
+    shifted = scores.copy()
+    shifted[1] += 5.0
+    shifted_low, shifted_up = _asymmetric_bounds(shifted)
+
+    assert shifted_up > bound_up
+    assert shifted_low == bound_low
+
+
+def test_asymmetric_bounds_split_the_miscoverage_between_both_sides() -> None:
+    """
+    Test each side of an asymmetric interval misses about `alpha / 2` of the target
+    distribution, which is the guarantee the two-sided calibration provides.
+    """
+    alpha = 0.1
+    rng = np.random.RandomState(random_state)
+    y_calib_asym = rng.exponential(2.0, size=5000)
+    scores = np.vstack(
+        (y_calib_asym - Y_PRED_LOW_ASYM, y_calib_asym - Y_PRED_UP_ASYM)
+    )
+
+    bound_low, bound_up = _asymmetric_bounds(scores, alpha=alpha)
+    y_test_asym = rng.exponential(2.0, size=100000)
+
+    miss_low = float(np.mean(y_test_asym < bound_low))
+    miss_up = float(np.mean(y_test_asym > bound_up))
+
+    assert 0.03 < miss_low < 0.07
+    assert 0.03 < miss_up < 0.07
+    assert 0.08 < miss_low + miss_up < 0.12
