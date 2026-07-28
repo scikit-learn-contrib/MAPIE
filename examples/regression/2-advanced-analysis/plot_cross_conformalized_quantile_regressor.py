@@ -60,7 +60,7 @@ mapie_cross_cqr.fit_conformalize(X_train, y_train)
 y_pred, y_pis = mapie_cross_cqr.predict_interval(X_test)
 
 coverage = regression_coverage_score(y_test, y_pis)[0]
-width = regression_mean_width_score(y_pis)
+width = regression_mean_width_score(y_pis)[0]
 
 print(f"Coverage: {coverage:.3f}")
 print(f"Mean width: {width:.3f}")
@@ -72,12 +72,8 @@ order = np.argsort(X_test[:, 0])
 X_plot = X_test[order, 0]
 y_pred_plot = y_pred[order]
 
-if y_pis.ndim == 2:
-    y_low = y_pis[order, 0]
-    y_up = y_pis[order, 1]
-else:
-    y_low = y_pis[order, 0, 0]
-    y_up = y_pis[order, 1, 0]
+y_low = y_pis[order, 0, 0]
+y_up = y_pis[order, 1, 0]
 
 plt.figure(figsize=(8, 6))
 plt.scatter(X_test[:, 0], y_test, s=8, alpha=0.3, label="Test data")
