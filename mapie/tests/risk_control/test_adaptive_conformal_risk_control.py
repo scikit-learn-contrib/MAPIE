@@ -11,7 +11,6 @@ from mapie.risk_control.adaptive_conformal_risk_control import (
     _LinearHead,
     _LogisticHead,
     _import_torch,
-    _infer_objective_sign,
     _train_model,
 )
 
@@ -54,6 +53,8 @@ def test_init_stores_parameters():
     assert crc._risk is recall_loss
     assert crc.predict_param_range == (0.0, 1.0)
     assert crc._risk.higher_is_better
+    assert crc._risk.monotonicity == "increasing"
+    assert crc._risk.objective_sign == 1.0
     assert np.isclose(crc._alpha, 0.1)
     assert crc.base_model is None
     assert crc.learning_rate == 1e-3
@@ -74,8 +75,7 @@ def test_conformalize_initializes_default_base_model():
     assert crc.X_conformalize_embedded.shape == (6, 9)
     np.testing.assert_array_equal(crc.y_conformalize, y)
     np.testing.assert_array_equal(crc.y_conformalize_pred, X)
-    assert isinstance(crc.base_model, _LinearHead)
-    assert crc._objective_sign == 1.0
+    assert isinstance(crc.base_model, _LogisticHead)
 
 
 def test_conformalize_uses_provided_base_model():
@@ -186,11 +186,19 @@ def test_train_model_rejects_invalid_batch_size(batch_size, error, message):
 
 def test_logistic_head_output_range():
     torch.manual_seed(0)
-    head = _LogisticHead(4)
+    head = _LogisticHead(4, predict_param_range=(0.5, 2.0))
     out = head(torch.rand(5, 4))
     assert tuple(out.shape) == (5, 1)
-    assert bool(torch.all(out >= 0))
-    assert bool(torch.all(out <= 1))
+    assert bool(torch.all(out >= 0.5))
+    assert bool(torch.all(out <= 2.0))
+
+
+def test_logistic_head_zero_initialization_outputs_range_midpoint():
+    head = _LogisticHead(4, predict_param_range=(0.5, 2.0))
+    torch.nn.init.zeros_(head.fc.weight)
+    torch.nn.init.zeros_(head.fc.bias)
+    out = head(torch.rand(5, 4))
+    np.testing.assert_allclose(out.detach().numpy(), 1.25)
 
 
 def test_custom_loss_forward_and_integral():
@@ -233,12 +241,20 @@ def test_aacrc_loss_is_same_for_equivalent_metric_and_loss():
     metric_loss = _AACRCLoss(
         alpha=0.1,
         n=1,
-        risk=RiskLoss(performance_metric, higher_is_better=True),
+        risk=RiskLoss(
+            performance_metric,
+            higher_is_better=True,
+            monotonicity="increasing",
+        ),
     )
     direct_loss = _AACRCLoss(
         alpha=0.1,
         n=1,
-        risk=RiskLoss(loss_function, higher_is_better=False),
+        risk=RiskLoss(
+            loss_function,
+            higher_is_better=False,
+            monotonicity="increasing",
+        ),
     )
 
     assert torch.allclose(
@@ -275,7 +291,11 @@ def test_aacrc_loss_with_nonzero_integration_start():
     loss = _AACRCLoss(
         alpha=0.1,
         n=1,
-        risk=RiskLoss(constant_loss, higher_is_better=False),
+        risk=RiskLoss(
+            constant_loss,
+            higher_is_better=False,
+            monotonicity="increasing",
+        ),
         integration_start=2.0,
     )(
         torch.ones(1, 1, device=DEVICE),
@@ -308,7 +328,11 @@ def test_aacrc_loss_scales_minibatch_to_full_objective():
     loss = _AACRCLoss(
         alpha=0.1,
         n=6,
-        risk=RiskLoss(constant_loss, higher_is_better=False),
+        risk=RiskLoss(
+            constant_loss,
+            higher_is_better=False,
+            monotonicity="increasing",
+        ),
     )(
         torch.ones(2, 1, device=DEVICE),
         torch.ones(2, 1, device=DEVICE),
@@ -323,6 +347,14 @@ def test_aacrc_loss_scales_minibatch_to_full_objective():
 
 
 def test_aacrc_loss_negates_objective_for_decreasing_risk():
+    def constant_loss(y_true, y_pred, predict_param):
+        return torch.full(
+            (len(predict_param),),
+            0.25,
+            dtype=y_pred.dtype,
+            device=y_pred.device,
+        )
+
     y_true = torch.ones(1, 1, device=DEVICE)
     y_pred = torch.ones(1, 1, device=DEVICE)
     predict_params = torch.tensor([[0.5]], device=DEVICE)
@@ -330,61 +362,31 @@ def test_aacrc_loss_negates_objective_for_decreasing_risk():
     increasing_objective = _AACRCLoss(
         alpha=0.1,
         n=1,
-        objective_sign=1.0,
+        risk=RiskLoss(
+            constant_loss,
+            higher_is_better=False,
+            monotonicity="increasing",
+        ),
     )(y_true, y_pred, predict_params, predict_param_n_plus_1)
     decreasing_objective = _AACRCLoss(
         alpha=0.1,
         n=1,
-        objective_sign=-1.0,
+        risk=RiskLoss(
+            constant_loss,
+            higher_is_better=False,
+            monotonicity="decreasing",
+        ),
     )(y_true, y_pred, predict_params, predict_param_n_plus_1)
 
     assert torch.allclose(decreasing_objective, -increasing_objective)
 
 
-@pytest.mark.parametrize(
-    "loss_function, message",
-    [
-        (
-            lambda y_true, y_pred, param: torch.ones(
-                len(param) + 1,
-                device=param.device,
-            ),
-            "one value per prediction parameter",
-        ),
-        (
-            lambda y_true, y_pred, param: torch.full(
-                (len(param),),
-                torch.nan,
-                device=param.device,
-            ),
-            "only finite values",
-        ),
-        (
-            lambda y_true, y_pred, param: torch.full(
-                (len(param),),
-                1.5,
-                device=param.device,
-            ),
-            r"lie in \[0, 1\]",
-        ),
-        (
-            lambda y_true, y_pred, param: (
-                0.5 * torch.sin(2 * torch.pi * param.reshape(len(param), -1)[:, 0])
-                + 0.5
-            ),
-            "must be monotone",
-        ),
-    ],
-)
-def test_infer_objective_sign_rejects_invalid_risks(loss_function, message):
-    risk = RiskLoss(loss_function, higher_is_better=False)
-    with pytest.raises(ValueError, match=message):
-        _infer_objective_sign(
-            risk,
-            np.ones(2),
-            np.ones(2),
-            (0.0, 1.0),
-            n_grid_points=5,
+def test_risk_loss_rejects_invalid_monotonicity():
+    with pytest.raises(ValueError, match="`monotonicity` must be either"):
+        RiskLoss(
+            lambda y_true, y_pred, param: param,
+            higher_is_better=False,
+            monotonicity="invalid",
         )
 
 
@@ -411,6 +413,8 @@ def test_predefined_recall_loss():
     losses.sum().backward()
     assert predict_params.grad is not None
     assert recall_loss.higher_is_better
+    assert recall_loss.monotonicity == "increasing"
+    assert recall_loss.objective_sign == 1.0
 
 
 def test_predefined_miscoverage_loss_is_differentiable():
@@ -422,6 +426,8 @@ def test_predefined_miscoverage_loss_is_differentiable():
     losses.sum().backward()
     assert widths.grad is not None
     assert not miscoverage_loss.higher_is_better
+    assert miscoverage_loss.monotonicity == "decreasing"
+    assert miscoverage_loss.objective_sign == -1.0
 
 
 @pytest.mark.parametrize(
@@ -475,12 +481,17 @@ def test_custom_risk_loss():
         predict_function=_predict_function,
         feature_map=_feature_map,
         confidence_level=0.9,
-        risk=RiskLoss(constant_loss, higher_is_better=False),
+        risk=RiskLoss(
+            constant_loss,
+            higher_is_better=False,
+            monotonicity="increasing",
+        ),
     )
     crc.conformalize(X, y, n_epochs=1)
     assert isinstance(crc.risk, RiskLoss)
     assert crc._risk is crc.risk
     assert not crc._risk.higher_is_better
+    assert crc._risk.monotonicity == "increasing"
 
 
 def test_custom_prediction_function_for_regression_intervals():
@@ -503,7 +514,7 @@ def test_custom_prediction_function_for_regression_intervals():
     crc.conformalize(X, y, n_epochs=1, batch_size=6)
     intervals = crc.predict(X[:2], n_epochs=0, batch_size=6)
     assert intervals.shape == (2, 2)
-    assert crc._objective_sign == -1.0
+    assert crc._risk.objective_sign == -1.0
     assert np.all((crc.best_predict_params_ >= 0.5) & (crc.best_predict_params_ <= 2))
 
 

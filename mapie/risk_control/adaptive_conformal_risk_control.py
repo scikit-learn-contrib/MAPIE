@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING, Callable, Optional, Tuple
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
-from mapie.risk_control.methods import _check_risk_monotonicity
 from mapie.risk_control.risks import RiskLoss, RiskLossLike, _resolve_risk, recall_loss
 from mapie.utils import _transform_confidence_level_to_alpha
 
@@ -85,16 +84,17 @@ class ConditionalExpectedRiskController:
         Differentiable loss or performance metric to control.
         Pass a :class:`RiskLoss` for a custom loss.
         Its wrapped PyTorch function must be monotone with respect to the
-        prediction parameter. The monotonic direction is inferred during
-        :meth:`conformalize`.
+        prediction parameter, and the direction of the resulting controlled
+        loss must be declared through ``RiskLoss.monotonicity``.
 
     predict_param_range : tuple of float, default=(0.0, 1.0)
         Lower and upper bounds of the learned prediction parameter.
 
     base_model : torch.nn.Module, optional
         Mapping from an embedding to the requested prediction-parameter range.
-        If ``None`` (default), a single linear layer sized to the embedding
-        dimension is created during :meth:`conformalize`.
+        If ``None`` (default), a logistic head sized to the embedding dimension
+        is created during :meth:`conformalize`. Its sigmoid output is scaled to
+        ``predict_param_range``.
 
     learning_rate : float, default=1e-4
         Learning rate of the Adam optimiser used to train the
@@ -117,7 +117,9 @@ class ConditionalExpectedRiskController:
         :meth:`conformalize`.
 
     base_model : torch.nn.Module
-        The fitted prediction-parameter model. Set by :meth:`conformalize`.
+        The fitted prediction-parameter model. Set by :meth:`conformalize`. By
+        default, this is a logistic head whose output is bounded by
+        ``predict_param_range``.
 
     References
     ----------
@@ -222,20 +224,17 @@ class ConditionalExpectedRiskController:
         self.X_conformalize_embedded = self.feature_map(X_conformalize_)
         self.y_conformalize = y_conformalize
         self.y_conformalize_pred = self.predict_function(X_conformalize_)
-        self._objective_sign = _infer_objective_sign(
-            self._risk,
-            self.y_conformalize,
-            self.y_conformalize_pred,
-            self.predict_param_range,
-        )
 
         random_idx = np.random.randint(len(X_conformalize_))
         x_n_plus_1 = X_conformalize_[random_idx]
 
         if self.base_model is None:
-            self.base_model = _LinearHead(self.X_conformalize_embedded.shape[1])
+            self.base_model = _LogisticHead(
+                self.X_conformalize_embedded.shape[1],
+                predict_param_range=self.predict_param_range,
+            )
             torch.nn.init.zeros_(self.base_model.fc.weight)
-            torch.nn.init.constant_(self.base_model.fc.bias, (lower + upper) / 2)
+            torch.nn.init.zeros_(self.base_model.fc.bias)
         self.base_model = _train_model(
             self.base_model,
             self.y_conformalize,
@@ -249,7 +248,6 @@ class ConditionalExpectedRiskController:
             x_n_plus_1=self.feature_map(x_n_plus_1),
             risk=self._risk,
             integration_start=lower,
-            objective_sign=self._objective_sign,
         )
 
     def predict(
@@ -299,7 +297,6 @@ class ConditionalExpectedRiskController:
                 x_n_plus_1=x_n_plus_1,
                 risk=self._risk,
                 integration_start=self.predict_param_range[0],
-                objective_sign=self._objective_sign,
             )
             best_predict_params[i] = np.clip(
                 model(torch.tensor(x_n_plus_1.astype(np.float32)).to(DEVICE)).item(),
@@ -308,62 +305,6 @@ class ConditionalExpectedRiskController:
 
         self.best_predict_params_ = best_predict_params
         return np.asarray(self.predict_function(X_, best_predict_params))
-
-
-def _infer_objective_sign(
-    risk: RiskLoss,
-    y_true: ArrayLike,
-    y_pred: ArrayLike,
-    predict_param_range: Tuple[float, float],
-    n_grid_points: int = 100,
-) -> float:
-    """Infer the sign that makes the AA-CRC objective locally minimizable."""
-    y_true_tensor = torch.tensor(
-        np.asarray(y_true, dtype=np.float32),
-        device=DEVICE,
-    )
-    y_pred_tensor = torch.tensor(
-        np.asarray(y_pred, dtype=np.float32),
-        device=DEVICE,
-    )
-    n_samples = len(y_true_tensor)
-    parameter_shape = (n_samples,) + (1,) * (y_pred_tensor.ndim - 1)
-    parameters = torch.linspace(
-        *predict_param_range,
-        n_grid_points,
-        dtype=y_pred_tensor.dtype,
-        device=DEVICE,
-    )
-
-    losses = []
-    with torch.no_grad():
-        for parameter in parameters:
-            values = risk(
-                y_true_tensor,
-                y_pred_tensor,
-                parameter.expand(parameter_shape),
-            )
-            values = torch.as_tensor(values, device=DEVICE).reshape(-1)
-            if len(values) != n_samples:
-                raise ValueError(
-                    "The risk must return one value per prediction parameter."
-                )
-            losses.append(values)
-    loss_values = torch.stack(losses)
-
-    if not bool(torch.isfinite(loss_values).all()):
-        raise ValueError("The risk must return only finite values.")
-    tolerance = 1e-6
-    if bool((loss_values < -tolerance).any() or (loss_values > 1 + tolerance).any()):
-        raise ValueError("The risk values must lie in [0, 1].")
-
-    mean_losses = loss_values.mean(dim=1).cpu().numpy()
-    direction = _check_risk_monotonicity(mean_losses)
-    if direction == "none":
-        raise ValueError(
-            "The risk must be monotone with respect to the prediction parameter."
-        )
-    return 1.0 if direction == "increasing" else -1.0
 
 
 def _train_model(
@@ -379,7 +320,6 @@ def _train_model(
     x_n_plus_1: ArrayLike,
     risk: RiskLoss,
     integration_start: float,
-    objective_sign: float = 1.0,
 ) -> "torch.nn.Module":
     """
     Train the prediction-parameter model on the conformalization set.
@@ -425,9 +365,6 @@ def _train_model(
     integration_start : float
         Lower integration bound.
 
-    objective_sign : float, default=1.0
-        Sign applied to the objective for the inferred monotonic direction.
-
     Returns
     -------
     torch.nn.Module
@@ -451,7 +388,6 @@ def _train_model(
         len(y_true_tensor),
         risk,
         integration_start,
-        objective_sign,
     )
     best_model = deepcopy(model)
     best_loss: float = np.inf
@@ -504,20 +440,30 @@ class _LogisticHead(torch.nn.Module):
     Single-layer logistic regression head mapping an embedding to a prediction
     parameter.
 
-    A linear layer projecting the embedding to a scalar, followed by a sigmoid.
+    A linear layer projecting the embedding to a scalar, followed by a sigmoid
+    scaled to the requested prediction-parameter range.
 
     Parameters
     ----------
     input_size : int
         Dimension of the input embedding.
+
+    predict_param_range : tuple of float, default=(0.0, 1.0)
+        Lower and upper bounds of the output.
     """
 
-    def __init__(self, input_size: int) -> None:
+    def __init__(
+        self,
+        input_size: int,
+        predict_param_range: Tuple[float, float] = (0.0, 1.0),
+    ) -> None:
         super().__init__()
         self.fc = torch.nn.Linear(input_size, 1)
+        self.lower_bound, self.upper_bound = predict_param_range
 
     def forward(self, x: "torch.Tensor") -> "torch.Tensor":
-        return torch.sigmoid(self.fc(x))
+        output_range = self.upper_bound - self.lower_bound
+        return self.lower_bound + output_range * torch.sigmoid(self.fc(x))
 
 
 class _AACRCLoss(torch.nn.Module):
@@ -544,8 +490,6 @@ class _AACRCLoss(torch.nn.Module):
     integration_start : float, default=0.0
         Lower integration bound.
 
-    objective_sign : float, default=1.0
-        ``1`` for an increasing loss and ``-1`` for a decreasing loss.
     """
 
     def __init__(
@@ -554,14 +498,12 @@ class _AACRCLoss(torch.nn.Module):
         n: int,
         risk: RiskLoss = recall_loss,
         integration_start: float = 0.0,
-        objective_sign: float = 1.0,
     ) -> None:
         super().__init__()
         self.alpha = alpha
         self.n = n
         self.risk = risk
         self.integration_start = integration_start
-        self.objective_sign = objective_sign
 
     def forward(
         self,
@@ -579,7 +521,7 @@ class _AACRCLoss(torch.nn.Module):
         objective = (batch_scale * torch.sum(integrals) + worst_case_integral) / (
             self.n + 1
         )
-        return self.objective_sign * objective
+        return self.risk.objective_sign * objective
 
     def _compute_integrals(
         self,
