@@ -7,8 +7,13 @@ This example compares the different possibilities exposed by
 ``CrossConformalizedQuantileRegressor``:
 
 - the interval construction methods: ``base``, ``plus`` and ``minmax``
-- the point prediction aggregation strategies: ``None``, ``mean``,
-  ``median`` and ``pinball_weighted_mean``
+- the point prediction aggregation strategies: ``mean``, ``median`` and
+  ``pinball_weighted_mean``
+
+Note that the valid aggregation strategies depend on the method: ``base``
+predicts points with an estimator fitted on the entire training data, and so
+only accepts ``aggregate_point_predictions=None``, while ``plus`` and ``minmax``
+aggregate the cross-validation folds and require one of the strategies above.
 
 The goal is to show how the same estimator can produce different point
 predictions and prediction intervals depending on the chosen strategy.
@@ -130,19 +135,20 @@ for method_name, method in METHODS.items():
         confidence_level=CONFIDENCE_LEVEL,
         cv=5,
         method=method,
+        random_state=RANDOM_STATE,
     )
     regressor.fit_conformalize(X_train, y_train)
-    y_pred, y_pis = regressor.predict_interval(
-        X_test,
-        aggregate_point_predictions="mean",
-    )
+    # `aggregate_point_predictions` is left to its "auto" default: the valid options
+    # depend on the method, since ``base`` predicts points with an estimator fitted
+    # on the whole training data while ``plus`` and ``minmax`` aggregate the folds.
+    y_pred, y_pis = regressor.predict_interval(X_test)
 
     coverage, width = summarize_interval(y_test, y_pis)
     method_results[method_name] = (y_pred, y_pis)
     method_metrics.append(
         {
             "strategy": method_name,
-            "aggregation": "mean",
+            "aggregation": "auto",
             "coverage": coverage,
             "mean_width": width,
         }
@@ -152,13 +158,15 @@ for method_name, method in METHODS.items():
 ##############################################################################
 # 4. Comparison of the point aggregation strategies
 # --------------------------------------------------------------------------
-# The aggregation strategy only impacts the point predictions and the
-# ensemble mode used internally by the interval computation. We keep the
-# interval construction method fixed to ``plus`` and vary the point
-# aggregation strategy.
+# The aggregation strategy is used to combine the predictions of the regressors
+# trained on each cross-validation fold, so it impacts the interval bounds as
+# well as the point predictions. We keep the interval construction method fixed
+# to ``plus`` and vary the point aggregation strategy.
+#
+# ``None`` is not part of the comparison: it predicts points with an estimator
+# fitted on the entire data, which only the ``base`` method fits.
 
 AGGREGATIONS = {
-    "none": None,
     "mean": "mean",
     "median": "median",
     "pinball_weighted_mean": "pinball_weighted_mean",
@@ -169,6 +177,7 @@ aggregation_regressor = CrossConformalizedQuantileRegressor(
     confidence_level=CONFIDENCE_LEVEL,
     cv=5,
     method="plus",
+    random_state=RANDOM_STATE,
 )
 aggregation_regressor.fit_conformalize(X_train, y_train)
 
@@ -230,23 +239,20 @@ fig.tight_layout()
 # 7. Plot the aggregation comparison
 # --------------------------------------------------------------------------
 
-fig, axs = plt.subplots(2, 2, figsize=(14, 10), sharex=True, sharey=True)
-for ax, (aggregation_name, (y_pred, y_pis)) in zip(
-    axs.ravel(), aggregation_results.items()
-):
+fig, axs = plt.subplots(1, 3, figsize=(18, 5), sharex=True, sharey=True)
+for ax, (aggregation_name, (y_pred, y_pis)) in zip(axs, aggregation_results.items()):
     coverage, width = summarize_interval(y_test, y_pis)
-    label = "None" if aggregation_name == "none" else aggregation_name
     plot_prediction_intervals(
         ax=ax,
         X_test=X_test,
         y_test=y_test,
         y_pred=y_pred,
         y_pis=y_pis,
-        title=f"Aggregation: {label}",
+        title=f"Aggregation: {aggregation_name}",
         subtitle=f"coverage={coverage:.3f} | width={width:.3f}",
     )
 
-axs[0, 0].legend(loc="upper left")
+axs[0].legend(loc="upper left")
 fig.suptitle(
     "CrossConformalizedQuantileRegressor: point aggregation strategies",
     y=1.02,
