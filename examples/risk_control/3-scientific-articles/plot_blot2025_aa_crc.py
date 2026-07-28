@@ -5,11 +5,10 @@ Automatically Adaptive Conformal Risk Control, Blot et al. (2025)
 This example gives a lightweight illustration inspired by Figure 2 of Blot
 et al. (2025) [1].
 
-A polynomial regression supplies point predictions, while indicators of fixed
-intervals of the input space form the embedding used by
+A polynomial regression supplies point predictions, while the raw value of
+``x`` and indicators of fixed input intervals jointly form the embedding used by
 ``ConditionalExpectedRiskController``. The controller learns input-dependent
-interval
-widths using the differentiable PyTorch ``miscoverage_loss``.
+interval widths using the differentiable PyTorch ``miscoverage_loss``.
 
 The top panel compares automatically adaptive conformal risk control (AA-CRC)
 with ``SplitConformalRegressor``. The bottom panel shows coverage within each
@@ -35,6 +34,7 @@ from mapie.utils import train_conformalize_test_split
 
 RANDOM_STATE = 42
 ALPHA = 0.1
+MAX_WIDTH = 5.0
 
 
 ##############################################################################
@@ -73,15 +73,15 @@ X, y = generate_grouped_regression_data()
     X,
     y,
     train_size=0.5,
-    conformalize_size=0.25,
-    test_size=0.25,
+    conformalize_size=0.3,
+    test_size=0.2,
     random_state=RANDOM_STATE,
 )
 
 
 ##############################################################################
-# Fit the point predictor and define the four groups
-# --------------------------------------------------
+# Fit the point predictor and define the combined embedding
+# ---------------------------------------------------------
 
 point_predictor = make_pipeline(
     PolynomialFeatures(degree=4),
@@ -89,13 +89,33 @@ point_predictor = make_pipeline(
 ).fit(X_train, y_train)
 
 
-def feature_map(X):
+def group_membership(X):
     """Return one indicator column for each x group."""
     x = np.asarray(X).reshape(-1)
     bin_indexes = np.digitize(x, x_bins[1:-1], right=False)
     matrix = np.zeros((len(x), len(x_bins) - 1))
     matrix[np.arange(len(x)), bin_indexes] = 1
     return matrix
+
+
+def feature_map(X):
+    """Combine the raw x value with its group indicators."""
+    x = np.asarray(X).reshape(-1, 1)
+    return np.column_stack([x, group_membership(x)])
+
+
+class BoundedWidthHead(torch.nn.Module):
+    """Map the embedding to an interval width between zero and ``max_width``."""
+
+    def __init__(self, n_features, max_width):
+        super().__init__()
+        self.linear = torch.nn.Linear(n_features, 1)
+        self.max_width = max_width
+        torch.nn.init.zeros_(self.linear.weight)
+        torch.nn.init.zeros_(self.linear.bias)
+
+    def forward(self, X):
+        return self.max_width * torch.sigmoid(self.linear(X))
 
 
 ##############################################################################
@@ -116,22 +136,34 @@ def interval_prediction(X, widths=None):
 # Fit AA-CRC and split conformal intervals
 # -----------------------------------------
 
-controller_params = dict(
+np.random.seed(RANDOM_STATE)
+torch.manual_seed(RANDOM_STATE)
+
+aa_controller = ConditionalExpectedRiskController(
     predict_function=interval_prediction,
     feature_map=feature_map,
     confidence_level=1 - ALPHA,
     risk="miscoverage",
-    predict_param_range=(0.0, 5.0),
-    learning_rate=1e-1,
-    weight_decay=0.0,
+    predict_param_range=(0.0, MAX_WIDTH),
+    base_model=BoundedWidthHead(
+        n_features=feature_map(X_calib[:1]).shape[1],
+        max_width=MAX_WIDTH,
+    ),
+    learning_rate=1.3e-1,
+    weight_decay=1e-5,
 )
-
-np.random.seed(RANDOM_STATE)
-torch.manual_seed(RANDOM_STATE)
-aa_controller = ConditionalExpectedRiskController(**controller_params)
-aa_controller.conformalize(X_calib, y_calib, n_epochs=200)
-
-y_interval_aa = aa_controller.predict(X_test, n_epochs=1)
+batch_size = len(X_calib)
+aa_controller.conformalize(
+    X_calib,
+    y_calib,
+    n_epochs=50,
+    batch_size=batch_size,
+)
+y_interval_aa = aa_controller.predict(
+    X_test,
+    n_epochs=1,
+    batch_size=batch_size,
+)
 y_lower = y_interval_aa[:, 0]
 y_upper = y_interval_aa[:, 1]
 
@@ -150,7 +182,7 @@ y_split_upper = y_interval[:, 1, 0]
 # Plot the intervals and group coverage
 # -------------------------------------
 
-test_groups = feature_map(X_test).astype(bool)
+test_groups = group_membership(X_test).astype(bool)
 aa_covered = (y_test >= y_lower) & (y_test <= y_upper)
 split_covered = (y_test >= y_split_lower) & (y_test <= y_split_upper)
 n_groups = len(x_bins) - 1
