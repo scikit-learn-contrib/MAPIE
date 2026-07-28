@@ -30,67 +30,71 @@ from sklearn.preprocessing import PolynomialFeatures
 
 from mapie.regression import SplitConformalRegressor
 from mapie.risk_control import ConditionalRiskController
+from mapie.utils import train_conformalize_test_split
 
 RANDOM_STATE = 42
 ALPHA = 0.1
 
 
 ##############################################################################
-# Generate the synthetic regression data
-# --------------------------------------
+# Generate grouped regression data
+# --------------------------------
+
+x_bins = np.array([-1.0, 0.0, 1.5, 3.0, 5.0])
 
 
-def generate_data(seed=RANDOM_STATE, n_train=1000, n_calib=100, n_test=120):
-    """Generate heteroscedastic data."""
-    rng = np.random.RandomState(seed)
-
-    def response(x):
-        y = np.zeros(len(x), dtype=float)
-        for i, value in enumerate(x):
-            y[i] = rng.poisson(np.sin(value) ** 2 + 0.1)
-            y[i] += 0.03 * value * rng.randn()
-            y[i] += 25 * (rng.uniform() < 0.01) * rng.randn()
-        return y
-
-    X = rng.uniform(0, 5, size=n_train + n_calib).astype(np.float32)
-    X_test = rng.uniform(0, 5, size=n_test).astype(np.float32)
-    y = response(X)
-    y_test = response(X_test)
-    return (
-        X[:n_train, None],
-        y[:n_train],
-        X[n_train:, None],
-        y[n_train:],
-        X_test[:, None],
-        y_test,
-    )
+def mean_function(x):
+    return x * np.sin(x)
 
 
-X_train, y_train, X_calib, y_calib, X_test, y_test = generate_data()
+def generate_grouped_regression_data(n_samples=1000, random_state=RANDOM_STATE):
+    """Generate heteroscedastic data over four groups."""
+    rng = np.random.default_rng(random_state)
+    x = rng.uniform(x_bins[0], x_bins[-1], size=n_samples)
+
+    normal_scale = 0.8 * (np.maximum(x, 0) / x_bins[-1]) ** 2 * x_bins[-1]
+    y = mean_function(x) + rng.normal(0, normal_scale)
+    y += rng.uniform(-2.4, 2.4, size=n_samples) * (x < 0)
+
+    X = x.reshape(-1, 1)
+    return X, y
+
+
+X, y = generate_grouped_regression_data()
+(
+    X_train,
+    X_calib,
+    X_test,
+    y_train,
+    y_calib,
+    y_test,
+) = train_conformalize_test_split(
+    X,
+    y,
+    train_size=0.5,
+    conformalize_size=0.25,
+    test_size=0.25,
+    random_state=RANDOM_STATE,
+)
 
 
 ##############################################################################
-# Fit the point predictor and define simple groups
-# ------------------------------------------------
+# Fit the point predictor and define the four groups
+# --------------------------------------------------
 
 point_predictor = make_pipeline(
     PolynomialFeatures(degree=4),
     LinearRegression(),
 ).fit(X_train, y_train)
 
-GROUP_WIDTH = 5 / 3
-GROUP_STARTS = np.arange(0, 5.0, GROUP_WIDTH)
 
-
-def group_feature_map(X):
-    """Return indicators of fixed-width intervals of the input space."""
-    x = np.asarray(X)
-    return np.column_stack(
-        [
-            ((x >= start) & (x < start + GROUP_WIDTH)).astype(np.float32).ravel()
-            for start in GROUP_STARTS
-        ]
-    )
+def feature_map(X):
+    """Return one indicator column for each x group."""
+    x = np.asarray(X).reshape(-1)
+    bin_indexes = np.digitize(x, x_bins[1:-1], right=False)
+    matrix = np.zeros((len(x), len(x_bins) - 1))
+    matrix[np.arange(len(x)), bin_indexes] = 1
+    return matrix
 
 
 ##############################################################################
@@ -113,7 +117,7 @@ def interval_prediction(X, widths=None):
 
 controller_params = dict(
     predict_function=interval_prediction,
-    feature_map=group_feature_map,
+    feature_map=feature_map,
     confidence_level=1 - ALPHA,
     risk="miscoverage",
     predict_param_range=(0.0, 5.0),
@@ -124,9 +128,9 @@ controller_params = dict(
 np.random.seed(RANDOM_STATE)
 torch.manual_seed(RANDOM_STATE)
 aa_controller = ConditionalRiskController(**controller_params)
-aa_controller.conformalize(X_calib, y_calib, n_epochs=10, batch_size=100)
+aa_controller.conformalize(X_calib, y_calib, n_epochs=200)
 
-y_interval_aa = aa_controller.predict(X_test, n_epochs=1, batch_size=100)
+y_interval_aa = aa_controller.predict(X_test, n_epochs=1)
 y_lower = y_interval_aa[:, 0]
 y_upper = y_interval_aa[:, 1]
 
@@ -145,10 +149,10 @@ y_split_upper = y_interval[:, 1, 0]
 # Plot the intervals and group coverage
 # -------------------------------------
 
-test_groups = group_feature_map(X_test).astype(bool)
+test_groups = feature_map(X_test).astype(bool)
 aa_covered = (y_test >= y_lower) & (y_test <= y_upper)
 split_covered = (y_test >= y_split_lower) & (y_test <= y_split_upper)
-n_groups = len(GROUP_STARTS)
+n_groups = len(x_bins) - 1
 aa_group_coverage = np.array(
     [aa_covered[test_groups[:, group]].mean() for group in range(n_groups)]
 )
@@ -200,7 +204,7 @@ ax_interval.plot(
     "k--",
     linewidth=1.2,
 )
-ax_interval.set(xlabel="$x$", ylabel="$y$", ylim=(-5, 6))
+ax_interval.set(xlabel="$x$", ylabel="$y$")
 ax_interval.set_title("AA-CRC and split conformal prediction intervals")
 ax_interval.legend(loc="upper left", ncols=2)
 
@@ -229,6 +233,10 @@ ax_coverage.set(
     ylabel="Coverage",
     ylim=(0, 1),
     xticks=groups,
+    xticklabels=[
+        f"[{left:g}, {right:g}{']' if group == n_groups - 1 else ')'}"
+        for group, (left, right) in enumerate(zip(x_bins[:-1], x_bins[1:]))
+    ],
 )
 ax_coverage.set_title("Coverage within each feature-map group")
 ax_coverage.legend(loc="lower right")
