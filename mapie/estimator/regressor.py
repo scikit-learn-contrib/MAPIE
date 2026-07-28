@@ -99,8 +99,6 @@ class _Conformalizer(ABC):
         elif self.agg_function in ["mean", None]:
             K = np.nan_to_num(k, nan=0.0)
             return cast(NDArray, np.matmul(x, (K / (K.sum(axis=1, keepdims=True))).T))
-        elif self.agg_function == "pinball_weighted_mean":
-            return self._pinball_weighted_mean(x)
         else:
             raise ValueError("The value of the aggregation function is not correct")
 
