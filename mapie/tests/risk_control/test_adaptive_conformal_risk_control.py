@@ -6,7 +6,7 @@ from mapie.risk_control import RiskLoss, miscoverage_loss, recall_loss
 from mapie.risk_control import adaptive_conformal_risk_control as acrc_module
 from mapie.risk_control.adaptive_conformal_risk_control import (
     DEVICE,
-    ConditionalRiskController,
+    ConditionalExpectedRiskController,
     _AACRCLoss,
     _LinearHead,
     _LogisticHead,
@@ -39,7 +39,7 @@ def _predict_function(X, predict_params=None):
 
 
 def test_init_stores_parameters():
-    crc = ConditionalRiskController(
+    crc = ConditionalExpectedRiskController(
         predict_function=_predict_function,
         feature_map=_feature_map,
         confidence_level=0.9,
@@ -64,7 +64,7 @@ def test_conformalize_initializes_default_base_model():
     np.random.seed(0)
     torch.manual_seed(0)
     X, y = _make_data()
-    crc = ConditionalRiskController(
+    crc = ConditionalExpectedRiskController(
         predict_function=_predict_function,
         feature_map=_feature_map,
         confidence_level=0.9,
@@ -82,7 +82,7 @@ def test_conformalize_uses_provided_base_model():
     np.random.seed(0)
     torch.manual_seed(0)
     X, y = _make_data()
-    crc = ConditionalRiskController(
+    crc = ConditionalExpectedRiskController(
         predict_function=_predict_function,
         feature_map=_feature_map,
         confidence_level=0.9,
@@ -97,7 +97,7 @@ def test_predict_returns_binary_masks():
     np.random.seed(0)
     torch.manual_seed(0)
     X, y = _make_data()
-    crc = ConditionalRiskController(
+    crc = ConditionalExpectedRiskController(
         predict_function=_predict_function,
         feature_map=_feature_map,
         confidence_level=0.9,
@@ -456,7 +456,7 @@ def test_conformalize_input_validation(overrides, error, message):
     }
     params.update(overrides)
     with pytest.raises(error, match=message):
-        crc = ConditionalRiskController(**params)
+        crc = ConditionalExpectedRiskController(**params)
         crc.conformalize(X, y, n_epochs=0)
 
 
@@ -471,7 +471,7 @@ def test_custom_risk_loss():
             device=y_pred.device,
         )
 
-    crc = ConditionalRiskController(
+    crc = ConditionalExpectedRiskController(
         predict_function=_predict_function,
         feature_map=_feature_map,
         confidence_level=0.9,
@@ -493,7 +493,7 @@ def test_custom_prediction_function_for_regression_intervals():
             return y_pred
         return np.column_stack([y_pred - widths, y_pred + widths])
 
-    crc = ConditionalRiskController(
+    crc = ConditionalExpectedRiskController(
         predict_function=interval_function,
         feature_map=lambda X: np.column_stack([np.ones(len(X)), np.asarray(X)]),
         confidence_level=0.9,
@@ -540,10 +540,10 @@ def test_risk_control_lazy_getattr_loads_class():
     import mapie.risk_control as rc
 
     # Drop any cached value so the lazy loader runs.
-    rc.__dict__.pop("ConditionalRiskController", None)
-    loaded = rc.ConditionalRiskController
-    assert loaded is ConditionalRiskController
-    assert loaded is acrc_module.ConditionalRiskController
+    rc.__dict__.pop("ConditionalExpectedRiskController", None)
+    loaded = rc.ConditionalExpectedRiskController
+    assert loaded is ConditionalExpectedRiskController
+    assert loaded is acrc_module.ConditionalExpectedRiskController
 
 
 def test_risk_control_getattr_unknown_name_raises():
