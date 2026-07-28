@@ -180,7 +180,7 @@ ax_interval.scatter(
 ax_interval.plot(
     X_test[order, 0],
     y_pred[order],
-    color="tab:blue",
+    color="black",
     linewidth=2,
     label="Model prediction",
 )
@@ -195,14 +195,16 @@ ax_interval.fill_between(
 ax_interval.plot(
     X_test[order, 0],
     y_split_lower[order],
-    "k--",
+    color="tab:blue",
+    linestyle="--",
     linewidth=1.2,
     label="Split conformal interval",
 )
 ax_interval.plot(
     X_test[order, 0],
     y_split_upper[order],
-    "k--",
+    color="tab:blue",
+    linestyle="--",
     linewidth=1.2,
 )
 ax_interval.set(xlabel="$x$", ylabel="$y$")
@@ -213,15 +215,17 @@ groups = np.arange(n_groups)
 bar_width = 0.4
 ax_coverage.bar(
     groups - bar_width / 2,
-    aa_group_coverage,
+    split_group_coverage,
     width=bar_width,
-    label="AA-CRC",
+    color="tab:blue",
+    label="Split conformal",
 )
 ax_coverage.bar(
     groups + bar_width / 2,
-    split_group_coverage,
+    aa_group_coverage,
     width=bar_width,
-    label="Split conformal",
+    color="tab:orange",
+    label="AA-CRC",
 )
 ax_coverage.axhline(
     1 - ALPHA,
