@@ -548,7 +548,6 @@ class _AACRCLoss(torch.nn.Module):
             target = torch.clone(y_true[i]).to(DEVICE)
             prediction = torch.clone(y_pred[i]).to(DEVICE)
             predict_param = predict_params[i]
-
             target = torch.repeat_interleave(
                 target[None, ...],
                 steps_trapz,
@@ -563,16 +562,16 @@ class _AACRCLoss(torch.nn.Module):
                 self.integration_start,
                 dtype=predict_param.dtype,
                 device=DEVICE,
-                requires_grad=True,
             )
-            end = predict_param
-            steps = steps_trapz
 
-            # Differentiable linspace
+            # Step 1: approximate the integral value on a detached grid.
+            # Detaching prevents autograd from differentiating the moving
+            # integration grid points, while preserving their numerical values.
+            detached_end = predict_param.detach()
             parameters = torch.lerp(
                 start,
-                end,
-                torch.linspace(0, 1, steps, device=DEVICE),
+                detached_end,
+                torch.linspace(0, 1, steps_trapz, device=DEVICE),
             )
             parameter_shape = (steps_trapz,) + (1,) * (prediction.ndim - 1)
             loss = self.risk(
@@ -580,7 +579,18 @@ class _AACRCLoss(torch.nn.Module):
                 prediction,
                 parameters.reshape(parameter_shape),
             )
-            integral = torch.trapz(loss - self.alpha, parameters)
+            integrand = loss - self.alpha
+            integral_value = torch.trapz(integrand, parameters)
+
+            # Step 2: create a zero-valued term used only to supply the exact
+            # endpoint gradient dI/du = loss(u) - alpha. In the forward pass,
+            # predict_param - detached_end is zero. In the backward pass, its
+            # derivative is one, so the proxy's derivative is endpoint_derivative.
+            endpoint_derivative = integrand[-1].detach()
+            gradient_proxy = (
+                endpoint_derivative * (predict_param - detached_end).squeeze()
+            )
+            integral = integral_value + gradient_proxy
             integrals.append(integral)
 
         # Stack to create a tensor with gradients

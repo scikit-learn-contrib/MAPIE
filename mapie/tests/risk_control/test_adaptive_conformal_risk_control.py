@@ -334,6 +334,30 @@ def test_custom_loss_forward_and_integral():
     assert tuple(integrals.shape) == (4,)
 
 
+def test_integral_gradient_uses_endpoint_identity():
+    loss_fn = _AACRCLoss(alpha=0.1, n=1, risk=miscoverage_loss)
+    y_true = torch.tensor([[1.0]], device=DEVICE)
+    y_pred = torch.tensor([[0.0]], device=DEVICE)
+    predict_params = torch.tensor(
+        [[2.0]],
+        device=DEVICE,
+        requires_grad=True,
+    )
+
+    integral = loss_fn._compute_integrals(
+        y_true,
+        y_pred,
+        predict_params,
+    ).sum()
+
+    assert torch.isclose(integral, torch.tensor(0.8, device=DEVICE))
+    integral.backward()
+    assert torch.isclose(
+        predict_params.grad.squeeze(),
+        torch.tensor(-0.1, device=DEVICE),
+    )
+
+
 def test_aacrc_loss_is_same_for_equivalent_metric_and_loss():
     def performance_metric(y_true, y_pred, predict_param):
         return torch.full(

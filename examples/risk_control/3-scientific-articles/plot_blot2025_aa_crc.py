@@ -143,7 +143,7 @@ aa_controller = ConditionalExpectedRiskController(
     risk="miscoverage",
     predict_param_range=(0.0, MAX_WIDTH),
     base_model=logistic_head,
-    learning_rate=1.3e-1,
+    learning_rate=1e-1,
     weight_decay=1e-5,
 )
 batch_size = len(X_calib)
