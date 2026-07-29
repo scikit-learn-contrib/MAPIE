@@ -217,9 +217,7 @@ def test_train_model_returns_eval_module():
     assert 0.0 <= float(predict_param.item()) <= 1.0
 
 
-def test_train_model_no_improvement_branch():
-    # With lr=0 the parameters never update, so the loss is identical across
-    # batches: from the second batch on, ``loss.item() < best_loss`` is False.
+def test_train_model_with_zero_learning_rate_returns_eval_module():
     torch.manual_seed(0)
     X, y = _make_data()
     embeddings = _feature_map(X)
@@ -238,6 +236,40 @@ def test_train_model_no_improvement_branch():
         integration_start=0.0,
     )
     assert not trained.training
+
+
+def test_train_model_returns_parameters_after_final_batch():
+    def calibration_dependent_loss(y_true, y_pred, predict_param):
+        return y_true
+
+    risk = RiskLoss(
+        calibration_dependent_loss,
+        higher_is_better=False,
+        monotonicity="increasing",
+    )
+    embeddings = np.ones((2, 1), dtype=np.float32)
+    model = _LogisticHead(1)
+    torch.nn.init.zeros_(model.fc.weight)
+    torch.nn.init.zeros_(model.fc.bias)
+
+    torch.manual_seed(1)
+    trained = _train_model(
+        model,
+        y_true=np.array([0.0, 1.0], dtype=np.float32),
+        y_pred=np.zeros(2, dtype=np.float32),
+        embeddings=embeddings,
+        lr=0.1,
+        weight_decay=0.0,
+        n_epochs=1,
+        batch_size=1,
+        alpha=0.1,
+        x_n_plus_1=embeddings[0:1],
+        risk=risk,
+        integration_start=0.0,
+    )
+
+    predict_param = trained(torch.tensor(embeddings[0:1], device=DEVICE)).item()
+    assert predict_param < 0.43
 
 
 @pytest.mark.parametrize(

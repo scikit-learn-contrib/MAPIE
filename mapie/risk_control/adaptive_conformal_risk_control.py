@@ -339,8 +339,9 @@ def _train_model(
     """
     Train the prediction-parameter model on the conformalization set.
 
-    The model is optimised against :class:`_AACRCLoss` and the parameters that
-    achieved the lowest loss are returned in evaluation mode.
+    The model is optimised against :class:`_AACRCLoss` using one optimizer step
+    per mini-batch. The parameters after the final optimizer step are returned
+    in evaluation mode.
 
     Parameters
     ----------
@@ -395,6 +396,9 @@ def _train_model(
     embeddings_tensor = torch.tensor(np.asarray(embeddings, dtype=np.float32)).to(
         DEVICE
     )
+    x_n_plus_1_tensor = torch.tensor(
+        np.asarray(x_n_plus_1, dtype=np.float32), device=DEVICE
+    )
     model = model.to(DEVICE)
     model.train()
     optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
@@ -404,8 +408,6 @@ def _train_model(
         risk,
         integration_start,
     )
-    best_model = deepcopy(model)
-    best_loss: float = np.inf
     for _ in range(n_epochs):
         indices = torch.randperm(len(y_true_tensor), device=DEVICE)
         for i in range(0, len(y_true_tensor), batch_size):
@@ -415,9 +417,7 @@ def _train_model(
             embeddings_batch = embeddings_tensor[batch_indices]
             optimizer.zero_grad()
             predict_params = model(embeddings_batch)
-            predict_param_n_plus_1 = model(
-                torch.tensor(np.asarray(x_n_plus_1, dtype=np.float32)).to(DEVICE)
-            )
+            predict_param_n_plus_1 = model(x_n_plus_1_tensor)
             loss = criterion(
                 y_true_batch,
                 y_pred_batch,
@@ -426,10 +426,7 @@ def _train_model(
             )
             loss.backward()
             optimizer.step()
-            if loss.item() < best_loss:
-                best_loss = float(loss.item())
-                best_model = deepcopy(model)
-    return best_model.eval()
+    return model.eval()
 
 
 class _LinearHead(torch.nn.Module):
