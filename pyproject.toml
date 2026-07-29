@@ -92,7 +92,7 @@ docs = [
     "sphinx_rtd_theme==3.0.2",
     "pandas==2.3.3",
     "typing_extensions==4.15.0",
-    "torch==2.12.0",
+    "torch==2.13.0",
     "pytorch-lightning==2.6.5",
     "albumentations==2.0.8",
     "opencv-python==4.13.0.92",
@@ -102,7 +102,7 @@ docs = [
 notebooks = [
     "ipykernel==6.31.0",
     "jupyter==1.1.1",
-    "jupyterlab==4.5.7",
+    "jupyterlab==4.5.10",
     "jupytext==1.18.1",
     "nbconvert==7.17.1",
     "matplotlib==3.9.4",
