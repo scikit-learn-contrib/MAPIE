@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from types import MethodType
-from typing import Any, Tuple, Optional, cast
+from typing import Any, Tuple, Optional
 
 import numpy as np
 import pandas as pd
@@ -135,7 +135,7 @@ class PrefitLikeCV:
     """Lightweight CV stub behaving like prefit mode for _predict_calib tests."""
 
     def __eq__(self, other: Any) -> bool:
-        return other == "prefit"
+        return bool(other == "prefit")
 
     def get_n_splits(self, X: Any, y: Any = None, groups: Any = None) -> int:
         return 2
@@ -739,7 +739,7 @@ def test_quantile_regression_score_get_quantile_rejects_scalar_alpha() -> None:
     with pytest.raises(TypeError, match=r".*iterable.*"):
         score.get_quantile(
             conformity_scores,
-            0.2,
+            0.2,  # type: ignore[arg-type]  # a scalar alpha is what raises here
             axis=1,
             reversed=True,
         )
@@ -887,20 +887,15 @@ def test_quantile_conformalizer_initialize_fit_conformalize() -> None:
     np.testing.assert_allclose(
         conformalizer.quantiles[level], np.array([0.1, 0.9, 0.5])
     )
-    assert list(conformalizer.estimators_.keys()) == [level, "central"]
-    assert conformalizer.estimators_ == {
-        level: {"lower": [], "upper": []},
-        "central": [],
-    }
-    assert conformalizer.estimators_[level] == {"lower": [], "upper": []}
+    assert list(conformalizer.estimators_.keys()) == [level]
+    assert conformalizer.estimators_ == {level: {"lower": [], "upper": []}}
+    assert conformalizer.central_estimators_ == []
     assert conformalizer.n_calib_samples == []
     np.testing.assert_array_equal(conformalizer.conformity_scores[level], np.array([]))
     assert conformalizer.pinball_losses[level] == []
     assert conformalizer.key_mapping == {"lower": 0, "upper": 1, "central": 2}
-    assert conformalizer._base_estimator_ == {
-        level: {"lower": [], "upper": []},
-        "central": [],
-    }
+    assert conformalizer._base_estimator_ == {level: {"lower": [], "upper": []}}
+    assert conformalizer._base_central_estimator_ == []
 
 
 def test_quantile_conformalizer_fit_quantiles() -> None:
@@ -920,7 +915,8 @@ def test_quantile_conformalizer_fit_quantiles() -> None:
 
     # _fit_quantiles returns a new dict and does not mutate self.estimators_.
     assert conformalizer.estimators_[level] == {"lower": [], "upper": []}
-    assert list(conformalizer.estimators_.keys()) == [level, "central"]
+    assert list(conformalizer.estimators_.keys()) == [level]
+    assert conformalizer.central_estimators_ == []
 
     assert fitted_estimators.get("lower") is not None
     assert fitted_estimators.get("upper") is not None
@@ -976,7 +972,7 @@ def test_quantile_conformalizer_fit() -> None:
     assert conformalizer.k_.shape == (len(y_train_toy), 3)
     assert len(conformalizer.estimators_[level]["lower"]) == 3
     assert len(conformalizer.estimators_[level]["upper"]) == 3
-    assert len(conformalizer.estimators_["central"]) == 3
+    assert len(conformalizer.central_estimators_) == 3
 
 
 def test_quantile_conformalizer_fit_with_base_method() -> None:
@@ -1000,12 +996,12 @@ def test_quantile_conformalizer_fit_with_base_method() -> None:
     assert conformalizer.k_.shape == (len(y_train_toy), 3)
     assert len(conformalizer.estimators_[level]["lower"]) == 3
     assert len(conformalizer.estimators_[level]["upper"]) == 3
-    assert len(conformalizer.estimators_["central"]) == 3
+    assert len(conformalizer.central_estimators_) == 3
     assert hasattr(conformalizer, "_base_estimator_")
-    assert set(conformalizer._base_estimator_.keys()) == {level, "central"}
+    assert set(conformalizer._base_estimator_.keys()) == {level}
     assert len(conformalizer._base_estimator_[level]["lower"]) == 1
     assert len(conformalizer._base_estimator_[level]["upper"]) == 1
-    assert len(conformalizer._base_estimator_["central"]) == 1
+    assert len(conformalizer._base_central_estimator_) == 1
 
 
 def test_quantile_conformalizer_predict_quantiles() -> None:
@@ -1017,8 +1013,8 @@ def test_quantile_conformalizer_predict_quantiles() -> None:
             "lower": [FixedPredictor(np.array([1.0, 2.0]))],
             "upper": [FixedPredictor(np.array([3.0, 4.0]))],
         },
-        "central": [FixedPredictor(np.array([2.0, 3.0]))],
     }
+    conformalizer.central_estimators_ = [FixedPredictor(np.array([2.0, 3.0]))]
 
     predictions = conformalizer._predict_quantiles(X_toy[:2], 0, level="0.2")
 
@@ -1038,11 +1034,7 @@ def test_quantile_conformalizer_predict_quantiles() -> None:
 def test_quantile_conformalizer_predict_center() -> None:
     """Test central predictor dispatch."""
     conformalizer = DummyQuantileConformalizer()
-    conformalizer.estimators_ = {
-        "lower": [],
-        "upper": [],
-        "central": [FixedPredictor(np.array([2.0, 3.0]))],
-    }
+    conformalizer.central_estimators_ = [FixedPredictor(np.array([2.0, 3.0]))]
 
     predictions = conformalizer._predict_center(X_toy[:2], 0)
 
@@ -1064,8 +1056,8 @@ def test_quantile_conformalizer_predict_returns_center_lower_upper() -> None:
             "lower": [FixedPredictor(np.array([1.0, 2.0]))],
             "upper": [FixedPredictor(np.array([3.0, 4.0]))],
         },
-        "central": [FixedPredictor(np.array([2.0, 3.0]))],
     }
+    conformalizer.central_estimators_ = [FixedPredictor(np.array([2.0, 3.0]))]
 
     y_pred_central, y_pred_low, y_pred_up = conformalizer._predict(
         X_toy[:2], ensemble=True
@@ -1098,11 +1090,11 @@ def test_quantile_conformalizer_predict_multiple_predictions_mean_aggregation() 
                 FixedPredictor(np.array([7.0, 8.0])),
             ],
         },
-        "central": [
-            FixedPredictor(np.array([2.0, 3.0])),
-            FixedPredictor(np.array([4.0, 5.0])),
-        ],
     }
+    conformalizer.central_estimators_ = [
+        FixedPredictor(np.array([2.0, 3.0])),
+        FixedPredictor(np.array([4.0, 5.0])),
+    ]
 
     y_pred_central, y_pred_low, y_pred_up = conformalizer._predict(
         X_toy[:2], ensemble=True
@@ -1132,11 +1124,11 @@ def test_quantile_conformalizer_predict_multiple_predictions_minmax() -> None:
                 FixedPredictor(np.array([7.0, 8.0])),
             ],
         },
-        "central": [
-            FixedPredictor(np.array([2.0, 3.0])),
-            FixedPredictor(np.array([4.0, 5.0])),
-        ],
     }
+    conformalizer.central_estimators_ = [
+        FixedPredictor(np.array([2.0, 3.0])),
+        FixedPredictor(np.array([4.0, 5.0])),
+    ]
 
     y_pred_central, y_pred_low, y_pred_up = conformalizer._predict(
         X_toy[:2], ensemble=True
@@ -1233,8 +1225,8 @@ def test_quantile_conformalizer_fit_twice_warns_and_resets() -> None:
     conformalizer.fit(X_train_toy, y_train_toy)
 
     conformalizer.is_conformalized = True
-    conformalizer.conformity_scores = [np.array([42.0])]
-    conformalizer.pinball_losses = [np.array([1.0, 2.0, 3.0])]
+    conformalizer.conformity_scores = {level: np.array([42.0])}
+    conformalizer.pinball_losses = {level: np.array([1.0, 2.0, 3.0])}
 
     with pytest.warns(
         UserWarning,
@@ -1262,7 +1254,7 @@ def test_quantile_conformalizer_predict_oof_empty_validation() -> None:
 def test_quantile_conformalizer_predict_oof_calls_predict_quantiles() -> None:
     """Test _predict_oof delegates to predict_quantiles with provided index."""
     conformalizer = DummyQuantileConformalizer()
-    call_args = {}
+    call_args: dict[str, Any] = {}
 
     def _mock_predict_quantiles(
         self: DummyQuantileConformalizer,
@@ -1277,7 +1269,7 @@ def test_quantile_conformalizer_predict_oof_calls_predict_quantiles() -> None:
         call_args["level"] = level
         return np.array([[1.0], [2.0], [3.0]])
 
-    conformalizer._predict_quantiles = MethodType(
+    conformalizer._predict_quantiles = MethodType(  # type: ignore[method-assign]
         _mock_predict_quantiles, conformalizer
     )
 
@@ -1327,7 +1319,9 @@ def test_quantile_conformalizer_conformalize_twice_warns_and_overwrites() -> Non
             ]
         )
 
-    conformalizer._predict_calib = MethodType(_mock_predict_calib, conformalizer)
+    conformalizer._predict_calib = MethodType(  # type: ignore[method-assign]
+        _mock_predict_calib, conformalizer
+    )
 
     with pytest.warns(
         UserWarning,
@@ -1345,7 +1339,7 @@ def test_quantile_conformalizer_conformalize_twice_warns_and_overwrites() -> Non
 def test_quantile_conformalizer_fit_cv_estimator_indexes_sample_weight() -> None:
     """Test _fit_cv_estimator forwards indexed sample_weight to _fit_quantiles."""
     conformalizer = DummyQuantileConformalizer()
-    observed: dict[str, NDArray] = {}
+    observed: dict[str, Any] = {}
     conformalizer.alpha = [0.2]
     level = str(conformalizer.alpha[0])
 
@@ -1361,9 +1355,11 @@ def test_quantile_conformalizer_fit_cv_estimator_indexes_sample_weight() -> None
         observed["y"] = np.asarray(y)
         observed["sample_weight"] = np.asarray(sample_weight)
         observed["fit_params"] = fit_params
-        return {level: {"lower": [], "upper": []}, "central": []}
+        return {"lower": [], "upper": [], "central": []}
 
-    conformalizer._fit_quantiles = MethodType(_mock_fit_quantiles, conformalizer)
+    conformalizer._fit_quantiles = MethodType(  # type: ignore[method-assign]
+        _mock_fit_quantiles, conformalizer
+    )
 
     train_index = np.array([0, 2, 4])
     sample_weight = np.array([1.0, 10.0, 2.0, 20.0, 3.0, 30.0])
@@ -1392,7 +1388,7 @@ def test_quantile_conformalizer_conformalize_forwards_groups_and_params() -> Non
     conformalizer.score = AbsoluteQuantileRegressionScore()
     conformalizer.alpha = [0.2]
     level = str(conformalizer.alpha[0])
-    conformalizer.conformity_scores = {level: []}
+    conformalizer.conformity_scores = {level: np.array([])}
 
     def _mock_predict_calib(
         self: DummyQuantileConformalizer,
@@ -1413,7 +1409,9 @@ def test_quantile_conformalizer_conformalize_forwards_groups_and_params() -> Non
             ]
         )
 
-    conformalizer._predict_calib = MethodType(_mock_predict_calib, conformalizer)
+    conformalizer._predict_calib = MethodType(  # type: ignore[method-assign]
+        _mock_predict_calib, conformalizer
+    )
 
     groups = np.array([10, 11])
     conformalizer.conformalize(X_toy[:2], y_toy[:2], groups=groups, foo="bar")
@@ -1437,7 +1435,7 @@ def test_quantile_conformalizer_conformalize_score_shape_matches_n_samples() -> 
     conformalizer.score = AbsoluteQuantileRegressionScore()
     conformalizer.alpha = [0.2]
     level = str(conformalizer.alpha[0])
-    conformalizer.conformity_scores = {level: []}
+    conformalizer.conformity_scores = {level: np.array([])}
 
     y_local = y_toy[:4]
 
@@ -1458,7 +1456,9 @@ def test_quantile_conformalizer_conformalize_score_shape_matches_n_samples() -> 
             ]
         )
 
-    conformalizer._predict_calib = MethodType(_mock_predict_calib, conformalizer)
+    conformalizer._predict_calib = MethodType(  # type: ignore[method-assign]
+        _mock_predict_calib, conformalizer
+    )
 
     conformalizer.conformalize(X_toy[:4], y_local)
 
@@ -1477,8 +1477,8 @@ def test_quantile_conformalizer_reset_clears_runtime_state() -> None:
     level = str(conformalizer.alpha[0])
     conformalizer.estimators_ = {
         level: {"lower": [object()], "upper": [object()]},
-        "central": [object()],
     }
+    conformalizer.central_estimators_ = [object()]
     conformalizer.n_calib_samples = [2, 3]
     conformalizer.conformity_scores = {level: np.array([1.0])}
     conformalizer.pinball_losses = {level: np.array([0.1, 0.2])}
@@ -1489,10 +1489,8 @@ def test_quantile_conformalizer_reset_clears_runtime_state() -> None:
     assert returned is conformalizer
     assert not conformalizer.is_fitted
     assert not conformalizer.is_conformalized
-    assert conformalizer.estimators_ == {
-        level: {"lower": [], "upper": []},
-        "central": [],
-    }
+    assert conformalizer.estimators_ == {level: {"lower": [], "upper": []}}
+    assert conformalizer.central_estimators_ == []
     assert conformalizer.n_calib_samples == []
     np.testing.assert_array_equal(conformalizer.conformity_scores[level], np.array([]))
     assert list(conformalizer.pinball_losses.keys()) == [level]
@@ -1505,7 +1503,8 @@ def test_quantile_conformalizer_predict_calib_prefit_shape_and_forwarding() -> N
     conformalizer = DummyQuantileConformalizer()
     conformalizer.is_fitted = True
     conformalizer.cv = PrefitLikeCV()
-    conformalizer.quantiles = np.array([0.1, 0.9, 0.5])
+    level = "0.2"
+    conformalizer.quantiles = {level: np.array([0.1, 0.9, 0.5])}
     conformalizer.n_calib_samples = [2, 2]
 
     observed: dict[str, Any] = {}
@@ -1519,6 +1518,7 @@ def test_quantile_conformalizer_predict_calib_prefit_shape_and_forwarding() -> N
     ) -> NDArray:
         observed["X"] = np.asarray(X)
         observed["index"] = index
+        observed["level"] = level
         observed["predict_params"] = predict_params
         return np.array(
             [
@@ -1528,16 +1528,17 @@ def test_quantile_conformalizer_predict_calib_prefit_shape_and_forwarding() -> N
             ]
         )
 
-    conformalizer._predict_quantiles = MethodType(
+    conformalizer._predict_quantiles = MethodType(  # type: ignore[method-assign]
         _mock_predict_quantiles, conformalizer
     )
 
-    y_pred = conformalizer._predict_calib(X_toy[:4], y_toy[:4], key="value")
+    y_pred = conformalizer._predict_calib(X_toy[:4], level, y_toy[:4], key="value")
 
     assert y_pred.shape == (3, 4)
     assert conformalizer.n_calib_samples == [2, 2]
     np.testing.assert_allclose(observed["X"], X_toy[:4])
     assert observed["index"] == 0
+    assert observed["level"] == level
     assert observed["predict_params"] == {"key": "value"}
 
 
@@ -1563,7 +1564,7 @@ def test_cross_conformalized_quantile_regressor_predict_interval_returns_expecte
         conformity_score=AbsoluteQuantileRegressionScore,
     )
     reg.is_conformalized = True
-    reg.alpha = np.array([0.1])
+    reg.alpha = [0.1]
     reg.conformity_scores = {"0.1": np.array([0.2, 0.3])}
     # `aggregate_point_predictions=None` is only valid with method="base".
     reg.method = "base"
@@ -1591,14 +1592,10 @@ def test_cross_conformalized_quantile_regressor_predict_mean_aggregation() -> No
     )
     reg.is_fitted = True
     reg.is_conformalized = True
-    reg.estimators_ = {
-        "lower": [],
-        "upper": [],
-        "central": [
-            FixedPredictor(np.array([2.0, 3.0])),
-            FixedPredictor(np.array([4.0, 5.0])),
-        ],
-    }
+    reg.central_estimators_ = [
+        FixedPredictor(np.array([2.0, 3.0])),
+        FixedPredictor(np.array([4.0, 5.0])),
+    ]
 
     y_pred = reg.predict(X_toy[:2], aggregate_point_predictions="mean")
 
@@ -1619,15 +1616,11 @@ def test_cross_conformalized_quantile_regressor_predict_pinball_weighted_mean() 
     reg.pinball_losses = {"0.1": np.array([[0.5, 0.5, 1.0], [0.5, 0.5, 3.0]])}
     # `quantiles` is keyed by level, as `_initialize_fit_conformalize` builds it.
     # Size 3 → the pinball_weighted_mean branch is active.
-    reg.quantiles = {"0.1": np.array([0.05, 0.95, 0.5])}  # type: ignore[assignment]
-    reg.estimators_ = {
-        "lower": [],
-        "upper": [],
-        "central": [
-            FixedPredictor(np.array([10.0, 20.0])),
-            FixedPredictor(np.array([30.0, 40.0])),
-        ],
-    }
+    reg.quantiles = {"0.1": np.array([0.05, 0.95, 0.5])}
+    reg.central_estimators_ = [
+        FixedPredictor(np.array([10.0, 20.0])),
+        FixedPredictor(np.array([30.0, 40.0])),
+    ]
 
     y_pred = reg.predict(X_toy[:2], aggregate_point_predictions="pinball_weighted_mean")
 
@@ -1659,7 +1652,7 @@ def test_cross_conformalized_quantile_regressor_predict_interval_mean_aggregatio
         conformity_score=AbsoluteQuantileRegressionScore,
     )
     reg.is_conformalized = True
-    reg.alpha = np.array([0.1])
+    reg.alpha = [0.1]
     reg.conformity_scores = {"0.1": np.array([0.2, 0.3])}
     reg.method = "plus"
     reg.score = StubScore()  # type: ignore[assignment]
@@ -1702,7 +1695,7 @@ def test_cross_conformalized_quantile_regressor_predict_interval_pinball_weighte
         conformity_score=AbsoluteQuantileRegressionScore,
     )
     reg.is_conformalized = True
-    reg.alpha = np.array([0.1])
+    reg.alpha = [0.1]
     reg.conformity_scores = {"0.1": np.array([0.2, 0.3])}
     reg.method = "plus"
     reg.score = StubScore()  # type: ignore[assignment]
@@ -1751,7 +1744,7 @@ def test_cross_conformalized_quantile_regressor_pinball_weighted_mean_end_to_end
 
     # Weights are normalized, so the aggregate stays within the range of the folds it
     # aggregates instead of being scaled by the number of folds.
-    n_split = len(reg.estimators_["central"])
+    n_split = len(reg.central_estimators_)
     fold_centers = np.vstack(
         [reg._predict_center(X_calib, index=i) for i in range(n_split)]
     )
@@ -1769,7 +1762,7 @@ def test_cross_conformalized_quantile_regressor_predict_interval_invalid_aggrega
         conformity_score=AbsoluteQuantileRegressionScore,
     )
     reg.is_conformalized = True
-    reg.alpha = np.array([0.1])
+    reg.alpha = [0.1]
     reg.conformity_scores_ = np.array([0.2, 0.3])
 
     with pytest.raises(
@@ -1871,7 +1864,7 @@ def test_cross_conformalized_quantile_regressor_predict_none_uses_full_data_esti
 
     y_pred = reg.predict(X[:20], aggregate_point_predictions=None)
 
-    base_central = cast(Any, reg._base_estimator_["central"])
+    base_central = reg._base_central_estimator_
     full_data_pred = base_central[0].predict(X[:20]).ravel()
     np.testing.assert_allclose(y_pred, full_data_pred)
 
@@ -2266,3 +2259,103 @@ def test_asymmetric_bounds_split_the_miscoverage_between_both_sides() -> None:
     assert 0.03 < miss_low < 0.07
     assert 0.03 < miss_up < 0.07
     assert 0.08 < miss_low + miss_up < 0.12
+
+
+def test_cross_conformalized_quantile_regressor_fits_central_estimator() -> None:
+    """Test a supplied central_estimator is fitted once per cross-validation fold."""
+    n_splits = 3
+    reg = CrossConformalizedQuantileRegressor(
+        estimator=qt,
+        cv=KFold(n_splits=n_splits),
+        central_estimator=LinearRegression(),
+        fit_central_estimator=True,
+    )
+
+    reg.fit_conformalize(X[:100], y[:100])
+
+    # The central estimator is shared across confidence levels, so a single level's
+    # worth of folds is expected, not one per (level, fold) pair.
+    assert len(reg.central_estimators_) == n_splits
+    assert all(
+        isinstance(estimator, LinearRegression) for estimator in reg.central_estimators_
+    )
+
+    y_pred = reg.predict(X[:20])
+    assert y_pred.shape == (20,)
+
+
+def test_cross_conformalized_quantile_regressor_reuses_central_estimator() -> None:
+    """Test fit_central_estimator=False reuses the supplied estimator as-is."""
+    central_estimator = LinearRegression()
+    reg = CrossConformalizedQuantileRegressor(
+        estimator=qt,
+        cv=KFold(n_splits=3),
+        central_estimator=central_estimator,
+        fit_central_estimator=False,
+    )
+
+    reg.fit_conformalize(X[:100], y[:100])
+
+    assert all(estimator is central_estimator for estimator in reg.central_estimators_)
+
+
+@pytest.mark.parametrize("n_jobs", [1, 2])
+def test_cross_conformalized_quantile_regressor_central_estimator_n_jobs(
+    n_jobs: int,
+) -> None:
+    """Test central estimators survive parallel fitting.
+
+    `_fit_quantiles` runs in a joblib worker, so it must hand the fitted estimators
+    back through its return value: mutating `self` there is lost as soon as the
+    workers are separate processes.
+    """
+    n_splits = 3
+    reg = CrossConformalizedQuantileRegressor(
+        estimator=qt,
+        cv=KFold(n_splits=n_splits),
+        n_jobs=n_jobs,
+        central_estimator=LinearRegression(),
+    )
+
+    reg.fit_conformalize(X[:100], y[:100])
+
+    assert len(reg.central_estimators_) == n_splits
+
+
+def test_cross_conformalized_quantile_regressor_central_estimator_multiple_levels() -> (
+    None
+):
+    """Test the central estimator is collected once per fold, not once per level."""
+    n_splits = 3
+    reg = CrossConformalizedQuantileRegressor(
+        estimator=qt,
+        cv=KFold(n_splits=n_splits),
+        confidence_level=MULTI_CONFIDENCE_LEVELS,
+        central_estimator=LinearRegression(),
+    )
+
+    reg.fit_conformalize(X[:100], y[:100])
+
+    assert len(reg.central_estimators_) == n_splits
+
+
+def test_cross_conformalized_quantile_regressor_central_estimator_refit() -> None:
+    """Test central estimators are collected again when fit_conformalize is re-run.
+
+    The `__central_fitted` guard stops the central estimator being added once per
+    confidence level; `_initialize_fit_conformalize` has to clear it, or a second fit
+    silently leaves `central_estimators_` empty.
+    """
+    n_splits = 3
+    reg = CrossConformalizedQuantileRegressor(
+        estimator=qt,
+        cv=KFold(n_splits=n_splits),
+        central_estimator=LinearRegression(),
+    )
+
+    reg.fit_conformalize(X[:100], y[:100])
+    reg.reset()
+    reg.fit_conformalize(X[100:200], y[100:200])
+
+    assert len(reg.central_estimators_) == n_splits
+    assert reg.predict(X[:20]).shape == (20,)

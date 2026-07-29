@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Iterable, List, Optional, Tuple, Union, cast
+from typing import Any, Iterable, List, Optional, Tuple, Type, TypeVar, Union, cast
 
 import warnings
 import numpy as np
@@ -47,6 +47,12 @@ from mapie.conformity_scores import (
 
 REGRESSOR_TYPE = Union[RegressorMixin, Pipeline]
 
+# Stands in for `typing.Self`, which is only available from Python 3.11 on: it keeps
+# `reset` returning the concrete subclass rather than the abstract conformalizer.
+_QuantileConformalizerT = TypeVar(
+    "_QuantileConformalizerT", bound="_QuantileConformalizer"
+)
+
 # Default of `aggregate_point_predictions`: no single value suits every method, since
 # `"base"` predicts points without aggregating the folds while `"plus"` and `"minmax"`
 # require an aggregation. This sentinel resolves to the one the method supports.
@@ -68,11 +74,25 @@ class _QuantileConformalizer(_Conformalizer, ABC):
     ALLOWED_AGG = ["mean", "median", "pinball_weighted_mean"]
 
     _central_estimator: Optional[RegressorMixin]
-    estimators_: dict[str, List[RegressorMixin]]
+    fit_central_estimator: Optional[bool]
     estimator: RegressorMixin
-    quantiles: NDArray[float]
-    _alphas: NDArray[float]
     score: QuantileRegressionScore
+
+    # One entry per confidence level, keyed by `str(alpha)`.
+    alpha: List[float]
+    quantiles: dict[str, NDArray[np.float64]]
+    conformity_scores: dict[str, NDArray[np.float64]]
+    pinball_losses: dict[str, ArrayLike]
+
+    # The lower and upper estimators are fitted per confidence level, whereas the
+    # central one is shared across levels and therefore stored apart.
+    estimators_: dict[str, dict[str, List[RegressorMixin]]]
+    central_estimators_: List[RegressorMixin]
+    _base_estimator_: dict[str, dict[str, List[RegressorMixin]]]
+    _base_central_estimator_: List[RegressorMixin]
+
+    key_mapping: dict[str, int]
+    _predict_params: dict
     __central_fitted: bool = False
 
     def __init__(self) -> None:
@@ -304,40 +324,30 @@ class _QuantileConformalizer(_Conformalizer, ABC):
         return estimator
 
     def _initialize_fit_conformalize(self) -> None:
-        self.quantiles: dict[str, float] = {
-            str(alpha): self._check_alpha(alpha) for alpha in self.alpha
-        }
-        self.estimators_: dict[
-            str, Union[dict[str, List[RegressorMixin]], List[RegressorMixin]]
-        ] = {
+        self.quantiles = {str(alpha): self._check_alpha(alpha) for alpha in self.alpha}
+        self.estimators_ = {
             str(alpha): {
                 "lower": [],
                 "upper": [],
             }
             for alpha in self.alpha
         }
-        self.estimators_["central"] = []
-        self.n_calib_samples: List[int] = []
-        self.conformity_scores: dict[str, NDArray[np.float64]] = {
-            str(alpha): np.array([]) for alpha in self.alpha
-        }
-        self.pinball_losses: dict[str, List[Iterable[float]]] = {
-            str(alpha): [] for alpha in self.alpha
-        }
+        self.central_estimators_ = []
+        self.n_calib_samples = []
+        self.conformity_scores = {str(alpha): np.array([]) for alpha in self.alpha}
+        self.pinball_losses = {str(alpha): [] for alpha in self.alpha}
         self.key_mapping = {"lower": 0, "upper": 1, "central": 2}
-        self.__central_is_fitted = False
+        self.__central_fitted = False
 
         if self.method == "base":
-            self._base_estimator_: dict[
-                str, Union[dict[str, List[RegressorMixin]], List[RegressorMixin]]
-            ] = {
+            self._base_estimator_ = {
                 str(alpha): {
                     "lower": [],
                     "upper": [],
                 }
                 for alpha in self.alpha
             }
-            self._base_estimator_["central"] = []
+            self._base_central_estimator_ = []
 
     @property
     @lru_cache(maxsize=None)
@@ -446,7 +456,11 @@ class _QuantileConformalizer(_Conformalizer, ABC):
         X, y = indexable(X, y)
         y = _check_y(y)
 
-        estimators_ = {"lower": [], "upper": [], "central": []}
+        estimators_: dict[str, List[RegressorMixin]] = {
+            "lower": [],
+            "upper": [],
+            "central": [],
+        }
         sample_weight, X, y = _check_null_weight(sample_weight, X, y)
         estimator_name = self.get_estimator_name()
         alpha_name = self.quantile_estimator_params[estimator_name]["alpha_name"]
@@ -466,8 +480,10 @@ class _QuantileConformalizer(_Conformalizer, ABC):
                 )
             )
 
-        if self._central_estimator is not None and self.fit_centeral_estimator:
-            cloned_estimator = clone(self._check_estimator(self._central_estimator))
+        # The central estimator predicts the median directly: it only needs `fit` and `predict`
+        if self._central_estimator is not None and self.fit_central_estimator:
+            _check_estimator_fit_predict(self._central_estimator)
+            cloned_estimator = clone(self._central_estimator)
             estimators_["central"].append(
                 _fit_estimator(
                     cloned_estimator,
@@ -477,13 +493,13 @@ class _QuantileConformalizer(_Conformalizer, ABC):
                     **fit_params,
                 )
             )
-        elif self._central_estimator is not None and not self.fit_central_estimator:
+        elif self._central_estimator is not None:
             estimators_["central"].append(self._central_estimator)
 
         return estimators_
 
     # TODO: Duplicated from CrossConformalRegressor -> should be factorize in next refacto
-    def reset(self) -> "CrossConformalizedQuantileRegressor":
+    def reset(self: _QuantileConformalizerT) -> _QuantileConformalizerT:
         """
         Discard previously computed conformity scores so that
         `fit_conformalize` can be called again with new data.
@@ -491,27 +507,21 @@ class _QuantileConformalizer(_Conformalizer, ABC):
         Returns
         -------
         Self
-            This CrossConformalRegressor instance, reset to its pre-fit state.
+            This conformalizer instance, reset to its pre-fit state.
         """
         self.is_fitted = False
         self.is_conformalized = False
-        self.estimators_: dict[
-            str, Union[dict[str, List[RegressorMixin]], List[RegressorMixin]]
-        ] = {
+        self.estimators_ = {
             str(alpha): {
                 "lower": [],
                 "upper": [],
             }
             for alpha in self.alpha
         }
-        self.estimators_["central"] = []
+        self.central_estimators_ = []
         self.n_calib_samples = []
-        self.conformity_scores = dict[str, NDArray[np.float64]](
-            {str(alpha): np.array([]) for alpha in self.alpha}
-        )
-        self.pinball_losses = dict[str, NDArray[np.float64]](
-            {str(alpha): np.array([]) for alpha in self.alpha}
-        )
+        self.conformity_scores = {str(alpha): np.array([]) for alpha in self.alpha}
+        self.pinball_losses = {str(alpha): np.array([]) for alpha in self.alpha}
         self._predict_params = {}
         return self
 
@@ -584,23 +594,21 @@ class _QuantileConformalizer(_Conformalizer, ABC):
                     for train_index, _ in cv.split(X, y, groups)
                 )
                 for dict_estimator in list_estimators:
-                    for key in dict_estimator.keys():
+                    for key, fitted_estimators in dict_estimator.items():
                         if key != "central":
-                            self.estimators_[level][key].extend(dict_estimator[key])
+                            self.estimators_[level][key].extend(fitted_estimators)
                         elif not self.__central_fitted:
-                            self.estimators_[key].extend(dict_estimator[key])
+                            self.central_estimators_.extend(fitted_estimators)
 
                 if self.method == "base":
                     base_estimators_ = self._fit_quantiles(
                         X, y, level, sample_weight=sample_weight, **fit_params
                     )
-                    for key in base_estimators_.keys():
+                    for key, fitted_estimators in base_estimators_.items():
                         if key != "central":
-                            self._base_estimator_[level][key].extend(
-                                base_estimators_[key]
-                            )
+                            self._base_estimator_[level][key].extend(fitted_estimators)
                         elif not self.__central_fitted:
-                            self._base_estimator_[key].extend(base_estimators_[key])
+                            self._base_central_estimator_.extend(fitted_estimators)
 
                 self.__central_fitted = True
 
@@ -704,7 +712,7 @@ class _QuantileConformalizer(_Conformalizer, ABC):
             pred_matrix = np.full(
                 shape=(n_samples, n_splits, len(self.quantiles[level])),
                 fill_value=np.nan,
-                dtype=float,
+                dtype=np.float64,
             )
             outputs = Parallel(n_jobs=self.n_jobs, verbose=self.verbose)(
                 delayed(self._predict_oof)(
@@ -805,7 +813,7 @@ class _QuantileConformalizer(_Conformalizer, ABC):
     # TODO: A structure can handle quantiles fitting and prediction to avoid code duplication between conformalizer
     def _predict_quantiles(
         self, X: ArrayLike, index: int, level: str, **predict_params
-    ) -> ArrayLike:
+    ) -> NDArray:
         """
         Predicts the lower and upper quantiles for the given input data X using the specified index.
 
@@ -822,7 +830,7 @@ class _QuantileConformalizer(_Conformalizer, ABC):
 
         Returns
         -------
-        ArrayLike
+        NDArray
             Predicted lower and upper quantiles for the input data X as distinct lines.
         """
         preds = [
@@ -835,11 +843,11 @@ class _QuantileConformalizer(_Conformalizer, ABC):
         ]
         if self.quantiles[level].size == 3:
             preds.append(
-                self.estimators_["central"][index].predict(X, **predict_params).ravel()
+                self.central_estimators_[index].predict(X, **predict_params).ravel()
             )
         return np.vstack(preds)
 
-    def _predict_center(self, X: ArrayLike, index: int, **predict_params) -> ArrayLike:
+    def _predict_center(self, X: ArrayLike, index: int, **predict_params) -> NDArray:
         """
         Predicts the central quantile for the given input data X using the specified index.
 
@@ -854,10 +862,12 @@ class _QuantileConformalizer(_Conformalizer, ABC):
 
         Returns
         -------
-        ArrayLike
+        NDArray
             Predicted central quantile for the input data X.
         """
-        return self.estimators_["central"][index].predict(X, **predict_params).ravel()
+        return np.asarray(
+            self.central_estimators_[index].predict(X, **predict_params).ravel()
+        )
 
     def _predict_base(self, X: ArrayLike, level: str, **predict_params):
         """
@@ -869,7 +879,7 @@ class _QuantileConformalizer(_Conformalizer, ABC):
         y_pred_up = self._base_estimator_[level]["upper"][0].predict(
             X, **predict_params
         )
-        y_pred_center = self._base_estimator_["central"][0].predict(X, **predict_params)
+        y_pred_center = self._base_central_estimator_[0].predict(X, **predict_params)
         return np.column_stack((y_pred_low, y_pred_up, y_pred_center))
 
     def _predict_aggregate(self, X: ArrayLike, level: str, **predict_params):
@@ -879,9 +889,9 @@ class _QuantileConformalizer(_Conformalizer, ABC):
         n_split = len(self.estimators_[level]["lower"])
         n_quantiles = len(self.quantiles[level])
         pred_matrix = np.full(
-            shape=(X.shape[0], n_split, 3),
+            shape=(_num_samples(X), n_split, 3),
             fill_value=np.nan,
-            dtype=float,
+            dtype=np.float64,
         )
         for i in range(n_split):
             pred_matrix[:, i, :n_quantiles] = self._predict_quantiles(
@@ -911,7 +921,7 @@ class _QuantileConformalizer(_Conformalizer, ABC):
         return y_pred
 
     def _predict(
-        self, X: ArrayLike, ensemble: bool, **predict_params
+        self, X: ArrayLike, ensemble: bool = False, **predict_params
     ) -> Tuple[NDArray, NDArray, NDArray]:
         """
         Predicts the lower and upper quantiles for the given input data X.
@@ -991,11 +1001,13 @@ class CrossConformalizedQuantileRegressor(_QuantileConformalizer):
     estimator : RegressorMixin, default=LinearRegression()
         Base regressor used to estimate the lower, upper and central quantiles.
 
-    confidence_level : float, default=0.9
-        Target confidence level of the prediction intervals.
+    confidence_level : float or Iterable[float], default=0.9
+        Target confidence level of the prediction intervals. An iterable requests
+        one interval per level, which `predict_interval` returns along the last axis.
 
-    conformity_score : Union[str, BaseRegressionScore], default="absolute"
-        Conformity score used to calibrate the quantile estimates.
+    conformity_score : QuantileRegressionScore or type, default=AbsoluteQuantileRegressionScore
+        Conformity score used to calibrate the quantile estimates. A class is
+        instantiated with its defaults; pass an instance to configure it.
 
     method : str, default="plus"
         Cross-conformalization strategy. Allowed values are
@@ -1036,8 +1048,10 @@ class CrossConformalizedQuantileRegressor(_QuantileConformalizer):
     def __init__(
         self,
         estimator: RegressorMixin = LinearRegression(),
-        confidence_level: float = 0.9,
-        conformity_score: QuantileRegressionScore = AbsoluteQuantileRegressionScore,
+        confidence_level: Union[float, Iterable[float]] = 0.9,
+        conformity_score: Union[
+            QuantileRegressionScore, Type[QuantileRegressionScore]
+        ] = AbsoluteQuantileRegressionScore,
         method: str = "plus",
         cv: Union[int, BaseCrossValidator] = 5,
         n_jobs: Optional[int] = None,
@@ -1072,10 +1086,10 @@ class CrossConformalizedQuantileRegressor(_QuantileConformalizer):
         self.alpha = _transform_confidence_level_to_alpha_list(confidence_level)
         self.is_fitted = self.is_conformalized = False
 
-        self._predict_params: dict = {}
-        self._central_estimator: Optional[RegressorMixin] = central_estimator
-        self.fit_central_estimator: Optional[bool] = fit_central_estimator
-        self.quantiles = [self._check_alpha(alpha) for alpha in self.alpha]
+        self._predict_params = {}
+        self._central_estimator = central_estimator
+        self.fit_central_estimator = fit_central_estimator
+        self.quantiles = {str(alpha): self._check_alpha(alpha) for alpha in self.alpha}
         self.agg_function = "mean"
 
     # ---------------------Fit and Conformalize
@@ -1221,7 +1235,7 @@ class CrossConformalizedQuantileRegressor(_QuantileConformalizer):
         # across those levels. Here every level has its own quantile estimators and its
         # own scores, so the bounds are computed level by level and stacked afterwards.
         bounds_low, bounds_up = [], []
-        y_pred = None
+        y_pred: Optional[NDArray] = None
 
         for alpha in self.alpha:
             level = str(alpha)
@@ -1234,7 +1248,7 @@ class CrossConformalizedQuantileRegressor(_QuantileConformalizer):
 
             # Predict the target with confidence intervals
             y_pred, y_pred_low, y_pred_up = self.score.predict_set(
-                X,
+                cast(NDArray, X),
                 alpha_np,
                 estimator=self,
                 conformity_scores=scores,
@@ -1253,7 +1267,7 @@ class CrossConformalizedQuantileRegressor(_QuantileConformalizer):
             [np.stack(bounds_low, axis=-1), np.stack(bounds_up, axis=-1)], axis=1
         )
 
-        return y_pred, intervalles
+        return cast(NDArray, y_pred), intervalles
 
     # TODO: Duplicated from CrossConformalRegressor
     def predict(
@@ -1308,15 +1322,16 @@ class CrossConformalizedQuantileRegressor(_QuantileConformalizer):
 
         # Reached only with `method="base"
         if not ensemble:
-            base_central = cast(List[RegressorMixin], self._base_estimator_["central"])
             return np.asarray(
-                base_central[0].predict(X, **self._predict_params).ravel()
+                self._base_central_estimator_[0]
+                .predict(X, **self._predict_params)
+                .ravel()
             )
 
         y_pred_multi = np.vstack(
             [
                 self._predict_center(X, index=i, **self._predict_params)
-                for i in range(len(self.estimators_["central"]))
+                for i in range(len(self.central_estimators_))
             ]
         )
 
@@ -1324,16 +1339,16 @@ class CrossConformalizedQuantileRegressor(_QuantileConformalizer):
         # aggregation resolved above rather than the argument.
         level = str(self.alpha[0])
         if self.agg_function == "pinball_weighted_mean" and (
-            cast(dict, self.quantiles)[level].size == 3
+            self.quantiles[level].size == 3
         ):
             central_weights = (
                 1 / np.asarray(self.pinball_losses[level], dtype=float)[:, 2]
             )
             weights = central_weights / central_weights.sum()
-            return np.sum((np.atleast_2d(weights).T * y_pred_multi), axis=0)
+            return np.asarray(np.sum((np.atleast_2d(weights).T * y_pred_multi), axis=0))
         if self.agg_function == "median":
-            return np.median(y_pred_multi, axis=0)
-        return np.mean(y_pred_multi, axis=0)
+            return np.asarray(np.median(y_pred_multi, axis=0))
+        return np.asarray(np.mean(y_pred_multi, axis=0))
 
     # TODO: Duplicated from CrossConformalRegressor
     def _set_aggregate_point_predictions_and_return_ensemble(
