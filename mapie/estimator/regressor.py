@@ -25,16 +25,19 @@ class _Conformalizer(ABC):
     Abstract base class for conformalizers.
     """
 
-    alpha: float
+    # `alpha` is intentionally not declared here: subclasses disagree on its type
+    # (a single risk level for `EnsembleRegressor`, one per confidence level for
+    # `_QuantileConformalizer`), so each declares the shape it actually stores.
     conformity_scores_: NDArray[np.float64]
     n_calib_samples: List[int]
     cv: BaseCrossValidator
-    njobs: Optional[int]
-    verbose: Optional[bool]
+    n_jobs: Optional[int]
+    verbose: int
     is_fitted: bool
     is_conformalized: bool
     agg_function: Optional[str]
     method: Optional[str]
+    use_split_method_: bool
 
     ALLOWED_AGG_FUNCTIONS = ["mean", "median"]
     cv_need_agg_function_ = ["Subsample"]
