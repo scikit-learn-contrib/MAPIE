@@ -167,7 +167,7 @@ $$
 
 where $\Lambda$ is the learned function class and $R$ is an optional regularizer. This is Equation 24 of [^3]. The last term involving $X_{n+1}$ is a worst-case correction: it lets the method compute $\widetilde{\lambda}(X_{n+1})$ without knowing the test label.
 
-In practice, a neural network maps an embedding $\Phi(x)$ to the prediction parameter $\lambda(x)$. MAPIE first trains this parameter model on the conformalization data. At prediction time, it makes a copy of the model and fine-tunes it separately for each test point using the objective above. The resulting value $\widetilde{\lambda}(X_{n+1})$ is then used to construct that point's prediction set or interval.
+In practice, a linear head (or any custom neural network) maps an embedding $\Phi(x)$ to the prediction parameter $\lambda(x)$. MAPIE first trains this parameter model on the conformalization data. At prediction time, it makes a copy of the model and fine-tunes it separately for each test point using the objective above. The resulting value $\widetilde{\lambda}(X_{n+1})$ is then used to construct that point's prediction set or interval.
 
 ---
 

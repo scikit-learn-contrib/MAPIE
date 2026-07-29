@@ -85,8 +85,13 @@ class ConditionalExpectedRiskController:
         prediction parameter, and the direction of the resulting controlled
         loss must be declared through ``RiskLoss.monotonicity``.
 
-    predict_param_range : tuple of float, default=(0.0, 1.0)
-        Lower and upper bounds of the learned prediction parameter.
+    predict_param_range : tuple of float, optional
+        Lower and upper bounds applied to the prediction parameter. By default,
+        the linear model output is used without clipping, as required by the
+        vector-space assumption in the AA-CRC guarantee. Providing bounds is a
+        practical option, but the clipped predictor does not strictly retain
+        that theoretical guarantee. When bounds are provided, their lower bound
+        is also used as the integration start.
 
     base_model : torch.nn.Module, optional
         Mapping from an embedding to a prediction parameter. If ``None``
@@ -99,7 +104,7 @@ class ConditionalExpectedRiskController:
         Learning rate of the Adam optimiser used to train the
         prediction-parameter model.
 
-    weight_decay : float, default=1e-5
+    weight_decay : float, default=0
         Weight decay (L2 penalty) of the Adam optimiser.
 
     Attributes
@@ -162,10 +167,10 @@ class ConditionalExpectedRiskController:
         feature_map: Callable[[ArrayLike], NDArray],
         target_level: float,
         risk: RiskLossLike,
-        predict_param_range: Tuple[float, float] = (0.0, 1.0),
+        predict_param_range: Optional[Tuple[float, float]] = None,
         base_model: Optional["torch.nn.Module"] = None,
         learning_rate: float = 1e-4,
-        weight_decay: float = 1e-5,
+        weight_decay: float = 0,
     ) -> None:
         self.predict_function = predict_function
         self.feature_map = feature_map
@@ -214,13 +219,19 @@ class ConditionalExpectedRiskController:
         """
         if not callable(self.predict_function):
             raise TypeError("`predict_function` must be callable.")
-        if len(self.predict_param_range) != 2:
-            raise ValueError("`predict_param_range` must contain two values.")
-        lower, upper = self.predict_param_range
-        if not np.isfinite([lower, upper]).all() or lower >= upper:
-            raise ValueError(
-                "`predict_param_range` values must be finite and increasing."
-            )
+        if self.predict_param_range is None:
+            lower = 0.0
+            initial_predict_param = 0.0
+        else:
+            if len(self.predict_param_range) != 2:
+                raise ValueError("`predict_param_range` must contain two values.")
+            lower, upper = self.predict_param_range
+            if not np.isfinite([lower, upper]).all() or lower >= upper:
+                raise ValueError(
+                    "`predict_param_range` values must be finite and increasing."
+                )
+            initial_predict_param = (lower + upper) / 2
+        self._integration_start = lower
 
         X_conformalize_ = np.asarray(X_conformalize)
         self.X_conformalize_embedded = self.feature_map(X_conformalize_)
@@ -233,7 +244,7 @@ class ConditionalExpectedRiskController:
         if self.base_model is None:
             self.base_model = _LinearHead(self.X_conformalize_embedded.shape[1])
             torch.nn.init.zeros_(self.base_model.fc.weight)
-            torch.nn.init.constant_(self.base_model.fc.bias, (lower + upper) / 2)
+            torch.nn.init.constant_(self.base_model.fc.bias, initial_predict_param)
         self.base_model = _train_model(
             self.base_model,
             self.y_conformalize,
@@ -295,12 +306,17 @@ class ConditionalExpectedRiskController:
                 alpha=self.target_level,
                 x_n_plus_1=x_n_plus_1,
                 risk=self._risk,
-                integration_start=self.predict_param_range[0],
+                integration_start=self._integration_start,
             )
-            best_predict_params[i] = np.clip(
-                model(torch.tensor(x_n_plus_1.astype(np.float32)).to(DEVICE)).item(),
-                *self.predict_param_range,
-            )
+            predict_param = model(
+                torch.tensor(x_n_plus_1.astype(np.float32)).to(DEVICE)
+            ).item()
+            if self.predict_param_range is not None:
+                predict_param = np.clip(
+                    predict_param,
+                    *self.predict_param_range,
+                )
+            best_predict_params[i] = predict_param
 
         self.best_predict_params_ = best_predict_params
         return np.asarray(self.predict_function(X_, best_predict_params))

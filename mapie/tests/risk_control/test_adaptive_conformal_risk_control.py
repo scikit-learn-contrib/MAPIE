@@ -51,7 +51,7 @@ def test_init_stores_parameters():
     assert crc.target_level == 0.1
     assert crc.risk == "recall"
     assert crc._risk is recall_loss
-    assert crc.predict_param_range == (0.0, 1.0)
+    assert crc.predict_param_range is None
     assert crc._risk.higher_is_better
     assert crc._risk.monotonicity == "increasing"
     assert crc._risk.objective_sign == 1.0
@@ -75,6 +75,43 @@ def test_conformalize_initializes_default_base_model():
     np.testing.assert_array_equal(crc.y_conformalize, y)
     np.testing.assert_array_equal(crc.y_conformalize_pred, X)
     assert isinstance(crc.base_model, _LinearHead)
+
+
+@pytest.mark.parametrize(
+    "predict_param_range, expected_predict_param, expected_integration_start",
+    [
+        (None, 2.0, 0.0),
+        ((0.0, 1.0), 1.0, 0.0),
+        ((0.5, 1.0), 1.0, 0.5),
+    ],
+)
+def test_predict_param_range_is_optional(
+    predict_param_range,
+    expected_predict_param,
+    expected_integration_start,
+):
+    X, y = _make_data()
+    head = _LinearHead(9)
+    with torch.no_grad():
+        head.fc.weight.zero_()
+        head.fc.bias.fill_(2.0)
+    crc = ConditionalExpectedRiskController(
+        predict_function=_predict_function,
+        feature_map=_feature_map,
+        target_level=0.1,
+        risk="recall",
+        predict_param_range=predict_param_range,
+        base_model=head,
+    )
+
+    crc.conformalize(X, y, n_epochs=0, batch_size=6)
+    crc.predict(X[:1], n_epochs=0, batch_size=6)
+
+    assert crc._integration_start == expected_integration_start
+    np.testing.assert_allclose(
+        crc.best_predict_params_,
+        expected_predict_param,
+    )
 
 
 def test_conformalize_uses_provided_base_model():

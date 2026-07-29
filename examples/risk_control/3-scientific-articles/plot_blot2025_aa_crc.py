@@ -14,6 +14,10 @@ The top panel compares automatically adaptive conformal risk control (AA-CRC)
 with ``SplitConformalRegressor``. The bottom panel shows coverage within each
 group of the feature map.
 
+For visualization, this example uses a bounded logistic head and clips interval
+widths to a finite range. This practical bounded variant does not strictly
+satisfy the vector-space assumption of the theoretical AA-CRC guarantee.
+
 [1] Vincent Blot, Anastasios N. Angelopoulos, Michael I. Jordan, and
 Nicolas J-B. Brunel. "Automatically Adaptive Conformal Risk Control."
 AISTATS, 2025.
