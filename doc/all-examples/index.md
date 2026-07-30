@@ -19,6 +19,13 @@ Prediction sets for single-label and multi-label classification.
 </div>
 
 <div class="card" markdown>
+### :material-vector-polyline: Conditional Conformal Prediction
+Conditional prediction intervals and prediction sets.
+
+[Open Conditional CP examples](../generated/conditional_cp/index.md)
+</div>
+
+<div class="card" markdown>
 ### :material-target: Calibration
 Calibration techniques and probabilistic prediction evaluation.
 
@@ -37,13 +44,6 @@ Risk control methods for complex machine learning tasks.
 Exchangeability testing and deployed-model monitoring examples.
 
 [Open Exchangeability Testing examples](../generated/exchangeability_testing/index.md)
-</div>
-
-<div class="card" markdown>
-### :material-account-group: Mondrian
-Group-conditional conformal prediction examples.
-
-[Open Mondrian examples](../generated/mondrian/index.md)
 </div>
 
 </div>

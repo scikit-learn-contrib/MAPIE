@@ -15,7 +15,7 @@ on multiple prediction parameters with MAPIE.
 
 """
 
-# sphinx_gallery_thumbnail_number = 2
+# mkdocs_gallery_thumbnail_number = 2
 
 import matplotlib.patches as patches
 import matplotlib.pyplot as plt
