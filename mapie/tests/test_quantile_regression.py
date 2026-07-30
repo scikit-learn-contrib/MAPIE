@@ -116,16 +116,15 @@ class NoAlphaParameterEstimator(BaseEstimator):
 
 
 class DummyQuantileConformalizer(_QuantileConformalizer):
-    def _check_cv(self, cv: Any) -> str:
-        return "split" if cv is None else cv
+    """Concrete stand-in for the abstract conformalizer, used to unit test its
+    methods in isolation by setting the needed attributes by hand."""
 
 
 class FixedPredictor(BaseEstimator):
+    """Already-fitted predictor returning a constant prediction."""
+
     def __init__(self, prediction: NDArray):
         self.prediction = np.asarray(prediction)
-
-    def fit(self, X: Any, y: Any) -> FixedPredictor:
-        return self
 
     def predict(self, X: Any, **kwargs: Any) -> NDArray:
         return self.prediction
@@ -328,52 +327,45 @@ def test_results_for_same_alpha(estimator: RegressorMixin, symmetry: bool) -> No
 @pytest.mark.parametrize("alphas", ["hello", _MapieQuantileRegressor, [2], 1])
 def test_wrong_alphas_types(alphas: float) -> None:
     """Checking for wrong type of alphas"""
+    mapie_reg = _MapieQuantileRegressor(alpha=alphas)
     with pytest.raises(
         ValueError,
         match=r".*Invalid confidence_level. Allowed values are float.*",
     ):
-        mapie_reg = _MapieQuantileRegressor(alpha=alphas)
         mapie_reg._initialize_fit_conformalize()
-        mapie_reg._fit_estimators(X_train, y_train)
-        mapie_reg.conformalize(X_calib, y_calib)
 
 
 @pytest.mark.parametrize("alphas", [1.0, 1.6, 1.95, 5.0, -0.1, -0.001, -10.0])
 def test_wrong_alphas(alphas: float) -> None:
     """Checking for alphas values that are too big according to all value."""
+    mapie_reg = _MapieQuantileRegressor(alpha=alphas)
     with pytest.raises(
         ValueError,
         match=r".*Invalid confidence_level. Allowed values are between .*",
     ):
-        mapie_reg = _MapieQuantileRegressor(alpha=alphas)
         mapie_reg._initialize_fit_conformalize()
-        mapie_reg._fit_estimators(X_train, y_train)
-        mapie_reg.conformalize(X_calib, y_calib)
 
 
 def test_estimators_quantile_function() -> None:
     """Checking for badly set estimator parameters."""
+    mapie_reg = _MapieQuantileRegressor(estimator=GradientBoostingRegressor())
+    mapie_reg._initialize_fit_conformalize()
     with pytest.raises(
         ValueError,
         match=r".*You need to set the loss/objective*",
     ):
-        mapie_reg = _MapieQuantileRegressor(estimator=GradientBoostingRegressor())
-        mapie_reg._initialize_fit_conformalize()
         mapie_reg._fit_estimators(X_train, y_train)
-        mapie_reg.conformalize(X_calib, y_calib)
 
 
 @pytest.mark.parametrize("cv", [-1, 2, KFold(), LeaveOneOut()])
 def test_invalid_cv(cv: Any) -> None:
     """Test that valid cv raise errors."""
+    mapie = _MapieQuantileRegressor(cv=cv)
     with pytest.raises(
         ValueError,
         match=r".*Invalid cv method.*",
     ):
-        mapie = _MapieQuantileRegressor(cv=cv)
         mapie._initialize_fit_conformalize()
-        mapie._fit_estimators(X_train, y_train)
-        mapie.conformalize(X_calib, y_calib)
 
 
 @pytest.mark.parametrize("cv", [None, "split"])
@@ -412,20 +404,36 @@ def test_calib_dataset_is_none_with_sample_weight() -> None:
     mapie.predict(X)
 
 
+def test_calib_dataset_is_given() -> None:
+    """Test a calibration dataset given explicitly is used as is, without splitting."""
+    mapie = _MapieQuantileRegressor()
+    mapie._initialize_fit_conformalize()
+
+    datasets = mapie._prepare_train_calib(
+        X_train, y_train, X_calib=X_calib, y_calib=y_calib
+    )
+
+    X_train_, y_train_, X_calib_, y_calib_, sample_weight_ = datasets
+    np.testing.assert_allclose(np.asarray(X_train_), X_train)
+    np.testing.assert_allclose(np.asarray(y_train_), y_train)
+    assert X_calib_ is X_calib
+    assert y_calib_ is y_calib
+    assert sample_weight_ is None
+
+
 @pytest.mark.parametrize("est", [RandomForestClassifier(), LinearRegression()])
 def test_estimators_not_in_list(est: RegressorMixin) -> None:
     """
     Test for estimators that are not in the list, hence not accepted
     estimators
     """
+    mapie_reg = _MapieQuantileRegressor(estimator=est)
+    mapie_reg._initialize_fit_conformalize()
     with pytest.raises(
         ValueError,
         match=r".*The base model is not supported.*",
     ):
-        mapie_reg = _MapieQuantileRegressor(estimator=est)
-        mapie_reg._initialize_fit_conformalize()
         mapie_reg._fit_estimators(X_train, y_train)
-        mapie_reg.conformalize(X_calib, y_calib)
 
 
 def test_for_small_dataset() -> None:
@@ -763,6 +771,30 @@ def test_quantile_conformalizer_check_alpha_with_central_estimator() -> None:
     np.testing.assert_allclose(alpha_np, np.array([0.1, 0.9]))
 
 
+@pytest.mark.parametrize("alpha", [0.0, 1.0, -0.1, 1.6])
+def test_quantile_conformalizer_check_alpha_out_of_bounds(alpha: float) -> None:
+    """Test alpha values outside of `]0, 1[` are rejected."""
+    conformalizer = DummyQuantileConformalizer()
+
+    with pytest.raises(
+        ValueError,
+        match=r".*Invalid confidence_level. Allowed values are between .*",
+    ):
+        conformalizer._check_alpha(alpha)
+
+
+@pytest.mark.parametrize("alpha", ["0.2", [0.2], 1, None])
+def test_quantile_conformalizer_check_alpha_wrong_type(alpha: Any) -> None:
+    """Test alpha values that are not floats are rejected."""
+    conformalizer = DummyQuantileConformalizer()
+
+    with pytest.raises(
+        ValueError,
+        match=r".*Invalid confidence_level. Allowed values are float.*",
+    ):
+        conformalizer._check_alpha(alpha)
+
+
 def test_quantile_conformalizer_check_score() -> None:
     """Test score validation against QuantileRegressionScore subclasses."""
     conformalizer = DummyQuantileConformalizer()
@@ -832,6 +864,62 @@ def test_quantile_conformalizer_check_quantile_estimator_pipeline() -> None:
     assert checked_estimator[-1] is estimator[-1]
 
 
+def test_quantile_conformalizer_check_quantile_estimator_wrong_loss() -> None:
+    """Test an estimator not set to the quantile loss is rejected."""
+    conformalizer = DummyQuantileConformalizer()
+
+    with pytest.raises(
+        ValueError,
+        match=r".*You need to set the loss/objective*",
+    ):
+        conformalizer._check_quantile_estimator(GradientBoostingRegressor())
+
+
+def test_quantile_conformalizer_check_quantile_estimator_no_loss_parameter() -> None:
+    """Test an estimator without the expected loss parameter is rejected."""
+    conformalizer = DummyQuantileConformalizer()
+    # Shadows the class attribute, so that the other tests keep the shared mapping.
+    conformalizer.quantile_estimator_params = {
+        "NoLossParameterEstimator": {"loss_name": "noloss", "alpha_name": "alpha"},
+    }
+
+    with pytest.raises(
+        ValueError,
+        match=r".*The matching parameter `loss_name`*",
+    ):
+        conformalizer._check_quantile_estimator(NoLossParameterEstimator(alpha=0.2))
+
+
+def test_quantile_conformalizer_check_quantile_estimator_no_alpha_parameter() -> None:
+    """Test an estimator without the expected alpha parameter is rejected."""
+    conformalizer = DummyQuantileConformalizer()
+    conformalizer.quantile_estimator_params = {
+        "NoAlphaParameterEstimator": {"loss_name": "loss", "alpha_name": "noalpha"},
+    }
+
+    with pytest.raises(
+        ValueError,
+        match=r".*The matching parameter `alpha_name`*",
+    ):
+        conformalizer._check_quantile_estimator(
+            NoAlphaParameterEstimator(alpha=0.2, loss="quantile")
+        )
+
+
+@pytest.mark.parametrize("estimator", [RandomForestClassifier(), LinearRegression()])
+def test_quantile_conformalizer_check_quantile_estimator_not_in_list(
+    estimator: RegressorMixin,
+) -> None:
+    """Test estimators unable to do quantile regression are rejected."""
+    conformalizer = DummyQuantileConformalizer()
+
+    with pytest.raises(
+        ValueError,
+        match=r".*The base model is not supported.*",
+    ):
+        conformalizer._check_quantile_estimator(estimator)
+
+
 def test_quantile_conformalizer_get_estimator_name() -> None:
     """Test estimator name extraction for plain estimators and pipelines."""
     conformalizer = DummyQuantileConformalizer()
@@ -853,6 +941,19 @@ def test_quantile_conformalizer_set_estimator_params() -> None:
 
     assert updated_estimator is estimator
     assert estimator.get_params()["quantile"] == 0.3
+
+
+def test_quantile_conformalizer_set_estimator_params_pipeline() -> None:
+    """Test parameters are set on the final step of a pipeline."""
+    conformalizer = DummyQuantileConformalizer()
+    estimator = make_pipeline(
+        SimpleImputer(), QuantileRegressor(solver="highs-ds", quantile=0.5)
+    )
+
+    updated_estimator = conformalizer._set_estimator_params(estimator, quantile=0.3)
+
+    assert updated_estimator is estimator
+    assert estimator[-1].get_params()["quantile"] == 0.3
 
 
 def test_quantile_conformalizer_initialize_fit_conformalize() -> None:
@@ -1118,6 +1219,85 @@ def test_quantile_conformalizer_predict_multiple_predictions_minmax() -> None:
     np.testing.assert_allclose(y_pred_central, np.array([3.0, 4.0]))
     np.testing.assert_allclose(y_pred_low, np.array([[1.0], [2.0]]))
     np.testing.assert_allclose(y_pred_up, np.array([[7.0], [8.0]]))
+
+
+def test_quantile_conformalizer_predict_center_from_central_estimators() -> None:
+    """
+    Test the center is predicted by the central estimator of each fold when the
+    quantile pair excludes the median, as a supplied `central_estimator` implies.
+    """
+    conformalizer = DummyQuantileConformalizer()
+    conformalizer.alpha = [0.2]
+    level = str(conformalizer.alpha[0])
+    # Size 2: the median is not among the quantiles, hence no central prediction to
+    # aggregate along with them.
+    conformalizer.quantiles = {level: np.array([0.1, 0.9])}
+    conformalizer.method = "plus"
+    conformalizer.agg_function = "mean"
+    conformalizer.estimators_ = {
+        level: {
+            "lower": [
+                FixedPredictor(np.array([1.0, 2.0])),
+                FixedPredictor(np.array([3.0, 4.0])),
+            ],
+            "upper": [
+                FixedPredictor(np.array([5.0, 6.0])),
+                FixedPredictor(np.array([7.0, 8.0])),
+            ],
+        },
+    }
+    conformalizer.central_estimators_ = [
+        FixedPredictor(np.array([2.0, 3.0])),
+        FixedPredictor(np.array([4.0, 5.0])),
+    ]
+
+    y_pred_central, y_pred_low, y_pred_up = conformalizer._predict(
+        X_toy[:2], ensemble=True
+    )
+
+    np.testing.assert_allclose(y_pred_central, np.array([3.0, 4.0]))
+    np.testing.assert_allclose(y_pred_low, np.array([[2.0], [3.0]]))
+    np.testing.assert_allclose(y_pred_up, np.array([[6.0], [7.0]]))
+
+
+def test_quantile_conformalizer_predict_center_pinball_weighted_mean() -> None:
+    """
+    Test the pinball weighted mean aggregates the quantiles only, the center of the
+    folds being averaged: the pinball losses of the median are unavailable when the
+    center comes from a central estimator.
+    """
+    conformalizer = DummyQuantileConformalizer()
+    conformalizer.alpha = [0.2]
+    level = str(conformalizer.alpha[0])
+    conformalizer.quantiles = {level: np.array([0.1, 0.9])}
+    conformalizer.method = "plus"
+    conformalizer.agg_function = "pinball_weighted_mean"
+    # Weights of the two folds are 0.75 and 0.25.
+    conformalizer.pinball_losses = {level: np.array([1.0, 3.0])}
+    conformalizer.estimators_ = {
+        level: {
+            "lower": [
+                FixedPredictor(np.array([1.0, 2.0])),
+                FixedPredictor(np.array([3.0, 4.0])),
+            ],
+            "upper": [
+                FixedPredictor(np.array([5.0, 6.0])),
+                FixedPredictor(np.array([7.0, 8.0])),
+            ],
+        },
+    }
+    conformalizer.central_estimators_ = [
+        FixedPredictor(np.array([2.0, 3.0])),
+        FixedPredictor(np.array([4.0, 5.0])),
+    ]
+
+    y_pred_central, y_pred_low, y_pred_up = conformalizer._predict(
+        X_toy[:2], ensemble=True
+    )
+
+    np.testing.assert_allclose(y_pred_central, np.array([3.0, 4.0]))
+    np.testing.assert_allclose(y_pred_low, np.array([[1.5], [2.5]]))
+    np.testing.assert_allclose(y_pred_up, np.array([[5.5], [6.5]]))
 
 
 def test_quantile_conformalizer_pinball_weighted_mean() -> None:
@@ -1582,6 +1762,28 @@ def test_cross_conformalized_quantile_regressor_predict_mean_aggregation() -> No
 
     assert y_pred.shape == (2,)
     np.testing.assert_allclose(y_pred, np.array([3.0, 4.0]))
+
+
+def test_cross_conformalized_quantile_regressor_predict_median_aggregation() -> None:
+    """Test predict aggregates central fold predictions with a median."""
+    reg = CrossConformalizedQuantileRegressor(
+        estimator=qt,
+        cv=KFold(n_splits=3),
+        conformity_score=AbsoluteQuantileRegressionScore,
+    )
+    reg.is_fitted = True
+    reg.is_conformalized = True
+    # One fold is deliberately far off, so that the median differs from the mean.
+    reg.central_estimators_ = [
+        FixedPredictor(np.array([2.0, 3.0])),
+        FixedPredictor(np.array([4.0, 5.0])),
+        FixedPredictor(np.array([30.0, 40.0])),
+    ]
+
+    y_pred = reg.predict(X_toy[:2], aggregate_point_predictions="median")
+
+    assert y_pred.shape == (2,)
+    np.testing.assert_allclose(y_pred, np.array([4.0, 5.0]))
 
 
 def test_cross_conformalized_quantile_regressor_predict_pinball_weighted_mean() -> None:
@@ -2340,3 +2542,26 @@ def test_cross_conformalized_quantile_regressor_central_estimator_refit() -> Non
 
     assert len(reg.central_estimators_) == n_splits
     assert reg.predict(X[:20]).shape == (20,)
+
+
+def test_cross_conformalized_quantile_regressor_fit_conformalize_twice_warns() -> None:
+    """
+    Test a second fit_conformalize without an explicit reset warns and starts over,
+    rather than appending to the conformity scores of the first one.
+    """
+    n_splits = 3
+    reg = CrossConformalizedQuantileRegressor(
+        estimator=qt,
+        cv=KFold(n_splits=n_splits),
+        confidence_level=0.9,
+    )
+
+    reg.fit_conformalize(X[:100], y[:100])
+    n_calib_samples = list(reg.n_calib_samples)
+
+    with pytest.warns(UserWarning, match=r".*was already called.*"):
+        reg.fit_conformalize(X[100:200], y[100:200])
+
+    assert reg.is_fitted_and_conformalized
+    assert len(reg.estimators_["0.1"]["lower"]) == n_splits
+    assert list(reg.n_calib_samples) == n_calib_samples

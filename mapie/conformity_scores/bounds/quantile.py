@@ -93,9 +93,10 @@ class AbsoluteQuantileRegressionScore(QuantileRegressionScore):
         Both signed rows follow the `y - y_pred` orientation, so the lower one is
         negated to turn it into a distance above the lower quantile before taking the
         maximum.
+
+        The consistency check inherited from `BaseRegressionScore` is not run here:
+        as documented on `QuantileRegressionScore`, the relation it asserts cannot
+        hold for a two-sided score, hence `consistency_check` being forced off.
         """
         conformity_scores = self.get_signed_conformity_scores(y, y_pred, **kwargs)
-
-        if self.consistency_check:
-            self.check_consistency(y, y_pred, conformity_scores, **kwargs)
         return np.asarray(np.maximum(-conformity_scores[0], conformity_scores[1]))
