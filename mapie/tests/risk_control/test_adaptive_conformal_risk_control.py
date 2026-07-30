@@ -10,6 +10,7 @@ from mapie.risk_control.adaptive_conformal_risk_control import (
     _AACRCLoss,
     _LinearHead,
     _LogisticHead,
+    _evaluate_aacrc_objective,
     _import_torch,
     _train_model,
 )
@@ -238,36 +239,109 @@ def test_train_model_with_zero_learning_rate_returns_eval_module():
     assert not trained.training
 
 
-def test_train_model_returns_parameters_after_final_batch():
-    def calibration_dependent_loss(y_true, y_pred, predict_param):
-        return y_true
+def test_evaluate_aacrc_objective_includes_full_objective_and_regularization():
+    def constant_loss(y_true, y_pred, predict_param):
+        return torch.full(
+            (len(predict_param),),
+            0.4,
+            device=predict_param.device,
+        )
 
     risk = RiskLoss(
-        calibration_dependent_loss,
+        constant_loss,
         higher_is_better=False,
         monotonicity="increasing",
     )
     embeddings = np.ones((2, 1), dtype=np.float32)
-    model = _LogisticHead(1)
+    model = _LinearHead(1).to(DEVICE)
+    torch.nn.init.zeros_(model.fc.weight)
+    torch.nn.init.constant_(model.fc.bias, 2.0)
+
+    objective = _evaluate_aacrc_objective(
+        model,
+        torch.zeros(2, device=DEVICE),
+        torch.zeros(2, device=DEVICE),
+        torch.tensor(embeddings, device=DEVICE),
+        torch.tensor(embeddings[0:1], device=DEVICE),
+        alpha=0.1,
+        risk=risk,
+        weight_decay=0.5,
+    )
+
+    # Integrated terms: 2 * (0.4 - 0.1) * 2 = 1.2.
+    # Worst-case term: (1 - 0.1) * 2 = 1.8. Dividing their sum by
+    # n + 1 gives 1.0. The L2 penalty is 0.5 / 2 * 2**2 = 1.0.
+    assert objective == pytest.approx(2.0)
+
+
+def test_evaluate_aacrc_objective_restores_training_mode():
+    X, y = _make_data()
+    embeddings = _feature_map(X)
+    model = _LogisticHead(embeddings.shape[1]).to(DEVICE)
+    model.train()
+
+    _evaluate_aacrc_objective(
+        model,
+        torch.tensor(y, device=DEVICE),
+        torch.tensor(X, device=DEVICE),
+        torch.tensor(embeddings, device=DEVICE),
+        torch.tensor(embeddings[0:1], device=DEVICE),
+        alpha=0.1,
+        risk=recall_loss,
+        weight_decay=0.0,
+    )
+
+    assert model.training
+
+
+def test_train_model_returns_best_epoch(monkeypatch):
+    def constant_loss(y_true, y_pred, predict_param):
+        return torch.full(
+            (len(predict_param),),
+            0.5,
+            device=predict_param.device,
+        )
+
+    risk = RiskLoss(
+        constant_loss,
+        higher_is_better=False,
+        monotonicity="increasing",
+    )
+    embeddings = np.ones((2, 1), dtype=np.float32)
+    model = _LinearHead(1)
     torch.nn.init.zeros_(model.fc.weight)
     torch.nn.init.zeros_(model.fc.bias)
+    evaluated_biases = []
+    objective_values = iter([2.0, 0.0, 1.0])
 
-    torch.manual_seed(1)
+    def evaluate_objective(model, *args, **kwargs):
+        evaluated_biases.append(model.fc.bias.detach().clone())
+        return next(objective_values)
+
+    monkeypatch.setattr(
+        acrc_module,
+        "_evaluate_aacrc_objective",
+        evaluate_objective,
+    )
+
     trained = _train_model(
         model,
-        y_true=np.array([0.0, 1.0], dtype=np.float32),
+        y_true=np.zeros(2, dtype=np.float32),
         y_pred=np.zeros(2, dtype=np.float32),
         embeddings=embeddings,
         lr=0.1,
         weight_decay=0.0,
-        n_epochs=1,
-        batch_size=1,
+        n_epochs=2,
+        batch_size=2,
         alpha=0.1,
         x_n_plus_1=embeddings[0:1],
         risk=risk,
     )
 
     assert trained is model
+    assert len(evaluated_biases) == 3
+    assert torch.equal(trained.fc.bias, evaluated_biases[1])
+    assert not torch.equal(trained.fc.bias, evaluated_biases[2])
 
 
 @pytest.mark.parametrize(

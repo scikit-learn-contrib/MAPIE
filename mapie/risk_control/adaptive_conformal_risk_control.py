@@ -335,8 +335,10 @@ def _train_model(
     Train the prediction-parameter model on the conformalization set.
 
     The model is optimised against :class:`_AACRCLoss` using one optimizer step
-    per mini-batch. The parameters after the final optimizer step are returned
-    in evaluation mode.
+    per mini-batch. After each epoch, the actual AA-CRC objective is evaluated
+    on the complete conformalization set. The parameters achieving the lowest
+    objective, including the parameters before the first epoch, are returned in
+    evaluation mode.
 
     Parameters
     ----------
@@ -399,6 +401,17 @@ def _train_model(
         len(y_true_tensor),
         risk,
     )
+    best_model_state = deepcopy(model.state_dict())
+    best_objective = _evaluate_aacrc_objective(
+        model,
+        y_true_tensor,
+        y_pred_tensor,
+        embeddings_tensor,
+        x_n_plus_1_tensor,
+        alpha,
+        risk,
+        weight_decay,
+    )
     for _ in range(n_epochs):
         indices = torch.randperm(len(y_true_tensor), device=DEVICE)
         for i in range(0, len(y_true_tensor), batch_size):
@@ -417,7 +430,85 @@ def _train_model(
             )
             loss.backward()
             optimizer.step()
+        objective = _evaluate_aacrc_objective(
+            model,
+            y_true_tensor,
+            y_pred_tensor,
+            embeddings_tensor,
+            x_n_plus_1_tensor,
+            alpha,
+            risk,
+            weight_decay,
+        )
+        if objective < best_objective:
+            best_objective = objective
+            best_model_state = deepcopy(model.state_dict())
+    model.load_state_dict(best_model_state)
     return model.eval()
+
+
+def _evaluate_aacrc_objective(
+    model: "torch.nn.Module",
+    y_true: "torch.Tensor",
+    y_pred: "torch.Tensor",
+    embeddings: "torch.Tensor",
+    x_n_plus_1: "torch.Tensor",
+    alpha: float,
+    risk: RiskLoss,
+    weight_decay: float,
+    integration_steps: int = 100,
+) -> float:
+    """Evaluate the actual AA-CRC objective without computing gradients."""
+    was_training = model.training
+    model.eval()
+    try:
+        with torch.no_grad():
+            predict_params = model(embeddings).reshape(-1)
+            integrals = []
+            for target, prediction, predict_param in zip(
+                y_true,
+                y_pred,
+                predict_params,
+            ):
+                parameters = torch.linspace(
+                    0.0,
+                    predict_param.item(),
+                    integration_steps,
+                    device=predict_param.device,
+                    dtype=predict_param.dtype,
+                )
+                target_repeated = target.unsqueeze(0).expand(
+                    integration_steps,
+                    *target.shape,
+                )
+                prediction_repeated = prediction.unsqueeze(0).expand(
+                    integration_steps,
+                    *prediction.shape,
+                )
+                parameter_shape = (integration_steps,) + (1,) * prediction.ndim
+                losses = risk(
+                    target_repeated,
+                    prediction_repeated,
+                    parameters.reshape(parameter_shape),
+                )
+                integrals.append(torch.trapz(losses - alpha, parameters))
+
+            predict_param_n_plus_1 = model(x_n_plus_1).squeeze()
+            worst_case_integral = (1 - alpha) * predict_param_n_plus_1
+            objective = (
+                risk.objective_sign
+                * (torch.stack(integrals).sum() + worst_case_integral)
+                / (len(y_true) + 1)
+            )
+            regularization = (
+                0.5
+                * weight_decay
+                * sum(parameter.square().sum() for parameter in model.parameters())
+            )
+            return float((objective + regularization).item())
+    finally:
+        if was_training:
+            model.train()
 
 
 class _LinearHead(torch.nn.Module):
