@@ -96,7 +96,7 @@ class _QuantileConformalizer(_Conformalizer, ABC):
     __central_fitted: bool = False
 
     def __init__(self) -> None:
-        # For testing
+        # to run tests
         self.is_fitted = False
         self.is_conformalized = False
 
@@ -196,7 +196,7 @@ class _QuantileConformalizer(_Conformalizer, ABC):
         """
         Perform several checks on the estimator to check if it has
         all the required specifications to be used with this methodology.
-        The estimators that can be used in _MapieQuantileRegressor need to
+        The estimators that can be used in _QuantileConformalizer need to
         have a `fit` and `predict` attribute, but also need to allow
         a quantile loss and therefore also setting a quantile value.
         Note that there is a `TypedDict` to check which methods allow for
