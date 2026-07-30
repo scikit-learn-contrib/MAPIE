@@ -548,6 +548,9 @@ class _QuantileConformalizer(_Conformalizer, ABC):
         sample_weight : Optional[ArrayLike] of shape (n_samples,), default=None
             Sample weights. If None, then samples are equally weighted.
 
+        groups: Optional[ArrayLike] of shape (n_samples,), default=None
+            Group labels for the samples used while splitting the dataset into folds.
+
         **fit_params : dict
             Additional fit parameters.
 
@@ -745,6 +748,25 @@ class _QuantileConformalizer(_Conformalizer, ABC):
         groups: Optional[ArrayLike] = None,
         **predict_params: Any,
     ) -> _QuantileConformalizer:
+        """
+        Conformalize the model using the provided calibration data.
+
+        Parameters
+        ----------
+        X : ArrayLike
+            Calibration features.
+        y : ArrayLike
+            Calibration targets.
+        groups : Optional[ArrayLike], optional
+            Group labels for the samples, by default None
+        **predict_params : Any
+            Additional parameters to pass to the prediction method.
+
+        Returns
+        -------
+        _QuantileConformalizer
+            The conformalized quantile regressor.
+        """
         X_calib, y_calib = cast(ArrayLike, X), cast(ArrayLike, y)
         X_calib, y_calib = indexable(X_calib, y_calib)
         y_calib = _check_y(y_calib)

@@ -20,7 +20,7 @@ class QuantileRegressionScore(BaseRegressionScore):
         super().__init__(sym=sym, consistency_check=consistency_check)
 
     def get_signed_conformity_scores(
-        self, y: NDArray[float], y_pred: NDArray[float], **kwargs
+        self, y: NDArray[np.float64], y_pred: NDArray[np.float64], **kwargs
     ) -> NDArray[np.float64]:
         """
         Placeholder for `get_conformity_scores`.
@@ -50,7 +50,10 @@ class QuantileRegressionScore(BaseRegressionScore):
         return np.vstack((y - y_pred[0], y - y_pred[1]))
 
     def get_estimation_distribution(
-        self, y_pred: NDArray[float], conformity_scores: NDArray[float], **kwargs
+        self,
+        y_pred: NDArray[np.float64],
+        conformity_scores: NDArray[np.float64],
+        **kwargs,
     ) -> NDArray[np.float64]:
         """
         Compute samples of the estimation distribution from the predicted
@@ -83,7 +86,7 @@ class AbsoluteQuantileRegressionScore(QuantileRegressionScore):
         super().__init__(sym=sym, consistency_check=False)
 
     def get_conformity_scores(
-        self, y: NDArray[float], y_pred: NDArray[float], **kwargs
+        self, y: NDArray[np.float64], y_pred: NDArray[np.float64], **kwargs
     ) -> NDArray[np.float64]:
         """
         Compute the conformity scores from the predicted values
@@ -98,4 +101,4 @@ class AbsoluteQuantileRegressionScore(QuantileRegressionScore):
 
         if self.consistency_check:
             self.check_consistency(y, y_pred, conformity_scores, **kwargs)
-        return np.maximum(-conformity_scores[0], conformity_scores[1])
+        return np.asarray(np.maximum(-conformity_scores[0], conformity_scores[1]))
