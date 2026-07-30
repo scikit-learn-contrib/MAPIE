@@ -769,7 +769,7 @@ class _QuantileConformalizer(_Conformalizer, ABC):
         """
         X_calib, y_calib = cast(ArrayLike, X), cast(ArrayLike, y)
         X_calib, y_calib = indexable(X_calib, y_calib)
-        y_calib = _check_y(y_calib)
+        y_calib = cast(NDArray, _check_y(y_calib))
 
         _raise_error_if_previous_method_not_called(
             "conformalize",

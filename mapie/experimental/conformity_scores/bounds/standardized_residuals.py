@@ -299,6 +299,7 @@ class MultivariateResidualNormalisedScore(BaseFitRegressionScore):
         (X, y, y_pred, self.covariance_estimator_, random_state) = (
             self._check_parameters(X, y, y_pred)
         )
+        assert self.covariance_estimator_ is not None
 
         if y_pred is not None and np.isnan(y_pred).any():
             raise ValueError("y_pred contains NaN values.")

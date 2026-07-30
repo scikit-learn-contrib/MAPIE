@@ -1412,7 +1412,7 @@ def _transform_confidence_level_to_alpha(
 
 def _transform_confidence_level_to_alpha_list(
     confidence_level: Union[float, Iterable[float]],
-) -> Iterable[float]:
+) -> List[float]:
     if isinstance(confidence_level, IterableType):
         confidence_levels = confidence_level
     else:

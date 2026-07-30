@@ -1,10 +1,11 @@
-from typing import Any, Optional, Tuple
+from typing import Optional, Tuple, cast
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 from mapie._machine_precision import EPSILON
 
 from mapie.conformity_scores.regression import BaseRegressionScore
+from mapie.estimator.regressor import _Conformalizer, EnsembleStdRegressor
 from mapie.utils import _compute_regression_quantile
 
 
@@ -74,13 +75,14 @@ class StdConformityScore(BaseRegressionScore):
         self,
         X: NDArray,
         alpha_np: NDArray,
-        estimator: Any,
+        estimator: _Conformalizer,
         conformity_scores: NDArray,
         ensemble: bool = False,
         method: str = "base",
         optimize_beta: bool = False,
         allow_infinite_bounds: bool = False,
-        **predict_params,
+        predict_params: Optional[dict] = None,
+        **kwargs,
     ) -> Tuple[NDArray, NDArray, NDArray]:
         """
         Compute bounds of the prediction intervals from the observed values,
@@ -120,7 +122,11 @@ class StdConformityScore(BaseRegressionScore):
             - The upper bounds of the prediction intervals of shape
             (n_samples, n_alpha).
         """
-        y_pred, y_pred_low, y_pred_up, y_std_multi = estimator.predict_with_std(
+        # `predict_set` forwards the estimator's predict parameters as loose keyword
+        # arguments, whereas the base signature declares them as a single dict.
+        predict_params = {**(predict_params or {}), **kwargs}
+        std_estimator = cast(EnsembleStdRegressor, estimator)
+        y_pred, y_pred_low, y_pred_up, y_std_multi = std_estimator.predict_with_std(
             X, ensemble, **predict_params
         )
         signed = -1 if self.sym else 1
