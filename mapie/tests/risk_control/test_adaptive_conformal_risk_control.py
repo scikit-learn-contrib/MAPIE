@@ -88,7 +88,11 @@ def test_conformalize_initializes_default_base_model():
 def test_predict_param_range_is_optional(
     predict_param_range,
     expected_predict_param,
+    monkeypatch,
 ):
+    # This test checks parameter-range semantics, not accelerator behavior.
+    # Run it on CPU to avoid platform-specific MPS numerical issues on macOS.
+    monkeypatch.setattr(acrc_module, "DEVICE", torch.device("cpu"))
     X, y = _make_data()
     head = _LinearHead(9)
     with torch.no_grad():
