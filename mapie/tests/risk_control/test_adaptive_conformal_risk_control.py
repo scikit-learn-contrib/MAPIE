@@ -78,17 +78,16 @@ def test_conformalize_initializes_default_base_model():
 
 
 @pytest.mark.parametrize(
-    "predict_param_range, expected_predict_param, expected_integration_start",
+    "predict_param_range, expected_predict_param",
     [
-        (None, 2.0, 0.0),
-        ((0.0, 1.0), 1.0, 0.0),
-        ((0.5, 1.0), 1.0, 0.5),
+        (None, 2.0),
+        ((0.0, 1.0), 1.0),
+        ((0.5, 1.0), 1.0),
     ],
 )
 def test_predict_param_range_is_optional(
     predict_param_range,
     expected_predict_param,
-    expected_integration_start,
 ):
     X, y = _make_data()
     head = _LinearHead(9)
@@ -107,7 +106,6 @@ def test_predict_param_range_is_optional(
     crc.conformalize(X, y, n_epochs=0, batch_size=6)
     crc.predict(X[:1], n_epochs=0, batch_size=6)
 
-    assert crc._integration_start == expected_integration_start
     np.testing.assert_allclose(
         crc.best_predict_params_,
         expected_predict_param,
@@ -210,7 +208,6 @@ def test_train_model_returns_eval_module():
         alpha=0.1,
         x_n_plus_1=embeddings[1:2],
         risk=recall_loss,
-        integration_start=0.0,
     )
     assert not trained.training
     predict_param = trained(torch.tensor(embeddings[1:2].astype(np.float32)).to(DEVICE))
@@ -233,7 +230,6 @@ def test_train_model_with_zero_learning_rate_returns_eval_module():
         alpha=0.1,
         x_n_plus_1=embeddings[0:1],
         risk=recall_loss,
-        integration_start=0.0,
     )
     assert not trained.training
 
@@ -265,7 +261,6 @@ def test_train_model_returns_parameters_after_final_batch():
         alpha=0.1,
         x_n_plus_1=embeddings[0:1],
         risk=risk,
-        integration_start=0.0,
     )
 
     predict_param = trained(torch.tensor(embeddings[0:1], device=DEVICE)).item()
@@ -297,7 +292,6 @@ def test_train_model_rejects_invalid_batch_size(batch_size, error, message):
             alpha=0.1,
             x_n_plus_1=embeddings[0:1],
             risk=recall_loss,
-            integration_start=0.0,
         )
 
 
@@ -318,23 +312,59 @@ def test_logistic_head_zero_initialization_outputs_range_midpoint():
     np.testing.assert_allclose(out.detach().numpy(), 1.25)
 
 
-def test_custom_loss_forward_and_integral():
+def test_aacrc_gradient_surrogate_is_zero_and_differentiable():
     torch.manual_seed(0)
     loss_fn = _AACRCLoss(alpha=0.1, n=4)
     y_true = torch.ones(4, 3, 3, device=DEVICE)
     y_pred = torch.rand(4, 3, 3, device=DEVICE)
     predict_params = torch.rand(4, 1, device=DEVICE, requires_grad=True)
-    predict_param_n_plus_1 = torch.rand(1, 1, device=DEVICE)
+    predict_param_n_plus_1 = torch.rand(
+        1,
+        1,
+        device=DEVICE,
+        requires_grad=True,
+    )
     loss = loss_fn(y_true, y_pred, predict_params, predict_param_n_plus_1)
-    assert loss.numel() == 1
+    assert torch.isclose(loss, torch.tensor(0.0, device=DEVICE))
     loss.backward()
     assert predict_params.grad is not None
     assert bool(torch.isfinite(predict_params.grad).all())
-    integrals = loss_fn._compute_integrals(y_true, y_pred, predict_params)
-    assert tuple(integrals.shape) == (4,)
+    assert predict_param_n_plus_1.grad is not None
+    assert bool(torch.isfinite(predict_param_n_plus_1.grad).all())
 
 
-def test_integral_gradient_uses_endpoint_identity():
+def test_aacrc_gradient_surrogate_evaluates_endpoint_risk_once():
+    parameter_shapes = []
+
+    def endpoint_loss(y_true, y_pred, predict_param):
+        parameter_shapes.append(tuple(predict_param.shape))
+        return torch.full(
+            (len(predict_param),),
+            0.25,
+            dtype=y_pred.dtype,
+            device=y_pred.device,
+        )
+
+    loss_fn = _AACRCLoss(
+        alpha=0.1,
+        n=4,
+        risk=RiskLoss(
+            endpoint_loss,
+            higher_is_better=False,
+            monotonicity="increasing",
+        ),
+    )
+    loss_fn(
+        torch.ones(4, 3, 3, device=DEVICE),
+        torch.ones(4, 3, 3, device=DEVICE),
+        torch.ones(4, 1, device=DEVICE, requires_grad=True),
+        torch.ones(1, 1, device=DEVICE, requires_grad=True),
+    )
+
+    assert parameter_shapes == [(4, 1, 1)]
+
+
+def test_aacrc_gradient_surrogate_uses_endpoint_identity():
     loss_fn = _AACRCLoss(alpha=0.1, n=1, risk=miscoverage_loss)
     y_true = torch.tensor([[1.0]], device=DEVICE)
     y_pred = torch.tensor([[0.0]], device=DEVICE)
@@ -343,18 +373,28 @@ def test_integral_gradient_uses_endpoint_identity():
         device=DEVICE,
         requires_grad=True,
     )
+    predict_param_n_plus_1 = torch.tensor(
+        [[2.0]],
+        device=DEVICE,
+        requires_grad=True,
+    )
 
-    integral = loss_fn._compute_integrals(
+    loss = loss_fn(
         y_true,
         y_pred,
         predict_params,
-    ).sum()
+        predict_param_n_plus_1,
+    )
 
-    assert torch.isclose(integral, torch.tensor(0.8, device=DEVICE))
-    integral.backward()
+    assert torch.isclose(loss, torch.tensor(0.0, device=DEVICE))
+    loss.backward()
     assert torch.isclose(
         predict_params.grad.squeeze(),
-        torch.tensor(-0.1, device=DEVICE),
+        torch.tensor(0.05, device=DEVICE),
+    )
+    assert torch.isclose(
+        predict_param_n_plus_1.grad.squeeze(),
+        torch.tensor(-0.45, device=DEVICE),
     )
 
 
@@ -375,10 +415,6 @@ def test_aacrc_loss_is_same_for_equivalent_metric_and_loss():
             device=y_pred.device,
         )
 
-    y_true = torch.ones(1, 1, device=DEVICE)
-    y_pred = torch.ones(1, 1, device=DEVICE)
-    predict_params = torch.tensor([[0.5]], device=DEVICE)
-    predict_param_n_plus_1 = torch.tensor([[0.5]], device=DEVICE)
     metric_loss = _AACRCLoss(
         alpha=0.1,
         n=1,
@@ -398,23 +434,40 @@ def test_aacrc_loss_is_same_for_equivalent_metric_and_loss():
         ),
     )
 
-    assert torch.allclose(
-        metric_loss(
-            y_true,
-            y_pred,
+    def get_gradients(loss_fn):
+        predict_params = torch.tensor(
+            [[0.5]],
+            device=DEVICE,
+            requires_grad=True,
+        )
+        predict_param_n_plus_1 = torch.tensor(
+            [[0.5]],
+            device=DEVICE,
+            requires_grad=True,
+        )
+        loss = loss_fn(
+            torch.ones(1, 1, device=DEVICE),
+            torch.ones(1, 1, device=DEVICE),
             predict_params,
             predict_param_n_plus_1,
-        ),
-        direct_loss(
-            y_true,
-            y_pred,
-            predict_params,
-            predict_param_n_plus_1,
-        ),
+        )
+        return torch.autograd.grad(
+            loss,
+            (predict_params, predict_param_n_plus_1),
+        )
+
+    metric_gradients = get_gradients(metric_loss)
+    direct_gradients = get_gradients(direct_loss)
+    assert all(
+        torch.allclose(metric_gradient, direct_gradient)
+        for metric_gradient, direct_gradient in zip(
+            metric_gradients,
+            direct_gradients,
+        )
     )
 
 
-def test_aacrc_loss_with_nonzero_integration_start():
+def test_aacrc_gradient_surrogate_calibration_and_worst_case_gradients():
     def constant_loss(y_true, y_pred, predict_param):
         return torch.full(
             (len(predict_param),),
@@ -437,7 +490,6 @@ def test_aacrc_loss_with_nonzero_integration_start():
             higher_is_better=False,
             monotonicity="increasing",
         ),
-        integration_start=2.0,
     )(
         torch.ones(1, 1, device=DEVICE),
         torch.ones(1, 1, device=DEVICE),
@@ -445,7 +497,7 @@ def test_aacrc_loss_with_nonzero_integration_start():
         predict_param_n_plus_1,
     )
 
-    assert torch.isclose(loss, torch.tensor(0.525, device=DEVICE))
+    assert torch.isclose(loss, torch.tensor(0.0, device=DEVICE))
     loss.backward()
     assert torch.isclose(
         predict_params.grad.squeeze(),
@@ -466,6 +518,18 @@ def test_aacrc_loss_scales_minibatch_to_full_objective():
             device=y_pred.device,
         )
 
+    predict_params = torch.ones(
+        2,
+        1,
+        device=DEVICE,
+        requires_grad=True,
+    )
+    predict_param_n_plus_1 = torch.ones(
+        1,
+        1,
+        device=DEVICE,
+        requires_grad=True,
+    )
     loss = _AACRCLoss(
         alpha=0.1,
         n=6,
@@ -477,14 +541,23 @@ def test_aacrc_loss_scales_minibatch_to_full_objective():
     )(
         torch.ones(2, 1, device=DEVICE),
         torch.ones(2, 1, device=DEVICE),
-        torch.ones(2, 1, device=DEVICE),
-        torch.ones(1, 1, device=DEVICE),
+        predict_params,
+        predict_param_n_plus_1,
     )
 
-    # Each integral is 0.4. Scaling the two-sample mini-batch by 6 / 2
-    # recovers the six calibration terms in the full AA-CRC objective.
-    expected = torch.tensor((6 * 0.4 + 0.9) / 7, device=DEVICE)
-    assert torch.isclose(loss, expected)
+    assert torch.isclose(loss, torch.tensor(0.0, device=DEVICE))
+    loss.backward()
+    expected_calibration_gradient = torch.tensor(3 * 0.4 / 7, device=DEVICE)
+    assert bool(
+        torch.allclose(
+            predict_params.grad,
+            torch.full_like(predict_params, expected_calibration_gradient),
+        )
+    )
+    assert torch.isclose(
+        predict_param_n_plus_1.grad.squeeze(),
+        torch.tensor(0.9 / 7, device=DEVICE),
+    )
 
 
 def test_aacrc_loss_negates_objective_for_decreasing_risk():
@@ -496,30 +569,45 @@ def test_aacrc_loss_negates_objective_for_decreasing_risk():
             device=y_pred.device,
         )
 
-    y_true = torch.ones(1, 1, device=DEVICE)
-    y_pred = torch.ones(1, 1, device=DEVICE)
-    predict_params = torch.tensor([[0.5]], device=DEVICE)
-    predict_param_n_plus_1 = torch.tensor([[0.5]], device=DEVICE)
-    increasing_objective = _AACRCLoss(
-        alpha=0.1,
-        n=1,
-        risk=RiskLoss(
-            constant_loss,
-            higher_is_better=False,
-            monotonicity="increasing",
-        ),
-    )(y_true, y_pred, predict_params, predict_param_n_plus_1)
-    decreasing_objective = _AACRCLoss(
-        alpha=0.1,
-        n=1,
-        risk=RiskLoss(
-            constant_loss,
-            higher_is_better=False,
-            monotonicity="decreasing",
-        ),
-    )(y_true, y_pred, predict_params, predict_param_n_plus_1)
+    def get_gradients(monotonicity):
+        predict_params = torch.tensor(
+            [[0.5]],
+            device=DEVICE,
+            requires_grad=True,
+        )
+        predict_param_n_plus_1 = torch.tensor(
+            [[0.5]],
+            device=DEVICE,
+            requires_grad=True,
+        )
+        loss = _AACRCLoss(
+            alpha=0.1,
+            n=1,
+            risk=RiskLoss(
+                constant_loss,
+                higher_is_better=False,
+                monotonicity=monotonicity,
+            ),
+        )(
+            torch.ones(1, 1, device=DEVICE),
+            torch.ones(1, 1, device=DEVICE),
+            predict_params,
+            predict_param_n_plus_1,
+        )
+        return torch.autograd.grad(
+            loss,
+            (predict_params, predict_param_n_plus_1),
+        )
 
-    assert torch.allclose(decreasing_objective, -increasing_objective)
+    increasing_gradients = get_gradients("increasing")
+    decreasing_gradients = get_gradients("decreasing")
+    assert all(
+        torch.allclose(decreasing_gradient, -increasing_gradient)
+        for increasing_gradient, decreasing_gradient in zip(
+            increasing_gradients,
+            decreasing_gradients,
+        )
+    )
 
 
 def test_risk_loss_rejects_invalid_monotonicity():

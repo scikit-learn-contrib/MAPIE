@@ -55,8 +55,9 @@ class ConditionalExpectedRiskController:
     that a user-provided bounded, monotone risk is controlled at the target
     risk level.
 
-    The loss is evaluated in PyTorch inside the AA-CRC objective [1]_, so its
-    gradient with respect to the prediction parameter is preserved.
+    The risk is evaluated in PyTorch at the learned prediction parameter. Its
+    value provides the exact gradient of the integrated AA-CRC objective [1]_;
+    the derivative of the risk itself is not needed.
 
     This implementation relies on PyTorch (an optional dependency, installable
     via ``pip install mapie[conditional]``). PyTorch is imported lazily, so it
@@ -79,8 +80,8 @@ class ConditionalExpectedRiskController:
         Target risk level. Must be in ``(0, 1)``.
 
     risk : {"recall", "miscoverage"} or RiskLoss
-        Differentiable loss or performance metric to control.
-        Pass a :class:`RiskLoss` for a custom loss.
+        PyTorch-compatible loss or performance metric to control. Pass a
+        :class:`RiskLoss` for a custom loss.
         Its wrapped PyTorch function must be monotone with respect to the
         prediction parameter, and the direction of the resulting controlled
         loss must be declared through ``RiskLoss.monotonicity``.
@@ -90,8 +91,7 @@ class ConditionalExpectedRiskController:
         the linear model output is used without clipping, as required by the
         vector-space assumption in the AA-CRC guarantee. Providing bounds is a
         practical option, but the clipped predictor does not strictly retain
-        that theoretical guarantee. When bounds are provided, their lower bound
-        is also used as the integration start.
+        that theoretical guarantee.
 
     base_model : torch.nn.Module, optional
         Mapping from an embedding to a prediction parameter. If ``None``
@@ -231,8 +231,6 @@ class ConditionalExpectedRiskController:
                     "`predict_param_range` values must be finite and increasing."
                 )
             initial_predict_param = (lower + upper) / 2
-        self._integration_start = lower
-
         X_conformalize_ = np.asarray(X_conformalize)
         self.X_conformalize_embedded = self.feature_map(X_conformalize_)
         self.y_conformalize = y_conformalize
@@ -257,7 +255,6 @@ class ConditionalExpectedRiskController:
             alpha=self.target_level,
             x_n_plus_1=self.feature_map(x_n_plus_1),
             risk=self._risk,
-            integration_start=lower,
         )
 
     def predict(
@@ -306,7 +303,6 @@ class ConditionalExpectedRiskController:
                 alpha=self.target_level,
                 x_n_plus_1=x_n_plus_1,
                 risk=self._risk,
-                integration_start=self._integration_start,
             )
             predict_param = model(
                 torch.tensor(x_n_plus_1.astype(np.float32)).to(DEVICE)
@@ -334,7 +330,6 @@ def _train_model(
     alpha: float,
     x_n_plus_1: ArrayLike,
     risk: RiskLoss,
-    integration_start: float,
 ) -> "torch.nn.Module":
     """
     Train the prediction-parameter model on the conformalization set.
@@ -376,10 +371,7 @@ def _train_model(
         Embedding of the new input whose prediction parameter must be controlled.
 
     risk : RiskLoss
-        Differentiable PyTorch loss or performance metric.
-
-    integration_start : float
-        Lower integration bound.
+        PyTorch-compatible loss or performance metric.
 
     Returns
     -------
@@ -406,7 +398,6 @@ def _train_model(
         alpha,
         len(y_true_tensor),
         risk,
-        integration_start,
     )
     for _ in range(n_epochs):
         indices = torch.randperm(len(y_true_tensor), device=DEVICE)
@@ -480,13 +471,15 @@ class _LogisticHead(torch.nn.Module):
 
 class _AACRCLoss(torch.nn.Module):
     """
-    Differentiable surrogate of the conformal risk.
+    Gradient surrogate for the integrated AA-CRC objective.
 
-    For each conformalization point, the integral of the differentiable loss
-    minus ``alpha`` is approximated by the trapezoidal rule
-    (:meth:`_compute_integrals`). The loss is the average of these integrals
-    plus the worst-case integral for the new input. The complete objective is
-    negated when the loss decreases with the prediction parameter.
+    The numerical value of the integrated objective is not needed during
+    training. This module therefore returns a zero-valued scalar whose gradient
+    matches that objective exactly. For each conformalization point, the
+    endpoint identity gives ``dI/du = loss(u) - alpha``. A zero-valued gradient
+    proxy supplies this derivative directly, avoiding numerical integration.
+    The complete gradient is negated when the loss decreases with the prediction
+    parameter.
 
     Parameters
     ----------
@@ -497,10 +490,7 @@ class _AACRCLoss(torch.nn.Module):
         Number of conformalization points (used to normalise the loss).
 
     risk : RiskLoss
-        Differentiable PyTorch loss or performance metric.
-
-    integration_start : float, default=0.0
-        Lower integration bound.
+        PyTorch loss or performance metric.
 
     """
 
@@ -509,13 +499,11 @@ class _AACRCLoss(torch.nn.Module):
         alpha: float,
         n: int,
         risk: RiskLoss = recall_loss,
-        integration_start: float = 0.0,
     ) -> None:
         super().__init__()
         self.alpha = alpha
         self.n = n
         self.risk = risk
-        self.integration_start = integration_start
 
     def forward(
         self,
@@ -524,74 +512,40 @@ class _AACRCLoss(torch.nn.Module):
         predict_params: "torch.Tensor",
         predict_param_n_plus_1: "torch.Tensor",
     ) -> "torch.Tensor":
-        integrals = self._compute_integrals(y_true, y_pred, predict_params)
+        detached_predict_params = predict_params.detach()
+        parameter_shape = (len(predict_params),) + (1,) * (y_pred.ndim - 1)
+
+        # Only endpoint risk values are needed; the risk itself is not
+        # differentiated.
+        with torch.no_grad():
+            endpoint_losses = self.risk(
+                y_true,
+                y_pred,
+                detached_predict_params.reshape(parameter_shape),
+            )
+            integrals_endpoint_derivatives = endpoint_losses - self.alpha
+
+        # In the forward pass, predict_params - detached_predict_params is zero.
+        # In the backward pass, its derivative is one, so the proxy's derivative
+        # is integrals_endpoint_derivatives.
+        integrals_gradient_proxy = integrals_endpoint_derivatives * (
+            predict_params.reshape(len(predict_params))
+            - detached_predict_params.reshape(len(predict_params))
+        )
+
         current_batch_size = len(y_true)
         batch_scale = self.n / current_batch_size
-        worst_case_integral = (1 - self.alpha) * (
-            predict_param_n_plus_1.squeeze() - self.integration_start
+        detached_predict_param_n_plus_1 = predict_param_n_plus_1.detach()
+
+        # Use the same zero-valued proxy for the worst-case integral, whose
+        # endpoint derivative is 1 - alpha.
+        worst_case_endpoint_derivative = 1 - self.alpha
+        worst_case_gradient_proxy = (
+            worst_case_endpoint_derivative
+            * (predict_param_n_plus_1 - detached_predict_param_n_plus_1).squeeze()
         )
-        objective = (batch_scale * torch.sum(integrals) + worst_case_integral) / (
-            self.n + 1
-        )
-        return self.risk.objective_sign * objective
-
-    def _compute_integrals(
-        self,
-        y_true: "torch.Tensor",
-        y_pred: "torch.Tensor",
-        predict_params: "torch.Tensor",
-        steps_trapz: int = 100,
-    ) -> "torch.Tensor":
-        # Use a list to accumulate the differentiable integrals
-        integrals: list = []
-        for i in range(len(y_true)):
-            target = torch.clone(y_true[i]).to(DEVICE)
-            prediction = torch.clone(y_pred[i]).to(DEVICE)
-            predict_param = predict_params[i]
-            target = torch.repeat_interleave(
-                target[None, ...],
-                steps_trapz,
-                dim=0,
-            )
-            prediction = torch.repeat_interleave(
-                prediction[None, ...],
-                steps_trapz,
-                dim=0,
-            )
-            start = torch.tensor(
-                self.integration_start,
-                dtype=predict_param.dtype,
-                device=DEVICE,
-            )
-
-            # Step 1: approximate the integral value on a detached grid.
-            # Detaching prevents autograd from differentiating the moving
-            # integration grid points, while preserving their numerical values.
-            detached_end = predict_param.detach()
-            parameters = torch.lerp(
-                start,
-                detached_end,
-                torch.linspace(0, 1, steps_trapz, device=DEVICE),
-            )
-            parameter_shape = (steps_trapz,) + (1,) * (prediction.ndim - 1)
-            loss = self.risk(
-                target,
-                prediction,
-                parameters.reshape(parameter_shape),
-            )
-            integrand = loss - self.alpha
-            integral_value = torch.trapz(integrand, parameters)
-
-            # Step 2: create a zero-valued term used only to supply the exact
-            # endpoint gradient dI/du = loss(u) - alpha. In the forward pass,
-            # predict_param - detached_end is zero. In the backward pass, its
-            # derivative is one, so the proxy's derivative is endpoint_derivative.
-            endpoint_derivative = integrand[-1].detach()
-            gradient_proxy = (
-                endpoint_derivative * (predict_param - detached_end).squeeze()
-            )
-            integral = integral_value + gradient_proxy
-            integrals.append(integral)
-
-        # Stack to create a tensor with gradients
-        return torch.stack(integrals)
+        objective_gradient_proxy = (
+            batch_scale * torch.sum(integrals_gradient_proxy)
+            + worst_case_gradient_proxy
+        ) / (self.n + 1)
+        return self.risk.objective_sign * objective_gradient_proxy

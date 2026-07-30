@@ -455,15 +455,15 @@ continuous_risk_choice_map = {
 
 class RiskLoss:
     """
-    Define a differentiable loss for automatically adaptive CRC (AA-CRC).
+    Define a PyTorch-compatible loss for automatically adaptive CRC (AA-CRC).
 
     Parameters
     ----------
     loss_function : Callable
-        Differentiable PyTorch function taking ``y_true``, raw ``y_pred`` and
-        the prediction parameter. It must return one value in ``[0, 1]`` per
-        prediction parameter. Use string names when selecting losses defined
-        by MAPIE; this class is the extension point for custom losses.
+        PyTorch function taking ``y_true``, raw ``y_pred`` and the prediction
+        parameter. It must return one value in ``[0, 1]`` per prediction
+        parameter. Use string names when selecting losses defined by MAPIE;
+        this class is the extension point for custom losses.
 
     higher_is_better : bool
         Whether ``loss_function`` is a performance metric (``True``) or a loss
