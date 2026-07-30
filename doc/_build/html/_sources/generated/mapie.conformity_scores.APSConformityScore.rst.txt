@@ -1,0 +1,17 @@
+﻿:mod:`mapie.conformity_scores`.APSConformityScore
+========================================================
+
+.. currentmodule:: mapie.conformity_scores
+
+.. autoclass:: APSConformityScore
+   :members:
+
+   
+   .. automethod:: __init__
+   
+
+.. include:: mapie.conformity_scores.APSConformityScore.examples
+
+.. raw:: html
+
+    <div style='clear:both'></div>

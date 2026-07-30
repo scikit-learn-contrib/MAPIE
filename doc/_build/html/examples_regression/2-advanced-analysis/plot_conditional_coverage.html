@@ -1,0 +1,1551 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Focus on local (or “conditional”) coverage &mdash; MAPIE 1.2.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/project-template.css?v=2b5c7e5c" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=d2d258e8" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-binder.css?v=f4aeca0c" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=6efca38a"></script>
+      <script src="../../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../_static/js/copybutton.js?v=26522df0"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Conformalized quantile regression on gamma distributed data" href="plot_cqr_tutorial.html" />
+    <link rel="prev" title="Focus on residual normalised score" href="plot_ResidualNormalisedScore_tutorial.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            MAPIE
+              <img src="../../_static/mapie_logo_white_cut.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../quick_start.html">Quick Start with MAPIE</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../quick_start.html#download-and-install-the-module">1. Download and install the module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../quick_start.html#regression">2. Regression</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../quick_start.html#classification">3. Classification</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../quick_start.html#risk-control">4. Risk Control</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../split_cross_conformal.html">The conformalization (or “calibration”) set</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../split_cross_conformal.html#split-conformal-predictions">1. Split conformal predictions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../split_cross_conformal.html#split-conformal-predictions-with-a-pre-trained-model">Split conformal predictions with a pre-trained model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../split_cross_conformal.html#split-conformal-predictions-with-an-untrained-model">Split conformal predictions with an untrained model</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../split_cross_conformal.html#cross-conformal-predictions">2. Cross conformal predictions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../choosing_the_right_algorithm.html">Choosing the right algorithm</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../v1_release_notes.html">MAPIE v1 release notes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../v1_release_notes.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../v1_release_notes.html#api-changes-overview">API changes overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../v1_release_notes.html#python-scikit-learn-and-numpy-versions-support">Python, scikit-learn and NumPy versions support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../v1_release_notes.html#api-changes-in-detail">API changes in detail</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../v1_release_notes.html#regression-and-classification-api-changes-excluding-time-series">Regression and classification API changes (excluding time series)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../v1_release_notes.html#classes">Classes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../v1_release_notes.html#workflow-and-methods">Workflow and methods</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../v1_release_notes.html#parameters">Parameters</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../v1_release_notes.html#other-api-changes">Other API changes</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../v1_release_notes.html#time-series">Time series</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../v1_release_notes.html#risk-control">Risk control</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../v1_release_notes.html#calibration">Calibration</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../v1_release_notes.html#mondrian">Mondrian</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../v1_release_notes.html#metrics">Metrics</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../v1_release_notes.html#conformity-scores">Conformity scores</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Measure predictions uncertainty</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../index_regression.html">Prediction intervals (regression)</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../choosing_the_right_algorithm_regression.html">Choose the right algorithm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../1-quickstart/plot_toy_model.html">Use MAPIE to plot prediction intervals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../1-quickstart/plot_prefit.html">Use MAPIE with a pre-trained model</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../index.html">All regression examples</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../1-quickstart/index.html">1. Quickstart</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../1-quickstart/plot_toy_model.html">Use MAPIE to plot prediction intervals</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../1-quickstart/plot_compare_conformity_scores.html">Use MAPIE on data with gamma distribution</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../1-quickstart/plot_prefit.html">Use MAPIE with a pre-trained model</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../1-quickstart/plot_heteroscedastic_1d_data.html">Use MAPIE on data with uneven uncertainty</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../1-quickstart/plot_homoscedastic_1d_data.html">Use MAPIE on data with constant uncertainty</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../1-quickstart/plot_ts-tutorial.html">Tutorial for time series</a></li>
+</ul>
+</li>
+<li class="toctree-l3 current"><a class="reference internal" href="index.html">2. Advanced analysis</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="plot_conformal_predictive_distribution.html">Conformal Predictive Distribution with MAPIE</a></li>
+<li class="toctree-l4"><a class="reference internal" href="plot_cqr_symmetry_difference.html">The symmetric correction parameter in conformalized quantile regression</a></li>
+<li class="toctree-l4"><a class="reference internal" href="plot_nested-cv.html">Hyperparameters tuning with cross-conformal regression</a></li>
+<li class="toctree-l4"><a class="reference internal" href="plot_both_uncertainties.html">Estimating aleatoric and epistemic uncertainties</a></li>
+<li class="toctree-l4"><a class="reference internal" href="plot_timeseries_enbpi.html">Time series: example of the EnbPI technique</a></li>
+<li class="toctree-l4"><a class="reference internal" href="plot-coverage-width-based-criterion.html">Focus on intervals width</a></li>
+<li class="toctree-l4"><a class="reference internal" href="plot_ResidualNormalisedScore_tutorial.html">Focus on residual normalised score</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">Focus on local (or “conditional”) coverage</a></li>
+<li class="toctree-l4"><a class="reference internal" href="plot_cqr_tutorial.html">Conformalized quantile regression on gamma distributed data</a></li>
+<li class="toctree-l4"><a class="reference internal" href="plot_coverage_validity.html">Coverage validity of MAPIE for regression tasks</a></li>
+<li class="toctree-l4"><a class="reference internal" href="plot_main-tutorial-regression.html">Comparison between conformalized quantile regressor and cross methods</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../3-scientific-articles/index.html">3. Simulations from scientific articles</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../3-scientific-articles/plot_barber2020_simulations.html">Predictive inference with the jackknife+, Foygel-Barber et al. (2020)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../3-scientific-articles/plot_zaffran2022_comparison.html">Adaptive conformal predictions for time series, Zaffran et al. (2022)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../3-scientific-articles/plot_kim2020_simulations.html">Predictive inference is free with the Jackknife+-after-Bootstrap, Kim et al. (2020)</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../4-other-notebooks/index.html">4. Other notebooks</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../theoretical_description_regression.html">Theoretical Description</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../theoretical_description_conformity_scores.html">Theoretical Description for Conformity Scores</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../index_classification.html">Prediction sets (classification)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../choosing_the_right_algorithm_classification.html">Choosing the right algorithm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples_classification/1-quickstart/plot_quickstart_classification.html">Use MAPIE to plot prediction sets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples_classification/index.html">All classification examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_classification/1-quickstart/index.html">1. Quickstart examples</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_classification/1-quickstart/plot_quickstart_classification.html">Use MAPIE to plot prediction sets</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_classification/2-advanced-analysis/index.html">2. Advanced analysis</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_classification/2-advanced-analysis/plot_comp_methods_on_2d_dataset.html">LAC and APS methods explained</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_classification/2-advanced-analysis/plot_main-tutorial-binary-classification.html">Set prediction example in the binary classification setting</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_classification/2-advanced-analysis/plot_crossconformal.html">Cross conformal classification explained</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_classification/3-scientific-articles/index.html">3. Simulations from scientific articles</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_classification/3-scientific-articles/plot_sadinle2019_example.html">Least Ambiguous Set-Valued Classifiers with Bounded Error Levels, Sadinle et al. (2019)</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_classification/4-other-notebooks/index.html">4. Other notebooks</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../theoretical_description_classification.html">Theoretical Description</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../index_binary_classification.html">The binary classification case</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_classification/2-advanced-analysis/plot_main-tutorial-binary-classification.html">Set prediction example in the binary classification setting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../theoretical_description_binary_classification.html">Theoretical Description</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Control prediction errors</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../theoretical_description_risk_control.html">Getting started with risk control in MAPIE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples_risk_control/1-quickstart/plot_risk_control_binary_classification.html">Use MAPIE to control the precision of a binary classifier</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples_risk_control/index.html">All risk control examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../examples_risk_control/1-quickstart/index.html">1. Quickstart examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_risk_control/1-quickstart/plot_risk_control_binary_classification.html">Use MAPIE to control the precision of a binary classifier</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples_risk_control/2-advanced-analysis/index.html">2. Advanced analysis</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_risk_control/2-advanced-analysis/plot_risk_control_multi-label_classification.html">Use MAPIE to control the risk of a multi-label classifier</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_risk_control/2-advanced-analysis/plot_risk_control_multi_parameter_binary_classification.html">Use MAPIE to control risk of a binary classifier with multiple prediction parameters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_risk_control/2-advanced-analysis/plot_semantic_segmentation_recall_control.html">Recall control for semantic segmentation with MAPIE</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_risk_control/2-advanced-analysis/plot_semantic_segmentation_precision_control.html">Precision control for semantic segmentation with MAPIE</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_risk_control/2-advanced-analysis/plot_multi_risk_control_binary_classification.html">Use MAPIE to control multiple risks of a binary classifier</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_risk_control/2-advanced-analysis/plot_risk_control_llm_as_a_judge.html">Risk Control for LLM as a Judge with Abstention</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../external_risk_control_package.html">Additional resources: external risk control package</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Calibrate classifiers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../theoretical_description_calibration.html">Theoretical Description</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples_calibration/index.html">Calibration examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../examples_calibration/1-quickstart/index.html">1. Quickstart examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_calibration/1-quickstart/plot_calibration_venn_abers_binary.html">Calibrating binary classifier with Venn-ABERS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_calibration/1-quickstart/plot_calibration_hypothesis_testing.html">Testing for calibration in binary classification settings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_calibration/1-quickstart/plot_calibration_venn_abers_multiclass.html">Calibrating multi-class classifier with Venn-ABERS</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples_calibration/2-advanced-analysis/index.html">2. Advanced analysis</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_calibration/2-advanced-analysis/plot_asymptotic_convergence_of_p_values.html">Evaluating the asymptotic convergence of p-values</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../notebooks_calibration.html">Calibration notebooks</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Question &amp; Answers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../theoretical_description_metrics.html">Metrics: how to measure conformal prediction performance?</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../theoretical_description_metrics.html#general-metrics">1. General Metrics</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../theoretical_description_metrics.html#regression-coverage-score">Regression Coverage Score</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../theoretical_description_metrics.html#regression-mean-width-score">Regression Mean Width Score</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../theoretical_description_metrics.html#classification-coverage-score">Classification Coverage Score</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../theoretical_description_metrics.html#classification-mean-width-score">Classification Mean Width Score</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../theoretical_description_metrics.html#size-stratified-coverage">Size-Stratified Coverage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../theoretical_description_metrics.html#hilbert-schmidt-independence-criterion">Hilbert-Schmidt Independence Criterion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../theoretical_description_metrics.html#coverage-width-based-criterion">Coverage Width-Based Criterion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../theoretical_description_metrics.html#mean-winkler-interval-score">Mean Winkler Interval Score</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../theoretical_description_metrics.html#calibration-metrics">2. Calibration Metrics</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../theoretical_description_metrics.html#expected-calibration-error">Expected Calibration Error</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../theoretical_description_metrics.html#top-label-expected-calibration-error-top-label-ece">Top-Label Expected Calibration Error (Top-Label ECE)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../theoretical_description_metrics.html#cumulative-differences">Cumulative Differences</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../theoretical_description_metrics.html#kolmogorov-smirnov-statistic-for-calibration">Kolmogorov-Smirnov Statistic for Calibration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../theoretical_description_metrics.html#kuiper-s-test">Kuiper’s Test</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../theoretical_description_metrics.html#spiegelhalters-test">Spiegelhalter’s Test</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../theoretical_description_metrics.html#references">References</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../index_mondrian.html">Mondrian: how to use prior knowledge on groups when measuring uncertainty?</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html">Tutorial: how to ensure fairness across groups with Mondrian</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html#create-the-noisy-dataset">1. Create the noisy dataset</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html#split-the-dataset-into-a-training-set-a-conformalization-set-and-a-test-set">2. Split the dataset into a training set, a conformalization set, and a test set</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html#fit-a-random-forest-regressor-on-the-training-set">3. Fit a random forest regressor on the training set</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html#build-the-classical-conformal-prediction-intervals">4. Build the classical conformal prediction intervals</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html#conformalize-a-splitconformalregressor-on-the-conformalization-set">Conformalize a SplitConformalRegressor on the conformalization set</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html#predict-the-prediction-intervals-on-the-test-set">Predict the prediction intervals on the test set</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html#evaluate-the-coverage-score-by-group">Evaluate the coverage score by group</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html#build-the-mondrian-conformal-prediction-intervals">5. Build the Mondrian conformal prediction intervals</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html#conformalize-a-splitconformalregressor-on-the-conformalization-set-for-each-group">Conformalize a SplitConformalRegressor on the conformalization set for each group</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html#id1">Predict the prediction intervals on the test set</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html#compare-the-coverage-by-partition-plot-both-methods-side-by-side">6. Compare the coverage by partition, plot both methods side by side</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../theoretical_description_mondrian.html">Theoretical Description</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../theoretical_description_mondrian.html#references">References</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../llm_risk_control.html">How to control LLM risks?</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html">MAPIE API</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../api.html#regression">Regression</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api.html#conformalizers">Conformalizers</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.regression.SplitConformalRegressor.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.regression</span></code>.SplitConformalRegressor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.regression.CrossConformalRegressor.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.regression</span></code>.CrossConformalRegressor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.regression.JackknifeAfterBootstrapRegressor.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.regression</span></code>.JackknifeAfterBootstrapRegressor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.regression.ConformalizedQuantileRegressor.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.regression</span></code>.ConformalizedQuantileRegressor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.regression.TimeSeriesRegressor.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.regression</span></code>.TimeSeriesRegressor</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../api.html#metrics">Metrics</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.regression.regression_coverage_score.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.regression</span></code>.regression_coverage_score</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.regression.regression_mean_width_score.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.regression</span></code>.regression_mean_width_score</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.regression.regression_ssc.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.regression</span></code>.regression_ssc</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.regression.regression_ssc_score.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.regression</span></code>.regression_ssc_score</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.regression.hsic.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.regression</span></code>.hsic</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.regression.coverage_width_based.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.regression</span></code>.coverage_width_based</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.regression.regression_mwi_score.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.regression</span></code>.regression_mwi_score</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../api.html#conformity-scores">Conformity Scores</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.conformity_scores.BaseRegressionScore.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.conformity_scores</span></code>.BaseRegressionScore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.conformity_scores.AbsoluteConformityScore.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.conformity_scores</span></code>.AbsoluteConformityScore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.conformity_scores.GammaConformityScore.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.conformity_scores</span></code>.GammaConformityScore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.conformity_scores.ResidualNormalisedScore.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.conformity_scores</span></code>.ResidualNormalisedScore</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../api.html#resampling">Resampling</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.subsample.BlockBootstrap.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.subsample</span></code>.BlockBootstrap</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.subsample.Subsample.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.subsample</span></code>.Subsample</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../api.html#classification">Classification</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api.html#id1">Conformalizers</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.classification.SplitConformalClassifier.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.classification</span></code>.SplitConformalClassifier</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.classification.CrossConformalClassifier.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.classification</span></code>.CrossConformalClassifier</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../api.html#id2">Metrics</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.classification.classification_coverage_score.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.classification</span></code>.classification_coverage_score</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.classification.classification_mean_width_score.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.classification</span></code>.classification_mean_width_score</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.classification.classification_ssc.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.classification</span></code>.classification_ssc</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.classification.classification_ssc_score.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.classification</span></code>.classification_ssc_score</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../api.html#id3">Conformity Scores</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.conformity_scores.BaseClassificationScore.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.conformity_scores</span></code>.BaseClassificationScore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.conformity_scores.NaiveConformityScore.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.conformity_scores</span></code>.NaiveConformityScore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.conformity_scores.LACConformityScore.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.conformity_scores</span></code>.LACConformityScore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.conformity_scores.APSConformityScore.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.conformity_scores</span></code>.APSConformityScore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.conformity_scores.RAPSConformityScore.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.conformity_scores</span></code>.RAPSConformityScore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.conformity_scores.TopKConformityScore.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.conformity_scores</span></code>.TopKConformityScore</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../api.html#risk-control">Risk Control</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../generated/mapie.risk_control.MultiLabelClassificationController.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.risk_control</span></code>.MultiLabelClassificationController</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.risk_control.MultiLabelClassificationController.html#mapie.risk_control.MultiLabelClassificationController"><code class="docutils literal notranslate"><span class="pre">MultiLabelClassificationController</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.risk_control.MultiLabelClassificationController.html#examples-using-mapie-risk-control-multilabelclassificationcontroller">Examples using <code class="docutils literal notranslate"><span class="pre">mapie.risk_control.MultiLabelClassificationController</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../generated/mapie.risk_control.BinaryClassificationController.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.risk_control</span></code>.BinaryClassificationController</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.risk_control.BinaryClassificationController.html#mapie.risk_control.BinaryClassificationController"><code class="docutils literal notranslate"><span class="pre">BinaryClassificationController</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.risk_control.BinaryClassificationController.html#examples-using-mapie-risk-control-binaryclassificationcontroller">Examples using <code class="docutils literal notranslate"><span class="pre">mapie.risk_control.BinaryClassificationController</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../generated/mapie.risk_control.SemanticSegmentationController.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.risk_control</span></code>.SemanticSegmentationController</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.risk_control.SemanticSegmentationController.html#mapie.risk_control.SemanticSegmentationController"><code class="docutils literal notranslate"><span class="pre">SemanticSegmentationController</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.risk_control.SemanticSegmentationController.html#examples-using-mapie-risk-control-semanticsegmentationcontroller">Examples using <code class="docutils literal notranslate"><span class="pre">mapie.risk_control.SemanticSegmentationController</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../generated/mapie.risk_control.BinaryClassificationRisk.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.risk_control</span></code>.BinaryClassificationRisk</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.risk_control.BinaryClassificationRisk.html#mapie.risk_control.BinaryClassificationRisk"><code class="docutils literal notranslate"><span class="pre">BinaryClassificationRisk</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.risk_control.BinaryClassificationRisk.html#examples-using-mapie-risk-control-binaryclassificationrisk">Examples using <code class="docutils literal notranslate"><span class="pre">mapie.risk_control.BinaryClassificationRisk</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../api.html#calibration">Calibration</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api.html#conformalizer">Conformalizer</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.calibration.TopLabelCalibrator.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.calibration</span></code>.TopLabelCalibrator</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../api.html#id4">Metrics</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.calibration.expected_calibration_error.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.expected_calibration_error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.calibration.top_label_ece.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.top_label_ece</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.calibration.cumulative_differences.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.cumulative_differences</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.calibration.kolmogorov_smirnov_cdf.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.kolmogorov_smirnov_cdf</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.calibration.kolmogorov_smirnov_p_value.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.kolmogorov_smirnov_p_value</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.calibration.kolmogorov_smirnov_statistic.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.kolmogorov_smirnov_statistic</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.calibration.kuiper_cdf.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.kuiper_cdf</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.calibration.kuiper_p_value.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.kuiper_p_value</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.calibration.kuiper_statistic.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.kuiper_statistic</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.calibration.length_scale.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.length_scale</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.calibration.spiegelhalter_p_value.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.spiegelhalter_p_value</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.calibration.spiegelhalter_statistic.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.spiegelhalter_statistic</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../api.html#utils">Utils</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../generated/mapie.utils.train_conformalize_test_split.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.utils</span></code>.train_conformalize_test_split</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.utils.train_conformalize_test_split.html#mapie.utils.train_conformalize_test_split"><code class="docutils literal notranslate"><span class="pre">train_conformalize_test_split()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.utils.train_conformalize_test_split.html#examples-using-mapie-utils-train-conformalize-test-split">Examples using <code class="docutils literal notranslate"><span class="pre">mapie.utils.train_conformalize_test_split</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">MAPIE</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index_regression.html">Prediction intervals (regression)</a></li>
+          <li class="breadcrumb-item"><a href="../index.html">All regression examples</a></li>
+          <li class="breadcrumb-item"><a href="index.html">2. Advanced analysis</a></li>
+      <li class="breadcrumb-item active">Focus on local (or “conditional”) coverage</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/examples_regression/2-advanced-analysis/plot_conditional_coverage.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p>Click <a class="reference internal" href="#sphx-glr-download-examples-regression-2-advanced-analysis-plot-conditional-coverage-py"><span class="std std-ref">here</span></a>
+to download the full example code</p>
+</div>
+<section class="sphx-glr-example-title" id="focus-on-local-or-conditional-coverage">
+<span id="sphx-glr-examples-regression-2-advanced-analysis-plot-conditional-coverage-py"></span><h1>Focus on local (or “conditional”) coverage<a class="headerlink" href="#focus-on-local-or-conditional-coverage" title="Link to this heading"></a></h1>
+<p>This example uses <a class="reference internal" href="../../generated/mapie.regression.SplitConformalRegressor.html#mapie.regression.SplitConformalRegressor" title="mapie.regression.SplitConformalRegressor"><code class="xref py py-class docutils literal notranslate"><span class="pre">SplitConformalRegressor</span></code></a>,
+<a class="reference internal" href="../../generated/mapie.regression.JackknifeAfterBootstrapRegressor.html#mapie.regression.JackknifeAfterBootstrapRegressor" title="mapie.regression.JackknifeAfterBootstrapRegressor"><code class="xref py py-class docutils literal notranslate"><span class="pre">JackknifeAfterBootstrapRegressor</span></code></a>,
+with conformal scores that returns adaptive intervals i.e.
+(<a class="reference internal" href="../../generated/mapie.conformity_scores.GammaConformityScore.html#mapie.conformity_scores.GammaConformityScore" title="mapie.conformity_scores.GammaConformityScore"><code class="xref py py-class docutils literal notranslate"><span class="pre">GammaConformityScore</span></code></a> and
+<a class="reference internal" href="../../generated/mapie.conformity_scores.ResidualNormalisedScore.html#mapie.conformity_scores.ResidualNormalisedScore" title="mapie.conformity_scores.ResidualNormalisedScore"><code class="xref py py-class docutils literal notranslate"><span class="pre">ResidualNormalisedScore</span></code></a>) as well as
+<a class="reference internal" href="../../generated/mapie.regression.ConformalizedQuantileRegressor.html#mapie.regression.ConformalizedQuantileRegressor" title="mapie.regression.ConformalizedQuantileRegressor"><code class="xref py py-class docutils literal notranslate"><span class="pre">ConformalizedQuantileRegressor</span></code></a> and
+<code class="xref py py-class docutils literal notranslate"><span class="pre">regression_ssc</span></code>,
+<code class="xref py py-func docutils literal notranslate"><span class="pre">regression_ssc_score()</span></code> and <code class="xref py py-func docutils literal notranslate"><span class="pre">hsic()</span></code>.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">lightgbm</span><span class="w"> </span><span class="kn">import</span> <span class="n">LGBMRegressor</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.model_selection</span><span class="w"> </span><span class="kn">import</span> <span class="n">train_test_split</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">numpy.typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">NDArray</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mapie.conformity_scores</span><span class="w"> </span><span class="kn">import</span> <span class="n">GammaConformityScore</span><span class="p">,</span> <span class="n">ResidualNormalisedScore</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mapie.metrics.regression</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">regression_coverage_score</span><span class="p">,</span>
+    <span class="n">regression_ssc</span><span class="p">,</span>
+    <span class="n">regression_ssc_score</span><span class="p">,</span>
+    <span class="n">hsic</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mapie.regression</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">SplitConformalRegressor</span><span class="p">,</span>
+    <span class="n">CrossConformalRegressor</span><span class="p">,</span>
+    <span class="n">JackknifeAfterBootstrapRegressor</span><span class="p">,</span>
+    <span class="n">ConformalizedQuantileRegressor</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">)</span>
+
+<span class="n">RANDOM_STATE</span> <span class="o">=</span> <span class="mi">42</span>
+<span class="n">split_size</span> <span class="o">=</span> <span class="mf">0.20</span>
+<span class="n">alpha</span> <span class="o">=</span> <span class="mf">0.05</span>
+<span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">RANDOM_STATE</span><span class="p">)</span>
+
+
+<span class="c1"># Functions for generating our dataset</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">sin_with_controlled_noise</span><span class="p">(</span>
+    <span class="n">min_x</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span>
+    <span class="n">max_x</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span>
+    <span class="n">n_samples</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">NDArray</span><span class="p">,</span> <span class="n">NDArray</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generate a dataset following sinx except that one interval over two 1 or -1</span>
+<span class="sd">    (0.5 probability) is added to X</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    min_x: Union[int, float]</span>
+<span class="sd">        The minimum value for X.</span>
+
+<span class="sd">    max_x: Union[int, float]</span>
+<span class="sd">        The maximum value for X.</span>
+
+<span class="sd">    n_samples: int</span>
+<span class="sd">        The number of samples wanted in the dataset.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Tuple[NDArray, NDArray]</span>
+<span class="sd">        - X: feature data.</span>
+<span class="sd">        - y: target data</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">X</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">min_x</span><span class="p">,</span> <span class="n">max_x</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">n_samples</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">n_samples</span><span class="p">,))</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">max_x</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">indexes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argwhere</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">greater_equal</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">X</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">greater</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">i</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">indexes</span><span class="p">:</span>
+                <span class="n">noise</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">choice</span><span class="p">([</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+                <span class="n">y</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="n">index</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span> <span class="o">+</span> <span class="n">noise</span> <span class="o">*</span> <span class="n">rng</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">+</span> <span class="mi">2</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">indexes</span><span class="p">:</span>
+                <span class="n">y</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="n">index</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span> <span class="o">+</span> <span class="n">rng</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">/</span> <span class="mi">5</span> <span class="o">+</span> <span class="mi">2</span>
+
+    <span class="k">return</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span>
+
+
+<span class="c1"># Data generation</span>
+<span class="n">min_x</span><span class="p">,</span> <span class="n">max_x</span><span class="p">,</span> <span class="n">n_samples</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">3000</span>
+<span class="n">X_train_conformalize</span><span class="p">,</span> <span class="n">y_train_conformalize</span> <span class="o">=</span> <span class="n">sin_with_controlled_noise</span><span class="p">(</span>
+    <span class="n">min_x</span><span class="p">,</span> <span class="n">max_x</span><span class="p">,</span> <span class="n">n_samples</span>
+<span class="p">)</span>
+<span class="n">X_test</span><span class="p">,</span> <span class="n">y_test</span> <span class="o">=</span> <span class="n">sin_with_controlled_noise</span><span class="p">(</span><span class="n">min_x</span><span class="p">,</span> <span class="n">max_x</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">n_samples</span> <span class="o">*</span> <span class="n">split_size</span><span class="p">))</span>
+
+<span class="c1"># Definition of our base models</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">LGBMRegressor</span><span class="p">(</span><span class="n">random_state</span><span class="o">=</span><span class="n">RANDOM_STATE</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="n">model_quant</span> <span class="o">=</span> <span class="n">LGBMRegressor</span><span class="p">(</span><span class="n">objective</span><span class="o">=</span><span class="s2">&quot;quantile&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="n">RANDOM_STATE</span><span class="p">)</span>
+
+
+<span class="c1"># Definition of the experimental set up</span>
+<span class="n">STRATEGIES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;cv_plus&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;class&quot;</span><span class="p">:</span> <span class="n">CrossConformalRegressor</span><span class="p">,</span>
+        <span class="s2">&quot;init_params&quot;</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="s2">&quot;plus&quot;</span><span class="p">,</span> <span class="n">cv</span><span class="o">=</span><span class="mi">10</span><span class="p">),</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;jackknife_plus_ab&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;class&quot;</span><span class="p">:</span> <span class="n">JackknifeAfterBootstrapRegressor</span><span class="p">,</span>
+        <span class="s2">&quot;init_params&quot;</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span>
+            <span class="n">method</span><span class="o">=</span><span class="s2">&quot;plus&quot;</span><span class="p">,</span>
+            <span class="n">resampling</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+            <span class="n">conformity_score</span><span class="o">=</span><span class="n">GammaConformityScore</span><span class="p">(),</span>
+        <span class="p">),</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;residual_normalised&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;class&quot;</span><span class="p">:</span> <span class="n">SplitConformalRegressor</span><span class="p">,</span>
+        <span class="s2">&quot;init_params&quot;</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span>
+            <span class="n">prefit</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">conformity_score</span><span class="o">=</span><span class="n">ResidualNormalisedScore</span><span class="p">(</span>
+                <span class="n">residual_estimator</span><span class="o">=</span><span class="n">LGBMRegressor</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="n">RANDOM_STATE</span><span class="p">),</span>
+                <span class="n">split_size</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span>
+                <span class="n">random_state</span><span class="o">=</span><span class="n">RANDOM_STATE</span><span class="p">,</span>
+            <span class="p">),</span>
+        <span class="p">),</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;conformalized_quantile_regression&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;class&quot;</span><span class="p">:</span> <span class="n">ConformalizedQuantileRegressor</span><span class="p">,</span>
+        <span class="s2">&quot;init_params&quot;</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(),</span>
+    <span class="p">},</span>
+<span class="p">}</span>
+
+<span class="n">y_pred</span><span class="p">,</span> <span class="n">y_pis</span><span class="p">,</span> <span class="n">coverage</span><span class="p">,</span> <span class="n">cond_coverage</span><span class="p">,</span> <span class="n">coef_corr</span> <span class="o">=</span> <span class="p">{},</span> <span class="p">{},</span> <span class="p">{},</span> <span class="p">{},</span> <span class="p">{}</span>
+<span class="n">num_bins</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="k">for</span> <span class="n">strategy_name</span><span class="p">,</span> <span class="n">strategy_params</span> <span class="ow">in</span> <span class="n">STRATEGIES</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+    <span class="n">init_params</span> <span class="o">=</span> <span class="n">strategy_params</span><span class="p">[</span><span class="s2">&quot;init_params&quot;</span><span class="p">]</span>
+    <span class="n">class_</span> <span class="o">=</span> <span class="n">strategy_params</span><span class="p">[</span><span class="s2">&quot;class&quot;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">strategy_name</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;conformalized_quantile_regression&quot;</span><span class="p">,</span> <span class="s2">&quot;residual_normalised&quot;</span><span class="p">]:</span>
+        <span class="n">X_train</span><span class="p">,</span> <span class="n">X_conformalize</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">y_conformalize</span> <span class="o">=</span> <span class="n">train_test_split</span><span class="p">(</span>
+            <span class="n">X_train_conformalize</span><span class="p">,</span>
+            <span class="n">y_train_conformalize</span><span class="p">,</span>
+            <span class="n">test_size</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span>
+            <span class="n">random_state</span><span class="o">=</span><span class="n">RANDOM_STATE</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">mapie</span> <span class="o">=</span> <span class="n">class_</span><span class="p">(</span><span class="n">model_quant</span><span class="p">,</span> <span class="n">confidence_level</span><span class="o">=</span><span class="mf">0.95</span><span class="p">,</span> <span class="o">**</span><span class="n">init_params</span><span class="p">)</span>
+        <span class="n">mapie</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
+        <span class="n">mapie</span><span class="o">.</span><span class="n">conformalize</span><span class="p">(</span><span class="n">X_conformalize</span><span class="p">,</span> <span class="n">y_conformalize</span><span class="p">)</span>
+        <span class="n">y_pred</span><span class="p">[</span><span class="n">strategy_name</span><span class="p">],</span> <span class="n">y_pis</span><span class="p">[</span><span class="n">strategy_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">mapie</span><span class="o">.</span><span class="n">predict_interval</span><span class="p">(</span><span class="n">X_test</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">mapie</span> <span class="o">=</span> <span class="n">class_</span><span class="p">(</span>
+            <span class="n">model</span><span class="p">,</span> <span class="n">confidence_level</span><span class="o">=</span><span class="mf">0.95</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="n">RANDOM_STATE</span><span class="p">,</span> <span class="o">**</span><span class="n">init_params</span>
+        <span class="p">)</span>
+        <span class="n">mapie</span><span class="o">.</span><span class="n">fit_conformalize</span><span class="p">(</span><span class="n">X_train_conformalize</span><span class="p">,</span> <span class="n">y_train_conformalize</span><span class="p">)</span>
+        <span class="n">y_pred</span><span class="p">[</span><span class="n">strategy_name</span><span class="p">],</span> <span class="n">y_pis</span><span class="p">[</span><span class="n">strategy_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">mapie</span><span class="o">.</span><span class="n">predict_interval</span><span class="p">(</span><span class="n">X_test</span><span class="p">)</span>
+
+    <span class="c1"># computing metrics</span>
+    <span class="n">coverage</span><span class="p">[</span><span class="n">strategy_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">regression_coverage_score</span><span class="p">(</span><span class="n">y_test</span><span class="p">,</span> <span class="n">y_pis</span><span class="p">[</span><span class="n">strategy_name</span><span class="p">])</span>
+    <span class="n">cond_coverage</span><span class="p">[</span><span class="n">strategy_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">regression_ssc_score</span><span class="p">(</span>
+        <span class="n">y_test</span><span class="p">,</span> <span class="n">y_pis</span><span class="p">[</span><span class="n">strategy_name</span><span class="p">],</span> <span class="n">num_bins</span><span class="o">=</span><span class="mi">1</span>
+    <span class="p">)</span>
+    <span class="n">coef_corr</span><span class="p">[</span><span class="n">strategy_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">hsic</span><span class="p">(</span><span class="n">y_test</span><span class="p">,</span> <span class="n">y_pis</span><span class="p">[</span><span class="n">strategy_name</span><span class="p">])</span>
+
+
+<span class="c1"># Visualisation of the estimated conditional coverage</span>
+<span class="n">estimated_cond_cov</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+    <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;global coverage&quot;</span><span class="p">,</span> <span class="s2">&quot;max coverage violation&quot;</span><span class="p">,</span> <span class="s2">&quot;hsic&quot;</span><span class="p">],</span>
+    <span class="n">index</span><span class="o">=</span><span class="n">STRATEGIES</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span>
+<span class="p">)</span>
+<span class="k">for</span> <span class="n">m</span><span class="p">,</span> <span class="n">cov</span><span class="p">,</span> <span class="n">ssc</span><span class="p">,</span> <span class="n">coef</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
+    <span class="n">STRATEGIES</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">coverage</span><span class="o">.</span><span class="n">values</span><span class="p">(),</span> <span class="n">cond_coverage</span><span class="o">.</span><span class="n">values</span><span class="p">(),</span> <span class="n">coef_corr</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+<span class="p">):</span>
+    <span class="n">estimated_cond_cov</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">m</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="nb">round</span><span class="p">(</span><span class="n">cov</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">2</span><span class="p">),</span> <span class="nb">round</span><span class="p">(</span><span class="n">ssc</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">2</span><span class="p">),</span> <span class="nb">round</span><span class="p">(</span><span class="n">coef</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">2</span><span class="p">)]</span>
+
+<span class="k">with</span> <span class="n">pd</span><span class="o">.</span><span class="n">option_context</span><span class="p">(</span><span class="s2">&quot;display.max_rows&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;display.max_columns&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">estimated_cond_cov</span><span class="p">)</span>
+</pre></div>
+</div>
+<p class="sphx-glr-script-out">Out:</p>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000053 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,236940
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000044 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 2700, number of used features: 1
+[LightGBM] [Info] Start training from score 2,238454
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000048 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 2700, number of used features: 1
+[LightGBM] [Info] Start training from score 2,241043
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000079 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 2700, number of used features: 1
+[LightGBM] [Info] Start training from score 2,233609
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000046 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 2700, number of used features: 1
+[LightGBM] [Info] Start training from score 2,237100
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000056 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 2700, number of used features: 1
+[LightGBM] [Info] Start training from score 2,243047
+[LightGBM] [Info] Auto-choosing row-wise multi-threading, the overhead of testing was 0,000043 seconds.
+You can set `force_row_wise=true` to remove the overhead.
+And if memory is not enough, you can set `force_col_wise=true`.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 2700, number of used features: 1
+[LightGBM] [Info] Start training from score 2,227147
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000049 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 2700, number of used features: 1
+[LightGBM] [Info] Start training from score 2,235667
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000035 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 2700, number of used features: 1
+[LightGBM] [Info] Start training from score 2,234801
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000036 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 2700, number of used features: 1
+[LightGBM] [Info] Start training from score 2,244449
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000035 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 2700, number of used features: 1
+[LightGBM] [Info] Start training from score 2,234082
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000053 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,236940
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000056 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,217092
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000058 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,241541
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000052 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,222294
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000039 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,213513
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000037 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,257495
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000040 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,229263
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000041 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,257159
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000039 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,244013
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000037 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,228891
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000087 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,204612
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000039 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,232843
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000036 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,229526
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000038 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,233344
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000045 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,230626
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000052 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,226642
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000041 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,224691
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000037 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,236657
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000047 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,244928
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000037 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,225204
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000053 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,232171
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000042 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,228620
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000051 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,236405
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000053 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,249860
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000044 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,232776
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000042 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,246155
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000043 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,241644
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000051 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,236959
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000061 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,245732
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000051 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,244423
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000041 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,239282
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000041 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,227708
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000056 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,252189
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000062 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,243424
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000043 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,225177
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000055 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,255950
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000093 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,220906
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000053 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,263738
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000053 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,260797
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000051 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,267587
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000064 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,217911
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000040 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,239236
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000054 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,250862
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000051 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,250402
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000077 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,235714
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000050 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,248277
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000038 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,199970
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000059 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,249611
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000054 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,215918
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000050 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,229250
+[LightGBM] [Info] Auto-choosing row-wise multi-threading, the overhead of testing was 0,000059 seconds.
+You can set `force_row_wise=true` to remove the overhead.
+And if memory is not enough, you can set `force_col_wise=true`.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,234582
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000044 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,255650
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000043 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,259835
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000064 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,251834
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000052 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,212282
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000039 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,232530
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000045 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,230560
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000044 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,247277
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000038 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,231671
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000054 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,264114
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000038 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,234350
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000045 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,220201
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000046 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,242095
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000048 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,240294
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000054 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,242567
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000057 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,223566
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000045 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,235743
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000047 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,223390
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000053 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,260776
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000053 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,239492
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000049 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,240691
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000059 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,211232
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000052 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,254671
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000040 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,240642
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000038 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,251172
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000051 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,239107
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000056 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,257319
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000038 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,240350
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000039 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,249482
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000039 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,217951
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000052 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,223061
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000038 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,258671
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000051 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,221218
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000053 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,229679
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000053 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,221999
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000047 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,243517
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000051 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,225737
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000043 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,222303
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000055 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,216583
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000042 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,238297
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000047 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,240879
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000046 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,250012
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000054 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,189692
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000040 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,235461
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000075 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,244380
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000042 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,227496
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000063 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,230579
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000044 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,248732
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000053 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,228872
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000052 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,213806
+[LightGBM] [Info] Auto-choosing row-wise multi-threading, the overhead of testing was 0,000030 seconds.
+You can set `force_row_wise=true` to remove the overhead.
+And if memory is not enough, you can set `force_col_wise=true`.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 3000, number of used features: 1
+[LightGBM] [Info] Start training from score 2,239221
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000044 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 2100, number of used features: 1
+[LightGBM] [Info] Start training from score 2,387946
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000037 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 211
+[LightGBM] [Info] Number of data points in the train set: 630, number of used features: 1
+[LightGBM] [Info] Start training from score -2,110152
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000045 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 2100, number of used features: 1
+[LightGBM] [Info] Start training from score 0,676877
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000047 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 2100, number of used features: 1
+[LightGBM] [Info] Start training from score 3,674894
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0,000043 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 255
+[LightGBM] [Info] Number of data points in the train set: 2100, number of used features: 1
+[LightGBM] [Info] Start training from score 2,387946
+                                  global coverage max coverage violation  hsic
+cv_plus                                      0.95                   0.95   0.0
+jackknife_plus_ab                            0.93                   0.93  0.05
+residual_normalised                          0.97                   0.97  0.01
+conformalized_quantile_regression            0.93                   0.93  0.03
+</pre></div>
+</div>
+<p>The global coverage is similar for all methods. To determine if these
+methods are good adaptive conformal methods, we use two metrics:
+<code class="xref py py-func docutils literal notranslate"><span class="pre">regression_ssc_score()</span></code> and <code class="xref py py-func docutils literal notranslate"><span class="pre">hsic()</span></code>.</p>
+<ul class="simple">
+<li><p>SSC (Size Stratified Coverage): This measures the maximum violation
+of coverage by grouping intervals by width and computing coverage for
+each group. An adaptive method has a maximum violation close to the global
+coverage. Among the four methods, CV+ performs the best.</p></li>
+<li><p>HSIC (Hilbert-Schmidt Independence Criterion): This computes the
+correlation between coverage and interval size. A value of 0 indicates
+independence between the two.</p></li>
+</ul>
+<p>It’s important to note that CV+ with the absolute residual score
+calculates constant intervals, which are not adaptive. Therefore,
+checking the distribution of interval widths is crucial before drawing conclusions.</p>
+<p>In this example, none of the methods stand out with the HSIC correlation coefficient.
+However, the SSC score for the gamma score method is significantly worse than
+for CQR and ResidualNormalisedScore, despite similar global coverage.
+ResidualNormalisedScore and CQR are very close, with ResidualNormalisedScore
+being slightly more conservative.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Visualition of the data and predictions</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_intervals</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="n">intervals</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Plots the data X, y with associated intervals and predictions points.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    X: ArrayLike</span>
+<span class="sd">        Observed features</span>
+<span class="sd">    y: ArrayLike</span>
+<span class="sd">        Observed targets</span>
+<span class="sd">    y_pred: ArrayLike</span>
+<span class="sd">        Predictions</span>
+<span class="sd">    intervals: ArrayLike</span>
+<span class="sd">        Prediction intervals</span>
+<span class="sd">    title: str</span>
+<span class="sd">        Title of the plot</span>
+<span class="sd">    ax: matplotlib axes</span>
+<span class="sd">        An ax can be provided to include this plot in a subplot</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+
+    <span class="n">y_pred</span> <span class="o">=</span> <span class="n">y_pred</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="n">order</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">X</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])</span>
+
+    <span class="c1"># data</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span> <span class="n">y</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;#1f77b4&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;data&quot;</span><span class="p">)</span>
+    <span class="c1"># predictions</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span>
+        <span class="n">X</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span> <span class="n">y_pred</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;#ff7f0e&quot;</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;+&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;predictions&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span>
+    <span class="p">)</span>
+    <span class="c1"># intervals</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">intervals</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]):</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">fill_between</span><span class="p">(</span>
+            <span class="n">X</span><span class="p">[</span><span class="n">order</span><span class="p">]</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span>
+            <span class="n">intervals</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">i</span><span class="p">][</span><span class="n">order</span><span class="p">],</span>
+            <span class="n">intervals</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">i</span><span class="p">][</span><span class="n">order</span><span class="p">],</span>
+            <span class="n">color</span><span class="o">=</span><span class="s2">&quot;#ff7f0e&quot;</span><span class="p">,</span>
+            <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;x&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;y&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_coverage_by_width</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">intervals</span><span class="p">,</span> <span class="n">num_bins</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    PLots a bar diagram of coverages by groups of interval widths.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    y: ArrayLike</span>
+<span class="sd">        Observed targets.</span>
+<span class="sd">    intervals: ArrayLike</span>
+<span class="sd">        Intervals of prediction</span>
+<span class="sd">    num_bins: int</span>
+<span class="sd">        Number of groups of interval widths</span>
+<span class="sd">    alpha: float</span>
+<span class="sd">        The risk level</span>
+<span class="sd">    title: str</span>
+<span class="sd">        Title of the plot</span>
+<span class="sd">    ax: matplotlib axes</span>
+<span class="sd">        An ax can be provided to include this plot in a subplot</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+
+    <span class="n">ax</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">num_bins</span><span class="p">),</span> <span class="n">regression_ssc</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">intervals</span><span class="p">,</span> <span class="n">num_bins</span><span class="o">=</span><span class="n">num_bins</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="mi">1</span> <span class="o">-</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;-&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;intervals grouped by size&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;coverage&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="n">which</span><span class="o">=</span><span class="s2">&quot;both&quot;</span><span class="p">,</span> <span class="n">bottom</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">top</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">labelbottom</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+
+<span class="n">max_width</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span>
+    <span class="p">[</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">y_pis</span><span class="p">[</span><span class="n">strategy</span><span class="p">][:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">y_pis</span><span class="p">[</span><span class="n">strategy</span><span class="p">][:,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">strategy</span> <span class="ow">in</span> <span class="n">STRATEGIES</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+    <span class="p">]</span>
+<span class="p">)</span>
+
+<span class="n">fig_distr</span><span class="p">,</span> <span class="n">axs_distr</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">nrows</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">ncols</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
+<span class="n">fig_viz</span><span class="p">,</span> <span class="n">axs_viz</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">nrows</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">ncols</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
+<span class="n">fig_hist</span><span class="p">,</span> <span class="n">axs_hist</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">nrows</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">ncols</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
+
+<span class="k">for</span> <span class="n">ax_viz</span><span class="p">,</span> <span class="n">ax_hist</span><span class="p">,</span> <span class="n">ax_distr</span><span class="p">,</span> <span class="n">strategy</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
+    <span class="n">axs_viz</span><span class="o">.</span><span class="n">flat</span><span class="p">,</span> <span class="n">axs_hist</span><span class="o">.</span><span class="n">flat</span><span class="p">,</span> <span class="n">axs_distr</span><span class="o">.</span><span class="n">flat</span><span class="p">,</span> <span class="n">STRATEGIES</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+<span class="p">):</span>
+    <span class="n">plot_intervals</span><span class="p">(</span>
+        <span class="n">X_test</span><span class="p">,</span> <span class="n">y_test</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">[</span><span class="n">strategy</span><span class="p">],</span> <span class="n">y_pis</span><span class="p">[</span><span class="n">strategy</span><span class="p">],</span> <span class="n">title</span><span class="o">=</span><span class="n">strategy</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax_viz</span>
+    <span class="p">)</span>
+    <span class="n">plot_coverage_by_width</span><span class="p">(</span>
+        <span class="n">y_test</span><span class="p">,</span>
+        <span class="n">y_pis</span><span class="p">[</span><span class="n">strategy</span><span class="p">],</span>
+        <span class="n">num_bins</span><span class="o">=</span><span class="n">num_bins</span><span class="p">,</span>
+        <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
+        <span class="n">title</span><span class="o">=</span><span class="n">strategy</span><span class="p">,</span>
+        <span class="n">ax</span><span class="o">=</span><span class="n">ax_hist</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">ax_distr</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">y_pis</span><span class="p">[</span><span class="n">strategy</span><span class="p">][:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">y_pis</span><span class="p">[</span><span class="n">strategy</span><span class="p">][:,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]),</span> <span class="n">bins</span><span class="o">=</span><span class="n">num_bins</span>
+    <span class="p">)</span>
+    <span class="n">ax_distr</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Interval width&quot;</span><span class="p">)</span>
+    <span class="n">ax_distr</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Occurences&quot;</span><span class="p">)</span>
+    <span class="n">ax_distr</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">strategy</span><span class="p">)</span>
+    <span class="n">ax_distr</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="n">max_width</span><span class="p">])</span>
+
+<span class="n">fig_viz</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="s2">&quot;Predicted points and intervals on test data&quot;</span><span class="p">)</span>
+<span class="n">fig_distr</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="s2">&quot;Distribution of intervals widths&quot;</span><span class="p">)</span>
+<span class="n">fig_hist</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="s2">&quot;Coverage by bins of intervals grouped by widths (ssc)&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<ul class="sphx-glr-horizontal">
+<li><img src="../../_images/sphx_glr_plot_conditional_coverage_001.png" srcset="../../_images/sphx_glr_plot_conditional_coverage_001.png" alt="Distribution of intervals widths, cv_plus, jackknife_plus_ab, residual_normalised, conformalized_quantile_regression" class = "sphx-glr-multi-img"/></li>
+<li><img src="../../_images/sphx_glr_plot_conditional_coverage_002.png" srcset="../../_images/sphx_glr_plot_conditional_coverage_002.png" alt="Predicted points and intervals on test data, cv_plus, jackknife_plus_ab, residual_normalised, conformalized_quantile_regression" class = "sphx-glr-multi-img"/></li>
+<li><img src="../../_images/sphx_glr_plot_conditional_coverage_003.png" srcset="../../_images/sphx_glr_plot_conditional_coverage_003.png" alt="Coverage by bins of intervals grouped by widths (ssc), cv_plus, jackknife_plus_ab, residual_normalised, conformalized_quantile_regression" class = "sphx-glr-multi-img"/></li>
+</ul>
+<p>With toy datasets, it’s easy to visually compare methods using data and
+prediction plots. A histogram of interval widths is crucial to accompany
+the metrics. This histogram shows that CV+ is not adaptive, so the metrics
+should not be used to evaluate its adaptivity. A wider spread of intervals
+indicates a more adaptive method.</p>
+<p>The plot of coverage by bins of intervals grouped by widths
+(output of <code class="xref py py-func docutils literal notranslate"><span class="pre">regression_ssc()</span></code>) should
+show bins as constant as possible around the global coverage (0.9).</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># The gamma score does not perform well in size stratified coverage,</span>
+<span class="c1"># often over-covering or under-covering. ResidualNormalisedScore has</span>
+<span class="c1"># several bins with over-coverage, while CQR has more under-coverage.</span>
+<span class="c1"># Visualizing the data confirms these results: CQR performs better</span>
+<span class="c1"># with spread-out data, whereas ResidualNormalisedScore is better</span>
+<span class="c1"># with small intervals.</span>
+</pre></div>
+</div>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 0 minutes  9.995 seconds)</p>
+<div class="sphx-glr-footer class sphx-glr-footer-example docutils container" id="sphx-glr-download-examples-regression-2-advanced-analysis-plot-conditional-coverage-py">
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/7cb0dff6a452d07af096ff19bd71dbe8/plot_conditional_coverage.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_conditional_coverage.py</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/6506c8b10bee8e6f04d5380f76c5b40e/plot_conditional_coverage.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">plot_conditional_coverage.ipynb</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="plot_ResidualNormalisedScore_tutorial.html" class="btn btn-neutral float-left" title="Focus on residual normalised score" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="plot_cqr_tutorial.html" class="btn btn-neutral float-right" title="Conformalized quantile regression on gamma distributed data" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Capgemini Invent.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

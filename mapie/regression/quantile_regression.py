@@ -2322,6 +2322,7 @@ class _MapieQuantileRegressor(_MapieRegressor):
         for i, est in enumerate(self.estimators_):
             y_preds[i] = est.predict(X, **predict_params)
         _check_lower_upper_bounds(y_preds[0], y_preds[1], y_preds[2])
+        quantile: NDArray
         if symmetry:
             quantile = np.full(
                 2, np.quantile(self.conformity_scores[2], q, method="higher")

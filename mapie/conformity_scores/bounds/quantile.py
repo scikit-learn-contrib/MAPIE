@@ -23,9 +23,6 @@ class QuantileRegressionScore(BaseRegressionScore):
         self, y: NDArray[np.float64], y_pred: NDArray[np.float64], **kwargs
     ) -> NDArray[np.float64]:
         """
-        Placeholder for `get_conformity_scores`.
-        Subclasses should implement this method!
-
         Compute the sample conformity scores given the predicted and
         observed targets.
 

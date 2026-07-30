@@ -1,0 +1,17 @@
+﻿:mod:`mapie.regression`.JackknifeAfterBootstrapRegressor
+===============================================================
+
+.. currentmodule:: mapie.regression
+
+.. autoclass:: JackknifeAfterBootstrapRegressor
+   :members:
+
+   
+   .. automethod:: __init__
+   
+
+.. include:: mapie.regression.JackknifeAfterBootstrapRegressor.examples
+
+.. raw:: html
+
+    <div style='clear:both'></div>

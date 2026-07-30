@@ -1,0 +1,12 @@
+﻿:mod:`mapie.metrics.classification`.classification_mean_width_score
+================================================================================
+
+.. currentmodule:: mapie.metrics.classification
+
+.. autofunction:: classification_mean_width_score
+
+.. include:: mapie.metrics.classification.classification_mean_width_score.examples
+
+.. raw:: html
+
+    <div style='clear:both'></div>

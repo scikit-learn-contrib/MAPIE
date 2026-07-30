@@ -1,0 +1,17 @@
+﻿:mod:`mapie.regression`.TimeSeriesRegressor
+==================================================
+
+.. currentmodule:: mapie.regression
+
+.. autoclass:: TimeSeriesRegressor
+   :members:
+
+   
+   .. automethod:: __init__
+   
+
+.. include:: mapie.regression.TimeSeriesRegressor.examples
+
+.. raw:: html
+
+    <div style='clear:both'></div>

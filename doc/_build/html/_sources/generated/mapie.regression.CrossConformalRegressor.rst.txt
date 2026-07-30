@@ -1,0 +1,17 @@
+﻿:mod:`mapie.regression`.CrossConformalRegressor
+======================================================
+
+.. currentmodule:: mapie.regression
+
+.. autoclass:: CrossConformalRegressor
+   :members:
+
+   
+   .. automethod:: __init__
+   
+
+.. include:: mapie.regression.CrossConformalRegressor.examples
+
+.. raw:: html
+
+    <div style='clear:both'></div>

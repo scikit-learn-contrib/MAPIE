@@ -1,0 +1,12 @@
+﻿:mod:`mapie.metrics.regression`.regression_coverage_score
+======================================================================
+
+.. currentmodule:: mapie.metrics.regression
+
+.. autofunction:: regression_coverage_score
+
+.. include:: mapie.metrics.regression.regression_coverage_score.examples
+
+.. raw:: html
+
+    <div style='clear:both'></div>

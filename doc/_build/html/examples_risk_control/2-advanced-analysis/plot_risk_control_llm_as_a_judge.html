@@ -1,0 +1,971 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Risk Control for LLM as a Judge with Abstention &mdash; MAPIE 1.2.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/project-template.css?v=2b5c7e5c" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=d2d258e8" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-binder.css?v=f4aeca0c" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=6efca38a"></script>
+      <script src="../../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../_static/js/copybutton.js?v=26522df0"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Additional resources: external risk control package" href="../../external_risk_control_package.html" />
+    <link rel="prev" title="Use MAPIE to control multiple risks of a binary classifier" href="plot_multi_risk_control_binary_classification.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            MAPIE
+              <img src="../../_static/mapie_logo_white_cut.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../quick_start.html">Quick Start with MAPIE</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../quick_start.html#download-and-install-the-module">1. Download and install the module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../quick_start.html#regression">2. Regression</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../quick_start.html#classification">3. Classification</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../quick_start.html#risk-control">4. Risk Control</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../split_cross_conformal.html">The conformalization (or “calibration”) set</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../split_cross_conformal.html#split-conformal-predictions">1. Split conformal predictions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../split_cross_conformal.html#split-conformal-predictions-with-a-pre-trained-model">Split conformal predictions with a pre-trained model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../split_cross_conformal.html#split-conformal-predictions-with-an-untrained-model">Split conformal predictions with an untrained model</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../split_cross_conformal.html#cross-conformal-predictions">2. Cross conformal predictions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../choosing_the_right_algorithm.html">Choosing the right algorithm</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../v1_release_notes.html">MAPIE v1 release notes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../v1_release_notes.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../v1_release_notes.html#api-changes-overview">API changes overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../v1_release_notes.html#python-scikit-learn-and-numpy-versions-support">Python, scikit-learn and NumPy versions support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../v1_release_notes.html#api-changes-in-detail">API changes in detail</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../v1_release_notes.html#regression-and-classification-api-changes-excluding-time-series">Regression and classification API changes (excluding time series)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../v1_release_notes.html#classes">Classes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../v1_release_notes.html#workflow-and-methods">Workflow and methods</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../v1_release_notes.html#parameters">Parameters</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../v1_release_notes.html#other-api-changes">Other API changes</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../v1_release_notes.html#time-series">Time series</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../v1_release_notes.html#risk-control">Risk control</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../v1_release_notes.html#calibration">Calibration</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../v1_release_notes.html#mondrian">Mondrian</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../v1_release_notes.html#metrics">Metrics</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../v1_release_notes.html#conformity-scores">Conformity scores</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Measure predictions uncertainty</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../index_regression.html">Prediction intervals (regression)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../choosing_the_right_algorithm_regression.html">Choose the right algorithm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples_regression/1-quickstart/plot_toy_model.html">Use MAPIE to plot prediction intervals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples_regression/1-quickstart/plot_prefit.html">Use MAPIE with a pre-trained model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples_regression/index.html">All regression examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_regression/1-quickstart/index.html">1. Quickstart</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_regression/1-quickstart/plot_toy_model.html">Use MAPIE to plot prediction intervals</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_regression/1-quickstart/plot_compare_conformity_scores.html">Use MAPIE on data with gamma distribution</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_regression/1-quickstart/plot_prefit.html">Use MAPIE with a pre-trained model</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_regression/1-quickstart/plot_heteroscedastic_1d_data.html">Use MAPIE on data with uneven uncertainty</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_regression/1-quickstart/plot_homoscedastic_1d_data.html">Use MAPIE on data with constant uncertainty</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_regression/1-quickstart/plot_ts-tutorial.html">Tutorial for time series</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_regression/2-advanced-analysis/index.html">2. Advanced analysis</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_regression/2-advanced-analysis/plot_conformal_predictive_distribution.html">Conformal Predictive Distribution with MAPIE</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_regression/2-advanced-analysis/plot_cqr_symmetry_difference.html">The symmetric correction parameter in conformalized quantile regression</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_regression/2-advanced-analysis/plot_nested-cv.html">Hyperparameters tuning with cross-conformal regression</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_regression/2-advanced-analysis/plot_both_uncertainties.html">Estimating aleatoric and epistemic uncertainties</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_regression/2-advanced-analysis/plot_timeseries_enbpi.html">Time series: example of the EnbPI technique</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_regression/2-advanced-analysis/plot-coverage-width-based-criterion.html">Focus on intervals width</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_regression/2-advanced-analysis/plot_ResidualNormalisedScore_tutorial.html">Focus on residual normalised score</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_regression/2-advanced-analysis/plot_conditional_coverage.html">Focus on local (or “conditional”) coverage</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_regression/2-advanced-analysis/plot_cqr_tutorial.html">Conformalized quantile regression on gamma distributed data</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_regression/2-advanced-analysis/plot_coverage_validity.html">Coverage validity of MAPIE for regression tasks</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_regression/2-advanced-analysis/plot_main-tutorial-regression.html">Comparison between conformalized quantile regressor and cross methods</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_regression/3-scientific-articles/index.html">3. Simulations from scientific articles</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_regression/3-scientific-articles/plot_barber2020_simulations.html">Predictive inference with the jackknife+, Foygel-Barber et al. (2020)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_regression/3-scientific-articles/plot_zaffran2022_comparison.html">Adaptive conformal predictions for time series, Zaffran et al. (2022)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_regression/3-scientific-articles/plot_kim2020_simulations.html">Predictive inference is free with the Jackknife+-after-Bootstrap, Kim et al. (2020)</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_regression/4-other-notebooks/index.html">4. Other notebooks</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../theoretical_description_regression.html">Theoretical Description</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../theoretical_description_conformity_scores.html">Theoretical Description for Conformity Scores</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../index_classification.html">Prediction sets (classification)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../choosing_the_right_algorithm_classification.html">Choosing the right algorithm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples_classification/1-quickstart/plot_quickstart_classification.html">Use MAPIE to plot prediction sets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples_classification/index.html">All classification examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_classification/1-quickstart/index.html">1. Quickstart examples</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_classification/1-quickstart/plot_quickstart_classification.html">Use MAPIE to plot prediction sets</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_classification/2-advanced-analysis/index.html">2. Advanced analysis</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_classification/2-advanced-analysis/plot_comp_methods_on_2d_dataset.html">LAC and APS methods explained</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_classification/2-advanced-analysis/plot_main-tutorial-binary-classification.html">Set prediction example in the binary classification setting</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_classification/2-advanced-analysis/plot_crossconformal.html">Cross conformal classification explained</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_classification/3-scientific-articles/index.html">3. Simulations from scientific articles</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_classification/3-scientific-articles/plot_sadinle2019_example.html">Least Ambiguous Set-Valued Classifiers with Bounded Error Levels, Sadinle et al. (2019)</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_classification/4-other-notebooks/index.html">4. Other notebooks</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../theoretical_description_classification.html">Theoretical Description</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../index_binary_classification.html">The binary classification case</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_classification/2-advanced-analysis/plot_main-tutorial-binary-classification.html">Set prediction example in the binary classification setting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../theoretical_description_binary_classification.html">Theoretical Description</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Control prediction errors</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../theoretical_description_risk_control.html">Getting started with risk control in MAPIE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../1-quickstart/plot_risk_control_binary_classification.html">Use MAPIE to control the precision of a binary classifier</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">All risk control examples</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../1-quickstart/index.html">1. Quickstart examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../1-quickstart/plot_risk_control_binary_classification.html">Use MAPIE to control the precision of a binary classifier</a></li>
+</ul>
+</li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">2. Advanced analysis</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="plot_risk_control_multi-label_classification.html">Use MAPIE to control the risk of a multi-label classifier</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_risk_control_multi_parameter_binary_classification.html">Use MAPIE to control risk of a binary classifier with multiple prediction parameters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_semantic_segmentation_recall_control.html">Recall control for semantic segmentation with MAPIE</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_semantic_segmentation_precision_control.html">Precision control for semantic segmentation with MAPIE</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_multi_risk_control_binary_classification.html">Use MAPIE to control multiple risks of a binary classifier</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Risk Control for LLM as a Judge with Abstention</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../external_risk_control_package.html">Additional resources: external risk control package</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Calibrate classifiers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../theoretical_description_calibration.html">Theoretical Description</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples_calibration/index.html">Calibration examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../examples_calibration/1-quickstart/index.html">1. Quickstart examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_calibration/1-quickstart/plot_calibration_venn_abers_binary.html">Calibrating binary classifier with Venn-ABERS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_calibration/1-quickstart/plot_calibration_hypothesis_testing.html">Testing for calibration in binary classification settings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_calibration/1-quickstart/plot_calibration_venn_abers_multiclass.html">Calibrating multi-class classifier with Venn-ABERS</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples_calibration/2-advanced-analysis/index.html">2. Advanced analysis</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_calibration/2-advanced-analysis/plot_asymptotic_convergence_of_p_values.html">Evaluating the asymptotic convergence of p-values</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../notebooks_calibration.html">Calibration notebooks</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Question &amp; Answers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../theoretical_description_metrics.html">Metrics: how to measure conformal prediction performance?</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../theoretical_description_metrics.html#general-metrics">1. General Metrics</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../theoretical_description_metrics.html#regression-coverage-score">Regression Coverage Score</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../theoretical_description_metrics.html#regression-mean-width-score">Regression Mean Width Score</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../theoretical_description_metrics.html#classification-coverage-score">Classification Coverage Score</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../theoretical_description_metrics.html#classification-mean-width-score">Classification Mean Width Score</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../theoretical_description_metrics.html#size-stratified-coverage">Size-Stratified Coverage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../theoretical_description_metrics.html#hilbert-schmidt-independence-criterion">Hilbert-Schmidt Independence Criterion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../theoretical_description_metrics.html#coverage-width-based-criterion">Coverage Width-Based Criterion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../theoretical_description_metrics.html#mean-winkler-interval-score">Mean Winkler Interval Score</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../theoretical_description_metrics.html#calibration-metrics">2. Calibration Metrics</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../theoretical_description_metrics.html#expected-calibration-error">Expected Calibration Error</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../theoretical_description_metrics.html#top-label-expected-calibration-error-top-label-ece">Top-Label Expected Calibration Error (Top-Label ECE)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../theoretical_description_metrics.html#cumulative-differences">Cumulative Differences</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../theoretical_description_metrics.html#kolmogorov-smirnov-statistic-for-calibration">Kolmogorov-Smirnov Statistic for Calibration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../theoretical_description_metrics.html#kuiper-s-test">Kuiper’s Test</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../theoretical_description_metrics.html#spiegelhalters-test">Spiegelhalter’s Test</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../theoretical_description_metrics.html#references">References</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../index_mondrian.html">Mondrian: how to use prior knowledge on groups when measuring uncertainty?</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html">Tutorial: how to ensure fairness across groups with Mondrian</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html#create-the-noisy-dataset">1. Create the noisy dataset</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html#split-the-dataset-into-a-training-set-a-conformalization-set-and-a-test-set">2. Split the dataset into a training set, a conformalization set, and a test set</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html#fit-a-random-forest-regressor-on-the-training-set">3. Fit a random forest regressor on the training set</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html#build-the-classical-conformal-prediction-intervals">4. Build the classical conformal prediction intervals</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html#conformalize-a-splitconformalregressor-on-the-conformalization-set">Conformalize a SplitConformalRegressor on the conformalization set</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html#predict-the-prediction-intervals-on-the-test-set">Predict the prediction intervals on the test set</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html#evaluate-the-coverage-score-by-group">Evaluate the coverage score by group</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html#build-the-mondrian-conformal-prediction-intervals">5. Build the Mondrian conformal prediction intervals</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html#conformalize-a-splitconformalregressor-on-the-conformalization-set-for-each-group">Conformalize a SplitConformalRegressor on the conformalization set for each group</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html#id1">Predict the prediction intervals on the test set</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html#compare-the-coverage-by-partition-plot-both-methods-side-by-side">6. Compare the coverage by partition, plot both methods side by side</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../theoretical_description_mondrian.html">Theoretical Description</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../theoretical_description_mondrian.html#references">References</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../llm_risk_control.html">How to control LLM risks?</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html">MAPIE API</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../api.html#regression">Regression</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api.html#conformalizers">Conformalizers</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.regression.SplitConformalRegressor.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.regression</span></code>.SplitConformalRegressor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.regression.CrossConformalRegressor.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.regression</span></code>.CrossConformalRegressor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.regression.JackknifeAfterBootstrapRegressor.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.regression</span></code>.JackknifeAfterBootstrapRegressor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.regression.ConformalizedQuantileRegressor.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.regression</span></code>.ConformalizedQuantileRegressor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.regression.TimeSeriesRegressor.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.regression</span></code>.TimeSeriesRegressor</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../api.html#metrics">Metrics</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.regression.regression_coverage_score.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.regression</span></code>.regression_coverage_score</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.regression.regression_mean_width_score.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.regression</span></code>.regression_mean_width_score</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.regression.regression_ssc.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.regression</span></code>.regression_ssc</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.regression.regression_ssc_score.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.regression</span></code>.regression_ssc_score</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.regression.hsic.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.regression</span></code>.hsic</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.regression.coverage_width_based.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.regression</span></code>.coverage_width_based</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.regression.regression_mwi_score.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.regression</span></code>.regression_mwi_score</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../api.html#conformity-scores">Conformity Scores</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.conformity_scores.BaseRegressionScore.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.conformity_scores</span></code>.BaseRegressionScore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.conformity_scores.AbsoluteConformityScore.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.conformity_scores</span></code>.AbsoluteConformityScore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.conformity_scores.GammaConformityScore.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.conformity_scores</span></code>.GammaConformityScore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.conformity_scores.ResidualNormalisedScore.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.conformity_scores</span></code>.ResidualNormalisedScore</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../api.html#resampling">Resampling</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.subsample.BlockBootstrap.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.subsample</span></code>.BlockBootstrap</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.subsample.Subsample.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.subsample</span></code>.Subsample</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../api.html#classification">Classification</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api.html#id1">Conformalizers</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.classification.SplitConformalClassifier.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.classification</span></code>.SplitConformalClassifier</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.classification.CrossConformalClassifier.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.classification</span></code>.CrossConformalClassifier</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../api.html#id2">Metrics</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.classification.classification_coverage_score.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.classification</span></code>.classification_coverage_score</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.classification.classification_mean_width_score.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.classification</span></code>.classification_mean_width_score</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.classification.classification_ssc.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.classification</span></code>.classification_ssc</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.classification.classification_ssc_score.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.classification</span></code>.classification_ssc_score</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../api.html#id3">Conformity Scores</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.conformity_scores.BaseClassificationScore.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.conformity_scores</span></code>.BaseClassificationScore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.conformity_scores.NaiveConformityScore.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.conformity_scores</span></code>.NaiveConformityScore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.conformity_scores.LACConformityScore.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.conformity_scores</span></code>.LACConformityScore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.conformity_scores.APSConformityScore.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.conformity_scores</span></code>.APSConformityScore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.conformity_scores.RAPSConformityScore.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.conformity_scores</span></code>.RAPSConformityScore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.conformity_scores.TopKConformityScore.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.conformity_scores</span></code>.TopKConformityScore</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../api.html#risk-control">Risk Control</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../generated/mapie.risk_control.MultiLabelClassificationController.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.risk_control</span></code>.MultiLabelClassificationController</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.risk_control.MultiLabelClassificationController.html#mapie.risk_control.MultiLabelClassificationController"><code class="docutils literal notranslate"><span class="pre">MultiLabelClassificationController</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.risk_control.MultiLabelClassificationController.html#examples-using-mapie-risk-control-multilabelclassificationcontroller">Examples using <code class="docutils literal notranslate"><span class="pre">mapie.risk_control.MultiLabelClassificationController</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../generated/mapie.risk_control.BinaryClassificationController.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.risk_control</span></code>.BinaryClassificationController</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.risk_control.BinaryClassificationController.html#mapie.risk_control.BinaryClassificationController"><code class="docutils literal notranslate"><span class="pre">BinaryClassificationController</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.risk_control.BinaryClassificationController.html#examples-using-mapie-risk-control-binaryclassificationcontroller">Examples using <code class="docutils literal notranslate"><span class="pre">mapie.risk_control.BinaryClassificationController</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../generated/mapie.risk_control.SemanticSegmentationController.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.risk_control</span></code>.SemanticSegmentationController</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.risk_control.SemanticSegmentationController.html#mapie.risk_control.SemanticSegmentationController"><code class="docutils literal notranslate"><span class="pre">SemanticSegmentationController</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.risk_control.SemanticSegmentationController.html#examples-using-mapie-risk-control-semanticsegmentationcontroller">Examples using <code class="docutils literal notranslate"><span class="pre">mapie.risk_control.SemanticSegmentationController</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../generated/mapie.risk_control.BinaryClassificationRisk.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.risk_control</span></code>.BinaryClassificationRisk</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.risk_control.BinaryClassificationRisk.html#mapie.risk_control.BinaryClassificationRisk"><code class="docutils literal notranslate"><span class="pre">BinaryClassificationRisk</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.risk_control.BinaryClassificationRisk.html#examples-using-mapie-risk-control-binaryclassificationrisk">Examples using <code class="docutils literal notranslate"><span class="pre">mapie.risk_control.BinaryClassificationRisk</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../api.html#calibration">Calibration</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api.html#conformalizer">Conformalizer</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.calibration.TopLabelCalibrator.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.calibration</span></code>.TopLabelCalibrator</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../api.html#id4">Metrics</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.calibration.expected_calibration_error.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.expected_calibration_error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.calibration.top_label_ece.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.top_label_ece</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.calibration.cumulative_differences.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.cumulative_differences</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.calibration.kolmogorov_smirnov_cdf.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.kolmogorov_smirnov_cdf</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.calibration.kolmogorov_smirnov_p_value.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.kolmogorov_smirnov_p_value</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.calibration.kolmogorov_smirnov_statistic.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.kolmogorov_smirnov_statistic</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.calibration.kuiper_cdf.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.kuiper_cdf</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.calibration.kuiper_p_value.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.kuiper_p_value</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.calibration.kuiper_statistic.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.kuiper_statistic</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.calibration.length_scale.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.length_scale</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.calibration.spiegelhalter_p_value.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.spiegelhalter_p_value</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.calibration.spiegelhalter_statistic.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.spiegelhalter_statistic</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../api.html#utils">Utils</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../generated/mapie.utils.train_conformalize_test_split.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.utils</span></code>.train_conformalize_test_split</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.utils.train_conformalize_test_split.html#mapie.utils.train_conformalize_test_split"><code class="docutils literal notranslate"><span class="pre">train_conformalize_test_split()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.utils.train_conformalize_test_split.html#examples-using-mapie-utils-train-conformalize-test-split">Examples using <code class="docutils literal notranslate"><span class="pre">mapie.utils.train_conformalize_test_split</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">MAPIE</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">All risk control examples</a></li>
+          <li class="breadcrumb-item"><a href="index.html">2. Advanced analysis</a></li>
+      <li class="breadcrumb-item active">Risk Control for LLM as a Judge with Abstention</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/examples_risk_control/2-advanced-analysis/plot_risk_control_llm_as_a_judge.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p><a class="reference internal" href="#sphx-glr-download-examples-risk-control-2-advanced-analysis-plot-risk-control-llm-as-a-judge-py"><span class="std std-ref">Go to the end</span></a>
+to download the full example code.</p>
+</div>
+<section class="sphx-glr-example-title" id="risk-control-for-llm-as-a-judge-with-abstention">
+<span id="sphx-glr-examples-risk-control-2-advanced-analysis-plot-risk-control-llm-as-a-judge-py"></span><h1>Risk Control for LLM as a Judge with Abstention<a class="headerlink" href="#risk-control-for-llm-as-a-judge-with-abstention" title="Link to this heading"></a></h1>
+<p>This example demonstrates how to use risk control methods for Large Language Models (LLMs) acting as judges.
+We simulate a scenario where an LLM evaluates answers, and we want to control the risk of hallucination detection.
+Moreover, we want the judge to abstain from making a decision when it is uncertain.</p>
+<p>More precisely, we want the precision of deciding whether an answer is hallucinated or not to be high,
+while controlling the rate of abstention.</p>
+<p>In binary classification terms, this corresponds to finding two thresholds to apply to the model’s predicted
+probability scores, such that:</p>
+<ul class="simple">
+<li><p>if the score is below the lower threshold, the answer is classified as “not hallucinated”,</p></li>
+<li><p>if the score is above the upper threshold, the answer is classified as “hallucinated”,</p></li>
+<li><p>if the score is between the two thresholds, the judge abstains from making a decision.</p></li>
+</ul>
+<p>Hence, we want to control the precision of the non-abstained predictions while minimizing the abstention rate.
+This procedure falls into the scope of multi-parameter (here two parameters: lower and upper thresholds)
+and multi-risk (here three risks: precision on the “hallucinated” class, precision on the “not hallucinated” class,
+and the abstention rate) risk control for binary classification.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># sphinx_gallery_thumbnail_number = 1</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.patches</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">patches</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.colors</span><span class="w"> </span><span class="kn">import</span> <span class="n">LinearSegmentedColormap</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.lines</span><span class="w"> </span><span class="kn">import</span> <span class="n">Line2D</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.patches</span><span class="w"> </span><span class="kn">import</span> <span class="n">Patch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">numpy.typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">NDArray</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.model_selection</span><span class="w"> </span><span class="kn">import</span> <span class="n">train_test_split</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">mapie.risk_control</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">BinaryClassificationController</span><span class="p">,</span>
+    <span class="n">abstention_rate</span><span class="p">,</span>
+    <span class="n">negative_predictive_value</span><span class="p">,</span>
+    <span class="n">positive_predictive_value</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">RANDOM_STATE</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">RANDOM_STATE</span><span class="p">)</span>
+
+<span class="n">pd</span><span class="o">.</span><span class="n">set_option</span><span class="p">(</span><span class="s2">&quot;display.max_colwidth&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>First, we load HaluEval Question-Answering Data, an open-source dataset for evaluating hallucination in LLMs.
+Then, we preprocess the data to create a suitable format for our analysis.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">url</span> <span class="o">=</span> <span class="s2">&quot;https://raw.githubusercontent.com/RUCAIBox/HaluEval/main/data/qa_data.json&quot;</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_json</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">lines</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;# Sample of the original dataset:</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;&quot;</span><span class="si">{</span><span class="n">col</span><span class="si">}</span><span class="s1">&quot;:    </span><span class="si">{</span><span class="n">df</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+
+<span class="c1"># Melt the dataframe to combine right_answer and hallucinated_answer into a single column</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">melt</span><span class="p">(</span>
+    <span class="n">id_vars</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;knowledge&quot;</span><span class="p">,</span> <span class="s2">&quot;question&quot;</span><span class="p">],</span>
+    <span class="n">value_vars</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;right_answer&quot;</span><span class="p">,</span> <span class="s2">&quot;hallucinated_answer&quot;</span><span class="p">],</span>
+    <span class="n">var_name</span><span class="o">=</span><span class="s2">&quot;answer_type&quot;</span><span class="p">,</span>
+    <span class="n">value_name</span><span class="o">=</span><span class="s2">&quot;answer&quot;</span><span class="p">,</span>
+    <span class="n">ignore_index</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>  <span class="c1"># Keep the original index to allow sorting back to pairs</span>
+<span class="p">)</span>
+
+<span class="c1"># Sort by index to keep the pairs together (right_answer and hallucinated_answer for</span>
+<span class="c1"># the same question)</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">sort_index</span><span class="p">()</span>
+
+<span class="c1"># Create the &#39;hallucinated&#39; flag based on the original column name and drop the helper</span>
+<span class="c1"># column &#39;answer_type&#39;</span>
+<span class="n">df</span><span class="p">[</span><span class="s2">&quot;hallucinated&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s2">&quot;answer_type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;hallucinated_answer&quot;</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;answer_type&quot;</span><span class="p">])</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># Create judge input prompts</span>
+<span class="n">df</span><span class="p">[</span><span class="s2">&quot;judge_input&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span>
+    <span class="k">lambda</span> <span class="n">row</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">    You are a judge evaluating whether an answer to a question is faithful to the</span>
+<span class="s2">    provided knowledge snippet.</span>
+
+<span class="s2">    Knowledge: </span><span class="si">{</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;knowledge&quot;</span><span class="p">]</span><span class="si">}</span>
+<span class="s2">    Question: </span><span class="si">{</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;question&quot;</span><span class="p">]</span><span class="si">}</span>
+<span class="s2">    Answer: </span><span class="si">{</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;answer&quot;</span><span class="p">]</span><span class="si">}</span>
+
+<span class="s2">    Does the answer contain information that is NOT supported by the knowledge?</span>
+
+<span class="s2">    Provide a score between 0.0 and 1.0 indicating the probability that the answer is a</span>
+<span class="s2">    hallucination.</span>
+<span class="s2">&quot;&quot;&quot;</span><span class="p">,</span>
+    <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<span class="c1"># Create synthetic judge scores</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">generate_biased_score</span><span class="p">(</span><span class="n">is_hallucinated</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate a biased score based on whether the answer is hallucinated.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">is_hallucinated</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">beta</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">beta</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+
+
+<span class="c1"># for reproductibility of results across infrastructure</span>
+<span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span>
+<span class="n">df</span><span class="p">[</span><span class="s2">&quot;judge_score&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s2">&quot;hallucinated&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">generate_biased_score</span><span class="p">)</span>
+
+<span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="p">[[</span><span class="s2">&quot;judge_input&quot;</span><span class="p">,</span> <span class="s2">&quot;judge_score&quot;</span><span class="p">,</span> <span class="s2">&quot;hallucinated&quot;</span><span class="p">]]</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s2">&quot;judge_input&quot;</span><span class="p">)</span>
+
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;# Sample of the processed dataset:</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;&quot;</span><span class="si">{</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1">&quot;:    </span><span class="si">{</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;&quot;</span><span class="si">{</span><span class="n">col</span><span class="si">}</span><span class="s1">&quot;:    </span><span class="si">{</span><span class="n">df</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span># Sample of the original dataset:
+
+&quot;knowledge&quot;:    Arthur&#39;s Magazine (1844–1846) was an American literary periodical published in Philadelphia in the 19th century.First for Women is a woman&#39;s magazine published by Bauer Media Group in the USA.
+
+&quot;question&quot;:    Which magazine was started first Arthur&#39;s Magazine or First for Women?
+
+&quot;right_answer&quot;:    Arthur&#39;s Magazine
+
+&quot;hallucinated_answer&quot;:    First for Women was started first.
+
+# Sample of the processed dataset:
+
+&quot;judge_input&quot;:
+    You are a judge evaluating whether an answer to a question is faithful to the
+    provided knowledge snippet.
+
+    Knowledge: Arthur&#39;s Magazine (1844–1846) was an American literary periodical published in Philadelphia in the 19th century.First for Women is a woman&#39;s magazine published by Bauer Media Group in the USA.
+    Question: Which magazine was started first Arthur&#39;s Magazine or First for Women?
+    Answer: Arthur&#39;s Magazine
+
+    Does the answer contain information that is NOT supported by the knowledge?
+
+    Provide a score between 0.0 and 1.0 indicating the probability that the answer is a
+    hallucination.
+
+&quot;judge_score&quot;:    0.1022181771242157
+
+&quot;hallucinated&quot;:    False
+</pre></div>
+</div>
+<p>For demonstration purposes, we simulate the LLM judge’s behavior using a simple table-based predictor.
+In practice, you would replace this with actual LLM API calls to get judge scores or read from a file
+of judge scores obtained from a complex LangChain pipeline for instance.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">TableBasePredictor</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">df</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">df</span> <span class="o">=</span> <span class="n">df</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">predict_proba</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="n">score_positive</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">X</span><span class="p">][</span><span class="s2">&quot;judge_score&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+        <span class="n">score_negative</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">score_positive</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">score_negative</span><span class="p">,</span> <span class="n">score_positive</span><span class="p">])</span><span class="o">.</span><span class="n">T</span>
+
+
+<span class="n">llm_judge</span> <span class="o">=</span> <span class="n">TableBasePredictor</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span>
+    <span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s2">&quot;hallucinated&quot;</span><span class="p">]][</span><span class="s2">&quot;judge_score&quot;</span><span class="p">],</span>
+    <span class="n">bins</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span>
+    <span class="n">alpha</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Hallucinated answer&quot;</span><span class="p">,</span>
+    <span class="n">density</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span>
+    <span class="n">df</span><span class="p">[</span><span class="o">~</span><span class="n">df</span><span class="p">[</span><span class="s2">&quot;hallucinated&quot;</span><span class="p">]][</span><span class="s2">&quot;judge_score&quot;</span><span class="p">],</span>
+    <span class="n">bins</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span>
+    <span class="n">alpha</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Correct answer&quot;</span><span class="p">,</span>
+    <span class="n">density</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Judge Score (Probability of Hallucination)&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Density&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Distribution of Judge Scores&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_plot_risk_control_llm_as_a_judge_001.png" srcset="../../_images/sphx_glr_plot_risk_control_llm_as_a_judge_001.png" alt="Distribution of Judge Scores" class = "sphx-glr-single-img"/><p>We now split the data into calibration and test sets.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">X</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>  <span class="c1"># index is the judge_input</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s2">&quot;hallucinated&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+<span class="n">X_calib</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">y_calib</span><span class="p">,</span> <span class="n">y_test</span> <span class="o">=</span> <span class="n">train_test_split</span><span class="p">(</span>
+    <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">test_size</span><span class="o">=</span><span class="mf">0.95</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="n">RANDOM_STATE</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Next, we define a multi-parameter prediction function.</p>
+<ul class="simple">
+<li><p>If the predicted score of the positive class is below a lower threshold <cite>lambda_1</cite>,
+the answer is classified as not hallucinated.</p></li>
+<li><p>If the predicted score is above an upper threshold <cite>lambda_2</cite>,
+the answer is classified as hallucinated.</p></li>
+<li><p>If the score lies between <cite>lambda_1</cite> and <cite>lambda_2</cite>,
+the judge abstains from making a decision.</p></li>
+</ul>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">abstain_to_answer</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">lambda_1</span><span class="p">,</span> <span class="n">lambda_2</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int_</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Predict function with abstention based on two thresholds.</span>
+<span class="sd">    - if the score is below `lambda_1`, predict 0 (not hallucinated)</span>
+<span class="sd">    - if the score is above `lambda_2`, predict 1 (hallucinated)</span>
+<span class="sd">    - if the score is between `lambda_1` and `lambda_2`, abstain (np.nan)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">y_score</span> <span class="o">=</span> <span class="n">llm_judge</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">X</span><span class="p">)[:,</span> <span class="mi">1</span><span class="p">]</span>
+    <span class="n">y_pred</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full_like</span><span class="p">(</span><span class="n">y_score</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+    <span class="n">y_pred</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">y_score</span> <span class="o">&lt;=</span> <span class="n">lambda_1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">)</span>
+    <span class="n">y_pred</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">y_score</span> <span class="o">&gt;=</span> <span class="n">lambda_2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">y_pred</span>
+</pre></div>
+</div>
+<p>Given the abstention task and the definition of <code class="docutils literal notranslate"><span class="pre">abstain_to_answer</span></code>, we must
+enforce the constraint <cite>lambda_1 &lt;= lambda_2</cite>. Therefore, we avoid exploring
+regions of the bi-variate parameter space where <cite>lambda_1 &gt; lambda_2</cite>.
+We construct a grid of parameter pairs that respects this constraint.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># to_explore = []</span>
+<span class="c1"># for i in range(9):</span>
+<span class="c1">#     lambda_1 = i / 10</span>
+<span class="c1">#     for j in range(i + 1, 10):</span>
+<span class="c1">#         lambda_2 = j / 10</span>
+<span class="c1">#         if lambda_2 &gt; 0.99:</span>
+<span class="c1">#             break</span>
+<span class="c1">#         to_explore.append((lambda_1, lambda_2))</span>
+<span class="c1"># to_explore = np.array(to_explore)</span>
+
+<span class="n">n_lambdas</span> <span class="o">=</span> <span class="mi">5</span>
+<span class="n">lambda_1_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">,</span> <span class="n">n_lambdas</span><span class="p">)</span>
+<span class="n">lambda_2_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">,</span> <span class="n">n_lambdas</span><span class="p">)</span>
+<span class="n">to_explore</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">lambda_1</span> <span class="ow">in</span> <span class="n">lambda_1_values</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">lambda_2</span> <span class="ow">in</span> <span class="n">lambda_2_values</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">lambda_2</span> <span class="o">&gt;=</span> <span class="n">lambda_1</span><span class="p">:</span>
+            <span class="n">to_explore</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">lambda_1</span><span class="p">,</span> <span class="n">lambda_2</span><span class="p">))</span>
+<span class="n">to_explore</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">to_explore</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>We now initialize a <a class="reference internal" href="../../generated/mapie.risk_control.BinaryClassificationController.html#mapie.risk_control.BinaryClassificationController" title="mapie.risk_control.BinaryClassificationController"><code class="xref py py-class docutils literal notranslate"><span class="pre">BinaryClassificationController</span></code></a>
+using the <cite>abstain_to_answer</cite> prediction function and three specific risks, each
+represented as an instance of <code class="xref py py-class docutils literal notranslate"><span class="pre">BinaryClassificationRisk</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">negative_predictive_value</span></code>: precision (NPV) on class 0 (“not hallucinated”),</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">positive_predictive_value</span></code>: precision (PPV) on class 1 (“hallucinated”),</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">abstention_rate</span></code>: proportion of abstentions (i.e., np.nan predictions).</p></li>
+</ul>
+<p>We set a target level for each risk and use the calibration data to compute
+statistically guaranteed thresholds. Among the valid thresholds, we select
+the one that minimizes the abstention rate, thereby reducing the need for
+human manual review.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">target_negative_predictive_value</span> <span class="o">=</span> <span class="mf">0.85</span>
+<span class="n">target_positive_predictive_value</span> <span class="o">=</span> <span class="mf">0.8</span>
+<span class="n">target_abstention_rate</span> <span class="o">=</span> <span class="mf">0.2</span>
+<span class="n">confidence_level</span> <span class="o">=</span> <span class="mf">0.9</span>
+
+<span class="n">bcc</span> <span class="o">=</span> <span class="n">BinaryClassificationController</span><span class="p">(</span>
+    <span class="n">predict_function</span><span class="o">=</span><span class="n">abstain_to_answer</span><span class="p">,</span>
+    <span class="n">risk</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;negative_predictive_value&quot;</span><span class="p">,</span> <span class="s2">&quot;positive_predictive_value&quot;</span><span class="p">,</span> <span class="s2">&quot;abstention_rate&quot;</span><span class="p">],</span>
+    <span class="n">target_level</span><span class="o">=</span><span class="p">[</span>
+        <span class="n">target_negative_predictive_value</span><span class="p">,</span>
+        <span class="n">target_positive_predictive_value</span><span class="p">,</span>
+        <span class="n">target_abstention_rate</span><span class="p">,</span>
+    <span class="p">],</span>
+    <span class="n">confidence_level</span><span class="o">=</span><span class="n">confidence_level</span><span class="p">,</span>
+    <span class="n">best_predict_param_choice</span><span class="o">=</span><span class="s2">&quot;abstention_rate&quot;</span><span class="p">,</span>
+    <span class="n">list_predict_params</span><span class="o">=</span><span class="n">to_explore</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">bcc</span><span class="o">.</span><span class="n">calibrate</span><span class="p">(</span><span class="n">X_calib</span><span class="p">,</span> <span class="n">y_calib</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">bcc</span><span class="o">.</span><span class="n">valid_predict_params</span><span class="p">)</span><span class="si">}</span><span class="s2"> two-dimensional parameters found that guarantee with a confidence of </span><span class="si">{</span><span class="n">confidence_level</span><span class="si">}</span><span class="s2">:</span><span class="se">\n</span><span class="s2">&quot;</span>
+    <span class="sa">f</span><span class="s2">&quot;- precision of at least </span><span class="si">{</span><span class="n">target_negative_predictive_value</span><span class="si">}</span><span class="s2"> for predicting not hallucinated,</span><span class="se">\n</span><span class="s2">&quot;</span>
+    <span class="sa">f</span><span class="s2">&quot;- precision of at least </span><span class="si">{</span><span class="n">target_positive_predictive_value</span><span class="si">}</span><span class="s2"> for predicting hallucinated, and</span><span class="se">\n</span><span class="s2">&quot;</span>
+    <span class="sa">f</span><span class="s2">&quot;- an abstention rate of at most </span><span class="si">{</span><span class="n">target_abstention_rate</span><span class="si">}</span><span class="s2">.</span><span class="se">\n\n</span><span class="s2">&quot;</span>
+    <span class="sa">f</span><span class="s2">&quot;Among these, the best thresholds that minimizes the abstention rate are:</span><span class="se">\n</span><span class="s2">&quot;</span>
+    <span class="sa">f</span><span class="s2">&quot;- lambda_1 = </span><span class="si">{</span><span class="n">bcc</span><span class="o">.</span><span class="n">best_predict_param</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">,</span><span class="se">\n</span><span class="s2">&quot;</span>
+    <span class="sa">f</span><span class="s2">&quot;- lambda_2 = </span><span class="si">{</span><span class="n">bcc</span><span class="o">.</span><span class="n">best_predict_param</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>3 two-dimensional parameters found that guarantee with a confidence of 0.9:
+- precision of at least 0.85 for predicting not hallucinated,
+- precision of at least 0.8 for predicting hallucinated, and
+- an abstention rate of at most 0.2.
+
+Among these, the best thresholds that minimizes the abstention rate are:
+- lambda_1 = 0.40,
+- lambda_2 = 0.50
+</pre></div>
+</div>
+<p>Below, we visualize the p-values associated with each explored parameter pair.
+The valid parameter region and the optimal parameter pair are highlighted.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Build p-values matrix</span>
+<span class="n">matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">((</span><span class="n">n_lambdas</span><span class="p">,</span> <span class="n">n_lambdas</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="p">(</span><span class="n">l1</span><span class="p">,</span> <span class="n">l2</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">to_explore</span><span class="p">):</span>
+    <span class="n">row</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">lambda_1_values</span> <span class="o">-</span> <span class="n">l1</span><span class="p">))</span>
+    <span class="n">col</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">lambda_2_values</span> <span class="o">-</span> <span class="n">l2</span><span class="p">))</span>
+    <span class="n">matrix</span><span class="p">[</span><span class="n">row</span><span class="p">,</span> <span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">bcc</span><span class="o">.</span><span class="n">p_values</span><span class="p">[</span><span class="n">idx</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+
+<span class="c1"># Build valid thresholds mask</span>
+<span class="n">valid_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_lambdas</span><span class="p">,</span> <span class="n">n_lambdas</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">l1</span><span class="p">,</span> <span class="n">l2</span> <span class="ow">in</span> <span class="n">bcc</span><span class="o">.</span><span class="n">valid_predict_params</span><span class="p">:</span>
+    <span class="n">row</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">lambda_1_values</span> <span class="o">-</span> <span class="n">l1</span><span class="p">))</span>
+    <span class="n">col</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">lambda_2_values</span> <span class="o">-</span> <span class="n">l2</span><span class="p">))</span>
+    <span class="n">valid_matrix</span><span class="p">[</span><span class="n">row</span><span class="p">,</span> <span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+
+<span class="c1"># Plot p-value matrix</span>
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mf">7.5</span><span class="p">,</span> <span class="mf">7.5</span><span class="p">))</span>
+
+<span class="n">colors</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;#cde2f9&quot;</span><span class="p">,</span> <span class="s2">&quot;#96bfd7&quot;</span><span class="p">,</span> <span class="s2">&quot;#3765a9&quot;</span><span class="p">]</span>
+<span class="n">cmap</span> <span class="o">=</span> <span class="n">LinearSegmentedColormap</span><span class="o">.</span><span class="n">from_list</span><span class="p">(</span><span class="s2">&quot;custom_blue&quot;</span><span class="p">,</span> <span class="n">colors</span><span class="p">,</span> <span class="n">gamma</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="n">masked_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_invalid</span><span class="p">(</span><span class="n">matrix</span><span class="p">)</span>
+<span class="n">im</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">masked_matrix</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="s2">&quot;nearest&quot;</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_lambdas</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_lambdas</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">matrix</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]):</span>
+            <span class="n">rect</span> <span class="o">=</span> <span class="n">patches</span><span class="o">.</span><span class="n">Rectangle</span><span class="p">(</span>
+                <span class="p">(</span><span class="n">j</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">i</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">),</span>
+                <span class="mi">1</span><span class="p">,</span>
+                <span class="mi">1</span><span class="p">,</span>
+                <span class="n">hatch</span><span class="o">=</span><span class="s2">&quot;///&quot;</span><span class="p">,</span>
+                <span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;none&quot;</span><span class="p">,</span>
+                <span class="n">edgecolor</span><span class="o">=</span><span class="s2">&quot;grey&quot;</span><span class="p">,</span>
+                <span class="n">linewidth</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">add_patch</span><span class="p">(</span><span class="n">rect</span><span class="p">)</span>
+
+<span class="c1"># Add valid parameters area shape</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_lambdas</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_lambdas</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">valid_matrix</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">neighbors</span> <span class="o">=</span> <span class="p">[(</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">j</span><span class="p">),</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">j</span><span class="p">),</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)]</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">valid_matrix</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="n">j</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">j</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">],</span> <span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">i</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;#2ecc71&quot;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">&gt;=</span> <span class="n">n_lambdas</span> <span class="ow">or</span> <span class="n">valid_matrix</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="n">j</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">j</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">],</span> <span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;#2ecc71&quot;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">j</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">valid_matrix</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="n">j</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">j</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">],</span> <span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;#2ecc71&quot;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">j</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">&gt;=</span> <span class="n">n_lambdas</span> <span class="ow">or</span> <span class="n">valid_matrix</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="n">j</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">j</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">],</span> <span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;#2ecc71&quot;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+
+<span class="c1"># Add best predict param as a star</span>
+<span class="n">best_l1</span><span class="p">,</span> <span class="n">best_l2</span> <span class="o">=</span> <span class="n">bcc</span><span class="o">.</span><span class="n">best_predict_param</span>
+<span class="n">row_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">lambda_1_values</span> <span class="o">-</span> <span class="n">best_l1</span><span class="p">))</span>
+<span class="n">col_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">lambda_2_values</span> <span class="o">-</span> <span class="n">best_l2</span><span class="p">))</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span>
+    <span class="n">col_idx</span><span class="p">,</span>
+    <span class="n">row_idx</span><span class="p">,</span>
+    <span class="n">c</span><span class="o">=</span><span class="s2">&quot;#2ecc71&quot;</span><span class="p">,</span>
+    <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;*&quot;</span><span class="p">,</span>
+    <span class="n">edgecolors</span><span class="o">=</span><span class="s2">&quot;k&quot;</span><span class="p">,</span>
+    <span class="n">s</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Best threshold pair&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Set up axes, theme and legend</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$\lambda_2$&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$\lambda_1$&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span>
+    <span class="s2">&quot;P-values per parameter pair</span><span class="se">\n</span><span class="s2">with valid parameter zone highlighted&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span>
+<span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">n_lambdas</span><span class="p">))</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xticklabels</span><span class="p">([</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">val</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">lambda_2_values</span><span class="p">],</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_yticks</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">n_lambdas</span><span class="p">))</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_yticklabels</span><span class="p">([</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">val</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">lambda_1_values</span><span class="p">],</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
+
+<span class="n">cbar</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">im</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">orientation</span><span class="o">=</span><span class="s2">&quot;horizontal&quot;</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">fraction</span><span class="o">=</span><span class="mf">0.035</span><span class="p">)</span>
+<span class="n">cbar</span><span class="o">.</span><span class="n">set_label</span><span class="p">(</span><span class="s2">&quot;P-value&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+<span class="n">legend_elements</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="n">Patch</span><span class="p">(</span><span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="n">edgecolor</span><span class="o">=</span><span class="s2">&quot;grey&quot;</span><span class="p">,</span> <span class="n">hatch</span><span class="o">=</span><span class="s2">&quot;///&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Non-explored zone&quot;</span><span class="p">),</span>
+    <span class="n">Patch</span><span class="p">(</span><span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="n">edgecolor</span><span class="o">=</span><span class="s2">&quot;#2ecc71&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Valid parameter zone&quot;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span>
+    <span class="n">Line2D</span><span class="p">(</span>
+        <span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+        <span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+        <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;*&quot;</span><span class="p">,</span>
+        <span class="n">color</span><span class="o">=</span><span class="s2">&quot;w&quot;</span><span class="p">,</span>
+        <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Best threshold pair&quot;</span><span class="p">,</span>
+        <span class="n">markerfacecolor</span><span class="o">=</span><span class="s2">&quot;#2ecc71&quot;</span><span class="p">,</span>
+        <span class="n">markeredgecolor</span><span class="o">=</span><span class="s2">&quot;k&quot;</span><span class="p">,</span>
+        <span class="n">markersize</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span>
+    <span class="p">),</span>
+<span class="p">]</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span>
+    <span class="n">handles</span><span class="o">=</span><span class="n">legend_elements</span><span class="p">,</span>
+    <span class="n">loc</span><span class="o">=</span><span class="s2">&quot;lower center&quot;</span><span class="p">,</span>
+    <span class="n">bbox_to_anchor</span><span class="o">=</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.25</span><span class="p">),</span>
+    <span class="n">ncol</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+    <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span>
+    <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$\lambda_1$&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Valid parameters&quot;</span><span class="p">)</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_plot_risk_control_llm_as_a_judge_002.png" srcset="../../_images/sphx_glr_plot_risk_control_llm_as_a_judge_002.png" alt="Valid parameters" class = "sphx-glr-single-img"/><p>Finally, we compare the performance of the risk-controlled thresholds
+with a naive approach that selects thresholds based solely on empirical
+performance on the calibration set.</p>
+<p>Similarly to the risk-controlled approach, the naive method explores all
+parameter pairs in the defined grid, computes the empirical risks on the
+calibration set, and selects the best feasible parameter pair that meets
+the target risk levels while minimizing the abstention rate.</p>
+<p>That comes down to selecting the parameter pair that minimizes the abstention rate
+on the calibration set among those that satisfy the following empirical constraints:</p>
+<ul class="simple">
+<li><p>empirical precision on class 0 &gt;= target_negative_predictive_value,</p></li>
+<li><p>empirical precision on class 1 &gt;= target_positive_predictive_value,</p></li>
+<li><p>empirical abstention rate &lt;= target_abstention_rate.</p></li>
+</ul>
+<p>We then evaluate both approaches on the test set and display the results.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">perf</span><span class="p">(</span><span class="n">risk</span><span class="p">,</span> <span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">):</span>
+    <span class="n">val</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">risk</span><span class="o">.</span><span class="n">get_value_and_effective_sample_size</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">)</span>
+    <span class="k">return</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">val</span> <span class="k">if</span> <span class="n">risk</span><span class="o">.</span><span class="n">higher_is_better</span> <span class="k">else</span> <span class="n">val</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">compute_risks</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;positive_predictive_value&quot;</span><span class="p">:</span> <span class="n">perf</span><span class="p">(</span><span class="n">positive_predictive_value</span><span class="p">,</span> <span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">),</span>
+        <span class="s2">&quot;negative_predictive_value&quot;</span><span class="p">:</span> <span class="n">perf</span><span class="p">(</span><span class="n">negative_predictive_value</span><span class="p">,</span> <span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">),</span>
+        <span class="s2">&quot;abstention_rate&quot;</span><span class="p">:</span> <span class="n">perf</span><span class="p">(</span><span class="n">abstention_rate</span><span class="p">,</span> <span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">),</span>
+    <span class="p">}</span>
+
+
+<span class="c1"># Compute performance for all thresholds on the calibration set</span>
+<span class="n">y_calib</span> <span class="o">=</span> <span class="n">y_calib</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+<span class="n">y_test</span> <span class="o">=</span> <span class="n">y_test</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+<span class="n">y_preds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">abstain_to_answer</span><span class="p">(</span><span class="n">X_calib</span><span class="p">,</span> <span class="n">l1</span><span class="p">,</span> <span class="n">l2</span><span class="p">)</span> <span class="k">for</span> <span class="n">l1</span><span class="p">,</span> <span class="n">l2</span> <span class="ow">in</span> <span class="n">to_explore</span><span class="p">])</span>
+
+<span class="n">emp_risks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">compute_risks</span><span class="p">(</span><span class="n">y_calib</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">)</span> <span class="k">for</span> <span class="n">y_pred</span> <span class="ow">in</span> <span class="n">y_preds</span><span class="p">])</span>
+<span class="n">emp_positive_predictive_value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+    <span class="p">[</span><span class="n">r</span><span class="p">[</span><span class="s2">&quot;positive_predictive_value&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">emp_risks</span><span class="p">]</span>
+<span class="p">)</span>
+<span class="n">emp_negative_predictive_value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+    <span class="p">[</span><span class="n">r</span><span class="p">[</span><span class="s2">&quot;negative_predictive_value&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">emp_risks</span><span class="p">]</span>
+<span class="p">)</span>
+<span class="n">abstention_rate_calib</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">r</span><span class="p">[</span><span class="s2">&quot;abstention_rate&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">emp_risks</span><span class="p">])</span>
+
+<span class="c1"># Identify feasible parameter pairs for the naive approach</span>
+<span class="n">feasible_mask</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="p">(</span><span class="n">emp_positive_predictive_value</span> <span class="o">&gt;=</span> <span class="n">target_positive_predictive_value</span><span class="p">)</span>
+    <span class="o">&amp;</span> <span class="p">(</span><span class="n">emp_negative_predictive_value</span> <span class="o">&gt;=</span> <span class="n">target_negative_predictive_value</span><span class="p">)</span>
+    <span class="o">&amp;</span> <span class="p">(</span><span class="n">abstention_rate_calib</span> <span class="o">&lt;=</span> <span class="n">target_abstention_rate</span><span class="p">)</span>
+<span class="p">)</span>
+
+<span class="c1"># Select the naive threshold pair that minimizes abstention rate</span>
+<span class="n">feasible_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">feasible_mask</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">best_feasible_idx</span> <span class="o">=</span> <span class="n">feasible_indices</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">abstention_rate_calib</span><span class="p">[</span><span class="n">feasible_indices</span><span class="p">])]</span>
+<span class="n">naive_lambda_1</span><span class="p">,</span> <span class="n">naive_lambda_2</span> <span class="o">=</span> <span class="n">to_explore</span><span class="p">[</span><span class="n">best_feasible_idx</span><span class="p">]</span>
+
+<span class="c1"># Compute predictions using both naive and risk-controlled thresholds</span>
+<span class="n">y_calib_pred_naive</span> <span class="o">=</span> <span class="n">abstain_to_answer</span><span class="p">(</span><span class="n">X_calib</span><span class="p">,</span> <span class="n">naive_lambda_1</span><span class="p">,</span> <span class="n">naive_lambda_2</span><span class="p">)</span>
+<span class="n">y_test_pred_naive</span> <span class="o">=</span> <span class="n">abstain_to_answer</span><span class="p">(</span><span class="n">X_test</span><span class="p">,</span> <span class="n">naive_lambda_1</span><span class="p">,</span> <span class="n">naive_lambda_2</span><span class="p">)</span>
+
+<span class="n">y_calib_pred_controlled</span> <span class="o">=</span> <span class="n">bcc</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_calib</span><span class="p">)</span>
+<span class="n">y_test_pred_controlled</span> <span class="o">=</span> <span class="n">bcc</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_test</span><span class="p">)</span>
+
+<span class="c1"># Compute risk values for all cases</span>
+<span class="n">naive_calib</span> <span class="o">=</span> <span class="n">compute_risks</span><span class="p">(</span><span class="n">y_calib</span><span class="p">,</span> <span class="n">y_calib_pred_naive</span><span class="p">)</span>
+<span class="n">naive_test</span> <span class="o">=</span> <span class="n">compute_risks</span><span class="p">(</span><span class="n">y_test</span><span class="p">,</span> <span class="n">y_test_pred_naive</span><span class="p">)</span>
+
+<span class="n">ctrl_calib</span> <span class="o">=</span> <span class="n">compute_risks</span><span class="p">(</span><span class="n">y_calib</span><span class="p">,</span> <span class="n">y_calib_pred_controlled</span><span class="p">)</span>
+<span class="n">ctrl_test</span> <span class="o">=</span> <span class="n">compute_risks</span><span class="p">(</span><span class="n">y_test</span><span class="p">,</span> <span class="n">y_test_pred_controlled</span><span class="p">)</span>
+
+<span class="c1"># Summarize results in a table format</span>
+<span class="n">ctrl_summary</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+    <span class="p">{</span>
+        <span class="s2">&quot;Calibration&quot;</span><span class="p">:</span> <span class="n">ctrl_calib</span><span class="p">,</span>
+        <span class="s2">&quot;Test&quot;</span><span class="p">:</span> <span class="n">ctrl_test</span><span class="p">,</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+
+<span class="n">naive_summary</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+    <span class="p">{</span>
+        <span class="s2">&quot;Calibration&quot;</span><span class="p">:</span> <span class="n">naive_calib</span><span class="p">,</span>
+        <span class="s2">&quot;Test&quot;</span><span class="p">:</span> <span class="n">naive_test</span><span class="p">,</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+
+<span class="c1"># Print thresholds and tables</span>
+<span class="nb">print</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Naive thresholds (lambda_1, lambda_2) = (</span><span class="si">{</span><span class="n">naive_lambda_1</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">naive_lambda_2</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">)&quot;</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s2">&quot;Risk-controlled thresholds (lambda_1, lambda_2) = (</span><span class="si">{</span><span class="n">bcc</span><span class="o">.</span><span class="n">best_predict_param</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">bcc</span><span class="o">.</span><span class="n">best_predict_param</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">)</span><span class="se">\n</span><span class="s2">&quot;</span>
+<span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Risk-controlled thresholds performance&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">ctrl_summary</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Naive thresholds performance&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">naive_summary</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Naive thresholds (lambda_1, lambda_2) = (0.40, 0.40)
+Risk-controlled thresholds (lambda_1, lambda_2) = (0.40, 0.50)
+
+Risk-controlled thresholds performance
+                           Calibration   Test
+positive_predictive_value        0.896  0.873
+negative_predictive_value        0.932  0.929
+abstention_rate                  0.080  0.081
+
+Naive thresholds performance
+                           Calibration   Test
+positive_predictive_value        0.828  0.806
+negative_predictive_value        0.932  0.929
+abstention_rate                  0.000  0.000
+</pre></div>
+</div>
+<p>In this example, the naive thresholds choose an abstention rate of 0% at the cost of a low margin on positive_predictive_value.</p>
+<p>Indeed, the naive approach may select thresholds that fail to meet the desired risk levels on unseen data.
+In contrast, the risk-controlled approach takes a margin which provides formal statistical guarantees on precision and abstention,
+making it more reliable in practice.</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 2.227 seconds)</p>
+<div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-examples-risk-control-2-advanced-analysis-plot-risk-control-llm-as-a-judge-py">
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/14db24e65c1ee29a61c5da01ed27db4c/plot_risk_control_llm_as_a_judge.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">plot_risk_control_llm_as_a_judge.ipynb</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/bd7a2d319aaa754ce23cad1e4691a5ea/plot_risk_control_llm_as_a_judge.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_risk_control_llm_as_a_judge.py</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-zip docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/e85cd286537abf7025f61d70048939cb/plot_risk_control_llm_as_a_judge.zip"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">zipped:</span> <span class="pre">plot_risk_control_llm_as_a_judge.zip</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="plot_multi_risk_control_binary_classification.html" class="btn btn-neutral float-left" title="Use MAPIE to control multiple risks of a binary classifier" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../../external_risk_control_package.html" class="btn btn-neutral float-right" title="Additional resources: external risk control package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Capgemini Invent.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

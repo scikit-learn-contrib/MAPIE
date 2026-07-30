@@ -1,16 +1,17 @@
 from typing import Optional, no_type_check
 
+from numpy.typing import ArrayLike
 from sklearn.utils.multiclass import (
     check_classification_targets,
     type_of_target,
 )
-
 from .regression import BaseRegressionScore
 from .classification import BaseClassificationScore
 from .bounds import (
     AbsoluteConformityScore,
     GammaConformityScore,
     ResidualNormalisedScore,
+    StdConformityScore,
 )
 from .sets import (
     LACConformityScore,
@@ -19,14 +20,13 @@ from .sets import (
     RAPSConformityScore,
 )
 
-from numpy.typing import ArrayLike
-
 
 CONFORMITY_SCORES_STRING_MAP = {
     BaseRegressionScore: {
         "absolute": AbsoluteConformityScore,
         "gamma": GammaConformityScore,
         "residual_normalized": ResidualNormalisedScore,
+        "std_normalized": StdConformityScore,
     },
     BaseClassificationScore: {
         "lac": LACConformityScore,
@@ -48,7 +48,7 @@ def check_and_select_conformity_score(conformity_score, conformity_score_type):
 
 
 def check_regression_conformity_score(
-    conformity_score: Optional[BaseRegressionScore],
+    conformity_score: Optional[BaseRegressionScore] = None,
     sym: bool = True,
 ) -> BaseRegressionScore:
     """

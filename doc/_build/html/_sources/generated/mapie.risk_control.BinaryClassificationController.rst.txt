@@ -1,0 +1,17 @@
+﻿:mod:`mapie.risk_control`.BinaryClassificationController
+===============================================================
+
+.. currentmodule:: mapie.risk_control
+
+.. autoclass:: BinaryClassificationController
+   :members:
+
+   
+   .. automethod:: __init__
+   
+
+.. include:: mapie.risk_control.BinaryClassificationController.examples
+
+.. raw:: html
+
+    <div style='clear:both'></div>

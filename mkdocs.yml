@@ -87,11 +87,10 @@ plugins:
         - doc/generated/mondrian
       within_subsection_order: FileNameSortKey
       plot_gallery: true
-      # Reuse gallery caches to skip unchanged examples when possible.
       run_stale_examples: true
       download_all_examples: false
-      abort_on_example_error: false
-      only_warn_on_example_error: true
+      abort_on_example_error: true
+      only_warn_on_example_error: false
 
 hooks:
   - doc/hooks/gallery_nav_fix.py
@@ -158,12 +157,14 @@ nav:
     - v1 Release Notes: getting-started/v1-release-notes.md
   - Conformal Prediction:
     - Regression Theory: theory/regression.md
-    - Conformity Scores: theory/conformity-scores.md
-    - Metrics: theory/metrics-conformal.md
     - Regression Examples: generated/regression
     - Classification Theory: theory/classification.md
     - Binary Classification: theory/binary-classification.md
     - Classification Examples: generated/classification
+    - Conformity Scores: theory/conformity-scores.md
+    - Metrics: theory/metrics-conformal.md
+    - Metrics for Conditional Conformal Prediction: theory/metrics-conditional-conformal.md
+    - Conditional Guarantees: theory/conditional-guarantees.md
   - Risk Control:
     - Getting Started: theory/risk-control.md
     - LLM Risk Control: theory/llm-risk-control.md

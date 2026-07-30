@@ -1,0 +1,767 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>mapie.regression.TimeSeriesRegressor &mdash; MAPIE 1.2.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/project-template.css?v=2b5c7e5c" />
+      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css?v=d2d258e8" />
+      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-binder.css?v=f4aeca0c" />
+      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=6efca38a"></script>
+      <script src="../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/js/copybutton.js?v=26522df0"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="mapie.metrics.regression.regression_coverage_score" href="mapie.metrics.regression.regression_coverage_score.html" />
+    <link rel="prev" title="mapie.regression.ConformalizedQuantileRegressor" href="mapie.regression.ConformalizedQuantileRegressor.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            MAPIE
+              <img src="../_static/mapie_logo_white_cut.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../quick_start.html">Quick Start with MAPIE</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../quick_start.html#download-and-install-the-module">1. Download and install the module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../quick_start.html#regression">2. Regression</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../quick_start.html#classification">3. Classification</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../quick_start.html#risk-control">4. Risk Control</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../split_cross_conformal.html">The conformalization (or “calibration”) set</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../split_cross_conformal.html#split-conformal-predictions">1. Split conformal predictions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../split_cross_conformal.html#split-conformal-predictions-with-a-pre-trained-model">Split conformal predictions with a pre-trained model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../split_cross_conformal.html#split-conformal-predictions-with-an-untrained-model">Split conformal predictions with an untrained model</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../split_cross_conformal.html#cross-conformal-predictions">2. Cross conformal predictions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../choosing_the_right_algorithm.html">Choosing the right algorithm</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../v1_release_notes.html">MAPIE v1 release notes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../v1_release_notes.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../v1_release_notes.html#api-changes-overview">API changes overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../v1_release_notes.html#python-scikit-learn-and-numpy-versions-support">Python, scikit-learn and NumPy versions support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../v1_release_notes.html#api-changes-in-detail">API changes in detail</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../v1_release_notes.html#regression-and-classification-api-changes-excluding-time-series">Regression and classification API changes (excluding time series)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../v1_release_notes.html#classes">Classes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../v1_release_notes.html#workflow-and-methods">Workflow and methods</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../v1_release_notes.html#parameters">Parameters</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../v1_release_notes.html#other-api-changes">Other API changes</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../v1_release_notes.html#time-series">Time series</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../v1_release_notes.html#risk-control">Risk control</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../v1_release_notes.html#calibration">Calibration</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../v1_release_notes.html#mondrian">Mondrian</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../v1_release_notes.html#metrics">Metrics</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../v1_release_notes.html#conformity-scores">Conformity scores</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Measure predictions uncertainty</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../index_regression.html">Prediction intervals (regression)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../choosing_the_right_algorithm_regression.html">Choose the right algorithm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples_regression/1-quickstart/plot_toy_model.html">Use MAPIE to plot prediction intervals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples_regression/1-quickstart/plot_prefit.html">Use MAPIE with a pre-trained model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples_regression/index.html">All regression examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../examples_regression/1-quickstart/index.html">1. Quickstart</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../examples_regression/1-quickstart/plot_toy_model.html">Use MAPIE to plot prediction intervals</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../examples_regression/1-quickstart/plot_compare_conformity_scores.html">Use MAPIE on data with gamma distribution</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../examples_regression/1-quickstart/plot_prefit.html">Use MAPIE with a pre-trained model</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../examples_regression/1-quickstart/plot_heteroscedastic_1d_data.html">Use MAPIE on data with uneven uncertainty</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../examples_regression/1-quickstart/plot_homoscedastic_1d_data.html">Use MAPIE on data with constant uncertainty</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../examples_regression/1-quickstart/plot_ts-tutorial.html">Tutorial for time series</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../examples_regression/2-advanced-analysis/index.html">2. Advanced analysis</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../examples_regression/2-advanced-analysis/plot_conformal_predictive_distribution.html">Conformal Predictive Distribution with MAPIE</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../examples_regression/2-advanced-analysis/plot_cqr_symmetry_difference.html">The symmetric correction parameter in conformalized quantile regression</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../examples_regression/2-advanced-analysis/plot_nested-cv.html">Hyperparameters tuning with cross-conformal regression</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../examples_regression/2-advanced-analysis/plot_both_uncertainties.html">Estimating aleatoric and epistemic uncertainties</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../examples_regression/2-advanced-analysis/plot_timeseries_enbpi.html">Time series: example of the EnbPI technique</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../examples_regression/2-advanced-analysis/plot-coverage-width-based-criterion.html">Focus on intervals width</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../examples_regression/2-advanced-analysis/plot_ResidualNormalisedScore_tutorial.html">Focus on residual normalised score</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../examples_regression/2-advanced-analysis/plot_conditional_coverage.html">Focus on local (or “conditional”) coverage</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../examples_regression/2-advanced-analysis/plot_cqr_tutorial.html">Conformalized quantile regression on gamma distributed data</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../examples_regression/2-advanced-analysis/plot_coverage_validity.html">Coverage validity of MAPIE for regression tasks</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../examples_regression/2-advanced-analysis/plot_main-tutorial-regression.html">Comparison between conformalized quantile regressor and cross methods</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../examples_regression/3-scientific-articles/index.html">3. Simulations from scientific articles</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../examples_regression/3-scientific-articles/plot_barber2020_simulations.html">Predictive inference with the jackknife+, Foygel-Barber et al. (2020)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../examples_regression/3-scientific-articles/plot_zaffran2022_comparison.html">Adaptive conformal predictions for time series, Zaffran et al. (2022)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../examples_regression/3-scientific-articles/plot_kim2020_simulations.html">Predictive inference is free with the Jackknife+-after-Bootstrap, Kim et al. (2020)</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../examples_regression/4-other-notebooks/index.html">4. Other notebooks</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../theoretical_description_regression.html">Theoretical Description</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../theoretical_description_conformity_scores.html">Theoretical Description for Conformity Scores</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../index_classification.html">Prediction sets (classification)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../choosing_the_right_algorithm_classification.html">Choosing the right algorithm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples_classification/1-quickstart/plot_quickstart_classification.html">Use MAPIE to plot prediction sets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples_classification/index.html">All classification examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../examples_classification/1-quickstart/index.html">1. Quickstart examples</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../examples_classification/1-quickstart/plot_quickstart_classification.html">Use MAPIE to plot prediction sets</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../examples_classification/2-advanced-analysis/index.html">2. Advanced analysis</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../examples_classification/2-advanced-analysis/plot_comp_methods_on_2d_dataset.html">LAC and APS methods explained</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../examples_classification/2-advanced-analysis/plot_main-tutorial-binary-classification.html">Set prediction example in the binary classification setting</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../examples_classification/2-advanced-analysis/plot_crossconformal.html">Cross conformal classification explained</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../examples_classification/3-scientific-articles/index.html">3. Simulations from scientific articles</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../examples_classification/3-scientific-articles/plot_sadinle2019_example.html">Least Ambiguous Set-Valued Classifiers with Bounded Error Levels, Sadinle et al. (2019)</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../examples_classification/4-other-notebooks/index.html">4. Other notebooks</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../theoretical_description_classification.html">Theoretical Description</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../index_binary_classification.html">The binary classification case</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../examples_classification/2-advanced-analysis/plot_main-tutorial-binary-classification.html">Set prediction example in the binary classification setting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../theoretical_description_binary_classification.html">Theoretical Description</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Control prediction errors</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../theoretical_description_risk_control.html">Getting started with risk control in MAPIE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples_risk_control/1-quickstart/plot_risk_control_binary_classification.html">Use MAPIE to control the precision of a binary classifier</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples_risk_control/index.html">All risk control examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../examples_risk_control/1-quickstart/index.html">1. Quickstart examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../examples_risk_control/1-quickstart/plot_risk_control_binary_classification.html">Use MAPIE to control the precision of a binary classifier</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../examples_risk_control/2-advanced-analysis/index.html">2. Advanced analysis</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../examples_risk_control/2-advanced-analysis/plot_risk_control_multi-label_classification.html">Use MAPIE to control the risk of a multi-label classifier</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../examples_risk_control/2-advanced-analysis/plot_risk_control_multi_parameter_binary_classification.html">Use MAPIE to control risk of a binary classifier with multiple prediction parameters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../examples_risk_control/2-advanced-analysis/plot_semantic_segmentation_recall_control.html">Recall control for semantic segmentation with MAPIE</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../examples_risk_control/2-advanced-analysis/plot_semantic_segmentation_precision_control.html">Precision control for semantic segmentation with MAPIE</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../examples_risk_control/2-advanced-analysis/plot_multi_risk_control_binary_classification.html">Use MAPIE to control multiple risks of a binary classifier</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../examples_risk_control/2-advanced-analysis/plot_risk_control_llm_as_a_judge.html">Risk Control for LLM as a Judge with Abstention</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../external_risk_control_package.html">Additional resources: external risk control package</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Calibrate classifiers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../theoretical_description_calibration.html">Theoretical Description</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples_calibration/index.html">Calibration examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../examples_calibration/1-quickstart/index.html">1. Quickstart examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../examples_calibration/1-quickstart/plot_calibration_venn_abers_binary.html">Calibrating binary classifier with Venn-ABERS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../examples_calibration/1-quickstart/plot_calibration_hypothesis_testing.html">Testing for calibration in binary classification settings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../examples_calibration/1-quickstart/plot_calibration_venn_abers_multiclass.html">Calibrating multi-class classifier with Venn-ABERS</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../examples_calibration/2-advanced-analysis/index.html">2. Advanced analysis</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../examples_calibration/2-advanced-analysis/plot_asymptotic_convergence_of_p_values.html">Evaluating the asymptotic convergence of p-values</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks_calibration.html">Calibration notebooks</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Question &amp; Answers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../theoretical_description_metrics.html">Metrics: how to measure conformal prediction performance?</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../theoretical_description_metrics.html#general-metrics">1. General Metrics</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../theoretical_description_metrics.html#regression-coverage-score">Regression Coverage Score</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../theoretical_description_metrics.html#regression-mean-width-score">Regression Mean Width Score</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../theoretical_description_metrics.html#classification-coverage-score">Classification Coverage Score</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../theoretical_description_metrics.html#classification-mean-width-score">Classification Mean Width Score</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../theoretical_description_metrics.html#size-stratified-coverage">Size-Stratified Coverage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../theoretical_description_metrics.html#hilbert-schmidt-independence-criterion">Hilbert-Schmidt Independence Criterion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../theoretical_description_metrics.html#coverage-width-based-criterion">Coverage Width-Based Criterion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../theoretical_description_metrics.html#mean-winkler-interval-score">Mean Winkler Interval Score</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../theoretical_description_metrics.html#calibration-metrics">2. Calibration Metrics</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../theoretical_description_metrics.html#expected-calibration-error">Expected Calibration Error</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../theoretical_description_metrics.html#top-label-expected-calibration-error-top-label-ece">Top-Label Expected Calibration Error (Top-Label ECE)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../theoretical_description_metrics.html#cumulative-differences">Cumulative Differences</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../theoretical_description_metrics.html#kolmogorov-smirnov-statistic-for-calibration">Kolmogorov-Smirnov Statistic for Calibration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../theoretical_description_metrics.html#kuiper-s-test">Kuiper’s Test</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../theoretical_description_metrics.html#spiegelhalters-test">Spiegelhalter’s Test</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../theoretical_description_metrics.html#references">References</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../index_mondrian.html">Mondrian: how to use prior knowledge on groups when measuring uncertainty?</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html">Tutorial: how to ensure fairness across groups with Mondrian</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html#create-the-noisy-dataset">1. Create the noisy dataset</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html#split-the-dataset-into-a-training-set-a-conformalization-set-and-a-test-set">2. Split the dataset into a training set, a conformalization set, and a test set</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html#fit-a-random-forest-regressor-on-the-training-set">3. Fit a random forest regressor on the training set</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html#build-the-classical-conformal-prediction-intervals">4. Build the classical conformal prediction intervals</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html#conformalize-a-splitconformalregressor-on-the-conformalization-set">Conformalize a SplitConformalRegressor on the conformalization set</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html#predict-the-prediction-intervals-on-the-test-set">Predict the prediction intervals on the test set</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html#evaluate-the-coverage-score-by-group">Evaluate the coverage score by group</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html#build-the-mondrian-conformal-prediction-intervals">5. Build the Mondrian conformal prediction intervals</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html#conformalize-a-splitconformalregressor-on-the-conformalization-set-for-each-group">Conformalize a SplitConformalRegressor on the conformalization set for each group</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html#id1">Predict the prediction intervals on the test set</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html#compare-the-coverage-by-partition-plot-both-methods-side-by-side">6. Compare the coverage by partition, plot both methods side by side</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../theoretical_description_mondrian.html">Theoretical Description</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../theoretical_description_mondrian.html#references">References</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../llm_risk_control.html">How to control LLM risks?</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">MAPIE API</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../api.html#regression">Regression</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="../api.html#conformalizers">Conformalizers</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="mapie.regression.SplitConformalRegressor.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.regression</span></code>.SplitConformalRegressor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mapie.regression.CrossConformalRegressor.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.regression</span></code>.CrossConformalRegressor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mapie.regression.JackknifeAfterBootstrapRegressor.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.regression</span></code>.JackknifeAfterBootstrapRegressor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mapie.regression.ConformalizedQuantileRegressor.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.regression</span></code>.ConformalizedQuantileRegressor</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.regression</span></code>.TimeSeriesRegressor</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../api.html#metrics">Metrics</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="mapie.metrics.regression.regression_coverage_score.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.regression</span></code>.regression_coverage_score</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mapie.metrics.regression.regression_mean_width_score.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.regression</span></code>.regression_mean_width_score</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mapie.metrics.regression.regression_ssc.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.regression</span></code>.regression_ssc</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mapie.metrics.regression.regression_ssc_score.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.regression</span></code>.regression_ssc_score</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mapie.metrics.regression.hsic.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.regression</span></code>.hsic</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mapie.metrics.regression.coverage_width_based.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.regression</span></code>.coverage_width_based</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mapie.metrics.regression.regression_mwi_score.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.regression</span></code>.regression_mwi_score</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../api.html#conformity-scores">Conformity Scores</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="mapie.conformity_scores.BaseRegressionScore.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.conformity_scores</span></code>.BaseRegressionScore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mapie.conformity_scores.AbsoluteConformityScore.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.conformity_scores</span></code>.AbsoluteConformityScore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mapie.conformity_scores.GammaConformityScore.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.conformity_scores</span></code>.GammaConformityScore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mapie.conformity_scores.ResidualNormalisedScore.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.conformity_scores</span></code>.ResidualNormalisedScore</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../api.html#resampling">Resampling</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="mapie.subsample.BlockBootstrap.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.subsample</span></code>.BlockBootstrap</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mapie.subsample.Subsample.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.subsample</span></code>.Subsample</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#classification">Classification</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../api.html#id1">Conformalizers</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="mapie.classification.SplitConformalClassifier.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.classification</span></code>.SplitConformalClassifier</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mapie.classification.CrossConformalClassifier.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.classification</span></code>.CrossConformalClassifier</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../api.html#id2">Metrics</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="mapie.metrics.classification.classification_coverage_score.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.classification</span></code>.classification_coverage_score</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mapie.metrics.classification.classification_mean_width_score.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.classification</span></code>.classification_mean_width_score</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mapie.metrics.classification.classification_ssc.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.classification</span></code>.classification_ssc</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mapie.metrics.classification.classification_ssc_score.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.classification</span></code>.classification_ssc_score</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../api.html#id3">Conformity Scores</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="mapie.conformity_scores.BaseClassificationScore.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.conformity_scores</span></code>.BaseClassificationScore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mapie.conformity_scores.NaiveConformityScore.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.conformity_scores</span></code>.NaiveConformityScore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mapie.conformity_scores.LACConformityScore.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.conformity_scores</span></code>.LACConformityScore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mapie.conformity_scores.APSConformityScore.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.conformity_scores</span></code>.APSConformityScore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mapie.conformity_scores.RAPSConformityScore.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.conformity_scores</span></code>.RAPSConformityScore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mapie.conformity_scores.TopKConformityScore.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.conformity_scores</span></code>.TopKConformityScore</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#risk-control">Risk Control</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="mapie.risk_control.MultiLabelClassificationController.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.risk_control</span></code>.MultiLabelClassificationController</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="mapie.risk_control.MultiLabelClassificationController.html#mapie.risk_control.MultiLabelClassificationController"><code class="docutils literal notranslate"><span class="pre">MultiLabelClassificationController</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mapie.risk_control.MultiLabelClassificationController.html#examples-using-mapie-risk-control-multilabelclassificationcontroller">Examples using <code class="docutils literal notranslate"><span class="pre">mapie.risk_control.MultiLabelClassificationController</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="mapie.risk_control.BinaryClassificationController.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.risk_control</span></code>.BinaryClassificationController</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="mapie.risk_control.BinaryClassificationController.html#mapie.risk_control.BinaryClassificationController"><code class="docutils literal notranslate"><span class="pre">BinaryClassificationController</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mapie.risk_control.BinaryClassificationController.html#examples-using-mapie-risk-control-binaryclassificationcontroller">Examples using <code class="docutils literal notranslate"><span class="pre">mapie.risk_control.BinaryClassificationController</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="mapie.risk_control.SemanticSegmentationController.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.risk_control</span></code>.SemanticSegmentationController</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="mapie.risk_control.SemanticSegmentationController.html#mapie.risk_control.SemanticSegmentationController"><code class="docutils literal notranslate"><span class="pre">SemanticSegmentationController</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mapie.risk_control.SemanticSegmentationController.html#examples-using-mapie-risk-control-semanticsegmentationcontroller">Examples using <code class="docutils literal notranslate"><span class="pre">mapie.risk_control.SemanticSegmentationController</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="mapie.risk_control.BinaryClassificationRisk.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.risk_control</span></code>.BinaryClassificationRisk</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="mapie.risk_control.BinaryClassificationRisk.html#mapie.risk_control.BinaryClassificationRisk"><code class="docutils literal notranslate"><span class="pre">BinaryClassificationRisk</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mapie.risk_control.BinaryClassificationRisk.html#examples-using-mapie-risk-control-binaryclassificationrisk">Examples using <code class="docutils literal notranslate"><span class="pre">mapie.risk_control.BinaryClassificationRisk</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#calibration">Calibration</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../api.html#conformalizer">Conformalizer</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="mapie.calibration.TopLabelCalibrator.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.calibration</span></code>.TopLabelCalibrator</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../api.html#id4">Metrics</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="mapie.metrics.calibration.expected_calibration_error.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.expected_calibration_error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mapie.metrics.calibration.top_label_ece.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.top_label_ece</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mapie.metrics.calibration.cumulative_differences.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.cumulative_differences</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mapie.metrics.calibration.kolmogorov_smirnov_cdf.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.kolmogorov_smirnov_cdf</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mapie.metrics.calibration.kolmogorov_smirnov_p_value.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.kolmogorov_smirnov_p_value</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mapie.metrics.calibration.kolmogorov_smirnov_statistic.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.kolmogorov_smirnov_statistic</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mapie.metrics.calibration.kuiper_cdf.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.kuiper_cdf</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mapie.metrics.calibration.kuiper_p_value.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.kuiper_p_value</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mapie.metrics.calibration.kuiper_statistic.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.kuiper_statistic</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mapie.metrics.calibration.length_scale.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.length_scale</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mapie.metrics.calibration.spiegelhalter_p_value.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.spiegelhalter_p_value</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mapie.metrics.calibration.spiegelhalter_statistic.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.spiegelhalter_statistic</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#utils">Utils</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="mapie.utils.train_conformalize_test_split.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.utils</span></code>.train_conformalize_test_split</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="mapie.utils.train_conformalize_test_split.html#mapie.utils.train_conformalize_test_split"><code class="docutils literal notranslate"><span class="pre">train_conformalize_test_split()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mapie.utils.train_conformalize_test_split.html#examples-using-mapie-utils-train-conformalize-test-split">Examples using <code class="docutils literal notranslate"><span class="pre">mapie.utils.train_conformalize_test_split</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">MAPIE</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../api.html">MAPIE API</a></li>
+      <li class="breadcrumb-item active"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.regression</span></code>.TimeSeriesRegressor</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/generated/mapie.regression.TimeSeriesRegressor.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="mapie-regression-timeseriesregressor">
+<h1><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.regression</span></code>.TimeSeriesRegressor<a class="headerlink" href="#mapie-regression-timeseriesregressor" title="Link to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="mapie.regression.TimeSeriesRegressor">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mapie.regression.</span></span><span class="sig-name descname"><span class="pre">TimeSeriesRegressor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">estimator</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="http://scikit-learn.org/stable/modules/generated/sklearn.base.RegressorMixin.html#sklearn.base.RegressorMixin" title="(in scikit-learn v1.8)"><span class="pre">RegressorMixin</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'enbpi'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cv</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">BaseCrossValidator</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_jobs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">agg_function</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'mean'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conformity_score</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="mapie.conformity_scores.BaseRegressionScore.html#mapie.conformity_scores.BaseRegressionScore" title="mapie.conformity_scores.regression.BaseRegressionScore"><span class="pre">BaseRegressionScore</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">RandomState</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mapie/regression/time_series_regression.html#TimeSeriesRegressor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mapie.regression.TimeSeriesRegressor" title="Link to this definition"></a></dt>
+<dd><p>Prediction intervals with out-of-fold residuals for time series.
+This class only has two valid <code class="docutils literal notranslate"><span class="pre">method</span></code> : <code class="docutils literal notranslate"><span class="pre">&quot;enbpi&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;aci&quot;</span></code></p>
+<p>The prediction intervals are calibrated on a split of the trained data.
+Both strategies are estimating prediction intervals
+on single-output time series.</p>
+<p>EnbPI allows you to update conformal scores using the <code class="docutils literal notranslate"><span class="pre">update</span></code>
+function. It will replace the oldest one with the newest scores.
+It will keep the same amount of total scores</p>
+<p>Actually, EnbPI only corresponds to <code class="docutils literal notranslate"><span class="pre">TimeSeriesRegressor</span></code> if the
+<code class="docutils literal notranslate"><span class="pre">cv</span></code> argument is of type <code class="docutils literal notranslate"><span class="pre">BlockBootstrap</span></code>.</p>
+<p>The ACI strategy allows you to adapt the conformal inference
+(i.e the quantile). If the real values are not in the coverage,
+the size of the intervals will grow. Conversely, if the real values are in
+the coverage, the size of the intervals will decrease. You can use a gamma
+coefficient to adjust the strength of the correction. If the quantile is
+equal to zero, the method will produce an infinite set size.</p>
+<p class="rubric">References</p>
+<p>Chen Xu, and Yao Xie.
+“Conformal prediction for dynamic time-series.”
+<a class="reference external" href="https://arxiv.org/abs/2010.09107">https://arxiv.org/abs/2010.09107</a></p>
+<p>Isaac Gibbs, Emmanuel Candes
+“Adaptive conformal inference under distribution shift”
+<a class="reference external" href="https://proceedings.neurips.cc/paper/2021/file/0d441de75945e5acbc865406fc9a2559-Paper.pdf">https://proceedings.neurips.cc/paper/2021/file/0d441de75945e5acbc865406fc9a2559-Paper.pdf</a></p>
+<p>Margaux Zaffran et al.
+“Adaptive Conformal Predictions for Time Series”
+<a class="reference external" href="https://arxiv.org/pdf/2202.07282.pdf">https://arxiv.org/pdf/2202.07282.pdf</a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="mapie.regression.TimeSeriesRegressor.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">estimator</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="http://scikit-learn.org/stable/modules/generated/sklearn.base.RegressorMixin.html#sklearn.base.RegressorMixin" title="(in scikit-learn v1.8)"><span class="pre">RegressorMixin</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'enbpi'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cv</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">BaseCrossValidator</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_jobs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">agg_function</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'mean'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conformity_score</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="mapie.conformity_scores.BaseRegressionScore.html#mapie.conformity_scores.BaseRegressionScore" title="mapie.conformity_scores.regression.BaseRegressionScore"><span class="pre">BaseRegressionScore</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">RandomState</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/mapie/regression/time_series_regression.html#TimeSeriesRegressor.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mapie.regression.TimeSeriesRegressor.__init__" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mapie.regression.TimeSeriesRegressor.adapt_conformal_inference">
+<span class="sig-name descname"><span class="pre">adapt_conformal_inference</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">_SupportsArray</span><span class="p"><span class="pre">[</span></span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">_NestedSequence</span><span class="p"><span class="pre">[</span></span><span class="pre">_SupportsArray</span><span class="p"><span class="pre">[</span></span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">complex</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">bytes</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">_NestedSequence</span><span class="p"><span class="pre">[</span></span><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">complex</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">bytes</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">_SupportsArray</span><span class="p"><span class="pre">[</span></span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">_NestedSequence</span><span class="p"><span class="pre">[</span></span><span class="pre">_SupportsArray</span><span class="p"><span class="pre">[</span></span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">complex</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">bytes</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">_NestedSequence</span><span class="p"><span class="pre">[</span></span><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">complex</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">bytes</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">confidence_level</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ensemble</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimize_beta</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#mapie.regression.TimeSeriesRegressor" title="mapie.regression.time_series_regression.TimeSeriesRegressor"><span class="pre">TimeSeriesRegressor</span></a></span></span><a class="reference internal" href="../_modules/mapie/regression/time_series_regression.html#TimeSeriesRegressor.adapt_conformal_inference"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mapie.regression.TimeSeriesRegressor.adapt_conformal_inference" title="Link to this definition"></a></dt>
+<dd><p>Adapt the <code class="docutils literal notranslate"><span class="pre">alpha_t</span></code> attribute when new data with known
+labels are available.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>X: ArrayLike of shape (n_samples, n_features)</strong></dt><dd><p>Input data.</p>
+</dd>
+<dt><strong>y: ArrayLike of shape (n_samples_test,)</strong></dt><dd><p>Input labels.</p>
+</dd>
+<dt><strong>ensemble: bool</strong></dt><dd><p>Boolean determining whether the predictions are ensembled or not.
+If <code class="docutils literal notranslate"><span class="pre">False</span></code>, predictions are those of the model trained on the
+whole training set.
+If <code class="docutils literal notranslate"><span class="pre">True</span></code>, predictions from perturbed models are aggregated by
+the aggregation function specified in the <code class="docutils literal notranslate"><span class="pre">agg_function</span></code>
+attribute.
+If <code class="docutils literal notranslate"><span class="pre">cv</span></code> is <code class="docutils literal notranslate"><span class="pre">&quot;prefit&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;split&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">ensemble</span></code> is ignored.</p>
+<p>By default <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>
+</dd>
+<dt><strong>gamma: float</strong></dt><dd><p>Coefficient that decides the correction of the conformal inference.
+If it equals 0, there are no corrections.</p>
+</dd>
+<dt><strong>confidence_level: Optional[Union[float, Iterable[float]]]</strong></dt><dd><p>Between <code class="docutils literal notranslate"><span class="pre">0</span></code> and <code class="docutils literal notranslate"><span class="pre">1</span></code>, represents the confidence level of the interval.</p>
+<p>By default <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
+</dd>
+<dt><strong>optimize_beta: bool</strong></dt><dd><p>Whether to optimize the PIs’ width or not.</p>
+<p>By default <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>TimeSeriesRegressor</dt><dd><p>The model itself.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>ValueError</dt><dd><p>If the length of <code class="docutils literal notranslate"><span class="pre">y</span></code> is greater than
+the length of the training set.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mapie.regression.TimeSeriesRegressor.predict">
+<span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">_SupportsArray</span><span class="p"><span class="pre">[</span></span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">_NestedSequence</span><span class="p"><span class="pre">[</span></span><span class="pre">_SupportsArray</span><span class="p"><span class="pre">[</span></span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">complex</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">bytes</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">_NestedSequence</span><span class="p"><span class="pre">[</span></span><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">complex</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">bytes</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ensemble</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">confidence_level</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimize_beta</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allow_infinite_bounds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">predict_params</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">_ScalarType_co</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">_ScalarType_co</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">_ScalarType_co</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/mapie/regression/time_series_regression.html#TimeSeriesRegressor.predict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mapie.regression.TimeSeriesRegressor.predict" title="Link to this definition"></a></dt>
+<dd><p>Predict target on new samples with confidence intervals.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>X: ArrayLike of shape (n_samples, n_features)</strong></dt><dd><p>Test data.</p>
+</dd>
+<dt><strong>ensemble: bool</strong></dt><dd><p>Boolean determining whether the predictions are ensembled or not.
+If <code class="docutils literal notranslate"><span class="pre">False</span></code>, predictions are those of the model trained on the
+whole training set.
+If <code class="docutils literal notranslate"><span class="pre">True</span></code>, predictions from perturbed models are aggregated by
+the aggregation function specified in the <code class="docutils literal notranslate"><span class="pre">agg_function</span></code>
+attribute.
+If <code class="docutils literal notranslate"><span class="pre">cv</span></code> is <code class="docutils literal notranslate"><span class="pre">&quot;prefit&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;split&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">ensemble</span></code> is ignored.</p>
+<p>By default <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>
+</dd>
+<dt><strong>confidence_level: Optional[Union[float, Iterable[float]]]</strong></dt><dd><p>Between <code class="docutils literal notranslate"><span class="pre">0</span></code> and <code class="docutils literal notranslate"><span class="pre">1</span></code>, represents the confidence level of the interval.</p>
+<p>By default <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
+</dd>
+<dt><strong>optimize_beta: bool</strong></dt><dd><p>Whether to optimize the PIs’ width or not.</p>
+<p>By default <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>
+</dd>
+<dt><strong>allow_infinite_bounds: bool</strong></dt><dd><p>Allow infinite prediction intervals to be produced.</p>
+</dd>
+<dt><strong>predict_params</strong><span class="classifier">dict</span></dt><dd><p>Additional predict parameters.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>Union[NDArray, Tuple[NDArray, NDArray]]</dt><dd><ul class="simple">
+<li><p>NDArray of shape (n_samples,) if <code class="docutils literal notranslate"><span class="pre">alpha</span></code> is <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
+<li><p>Tuple[NDArray, NDArray] of shapes (n_samples,) and
+(n_samples, 2, n_alpha) if <code class="docutils literal notranslate"><span class="pre">alpha</span></code> is not <code class="docutils literal notranslate"><span class="pre">None</span></code>.
+- [:, 0, :]: Lower bound of the prediction interval.
+- [:, 1, :]: Upper bound of the prediction interval.</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mapie.regression.TimeSeriesRegressor.set_fit_request">
+<span class="sig-name descname"><span class="pre">set_fit_request</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">groups</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'$UNCHANGED$'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_weight</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'$UNCHANGED$'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#mapie.regression.TimeSeriesRegressor" title="mapie.regression.time_series_regression.TimeSeriesRegressor"><span class="pre">TimeSeriesRegressor</span></a></span></span><a class="headerlink" href="#mapie.regression.TimeSeriesRegressor.set_fit_request" title="Link to this definition"></a></dt>
+<dd><p>Request metadata passed to the <code class="docutils literal notranslate"><span class="pre">fit</span></code> method.</p>
+<p>Note that this method is only relevant if
+<code class="docutils literal notranslate"><span class="pre">enable_metadata_routing=True</span></code> (see <a class="reference external" href="http://scikit-learn.org/stable/modules/generated/sklearn.set_config.html#sklearn.set_config" title="(in scikit-learn v1.8)"><code class="xref py py-func docutils literal notranslate"><span class="pre">sklearn.set_config()</span></code></a>).
+Please see <a class="reference external" href="http://scikit-learn.org/stable/metadata_routing.html#metadata-routing" title="(in scikit-learn v1.8)"><span class="xref std std-ref">User Guide</span></a> on how the routing
+mechanism works.</p>
+<p>The options for each parameter are:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">True</span></code>: metadata is requested, and passed to <code class="docutils literal notranslate"><span class="pre">fit</span></code> if provided. The request is ignored if metadata is not provided.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">False</span></code>: metadata is not requested and the meta-estimator will not pass it to <code class="docutils literal notranslate"><span class="pre">fit</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">None</span></code>: metadata is not requested, and the meta-estimator will raise an error if the user provides it.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">str</span></code>: metadata should be passed to the meta-estimator with this given alias instead of the original name.</p></li>
+</ul>
+<p>The default (<code class="docutils literal notranslate"><span class="pre">sklearn.utils.metadata_routing.UNCHANGED</span></code>) retains the
+existing request. This allows you to change the request for some
+parameters and not others.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">Added in version 1.3.</span></p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This method is only relevant if this estimator is used as a
+sub-estimator of a meta-estimator, e.g. used inside a
+<a class="reference external" href="http://scikit-learn.org/stable/modules/generated/sklearn.pipeline.Pipeline.html#sklearn.pipeline.Pipeline" title="(in scikit-learn v1.8)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Pipeline</span></code></a>. Otherwise it has no effect.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>groups</strong><span class="classifier">str, True, False, or None,                     default=sklearn.utils.metadata_routing.UNCHANGED</span></dt><dd><p>Metadata routing for <code class="docutils literal notranslate"><span class="pre">groups</span></code> parameter in <code class="docutils literal notranslate"><span class="pre">fit</span></code>.</p>
+</dd>
+<dt><strong>sample_weight</strong><span class="classifier">str, True, False, or None,                     default=sklearn.utils.metadata_routing.UNCHANGED</span></dt><dd><p>Metadata routing for <code class="docutils literal notranslate"><span class="pre">sample_weight</span></code> parameter in <code class="docutils literal notranslate"><span class="pre">fit</span></code>.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>self</strong><span class="classifier">object</span></dt><dd><p>The updated object.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mapie.regression.TimeSeriesRegressor.set_predict_request">
+<span class="sig-name descname"><span class="pre">set_predict_request</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allow_infinite_bounds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'$UNCHANGED$'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">confidence_level</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'$UNCHANGED$'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ensemble</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'$UNCHANGED$'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimize_beta</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'$UNCHANGED$'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#mapie.regression.TimeSeriesRegressor" title="mapie.regression.time_series_regression.TimeSeriesRegressor"><span class="pre">TimeSeriesRegressor</span></a></span></span><a class="headerlink" href="#mapie.regression.TimeSeriesRegressor.set_predict_request" title="Link to this definition"></a></dt>
+<dd><p>Request metadata passed to the <code class="docutils literal notranslate"><span class="pre">predict</span></code> method.</p>
+<p>Note that this method is only relevant if
+<code class="docutils literal notranslate"><span class="pre">enable_metadata_routing=True</span></code> (see <a class="reference external" href="http://scikit-learn.org/stable/modules/generated/sklearn.set_config.html#sklearn.set_config" title="(in scikit-learn v1.8)"><code class="xref py py-func docutils literal notranslate"><span class="pre">sklearn.set_config()</span></code></a>).
+Please see <a class="reference external" href="http://scikit-learn.org/stable/metadata_routing.html#metadata-routing" title="(in scikit-learn v1.8)"><span class="xref std std-ref">User Guide</span></a> on how the routing
+mechanism works.</p>
+<p>The options for each parameter are:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">True</span></code>: metadata is requested, and passed to <code class="docutils literal notranslate"><span class="pre">predict</span></code> if provided. The request is ignored if metadata is not provided.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">False</span></code>: metadata is not requested and the meta-estimator will not pass it to <code class="docutils literal notranslate"><span class="pre">predict</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">None</span></code>: metadata is not requested, and the meta-estimator will raise an error if the user provides it.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">str</span></code>: metadata should be passed to the meta-estimator with this given alias instead of the original name.</p></li>
+</ul>
+<p>The default (<code class="docutils literal notranslate"><span class="pre">sklearn.utils.metadata_routing.UNCHANGED</span></code>) retains the
+existing request. This allows you to change the request for some
+parameters and not others.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">Added in version 1.3.</span></p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This method is only relevant if this estimator is used as a
+sub-estimator of a meta-estimator, e.g. used inside a
+<a class="reference external" href="http://scikit-learn.org/stable/modules/generated/sklearn.pipeline.Pipeline.html#sklearn.pipeline.Pipeline" title="(in scikit-learn v1.8)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Pipeline</span></code></a>. Otherwise it has no effect.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>allow_infinite_bounds</strong><span class="classifier">str, True, False, or None,                     default=sklearn.utils.metadata_routing.UNCHANGED</span></dt><dd><p>Metadata routing for <code class="docutils literal notranslate"><span class="pre">allow_infinite_bounds</span></code> parameter in <code class="docutils literal notranslate"><span class="pre">predict</span></code>.</p>
+</dd>
+<dt><strong>confidence_level</strong><span class="classifier">str, True, False, or None,                     default=sklearn.utils.metadata_routing.UNCHANGED</span></dt><dd><p>Metadata routing for <code class="docutils literal notranslate"><span class="pre">confidence_level</span></code> parameter in <code class="docutils literal notranslate"><span class="pre">predict</span></code>.</p>
+</dd>
+<dt><strong>ensemble</strong><span class="classifier">str, True, False, or None,                     default=sklearn.utils.metadata_routing.UNCHANGED</span></dt><dd><p>Metadata routing for <code class="docutils literal notranslate"><span class="pre">ensemble</span></code> parameter in <code class="docutils literal notranslate"><span class="pre">predict</span></code>.</p>
+</dd>
+<dt><strong>optimize_beta</strong><span class="classifier">str, True, False, or None,                     default=sklearn.utils.metadata_routing.UNCHANGED</span></dt><dd><p>Metadata routing for <code class="docutils literal notranslate"><span class="pre">optimize_beta</span></code> parameter in <code class="docutils literal notranslate"><span class="pre">predict</span></code>.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>self</strong><span class="classifier">object</span></dt><dd><p>The updated object.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mapie.regression.TimeSeriesRegressor.set_score_request">
+<span class="sig-name descname"><span class="pre">set_score_request</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_weight</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'$UNCHANGED$'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#mapie.regression.TimeSeriesRegressor" title="mapie.regression.time_series_regression.TimeSeriesRegressor"><span class="pre">TimeSeriesRegressor</span></a></span></span><a class="headerlink" href="#mapie.regression.TimeSeriesRegressor.set_score_request" title="Link to this definition"></a></dt>
+<dd><p>Request metadata passed to the <code class="docutils literal notranslate"><span class="pre">score</span></code> method.</p>
+<p>Note that this method is only relevant if
+<code class="docutils literal notranslate"><span class="pre">enable_metadata_routing=True</span></code> (see <a class="reference external" href="http://scikit-learn.org/stable/modules/generated/sklearn.set_config.html#sklearn.set_config" title="(in scikit-learn v1.8)"><code class="xref py py-func docutils literal notranslate"><span class="pre">sklearn.set_config()</span></code></a>).
+Please see <a class="reference external" href="http://scikit-learn.org/stable/metadata_routing.html#metadata-routing" title="(in scikit-learn v1.8)"><span class="xref std std-ref">User Guide</span></a> on how the routing
+mechanism works.</p>
+<p>The options for each parameter are:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">True</span></code>: metadata is requested, and passed to <code class="docutils literal notranslate"><span class="pre">score</span></code> if provided. The request is ignored if metadata is not provided.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">False</span></code>: metadata is not requested and the meta-estimator will not pass it to <code class="docutils literal notranslate"><span class="pre">score</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">None</span></code>: metadata is not requested, and the meta-estimator will raise an error if the user provides it.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">str</span></code>: metadata should be passed to the meta-estimator with this given alias instead of the original name.</p></li>
+</ul>
+<p>The default (<code class="docutils literal notranslate"><span class="pre">sklearn.utils.metadata_routing.UNCHANGED</span></code>) retains the
+existing request. This allows you to change the request for some
+parameters and not others.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">Added in version 1.3.</span></p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This method is only relevant if this estimator is used as a
+sub-estimator of a meta-estimator, e.g. used inside a
+<a class="reference external" href="http://scikit-learn.org/stable/modules/generated/sklearn.pipeline.Pipeline.html#sklearn.pipeline.Pipeline" title="(in scikit-learn v1.8)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Pipeline</span></code></a>. Otherwise it has no effect.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>sample_weight</strong><span class="classifier">str, True, False, or None,                     default=sklearn.utils.metadata_routing.UNCHANGED</span></dt><dd><p>Metadata routing for <code class="docutils literal notranslate"><span class="pre">sample_weight</span></code> parameter in <code class="docutils literal notranslate"><span class="pre">score</span></code>.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>self</strong><span class="classifier">object</span></dt><dd><p>The updated object.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mapie.regression.TimeSeriesRegressor.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">_SupportsArray</span><span class="p"><span class="pre">[</span></span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">_NestedSequence</span><span class="p"><span class="pre">[</span></span><span class="pre">_SupportsArray</span><span class="p"><span class="pre">[</span></span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">complex</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">bytes</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">_NestedSequence</span><span class="p"><span class="pre">[</span></span><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">complex</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">bytes</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">_SupportsArray</span><span class="p"><span class="pre">[</span></span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">_NestedSequence</span><span class="p"><span class="pre">[</span></span><span class="pre">_SupportsArray</span><span class="p"><span class="pre">[</span></span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">complex</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">bytes</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">_NestedSequence</span><span class="p"><span class="pre">[</span></span><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">complex</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">bytes</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ensemble</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">confidence_level</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimize_beta</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#mapie.regression.TimeSeriesRegressor" title="mapie.regression.time_series_regression.TimeSeriesRegressor"><span class="pre">TimeSeriesRegressor</span></a></span></span><a class="reference internal" href="../_modules/mapie/regression/time_series_regression.html#TimeSeriesRegressor.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mapie.regression.TimeSeriesRegressor.update" title="Link to this definition"></a></dt>
+<dd><p>Update conformity scores</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>X: ArrayLike of shape (n_samples, n_features)</strong></dt><dd><p>Input data.</p>
+</dd>
+<dt><strong>y: ArrayLike of shape (n_samples_test,)</strong></dt><dd><p>Input labels.</p>
+</dd>
+<dt><strong>ensemble: bool</strong></dt><dd><p>Boolean determining whether the predictions are ensembled or not.
+If <code class="docutils literal notranslate"><span class="pre">False</span></code>, predictions are those of the model trained on the
+whole training set.
+If <code class="docutils literal notranslate"><span class="pre">True</span></code>, predictions from perturbed models are aggregated by
+the aggregation function specified in the <code class="docutils literal notranslate"><span class="pre">agg_function</span></code>
+attribute.
+If <code class="docutils literal notranslate"><span class="pre">cv</span></code> is <code class="docutils literal notranslate"><span class="pre">&quot;prefit&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;split&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">ensemble</span></code> is ignored.</p>
+<p>By default <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>
+</dd>
+<dt><strong>confidence_level: Optional[Union[float, Iterable[float]]]</strong></dt><dd><p>(deprecated)
+Between <code class="docutils literal notranslate"><span class="pre">0</span></code> and <code class="docutils literal notranslate"><span class="pre">1</span></code>, represents the confidence level of the interval.</p>
+<p>By default <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
+</dd>
+<dt><strong>gamma: float</strong></dt><dd><p>(deprecated)
+Coefficient that decides the correction of the conformal inference.
+If it equals 0, there are no corrections.</p>
+<p>By default <code class="docutils literal notranslate"><span class="pre">0.</span></code>.</p>
+</dd>
+<dt><strong>optimize_beta: bool</strong></dt><dd><p>(deprecated)
+Whether to optimize the PIs’ width or not.</p>
+<p>By default <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>TimeSeriesRegressor</dt><dd><p>The model itself.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>ValueError</dt><dd><p>If the length of <code class="docutils literal notranslate"><span class="pre">y</span></code> is greater than
+the length of the training set.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<section id="examples-using-mapie-regression-timeseriesregressor">
+<h2>Examples using <code class="docutils literal notranslate"><span class="pre">mapie.regression.TimeSeriesRegressor</span></code><a class="headerlink" href="#examples-using-mapie-regression-timeseriesregressor" title="Link to this heading"></a></h2>
+<div class="sphx-glr-thumbnails"><div class="sphx-glr-thumbcontainer" tooltip="Note: in this tutorial, we use the following terms employed in the scientific literature:"><img alt="" src="../_images/sphx_glr_plot_ts-tutorial_thumb.png" />
+<p><a class="reference internal" href="../examples_regression/1-quickstart/plot_ts-tutorial.html#sphx-glr-examples-regression-1-quickstart-plot-ts-tutorial-py"><span class="std std-ref">Tutorial for time series</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Tutorial for time series</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="Note: in this example, we use the following terms employed in the scientific literature:"><img alt="" src="../_images/sphx_glr_plot_timeseries_enbpi_thumb.png" />
+<p><a class="reference internal" href="../examples_regression/2-advanced-analysis/plot_timeseries_enbpi.html#sphx-glr-examples-regression-2-advanced-analysis-plot-timeseries-enbpi-py"><span class="std std-ref">Time series: example of the EnbPI technique</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Time series: example of the EnbPI technique</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="Note: in this example, we use the following terms employed in the scientific literature:"><img alt="" src="../_images/sphx_glr_plot_zaffran2022_comparison_thumb.png" />
+<p><a class="reference internal" href="../examples_regression/3-scientific-articles/plot_zaffran2022_comparison.html#sphx-glr-examples-regression-3-scientific-articles-plot-zaffran2022-comparison-py"><span class="std std-ref">Adaptive conformal predictions for time series, Zaffran et al. (2022)</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Adaptive conformal predictions for time series, Zaffran et al. (2022)</div>
+</div></div><div style='clear:both'></div></section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="mapie.regression.ConformalizedQuantileRegressor.html" class="btn btn-neutral float-left" title="mapie.regression.ConformalizedQuantileRegressor" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="mapie.metrics.regression.regression_coverage_score.html" class="btn btn-neutral float-right" title="mapie.metrics.regression.regression_coverage_score" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Capgemini Invent.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

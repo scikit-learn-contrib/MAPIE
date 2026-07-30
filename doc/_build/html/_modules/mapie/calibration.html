@@ -1,0 +1,1619 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>mapie.calibration &mdash; MAPIE 1.2.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/project-template.css?v=2b5c7e5c" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=d2d258e8" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-binder.css?v=f4aeca0c" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=6efca38a"></script>
+      <script src="../../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../_static/js/copybutton.js?v=26522df0"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            MAPIE
+              <img src="../../_static/mapie_logo_white_cut.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../quick_start.html">Quick Start with MAPIE</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../quick_start.html#download-and-install-the-module">1. Download and install the module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../quick_start.html#regression">2. Regression</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../quick_start.html#classification">3. Classification</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../quick_start.html#risk-control">4. Risk Control</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../split_cross_conformal.html">The conformalization (or “calibration”) set</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../split_cross_conformal.html#split-conformal-predictions">1. Split conformal predictions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../split_cross_conformal.html#split-conformal-predictions-with-a-pre-trained-model">Split conformal predictions with a pre-trained model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../split_cross_conformal.html#split-conformal-predictions-with-an-untrained-model">Split conformal predictions with an untrained model</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../split_cross_conformal.html#cross-conformal-predictions">2. Cross conformal predictions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../choosing_the_right_algorithm.html">Choosing the right algorithm</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../v1_release_notes.html">MAPIE v1 release notes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../v1_release_notes.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../v1_release_notes.html#api-changes-overview">API changes overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../v1_release_notes.html#python-scikit-learn-and-numpy-versions-support">Python, scikit-learn and NumPy versions support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../v1_release_notes.html#api-changes-in-detail">API changes in detail</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../v1_release_notes.html#regression-and-classification-api-changes-excluding-time-series">Regression and classification API changes (excluding time series)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../v1_release_notes.html#classes">Classes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../v1_release_notes.html#workflow-and-methods">Workflow and methods</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../v1_release_notes.html#parameters">Parameters</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../v1_release_notes.html#other-api-changes">Other API changes</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../v1_release_notes.html#time-series">Time series</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../v1_release_notes.html#risk-control">Risk control</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../v1_release_notes.html#calibration">Calibration</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../v1_release_notes.html#mondrian">Mondrian</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../v1_release_notes.html#metrics">Metrics</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../v1_release_notes.html#conformity-scores">Conformity scores</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Measure predictions uncertainty</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../index_regression.html">Prediction intervals (regression)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../choosing_the_right_algorithm_regression.html">Choose the right algorithm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples_regression/1-quickstart/plot_toy_model.html">Use MAPIE to plot prediction intervals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples_regression/1-quickstart/plot_prefit.html">Use MAPIE with a pre-trained model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples_regression/index.html">All regression examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_regression/1-quickstart/index.html">1. Quickstart</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_regression/1-quickstart/plot_toy_model.html">Use MAPIE to plot prediction intervals</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_regression/1-quickstart/plot_compare_conformity_scores.html">Use MAPIE on data with gamma distribution</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_regression/1-quickstart/plot_prefit.html">Use MAPIE with a pre-trained model</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_regression/1-quickstart/plot_heteroscedastic_1d_data.html">Use MAPIE on data with uneven uncertainty</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_regression/1-quickstart/plot_homoscedastic_1d_data.html">Use MAPIE on data with constant uncertainty</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_regression/1-quickstart/plot_ts-tutorial.html">Tutorial for time series</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_regression/2-advanced-analysis/index.html">2. Advanced analysis</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_regression/2-advanced-analysis/plot_conformal_predictive_distribution.html">Conformal Predictive Distribution with MAPIE</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_regression/2-advanced-analysis/plot_cqr_symmetry_difference.html">The symmetric correction parameter in conformalized quantile regression</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_regression/2-advanced-analysis/plot_nested-cv.html">Hyperparameters tuning with cross-conformal regression</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_regression/2-advanced-analysis/plot_both_uncertainties.html">Estimating aleatoric and epistemic uncertainties</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_regression/2-advanced-analysis/plot_timeseries_enbpi.html">Time series: example of the EnbPI technique</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_regression/2-advanced-analysis/plot-coverage-width-based-criterion.html">Focus on intervals width</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_regression/2-advanced-analysis/plot_ResidualNormalisedScore_tutorial.html">Focus on residual normalised score</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_regression/2-advanced-analysis/plot_conditional_coverage.html">Focus on local (or “conditional”) coverage</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_regression/2-advanced-analysis/plot_cqr_tutorial.html">Conformalized quantile regression on gamma distributed data</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_regression/2-advanced-analysis/plot_coverage_validity.html">Coverage validity of MAPIE for regression tasks</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_regression/2-advanced-analysis/plot_main-tutorial-regression.html">Comparison between conformalized quantile regressor and cross methods</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_regression/3-scientific-articles/index.html">3. Simulations from scientific articles</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_regression/3-scientific-articles/plot_barber2020_simulations.html">Predictive inference with the jackknife+, Foygel-Barber et al. (2020)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_regression/3-scientific-articles/plot_zaffran2022_comparison.html">Adaptive conformal predictions for time series, Zaffran et al. (2022)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_regression/3-scientific-articles/plot_kim2020_simulations.html">Predictive inference is free with the Jackknife+-after-Bootstrap, Kim et al. (2020)</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_regression/4-other-notebooks/index.html">4. Other notebooks</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../theoretical_description_regression.html">Theoretical Description</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../theoretical_description_conformity_scores.html">Theoretical Description for Conformity Scores</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../index_classification.html">Prediction sets (classification)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../choosing_the_right_algorithm_classification.html">Choosing the right algorithm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples_classification/1-quickstart/plot_quickstart_classification.html">Use MAPIE to plot prediction sets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples_classification/index.html">All classification examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_classification/1-quickstart/index.html">1. Quickstart examples</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_classification/1-quickstart/plot_quickstart_classification.html">Use MAPIE to plot prediction sets</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_classification/2-advanced-analysis/index.html">2. Advanced analysis</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_classification/2-advanced-analysis/plot_comp_methods_on_2d_dataset.html">LAC and APS methods explained</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_classification/2-advanced-analysis/plot_main-tutorial-binary-classification.html">Set prediction example in the binary classification setting</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_classification/2-advanced-analysis/plot_crossconformal.html">Cross conformal classification explained</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_classification/3-scientific-articles/index.html">3. Simulations from scientific articles</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_classification/3-scientific-articles/plot_sadinle2019_example.html">Least Ambiguous Set-Valued Classifiers with Bounded Error Levels, Sadinle et al. (2019)</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_classification/4-other-notebooks/index.html">4. Other notebooks</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../theoretical_description_classification.html">Theoretical Description</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../index_binary_classification.html">The binary classification case</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_classification/2-advanced-analysis/plot_main-tutorial-binary-classification.html">Set prediction example in the binary classification setting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../theoretical_description_binary_classification.html">Theoretical Description</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Control prediction errors</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../theoretical_description_risk_control.html">Getting started with risk control in MAPIE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples_risk_control/1-quickstart/plot_risk_control_binary_classification.html">Use MAPIE to control the precision of a binary classifier</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples_risk_control/index.html">All risk control examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../examples_risk_control/1-quickstart/index.html">1. Quickstart examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_risk_control/1-quickstart/plot_risk_control_binary_classification.html">Use MAPIE to control the precision of a binary classifier</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples_risk_control/2-advanced-analysis/index.html">2. Advanced analysis</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_risk_control/2-advanced-analysis/plot_risk_control_multi-label_classification.html">Use MAPIE to control the risk of a multi-label classifier</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_risk_control/2-advanced-analysis/plot_risk_control_multi_parameter_binary_classification.html">Use MAPIE to control risk of a binary classifier with multiple prediction parameters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_risk_control/2-advanced-analysis/plot_semantic_segmentation_recall_control.html">Recall control for semantic segmentation with MAPIE</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_risk_control/2-advanced-analysis/plot_semantic_segmentation_precision_control.html">Precision control for semantic segmentation with MAPIE</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_risk_control/2-advanced-analysis/plot_multi_risk_control_binary_classification.html">Use MAPIE to control multiple risks of a binary classifier</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_risk_control/2-advanced-analysis/plot_risk_control_llm_as_a_judge.html">Risk Control for LLM as a Judge with Abstention</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../external_risk_control_package.html">Additional resources: external risk control package</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Calibrate classifiers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../theoretical_description_calibration.html">Theoretical Description</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples_calibration/index.html">Calibration examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../examples_calibration/1-quickstart/index.html">1. Quickstart examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_calibration/1-quickstart/plot_calibration_venn_abers_binary.html">Calibrating binary classifier with Venn-ABERS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_calibration/1-quickstart/plot_calibration_hypothesis_testing.html">Testing for calibration in binary classification settings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_calibration/1-quickstart/plot_calibration_venn_abers_multiclass.html">Calibrating multi-class classifier with Venn-ABERS</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples_calibration/2-advanced-analysis/index.html">2. Advanced analysis</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_calibration/2-advanced-analysis/plot_asymptotic_convergence_of_p_values.html">Evaluating the asymptotic convergence of p-values</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../notebooks_calibration.html">Calibration notebooks</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Question &amp; Answers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../theoretical_description_metrics.html">Metrics: how to measure conformal prediction performance?</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../theoretical_description_metrics.html#general-metrics">1. General Metrics</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../theoretical_description_metrics.html#regression-coverage-score">Regression Coverage Score</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../theoretical_description_metrics.html#regression-mean-width-score">Regression Mean Width Score</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../theoretical_description_metrics.html#classification-coverage-score">Classification Coverage Score</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../theoretical_description_metrics.html#classification-mean-width-score">Classification Mean Width Score</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../theoretical_description_metrics.html#size-stratified-coverage">Size-Stratified Coverage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../theoretical_description_metrics.html#hilbert-schmidt-independence-criterion">Hilbert-Schmidt Independence Criterion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../theoretical_description_metrics.html#coverage-width-based-criterion">Coverage Width-Based Criterion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../theoretical_description_metrics.html#mean-winkler-interval-score">Mean Winkler Interval Score</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../theoretical_description_metrics.html#calibration-metrics">2. Calibration Metrics</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../theoretical_description_metrics.html#expected-calibration-error">Expected Calibration Error</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../theoretical_description_metrics.html#top-label-expected-calibration-error-top-label-ece">Top-Label Expected Calibration Error (Top-Label ECE)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../theoretical_description_metrics.html#cumulative-differences">Cumulative Differences</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../theoretical_description_metrics.html#kolmogorov-smirnov-statistic-for-calibration">Kolmogorov-Smirnov Statistic for Calibration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../theoretical_description_metrics.html#kuiper-s-test">Kuiper’s Test</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../theoretical_description_metrics.html#spiegelhalters-test">Spiegelhalter’s Test</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../theoretical_description_metrics.html#references">References</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../index_mondrian.html">Mondrian: how to use prior knowledge on groups when measuring uncertainty?</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html">Tutorial: how to ensure fairness across groups with Mondrian</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html#create-the-noisy-dataset">1. Create the noisy dataset</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html#split-the-dataset-into-a-training-set-a-conformalization-set-and-a-test-set">2. Split the dataset into a training set, a conformalization set, and a test set</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html#fit-a-random-forest-regressor-on-the-training-set">3. Fit a random forest regressor on the training set</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html#build-the-classical-conformal-prediction-intervals">4. Build the classical conformal prediction intervals</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html#conformalize-a-splitconformalregressor-on-the-conformalization-set">Conformalize a SplitConformalRegressor on the conformalization set</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html#predict-the-prediction-intervals-on-the-test-set">Predict the prediction intervals on the test set</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html#evaluate-the-coverage-score-by-group">Evaluate the coverage score by group</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html#build-the-mondrian-conformal-prediction-intervals">5. Build the Mondrian conformal prediction intervals</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html#conformalize-a-splitconformalregressor-on-the-conformalization-set-for-each-group">Conformalize a SplitConformalRegressor on the conformalization set for each group</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html#id1">Predict the prediction intervals on the test set</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html#compare-the-coverage-by-partition-plot-both-methods-side-by-side">6. Compare the coverage by partition, plot both methods side by side</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../theoretical_description_mondrian.html">Theoretical Description</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../theoretical_description_mondrian.html#references">References</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../llm_risk_control.html">How to control LLM risks?</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html">MAPIE API</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../api.html#regression">Regression</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api.html#conformalizers">Conformalizers</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.regression.SplitConformalRegressor.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.regression</span></code>.SplitConformalRegressor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.regression.CrossConformalRegressor.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.regression</span></code>.CrossConformalRegressor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.regression.JackknifeAfterBootstrapRegressor.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.regression</span></code>.JackknifeAfterBootstrapRegressor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.regression.ConformalizedQuantileRegressor.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.regression</span></code>.ConformalizedQuantileRegressor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.regression.TimeSeriesRegressor.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.regression</span></code>.TimeSeriesRegressor</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../api.html#metrics">Metrics</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.regression.regression_coverage_score.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.regression</span></code>.regression_coverage_score</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.regression.regression_mean_width_score.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.regression</span></code>.regression_mean_width_score</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.regression.regression_ssc.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.regression</span></code>.regression_ssc</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.regression.regression_ssc_score.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.regression</span></code>.regression_ssc_score</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.regression.hsic.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.regression</span></code>.hsic</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.regression.coverage_width_based.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.regression</span></code>.coverage_width_based</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.regression.regression_mwi_score.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.regression</span></code>.regression_mwi_score</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../api.html#conformity-scores">Conformity Scores</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.conformity_scores.BaseRegressionScore.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.conformity_scores</span></code>.BaseRegressionScore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.conformity_scores.AbsoluteConformityScore.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.conformity_scores</span></code>.AbsoluteConformityScore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.conformity_scores.GammaConformityScore.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.conformity_scores</span></code>.GammaConformityScore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.conformity_scores.ResidualNormalisedScore.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.conformity_scores</span></code>.ResidualNormalisedScore</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../api.html#resampling">Resampling</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.subsample.BlockBootstrap.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.subsample</span></code>.BlockBootstrap</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.subsample.Subsample.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.subsample</span></code>.Subsample</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../api.html#classification">Classification</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api.html#id1">Conformalizers</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.classification.SplitConformalClassifier.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.classification</span></code>.SplitConformalClassifier</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.classification.CrossConformalClassifier.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.classification</span></code>.CrossConformalClassifier</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../api.html#id2">Metrics</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.classification.classification_coverage_score.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.classification</span></code>.classification_coverage_score</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.classification.classification_mean_width_score.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.classification</span></code>.classification_mean_width_score</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.classification.classification_ssc.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.classification</span></code>.classification_ssc</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.classification.classification_ssc_score.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.classification</span></code>.classification_ssc_score</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../api.html#id3">Conformity Scores</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.conformity_scores.BaseClassificationScore.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.conformity_scores</span></code>.BaseClassificationScore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.conformity_scores.NaiveConformityScore.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.conformity_scores</span></code>.NaiveConformityScore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.conformity_scores.LACConformityScore.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.conformity_scores</span></code>.LACConformityScore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.conformity_scores.APSConformityScore.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.conformity_scores</span></code>.APSConformityScore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.conformity_scores.RAPSConformityScore.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.conformity_scores</span></code>.RAPSConformityScore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.conformity_scores.TopKConformityScore.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.conformity_scores</span></code>.TopKConformityScore</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../api.html#risk-control">Risk Control</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../generated/mapie.risk_control.MultiLabelClassificationController.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.risk_control</span></code>.MultiLabelClassificationController</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.risk_control.MultiLabelClassificationController.html#mapie.risk_control.MultiLabelClassificationController"><code class="docutils literal notranslate"><span class="pre">MultiLabelClassificationController</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.risk_control.MultiLabelClassificationController.html#examples-using-mapie-risk-control-multilabelclassificationcontroller">Examples using <code class="docutils literal notranslate"><span class="pre">mapie.risk_control.MultiLabelClassificationController</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../generated/mapie.risk_control.BinaryClassificationController.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.risk_control</span></code>.BinaryClassificationController</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.risk_control.BinaryClassificationController.html#mapie.risk_control.BinaryClassificationController"><code class="docutils literal notranslate"><span class="pre">BinaryClassificationController</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.risk_control.BinaryClassificationController.html#examples-using-mapie-risk-control-binaryclassificationcontroller">Examples using <code class="docutils literal notranslate"><span class="pre">mapie.risk_control.BinaryClassificationController</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../generated/mapie.risk_control.SemanticSegmentationController.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.risk_control</span></code>.SemanticSegmentationController</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.risk_control.SemanticSegmentationController.html#mapie.risk_control.SemanticSegmentationController"><code class="docutils literal notranslate"><span class="pre">SemanticSegmentationController</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.risk_control.SemanticSegmentationController.html#examples-using-mapie-risk-control-semanticsegmentationcontroller">Examples using <code class="docutils literal notranslate"><span class="pre">mapie.risk_control.SemanticSegmentationController</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../generated/mapie.risk_control.BinaryClassificationRisk.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.risk_control</span></code>.BinaryClassificationRisk</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.risk_control.BinaryClassificationRisk.html#mapie.risk_control.BinaryClassificationRisk"><code class="docutils literal notranslate"><span class="pre">BinaryClassificationRisk</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.risk_control.BinaryClassificationRisk.html#examples-using-mapie-risk-control-binaryclassificationrisk">Examples using <code class="docutils literal notranslate"><span class="pre">mapie.risk_control.BinaryClassificationRisk</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../api.html#calibration">Calibration</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api.html#conformalizer">Conformalizer</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.calibration.TopLabelCalibrator.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.calibration</span></code>.TopLabelCalibrator</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../api.html#id4">Metrics</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.calibration.expected_calibration_error.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.expected_calibration_error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.calibration.top_label_ece.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.top_label_ece</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.calibration.cumulative_differences.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.cumulative_differences</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.calibration.kolmogorov_smirnov_cdf.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.kolmogorov_smirnov_cdf</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.calibration.kolmogorov_smirnov_p_value.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.kolmogorov_smirnov_p_value</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.calibration.kolmogorov_smirnov_statistic.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.kolmogorov_smirnov_statistic</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.calibration.kuiper_cdf.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.kuiper_cdf</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.calibration.kuiper_p_value.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.kuiper_p_value</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.calibration.kuiper_statistic.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.kuiper_statistic</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.calibration.length_scale.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.length_scale</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.calibration.spiegelhalter_p_value.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.spiegelhalter_p_value</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.calibration.spiegelhalter_statistic.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.spiegelhalter_statistic</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../api.html#utils">Utils</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../generated/mapie.utils.train_conformalize_test_split.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.utils</span></code>.train_conformalize_test_split</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.utils.train_conformalize_test_split.html#mapie.utils.train_conformalize_test_split"><code class="docutils literal notranslate"><span class="pre">train_conformalize_test_split()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.utils.train_conformalize_test_split.html#examples-using-mapie-utils-train-conformalize-test-split">Examples using <code class="docutils literal notranslate"><span class="pre">mapie.utils.train_conformalize_test_split</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">MAPIE</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">mapie.calibration</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for mapie.calibration</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">inspect</span><span class="w"> </span><span class="kn">import</span> <span class="n">signature</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">cast</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">numpy.typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">ArrayLike</span><span class="p">,</span> <span class="n">NDArray</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseEstimator</span><span class="p">,</span> <span class="n">ClassifierMixin</span><span class="p">,</span> <span class="n">RegressorMixin</span><span class="p">,</span> <span class="n">clone</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.calibration</span><span class="w"> </span><span class="kn">import</span> <span class="n">_SigmoidCalibration</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">NotFittedError</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.isotonic</span><span class="w"> </span><span class="kn">import</span> <span class="n">IsotonicRegression</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.pipeline</span><span class="w"> </span><span class="kn">import</span> <span class="n">Pipeline</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">check_random_state</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.utils.multiclass</span><span class="w"> </span><span class="kn">import</span> <span class="n">type_of_target</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.utils.validation</span><span class="w"> </span><span class="kn">import</span> <span class="n">_check_y</span><span class="p">,</span> <span class="n">_num_samples</span><span class="p">,</span> <span class="n">indexable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.model_selection</span><span class="w"> </span><span class="kn">import</span> <span class="n">train_test_split</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">._venn_abers</span><span class="w"> </span><span class="kn">import</span> <span class="n">VennAbers</span><span class="p">,</span> <span class="n">VennAbersMultiClass</span><span class="p">,</span> <span class="n">predict_proba_prefitted_va</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.utils</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">_check_estimator_classification</span><span class="p">,</span>
+    <span class="n">_check_estimator_fit_predict</span><span class="p">,</span>
+    <span class="n">_check_n_features_in</span><span class="p">,</span>
+    <span class="n">_check_null_weight</span><span class="p">,</span>
+    <span class="n">_fit_estimator</span><span class="p">,</span>
+    <span class="n">check_is_fitted</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<div class="viewcode-block" id="TopLabelCalibrator">
+<a class="viewcode-back" href="../../generated/mapie.calibration.TopLabelCalibrator.html#mapie.calibration.TopLabelCalibrator">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">TopLabelCalibrator</span><span class="p">(</span><span class="n">BaseEstimator</span><span class="p">,</span> <span class="n">ClassifierMixin</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Top-label calibration for multi-class problems.</span>
+<span class="sd">    Performs a calibration on the class with the highest score</span>
+<span class="sd">    given both score and class, see section 2 of [1].</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    estimator : Optional[ClassifierMixin]</span>
+<span class="sd">        Any classifier with scikit-learn API</span>
+<span class="sd">        (i.e. with fit, predict, and predict_proba methods), by default</span>
+<span class="sd">        ``None``.</span>
+<span class="sd">        If ``None``, estimator defaults to a ``LogisticRegression`` instance.</span>
+
+<span class="sd">    calibrator : Optional[Union[str, RegressorMixin]]</span>
+<span class="sd">        Any calibrator with scikit-learn API</span>
+<span class="sd">        (i.e. with fit, predict, and predict_proba methods), by default</span>
+<span class="sd">        ``None``.</span>
+<span class="sd">        If ``None``, calibrator defaults to a string &quot;sigmoid&quot; instance.</span>
+
+<span class="sd">        By default ``None``.</span>
+
+<span class="sd">    cv: Optional[str]</span>
+<span class="sd">        The cross-validation strategy to compute scores :</span>
+
+<span class="sd">        - &quot;split&quot;, performs a standard splitting into a calibration and a</span>
+<span class="sd">          test set.</span>
+
+<span class="sd">        - &quot;prefit&quot;, assumes that ``estimator`` has been fitted already.</span>
+<span class="sd">          All the data that are provided in the ``fit`` method are then used</span>
+<span class="sd">          to calibrate the predictions through the score computation.</span>
+
+<span class="sd">        By default &quot;split&quot;.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    classes_: NDArray</span>
+<span class="sd">        Array with the name of each class.</span>
+
+<span class="sd">    n_classes_: int</span>
+<span class="sd">        Number of classes that are in the training dataset.</span>
+
+<span class="sd">    uncalib_pred: NDArray</span>
+<span class="sd">        Array of the uncalibrated predictions set by the ``estimator``.</span>
+
+<span class="sd">    single_estimator_: ClassifierMixin</span>
+<span class="sd">        Classifier fitted on the training data.</span>
+
+<span class="sd">    calibrators: Dict[Union[int, str], RegressorMixin]</span>
+<span class="sd">        Dictionnary of all the fitted calibrators.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    [1] Gupta, Chirag, and Aaditya K. Ramdas. &quot;Top-label calibration</span>
+<span class="sd">    and multiclass-to-binary reductions.&quot; arXiv preprint</span>
+<span class="sd">    arXiv:2107.08353 (2021).</span>
+
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">    &gt;&gt;&gt; from mapie.calibration import TopLabelCalibrator</span>
+<span class="sd">    &gt;&gt;&gt; X_toy = np.arange(9).reshape(-1, 1)</span>
+<span class="sd">    &gt;&gt;&gt; y_toy = np.stack([0, 0, 1, 0, 1, 2, 1, 2, 2])</span>
+<span class="sd">    &gt;&gt;&gt; mapie = TopLabelCalibrator().fit(X_toy, y_toy, random_state=20)</span>
+<span class="sd">    &gt;&gt;&gt; y_calib = mapie.predict_proba(X_toy)</span>
+<span class="sd">    &gt;&gt;&gt; print(y_calib)</span>
+<span class="sd">    [[0.84......        nan        nan]</span>
+<span class="sd">     [0.75......        nan        nan]</span>
+<span class="sd">     [0.62......        nan        nan]</span>
+<span class="sd">     [       nan 0.33......        nan]</span>
+<span class="sd">     [       nan 0.33......        nan]</span>
+<span class="sd">     [       nan 0.33......        nan]</span>
+<span class="sd">     [       nan        nan 0.33......]</span>
+<span class="sd">     [       nan        nan 0.54......]</span>
+<span class="sd">     [       nan        nan 0.66......]]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">fit_attributes</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s2">&quot;estimator&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;calibrators&quot;</span><span class="p">,</span>
+    <span class="p">]</span>
+
+    <span class="n">named_calibrators</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;sigmoid&quot;</span><span class="p">:</span> <span class="n">_SigmoidCalibration</span><span class="p">(),</span>
+        <span class="s2">&quot;isotonic&quot;</span><span class="p">:</span> <span class="n">IsotonicRegression</span><span class="p">(</span><span class="n">out_of_bounds</span><span class="o">=</span><span class="s2">&quot;clip&quot;</span><span class="p">),</span>
+    <span class="p">}</span>
+
+    <span class="n">valid_cv</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;prefit&quot;</span><span class="p">,</span> <span class="s2">&quot;split&quot;</span><span class="p">]</span>
+
+    <span class="n">valid_inputs</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;multiclass&quot;</span><span class="p">,</span> <span class="s2">&quot;binary&quot;</span><span class="p">]</span>
+
+<div class="viewcode-block" id="TopLabelCalibrator.__init__">
+<a class="viewcode-back" href="../../generated/mapie.calibration.TopLabelCalibrator.html#mapie.calibration.TopLabelCalibrator.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">estimator</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ClassifierMixin</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">calibrator</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">RegressorMixin</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">cv</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;split&quot;</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">estimator</span> <span class="o">=</span> <span class="n">estimator</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">calibrator</span> <span class="o">=</span> <span class="n">calibrator</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cv</span> <span class="o">=</span> <span class="n">cv</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_is_fitted</span> <span class="o">=</span> <span class="kc">False</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_fitted</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns True if the estimator is fitted&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_fitted</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_check_cv</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">cv</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check if cross-validator is ``&quot;prefit&quot;`` or ``&quot;split&quot;``.</span>
+<span class="sd">        Else raise error.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        cv : str</span>
+<span class="sd">            Cross-validator to check.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        str</span>
+<span class="sd">            &#39;prefit&#39; or &#39;split&#39;.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If the cross-validator is not valid.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">cv</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">valid_cv</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">cv</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid cv argument. Allowed values are </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">valid_cv</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_check_calibrator</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">calibrator</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">RegressorMixin</span><span class="p">]],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RegressorMixin</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check the input that has been provided for calibrator and</span>
+<span class="sd">        check that the calibrator is a valid estimator to calibrate.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        calibrator : Union[str, RegressorMixin]</span>
+<span class="sd">            If calibrator is a string then it returns the corresponding</span>
+<span class="sd">            estimator of ``named_calibrators``, else returns calibrator.</span>
+
+<span class="sd">            By defaults ``None``. If ``None``, defaults to ``&quot;sigmoid&quot;``.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        RegressorMixin</span>
+<span class="sd">            RegressorMixin calibrator.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If calibrator is not a key of ``named_calibrators``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">calibrator</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">calibrator</span> <span class="o">=</span> <span class="s2">&quot;sigmoid&quot;</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">calibrator</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">calibrator</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">named_calibrators</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">calibrator</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">named_calibrators</span><span class="p">[</span><span class="n">calibrator</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;Please provide a string in: &quot;</span>
+                    <span class="o">+</span> <span class="p">(</span><span class="s2">&quot;, &quot;</span><span class="p">)</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">named_calibrators</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+                    <span class="o">+</span> <span class="s2">&quot;.&quot;</span>
+                <span class="p">)</span>
+        <span class="n">_check_estimator_fit_predict</span><span class="p">(</span><span class="n">calibrator</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">calibrator</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_labels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">NDArray</span><span class="p">,</span> <span class="n">NDArray</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This method depends on the value of ``method`` and collects the labels</span>
+<span class="sd">        that are needed to transform a multi-class calibration to multiple</span>
+<span class="sd">        binary calibrations.</span>
+
+<span class="sd">        - &quot;top_label&quot; method means that you take the maximum score and</span>
+<span class="sd">        calibrate each maximum class separately in a one-versus all setting,</span>
+<span class="sd">        see section 2 of [1].</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X : ArrayLike of shape (n_samples, n_features)</span>
+<span class="sd">            Training data.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Tuple[NDArray, NDArray] of shapes (n_samples,) and (n_samples,)</span>
+<span class="sd">            The first element corresponds to the output scores that have</span>
+<span class="sd">            to be calibrated and the second element corresponds to the</span>
+<span class="sd">            predictions.</span>
+
+<span class="sd">            In the &quot;top_label&quot; setting, this refers to the maximum scores</span>
+<span class="sd">            and the class associated to the maximum score.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">pred</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">single_estimator_</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">X</span><span class="p">)</span>
+        <span class="n">max_class_prob</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">pred</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">y_pred</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">classes_</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">pred</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)]</span>
+        <span class="k">return</span> <span class="n">max_class_prob</span><span class="p">,</span> <span class="n">y_pred</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_check_type_of_target</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check type of target for calibration class.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        y : ArrayLike of shape (n_samples,)</span>
+<span class="sd">            Training labels.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">type_of_target</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">valid_inputs</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Make sure to have one of the allowed targets: &quot;</span>
+                <span class="o">+</span> <span class="p">(</span><span class="s2">&quot;, &quot;</span><span class="p">)</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">valid_inputs</span><span class="p">)</span>
+                <span class="o">+</span> <span class="s2">&quot;.&quot;</span>
+            <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_fit_calibrator</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">label</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
+        <span class="n">calibrator</span><span class="p">:</span> <span class="n">RegressorMixin</span><span class="p">,</span>
+        <span class="n">y_calib</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">,</span>
+        <span class="n">top_class_prob</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">,</span>
+        <span class="n">y_pred</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">,</span>
+        <span class="n">sample_weight</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ArrayLike</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RegressorMixin</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Fitting the calibrator requires that we have a binary target, hence,</span>
+<span class="sd">        we find the subset of values on which we want to apply this</span>
+<span class="sd">        calibration and apply a binary calibration on these.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        label : Union[int, str]</span>
+<span class="sd">            The class for which we fit a calibrator.</span>
+<span class="sd">        calibrator : RegressorMixin</span>
+<span class="sd">            Calibrator to fit.</span>
+<span class="sd">        y_calib : NDArray of shape (n_samples,)</span>
+<span class="sd">            Training labels.</span>
+<span class="sd">        top_class_prob : NDArray of shape (n_samples,)</span>
+<span class="sd">            The highest score for each input of the method ``predict_proba``</span>
+<span class="sd">            of the ``estimator`.</span>
+<span class="sd">        y_pred : NDArray of shape (n_samples,)</span>
+<span class="sd">            Predictions.</span>
+<span class="sd">        sample_weight : Optional[ArrayLike] of shape (n_samples,)</span>
+<span class="sd">            Sample weights. If ``None``, then samples are equally weighted.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        RegressorMixin</span>
+<span class="sd">            Calibrated estimator.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">calibrator_</span> <span class="o">=</span> <span class="n">clone</span><span class="p">(</span><span class="n">calibrator</span><span class="p">)</span>
+        <span class="n">sample_weight</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">NDArray</span><span class="p">,</span> <span class="n">sample_weight</span><span class="p">)</span>
+        <span class="n">given_label_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argwhere</span><span class="p">(</span><span class="n">y_pred</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span> <span class="o">==</span> <span class="n">label</span><span class="p">)</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+        <span class="n">y_calib_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">equal</span><span class="p">(</span><span class="n">y_calib</span><span class="p">[</span><span class="n">given_label_indices</span><span class="p">],</span> <span class="n">label</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+        <span class="n">top_class_prob_</span> <span class="o">=</span> <span class="n">top_class_prob</span><span class="p">[</span><span class="n">given_label_indices</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">sample_weight</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">sample_weight_</span> <span class="o">=</span> <span class="n">sample_weight</span><span class="p">[</span><span class="n">given_label_indices</span><span class="p">]</span>
+            <span class="p">(</span><span class="n">sample_weight_</span><span class="p">,</span> <span class="n">top_class_prob_</span><span class="p">,</span> <span class="n">y_calib_</span><span class="p">)</span> <span class="o">=</span> <span class="n">_check_null_weight</span><span class="p">(</span>
+                <span class="n">sample_weight_</span><span class="p">,</span> <span class="n">top_class_prob_</span><span class="p">,</span> <span class="n">y_calib_</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">sample_weight_</span> <span class="o">=</span> <span class="n">sample_weight</span>
+        <span class="n">calibrator_</span> <span class="o">=</span> <span class="n">_fit_estimator</span><span class="p">(</span>
+            <span class="n">calibrator_</span><span class="p">,</span> <span class="n">top_class_prob_</span><span class="p">,</span> <span class="n">y_calib_</span><span class="p">,</span> <span class="n">sample_weight_</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">calibrator_</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_fit_calibrators</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">X</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span>
+        <span class="n">y</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span>
+        <span class="n">sample_weight</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ArrayLike</span><span class="p">],</span>
+        <span class="n">calibrator</span><span class="p">:</span> <span class="n">RegressorMixin</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">RegressorMixin</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This method sequentially fits the calibrators for each labels</span>
+<span class="sd">        defined by ``_get_labels`` method.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X : ArrayLike of shape (n_samples, n_features)</span>
+<span class="sd">            Training data.</span>
+<span class="sd">        y : ArrayLike of shape (n_samples,)</span>
+<span class="sd">            Training labels.</span>
+<span class="sd">        sample_weight : Optional[ArrayLike] of shape (n_samples,)</span>
+<span class="sd">            Sample weights for fitting the out-of-fold models.</span>
+<span class="sd">            If ``None``, then samples are equally weighted.</span>
+<span class="sd">            Note that the sample weight defined are only for the training, not</span>
+<span class="sd">            for the calibration.</span>
+<span class="sd">            By default ``None``.</span>
+<span class="sd">        calibrator : RegressorMixin</span>
+<span class="sd">            Calibrator to fit.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Dict[Union[int, str], RegressorMixin]</span>
+<span class="sd">            Dictionnary of fitted calibrators.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">X</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">indexable</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">_check_y</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+        <span class="n">max_prob</span><span class="p">,</span> <span class="n">y_pred</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_labels</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="n">calibrators</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">y_pred</span><span class="p">):</span>
+            <span class="n">calibrator_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fit_calibrator</span><span class="p">(</span>
+                <span class="n">label</span><span class="p">,</span>
+                <span class="n">calibrator</span><span class="p">,</span>
+                <span class="n">cast</span><span class="p">(</span><span class="n">NDArray</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span>
+                <span class="n">max_prob</span><span class="p">,</span>
+                <span class="n">y_pred</span><span class="p">,</span>
+                <span class="n">sample_weight</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">calibrators</span><span class="p">[</span><span class="n">label</span><span class="p">]</span> <span class="o">=</span> <span class="n">calibrator_</span>
+        <span class="k">return</span> <span class="n">calibrators</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_pred_proba_calib</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">label</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
+        <span class="n">calibrated_values</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">,</span>
+        <span class="n">max_prob</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">,</span>
+        <span class="n">y_pred</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Using the predicted scores, we calibrate the maximum score with the</span>
+<span class="sd">        specifically fitted calibrator. Note that if there is no calibrator</span>
+<span class="sd">        for the specific class, then we simply output the not calibrated</span>
+<span class="sd">        values.</span>
+
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        idx : int</span>
+<span class="sd">            Position of the label for an enumerate of all labels.</span>
+<span class="sd">        label : Union[int, str]</span>
+<span class="sd">            The label to define the subset of values to be taken into account.</span>
+<span class="sd">        calibrated_values : NDArray</span>
+<span class="sd">            Array of calibrated values to be updated.</span>
+<span class="sd">        max_prob : NDArray of shape (n_samples,)</span>
+<span class="sd">            Values to be calibrated.</span>
+<span class="sd">        y_pred : NDArray of shape (n_samples,)</span>
+<span class="sd">            Indicator of the values to be calibrated.</span>
+
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        Warnings</span>
+<span class="sd">            If there has not been a fitted calibrator for the specific class.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">idx_labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">y_pred</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span> <span class="o">==</span> <span class="n">label</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">label</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">calibrators</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">calibrated_values</span><span class="p">[</span><span class="n">idx_labels</span><span class="p">,</span> <span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">max_prob</span><span class="p">[</span><span class="n">idx_labels</span><span class="p">]</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;WARNING: This predicted label </span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2"> has not been seen &quot;</span>
+                <span class="o">+</span> <span class="s2">&quot; during the calibration and therefore scores will remain&quot;</span>
+                <span class="o">+</span> <span class="s2">&quot; unchanged.&quot;</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">calibrator_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calibrators</span><span class="p">[</span><span class="n">label</span><span class="p">]</span>
+            <span class="n">preds_</span> <span class="o">=</span> <span class="n">calibrator_</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">max_prob</span><span class="p">[</span><span class="n">idx_labels</span><span class="p">])</span>
+            <span class="n">calibrated_values</span><span class="p">[</span><span class="n">idx_labels</span><span class="p">,</span> <span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">preds_</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_calib_set</span><span class="p">(</span>
+        <span class="n">X</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span>
+        <span class="n">y</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span>
+        <span class="n">sample_weight</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">NDArray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">calib_size</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.3</span><span class="p">,</span>
+        <span class="n">random_state</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">shuffle</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">stratify</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ArrayLike</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span>
+        <span class="n">ArrayLike</span><span class="p">,</span> <span class="n">ArrayLike</span><span class="p">,</span> <span class="n">ArrayLike</span><span class="p">,</span> <span class="n">ArrayLike</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="n">NDArray</span><span class="p">],</span> <span class="n">Optional</span><span class="p">[</span><span class="n">NDArray</span><span class="p">]</span>
+    <span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Split the dataset into training and calibration sets.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        Same definition of parameters as for the ``fit`` method.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Tuple[</span>
+<span class="sd">            ArrayLike, ArrayLike, ArrayLike, ArrayLike,</span>
+<span class="sd">            Optional[NDArray], Optional[NDArray]</span>
+<span class="sd">        ]</span>
+<span class="sd">        - [0]: ArrayLike of shape (n_samples_*(1-calib_size), n_features)</span>
+<span class="sd">        X_train</span>
+<span class="sd">        - [1]: ArrayLike of shape (n_samples_*(1-calib_size),)</span>
+<span class="sd">        y_train</span>
+<span class="sd">        - [2]: ArrayLike of shape (n_samples_*calib_size, n_features)</span>
+<span class="sd">        X_calib</span>
+<span class="sd">        - [3]: ArrayLike of shape (n_samples_*calib_size,)</span>
+<span class="sd">        y_calib</span>
+<span class="sd">        - [4]: Optional[NDArray] of shape (n_samples_*(1-calib_size),)</span>
+<span class="sd">            sample_weight_train</span>
+<span class="sd">        - [5]: Optional[NDArray] of shape (n_samples_*calib_size,)</span>
+<span class="sd">            sample_weight_calib</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">sample_weight</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">X_calib</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">y_calib</span><span class="p">)</span> <span class="o">=</span> <span class="n">train_test_split</span><span class="p">(</span>
+                <span class="n">X</span><span class="p">,</span>
+                <span class="n">y</span><span class="p">,</span>
+                <span class="n">test_size</span><span class="o">=</span><span class="n">calib_size</span><span class="p">,</span>
+                <span class="n">random_state</span><span class="o">=</span><span class="n">random_state</span><span class="p">,</span>
+                <span class="n">shuffle</span><span class="o">=</span><span class="n">shuffle</span><span class="p">,</span>
+                <span class="n">stratify</span><span class="o">=</span><span class="n">stratify</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">sample_weight_train</span> <span class="o">=</span> <span class="n">sample_weight</span>
+            <span class="n">sample_weight_calib</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="p">(</span>
+                <span class="n">X_train</span><span class="p">,</span>
+                <span class="n">X_calib</span><span class="p">,</span>
+                <span class="n">y_train</span><span class="p">,</span>
+                <span class="n">y_calib</span><span class="p">,</span>
+                <span class="n">sample_weight_train</span><span class="p">,</span>
+                <span class="n">sample_weight_calib</span><span class="p">,</span>
+            <span class="p">)</span> <span class="o">=</span> <span class="n">train_test_split</span><span class="p">(</span>
+                <span class="n">X</span><span class="p">,</span>
+                <span class="n">y</span><span class="p">,</span>
+                <span class="n">sample_weight</span><span class="p">,</span>
+                <span class="n">test_size</span><span class="o">=</span><span class="n">calib_size</span><span class="p">,</span>
+                <span class="n">random_state</span><span class="o">=</span><span class="n">random_state</span><span class="p">,</span>
+                <span class="n">shuffle</span><span class="o">=</span><span class="n">shuffle</span><span class="p">,</span>
+                <span class="n">stratify</span><span class="o">=</span><span class="n">stratify</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="n">X_train</span><span class="p">,</span> <span class="n">X_calib</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">ArrayLike</span><span class="p">,</span> <span class="n">X_train</span><span class="p">),</span> <span class="n">cast</span><span class="p">(</span><span class="n">ArrayLike</span><span class="p">,</span> <span class="n">X_calib</span><span class="p">)</span>
+        <span class="n">y_train</span><span class="p">,</span> <span class="n">y_calib</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">ArrayLike</span><span class="p">,</span> <span class="n">y_train</span><span class="p">),</span> <span class="n">cast</span><span class="p">(</span><span class="n">ArrayLike</span><span class="p">,</span> <span class="n">y_calib</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">X_train</span><span class="p">,</span>
+            <span class="n">y_train</span><span class="p">,</span>
+            <span class="n">X_calib</span><span class="p">,</span>
+            <span class="n">y_calib</span><span class="p">,</span>
+            <span class="n">sample_weight_train</span><span class="p">,</span>
+            <span class="n">sample_weight_calib</span><span class="p">,</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="TopLabelCalibrator.fit">
+<a class="viewcode-back" href="../../generated/mapie.calibration.TopLabelCalibrator.html#mapie.calibration.TopLabelCalibrator.fit">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fit</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">X</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span>
+        <span class="n">y</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span>
+        <span class="n">sample_weight</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">NDArray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">calib_size</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.33</span><span class="p">,</span>
+        <span class="n">random_state</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">,</span> <span class="kc">None</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">shuffle</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">stratify</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ArrayLike</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">fit_params</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TopLabelCalibrator</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calibrate the estimator on given datasets, according to the chosen</span>
+<span class="sd">        method.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X : ArrayLike of shape (n_samples, n_features)</span>
+<span class="sd">            Training data.</span>
+<span class="sd">        y : ArrayLike of shape (n_samples,)</span>
+<span class="sd">            Training labels.</span>
+<span class="sd">        sample_weight : Optional[ArrayLike] of shape (n_samples,)</span>
+<span class="sd">            Sample weights for fitting the out-of-fold models.</span>
+<span class="sd">            If ``None``, then samples are equally weighted.</span>
+<span class="sd">            Note that the sample weight defined are only for the training, not</span>
+<span class="sd">            for the calibration procedure.</span>
+<span class="sd">            By default ``None``.</span>
+<span class="sd">        calib_size : Optional[float]</span>
+<span class="sd">            If ``cv == split`` and X_calib and y_calib are not defined, then</span>
+<span class="sd">            the calibration dataset is created with the split defined by</span>
+<span class="sd">            calib_size.</span>
+<span class="sd">        random_state : int, RandomState instance or ``None``, default is</span>
+<span class="sd">            ``None``</span>
+<span class="sd">            See ``sklearn.model_selection.train_test_split`` documentation.</span>
+<span class="sd">            Controls the shuffling applied to the data before applying the</span>
+<span class="sd">            split.</span>
+<span class="sd">            Pass an int for reproducible output across multiple function calls.</span>
+<span class="sd">        shuffle : bool, default=True</span>
+<span class="sd">            See ``sklearn.model_selection.train_test_split`` documentation.</span>
+<span class="sd">            Whether or not to shuffle the data before splitting.</span>
+<span class="sd">            If shuffle=False, then stratify must be ``None``.</span>
+<span class="sd">        stratify : array-like, default=None</span>
+<span class="sd">            See ``sklearn.model_selection.train_test_split`` documentation.</span>
+<span class="sd">            If not ``None``, data is split in a stratified fashion, using this</span>
+<span class="sd">            as the class label.</span>
+<span class="sd">        **fit_params : dict</span>
+<span class="sd">            Additional fit parameters.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        TopLabelCalibrator</span>
+<span class="sd">            The model itself.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_cv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cv</span><span class="p">)</span>
+        <span class="n">X</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">indexable</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">_check_y</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_type_of_target</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+        <span class="n">estimator</span> <span class="o">=</span> <span class="n">_check_estimator_classification</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">cv</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimator</span><span class="p">)</span>
+        <span class="n">calibrator</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_calibrator</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">calibrator</span><span class="p">)</span>
+        <span class="n">sample_weight</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">_check_null_weight</span><span class="p">(</span><span class="n">sample_weight</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_features_in_</span> <span class="o">=</span> <span class="n">_check_n_features_in</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">cv</span><span class="p">,</span> <span class="n">estimator</span><span class="p">)</span>
+        <span class="n">random_state</span> <span class="o">=</span> <span class="n">check_random_state</span><span class="p">(</span><span class="n">random_state</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">cv</span> <span class="o">==</span> <span class="s2">&quot;prefit&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">single_estimator_</span> <span class="o">=</span> <span class="n">estimator</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">classes_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">single_estimator_</span><span class="o">.</span><span class="n">classes_</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">n_classes_</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">classes_</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">calibrators</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fit_calibrators</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">sample_weight</span><span class="p">,</span> <span class="n">calibrator</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">cv</span> <span class="o">==</span> <span class="s2">&quot;split&quot;</span><span class="p">:</span>
+            <span class="n">results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_calib_set</span><span class="p">(</span>
+                <span class="n">X</span><span class="p">,</span>
+                <span class="n">y</span><span class="p">,</span>
+                <span class="n">sample_weight</span><span class="o">=</span><span class="n">sample_weight</span><span class="p">,</span>
+                <span class="n">calib_size</span><span class="o">=</span><span class="n">calib_size</span><span class="p">,</span>
+                <span class="n">random_state</span><span class="o">=</span><span class="n">random_state</span><span class="p">,</span>
+                <span class="n">shuffle</span><span class="o">=</span><span class="n">shuffle</span><span class="p">,</span>
+                <span class="n">stratify</span><span class="o">=</span><span class="n">stratify</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">X_calib</span><span class="p">,</span> <span class="n">y_calib</span><span class="p">,</span> <span class="n">sw_train</span><span class="p">,</span> <span class="n">sw_calib</span> <span class="o">=</span> <span class="n">results</span>
+            <span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span> <span class="o">=</span> <span class="n">indexable</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
+            <span class="n">y_train</span> <span class="o">=</span> <span class="n">_check_y</span><span class="p">(</span><span class="n">y_train</span><span class="p">)</span>
+            <span class="n">sw_train</span><span class="p">,</span> <span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span> <span class="o">=</span> <span class="n">_check_null_weight</span><span class="p">(</span><span class="n">sw_train</span><span class="p">,</span> <span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
+            <span class="n">estimator</span> <span class="o">=</span> <span class="n">_fit_estimator</span><span class="p">(</span>
+                <span class="n">clone</span><span class="p">(</span><span class="n">estimator</span><span class="p">),</span>
+                <span class="n">X_train</span><span class="p">,</span>
+                <span class="n">y_train</span><span class="p">,</span>
+                <span class="n">sw_train</span><span class="p">,</span>
+                <span class="o">**</span><span class="n">fit_params</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">single_estimator_</span> <span class="o">=</span> <span class="n">estimator</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">classes_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">single_estimator_</span><span class="o">.</span><span class="n">classes_</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">n_classes_</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">classes_</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">calibrators</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fit_calibrators</span><span class="p">(</span>
+                <span class="n">X_calib</span><span class="p">,</span> <span class="n">y_calib</span><span class="p">,</span> <span class="n">sw_calib</span><span class="p">,</span> <span class="n">calibrator</span>
+            <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_is_fitted</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+
+<div class="viewcode-block" id="TopLabelCalibrator.predict_proba">
+<a class="viewcode-back" href="../../generated/mapie.calibration.TopLabelCalibrator.html#mapie.calibration.TopLabelCalibrator.predict_proba">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">predict_proba</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">X</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Prediction of the calibrated scores using fitted classifier and</span>
+<span class="sd">        calibrator.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X : ArrayLike of shape (n_samples, n_features)</span>
+<span class="sd">            Test data.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        NDArray of shape (n_samples, n_classes)</span>
+<span class="sd">            The calibrated score for each max score and zeros at every</span>
+<span class="sd">            other position in that line.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">check_is_fitted</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">uncalib_pred</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">single_estimator_</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">X</span><span class="p">)</span>
+
+        <span class="n">max_prob</span><span class="p">,</span> <span class="n">y_pred</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_labels</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+
+        <span class="n">n</span> <span class="o">=</span> <span class="n">_num_samples</span><span class="p">(</span><span class="n">max_prob</span><span class="p">)</span>
+        <span class="n">calibrated_test_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">((</span><span class="n">n</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_classes_</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">y_pred</span><span class="p">)):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_pred_proba_calib</span><span class="p">(</span>
+                <span class="n">idx</span><span class="p">,</span>
+                <span class="n">label</span><span class="p">,</span>
+                <span class="n">calibrated_test_values</span><span class="p">,</span>
+                <span class="n">max_prob</span><span class="p">,</span>
+                <span class="n">y_pred</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">calibrated_test_values</span></div>
+
+
+<div class="viewcode-block" id="TopLabelCalibrator.predict">
+<a class="viewcode-back" href="../../generated/mapie.calibration.TopLabelCalibrator.html#mapie.calibration.TopLabelCalibrator.predict">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">predict</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">X</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Predict the class of the estimator after calibration.</span>
+<span class="sd">        Note that in the top-label setting, this class does not change.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X : ArrayLike of shape (n_samples, n_features)</span>
+<span class="sd">            Test data.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        NDArray of shape (n_samples,)</span>
+<span class="sd">            The class from the scores.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">check_is_fitted</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">single_estimator_</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="p">)</span></div>
+</div>
+
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">VennAbersCalibrator</span><span class="p">(</span><span class="n">BaseEstimator</span><span class="p">,</span> <span class="n">ClassifierMixin</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Venn-ABERS calibration for binary and multi-class problems.</span>
+
+<span class="sd">    A class implementing binary [1] or multi-class [2] Venn-ABERS calibration.</span>
+<span class="sd">    This calibrator provides well-calibrated probabilities with validity guarantees.</span>
+<span class="sd">    The implementation is based on the reference implementation by the user ip200 [3].</span>
+
+<span class="sd">    Can be used in 3 different forms:</span>
+<span class="sd">    - Prefit Venn-ABERS: estimator is already fitted, only calibration is performed</span>
+<span class="sd">    - Inductive Venn-ABERS (IVAP): splits data into training and calibration sets</span>
+<span class="sd">    - Cross Venn-ABERS (CVAP): uses cross-validation for calibration</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    estimator : ClassifierMixin</span>
+<span class="sd">        The classifier whose output needs to be calibrated to provide more</span>
+<span class="sd">        accurate `predict_proba` outputs. Must be a scikit-learn compatible</span>
+<span class="sd">        classifier with `fit` and `predict_proba` methods.</span>
+
+<span class="sd">    cv : Optional[str], default=None</span>
+<span class="sd">        The cross-validation strategy:</span>
+
+<span class="sd">        - ``&quot;prefit&quot;``: Assumes that ``estimator`` has been fitted already.</span>
+<span class="sd">            All data provided in ``fit`` are used for calibration only.</span>
+<span class="sd">        - ``None``: Uses inductive or cross validation based on the</span>
+<span class="sd">            ``inductive`` parameter.</span>
+
+<span class="sd">    inductive : bool, default=True</span>
+<span class="sd">        Determines the calibration strategy when ``cv=None``:</span>
+
+<span class="sd">        - ``True``: Inductive Venn-ABERS (IVAP) - splits data into proper</span>
+<span class="sd">            training and calibration sets.</span>
+<span class="sd">        - ``False``: Cross Venn-ABERS (CVAP) - uses k-fold cross-validation.</span>
+
+<span class="sd">    n_splits : Optional[int], default=None</span>
+<span class="sd">        Number of folds for Cross Venn-ABERS (CVAP). Must be at least 2.</span>
+<span class="sd">        Only used when ``inductive=False`` and ``cv=None``.</span>
+<span class="sd">        Uses ``sklearn.model_selection.StratifiedKFold`` functionality.</span>
+
+<span class="sd">    train_proper_size : Optional[float], default=None</span>
+<span class="sd">        Proportion of the dataset to use for proper training in Inductive</span>
+<span class="sd">        Venn-ABERS (IVAP). Only used when ``inductive=True`` and ``cv=None``.</span>
+
+<span class="sd">        - If float, should be between 0.0 and 1.0.</span>
+<span class="sd">        - If int, represents the absolute number of training samples.</span>
+<span class="sd">        - If ``None``, automatically set to complement of ``cal_size``.</span>
+
+<span class="sd">    random_state : Optional[int], default=None</span>
+<span class="sd">        Controls the shuffling applied to the data before splitting.</span>
+<span class="sd">        Pass an int for reproducible output across multiple function calls.</span>
+<span class="sd">        Can be overridden in the ``fit`` method.</span>
+
+<span class="sd">    shuffle : bool, default=True</span>
+<span class="sd">        Whether to shuffle the data before splitting.</span>
+
+<span class="sd">        - For IVAP: if ``shuffle=False``, then ``stratify`` must be ``None``.</span>
+<span class="sd">        - For CVAP: controls whether to shuffle each class&#39;s samples before</span>
+<span class="sd">            splitting into batches.</span>
+
+<span class="sd">        Can be overridden in the ``fit`` method.</span>
+
+<span class="sd">    stratify : Optional[ArrayLike], default=None</span>
+<span class="sd">        For Inductive Venn-ABERS (IVAP) only. If not ``None``, data is split</span>
+<span class="sd">        in a stratified fashion, using this as the class labels.</span>
+<span class="sd">        Can be overridden in the ``fit`` method.</span>
+
+<span class="sd">    precision : Optional[int], default=None</span>
+<span class="sd">        Number of decimal points to round Venn-ABERS calibration probabilities.</span>
+<span class="sd">        Yields significantly faster computation for larger calibration datasets.</span>
+<span class="sd">        Trade-off between speed and precision.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    classes_ : NDArray</span>
+<span class="sd">        Array with the name of each class.</span>
+
+<span class="sd">    n_classes_ : int</span>
+<span class="sd">        Number of classes in the training dataset.</span>
+
+<span class="sd">    n_features_in_ : int</span>
+<span class="sd">        Number of features seen during fit.</span>
+
+<span class="sd">    va_calibrator_ : Union[VennAbersMultiClass, VennAbers, None]</span>
+<span class="sd">        The fitted Venn-ABERS calibrator instance.</span>
+<span class="sd">        May be None in prefit mode with multi-class classification.</span>
+
+<span class="sd">    transformers_ : Optional[Pipeline]</span>
+<span class="sd">        Transformers from sklearn pipeline to transform categorical attributes.</span>
+
+<span class="sd">    single_estimator_ : Optional[ClassifierMixin]</span>
+<span class="sd">        The fitted estimator (only for prefit mode).</span>
+
+<span class="sd">    p_cal_ : Optional[NDArray]</span>
+<span class="sd">        Calibration probabilities (only for prefit mode with multi-class).</span>
+
+<span class="sd">    y_cal_ : Optional[NDArray]</span>
+<span class="sd">        Calibration labels (only for prefit mode with multi-class).</span>
+
+<span class="sd">    cv_ensemble: bool, default = True</span>
+<span class="sd">        If False then the predictions for the test set are generated using the underlying classifier trained</span>
+<span class="sd">        on the whole training set, instead of on the split (in the case of IVAP) or folds (in the case of CVAP)</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    [1] Vovk, Vladimir, Ivan Petej, and Valentina Fedorova.</span>
+<span class="sd">        &quot;Large-scale probabilistic predictors with and without guarantees</span>
+<span class="sd">        of validity.&quot; Advances in Neural Information Processing Systems 28</span>
+<span class="sd">        (2015). https://arxiv.org/pdf/1511.00213.pdf</span>
+
+<span class="sd">    [2] Manokhin, Valery. &quot;Multi-class probabilistic classification using</span>
+<span class="sd">        inductive and cross Venn–Abers predictors.&quot; In Conformal and</span>
+<span class="sd">        Probabilistic Prediction and Applications, pp. 228-240. PMLR, 2017.</span>
+
+<span class="sd">    [3] Reference implementation:</span>
+<span class="sd">    https://github.com/ip200/venn-abers/blob/main/src/venn_abers.py</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import warnings</span>
+<span class="sd">    &gt;&gt;&gt; warnings.filterwarnings(&quot;ignore&quot;)</span>
+<span class="sd">    &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">    &gt;&gt;&gt; from sklearn.datasets import make_classification</span>
+<span class="sd">    &gt;&gt;&gt; from sklearn.model_selection import train_test_split</span>
+<span class="sd">    &gt;&gt;&gt; from sklearn.naive_bayes import GaussianNB</span>
+<span class="sd">    &gt;&gt;&gt; from mapie.calibration import VennAbersCalibrator</span>
+
+<span class="sd">    **Example 1: Prefit mode**</span>
+
+<span class="sd">    &gt;&gt;&gt; X, y = make_classification(n_samples=1000, n_features=20,</span>
+<span class="sd">    ...                            n_classes=3, n_informative=10,</span>
+<span class="sd">    ...                            random_state=42)</span>
+<span class="sd">    &gt;&gt;&gt; X_train, X_test, y_train, y_test = train_test_split(</span>
+<span class="sd">    ...     X, y, test_size=0.2, random_state=42</span>
+<span class="sd">    ... )</span>
+<span class="sd">    &gt;&gt;&gt; # Fit the base classifier</span>
+<span class="sd">    &gt;&gt;&gt; clf = GaussianNB()</span>
+<span class="sd">    &gt;&gt;&gt; _ = clf.fit(X_train, y_train)</span>
+<span class="sd">    &gt;&gt;&gt; # Calibrate using prefit mode</span>
+<span class="sd">    &gt;&gt;&gt; va_cal = VennAbersCalibrator(estimator=clf, cv=&quot;prefit&quot;)</span>
+<span class="sd">    &gt;&gt;&gt; _ = va_cal.fit(X_test, y_test)  # Use test set for calibration</span>
+<span class="sd">    &gt;&gt;&gt; # Get calibrated probabilities</span>
+<span class="sd">    &gt;&gt;&gt; calibrated_probs = va_cal.predict_proba(X_test)</span>
+
+<span class="sd">    **Example 2: Inductive Venn-ABERS (IVAP)**</span>
+
+<span class="sd">    &gt;&gt;&gt; X, y = make_classification(n_samples=1000, n_features=20,</span>
+<span class="sd">    ...                            n_classes=2, random_state=42)</span>
+<span class="sd">    &gt;&gt;&gt; X_train, X_test, y_train, y_test = train_test_split(</span>
+<span class="sd">    ...     X, y, test_size=0.2, random_state=42</span>
+<span class="sd">    ... )</span>
+<span class="sd">    &gt;&gt;&gt; # Inductive mode with 30% calibration split</span>
+<span class="sd">    &gt;&gt;&gt; clf = GaussianNB()</span>
+<span class="sd">    &gt;&gt;&gt; va_cal = VennAbersCalibrator(</span>
+<span class="sd">    ...     estimator=clf,</span>
+<span class="sd">    ...     inductive=True,</span>
+<span class="sd">    ...     random_state=42</span>
+<span class="sd">    ... )</span>
+<span class="sd">    &gt;&gt;&gt; _ = va_cal.fit(X_train, y_train)</span>
+<span class="sd">    &gt;&gt;&gt; calibrated_probs = va_cal.predict_proba(X_test)</span>
+<span class="sd">    &gt;&gt;&gt; predictions = va_cal.predict(X_test)</span>
+
+<span class="sd">    **Example 3: Cross Venn-ABERS (CVAP)**</span>
+
+<span class="sd">    &gt;&gt;&gt; X, y = make_classification(n_samples=1000, n_features=20,</span>
+<span class="sd">    ...                            n_informative=10, n_classes=3,</span>
+<span class="sd">    ...                            random_state=42)</span>
+<span class="sd">    &gt;&gt;&gt; X_train, X_test, y_train, y_test = train_test_split(</span>
+<span class="sd">    ...     X, y, test_size=0.2, random_state=42</span>
+<span class="sd">    ... )</span>
+<span class="sd">    &gt;&gt;&gt; # Cross validation mode with 5 folds</span>
+<span class="sd">    &gt;&gt;&gt; clf = GaussianNB()</span>
+<span class="sd">    &gt;&gt;&gt; va_cal = VennAbersCalibrator(</span>
+<span class="sd">    ...     estimator=clf,</span>
+<span class="sd">    ...     inductive=False,</span>
+<span class="sd">    ...     n_splits=5,</span>
+<span class="sd">    ...     random_state=42</span>
+<span class="sd">    ... )</span>
+<span class="sd">    &gt;&gt;&gt; _ = va_cal.fit(X_train, y_train)</span>
+<span class="sd">    &gt;&gt;&gt; calibrated_probs = va_cal.predict_proba(X_test)</span>
+<span class="sd">    &gt;&gt;&gt; predictions = va_cal.predict(X_test)</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    - Venn-ABERS calibration provides probabilistic predictions with</span>
+<span class="sd">        validity guarantees under the exchangeability assumption.</span>
+<span class="sd">    - For binary classification, the method produces well-calibrated</span>
+<span class="sd">        probabilities with minimal assumptions.</span>
+<span class="sd">    - For multi-class problems, the method uses a one-vs-one approach</span>
+<span class="sd">        to extend binary Venn-ABERS to multiple classes.</span>
+<span class="sd">    - The ``precision`` parameter can significantly speed up computation</span>
+<span class="sd">        for large datasets with minimal impact on calibration quality.</span>
+<span class="sd">    - When using ``cv=&quot;prefit&quot;``, ensure the estimator is fitted on a</span>
+<span class="sd">        different dataset than the one used for calibration to avoid</span>
+<span class="sd">        overfitting.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    TopLabelCalibrator : Top-label calibration for multi-class problems.</span>
+<span class="sd">    sklearn.calibration.CalibratedClassifierCV : Scikit-learn&#39;s probability</span>
+<span class="sd">        calibration with isotonic regression or Platt scaling.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">fit_attributes</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;va_calibrator_&quot;</span><span class="p">,</span> <span class="s2">&quot;classes_&quot;</span><span class="p">,</span> <span class="s2">&quot;n_classes_&quot;</span><span class="p">]</span>
+
+    <span class="n">valid_cv</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;prefit&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">estimator</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ClassifierMixin</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">cv</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">inductive</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">n_splits</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">train_proper_size</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">random_state</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">shuffle</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">stratify</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ArrayLike</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">precision</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">cv_ensemble</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">estimator</span> <span class="o">=</span> <span class="n">estimator</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cv</span> <span class="o">=</span> <span class="n">cv</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inductive</span> <span class="o">=</span> <span class="n">inductive</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_splits</span> <span class="o">=</span> <span class="n">n_splits</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">train_proper_size</span> <span class="o">=</span> <span class="n">train_proper_size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">random_state</span> <span class="o">=</span> <span class="n">random_state</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">shuffle</span> <span class="o">=</span> <span class="n">shuffle</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stratify</span> <span class="o">=</span> <span class="n">stratify</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">precision</span> <span class="o">=</span> <span class="n">precision</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cv_ensemble</span> <span class="o">=</span> <span class="n">cv_ensemble</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_is_fitted</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="c1"># Initialize attributes that will be set during fit</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">va_calibrator_</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">VennAbersMultiClass</span><span class="p">,</span> <span class="n">VennAbers</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">classes_</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">NDArray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_classes_</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transformers_</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Pipeline</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">single_estimator_</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ClassifierMixin</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">p_cal_</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">NDArray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y_cal_</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">NDArray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_fitted</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns True if the estimator is fitted&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_fitted</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_check_cv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cv</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check if cross-validator is valid.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        cv : Optional[str]</span>
+<span class="sd">            Cross-validator to check.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Optional[str]</span>
+<span class="sd">            &#39;prefit&#39; or None.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If the cross-validator is not valid.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">cv</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">valid_cv</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">cv</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid cv argument. Allowed values are </span><span class="si">{self.valid_cv}</span><span class="s2">.&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">fit</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">X</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span>
+        <span class="n">y</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span>
+        <span class="n">sample_weight</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">NDArray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">calib_size</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.33</span><span class="p">,</span>
+        <span class="n">random_state</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">,</span> <span class="kc">None</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">shuffle</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">stratify</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ArrayLike</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">fit_params</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;VennAbersCalibrator&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Fits the Venn-ABERS calibrator.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X : ArrayLike of shape (n_samples, n_features)</span>
+<span class="sd">            Training data.</span>
+
+<span class="sd">        y : ArrayLike of shape (n_samples,)</span>
+<span class="sd">            Training labels.</span>
+
+<span class="sd">        sample_weight : Optional[NDArray] of shape (n_samples,)</span>
+<span class="sd">            Sample weights for fitting the out-of-fold models.</span>
+<span class="sd">            If ``None``, then samples are equally weighted.</span>
+<span class="sd">            Note that the sample weight defined are only for the training, not</span>
+<span class="sd">            for the calibration procedure.</span>
+<span class="sd">            By default ``None``.</span>
+
+<span class="sd">        calib_size : Optional[float], default=0.33</span>
+<span class="sd">            Proportion of the dataset to use for calibration when using</span>
+<span class="sd">            Inductive Venn-ABERS (IVAP) mode (``inductive=True`` and ``cv=None``).</span>
+<span class="sd">            It should be between 0.0 and 1.0 and represents</span>
+<span class="sd">            the proportion of the dataset to include in the calibration split.</span>
+<span class="sd">            This parameter is ignored when ``cv=&quot;prefit&quot;`` or when using</span>
+<span class="sd">            Cross Venn-ABERS (``inductive=False``).</span>
+
+<span class="sd">        random_state : Optional[Union[int, np.random.RandomState, None]], default=None</span>
+<span class="sd">            Controls the shuffling applied to the data before applying the split.</span>
+<span class="sd">            Pass an int for reproducible output across multiple function calls.</span>
+
+<span class="sd">        shuffle : Optional[bool], default=True</span>
+<span class="sd">            Whether to shuffle the data before splitting. If shuffle=False</span>
+<span class="sd">            then stratify must be None.</span>
+
+<span class="sd">        stratify : Optional[ArrayLike], default=None</span>
+<span class="sd">            If not None, data is split in a stratified fashion, using this as</span>
+<span class="sd">            the class labels.</span>
+
+<span class="sd">        **fit_params : dict</span>
+<span class="sd">            Additional parameters for the underlying estimator.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        VennAbersCalibrator</span>
+<span class="sd">            The fitted calibrator.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If required parameters are missing for the chosen mode.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_cv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cv</span><span class="p">)</span>
+
+        <span class="c1"># Check for manual mode (backward compatibility)</span>
+        <span class="c1"># If estimator is None, we expect this to be manual mode</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimator</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;For VennAbersCalibrator, an estimator must be provided. &quot;</span>
+                <span class="s2">&quot;For manual calibration with pre-computed probabilities, &quot;</span>
+                <span class="s2">&quot;please use the VennAbers class directly from mapie._venn_abers&quot;</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Validate inputs</span>
+        <span class="n">X</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">indexable</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">_check_y</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+        <span class="n">sample_weight</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">_check_null_weight</span><span class="p">(</span><span class="n">sample_weight</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+
+        <span class="c1"># Handle categorical features</span>
+        <span class="n">last_estimator</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimator</span>
+        <span class="n">X_processed</span> <span class="o">=</span> <span class="n">X</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">last_estimator</span><span class="p">,</span> <span class="n">Pipeline</span><span class="p">):</span>
+            <span class="c1"># Separate transformers and final estimator</span>
+            <span class="n">transformers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimator</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>  <span class="c1"># all steps except last</span>
+            <span class="n">last_estimator</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimator</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>  <span class="c1"># usually a classifier</span>
+
+            <span class="n">X_processed</span> <span class="o">=</span> <span class="n">transformers</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">transformers_</span> <span class="o">=</span> <span class="n">transformers</span>
+
+        <span class="c1"># Set up classes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">classes_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_classes_</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">classes_</span><span class="p">)</span>
+
+        <span class="c1"># Prefit mode: estimator is already fitted, only calibrate</span>
+        <span class="k">if</span> <span class="n">cv</span> <span class="o">==</span> <span class="s2">&quot;prefit&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">last_estimator</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">NotFittedError</span><span class="p">(</span>
+                    <span class="s2">&quot;For cv=&#39;prefit&#39;, the estimator must be already fitted&quot;</span>
+                <span class="p">)</span>
+
+            <span class="c1"># Set up classes from the fitted estimator</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">single_estimator_</span> <span class="o">=</span> <span class="n">last_estimator</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">classes_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">single_estimator_</span><span class="o">.</span><span class="n">classes_</span>
+
+            <span class="c1"># Type guard: ensure classes_ is not None</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">classes_</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                    <span class="s2">&quot;classes_ should not be None after fitting estimator&quot;</span>
+                <span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">n_classes_</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">classes_</span><span class="p">)</span>
+
+            <span class="c1"># Get predictions from the fitted estimator</span>
+            <span class="n">p_cal_pred</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">single_estimator_</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">X_processed</span><span class="p">)</span>
+
+            <span class="c1"># Fit Venn-ABERS calibrator on these predictions</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_classes_</span> <span class="o">&lt;=</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">va_calibrator_</span> <span class="o">=</span> <span class="n">VennAbers</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">va_calibrator_</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">p_cal_pred</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">precision</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># For multi-class, store calibration data for later use</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">p_cal_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">p_cal_pred</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">y_cal_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">va_calibrator_</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># Will be used in predict_proba</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Standard inductive or cross validation mode</span>
+            <span class="c1"># Integrity checks</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">inductive</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_splits</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;For Cross Venn-ABERS please provide n_splits&quot;</span><span class="p">)</span>
+
+            <span class="c1"># Check random state</span>
+            <span class="n">random_state_to_use</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">if</span> <span class="n">random_state</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">random_state_to_use</span> <span class="o">=</span> <span class="n">random_state</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">random_state_to_use</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">random_state</span>
+
+            <span class="c1"># Initialize and fit the Venn-ABERS calibrator</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">va_calibrator_</span> <span class="o">=</span> <span class="n">VennAbersMultiClass</span><span class="p">(</span>
+                <span class="n">estimator</span><span class="o">=</span><span class="n">last_estimator</span><span class="p">,</span>
+                <span class="n">inductive</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">inductive</span><span class="p">,</span>
+                <span class="n">n_splits</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_splits</span><span class="p">,</span>
+                <span class="n">cal_size</span><span class="o">=</span><span class="n">calib_size</span><span class="p">,</span>
+                <span class="n">train_proper_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">train_proper_size</span><span class="p">,</span>
+                <span class="n">random_state</span><span class="o">=</span><span class="n">random_state_to_use</span><span class="p">,</span>
+                <span class="n">shuffle</span><span class="o">=</span><span class="n">shuffle</span> <span class="k">if</span> <span class="n">shuffle</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">shuffle</span><span class="p">,</span>
+                <span class="n">stratify</span><span class="o">=</span><span class="n">stratify</span> <span class="k">if</span> <span class="n">stratify</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">stratify</span><span class="p">,</span>
+                <span class="n">precision</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">precision</span><span class="p">,</span>
+                <span class="n">cv_ensemble</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cv_ensemble</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">va_calibrator_</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_processed</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">sample_weight</span><span class="o">=</span><span class="n">sample_weight</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_is_fitted</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">predict_proba</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span> <span class="n">loss</span><span class="o">=</span><span class="s2">&quot;log&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Prediction of the calibrated scores using fitted classifier and</span>
+<span class="sd">        Venn-ABERS calibrator.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X : ArrayLike of shape (n_samples, n_features)</span>
+<span class="sd">            Test data.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        NDArray of shape (n_samples, n_classes)</span>
+<span class="sd">            Venn-ABERS calibrated probabilities.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">check_is_fitted</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="n">cv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_cv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cv</span><span class="p">)</span>
+
+        <span class="c1"># Process test data</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">transformers_</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">X_processed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">transformers_</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">X_processed</span> <span class="o">=</span> <span class="n">X</span>
+        <span class="c1"># Prefit mode: use fitted estimator to get probabilities, then calibrate</span>
+        <span class="k">if</span> <span class="n">cv</span> <span class="o">==</span> <span class="s2">&quot;prefit&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">single_estimator_</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                    <span class="s2">&quot;single_estimator_ should not be None in prefit mode&quot;</span>
+                <span class="p">)</span>
+
+            <span class="n">p_test_pred</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">single_estimator_</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">X_processed</span><span class="p">)</span>
+
+            <span class="c1"># Type guard: ensure n_classes_ is not None after fit</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_classes_</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;n_classes_ should not be None after fitting&quot;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_classes_</span> <span class="o">&lt;=</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="c1"># Binary classification</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">va_calibrator_</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                        <span class="s2">&quot;va_calibrator_ should not be None for binary classification&quot;</span>
+                    <span class="p">)</span>
+                <span class="n">p_prime</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">va_calibrator_</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">p_test_pred</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Multi-class classification</span>
+                <span class="n">p_prime</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">predict_proba_prefitted_va</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">p_cal_</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">y_cal_</span><span class="p">,</span>
+                    <span class="n">p_test_pred</span><span class="p">,</span>
+                    <span class="n">precision</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">precision</span><span class="p">,</span>
+                    <span class="n">va_tpe</span><span class="o">=</span><span class="s2">&quot;one_vs_one&quot;</span><span class="p">,</span>
+                <span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">p_prime</span>
+
+        <span class="c1"># Standard inductive or cross validation mode</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">va_calibrator_</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s2">&quot;va_calibrator_ should not be None in inductive/cross-validation mode&quot;</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Type guard: ensure we have VennAbersMultiClass instance</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">va_calibrator_</span><span class="p">,</span> <span class="n">VennAbersMultiClass</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s2">&quot;va_calibrator_ should be VennAbersMultiClass instance in &quot;</span>
+                <span class="s2">&quot;inductive/cross-validation mode&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="s2">&quot;loss&quot;</span> <span class="ow">in</span> <span class="n">signature</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">va_calibrator_</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">)</span><span class="o">.</span><span class="n">parameters</span><span class="p">:</span>
+            <span class="n">p_prime</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">va_calibrator_</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span>
+                <span class="n">X_processed</span><span class="p">,</span> <span class="n">loss</span><span class="o">=</span><span class="n">loss</span><span class="p">,</span> <span class="n">p0_p1_output</span><span class="o">=</span><span class="kc">False</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">p_prime</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">va_calibrator_</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">X_processed</span><span class="p">,</span> <span class="n">p0_p1_output</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">p_prime</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span> <span class="n">loss</span><span class="o">=</span><span class="s2">&quot;log&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Predict the class of the estimator after Venn-ABERS calibration.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X : ArrayLike of shape (n_samples, n_features)</span>
+<span class="sd">            Test data.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        NDArray of shape (n_samples,)</span>
+<span class="sd">            The predicted class labels.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">check_is_fitted</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="c1"># Type guard: ensure classes_ is not None after fit</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">classes_</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;classes_ should not be None after fitting&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Get calibrated probabilities</span>
+        <span class="n">p_prime</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">loss</span><span class="o">=</span><span class="n">loss</span><span class="p">)</span>
+
+        <span class="c1"># Store classes_ in a local variable to help type checker</span>
+        <span class="n">classes</span><span class="p">:</span> <span class="n">NDArray</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">classes_</span>
+        <span class="n">n_classes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_classes_</span>
+
+        <span class="c1"># Convert probabilities to class predictions</span>
+        <span class="k">if</span> <span class="n">n_classes</span> <span class="ow">and</span> <span class="p">(</span><span class="n">n_classes</span> <span class="o">&lt;=</span> <span class="mi">2</span><span class="p">):</span>
+            <span class="c1"># Binary classification</span>
+            <span class="n">y_pred</span> <span class="o">=</span> <span class="n">classes</span><span class="p">[(</span><span class="n">p_prime</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mf">0.5</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Multi-class classification</span>
+            <span class="n">y_pred</span> <span class="o">=</span> <span class="n">classes</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">p_prime</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)]</span>
+
+        <span class="k">return</span> <span class="n">y_pred</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Capgemini Invent.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

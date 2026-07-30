@@ -1,0 +1,12 @@
+﻿:mod:`mapie.metrics.calibration`.expected_calibration_error
+========================================================================
+
+.. currentmodule:: mapie.metrics.calibration
+
+.. autofunction:: expected_calibration_error
+
+.. include:: mapie.metrics.calibration.expected_calibration_error.examples
+
+.. raw:: html
+
+    <div style='clear:both'></div>

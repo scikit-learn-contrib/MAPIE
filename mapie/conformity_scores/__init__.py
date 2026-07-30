@@ -6,6 +6,7 @@ from .bounds import (
     QuantileRegressionScore,
     AbsoluteQuantileRegressionScore,
     ResidualNormalisedScore,
+    StdConformityScore,
 )
 from .sets import (
     APSConformityScore,
@@ -29,4 +30,5 @@ __all__ = [
     "APSConformityScore",
     "RAPSConformityScore",
     "TopKConformityScore",
+    "StdConformityScore",
 ]

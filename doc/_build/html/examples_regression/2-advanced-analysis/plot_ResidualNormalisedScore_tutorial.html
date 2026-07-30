@@ -1,0 +1,748 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Focus on residual normalised score &mdash; MAPIE 1.2.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/project-template.css?v=2b5c7e5c" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=d2d258e8" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-binder.css?v=f4aeca0c" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=6efca38a"></script>
+      <script src="../../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../_static/js/copybutton.js?v=26522df0"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Focus on local (or “conditional”) coverage" href="plot_conditional_coverage.html" />
+    <link rel="prev" title="Focus on intervals width" href="plot-coverage-width-based-criterion.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            MAPIE
+              <img src="../../_static/mapie_logo_white_cut.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../quick_start.html">Quick Start with MAPIE</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../quick_start.html#download-and-install-the-module">1. Download and install the module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../quick_start.html#regression">2. Regression</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../quick_start.html#classification">3. Classification</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../quick_start.html#risk-control">4. Risk Control</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../split_cross_conformal.html">The conformalization (or “calibration”) set</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../split_cross_conformal.html#split-conformal-predictions">1. Split conformal predictions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../split_cross_conformal.html#split-conformal-predictions-with-a-pre-trained-model">Split conformal predictions with a pre-trained model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../split_cross_conformal.html#split-conformal-predictions-with-an-untrained-model">Split conformal predictions with an untrained model</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../split_cross_conformal.html#cross-conformal-predictions">2. Cross conformal predictions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../choosing_the_right_algorithm.html">Choosing the right algorithm</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../v1_release_notes.html">MAPIE v1 release notes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../v1_release_notes.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../v1_release_notes.html#api-changes-overview">API changes overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../v1_release_notes.html#python-scikit-learn-and-numpy-versions-support">Python, scikit-learn and NumPy versions support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../v1_release_notes.html#api-changes-in-detail">API changes in detail</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../v1_release_notes.html#regression-and-classification-api-changes-excluding-time-series">Regression and classification API changes (excluding time series)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../v1_release_notes.html#classes">Classes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../v1_release_notes.html#workflow-and-methods">Workflow and methods</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../v1_release_notes.html#parameters">Parameters</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../v1_release_notes.html#other-api-changes">Other API changes</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../v1_release_notes.html#time-series">Time series</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../v1_release_notes.html#risk-control">Risk control</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../v1_release_notes.html#calibration">Calibration</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../v1_release_notes.html#mondrian">Mondrian</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../v1_release_notes.html#metrics">Metrics</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../v1_release_notes.html#conformity-scores">Conformity scores</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Measure predictions uncertainty</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../index_regression.html">Prediction intervals (regression)</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../choosing_the_right_algorithm_regression.html">Choose the right algorithm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../1-quickstart/plot_toy_model.html">Use MAPIE to plot prediction intervals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../1-quickstart/plot_prefit.html">Use MAPIE with a pre-trained model</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../index.html">All regression examples</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../1-quickstart/index.html">1. Quickstart</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../1-quickstart/plot_toy_model.html">Use MAPIE to plot prediction intervals</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../1-quickstart/plot_compare_conformity_scores.html">Use MAPIE on data with gamma distribution</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../1-quickstart/plot_prefit.html">Use MAPIE with a pre-trained model</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../1-quickstart/plot_heteroscedastic_1d_data.html">Use MAPIE on data with uneven uncertainty</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../1-quickstart/plot_homoscedastic_1d_data.html">Use MAPIE on data with constant uncertainty</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../1-quickstart/plot_ts-tutorial.html">Tutorial for time series</a></li>
+</ul>
+</li>
+<li class="toctree-l3 current"><a class="reference internal" href="index.html">2. Advanced analysis</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="plot_conformal_predictive_distribution.html">Conformal Predictive Distribution with MAPIE</a></li>
+<li class="toctree-l4"><a class="reference internal" href="plot_cqr_symmetry_difference.html">The symmetric correction parameter in conformalized quantile regression</a></li>
+<li class="toctree-l4"><a class="reference internal" href="plot_nested-cv.html">Hyperparameters tuning with cross-conformal regression</a></li>
+<li class="toctree-l4"><a class="reference internal" href="plot_both_uncertainties.html">Estimating aleatoric and epistemic uncertainties</a></li>
+<li class="toctree-l4"><a class="reference internal" href="plot_timeseries_enbpi.html">Time series: example of the EnbPI technique</a></li>
+<li class="toctree-l4"><a class="reference internal" href="plot-coverage-width-based-criterion.html">Focus on intervals width</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">Focus on residual normalised score</a></li>
+<li class="toctree-l4"><a class="reference internal" href="plot_conditional_coverage.html">Focus on local (or “conditional”) coverage</a></li>
+<li class="toctree-l4"><a class="reference internal" href="plot_cqr_tutorial.html">Conformalized quantile regression on gamma distributed data</a></li>
+<li class="toctree-l4"><a class="reference internal" href="plot_coverage_validity.html">Coverage validity of MAPIE for regression tasks</a></li>
+<li class="toctree-l4"><a class="reference internal" href="plot_main-tutorial-regression.html">Comparison between conformalized quantile regressor and cross methods</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../3-scientific-articles/index.html">3. Simulations from scientific articles</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../3-scientific-articles/plot_barber2020_simulations.html">Predictive inference with the jackknife+, Foygel-Barber et al. (2020)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../3-scientific-articles/plot_zaffran2022_comparison.html">Adaptive conformal predictions for time series, Zaffran et al. (2022)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../3-scientific-articles/plot_kim2020_simulations.html">Predictive inference is free with the Jackknife+-after-Bootstrap, Kim et al. (2020)</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../4-other-notebooks/index.html">4. Other notebooks</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../theoretical_description_regression.html">Theoretical Description</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../theoretical_description_conformity_scores.html">Theoretical Description for Conformity Scores</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../index_classification.html">Prediction sets (classification)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../choosing_the_right_algorithm_classification.html">Choosing the right algorithm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples_classification/1-quickstart/plot_quickstart_classification.html">Use MAPIE to plot prediction sets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples_classification/index.html">All classification examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_classification/1-quickstart/index.html">1. Quickstart examples</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_classification/1-quickstart/plot_quickstart_classification.html">Use MAPIE to plot prediction sets</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_classification/2-advanced-analysis/index.html">2. Advanced analysis</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_classification/2-advanced-analysis/plot_comp_methods_on_2d_dataset.html">LAC and APS methods explained</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_classification/2-advanced-analysis/plot_main-tutorial-binary-classification.html">Set prediction example in the binary classification setting</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_classification/2-advanced-analysis/plot_crossconformal.html">Cross conformal classification explained</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_classification/3-scientific-articles/index.html">3. Simulations from scientific articles</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_classification/3-scientific-articles/plot_sadinle2019_example.html">Least Ambiguous Set-Valued Classifiers with Bounded Error Levels, Sadinle et al. (2019)</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_classification/4-other-notebooks/index.html">4. Other notebooks</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../theoretical_description_classification.html">Theoretical Description</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../index_binary_classification.html">The binary classification case</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_classification/2-advanced-analysis/plot_main-tutorial-binary-classification.html">Set prediction example in the binary classification setting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../theoretical_description_binary_classification.html">Theoretical Description</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Control prediction errors</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../theoretical_description_risk_control.html">Getting started with risk control in MAPIE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples_risk_control/1-quickstart/plot_risk_control_binary_classification.html">Use MAPIE to control the precision of a binary classifier</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples_risk_control/index.html">All risk control examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../examples_risk_control/1-quickstart/index.html">1. Quickstart examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_risk_control/1-quickstart/plot_risk_control_binary_classification.html">Use MAPIE to control the precision of a binary classifier</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples_risk_control/2-advanced-analysis/index.html">2. Advanced analysis</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_risk_control/2-advanced-analysis/plot_risk_control_multi-label_classification.html">Use MAPIE to control the risk of a multi-label classifier</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_risk_control/2-advanced-analysis/plot_risk_control_multi_parameter_binary_classification.html">Use MAPIE to control risk of a binary classifier with multiple prediction parameters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_risk_control/2-advanced-analysis/plot_semantic_segmentation_recall_control.html">Recall control for semantic segmentation with MAPIE</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_risk_control/2-advanced-analysis/plot_semantic_segmentation_precision_control.html">Precision control for semantic segmentation with MAPIE</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_risk_control/2-advanced-analysis/plot_multi_risk_control_binary_classification.html">Use MAPIE to control multiple risks of a binary classifier</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_risk_control/2-advanced-analysis/plot_risk_control_llm_as_a_judge.html">Risk Control for LLM as a Judge with Abstention</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../external_risk_control_package.html">Additional resources: external risk control package</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Calibrate classifiers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../theoretical_description_calibration.html">Theoretical Description</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples_calibration/index.html">Calibration examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../examples_calibration/1-quickstart/index.html">1. Quickstart examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_calibration/1-quickstart/plot_calibration_venn_abers_binary.html">Calibrating binary classifier with Venn-ABERS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_calibration/1-quickstart/plot_calibration_hypothesis_testing.html">Testing for calibration in binary classification settings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_calibration/1-quickstart/plot_calibration_venn_abers_multiclass.html">Calibrating multi-class classifier with Venn-ABERS</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples_calibration/2-advanced-analysis/index.html">2. Advanced analysis</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_calibration/2-advanced-analysis/plot_asymptotic_convergence_of_p_values.html">Evaluating the asymptotic convergence of p-values</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../notebooks_calibration.html">Calibration notebooks</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Question &amp; Answers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../theoretical_description_metrics.html">Metrics: how to measure conformal prediction performance?</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../theoretical_description_metrics.html#general-metrics">1. General Metrics</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../theoretical_description_metrics.html#regression-coverage-score">Regression Coverage Score</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../theoretical_description_metrics.html#regression-mean-width-score">Regression Mean Width Score</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../theoretical_description_metrics.html#classification-coverage-score">Classification Coverage Score</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../theoretical_description_metrics.html#classification-mean-width-score">Classification Mean Width Score</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../theoretical_description_metrics.html#size-stratified-coverage">Size-Stratified Coverage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../theoretical_description_metrics.html#hilbert-schmidt-independence-criterion">Hilbert-Schmidt Independence Criterion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../theoretical_description_metrics.html#coverage-width-based-criterion">Coverage Width-Based Criterion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../theoretical_description_metrics.html#mean-winkler-interval-score">Mean Winkler Interval Score</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../theoretical_description_metrics.html#calibration-metrics">2. Calibration Metrics</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../theoretical_description_metrics.html#expected-calibration-error">Expected Calibration Error</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../theoretical_description_metrics.html#top-label-expected-calibration-error-top-label-ece">Top-Label Expected Calibration Error (Top-Label ECE)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../theoretical_description_metrics.html#cumulative-differences">Cumulative Differences</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../theoretical_description_metrics.html#kolmogorov-smirnov-statistic-for-calibration">Kolmogorov-Smirnov Statistic for Calibration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../theoretical_description_metrics.html#kuiper-s-test">Kuiper’s Test</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../theoretical_description_metrics.html#spiegelhalters-test">Spiegelhalter’s Test</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../theoretical_description_metrics.html#references">References</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../index_mondrian.html">Mondrian: how to use prior knowledge on groups when measuring uncertainty?</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html">Tutorial: how to ensure fairness across groups with Mondrian</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html#create-the-noisy-dataset">1. Create the noisy dataset</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html#split-the-dataset-into-a-training-set-a-conformalization-set-and-a-test-set">2. Split the dataset into a training set, a conformalization set, and a test set</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html#fit-a-random-forest-regressor-on-the-training-set">3. Fit a random forest regressor on the training set</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html#build-the-classical-conformal-prediction-intervals">4. Build the classical conformal prediction intervals</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html#conformalize-a-splitconformalregressor-on-the-conformalization-set">Conformalize a SplitConformalRegressor on the conformalization set</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html#predict-the-prediction-intervals-on-the-test-set">Predict the prediction intervals on the test set</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html#evaluate-the-coverage-score-by-group">Evaluate the coverage score by group</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html#build-the-mondrian-conformal-prediction-intervals">5. Build the Mondrian conformal prediction intervals</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html#conformalize-a-splitconformalregressor-on-the-conformalization-set-for-each-group">Conformalize a SplitConformalRegressor on the conformalization set for each group</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html#id1">Predict the prediction intervals on the test set</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html#compare-the-coverage-by-partition-plot-both-methods-side-by-side">6. Compare the coverage by partition, plot both methods side by side</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../theoretical_description_mondrian.html">Theoretical Description</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../theoretical_description_mondrian.html#references">References</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../llm_risk_control.html">How to control LLM risks?</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html">MAPIE API</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../api.html#regression">Regression</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api.html#conformalizers">Conformalizers</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.regression.SplitConformalRegressor.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.regression</span></code>.SplitConformalRegressor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.regression.CrossConformalRegressor.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.regression</span></code>.CrossConformalRegressor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.regression.JackknifeAfterBootstrapRegressor.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.regression</span></code>.JackknifeAfterBootstrapRegressor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.regression.ConformalizedQuantileRegressor.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.regression</span></code>.ConformalizedQuantileRegressor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.regression.TimeSeriesRegressor.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.regression</span></code>.TimeSeriesRegressor</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../api.html#metrics">Metrics</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.regression.regression_coverage_score.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.regression</span></code>.regression_coverage_score</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.regression.regression_mean_width_score.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.regression</span></code>.regression_mean_width_score</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.regression.regression_ssc.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.regression</span></code>.regression_ssc</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.regression.regression_ssc_score.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.regression</span></code>.regression_ssc_score</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.regression.hsic.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.regression</span></code>.hsic</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.regression.coverage_width_based.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.regression</span></code>.coverage_width_based</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.regression.regression_mwi_score.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.regression</span></code>.regression_mwi_score</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../api.html#conformity-scores">Conformity Scores</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.conformity_scores.BaseRegressionScore.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.conformity_scores</span></code>.BaseRegressionScore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.conformity_scores.AbsoluteConformityScore.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.conformity_scores</span></code>.AbsoluteConformityScore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.conformity_scores.GammaConformityScore.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.conformity_scores</span></code>.GammaConformityScore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.conformity_scores.ResidualNormalisedScore.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.conformity_scores</span></code>.ResidualNormalisedScore</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../api.html#resampling">Resampling</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.subsample.BlockBootstrap.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.subsample</span></code>.BlockBootstrap</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.subsample.Subsample.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.subsample</span></code>.Subsample</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../api.html#classification">Classification</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api.html#id1">Conformalizers</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.classification.SplitConformalClassifier.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.classification</span></code>.SplitConformalClassifier</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.classification.CrossConformalClassifier.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.classification</span></code>.CrossConformalClassifier</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../api.html#id2">Metrics</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.classification.classification_coverage_score.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.classification</span></code>.classification_coverage_score</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.classification.classification_mean_width_score.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.classification</span></code>.classification_mean_width_score</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.classification.classification_ssc.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.classification</span></code>.classification_ssc</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.classification.classification_ssc_score.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.classification</span></code>.classification_ssc_score</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../api.html#id3">Conformity Scores</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.conformity_scores.BaseClassificationScore.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.conformity_scores</span></code>.BaseClassificationScore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.conformity_scores.NaiveConformityScore.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.conformity_scores</span></code>.NaiveConformityScore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.conformity_scores.LACConformityScore.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.conformity_scores</span></code>.LACConformityScore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.conformity_scores.APSConformityScore.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.conformity_scores</span></code>.APSConformityScore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.conformity_scores.RAPSConformityScore.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.conformity_scores</span></code>.RAPSConformityScore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.conformity_scores.TopKConformityScore.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.conformity_scores</span></code>.TopKConformityScore</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../api.html#risk-control">Risk Control</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../generated/mapie.risk_control.MultiLabelClassificationController.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.risk_control</span></code>.MultiLabelClassificationController</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.risk_control.MultiLabelClassificationController.html#mapie.risk_control.MultiLabelClassificationController"><code class="docutils literal notranslate"><span class="pre">MultiLabelClassificationController</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.risk_control.MultiLabelClassificationController.html#examples-using-mapie-risk-control-multilabelclassificationcontroller">Examples using <code class="docutils literal notranslate"><span class="pre">mapie.risk_control.MultiLabelClassificationController</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../generated/mapie.risk_control.BinaryClassificationController.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.risk_control</span></code>.BinaryClassificationController</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.risk_control.BinaryClassificationController.html#mapie.risk_control.BinaryClassificationController"><code class="docutils literal notranslate"><span class="pre">BinaryClassificationController</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.risk_control.BinaryClassificationController.html#examples-using-mapie-risk-control-binaryclassificationcontroller">Examples using <code class="docutils literal notranslate"><span class="pre">mapie.risk_control.BinaryClassificationController</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../generated/mapie.risk_control.SemanticSegmentationController.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.risk_control</span></code>.SemanticSegmentationController</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.risk_control.SemanticSegmentationController.html#mapie.risk_control.SemanticSegmentationController"><code class="docutils literal notranslate"><span class="pre">SemanticSegmentationController</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.risk_control.SemanticSegmentationController.html#examples-using-mapie-risk-control-semanticsegmentationcontroller">Examples using <code class="docutils literal notranslate"><span class="pre">mapie.risk_control.SemanticSegmentationController</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../generated/mapie.risk_control.BinaryClassificationRisk.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.risk_control</span></code>.BinaryClassificationRisk</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.risk_control.BinaryClassificationRisk.html#mapie.risk_control.BinaryClassificationRisk"><code class="docutils literal notranslate"><span class="pre">BinaryClassificationRisk</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.risk_control.BinaryClassificationRisk.html#examples-using-mapie-risk-control-binaryclassificationrisk">Examples using <code class="docutils literal notranslate"><span class="pre">mapie.risk_control.BinaryClassificationRisk</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../api.html#calibration">Calibration</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api.html#conformalizer">Conformalizer</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.calibration.TopLabelCalibrator.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.calibration</span></code>.TopLabelCalibrator</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../api.html#id4">Metrics</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.calibration.expected_calibration_error.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.expected_calibration_error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.calibration.top_label_ece.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.top_label_ece</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.calibration.cumulative_differences.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.cumulative_differences</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.calibration.kolmogorov_smirnov_cdf.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.kolmogorov_smirnov_cdf</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.calibration.kolmogorov_smirnov_p_value.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.kolmogorov_smirnov_p_value</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.calibration.kolmogorov_smirnov_statistic.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.kolmogorov_smirnov_statistic</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.calibration.kuiper_cdf.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.kuiper_cdf</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.calibration.kuiper_p_value.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.kuiper_p_value</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.calibration.kuiper_statistic.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.kuiper_statistic</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.calibration.length_scale.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.length_scale</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.calibration.spiegelhalter_p_value.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.spiegelhalter_p_value</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.metrics.calibration.spiegelhalter_statistic.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.spiegelhalter_statistic</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../api.html#utils">Utils</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../generated/mapie.utils.train_conformalize_test_split.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.utils</span></code>.train_conformalize_test_split</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.utils.train_conformalize_test_split.html#mapie.utils.train_conformalize_test_split"><code class="docutils literal notranslate"><span class="pre">train_conformalize_test_split()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../generated/mapie.utils.train_conformalize_test_split.html#examples-using-mapie-utils-train-conformalize-test-split">Examples using <code class="docutils literal notranslate"><span class="pre">mapie.utils.train_conformalize_test_split</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">MAPIE</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index_regression.html">Prediction intervals (regression)</a></li>
+          <li class="breadcrumb-item"><a href="../index.html">All regression examples</a></li>
+          <li class="breadcrumb-item"><a href="index.html">2. Advanced analysis</a></li>
+      <li class="breadcrumb-item active">Focus on residual normalised score</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/examples_regression/2-advanced-analysis/plot_ResidualNormalisedScore_tutorial.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p>Click <a class="reference internal" href="#sphx-glr-download-examples-regression-2-advanced-analysis-plot-residualnormalisedscore-tutorial-py"><span class="std std-ref">here</span></a>
+to download the full example code</p>
+</div>
+<section class="sphx-glr-example-title" id="focus-on-residual-normalised-score">
+<span id="sphx-glr-examples-regression-2-advanced-analysis-plot-residualnormalisedscore-tutorial-py"></span><h1>Focus on residual normalised score<a class="headerlink" href="#focus-on-residual-normalised-score" title="Link to this heading"></a></h1>
+<p>We will use the sklearn california housing dataset to understand how the
+residual normalised score works and show the multiple ways of using it.</p>
+<p>We will explicit the experimental setup below.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># sphinx_gallery_thumbnail_number = 2</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.ticker</span><span class="w"> </span><span class="kn">import</span> <span class="n">FormatStrFormatter</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">numpy.typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">ArrayLike</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">fetch_california_housing</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.ensemble</span><span class="w"> </span><span class="kn">import</span> <span class="n">RandomForestRegressor</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.linear_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">LinearRegression</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.model_selection</span><span class="w"> </span><span class="kn">import</span> <span class="n">train_test_split</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">mapie.conformity_scores</span><span class="w"> </span><span class="kn">import</span> <span class="n">ResidualNormalisedScore</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mapie.metrics.regression</span><span class="w"> </span><span class="kn">import</span> <span class="n">regression_coverage_score</span><span class="p">,</span> <span class="n">regression_ssc_score</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mapie.regression</span><span class="w"> </span><span class="kn">import</span> <span class="n">SplitConformalRegressor</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mapie.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">train_conformalize_test_split</span>
+
+<span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">)</span>
+
+<span class="n">RANDOM_STATE</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">RANDOM_STATE</span><span class="p">)</span>
+</pre></div>
+</div>
+<section id="data">
+<h2>1. Data<a class="headerlink" href="#data" title="Link to this heading"></a></h2>
+<p>The target variable of this dataset is the median house value for the
+California districts. This dataset is composed of 8 features, including
+variables such as the age of the house, the median income of the
+neighborhood, the average number of rooms or bedrooms or even the location in
+latitude and longitude. In total there are around 20k observations.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">data</span> <span class="o">=</span> <span class="n">fetch_california_housing</span><span class="p">()</span>
+<span class="n">X</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">data</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">target</span>
+</pre></div>
+</div>
+<p>Now let’s visualize a histogram of the price of the houses.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">axs</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+<span class="n">axs</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
+<span class="n">axs</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Median price of houses&quot;</span><span class="p">)</span>
+<span class="n">axs</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Histogram of house prices&quot;</span><span class="p">)</span>
+<span class="n">axs</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">set_major_formatter</span><span class="p">(</span><span class="n">FormatStrFormatter</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%.0f</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="s2">&quot;k&quot;</span><span class="p">))</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_plot_ResidualNormalisedScore_tutorial_001.png" srcset="../../_images/sphx_glr_plot_ResidualNormalisedScore_tutorial_001.png" alt="Histogram of house prices" class = "sphx-glr-single-img"/><p>Let’s now create the different splits for the dataset, with a training,
+conformalize, residual and test set. Recall that the conformalize set is used
+for calibrating the prediction intervals and the residual set is used to fit
+the residual estimator used by the
+<a class="reference internal" href="../../generated/mapie.conformity_scores.ResidualNormalisedScore.html#mapie.conformity_scores.ResidualNormalisedScore" title="mapie.conformity_scores.ResidualNormalisedScore"><code class="xref py py-class docutils literal notranslate"><span class="pre">ResidualNormalisedScore</span></code></a>.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+<span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+
+<span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">X_conformalize</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">y_conformalize</span><span class="p">,</span> <span class="n">y_test</span><span class="p">)</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">train_conformalize_test_split</span><span class="p">(</span>
+        <span class="n">X</span><span class="p">,</span>
+        <span class="n">y</span><span class="p">,</span>
+        <span class="n">train_size</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span>
+        <span class="n">conformalize_size</span><span class="o">=</span><span class="mf">0.28</span><span class="p">,</span>
+        <span class="n">test_size</span><span class="o">=</span><span class="mf">0.02</span><span class="p">,</span>
+        <span class="n">random_state</span><span class="o">=</span><span class="n">RANDOM_STATE</span><span class="p">,</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+
+<span class="n">X_conformalize_prefit</span><span class="p">,</span> <span class="n">X_res</span><span class="p">,</span> <span class="n">y_conformalize_prefit</span><span class="p">,</span> <span class="n">y_res</span> <span class="o">=</span> <span class="n">train_test_split</span><span class="p">(</span>
+    <span class="n">X_conformalize</span><span class="p">,</span> <span class="n">y_conformalize</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="n">RANDOM_STATE</span><span class="p">,</span> <span class="n">test_size</span><span class="o">=</span><span class="mf">0.5</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="models">
+<h2>2. Models<a class="headerlink" href="#models" title="Link to this heading"></a></h2>
+<p>We will now define 4 different ways of using the residual normalised score.
+Remember that this score is only available in the split setup. First, the
+simplest one with all the default parameters :
+a <a class="reference external" href="http://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LinearRegression.html#sklearn.linear_model.LinearRegression" title="(in scikit-learn v1.8)"><code class="xref py py-class docutils literal notranslate"><span class="pre">LinearRegression</span></code></a> is used for the residual
+estimator. (Note that to avoid negative values it is trained with the log
+of the features and the exponential of the predictions are used).
+It is also possible to use it with <code class="docutils literal notranslate"><span class="pre">prefit=True</span></code> i.e. with
+the base model trained beforehand. The third setup that we illustrate here
+is with the residual model prefitted : we can set the estimator in parameters
+of the class, not forgetting to specify <code class="docutils literal notranslate"><span class="pre">prefit=&quot;True&quot;</span></code>. Finally, as an
+example of the exotic parameterisation we use as a residual
+estimator a <a class="reference external" href="http://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LinearRegression.html#sklearn.linear_model.LinearRegression" title="(in scikit-learn v1.8)"><code class="xref py py-class docutils literal notranslate"><span class="pre">LinearRegression</span></code></a> wrapped to avoid
+negative values like it is done by default in the class.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">PosEstim</span><span class="p">(</span><span class="n">LinearRegression</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">(</span><span class="mf">1e-8</span><span class="p">)))))</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="n">y_pred</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">y_pred</span><span class="p">)</span>
+
+
+<span class="n">base_model</span> <span class="o">=</span> <span class="n">RandomForestRegressor</span><span class="p">(</span><span class="n">n_estimators</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="n">RANDOM_STATE</span><span class="p">)</span>
+<span class="n">base_model</span> <span class="o">=</span> <span class="n">base_model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
+
+<span class="n">residual_estimator</span> <span class="o">=</span> <span class="n">RandomForestRegressor</span><span class="p">(</span>
+    <span class="n">n_estimators</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">max_leaf_nodes</span><span class="o">=</span><span class="mi">70</span><span class="p">,</span> <span class="n">min_samples_leaf</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="n">RANDOM_STATE</span>
+<span class="p">)</span>
+<span class="n">residual_estimator</span> <span class="o">=</span> <span class="n">residual_estimator</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
+    <span class="n">X_res</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">subtract</span><span class="p">(</span><span class="n">y_res</span><span class="p">,</span> <span class="n">base_model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_res</span><span class="p">)))</span>
+<span class="p">)</span>
+<span class="n">wrapped_residual_estimator</span> <span class="o">=</span> <span class="n">PosEstim</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
+    <span class="n">X_res</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">subtract</span><span class="p">(</span><span class="n">y_res</span><span class="p">,</span> <span class="n">base_model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_res</span><span class="p">)))</span>
+<span class="p">)</span>
+
+<span class="n">CONFIDENCE_LEVEL</span> <span class="o">=</span> <span class="mf">0.9</span>
+
+<span class="c1"># Estimating prediction intervals</span>
+<span class="n">STRATEGIES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;Default&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;class&quot;</span><span class="p">:</span> <span class="n">SplitConformalRegressor</span><span class="p">,</span>
+        <span class="s2">&quot;init_params&quot;</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span>
+            <span class="n">confidence_level</span><span class="o">=</span><span class="n">CONFIDENCE_LEVEL</span><span class="p">,</span>
+            <span class="n">prefit</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">conformity_score</span><span class="o">=</span><span class="n">ResidualNormalisedScore</span><span class="p">(),</span>
+        <span class="p">),</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;Base model prefit&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;class&quot;</span><span class="p">:</span> <span class="n">SplitConformalRegressor</span><span class="p">,</span>
+        <span class="s2">&quot;init_params&quot;</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span>
+            <span class="n">estimator</span><span class="o">=</span><span class="n">base_model</span><span class="p">,</span>
+            <span class="n">confidence_level</span><span class="o">=</span><span class="n">CONFIDENCE_LEVEL</span><span class="p">,</span>
+            <span class="n">prefit</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">conformity_score</span><span class="o">=</span><span class="n">ResidualNormalisedScore</span><span class="p">(</span>
+                <span class="n">split_size</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+                <span class="n">random_state</span><span class="o">=</span><span class="n">RANDOM_STATE</span><span class="p">,</span>
+            <span class="p">),</span>
+        <span class="p">),</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;Base and residual model prefit&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;class&quot;</span><span class="p">:</span> <span class="n">SplitConformalRegressor</span><span class="p">,</span>
+        <span class="s2">&quot;init_params&quot;</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span>
+            <span class="n">estimator</span><span class="o">=</span><span class="n">base_model</span><span class="p">,</span>
+            <span class="n">confidence_level</span><span class="o">=</span><span class="n">CONFIDENCE_LEVEL</span><span class="p">,</span>
+            <span class="n">prefit</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">conformity_score</span><span class="o">=</span><span class="n">ResidualNormalisedScore</span><span class="p">(</span>
+                <span class="n">residual_estimator</span><span class="o">=</span><span class="n">residual_estimator</span><span class="p">,</span>
+                <span class="n">random_state</span><span class="o">=</span><span class="n">RANDOM_STATE</span><span class="p">,</span>
+                <span class="n">prefit</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">),</span>
+        <span class="p">),</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;Wrapped residual model&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;class&quot;</span><span class="p">:</span> <span class="n">SplitConformalRegressor</span><span class="p">,</span>
+        <span class="s2">&quot;init_params&quot;</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span>
+            <span class="n">estimator</span><span class="o">=</span><span class="n">base_model</span><span class="p">,</span>
+            <span class="n">confidence_level</span><span class="o">=</span><span class="n">CONFIDENCE_LEVEL</span><span class="p">,</span>
+            <span class="n">prefit</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">conformity_score</span><span class="o">=</span><span class="n">ResidualNormalisedScore</span><span class="p">(</span>
+                <span class="n">residual_estimator</span><span class="o">=</span><span class="n">wrapped_residual_estimator</span><span class="p">,</span>
+                <span class="n">random_state</span><span class="o">=</span><span class="n">RANDOM_STATE</span><span class="p">,</span>
+                <span class="n">prefit</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">),</span>
+        <span class="p">),</span>
+    <span class="p">},</span>
+<span class="p">}</span>
+
+<span class="n">y_pred</span><span class="p">,</span> <span class="n">y_pis</span><span class="p">,</span> <span class="n">coverage</span><span class="p">,</span> <span class="n">cond_coverage</span> <span class="o">=</span> <span class="p">{},</span> <span class="p">{},</span> <span class="p">{},</span> <span class="p">{}</span>
+<span class="n">num_bins</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="k">for</span> <span class="n">strategy_name</span><span class="p">,</span> <span class="n">strategy_params</span> <span class="ow">in</span> <span class="n">STRATEGIES</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+    <span class="n">init_params</span> <span class="o">=</span> <span class="n">strategy_params</span><span class="p">[</span><span class="s2">&quot;init_params&quot;</span><span class="p">]</span>
+    <span class="n">class_</span> <span class="o">=</span> <span class="n">strategy_params</span><span class="p">[</span><span class="s2">&quot;class&quot;</span><span class="p">]</span>
+    <span class="n">mapie</span> <span class="o">=</span> <span class="n">class_</span><span class="p">(</span><span class="o">**</span><span class="n">init_params</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">mapie</span><span class="o">.</span><span class="n">_prefit</span><span class="p">:</span>
+        <span class="n">mapie</span><span class="o">.</span><span class="n">conformalize</span><span class="p">(</span><span class="n">X_conformalize_prefit</span><span class="p">,</span> <span class="n">y_conformalize_prefit</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">mapie</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
+        <span class="n">mapie</span><span class="o">.</span><span class="n">conformalize</span><span class="p">(</span><span class="n">X_conformalize</span><span class="p">,</span> <span class="n">y_conformalize</span><span class="p">)</span>
+    <span class="n">y_pred</span><span class="p">[</span><span class="n">strategy_name</span><span class="p">],</span> <span class="n">y_pis</span><span class="p">[</span><span class="n">strategy_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">mapie</span><span class="o">.</span><span class="n">predict_interval</span><span class="p">(</span><span class="n">X_test</span><span class="p">)</span>
+    <span class="n">coverage</span><span class="p">[</span><span class="n">strategy_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">regression_coverage_score</span><span class="p">(</span><span class="n">y_test</span><span class="p">,</span> <span class="n">y_pis</span><span class="p">[</span><span class="n">strategy_name</span><span class="p">])</span>
+    <span class="n">cond_coverage</span><span class="p">[</span><span class="n">strategy_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">regression_ssc_score</span><span class="p">(</span>
+        <span class="n">y_test</span><span class="p">,</span> <span class="n">y_pis</span><span class="p">[</span><span class="n">strategy_name</span><span class="p">],</span> <span class="n">num_bins</span><span class="o">=</span><span class="n">num_bins</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">yerr</span><span class="p">(</span><span class="n">y_pred</span><span class="p">,</span> <span class="n">intervals</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ArrayLike</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns the error bars with the point prediction and its interval</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    y_pred: ArrayLike</span>
+<span class="sd">        Point predictions.</span>
+<span class="sd">    intervals: ArrayLike</span>
+<span class="sd">        Predictions intervals.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ArrayLike</span>
+<span class="sd">        Error bars.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">y_pred</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-</span> <span class="n">intervals</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="p">,</span>
+                <span class="n">intervals</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">T</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">y_pred</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+            <span class="p">],</span>
+            <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_predictions</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="n">intervals</span><span class="p">,</span> <span class="n">coverage</span><span class="p">,</span> <span class="n">cond_coverage</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Plots y_true against y_pred with the associated interval.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    y: ArrayLike</span>
+<span class="sd">       Observed targets</span>
+<span class="sd">    y_pred: ArrayLike</span>
+<span class="sd">       Predictions</span>
+<span class="sd">    intervals: ArrayLike</span>
+<span class="sd">       Prediction intervals</span>
+<span class="sd">    coverage: float</span>
+<span class="sd">       Global coverage</span>
+<span class="sd">    cond_coverage: float</span>
+<span class="sd">        Maximum violation coverage</span>
+<span class="sd">    ax: matplotlib axes</span>
+<span class="sd">       An ax can be provided to include this plot in a subplot</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">([</span><span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">5.5</span><span class="p">])</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">([</span><span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">5.5</span><span class="p">])</span>
+
+    <span class="n">error</span> <span class="o">=</span> <span class="n">y_pred</span> <span class="o">-</span> <span class="n">intervals</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+    <span class="n">warning1</span> <span class="o">=</span> <span class="n">y_test</span> <span class="o">&gt;</span> <span class="n">y_pred</span> <span class="o">+</span> <span class="n">error</span>
+    <span class="n">warning2</span> <span class="o">=</span> <span class="n">y_test</span> <span class="o">&lt;</span> <span class="n">y_pred</span> <span class="o">-</span> <span class="n">error</span>
+    <span class="n">warnings</span> <span class="o">=</span> <span class="n">warning1</span> <span class="o">+</span> <span class="n">warning2</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">errorbar</span><span class="p">(</span>
+        <span class="n">y</span><span class="p">[</span><span class="o">~</span><span class="n">warnings</span><span class="p">],</span>
+        <span class="n">y_pred</span><span class="p">[</span><span class="o">~</span><span class="n">warnings</span><span class="p">],</span>
+        <span class="n">yerr</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">error</span><span class="p">[</span><span class="o">~</span><span class="n">warnings</span><span class="p">]),</span>
+        <span class="n">color</span><span class="o">=</span><span class="s2">&quot;g&quot;</span><span class="p">,</span>
+        <span class="n">alpha</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+        <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;None&quot;</span><span class="p">,</span>
+        <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Inside prediction interval&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">errorbar</span><span class="p">(</span>
+        <span class="n">y</span><span class="p">[</span><span class="n">warnings</span><span class="p">],</span>
+        <span class="n">y_pred</span><span class="p">[</span><span class="n">warnings</span><span class="p">],</span>
+        <span class="n">yerr</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">error</span><span class="p">[</span><span class="n">warnings</span><span class="p">]),</span>
+        <span class="n">color</span><span class="o">=</span><span class="s2">&quot;r&quot;</span><span class="p">,</span>
+        <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span>
+        <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;None&quot;</span><span class="p">,</span>
+        <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Outside prediction interval&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">y</span><span class="p">),</span> <span class="nb">max</span><span class="p">(</span><span class="n">y_pred</span><span class="p">))],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">y</span><span class="p">),</span> <span class="nb">max</span><span class="p">(</span><span class="n">y_pred</span><span class="p">))],</span> <span class="s2">&quot;-r&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">strategy</span><span class="si">}</span><span class="s2"> - coverage=</span><span class="si">{</span><span class="n">coverage</span><span class="si">:</span><span class="s2">.0%</span><span class="si">}</span><span class="s2"> &quot;</span>
+        <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;- max violation=</span><span class="si">{</span><span class="n">cond_coverage</span><span class="si">:</span><span class="s2">.0%</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;y true&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;y pred&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
+
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">axs</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">nrows</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">ncols</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
+<span class="k">for</span> <span class="n">ax</span><span class="p">,</span> <span class="n">strategy</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">axs</span><span class="o">.</span><span class="n">flat</span><span class="p">,</span> <span class="n">STRATEGIES</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+    <span class="n">plot_predictions</span><span class="p">(</span>
+        <span class="n">y_test</span><span class="p">,</span>
+        <span class="n">y_pred</span><span class="p">[</span><span class="n">strategy</span><span class="p">],</span>
+        <span class="n">y_pis</span><span class="p">[</span><span class="n">strategy</span><span class="p">],</span>
+        <span class="n">coverage</span><span class="p">[</span><span class="n">strategy</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
+        <span class="n">cond_coverage</span><span class="p">[</span><span class="n">strategy</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
+        <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span>
+    <span class="p">)</span>
+
+<span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Predicted values and intervals of level </span><span class="si">{</span><span class="n">CONFIDENCE_LEVEL</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_plot_ResidualNormalisedScore_tutorial_002.png" srcset="../../_images/sphx_glr_plot_ResidualNormalisedScore_tutorial_002.png" alt="Predicted values and intervals of level 0.9, Default - coverage=90% - max violation=69%, Base model prefit - coverage=87% - max violation=64%, Base and residual model prefit - coverage=89% - max violation=78%, Wrapped residual model - coverage=88% - max violation=43%" class = "sphx-glr-single-img"/><p>The results show that all the setups reach the global coverage guaranteed of
+confidence_level.
+It is interesting to note that the “base model prefit” and the “wrapped
+residual model” give exactly the same results. And this is because they are
+the same models : one prefitted and one fitted directly in the class.</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 0 minutes  3.272 seconds)</p>
+<div class="sphx-glr-footer class sphx-glr-footer-example docutils container" id="sphx-glr-download-examples-regression-2-advanced-analysis-plot-residualnormalisedscore-tutorial-py">
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/8095d41e7d018b62d921e18a2d72427d/plot_ResidualNormalisedScore_tutorial.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_ResidualNormalisedScore_tutorial.py</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/2f4c52e473a834c758ea2fe9fe9ea83c/plot_ResidualNormalisedScore_tutorial.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">plot_ResidualNormalisedScore_tutorial.ipynb</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="plot-coverage-width-based-criterion.html" class="btn btn-neutral float-left" title="Focus on intervals width" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="plot_conditional_coverage.html" class="btn btn-neutral float-right" title="Focus on local (or “conditional”) coverage" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Capgemini Invent.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

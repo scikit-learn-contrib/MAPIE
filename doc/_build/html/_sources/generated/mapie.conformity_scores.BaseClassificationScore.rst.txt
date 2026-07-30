@@ -1,0 +1,17 @@
+﻿:mod:`mapie.conformity_scores`.BaseClassificationScore
+=============================================================
+
+.. currentmodule:: mapie.conformity_scores
+
+.. autoclass:: BaseClassificationScore
+   :members:
+
+   
+   .. automethod:: __init__
+   
+
+.. include:: mapie.conformity_scores.BaseClassificationScore.examples
+
+.. raw:: html
+
+    <div style='clear:both'></div>

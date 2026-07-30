@@ -1,0 +1,17 @@
+﻿:mod:`mapie.risk_control`.PrecisionRecallController
+==========================================================
+
+.. currentmodule:: mapie.risk_control
+
+.. autoclass:: PrecisionRecallController
+   :members:
+
+   
+   .. automethod:: __init__
+   
+
+.. include:: mapie.risk_control.PrecisionRecallController.examples
+
+.. raw:: html
+
+    <div style='clear:both'></div>

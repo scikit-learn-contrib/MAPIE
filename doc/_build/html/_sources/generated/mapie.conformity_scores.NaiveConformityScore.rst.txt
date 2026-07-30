@@ -1,0 +1,17 @@
+﻿:mod:`mapie.conformity_scores`.NaiveConformityScore
+==========================================================
+
+.. currentmodule:: mapie.conformity_scores
+
+.. autoclass:: NaiveConformityScore
+   :members:
+
+   
+   .. automethod:: __init__
+   
+
+.. include:: mapie.conformity_scores.NaiveConformityScore.examples
+
+.. raw:: html
+
+    <div style='clear:both'></div>

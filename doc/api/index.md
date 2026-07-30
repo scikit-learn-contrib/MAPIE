@@ -36,6 +36,7 @@ Complete API documentation for MAPIE v1.
 | [`AbsoluteConformityScore`](conformity-scores.md#mapie.conformity_scores.AbsoluteConformityScore) | Absolute residual conformity score |
 | [`GammaConformityScore`](conformity-scores.md#mapie.conformity_scores.GammaConformityScore) | Gamma (normalized) conformity score |
 | [`ResidualNormalisedScore`](conformity-scores.md#mapie.conformity_scores.ResidualNormalisedScore) | Residual normalized conformity score |
+| [`StdConformityScore`](conformity-scores.md#mapie.conformity_scores.StdConformityScore) | Standardized non-conformity score (J+GP) |
 
 ### Resampling
 
@@ -74,6 +75,18 @@ Complete API documentation for MAPIE v1.
 | [`APSConformityScore`](conformity-scores.md#mapie.conformity_scores.APSConformityScore) | Adaptive Prediction Sets score |
 | [`RAPSConformityScore`](conformity-scores.md#mapie.conformity_scores.RAPSConformityScore) | Regularized APS score |
 | [`TopKConformityScore`](conformity-scores.md#mapie.conformity_scores.TopKConformityScore) | Top-K conformity score |
+
+---
+
+## Conditional Conformal Prediction
+
+### Metrics
+
+| Function | Description |
+|---|---|
+| [`coverage_gap`](metrics.md#mapie.metrics.conditional.coverage_gap) | CovGap and WCovGap across predefined groups |
+| [`worst_slab_coverage`](metrics.md#mapie.metrics.conditional.worst_slab_coverage) | Worst-case slab coverage over geometric slices |
+| [`excess_risk_target_coverage`](metrics.md#mapie.metrics.conditional.excess_risk_target_coverage) | ERT conditional coverage diagnostic using a learned coverage model |
 
 ---
 

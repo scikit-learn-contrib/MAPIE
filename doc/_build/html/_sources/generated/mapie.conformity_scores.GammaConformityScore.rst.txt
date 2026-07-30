@@ -1,0 +1,17 @@
+﻿:mod:`mapie.conformity_scores`.GammaConformityScore
+==========================================================
+
+.. currentmodule:: mapie.conformity_scores
+
+.. autoclass:: GammaConformityScore
+   :members:
+
+   
+   .. automethod:: __init__
+   
+
+.. include:: mapie.conformity_scores.GammaConformityScore.examples
+
+.. raw:: html
+
+    <div style='clear:both'></div>

@@ -1,0 +1,12 @@
+﻿:mod:`mapie.metrics.calibration`.kolmogorov_smirnov_cdf
+====================================================================
+
+.. currentmodule:: mapie.metrics.calibration
+
+.. autofunction:: kolmogorov_smirnov_cdf
+
+.. include:: mapie.metrics.calibration.kolmogorov_smirnov_cdf.examples
+
+.. raw:: html
+
+    <div style='clear:both'></div>

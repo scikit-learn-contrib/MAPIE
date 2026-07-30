@@ -1,0 +1,17 @@
+﻿:mod:`mapie.classification`.CrossConformalClassifier
+===========================================================
+
+.. currentmodule:: mapie.classification
+
+.. autoclass:: CrossConformalClassifier
+   :members:
+
+   
+   .. automethod:: __init__
+   
+
+.. include:: mapie.classification.CrossConformalClassifier.examples
+
+.. raw:: html
+
+    <div style='clear:both'></div>

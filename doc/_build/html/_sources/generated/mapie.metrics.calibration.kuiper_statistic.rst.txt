@@ -1,0 +1,12 @@
+﻿:mod:`mapie.metrics.calibration`.kuiper_statistic
+==============================================================
+
+.. currentmodule:: mapie.metrics.calibration
+
+.. autofunction:: kuiper_statistic
+
+.. include:: mapie.metrics.calibration.kuiper_statistic.examples
+
+.. raw:: html
+
+    <div style='clear:both'></div>

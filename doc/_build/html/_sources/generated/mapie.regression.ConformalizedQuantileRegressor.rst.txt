@@ -1,0 +1,17 @@
+﻿:mod:`mapie.regression`.ConformalizedQuantileRegressor
+=============================================================
+
+.. currentmodule:: mapie.regression
+
+.. autoclass:: ConformalizedQuantileRegressor
+   :members:
+
+   
+   .. automethod:: __init__
+   
+
+.. include:: mapie.regression.ConformalizedQuantileRegressor.examples
+
+.. raw:: html
+
+    <div style='clear:both'></div>

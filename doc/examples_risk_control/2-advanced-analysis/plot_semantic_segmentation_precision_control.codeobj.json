@@ -1,0 +1,1045 @@
+{
+ "Path": [
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "pathlib",
+   "module_short": "pathlib",
+   "name": "Path"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "pathlib",
+   "module_short": "pathlib",
+   "name": "PurePath"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "pathlib",
+   "module_short": "pathlib",
+   "name": "Path"
+  }
+ ],
+ "RoofSegmentationDataset": [
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "torch.utils.data.dataset",
+   "module_short": "torch.utils.data",
+   "name": "Dataset"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "torch.utils.data",
+   "module_short": "torch.utils.data",
+   "name": "Dataset"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "torch.utils",
+   "module_short": "torch.utils",
+   "name": "Dataset"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "torch",
+   "module_short": "torch",
+   "name": "Dataset"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "typing",
+   "module_short": "typing",
+   "name": "Generic"
+  }
+ ],
+ "SegmentationLightningModule": [
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "pytorch_lightning.core.module",
+   "module_short": "pytorch_lightning",
+   "name": "LightningModule"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "pytorch_lightning.core",
+   "module_short": "pytorch_lightning",
+   "name": "LightningModule"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "pytorch_lightning",
+   "module_short": "pytorch_lightning",
+   "name": "LightningModule"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "lightning_fabric.utilities.device_dtype_mixin",
+   "module_short": "lightning_fabric.utilities.device_dtype_mixin",
+   "name": "_DeviceDtypeModuleMixin"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "lightning_fabric.utilities",
+   "module_short": "lightning_fabric.utilities",
+   "name": "_DeviceDtypeModuleMixin"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "lightning_fabric",
+   "module_short": "lightning_fabric",
+   "name": "_DeviceDtypeModuleMixin"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "pytorch_lightning.core.mixins.hparams_mixin",
+   "module_short": "pytorch_lightning.core.mixins",
+   "name": "HyperparametersMixin"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "pytorch_lightning.core.mixins",
+   "module_short": "pytorch_lightning.core.mixins",
+   "name": "HyperparametersMixin"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "pytorch_lightning.core",
+   "module_short": "pytorch_lightning.core",
+   "name": "HyperparametersMixin"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "pytorch_lightning",
+   "module_short": "pytorch_lightning",
+   "name": "HyperparametersMixin"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "pytorch_lightning.core.hooks",
+   "module_short": "pytorch_lightning.core.hooks",
+   "name": "ModelHooks"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "pytorch_lightning.core",
+   "module_short": "pytorch_lightning.core",
+   "name": "ModelHooks"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "pytorch_lightning",
+   "module_short": "pytorch_lightning",
+   "name": "ModelHooks"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "pytorch_lightning.core.hooks",
+   "module_short": "pytorch_lightning.core.hooks",
+   "name": "DataHooks"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "pytorch_lightning.core",
+   "module_short": "pytorch_lightning.core",
+   "name": "DataHooks"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "pytorch_lightning",
+   "module_short": "pytorch_lightning",
+   "name": "DataHooks"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "pytorch_lightning.core.hooks",
+   "module_short": "pytorch_lightning.core.hooks",
+   "name": "CheckpointHooks"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "pytorch_lightning.core",
+   "module_short": "pytorch_lightning.core",
+   "name": "CheckpointHooks"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "pytorch_lightning",
+   "module_short": "pytorch_lightning",
+   "name": "CheckpointHooks"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "torch.nn.modules.module",
+   "module_short": "torch.nn",
+   "name": "Module"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "torch.nn.modules",
+   "module_short": "torch.nn",
+   "name": "Module"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "torch.nn",
+   "module_short": "torch.nn",
+   "name": "Module"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "torch",
+   "module_short": "torch",
+   "name": "Module"
+  }
+ ],
+ "SegmentationLightningModule.load_from_checkpoint": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "function"
+  }
+ ],
+ "SemanticSegmentationController": [
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "mapie.risk_control.semantic_segmentation",
+   "module_short": "mapie.risk_control",
+   "name": "SemanticSegmentationController"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "mapie.risk_control",
+   "module_short": "mapie.risk_control",
+   "name": "SemanticSegmentationController"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "mapie",
+   "module_short": "mapie",
+   "name": "SemanticSegmentationController"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "mapie.risk_control.multi_label_classification",
+   "module_short": "mapie.risk_control",
+   "name": "MultiLabelClassificationController"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "mapie.risk_control",
+   "module_short": "mapie.risk_control",
+   "name": "MultiLabelClassificationController"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "mapie",
+   "module_short": "mapie",
+   "name": "MultiLabelClassificationController"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "mapie.risk_control",
+   "module_short": "mapie.risk_control",
+   "name": "SemanticSegmentationController"
+  }
+ ],
+ "get_validation_transforms": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "function"
+  }
+ ],
+ "hf_hub_download": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "function"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "huggingface_hub",
+   "module_short": "huggingface_hub",
+   "name": "hf_hub_download"
+  }
+ ],
+ "hf_module": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "module"
+  }
+ ],
+ "hf_module.RoofSegmentationDataset": [
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "torch.utils.data.dataset",
+   "module_short": "torch.utils.data",
+   "name": "Dataset"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "torch.utils.data",
+   "module_short": "torch.utils.data",
+   "name": "Dataset"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "torch.utils",
+   "module_short": "torch.utils",
+   "name": "Dataset"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "torch",
+   "module_short": "torch",
+   "name": "Dataset"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "typing",
+   "module_short": "typing",
+   "name": "Generic"
+  }
+ ],
+ "hf_module.SegmentationLightningModule": [
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "pytorch_lightning.core.module",
+   "module_short": "pytorch_lightning",
+   "name": "LightningModule"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "pytorch_lightning.core",
+   "module_short": "pytorch_lightning",
+   "name": "LightningModule"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "pytorch_lightning",
+   "module_short": "pytorch_lightning",
+   "name": "LightningModule"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "lightning_fabric.utilities.device_dtype_mixin",
+   "module_short": "lightning_fabric.utilities.device_dtype_mixin",
+   "name": "_DeviceDtypeModuleMixin"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "lightning_fabric.utilities",
+   "module_short": "lightning_fabric.utilities",
+   "name": "_DeviceDtypeModuleMixin"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "lightning_fabric",
+   "module_short": "lightning_fabric",
+   "name": "_DeviceDtypeModuleMixin"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "pytorch_lightning.core.mixins.hparams_mixin",
+   "module_short": "pytorch_lightning.core.mixins",
+   "name": "HyperparametersMixin"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "pytorch_lightning.core.mixins",
+   "module_short": "pytorch_lightning.core.mixins",
+   "name": "HyperparametersMixin"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "pytorch_lightning.core",
+   "module_short": "pytorch_lightning.core",
+   "name": "HyperparametersMixin"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "pytorch_lightning",
+   "module_short": "pytorch_lightning",
+   "name": "HyperparametersMixin"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "pytorch_lightning.core.hooks",
+   "module_short": "pytorch_lightning.core.hooks",
+   "name": "ModelHooks"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "pytorch_lightning.core",
+   "module_short": "pytorch_lightning.core",
+   "name": "ModelHooks"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "pytorch_lightning",
+   "module_short": "pytorch_lightning",
+   "name": "ModelHooks"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "pytorch_lightning.core.hooks",
+   "module_short": "pytorch_lightning.core.hooks",
+   "name": "DataHooks"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "pytorch_lightning.core",
+   "module_short": "pytorch_lightning.core",
+   "name": "DataHooks"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "pytorch_lightning",
+   "module_short": "pytorch_lightning",
+   "name": "DataHooks"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "pytorch_lightning.core.hooks",
+   "module_short": "pytorch_lightning.core.hooks",
+   "name": "CheckpointHooks"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "pytorch_lightning.core",
+   "module_short": "pytorch_lightning.core",
+   "name": "CheckpointHooks"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "pytorch_lightning",
+   "module_short": "pytorch_lightning",
+   "name": "CheckpointHooks"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "torch.nn.modules.module",
+   "module_short": "torch.nn",
+   "name": "Module"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "torch.nn.modules",
+   "module_short": "torch.nn",
+   "name": "Module"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "torch.nn",
+   "module_short": "torch.nn",
+   "name": "Module"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "torch",
+   "module_short": "torch",
+   "name": "Module"
+  }
+ ],
+ "hf_module.get_validation_transforms": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "function"
+  }
+ ],
+ "importlib.util.module_from_spec": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "function"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "importlib.util",
+   "module_short": "importlib.util",
+   "name": "module_from_spec"
+  }
+ ],
+ "importlib.util.spec_from_file_location": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "function"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "importlib.util",
+   "module_short": "importlib.util",
+   "name": "spec_from_file_location"
+  }
+ ],
+ "mapie.risk_control.SemanticSegmentationController": [
+  {
+   "is_class": false,
+   "is_explicit": true,
+   "module": "mapie.risk_control",
+   "module_short": "mapie.risk_control",
+   "name": "SemanticSegmentationController"
+  },
+  {
+   "is_class": false,
+   "is_explicit": true,
+   "module": "mapie.risk_control",
+   "module_short": "mapie.risk_control",
+   "name": "SemanticSegmentationController"
+  }
+ ],
+ "module_path": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "str"
+  }
+ ],
+ "np.array": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "builtin_function_or_method"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "numpy",
+   "module_short": "numpy",
+   "name": "array"
+  }
+ ],
+ "np.clip": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "numpy",
+   "module_short": "numpy",
+   "name": "_ArrayFunctionDispatcher"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "numpy",
+   "module_short": "numpy",
+   "name": "clip"
+  }
+ ],
+ "np.empty": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "builtin_function_or_method"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "numpy",
+   "module_short": "numpy",
+   "name": "empty"
+  }
+ ],
+ "np.ndarray": [
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "numpy",
+   "module_short": "numpy",
+   "name": "ndarray"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "numpy",
+   "module_short": "numpy",
+   "name": "ndarray"
+  }
+ ],
+ "np.quantile": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "numpy",
+   "module_short": "numpy",
+   "name": "_ArrayFunctionDispatcher"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "numpy",
+   "module_short": "numpy",
+   "name": "quantile"
+  }
+ ],
+ "np.random.choice": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "module.choice"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "numpy.random",
+   "module_short": "numpy.random",
+   "name": "choice"
+  }
+ ],
+ "np.random.default_rng": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "_cython_3_0_11",
+   "module_short": "_cython_3_0_11",
+   "name": "cython_function_or_method"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "numpy.random",
+   "module_short": "numpy.random",
+   "name": "default_rng"
+  }
+ ],
+ "np.random.seed": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "_cython_3_0_11",
+   "module_short": "_cython_3_0_11",
+   "name": "cython_function_or_method"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "numpy.random",
+   "module_short": "numpy.random",
+   "name": "seed"
+  }
+ ],
+ "np.zeros": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "builtin_function_or_method"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "numpy",
+   "module_short": "numpy",
+   "name": "zeros"
+  }
+ ],
+ "plt.show": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "function"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "matplotlib.pyplot",
+   "module_short": "matplotlib.pyplot",
+   "name": "show"
+  }
+ ],
+ "plt.subplots": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "function"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "matplotlib.pyplot",
+   "module_short": "matplotlib.pyplot",
+   "name": "subplots"
+  }
+ ],
+ "plt.tight_layout": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "function"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "matplotlib.pyplot",
+   "module_short": "matplotlib.pyplot",
+   "name": "tight_layout"
+  }
+ ],
+ "snapshot_download": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "function"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "huggingface_hub",
+   "module_short": "huggingface_hub",
+   "name": "snapshot_download"
+  }
+ ],
+ "spec": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "importlib._bootstrap",
+   "module_short": "importlib._bootstrap",
+   "name": "ModuleSpec"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "importlib",
+   "module_short": "importlib",
+   "name": "ModuleSpec"
+  }
+ ],
+ "spec.loader.exec_module": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "importlib._bootstrap_external",
+   "module_short": "importlib._bootstrap_external",
+   "name": "SourceFileLoader.exec_module"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "importlib",
+   "module_short": "importlib",
+   "name": "SourceFileLoader.exec_module"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "importlib._bootstrap_external",
+   "module_short": "importlib._bootstrap_external",
+   "name": "FileLoader.exec_module"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "importlib",
+   "module_short": "importlib",
+   "name": "FileLoader.exec_module"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "importlib._bootstrap_external",
+   "module_short": "importlib._bootstrap_external",
+   "name": "SourceLoader.exec_module"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "importlib",
+   "module_short": "importlib",
+   "name": "SourceLoader.exec_module"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "importlib._bootstrap_external",
+   "module_short": "importlib._bootstrap_external",
+   "name": "_LoaderBasics.exec_module"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "importlib",
+   "module_short": "importlib",
+   "name": "_LoaderBasics.exec_module"
+  }
+ ],
+ "torch.Tensor": [
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "torch",
+   "module_short": "torch",
+   "name": "Tensor"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "torch._C",
+   "module_short": "torch._C",
+   "name": "TensorBase"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "torch",
+   "module_short": "torch",
+   "name": "TensorBase"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "torch",
+   "module_short": "torch",
+   "name": "Tensor"
+  }
+ ],
+ "torch.cuda.is_available": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "function"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "torch.cuda",
+   "module_short": "torch.cuda",
+   "name": "is_available"
+  }
+ ],
+ "torch.no_grad": [
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "torch.autograd.grad_mode",
+   "module_short": "torch",
+   "name": "no_grad"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "torch.autograd",
+   "module_short": "torch",
+   "name": "no_grad"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "torch",
+   "module_short": "torch",
+   "name": "no_grad"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "torch.utils._contextlib",
+   "module_short": "torch.utils._contextlib",
+   "name": "_NoParamDecoratorContextManager"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "torch.utils",
+   "module_short": "torch.utils",
+   "name": "_NoParamDecoratorContextManager"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "torch",
+   "module_short": "torch",
+   "name": "_NoParamDecoratorContextManager"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "torch.utils._contextlib",
+   "module_short": "torch.utils._contextlib",
+   "name": "_DecoratorContextManager"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "torch.utils",
+   "module_short": "torch.utils",
+   "name": "_DecoratorContextManager"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "torch",
+   "module_short": "torch",
+   "name": "_DecoratorContextManager"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "torch",
+   "module_short": "torch",
+   "name": "no_grad"
+  }
+ ],
+ "torch.utils.data.DataLoader": [
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "torch.utils.data.dataloader",
+   "module_short": "torch.utils.data",
+   "name": "DataLoader"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "torch.utils.data",
+   "module_short": "torch.utils.data",
+   "name": "DataLoader"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "torch.utils",
+   "module_short": "torch.utils",
+   "name": "DataLoader"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "torch",
+   "module_short": "torch",
+   "name": "DataLoader"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "typing",
+   "module_short": "typing",
+   "name": "Generic"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "torch.utils.data",
+   "module_short": "torch.utils.data",
+   "name": "DataLoader"
+  }
+ ],
+ "warnings.filterwarnings": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "function"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "warnings",
+   "module_short": "warnings",
+   "name": "filterwarnings"
+  }
+ ]
+}

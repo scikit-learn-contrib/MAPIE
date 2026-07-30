@@ -7,7 +7,7 @@ from sklearn.model_selection import BaseCrossValidator
 
 from mapie._machine_precision import EPSILON
 from numpy.typing import NDArray
-from mapie.utils import _compute_quantiles
+from mapie.utils import _compute_classification_quantile
 
 
 class LACConformityScore(BaseClassificationScore):
@@ -153,7 +153,7 @@ class LACConformityScore(BaseClassificationScore):
         n = len(conformity_scores)
 
         if cv == "prefit" or agg_scores in ["mean"]:
-            quantiles_ = _compute_quantiles(conformity_scores, alpha_np)
+            quantiles_ = _compute_classification_quantile(conformity_scores, alpha_np)
         else:
             quantiles_ = (n + 1) * (1 - alpha_np)
 

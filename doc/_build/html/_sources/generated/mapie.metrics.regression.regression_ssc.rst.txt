@@ -1,0 +1,12 @@
+﻿:mod:`mapie.metrics.regression`.regression_ssc
+===========================================================
+
+.. currentmodule:: mapie.metrics.regression
+
+.. autofunction:: regression_ssc
+
+.. include:: mapie.metrics.regression.regression_ssc.examples
+
+.. raw:: html
+
+    <div style='clear:both'></div>

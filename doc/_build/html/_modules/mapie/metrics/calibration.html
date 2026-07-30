@@ -1,0 +1,1324 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>mapie.metrics.calibration &mdash; MAPIE 1.2.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/project-template.css?v=2b5c7e5c" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery.css?v=d2d258e8" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=6efca38a"></script>
+      <script src="../../../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../_static/js/copybutton.js?v=26522df0"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            MAPIE
+              <img src="../../../_static/mapie_logo_white_cut.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../quick_start.html">Quick Start with MAPIE</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../quick_start.html#download-and-install-the-module">1. Download and install the module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../quick_start.html#regression">2. Regression</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../quick_start.html#classification">3. Classification</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../quick_start.html#risk-control">4. Risk Control</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../split_cross_conformal.html">The conformalization (or “calibration”) set</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../split_cross_conformal.html#split-conformal-predictions">1. Split conformal predictions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../split_cross_conformal.html#split-conformal-predictions-with-a-pre-trained-model">Split conformal predictions with a pre-trained model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../split_cross_conformal.html#split-conformal-predictions-with-an-untrained-model">Split conformal predictions with an untrained model</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../split_cross_conformal.html#cross-conformal-predictions">2. Cross conformal predictions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../choosing_the_right_algorithm.html">Choosing the right algorithm</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../v1_release_notes.html">MAPIE v1 release notes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../v1_release_notes.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../v1_release_notes.html#api-changes-overview">API changes overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../v1_release_notes.html#python-scikit-learn-and-numpy-versions-support">Python, scikit-learn and NumPy versions support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../v1_release_notes.html#api-changes-in-detail">API changes in detail</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../v1_release_notes.html#regression-and-classification-api-changes-excluding-time-series">Regression and classification API changes (excluding time series)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../v1_release_notes.html#classes">Classes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../v1_release_notes.html#workflow-and-methods">Workflow and methods</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../v1_release_notes.html#parameters">Parameters</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../v1_release_notes.html#other-api-changes">Other API changes</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../v1_release_notes.html#time-series">Time series</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../v1_release_notes.html#risk-control">Risk control</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../v1_release_notes.html#calibration">Calibration</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../v1_release_notes.html#mondrian">Mondrian</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../v1_release_notes.html#metrics">Metrics</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../v1_release_notes.html#conformity-scores">Conformity scores</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Measure predictions uncertainty</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../index_regression.html">Prediction intervals (regression)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../choosing_the_right_algorithm_regression.html">Choose the right algorithm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../examples_regression/1-quickstart/plot_toy_model.html">Use MAPIE to plot prediction intervals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../examples_regression/1-quickstart/plot_prefit.html">Use MAPIE with a pre-trained model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../examples_regression/index.html">All regression examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../examples_regression/1-quickstart/index.html">1. Quickstart</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples_regression/1-quickstart/plot_toy_model.html">Use MAPIE to plot prediction intervals</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples_regression/1-quickstart/plot_compare_conformity_scores.html">Use MAPIE on data with gamma distribution</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples_regression/1-quickstart/plot_prefit.html">Use MAPIE with a pre-trained model</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples_regression/1-quickstart/plot_heteroscedastic_1d_data.html">Use MAPIE on data with uneven uncertainty</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples_regression/1-quickstart/plot_homoscedastic_1d_data.html">Use MAPIE on data with constant uncertainty</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples_regression/1-quickstart/plot_ts-tutorial.html">Tutorial for time series</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../examples_regression/2-advanced-analysis/index.html">2. Advanced analysis</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples_regression/2-advanced-analysis/plot_conformal_predictive_distribution.html">Conformal Predictive Distribution with MAPIE</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples_regression/2-advanced-analysis/plot_cqr_symmetry_difference.html">The symmetric correction parameter in conformalized quantile regression</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples_regression/2-advanced-analysis/plot_nested-cv.html">Hyperparameters tuning with cross-conformal regression</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples_regression/2-advanced-analysis/plot_both_uncertainties.html">Estimating aleatoric and epistemic uncertainties</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples_regression/2-advanced-analysis/plot_timeseries_enbpi.html">Time series: example of the EnbPI technique</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples_regression/2-advanced-analysis/plot-coverage-width-based-criterion.html">Focus on intervals width</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples_regression/2-advanced-analysis/plot_ResidualNormalisedScore_tutorial.html">Focus on residual normalised score</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples_regression/2-advanced-analysis/plot_conditional_coverage.html">Focus on local (or “conditional”) coverage</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples_regression/2-advanced-analysis/plot_cqr_tutorial.html">Conformalized quantile regression on gamma distributed data</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples_regression/2-advanced-analysis/plot_coverage_validity.html">Coverage validity of MAPIE for regression tasks</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples_regression/2-advanced-analysis/plot_main-tutorial-regression.html">Comparison between conformalized quantile regressor and cross methods</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../examples_regression/3-scientific-articles/index.html">3. Simulations from scientific articles</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples_regression/3-scientific-articles/plot_barber2020_simulations.html">Predictive inference with the jackknife+, Foygel-Barber et al. (2020)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples_regression/3-scientific-articles/plot_zaffran2022_comparison.html">Adaptive conformal predictions for time series, Zaffran et al. (2022)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples_regression/3-scientific-articles/plot_kim2020_simulations.html">Predictive inference is free with the Jackknife+-after-Bootstrap, Kim et al. (2020)</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../examples_regression/4-other-notebooks/index.html">4. Other notebooks</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../theoretical_description_regression.html">Theoretical Description</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../theoretical_description_conformity_scores.html">Theoretical Description for Conformity Scores</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../index_classification.html">Prediction sets (classification)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../choosing_the_right_algorithm_classification.html">Choosing the right algorithm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../examples_classification/1-quickstart/plot_quickstart_classification.html">Use MAPIE to plot prediction sets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../examples_classification/index.html">All classification examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../examples_classification/1-quickstart/index.html">1. Quickstart examples</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples_classification/1-quickstart/plot_quickstart_classification.html">Use MAPIE to plot prediction sets</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../examples_classification/2-advanced-analysis/index.html">2. Advanced analysis</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples_classification/2-advanced-analysis/plot_comp_methods_on_2d_dataset.html">LAC and APS methods explained</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples_classification/2-advanced-analysis/plot_main-tutorial-binary-classification.html">Set prediction example in the binary classification setting</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples_classification/2-advanced-analysis/plot_crossconformal.html">Cross conformal classification explained</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../examples_classification/3-scientific-articles/index.html">3. Simulations from scientific articles</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples_classification/3-scientific-articles/plot_sadinle2019_example.html">Least Ambiguous Set-Valued Classifiers with Bounded Error Levels, Sadinle et al. (2019)</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../examples_classification/4-other-notebooks/index.html">4. Other notebooks</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../theoretical_description_classification.html">Theoretical Description</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../index_binary_classification.html">The binary classification case</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../examples_classification/2-advanced-analysis/plot_main-tutorial-binary-classification.html">Set prediction example in the binary classification setting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../theoretical_description_binary_classification.html">Theoretical Description</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Control prediction errors</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../theoretical_description_risk_control.html">Getting started with risk control in MAPIE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples_risk_control/1-quickstart/plot_risk_control_binary_classification.html">Use MAPIE to control the precision of a binary classifier</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples_risk_control/index.html">All risk control examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../examples_risk_control/1-quickstart/index.html">1. Quickstart examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../examples_risk_control/1-quickstart/plot_risk_control_binary_classification.html">Use MAPIE to control the precision of a binary classifier</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../examples_risk_control/2-advanced-analysis/index.html">2. Advanced analysis</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../examples_risk_control/2-advanced-analysis/plot_risk_control_multi-label_classification.html">Use MAPIE to control the risk of a multi-label classifier</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../examples_risk_control/2-advanced-analysis/plot_risk_control_multi_parameter_binary_classification.html">Use MAPIE to control risk of a binary classifier with multiple prediction parameters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../examples_risk_control/2-advanced-analysis/plot_semantic_segmentation_recall_control.html">Recall control for semantic segmentation with MAPIE</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../examples_risk_control/2-advanced-analysis/plot_semantic_segmentation_precision_control.html">Precision control for semantic segmentation with MAPIE</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../examples_risk_control/2-advanced-analysis/plot_multi_risk_control_binary_classification.html">Use MAPIE to control multiple risks of a binary classifier</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../examples_risk_control/2-advanced-analysis/plot_risk_control_llm_as_a_judge.html">Risk Control for LLM as a Judge with Abstention</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../external_risk_control_package.html">Additional resources: external risk control package</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Calibrate classifiers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../theoretical_description_calibration.html">Theoretical Description</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples_calibration/index.html">Calibration examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../examples_calibration/1-quickstart/index.html">1. Quickstart examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../examples_calibration/1-quickstart/plot_calibration_venn_abers_binary.html">Calibrating binary classifier with Venn-ABERS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../examples_calibration/1-quickstart/plot_calibration_hypothesis_testing.html">Testing for calibration in binary classification settings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../examples_calibration/1-quickstart/plot_calibration_venn_abers_multiclass.html">Calibrating multi-class classifier with Venn-ABERS</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../examples_calibration/2-advanced-analysis/index.html">2. Advanced analysis</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../examples_calibration/2-advanced-analysis/plot_asymptotic_convergence_of_p_values.html">Evaluating the asymptotic convergence of p-values</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../notebooks_calibration.html">Calibration notebooks</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Question &amp; Answers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../theoretical_description_metrics.html">Metrics: how to measure conformal prediction performance?</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../theoretical_description_metrics.html#general-metrics">1. General Metrics</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../theoretical_description_metrics.html#regression-coverage-score">Regression Coverage Score</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../theoretical_description_metrics.html#regression-mean-width-score">Regression Mean Width Score</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../theoretical_description_metrics.html#classification-coverage-score">Classification Coverage Score</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../theoretical_description_metrics.html#classification-mean-width-score">Classification Mean Width Score</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../theoretical_description_metrics.html#size-stratified-coverage">Size-Stratified Coverage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../theoretical_description_metrics.html#hilbert-schmidt-independence-criterion">Hilbert-Schmidt Independence Criterion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../theoretical_description_metrics.html#coverage-width-based-criterion">Coverage Width-Based Criterion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../theoretical_description_metrics.html#mean-winkler-interval-score">Mean Winkler Interval Score</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../theoretical_description_metrics.html#calibration-metrics">2. Calibration Metrics</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../theoretical_description_metrics.html#expected-calibration-error">Expected Calibration Error</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../theoretical_description_metrics.html#top-label-expected-calibration-error-top-label-ece">Top-Label Expected Calibration Error (Top-Label ECE)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../theoretical_description_metrics.html#cumulative-differences">Cumulative Differences</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../theoretical_description_metrics.html#kolmogorov-smirnov-statistic-for-calibration">Kolmogorov-Smirnov Statistic for Calibration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../theoretical_description_metrics.html#kuiper-s-test">Kuiper’s Test</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../theoretical_description_metrics.html#spiegelhalters-test">Spiegelhalter’s Test</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../theoretical_description_metrics.html#references">References</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../index_mondrian.html">Mondrian: how to use prior knowledge on groups when measuring uncertainty?</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html">Tutorial: how to ensure fairness across groups with Mondrian</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html#create-the-noisy-dataset">1. Create the noisy dataset</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html#split-the-dataset-into-a-training-set-a-conformalization-set-and-a-test-set">2. Split the dataset into a training set, a conformalization set, and a test set</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html#fit-a-random-forest-regressor-on-the-training-set">3. Fit a random forest regressor on the training set</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html#build-the-classical-conformal-prediction-intervals">4. Build the classical conformal prediction intervals</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html#conformalize-a-splitconformalregressor-on-the-conformalization-set">Conformalize a SplitConformalRegressor on the conformalization set</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html#predict-the-prediction-intervals-on-the-test-set">Predict the prediction intervals on the test set</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html#evaluate-the-coverage-score-by-group">Evaluate the coverage score by group</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html#build-the-mondrian-conformal-prediction-intervals">5. Build the Mondrian conformal prediction intervals</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html#conformalize-a-splitconformalregressor-on-the-conformalization-set-for-each-group">Conformalize a SplitConformalRegressor on the conformalization set for each group</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html#id1">Predict the prediction intervals on the test set</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html#compare-the-coverage-by-partition-plot-both-methods-side-by-side">6. Compare the coverage by partition, plot both methods side by side</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../theoretical_description_mondrian.html">Theoretical Description</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../theoretical_description_mondrian.html#references">References</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../llm_risk_control.html">How to control LLM risks?</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html">MAPIE API</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#regression">Regression</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#conformalizers">Conformalizers</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../generated/mapie.regression.SplitConformalRegressor.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.regression</span></code>.SplitConformalRegressor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../generated/mapie.regression.CrossConformalRegressor.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.regression</span></code>.CrossConformalRegressor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../generated/mapie.regression.JackknifeAfterBootstrapRegressor.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.regression</span></code>.JackknifeAfterBootstrapRegressor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../generated/mapie.regression.ConformalizedQuantileRegressor.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.regression</span></code>.ConformalizedQuantileRegressor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../generated/mapie.regression.TimeSeriesRegressor.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.regression</span></code>.TimeSeriesRegressor</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#metrics">Metrics</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../generated/mapie.metrics.regression.regression_coverage_score.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.regression</span></code>.regression_coverage_score</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../generated/mapie.metrics.regression.regression_mean_width_score.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.regression</span></code>.regression_mean_width_score</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../generated/mapie.metrics.regression.regression_ssc.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.regression</span></code>.regression_ssc</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../generated/mapie.metrics.regression.regression_ssc_score.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.regression</span></code>.regression_ssc_score</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../generated/mapie.metrics.regression.hsic.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.regression</span></code>.hsic</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../generated/mapie.metrics.regression.coverage_width_based.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.regression</span></code>.coverage_width_based</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../generated/mapie.metrics.regression.regression_mwi_score.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.regression</span></code>.regression_mwi_score</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#conformity-scores">Conformity Scores</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../generated/mapie.conformity_scores.BaseRegressionScore.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.conformity_scores</span></code>.BaseRegressionScore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../generated/mapie.conformity_scores.AbsoluteConformityScore.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.conformity_scores</span></code>.AbsoluteConformityScore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../generated/mapie.conformity_scores.GammaConformityScore.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.conformity_scores</span></code>.GammaConformityScore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../generated/mapie.conformity_scores.ResidualNormalisedScore.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.conformity_scores</span></code>.ResidualNormalisedScore</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#resampling">Resampling</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../generated/mapie.subsample.BlockBootstrap.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.subsample</span></code>.BlockBootstrap</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../generated/mapie.subsample.Subsample.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.subsample</span></code>.Subsample</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#classification">Classification</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#id1">Conformalizers</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../generated/mapie.classification.SplitConformalClassifier.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.classification</span></code>.SplitConformalClassifier</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../generated/mapie.classification.CrossConformalClassifier.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.classification</span></code>.CrossConformalClassifier</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#id2">Metrics</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../generated/mapie.metrics.classification.classification_coverage_score.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.classification</span></code>.classification_coverage_score</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../generated/mapie.metrics.classification.classification_mean_width_score.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.classification</span></code>.classification_mean_width_score</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../generated/mapie.metrics.classification.classification_ssc.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.classification</span></code>.classification_ssc</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../generated/mapie.metrics.classification.classification_ssc_score.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.classification</span></code>.classification_ssc_score</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#id3">Conformity Scores</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../generated/mapie.conformity_scores.BaseClassificationScore.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.conformity_scores</span></code>.BaseClassificationScore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../generated/mapie.conformity_scores.NaiveConformityScore.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.conformity_scores</span></code>.NaiveConformityScore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../generated/mapie.conformity_scores.LACConformityScore.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.conformity_scores</span></code>.LACConformityScore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../generated/mapie.conformity_scores.APSConformityScore.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.conformity_scores</span></code>.APSConformityScore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../generated/mapie.conformity_scores.RAPSConformityScore.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.conformity_scores</span></code>.RAPSConformityScore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../generated/mapie.conformity_scores.TopKConformityScore.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.conformity_scores</span></code>.TopKConformityScore</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#risk-control">Risk Control</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../generated/mapie.risk_control.MultiLabelClassificationController.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.risk_control</span></code>.MultiLabelClassificationController</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../generated/mapie.risk_control.MultiLabelClassificationController.html#mapie.risk_control.MultiLabelClassificationController"><code class="docutils literal notranslate"><span class="pre">MultiLabelClassificationController</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../generated/mapie.risk_control.MultiLabelClassificationController.html#examples-using-mapie-risk-control-multilabelclassificationcontroller">Examples using <code class="docutils literal notranslate"><span class="pre">mapie.risk_control.MultiLabelClassificationController</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../generated/mapie.risk_control.BinaryClassificationController.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.risk_control</span></code>.BinaryClassificationController</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../generated/mapie.risk_control.BinaryClassificationController.html#mapie.risk_control.BinaryClassificationController"><code class="docutils literal notranslate"><span class="pre">BinaryClassificationController</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../generated/mapie.risk_control.BinaryClassificationController.html#examples-using-mapie-risk-control-binaryclassificationcontroller">Examples using <code class="docutils literal notranslate"><span class="pre">mapie.risk_control.BinaryClassificationController</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../generated/mapie.risk_control.SemanticSegmentationController.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.risk_control</span></code>.SemanticSegmentationController</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../generated/mapie.risk_control.SemanticSegmentationController.html#mapie.risk_control.SemanticSegmentationController"><code class="docutils literal notranslate"><span class="pre">SemanticSegmentationController</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../generated/mapie.risk_control.SemanticSegmentationController.html#examples-using-mapie-risk-control-semanticsegmentationcontroller">Examples using <code class="docutils literal notranslate"><span class="pre">mapie.risk_control.SemanticSegmentationController</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../generated/mapie.risk_control.BinaryClassificationRisk.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.risk_control</span></code>.BinaryClassificationRisk</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../generated/mapie.risk_control.BinaryClassificationRisk.html#mapie.risk_control.BinaryClassificationRisk"><code class="docutils literal notranslate"><span class="pre">BinaryClassificationRisk</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../generated/mapie.risk_control.BinaryClassificationRisk.html#examples-using-mapie-risk-control-binaryclassificationrisk">Examples using <code class="docutils literal notranslate"><span class="pre">mapie.risk_control.BinaryClassificationRisk</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#calibration">Calibration</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#conformalizer">Conformalizer</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../generated/mapie.calibration.TopLabelCalibrator.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.calibration</span></code>.TopLabelCalibrator</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api.html#id4">Metrics</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../generated/mapie.metrics.calibration.expected_calibration_error.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.expected_calibration_error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../generated/mapie.metrics.calibration.top_label_ece.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.top_label_ece</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../generated/mapie.metrics.calibration.cumulative_differences.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.cumulative_differences</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../generated/mapie.metrics.calibration.kolmogorov_smirnov_cdf.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.kolmogorov_smirnov_cdf</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../generated/mapie.metrics.calibration.kolmogorov_smirnov_p_value.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.kolmogorov_smirnov_p_value</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../generated/mapie.metrics.calibration.kolmogorov_smirnov_statistic.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.kolmogorov_smirnov_statistic</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../generated/mapie.metrics.calibration.kuiper_cdf.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.kuiper_cdf</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../generated/mapie.metrics.calibration.kuiper_p_value.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.kuiper_p_value</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../generated/mapie.metrics.calibration.kuiper_statistic.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.kuiper_statistic</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../generated/mapie.metrics.calibration.length_scale.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.length_scale</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../generated/mapie.metrics.calibration.spiegelhalter_p_value.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.spiegelhalter_p_value</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../generated/mapie.metrics.calibration.spiegelhalter_statistic.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.spiegelhalter_statistic</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api.html#utils">Utils</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../generated/mapie.utils.train_conformalize_test_split.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.utils</span></code>.train_conformalize_test_split</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../generated/mapie.utils.train_conformalize_test_split.html#mapie.utils.train_conformalize_test_split"><code class="docutils literal notranslate"><span class="pre">train_conformalize_test_split()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../generated/mapie.utils.train_conformalize_test_split.html#examples-using-mapie-utils-train-conformalize-test-split">Examples using <code class="docutils literal notranslate"><span class="pre">mapie.utils.train_conformalize_test_split</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">MAPIE</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">mapie.metrics.calibration</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for mapie.metrics.calibration</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">scipy</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">numpy.typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">ArrayLike</span><span class="p">,</span> <span class="n">NDArray</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">check_random_state</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mapie._machine_precision</span><span class="w"> </span><span class="kn">import</span> <span class="n">EPSILON</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mapie.utils</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">_check_array_inf</span><span class="p">,</span>
+    <span class="n">_check_array_nan</span><span class="p">,</span>
+    <span class="n">_check_arrays_length</span><span class="p">,</span>
+    <span class="n">_check_binary_zero_one</span><span class="p">,</span>
+    <span class="n">_check_number_bins</span><span class="p">,</span>
+    <span class="n">_check_split_strategy</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.utils.validation</span><span class="w"> </span><span class="kn">import</span> <span class="n">column_or_1d</span>
+
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">cast</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_binning_groups</span><span class="p">(</span>
+    <span class="n">y_score</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">,</span>
+    <span class="n">num_bins</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">strategy</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    y_score : NDArray of shape (n_samples,)</span>
+<span class="sd">        The scores given from the calibrator.</span>
+<span class="sd">    num_bins : int</span>
+<span class="sd">        Number of bins to make the split in the y_score.</span>
+<span class="sd">    strategy : string</span>
+<span class="sd">        The splitting strategy to split y_scores into different bins.</span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    NDArray of shape (num_bins,)</span>
+<span class="sd">        An array of all the splitting points for a new bin.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">bins</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">strategy</span> <span class="o">==</span> <span class="s2">&quot;quantile&quot;</span><span class="p">:</span>
+        <span class="n">quantiles</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">num_bins</span><span class="p">)</span>
+        <span class="n">bins</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">y_score</span><span class="p">,</span> <span class="n">quantiles</span> <span class="o">*</span> <span class="mi">100</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">strategy</span> <span class="o">==</span> <span class="s2">&quot;uniform&quot;</span><span class="p">:</span>
+        <span class="n">bins</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="n">num_bins</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">bin_groups</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array_split</span><span class="p">(</span><span class="n">y_score</span><span class="p">,</span> <span class="n">num_bins</span><span class="p">)</span>
+        <span class="n">bins</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">bin_group</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="k">for</span> <span class="n">bin_group</span> <span class="ow">in</span> <span class="n">bin_groups</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span> <span class="o">+</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">])</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">bins</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_calc_bins</span><span class="p">(</span>
+    <span class="n">y_true</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">,</span>
+    <span class="n">y_score</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">,</span>
+    <span class="n">num_bins</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">strategy</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">NDArray</span><span class="p">,</span> <span class="n">NDArray</span><span class="p">,</span> <span class="n">NDArray</span><span class="p">,</span> <span class="n">NDArray</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    For each bins, calculate the accuracy, average confidence and size.</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    y_true: NDArray of shape (n_samples,)</span>
+<span class="sd">        The &quot;true&quot; values, target for the calibrator.</span>
+<span class="sd">    y_score: NDArray of shape (n_samples,)</span>
+<span class="sd">        The scores given from the calibrator.</span>
+<span class="sd">    num_bins: int</span>
+<span class="sd">        Number of bins to make the split in the y_score.</span>
+<span class="sd">    strategy: str</span>
+<span class="sd">        The way of splitting the predictions into different bins.</span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Union[NDArray, NDArray, NDArray, NDArray]</span>
+<span class="sd">    - [0]: NDArray of shape (num_bins,)</span>
+<span class="sd">    An array of all the splitting points for a new bin.</span>
+<span class="sd">    - [1]: NDArray of shape (num_bins,)</span>
+<span class="sd">    An array of the average accuracy in each of the bins.</span>
+<span class="sd">    - [2]: NDArray of shape (num_bins,)</span>
+<span class="sd">    An array of the average confidence in each of the bins.</span>
+<span class="sd">    - [3]: NDArray of shape (num_bins,)</span>
+<span class="sd">    An array of the number of observations in each of the bins.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">bins</span> <span class="o">=</span> <span class="n">_get_binning_groups</span><span class="p">(</span><span class="n">y_score</span><span class="p">,</span> <span class="n">num_bins</span><span class="p">,</span> <span class="n">strategy</span><span class="p">)</span>
+    <span class="n">binned</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">digitize</span><span class="p">(</span><span class="n">y_score</span><span class="p">,</span> <span class="n">bins</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">bin_accs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">num_bins</span><span class="p">)</span>
+    <span class="n">bin_confs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">num_bins</span><span class="p">)</span>
+    <span class="n">bin_sizes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">num_bins</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="nb">bin</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_bins</span><span class="p">):</span>
+        <span class="n">bin_sizes</span><span class="p">[</span><span class="nb">bin</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">y_score</span><span class="p">[</span><span class="n">binned</span> <span class="o">==</span> <span class="nb">bin</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">bin_sizes</span><span class="p">[</span><span class="nb">bin</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">bin_accs</span><span class="p">[</span><span class="nb">bin</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">y_true</span><span class="p">[</span><span class="n">binned</span> <span class="o">==</span> <span class="nb">bin</span><span class="p">]),</span>
+                <span class="n">bin_sizes</span><span class="p">[</span><span class="nb">bin</span><span class="p">],</span>
+            <span class="p">)</span>
+            <span class="n">bin_confs</span><span class="p">[</span><span class="nb">bin</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">y_score</span><span class="p">[</span><span class="n">binned</span> <span class="o">==</span> <span class="nb">bin</span><span class="p">]),</span>
+                <span class="n">bin_sizes</span><span class="p">[</span><span class="nb">bin</span><span class="p">],</span>
+            <span class="p">)</span>
+    <span class="k">return</span> <span class="n">bins</span><span class="p">,</span> <span class="n">bin_accs</span><span class="p">,</span> <span class="n">bin_confs</span><span class="p">,</span> <span class="n">bin_sizes</span>  <span class="c1"># type: ignore</span>
+
+
+<div class="viewcode-block" id="expected_calibration_error">
+<a class="viewcode-back" href="../../../generated/mapie.metrics.calibration.expected_calibration_error.html#mapie.metrics.calibration.expected_calibration_error">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">expected_calibration_error</span><span class="p">(</span>
+    <span class="n">y_true</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="n">y_scores</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="n">num_bins</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span>
+    <span class="n">split_strategy</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The expected calibration error, which is the difference between</span>
+<span class="sd">    the confidence scores and accuracy per bin [1].</span>
+
+<span class="sd">    [1] Naeini, Mahdi Pakdaman, Gregory Cooper, and Milos Hauskrecht.</span>
+<span class="sd">    &quot;Obtaining well calibrated probabilities using bayesian binning.&quot;</span>
+<span class="sd">    Twenty-Ninth AAAI Conference on Artificial Intelligence. 2015.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    y_true: ArrayLike of shape (n_samples,)</span>
+<span class="sd">        The target values for the calibrator.</span>
+<span class="sd">    y_scores: ArrayLike of shape (n_samples,) or (n_samples, n_classes)</span>
+<span class="sd">        The predictions scores.</span>
+<span class="sd">    num_bins: int</span>
+<span class="sd">        Number of bins to make the split in the y_score. The allowed</span>
+<span class="sd">        values are num_bins above 0.</span>
+<span class="sd">    split_strategy: str</span>
+<span class="sd">        The way of splitting the predictions into different bins.</span>
+<span class="sd">        The allowed split strategies are &quot;uniform&quot;, &quot;quantile&quot; and</span>
+<span class="sd">        &quot;array split&quot;.</span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    float</span>
+<span class="sd">        The score of ECE (Expected Calibration Error).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">split_strategy</span> <span class="o">=</span> <span class="n">_check_split_strategy</span><span class="p">(</span><span class="n">split_strategy</span><span class="p">)</span>
+    <span class="n">num_bins</span> <span class="o">=</span> <span class="n">_check_number_bins</span><span class="p">(</span><span class="n">num_bins</span><span class="p">)</span>
+    <span class="n">y_true_</span> <span class="o">=</span> <span class="n">_check_binary_zero_one</span><span class="p">(</span><span class="n">y_true</span><span class="p">)</span>
+    <span class="n">y_scores</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">NDArray</span><span class="p">,</span> <span class="n">y_scores</span><span class="p">)</span>
+
+    <span class="n">_check_arrays_length</span><span class="p">(</span><span class="n">y_true_</span><span class="p">,</span> <span class="n">y_scores</span><span class="p">)</span>
+    <span class="n">_check_array_nan</span><span class="p">(</span><span class="n">y_true_</span><span class="p">)</span>
+    <span class="n">_check_array_inf</span><span class="p">(</span><span class="n">y_true_</span><span class="p">)</span>
+    <span class="n">_check_array_nan</span><span class="p">(</span><span class="n">y_scores</span><span class="p">)</span>
+    <span class="n">_check_array_inf</span><span class="p">(</span><span class="n">y_scores</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">y_scores</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">y_score</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">NDArray</span><span class="p">,</span> <span class="n">column_or_1d</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanmax</span><span class="p">(</span><span class="n">y_scores</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">y_score</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">NDArray</span><span class="p">,</span> <span class="n">column_or_1d</span><span class="p">(</span><span class="n">y_scores</span><span class="p">))</span>
+
+    <span class="n">_</span><span class="p">,</span> <span class="n">bin_accs</span><span class="p">,</span> <span class="n">bin_confs</span><span class="p">,</span> <span class="n">bin_sizes</span> <span class="o">=</span> <span class="n">_calc_bins</span><span class="p">(</span>
+        <span class="n">y_true_</span><span class="p">,</span> <span class="n">y_score</span><span class="p">,</span> <span class="n">num_bins</span><span class="p">,</span> <span class="n">split_strategy</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">bin_sizes</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">bin_accs</span> <span class="o">-</span> <span class="n">bin_confs</span><span class="p">)),</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">bin_sizes</span><span class="p">)</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="top_label_ece">
+<a class="viewcode-back" href="../../../generated/mapie.metrics.calibration.top_label_ece.html#mapie.metrics.calibration.top_label_ece">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">top_label_ece</span><span class="p">(</span>
+    <span class="n">y_true</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="n">y_scores</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="n">y_score_arg</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ArrayLike</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">num_bins</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span>
+    <span class="n">split_strategy</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">classes</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ArrayLike</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The Top-Label ECE which is a method adapted to fit the</span>
+<span class="sd">    ECE to a Top-Label setting [2].</span>
+
+<span class="sd">    [2] Gupta, Chirag, and Aaditya K. Ramdas.</span>
+<span class="sd">    &quot;Top-label calibration and multiclass-to-binary reductions.&quot;</span>
+<span class="sd">    arXiv preprint arXiv:2107.08353 (2021).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    y_true: ArrayLike of shape (n_samples,)</span>
+<span class="sd">        The target values for the calibrator.</span>
+<span class="sd">    y_scores: ArrayLike of shape (n_samples, n_classes)</span>
+<span class="sd">    or (n_samples,)</span>
+<span class="sd">        The predictions scores, either the maximum score and the</span>
+<span class="sd">        argmax needs to be inputted or in the form of the prediction</span>
+<span class="sd">        probabilities.</span>
+<span class="sd">    y_score_arg: Optional[ArrayLike] of shape (n_samples,)</span>
+<span class="sd">        If only the maximum is provided in the y_scores, the argmax must</span>
+<span class="sd">        be provided here. This is optional and could be directly infered</span>
+<span class="sd">        from the y_scores.</span>
+<span class="sd">    num_bins: int</span>
+<span class="sd">        Number of bins to make the split in the y_score. The allowed</span>
+<span class="sd">        values are num_bins above 0.</span>
+<span class="sd">    split_strategy: str</span>
+<span class="sd">        The way of splitting the predictions into different bins.</span>
+<span class="sd">        The allowed split strategies are &quot;uniform&quot;, &quot;quantile&quot; and</span>
+<span class="sd">        &quot;array split&quot;.</span>
+<span class="sd">    classes: ArrayLike of shape (n_samples,)</span>
+<span class="sd">        The different classes, in order of the indices that would be</span>
+<span class="sd">        present in a pred_proba.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    float</span>
+<span class="sd">        The ECE score adapted in the top label setting.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">y_scores</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">NDArray</span><span class="p">,</span> <span class="n">y_scores</span><span class="p">)</span>
+    <span class="n">y_true</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">NDArray</span><span class="p">,</span> <span class="n">y_true</span><span class="p">)</span>
+    <span class="n">_check_array_nan</span><span class="p">(</span><span class="n">y_true</span><span class="p">)</span>
+    <span class="n">_check_array_inf</span><span class="p">(</span><span class="n">y_true</span><span class="p">)</span>
+    <span class="n">_check_array_nan</span><span class="p">(</span><span class="n">y_scores</span><span class="p">)</span>
+    <span class="n">_check_array_inf</span><span class="p">(</span><span class="n">y_scores</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">y_score_arg</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">_check_arrays_length</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_scores</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">y_score_arg</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">NDArray</span><span class="p">,</span> <span class="n">y_score_arg</span><span class="p">)</span>
+        <span class="n">_check_array_nan</span><span class="p">(</span><span class="n">y_score_arg</span><span class="p">)</span>
+        <span class="n">_check_array_inf</span><span class="p">(</span><span class="n">y_score_arg</span><span class="p">)</span>
+        <span class="n">_check_arrays_length</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_scores</span><span class="p">,</span> <span class="n">y_score_arg</span><span class="p">)</span>
+
+    <span class="n">ece</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span>
+    <span class="n">split_strategy</span> <span class="o">=</span> <span class="n">_check_split_strategy</span><span class="p">(</span><span class="n">split_strategy</span><span class="p">)</span>
+    <span class="n">num_bins</span> <span class="o">=</span> <span class="n">_check_number_bins</span><span class="p">(</span><span class="n">num_bins</span><span class="p">)</span>
+    <span class="n">y_true</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">NDArray</span><span class="p">,</span> <span class="n">column_or_1d</span><span class="p">(</span><span class="n">y_true</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">y_score_arg</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">y_score</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">NDArray</span><span class="p">,</span> <span class="n">column_or_1d</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanmax</span><span class="p">(</span><span class="n">y_scores</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)))</span>
+        <span class="k">if</span> <span class="n">classes</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">y_score_arg</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">NDArray</span><span class="p">,</span> <span class="n">column_or_1d</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanargmax</span><span class="p">(</span><span class="n">y_scores</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">classes</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">NDArray</span><span class="p">,</span> <span class="n">classes</span><span class="p">)</span>
+            <span class="n">y_score_arg</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span>
+                <span class="n">NDArray</span><span class="p">,</span> <span class="n">column_or_1d</span><span class="p">(</span><span class="n">classes</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">nanargmax</span><span class="p">(</span><span class="n">y_scores</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)])</span>
+            <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">y_score</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">NDArray</span><span class="p">,</span> <span class="n">column_or_1d</span><span class="p">(</span><span class="n">y_scores</span><span class="p">))</span>
+        <span class="n">y_score_arg</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">NDArray</span><span class="p">,</span> <span class="n">column_or_1d</span><span class="p">(</span><span class="n">y_score_arg</span><span class="p">))</span>
+    <span class="n">labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">y_score_arg</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">labels</span><span class="p">:</span>
+        <span class="n">label_ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">label</span> <span class="o">==</span> <span class="n">y_score_arg</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">y_true_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">y_true</span><span class="p">[</span><span class="n">label_ind</span><span class="p">]</span> <span class="o">==</span> <span class="n">label</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+        <span class="n">ece</span> <span class="o">+=</span> <span class="n">expected_calibration_error</span><span class="p">(</span>
+            <span class="n">y_true_</span><span class="p">,</span>
+            <span class="n">y_scores</span><span class="o">=</span><span class="n">y_score</span><span class="p">[</span><span class="n">label_ind</span><span class="p">],</span>
+            <span class="n">num_bins</span><span class="o">=</span><span class="n">num_bins</span><span class="p">,</span>
+            <span class="n">split_strategy</span><span class="o">=</span><span class="n">split_strategy</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="n">ece</span> <span class="o">/=</span> <span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">ece</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">add_jitter</span><span class="p">(</span>
+    <span class="n">x</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">,</span>
+    <span class="n">noise_amplitude</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-8</span><span class="p">,</span>
+    <span class="n">random_state</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Add a tiny normal distributed perturbation to an array x.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x : NDArray</span>
+<span class="sd">        The array to jitter.</span>
+
+<span class="sd">    noise_amplitude : float, optional</span>
+<span class="sd">        The tiny relative noise amplitude to add, by default 1e-8.</span>
+
+<span class="sd">    random_state: Optional[Union[int, RandomState]]</span>
+<span class="sd">        Pseudo random number generator state used for random sampling.</span>
+<span class="sd">        Pass an int for reproducible output across multiple function calls.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    NDArray</span>
+<span class="sd">        The array x jittered.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">    &gt;&gt;&gt; from mapie.metrics.calibration import add_jitter</span>
+<span class="sd">    &gt;&gt;&gt; x = np.array([0, 1, 2, 3, 4])</span>
+<span class="sd">    &gt;&gt;&gt; res = add_jitter(x, random_state=1)</span>
+<span class="sd">    &gt;&gt;&gt; res</span>
+<span class="sd">    array([0.        , 0.99999999, 1.99999999, 2.99999997, 4.00000003])</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">random_state_np</span> <span class="o">=</span> <span class="n">check_random_state</span><span class="p">(</span><span class="n">random_state</span><span class="p">)</span>
+    <span class="n">noise</span> <span class="o">=</span> <span class="n">noise_amplitude</span> <span class="o">*</span> <span class="n">random_state_np</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="n">n</span><span class="p">)</span>
+    <span class="n">x_jittered</span> <span class="o">=</span> <span class="n">x</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">noise</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">x_jittered</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">sort_xy_by_y</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">NDArray</span><span class="p">,</span> <span class="n">NDArray</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Sort two arrays x and y according to y values.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x : NDArray of size (n_samples,)</span>
+<span class="sd">        The array to sort according to y.</span>
+<span class="sd">    y : NDArray of size (n_samples,)</span>
+<span class="sd">        The array to sort.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Tuple[NDArray, NDArray]</span>
+<span class="sd">        Both arrays sorted.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">    &gt;&gt;&gt; from mapie.metrics.calibration import sort_xy_by_y</span>
+<span class="sd">    &gt;&gt;&gt; x = np.array([1, 2, 3, 4, 5])</span>
+<span class="sd">    &gt;&gt;&gt; y = np.array([5, 4, 3, 1, 2])</span>
+<span class="sd">    &gt;&gt;&gt; x_sorted, y_sorted = sort_xy_by_y(x, y)</span>
+<span class="sd">    &gt;&gt;&gt; print(x_sorted)</span>
+<span class="sd">    [4 5 3 2 1]</span>
+<span class="sd">    &gt;&gt;&gt; print(y_sorted)</span>
+<span class="sd">    [1 2 3 4 5]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">column_or_1d</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">column_or_1d</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+    <span class="n">sort_index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+    <span class="n">x_sorted</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="n">sort_index</span><span class="p">]</span>
+    <span class="n">y_sorted</span> <span class="o">=</span> <span class="n">y</span><span class="p">[</span><span class="n">sort_index</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">x_sorted</span><span class="p">,</span> <span class="n">y_sorted</span>
+
+
+<div class="viewcode-block" id="cumulative_differences">
+<a class="viewcode-back" href="../../../generated/mapie.metrics.calibration.cumulative_differences.html#mapie.metrics.calibration.cumulative_differences">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">cumulative_differences</span><span class="p">(</span>
+    <span class="n">y_true</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">,</span>
+    <span class="n">y_score</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">,</span>
+    <span class="n">noise_amplitude</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-8</span><span class="p">,</span>
+    <span class="n">random_state</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute the cumulative difference between y_true and y_score, both ordered</span>
+<span class="sd">    according to y_scores array.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    y_true : NDArray of size (n_samples,)</span>
+<span class="sd">        An array of ground truths.</span>
+
+<span class="sd">    y_score : NDArray of size (n_samples,)</span>
+<span class="sd">        An array of scores.</span>
+
+<span class="sd">    noise_amplitude : float, optional</span>
+<span class="sd">        The tiny relative noise amplitude to add, by default 1e-8.</span>
+
+<span class="sd">    random_state: Optional[Union[int, RandomState]]</span>
+<span class="sd">        Pseudo random number generator state used for random sampling.</span>
+<span class="sd">        Pass an int for reproducible output across multiple function calls.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    NDArray</span>
+<span class="sd">        The mean cumulative difference between y_true and y_score.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    Arrieta-Ibarra I, Gujral P, Tannen J, Tygert M, Xu C.</span>
+<span class="sd">    Metrics of calibration for probabilistic predictions.</span>
+<span class="sd">    The Journal of Machine Learning Research.</span>
+<span class="sd">    2022 Jan 1;23(1):15886-940.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">    &gt;&gt;&gt; from mapie.metrics.calibration import cumulative_differences</span>
+<span class="sd">    &gt;&gt;&gt; y_true = np.array([1, 0, 0])</span>
+<span class="sd">    &gt;&gt;&gt; y_score = np.array([0.7, 0.3, 0.6])</span>
+<span class="sd">    &gt;&gt;&gt; cum_diff = cumulative_differences(y_true, y_score)</span>
+<span class="sd">    &gt;&gt;&gt; print(len(cum_diff))</span>
+<span class="sd">    3</span>
+<span class="sd">    &gt;&gt;&gt; print(np.max(cum_diff) &lt;= 1)</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; print(np.min(cum_diff) &gt;= -1)</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; cum_diff</span>
+<span class="sd">    array([-0.1, -0.3, -0.2])</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_check_arrays_length</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_score</span><span class="p">)</span>
+    <span class="n">_check_array_nan</span><span class="p">(</span><span class="n">y_true</span><span class="p">)</span>
+    <span class="n">_check_array_inf</span><span class="p">(</span><span class="n">y_true</span><span class="p">)</span>
+    <span class="n">_check_array_nan</span><span class="p">(</span><span class="n">y_score</span><span class="p">)</span>
+    <span class="n">_check_array_inf</span><span class="p">(</span><span class="n">y_score</span><span class="p">)</span>
+
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">y_true</span><span class="p">)</span>
+    <span class="n">y_score_jittered</span> <span class="o">=</span> <span class="n">add_jitter</span><span class="p">(</span>
+        <span class="n">y_score</span><span class="p">,</span> <span class="n">noise_amplitude</span><span class="o">=</span><span class="n">noise_amplitude</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="n">random_state</span>
+    <span class="p">)</span>
+    <span class="n">y_true_sorted</span><span class="p">,</span> <span class="n">y_score_sorted</span> <span class="o">=</span> <span class="n">sort_xy_by_y</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_score_jittered</span><span class="p">)</span>
+    <span class="n">cumulative_differences</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">y_true_sorted</span> <span class="o">-</span> <span class="n">y_score_sorted</span><span class="p">)</span> <span class="o">/</span> <span class="n">n</span>
+    <span class="k">return</span> <span class="n">cumulative_differences</span></div>
+
+
+
+<div class="viewcode-block" id="length_scale">
+<a class="viewcode-back" href="../../../generated/mapie.metrics.calibration.length_scale.html#mapie.metrics.calibration.length_scale">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">length_scale</span><span class="p">(</span><span class="n">s</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute the mean square root of the sum  of s * (1 - s).</span>
+<span class="sd">    This is basically the standard deviation of the</span>
+<span class="sd">    cumulative differences.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    s : NDArray of shape (n_samples,)</span>
+<span class="sd">        An array of scores.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    float</span>
+<span class="sd">        The length_scale array.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    Arrieta-Ibarra I, Gujral P, Tannen J, Tygert M, Xu C.</span>
+<span class="sd">    Metrics of calibration for probabilistic predictions.</span>
+<span class="sd">    The Journal of Machine Learning Research.</span>
+<span class="sd">    2022 Jan 1;23(1):15886-940.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">    &gt;&gt;&gt; from mapie.metrics.calibration import length_scale</span>
+<span class="sd">    &gt;&gt;&gt; s = np.array([0, 0, 0.4, 0.3, 0.8])</span>
+<span class="sd">    &gt;&gt;&gt; res = length_scale(s)</span>
+<span class="sd">    &gt;&gt;&gt; print(np.round(res, 2))</span>
+<span class="sd">    0.16</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+    <span class="n">length_scale</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">s</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">s</span><span class="p">)))</span> <span class="o">/</span> <span class="n">n</span>
+    <span class="k">return</span> <span class="n">length_scale</span></div>
+
+
+
+<div class="viewcode-block" id="kolmogorov_smirnov_statistic">
+<a class="viewcode-back" href="../../../generated/mapie.metrics.calibration.kolmogorov_smirnov_statistic.html#mapie.metrics.calibration.kolmogorov_smirnov_statistic">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">kolmogorov_smirnov_statistic</span><span class="p">(</span><span class="n">y_true</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">,</span> <span class="n">y_score</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute Kolmogorov-smirnov&#39;s statistic for calibration test.</span>
+<span class="sd">    Also called ECCE-MAD</span>
+<span class="sd">    (Estimated Cumulative Calibration Errors - Maximum Absolute Deviation).</span>
+<span class="sd">    The closer to zero, the better the scores are calibrated.</span>
+<span class="sd">    Indeed, if the scores are perfectly calibrated,</span>
+<span class="sd">    the cumulative differences between ``y_true`` and ``y_score``</span>
+<span class="sd">    should share the same properties of a standard Brownian motion</span>
+<span class="sd">    asymptotically.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    y_true : NDArray of shape (n_samples,)</span>
+<span class="sd">        An array of ground truth.</span>
+
+<span class="sd">    y_score : NDArray of shape (n_samples,)</span>
+<span class="sd">        An array of scores..</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    float</span>
+<span class="sd">        Kolmogorov-smirnov&#39;s statistic.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    Arrieta-Ibarra I, Gujral P, Tannen J, Tygert M, Xu C.</span>
+<span class="sd">    Metrics of calibration for probabilistic predictions.</span>
+<span class="sd">    The Journal of Machine Learning Research.</span>
+<span class="sd">    2022 Jan 1;23(1):15886-940.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">    &gt;&gt;&gt; from mapie.metrics.calibration import kolmogorov_smirnov_statistic</span>
+<span class="sd">    &gt;&gt;&gt; y_true = np.array([0, 1, 0, 1, 0])</span>
+<span class="sd">    &gt;&gt;&gt; y_score = np.array([0.1, 0.9, 0.21, 0.9, 0.5])</span>
+<span class="sd">    &gt;&gt;&gt; print(np.round(kolmogorov_smirnov_statistic(y_true, y_score), 3))</span>
+<span class="sd">    0.978</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_check_arrays_length</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_score</span><span class="p">)</span>
+    <span class="n">_check_array_nan</span><span class="p">(</span><span class="n">y_true</span><span class="p">)</span>
+    <span class="n">_check_array_inf</span><span class="p">(</span><span class="n">y_true</span><span class="p">)</span>
+    <span class="n">_check_array_nan</span><span class="p">(</span><span class="n">y_score</span><span class="p">)</span>
+    <span class="n">_check_array_inf</span><span class="p">(</span><span class="n">y_score</span><span class="p">)</span>
+
+    <span class="n">y_true</span> <span class="o">=</span> <span class="n">column_or_1d</span><span class="p">(</span><span class="n">y_true</span><span class="p">)</span>
+    <span class="n">y_score</span> <span class="o">=</span> <span class="n">column_or_1d</span><span class="p">(</span><span class="n">y_score</span><span class="p">)</span>
+
+    <span class="n">cum_diff</span> <span class="o">=</span> <span class="n">cumulative_differences</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_score</span><span class="p">)</span>
+    <span class="n">sigma</span> <span class="o">=</span> <span class="n">length_scale</span><span class="p">(</span><span class="n">y_score</span><span class="p">)</span>
+    <span class="n">ks_stat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">cum_diff</span><span class="p">))</span> <span class="o">/</span> <span class="n">sigma</span>
+    <span class="k">return</span> <span class="n">ks_stat</span></div>
+
+
+
+<div class="viewcode-block" id="kolmogorov_smirnov_cdf">
+<a class="viewcode-back" href="../../../generated/mapie.metrics.calibration.kolmogorov_smirnov_cdf.html#mapie.metrics.calibration.kolmogorov_smirnov_cdf">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">kolmogorov_smirnov_cdf</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute the Kolmogorov-smirnov cumulative distribution</span>
+<span class="sd">    function (CDF) for the float x.</span>
+<span class="sd">    This is interpreted as the CDF of the maximum absolute value</span>
+<span class="sd">    of the standard Brownian motion over the unit interval [0, 1].</span>
+<span class="sd">    The function is approximated by its power series, truncated so as to hit</span>
+<span class="sd">    machine precision error.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x : float</span>
+<span class="sd">        The float x to compute the cumulative distribution function on.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    float</span>
+<span class="sd">        The Kolmogorov-smirnov cumulative distribution function.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    Tygert M.</span>
+<span class="sd">    Calibration of P-values for calibration and for deviation</span>
+<span class="sd">    of a subpopulation from the full population.</span>
+<span class="sd">    arXiv preprint arXiv:2202.00100.</span>
+<span class="sd">    2022 Jan 31.</span>
+
+<span class="sd">    D. A. Darling. A. J. F. Siegert.</span>
+<span class="sd">    The First Passage Problem for a Continuous Markov Process.</span>
+<span class="sd">    Ann. Math. Statist. 24 (4) 624 - 639, December,</span>
+<span class="sd">    1953.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">    &gt;&gt;&gt; from mapie.metrics.calibration import kolmogorov_smirnov_cdf</span>
+<span class="sd">    &gt;&gt;&gt; print(np.round(kolmogorov_smirnov_cdf(1), 4))</span>
+<span class="sd">    0.3708</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">kmax</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span>
+        <span class="mf">0.5</span> <span class="o">+</span> <span class="n">x</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">4</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">EPSILON</span><span class="p">)))</span>
+    <span class="p">)</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">kmax</span><span class="p">)):</span>
+        <span class="n">kplus</span> <span class="o">=</span> <span class="n">k</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">2</span>
+        <span class="n">c</span> <span class="o">+=</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">**</span> <span class="n">k</span> <span class="o">/</span> <span class="n">kplus</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">kplus</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
+    <span class="n">c</span> <span class="o">*=</span> <span class="mi">2</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span>
+    <span class="k">return</span> <span class="n">c</span></div>
+
+
+
+<div class="viewcode-block" id="kolmogorov_smirnov_p_value">
+<a class="viewcode-back" href="../../../generated/mapie.metrics.calibration.kolmogorov_smirnov_p_value.html#mapie.metrics.calibration.kolmogorov_smirnov_p_value">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">kolmogorov_smirnov_p_value</span><span class="p">(</span><span class="n">y_true</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">,</span> <span class="n">y_score</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute Kolmogorov Smirnov p-value.</span>
+<span class="sd">    Deduced from the corresponding statistic and CDF.</span>
+<span class="sd">    It represents the probability of the observed statistic</span>
+<span class="sd">    under the null hypothesis of perfect calibration.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    y_true : NDArray of shape (n_samples,)</span>
+<span class="sd">        An array of ground truth.</span>
+
+<span class="sd">    y_score : NDArray of shape (n_samples,)</span>
+<span class="sd">        An array of scores.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    float</span>
+<span class="sd">        The Kolmogorov Smirnov p-value.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    Tygert M.</span>
+<span class="sd">    Calibration of P-values for calibration and for deviation</span>
+<span class="sd">    of a subpopulation from the full population.</span>
+<span class="sd">    arXiv preprint arXiv:2202.00100.</span>
+<span class="sd">    2022 Jan 31.</span>
+
+<span class="sd">    D. A. Darling. A. J. F. Siegert.</span>
+<span class="sd">    The First Passage Problem for a Continuous Markov Process.</span>
+<span class="sd">    Ann. Math. Statist. 24 (4) 624 - 639, December,</span>
+<span class="sd">    1953.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import pandas as pd</span>
+<span class="sd">    &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">    &gt;&gt;&gt; from mapie.metrics.calibration import kolmogorov_smirnov_p_value</span>
+<span class="sd">    &gt;&gt;&gt; y_true = np.array([1, 0, 1, 0, 1, 0])</span>
+<span class="sd">    &gt;&gt;&gt; y_score = np.array([0.8, 0.3, 0.5, 0.5, 0.7, 0.1])</span>
+<span class="sd">    &gt;&gt;&gt; ks_p_value = kolmogorov_smirnov_p_value(y_true, y_score)</span>
+<span class="sd">    &gt;&gt;&gt; print(np.round(ks_p_value, 4))</span>
+<span class="sd">    0.7857</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_check_arrays_length</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_score</span><span class="p">)</span>
+    <span class="n">_check_array_nan</span><span class="p">(</span><span class="n">y_true</span><span class="p">)</span>
+    <span class="n">_check_array_inf</span><span class="p">(</span><span class="n">y_true</span><span class="p">)</span>
+    <span class="n">_check_array_nan</span><span class="p">(</span><span class="n">y_score</span><span class="p">)</span>
+    <span class="n">_check_array_inf</span><span class="p">(</span><span class="n">y_score</span><span class="p">)</span>
+
+    <span class="n">ks_stat</span> <span class="o">=</span> <span class="n">kolmogorov_smirnov_statistic</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_score</span><span class="p">)</span>
+    <span class="n">ks_p_value</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">kolmogorov_smirnov_cdf</span><span class="p">(</span><span class="n">ks_stat</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">ks_p_value</span></div>
+
+
+
+<div class="viewcode-block" id="kuiper_statistic">
+<a class="viewcode-back" href="../../../generated/mapie.metrics.calibration.kuiper_statistic.html#mapie.metrics.calibration.kuiper_statistic">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">kuiper_statistic</span><span class="p">(</span><span class="n">y_true</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">,</span> <span class="n">y_score</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute Kuiper&#39;s statistic for calibration test.</span>
+<span class="sd">    Also called ECCE-R (Estimated Cumulative Calibration Errors - Range).</span>
+<span class="sd">    The closer to zero, the better the scores are calibrated.</span>
+<span class="sd">    Indeed, if the scores are perfectly calibrated,</span>
+<span class="sd">    the cumulative differences between ``y_true`` and ``y_score``</span>
+<span class="sd">    should share the same properties of a standard Brownian motion</span>
+<span class="sd">    asymptotically.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    y_true : NDArray of shape (n_samples,)</span>
+<span class="sd">        An array of ground truth.</span>
+
+<span class="sd">    y_score : NDArray of shape (n_samples,)</span>
+<span class="sd">        An array of scores.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    float</span>
+<span class="sd">        Kuiper&#39;s statistic.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    Arrieta-Ibarra I, Gujral P, Tannen J, Tygert M, Xu C.</span>
+<span class="sd">    Metrics of calibration for probabilistic predictions.</span>
+<span class="sd">    The Journal of Machine Learning Research.</span>
+<span class="sd">    2022 Jan 1;23(1):15886-940.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">    &gt;&gt;&gt; from mapie.metrics.calibration import kuiper_statistic</span>
+<span class="sd">    &gt;&gt;&gt; y_true = np.array([0, 1, 0, 1, 0])</span>
+<span class="sd">    &gt;&gt;&gt; y_score = np.array([0.1, 0.9, 0.21, 0.9, 0.5])</span>
+<span class="sd">    &gt;&gt;&gt; print(np.round(kuiper_statistic(y_true, y_score), 3))</span>
+<span class="sd">    0.857</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_check_arrays_length</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_score</span><span class="p">)</span>
+    <span class="n">_check_array_nan</span><span class="p">(</span><span class="n">y_true</span><span class="p">)</span>
+    <span class="n">_check_array_inf</span><span class="p">(</span><span class="n">y_true</span><span class="p">)</span>
+    <span class="n">_check_array_nan</span><span class="p">(</span><span class="n">y_score</span><span class="p">)</span>
+    <span class="n">_check_array_inf</span><span class="p">(</span><span class="n">y_score</span><span class="p">)</span>
+
+    <span class="n">y_true</span> <span class="o">=</span> <span class="n">column_or_1d</span><span class="p">(</span><span class="n">y_true</span><span class="p">)</span>
+    <span class="n">y_score</span> <span class="o">=</span> <span class="n">column_or_1d</span><span class="p">(</span><span class="n">y_score</span><span class="p">)</span>
+    <span class="n">cum_diff</span> <span class="o">=</span> <span class="n">cumulative_differences</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_score</span><span class="p">)</span>
+    <span class="n">sigma</span> <span class="o">=</span> <span class="n">length_scale</span><span class="p">(</span><span class="n">y_score</span><span class="p">)</span>
+    <span class="n">ku_stat</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">cum_diff</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">cum_diff</span><span class="p">))</span> <span class="o">/</span> <span class="n">sigma</span>  <span class="c1"># type: ignore</span>
+    <span class="k">return</span> <span class="n">ku_stat</span></div>
+
+
+
+<div class="viewcode-block" id="kuiper_cdf">
+<a class="viewcode-back" href="../../../generated/mapie.metrics.calibration.kuiper_cdf.html#mapie.metrics.calibration.kuiper_cdf">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">kuiper_cdf</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute the Kuiper cumulative distribution function (CDF) for the float x.</span>
+<span class="sd">    This is interpreted as the CDF of the range</span>
+<span class="sd">    of the standard Brownian motion over the unit interval [0, 1].</span>
+<span class="sd">    The function is approximated by its power series, truncated so as to hit</span>
+<span class="sd">    machine precision error.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x : float</span>
+<span class="sd">        The float x to compute the cumulative distribution function.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    float</span>
+<span class="sd">        The Kuiper cumulative distribution function.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    Tygert M.</span>
+<span class="sd">    Calibration of P-values for calibration and for deviation</span>
+<span class="sd">    of a subpopulation from the full population.</span>
+<span class="sd">    arXiv preprint arXiv:2202.00100.</span>
+<span class="sd">    2022 Jan 31.</span>
+
+<span class="sd">    William Feller.</span>
+<span class="sd">    The Asymptotic Distribution of the Range of Sums of</span>
+<span class="sd">    Independent Random Variables.</span>
+<span class="sd">    Ann. Math. Statist. 22 (3) 427 - 432</span>
+<span class="sd">    September, 1951.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">    &gt;&gt;&gt; from mapie.metrics.calibration import kuiper_cdf</span>
+<span class="sd">    &gt;&gt;&gt; print(np.round(kuiper_cdf(1), 4))</span>
+<span class="sd">    0.0634</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">kmax</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span>
+        <span class="p">(</span>
+            <span class="mf">0.5</span>
+            <span class="o">+</span> <span class="n">x</span>
+            <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+            <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">4</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span> <span class="o">*</span> <span class="n">EPSILON</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">x</span> <span class="o">+</span> <span class="n">x</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">kmax</span><span class="p">)):</span>
+        <span class="n">kplus</span> <span class="o">=</span> <span class="n">k</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">2</span>
+        <span class="n">c</span> <span class="o">+=</span> <span class="p">(</span><span class="mi">8</span> <span class="o">/</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">/</span> <span class="n">kplus</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span>
+            <span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="n">kplus</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">c</span></div>
+
+
+
+<div class="viewcode-block" id="kuiper_p_value">
+<a class="viewcode-back" href="../../../generated/mapie.metrics.calibration.kuiper_p_value.html#mapie.metrics.calibration.kuiper_p_value">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">kuiper_p_value</span><span class="p">(</span><span class="n">y_true</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">,</span> <span class="n">y_score</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute Kuiper statistic p-value.</span>
+<span class="sd">    Deduced from the corresponding statistic and CDF.</span>
+<span class="sd">    It represents the probability of the observed statistic</span>
+<span class="sd">    under the null hypothesis of perfect calibration.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    y_true : NDArray of shape (n_samples,)</span>
+<span class="sd">        An array of ground truth.</span>
+
+<span class="sd">    y_score : NDArray of shape (n_samples,)</span>
+<span class="sd">        An array of scores.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    float</span>
+<span class="sd">        The Kuiper p-value.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    Tygert M.</span>
+<span class="sd">    Calibration of P-values for calibration and for deviation</span>
+<span class="sd">    of a subpopulation from the full population.</span>
+<span class="sd">    arXiv preprint arXiv:2202.00100.</span>
+<span class="sd">    2022 Jan 31.</span>
+
+<span class="sd">    William Feller.</span>
+<span class="sd">    The Asymptotic Distribution of the Range of Sums of</span>
+<span class="sd">    Independent Random Variables.</span>
+<span class="sd">    Ann. Math. Statist. 22 (3) 427 - 432</span>
+<span class="sd">    September, 1951.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import pandas as pd</span>
+<span class="sd">    &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">    &gt;&gt;&gt; from mapie.metrics.calibration import kuiper_p_value</span>
+<span class="sd">    &gt;&gt;&gt; y_true = np.array([1, 0, 1, 0, 1, 0])</span>
+<span class="sd">    &gt;&gt;&gt; y_score = np.array([0.8, 0.3, 0.5, 0.5, 0.7, 0.1])</span>
+<span class="sd">    &gt;&gt;&gt; ku_p_value = kuiper_p_value(y_true, y_score)</span>
+<span class="sd">    &gt;&gt;&gt; print(np.round(ku_p_value, 4))</span>
+<span class="sd">    0.9684</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_check_arrays_length</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_score</span><span class="p">)</span>
+    <span class="n">_check_array_nan</span><span class="p">(</span><span class="n">y_true</span><span class="p">)</span>
+    <span class="n">_check_array_inf</span><span class="p">(</span><span class="n">y_true</span><span class="p">)</span>
+    <span class="n">_check_array_nan</span><span class="p">(</span><span class="n">y_score</span><span class="p">)</span>
+    <span class="n">_check_array_inf</span><span class="p">(</span><span class="n">y_score</span><span class="p">)</span>
+
+    <span class="n">ku_stat</span> <span class="o">=</span> <span class="n">kuiper_statistic</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_score</span><span class="p">)</span>
+    <span class="n">ku_p_value</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">kuiper_cdf</span><span class="p">(</span><span class="n">ku_stat</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">ku_p_value</span></div>
+
+
+
+<div class="viewcode-block" id="spiegelhalter_statistic">
+<a class="viewcode-back" href="../../../generated/mapie.metrics.calibration.spiegelhalter_statistic.html#mapie.metrics.calibration.spiegelhalter_statistic">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">spiegelhalter_statistic</span><span class="p">(</span><span class="n">y_true</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">,</span> <span class="n">y_score</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute Spiegelhalter&#39;s statistic for calibration test.</span>
+<span class="sd">    The closer to zero, the better the scores are calibrated.</span>
+<span class="sd">    Indeed, if the scores are perfectly calibrated,</span>
+<span class="sd">    the Brier score simplifies to an expression whose expectancy</span>
+<span class="sd">    and variance are easy to compute. The statistic is no more that</span>
+<span class="sd">    a z-score on this normalized expression.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    y_true : NDArray of shape (n_samples,)</span>
+<span class="sd">        An array of ground truth.</span>
+
+<span class="sd">    y_score : NDArray of shape (n_samples,)</span>
+<span class="sd">        An array of scores.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    float</span>
+<span class="sd">        Spiegelhalter&#39;s statistic.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    Spiegelhalter DJ.</span>
+<span class="sd">    Probabilistic prediction in patient management and clinical trials.</span>
+<span class="sd">    Statistics in medicine.</span>
+<span class="sd">    1986 Sep;5(5):421-33.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">    &gt;&gt;&gt; from mapie.metrics.calibration import spiegelhalter_statistic</span>
+<span class="sd">    &gt;&gt;&gt; y_true = np.array([0, 1, 0, 1, 0])</span>
+<span class="sd">    &gt;&gt;&gt; y_score = np.array([0.1, 0.9, 0.21, 0.9, 0.5])</span>
+<span class="sd">    &gt;&gt;&gt; print(np.round(spiegelhalter_statistic(y_true, y_score), 3))</span>
+<span class="sd">    -0.757</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_check_arrays_length</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_score</span><span class="p">)</span>
+    <span class="n">_check_array_nan</span><span class="p">(</span><span class="n">y_true</span><span class="p">)</span>
+    <span class="n">_check_array_inf</span><span class="p">(</span><span class="n">y_true</span><span class="p">)</span>
+    <span class="n">_check_array_nan</span><span class="p">(</span><span class="n">y_score</span><span class="p">)</span>
+    <span class="n">_check_array_inf</span><span class="p">(</span><span class="n">y_score</span><span class="p">)</span>
+
+    <span class="n">y_true</span> <span class="o">=</span> <span class="n">column_or_1d</span><span class="p">(</span><span class="n">y_true</span><span class="p">)</span>
+    <span class="n">y_score</span> <span class="o">=</span> <span class="n">column_or_1d</span><span class="p">(</span><span class="n">y_score</span><span class="p">)</span>
+    <span class="n">numerator</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">y_true</span> <span class="o">-</span> <span class="n">y_score</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">y_score</span><span class="p">))</span>
+    <span class="n">denominator</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="mi">1</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">y_score</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">y_score</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">y_score</span><span class="p">)))</span>
+    <span class="n">sp_stat</span> <span class="o">=</span> <span class="n">numerator</span> <span class="o">/</span> <span class="n">denominator</span>
+    <span class="k">return</span> <span class="n">sp_stat</span></div>
+
+
+
+<div class="viewcode-block" id="spiegelhalter_p_value">
+<a class="viewcode-back" href="../../../generated/mapie.metrics.calibration.spiegelhalter_p_value.html#mapie.metrics.calibration.spiegelhalter_p_value">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">spiegelhalter_p_value</span><span class="p">(</span><span class="n">y_true</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">,</span> <span class="n">y_score</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute Spiegelhalter statistic p-value.</span>
+<span class="sd">    Deduced from the corresponding statistic and CDF,</span>
+<span class="sd">    which is no more than the normal distribution.</span>
+<span class="sd">    It represents the probability of the observed statistic</span>
+<span class="sd">    under the null hypothesis of perfect calibration.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    y_true : NDArray of shape (n_samples,)</span>
+<span class="sd">        An array of ground truth.</span>
+
+<span class="sd">    y_score : NDArray of shape (n_samples,)</span>
+<span class="sd">        An array of scores.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    float</span>
+<span class="sd">        The Spiegelhalter statistic p_value.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    Spiegelhalter DJ.</span>
+<span class="sd">    Probabilistic prediction in patient management and clinical trials.</span>
+<span class="sd">    Statistics in medicine.</span>
+<span class="sd">    1986 Sep;5(5):421-33.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">    &gt;&gt;&gt; from mapie.metrics.calibration import spiegelhalter_p_value</span>
+<span class="sd">    &gt;&gt;&gt; y_true = np.array([1, 0, 1, 0, 1, 0])</span>
+<span class="sd">    &gt;&gt;&gt; y_score = np.array([0.8, 0.3, 0.5, 0.5, 0.7, 0.1])</span>
+<span class="sd">    &gt;&gt;&gt; sp_p_value = spiegelhalter_p_value(y_true, y_score)</span>
+<span class="sd">    &gt;&gt;&gt; print(np.round(sp_p_value, 4))</span>
+<span class="sd">    0.8486</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_check_arrays_length</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_score</span><span class="p">)</span>
+    <span class="n">_check_array_nan</span><span class="p">(</span><span class="n">y_true</span><span class="p">)</span>
+    <span class="n">_check_array_inf</span><span class="p">(</span><span class="n">y_true</span><span class="p">)</span>
+    <span class="n">_check_array_nan</span><span class="p">(</span><span class="n">y_score</span><span class="p">)</span>
+    <span class="n">_check_array_inf</span><span class="p">(</span><span class="n">y_score</span><span class="p">)</span>
+    <span class="n">sp_stat</span> <span class="o">=</span> <span class="n">spiegelhalter_statistic</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_score</span><span class="p">)</span>
+    <span class="n">sp_p_value</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">scipy</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">norm</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="n">sp_stat</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">sp_p_value</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Capgemini Invent.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

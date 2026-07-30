@@ -1,0 +1,17 @@
+﻿:mod:`mapie.subsample`.BlockBootstrap
+============================================
+
+.. currentmodule:: mapie.subsample
+
+.. autoclass:: BlockBootstrap
+   :members:
+
+   
+   .. automethod:: __init__
+   
+
+.. include:: mapie.subsample.BlockBootstrap.examples
+
+.. raw:: html
+
+    <div style='clear:both'></div>

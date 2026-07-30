@@ -1,0 +1,12 @@
+﻿:mod:`mapie.metrics.calibration`.length_scale
+==========================================================
+
+.. currentmodule:: mapie.metrics.calibration
+
+.. autofunction:: length_scale
+
+.. include:: mapie.metrics.calibration.length_scale.examples
+
+.. raw:: html
+
+    <div style='clear:both'></div>

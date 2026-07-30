@@ -1,0 +1,835 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MAPIE v1 release notes &mdash; MAPIE 1.2.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="_static/css/project-template.css?v=2b5c7e5c" />
+      <link rel="stylesheet" type="text/css" href="_static/sg_gallery.css?v=d2d258e8" />
+      <link rel="stylesheet" type="text/css" href="_static/sg_gallery-binder.css?v=f4aeca0c" />
+      <link rel="stylesheet" type="text/css" href="_static/sg_gallery-dataframe.css?v=2082cf3c" />
+      <link rel="stylesheet" type="text/css" href="_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=6efca38a"></script>
+      <script src="_static/doctools.js?v=9a2dae69"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/js/copybutton.js?v=26522df0"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Prediction intervals (regression)" href="index_regression.html" />
+    <link rel="prev" title="Choosing the right algorithm" href="choosing_the_right_algorithm.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            MAPIE
+              <img src="_static/mapie_logo_white_cut.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="quick_start.html">Quick Start with MAPIE</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="quick_start.html#download-and-install-the-module">1. Download and install the module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quick_start.html#regression">2. Regression</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quick_start.html#classification">3. Classification</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quick_start.html#risk-control">4. Risk Control</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="split_cross_conformal.html">The conformalization (or “calibration”) set</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="split_cross_conformal.html#split-conformal-predictions">1. Split conformal predictions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="split_cross_conformal.html#split-conformal-predictions-with-a-pre-trained-model">Split conformal predictions with a pre-trained model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="split_cross_conformal.html#split-conformal-predictions-with-an-untrained-model">Split conformal predictions with an untrained model</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="split_cross_conformal.html#cross-conformal-predictions">2. Cross conformal predictions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="choosing_the_right_algorithm.html">Choosing the right algorithm</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">MAPIE v1 release notes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#api-changes-overview">API changes overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#python-scikit-learn-and-numpy-versions-support">Python, scikit-learn and NumPy versions support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#api-changes-in-detail">API changes in detail</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#regression-and-classification-api-changes-excluding-time-series">Regression and classification API changes (excluding time series)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#classes">Classes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#workflow-and-methods">Workflow and methods</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#parameters">Parameters</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#other-api-changes">Other API changes</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#time-series">Time series</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#risk-control">Risk control</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#calibration">Calibration</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mondrian">Mondrian</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#metrics">Metrics</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#conformity-scores">Conformity scores</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Measure predictions uncertainty</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="index_regression.html">Prediction intervals (regression)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="choosing_the_right_algorithm_regression.html">Choose the right algorithm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples_regression/1-quickstart/plot_toy_model.html">Use MAPIE to plot prediction intervals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples_regression/1-quickstart/plot_prefit.html">Use MAPIE with a pre-trained model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples_regression/index.html">All regression examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="examples_regression/1-quickstart/index.html">1. Quickstart</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="examples_regression/1-quickstart/plot_toy_model.html">Use MAPIE to plot prediction intervals</a></li>
+<li class="toctree-l4"><a class="reference internal" href="examples_regression/1-quickstart/plot_compare_conformity_scores.html">Use MAPIE on data with gamma distribution</a></li>
+<li class="toctree-l4"><a class="reference internal" href="examples_regression/1-quickstart/plot_prefit.html">Use MAPIE with a pre-trained model</a></li>
+<li class="toctree-l4"><a class="reference internal" href="examples_regression/1-quickstart/plot_heteroscedastic_1d_data.html">Use MAPIE on data with uneven uncertainty</a></li>
+<li class="toctree-l4"><a class="reference internal" href="examples_regression/1-quickstart/plot_homoscedastic_1d_data.html">Use MAPIE on data with constant uncertainty</a></li>
+<li class="toctree-l4"><a class="reference internal" href="examples_regression/1-quickstart/plot_ts-tutorial.html">Tutorial for time series</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="examples_regression/2-advanced-analysis/index.html">2. Advanced analysis</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="examples_regression/2-advanced-analysis/plot_conformal_predictive_distribution.html">Conformal Predictive Distribution with MAPIE</a></li>
+<li class="toctree-l4"><a class="reference internal" href="examples_regression/2-advanced-analysis/plot_cqr_symmetry_difference.html">The symmetric correction parameter in conformalized quantile regression</a></li>
+<li class="toctree-l4"><a class="reference internal" href="examples_regression/2-advanced-analysis/plot_nested-cv.html">Hyperparameters tuning with cross-conformal regression</a></li>
+<li class="toctree-l4"><a class="reference internal" href="examples_regression/2-advanced-analysis/plot_both_uncertainties.html">Estimating aleatoric and epistemic uncertainties</a></li>
+<li class="toctree-l4"><a class="reference internal" href="examples_regression/2-advanced-analysis/plot_timeseries_enbpi.html">Time series: example of the EnbPI technique</a></li>
+<li class="toctree-l4"><a class="reference internal" href="examples_regression/2-advanced-analysis/plot-coverage-width-based-criterion.html">Focus on intervals width</a></li>
+<li class="toctree-l4"><a class="reference internal" href="examples_regression/2-advanced-analysis/plot_ResidualNormalisedScore_tutorial.html">Focus on residual normalised score</a></li>
+<li class="toctree-l4"><a class="reference internal" href="examples_regression/2-advanced-analysis/plot_conditional_coverage.html">Focus on local (or “conditional”) coverage</a></li>
+<li class="toctree-l4"><a class="reference internal" href="examples_regression/2-advanced-analysis/plot_cqr_tutorial.html">Conformalized quantile regression on gamma distributed data</a></li>
+<li class="toctree-l4"><a class="reference internal" href="examples_regression/2-advanced-analysis/plot_coverage_validity.html">Coverage validity of MAPIE for regression tasks</a></li>
+<li class="toctree-l4"><a class="reference internal" href="examples_regression/2-advanced-analysis/plot_main-tutorial-regression.html">Comparison between conformalized quantile regressor and cross methods</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="examples_regression/3-scientific-articles/index.html">3. Simulations from scientific articles</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="examples_regression/3-scientific-articles/plot_barber2020_simulations.html">Predictive inference with the jackknife+, Foygel-Barber et al. (2020)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="examples_regression/3-scientific-articles/plot_zaffran2022_comparison.html">Adaptive conformal predictions for time series, Zaffran et al. (2022)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="examples_regression/3-scientific-articles/plot_kim2020_simulations.html">Predictive inference is free with the Jackknife+-after-Bootstrap, Kim et al. (2020)</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="examples_regression/4-other-notebooks/index.html">4. Other notebooks</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="theoretical_description_regression.html">Theoretical Description</a></li>
+<li class="toctree-l2"><a class="reference internal" href="theoretical_description_conformity_scores.html">Theoretical Description for Conformity Scores</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="index_classification.html">Prediction sets (classification)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="choosing_the_right_algorithm_classification.html">Choosing the right algorithm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples_classification/1-quickstart/plot_quickstart_classification.html">Use MAPIE to plot prediction sets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples_classification/index.html">All classification examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="examples_classification/1-quickstart/index.html">1. Quickstart examples</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="examples_classification/1-quickstart/plot_quickstart_classification.html">Use MAPIE to plot prediction sets</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="examples_classification/2-advanced-analysis/index.html">2. Advanced analysis</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="examples_classification/2-advanced-analysis/plot_comp_methods_on_2d_dataset.html">LAC and APS methods explained</a></li>
+<li class="toctree-l4"><a class="reference internal" href="examples_classification/2-advanced-analysis/plot_main-tutorial-binary-classification.html">Set prediction example in the binary classification setting</a></li>
+<li class="toctree-l4"><a class="reference internal" href="examples_classification/2-advanced-analysis/plot_crossconformal.html">Cross conformal classification explained</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="examples_classification/3-scientific-articles/index.html">3. Simulations from scientific articles</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="examples_classification/3-scientific-articles/plot_sadinle2019_example.html">Least Ambiguous Set-Valued Classifiers with Bounded Error Levels, Sadinle et al. (2019)</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="examples_classification/4-other-notebooks/index.html">4. Other notebooks</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="theoretical_description_classification.html">Theoretical Description</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index_binary_classification.html">The binary classification case</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="examples_classification/2-advanced-analysis/plot_main-tutorial-binary-classification.html">Set prediction example in the binary classification setting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="theoretical_description_binary_classification.html">Theoretical Description</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Control prediction errors</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="theoretical_description_risk_control.html">Getting started with risk control in MAPIE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples_risk_control/1-quickstart/plot_risk_control_binary_classification.html">Use MAPIE to control the precision of a binary classifier</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples_risk_control/index.html">All risk control examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="examples_risk_control/1-quickstart/index.html">1. Quickstart examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="examples_risk_control/1-quickstart/plot_risk_control_binary_classification.html">Use MAPIE to control the precision of a binary classifier</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="examples_risk_control/2-advanced-analysis/index.html">2. Advanced analysis</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="examples_risk_control/2-advanced-analysis/plot_risk_control_multi-label_classification.html">Use MAPIE to control the risk of a multi-label classifier</a></li>
+<li class="toctree-l3"><a class="reference internal" href="examples_risk_control/2-advanced-analysis/plot_risk_control_multi_parameter_binary_classification.html">Use MAPIE to control risk of a binary classifier with multiple prediction parameters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="examples_risk_control/2-advanced-analysis/plot_semantic_segmentation_recall_control.html">Recall control for semantic segmentation with MAPIE</a></li>
+<li class="toctree-l3"><a class="reference internal" href="examples_risk_control/2-advanced-analysis/plot_semantic_segmentation_precision_control.html">Precision control for semantic segmentation with MAPIE</a></li>
+<li class="toctree-l3"><a class="reference internal" href="examples_risk_control/2-advanced-analysis/plot_multi_risk_control_binary_classification.html">Use MAPIE to control multiple risks of a binary classifier</a></li>
+<li class="toctree-l3"><a class="reference internal" href="examples_risk_control/2-advanced-analysis/plot_risk_control_llm_as_a_judge.html">Risk Control for LLM as a Judge with Abstention</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="external_risk_control_package.html">Additional resources: external risk control package</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Calibrate classifiers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="theoretical_description_calibration.html">Theoretical Description</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples_calibration/index.html">Calibration examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="examples_calibration/1-quickstart/index.html">1. Quickstart examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="examples_calibration/1-quickstart/plot_calibration_venn_abers_binary.html">Calibrating binary classifier with Venn-ABERS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="examples_calibration/1-quickstart/plot_calibration_hypothesis_testing.html">Testing for calibration in binary classification settings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="examples_calibration/1-quickstart/plot_calibration_venn_abers_multiclass.html">Calibrating multi-class classifier with Venn-ABERS</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="examples_calibration/2-advanced-analysis/index.html">2. Advanced analysis</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="examples_calibration/2-advanced-analysis/plot_asymptotic_convergence_of_p_values.html">Evaluating the asymptotic convergence of p-values</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="notebooks_calibration.html">Calibration notebooks</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Question &amp; Answers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="theoretical_description_metrics.html">Metrics: how to measure conformal prediction performance?</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="theoretical_description_metrics.html#general-metrics">1. General Metrics</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="theoretical_description_metrics.html#regression-coverage-score">Regression Coverage Score</a></li>
+<li class="toctree-l3"><a class="reference internal" href="theoretical_description_metrics.html#regression-mean-width-score">Regression Mean Width Score</a></li>
+<li class="toctree-l3"><a class="reference internal" href="theoretical_description_metrics.html#classification-coverage-score">Classification Coverage Score</a></li>
+<li class="toctree-l3"><a class="reference internal" href="theoretical_description_metrics.html#classification-mean-width-score">Classification Mean Width Score</a></li>
+<li class="toctree-l3"><a class="reference internal" href="theoretical_description_metrics.html#size-stratified-coverage">Size-Stratified Coverage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="theoretical_description_metrics.html#hilbert-schmidt-independence-criterion">Hilbert-Schmidt Independence Criterion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="theoretical_description_metrics.html#coverage-width-based-criterion">Coverage Width-Based Criterion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="theoretical_description_metrics.html#mean-winkler-interval-score">Mean Winkler Interval Score</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="theoretical_description_metrics.html#calibration-metrics">2. Calibration Metrics</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="theoretical_description_metrics.html#expected-calibration-error">Expected Calibration Error</a></li>
+<li class="toctree-l3"><a class="reference internal" href="theoretical_description_metrics.html#top-label-expected-calibration-error-top-label-ece">Top-Label Expected Calibration Error (Top-Label ECE)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="theoretical_description_metrics.html#cumulative-differences">Cumulative Differences</a></li>
+<li class="toctree-l3"><a class="reference internal" href="theoretical_description_metrics.html#kolmogorov-smirnov-statistic-for-calibration">Kolmogorov-Smirnov Statistic for Calibration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="theoretical_description_metrics.html#kuiper-s-test">Kuiper’s Test</a></li>
+<li class="toctree-l3"><a class="reference internal" href="theoretical_description_metrics.html#spiegelhalters-test">Spiegelhalter’s Test</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="theoretical_description_metrics.html#references">References</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="index_mondrian.html">Mondrian: how to use prior knowledge on groups when measuring uncertainty?</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html">Tutorial: how to ensure fairness across groups with Mondrian</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html#create-the-noisy-dataset">1. Create the noisy dataset</a></li>
+<li class="toctree-l3"><a class="reference internal" href="examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html#split-the-dataset-into-a-training-set-a-conformalization-set-and-a-test-set">2. Split the dataset into a training set, a conformalization set, and a test set</a></li>
+<li class="toctree-l3"><a class="reference internal" href="examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html#fit-a-random-forest-regressor-on-the-training-set">3. Fit a random forest regressor on the training set</a></li>
+<li class="toctree-l3"><a class="reference internal" href="examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html#build-the-classical-conformal-prediction-intervals">4. Build the classical conformal prediction intervals</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html#conformalize-a-splitconformalregressor-on-the-conformalization-set">Conformalize a SplitConformalRegressor on the conformalization set</a></li>
+<li class="toctree-l4"><a class="reference internal" href="examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html#predict-the-prediction-intervals-on-the-test-set">Predict the prediction intervals on the test set</a></li>
+<li class="toctree-l4"><a class="reference internal" href="examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html#evaluate-the-coverage-score-by-group">Evaluate the coverage score by group</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html#build-the-mondrian-conformal-prediction-intervals">5. Build the Mondrian conformal prediction intervals</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html#conformalize-a-splitconformalregressor-on-the-conformalization-set-for-each-group">Conformalize a SplitConformalRegressor on the conformalization set for each group</a></li>
+<li class="toctree-l4"><a class="reference internal" href="examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html#id1">Predict the prediction intervals on the test set</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html#compare-the-coverage-by-partition-plot-both-methods-side-by-side">6. Compare the coverage by partition, plot both methods side by side</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="theoretical_description_mondrian.html">Theoretical Description</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="theoretical_description_mondrian.html#references">References</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="llm_risk_control.html">How to control LLM risks?</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api.html">MAPIE API</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api.html#regression">Regression</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api.html#conformalizers">Conformalizers</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="generated/mapie.regression.SplitConformalRegressor.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.regression</span></code>.SplitConformalRegressor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/mapie.regression.CrossConformalRegressor.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.regression</span></code>.CrossConformalRegressor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/mapie.regression.JackknifeAfterBootstrapRegressor.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.regression</span></code>.JackknifeAfterBootstrapRegressor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/mapie.regression.ConformalizedQuantileRegressor.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.regression</span></code>.ConformalizedQuantileRegressor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/mapie.regression.TimeSeriesRegressor.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.regression</span></code>.TimeSeriesRegressor</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#metrics">Metrics</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="generated/mapie.metrics.regression.regression_coverage_score.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.regression</span></code>.regression_coverage_score</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/mapie.metrics.regression.regression_mean_width_score.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.regression</span></code>.regression_mean_width_score</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/mapie.metrics.regression.regression_ssc.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.regression</span></code>.regression_ssc</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/mapie.metrics.regression.regression_ssc_score.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.regression</span></code>.regression_ssc_score</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/mapie.metrics.regression.hsic.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.regression</span></code>.hsic</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/mapie.metrics.regression.coverage_width_based.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.regression</span></code>.coverage_width_based</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/mapie.metrics.regression.regression_mwi_score.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.regression</span></code>.regression_mwi_score</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#conformity-scores">Conformity Scores</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="generated/mapie.conformity_scores.BaseRegressionScore.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.conformity_scores</span></code>.BaseRegressionScore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/mapie.conformity_scores.AbsoluteConformityScore.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.conformity_scores</span></code>.AbsoluteConformityScore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/mapie.conformity_scores.GammaConformityScore.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.conformity_scores</span></code>.GammaConformityScore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/mapie.conformity_scores.ResidualNormalisedScore.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.conformity_scores</span></code>.ResidualNormalisedScore</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#resampling">Resampling</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="generated/mapie.subsample.BlockBootstrap.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.subsample</span></code>.BlockBootstrap</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/mapie.subsample.Subsample.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.subsample</span></code>.Subsample</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#classification">Classification</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api.html#id1">Conformalizers</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="generated/mapie.classification.SplitConformalClassifier.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.classification</span></code>.SplitConformalClassifier</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/mapie.classification.CrossConformalClassifier.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.classification</span></code>.CrossConformalClassifier</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#id2">Metrics</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="generated/mapie.metrics.classification.classification_coverage_score.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.classification</span></code>.classification_coverage_score</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/mapie.metrics.classification.classification_mean_width_score.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.classification</span></code>.classification_mean_width_score</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/mapie.metrics.classification.classification_ssc.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.classification</span></code>.classification_ssc</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/mapie.metrics.classification.classification_ssc_score.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.classification</span></code>.classification_ssc_score</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#id3">Conformity Scores</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="generated/mapie.conformity_scores.BaseClassificationScore.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.conformity_scores</span></code>.BaseClassificationScore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/mapie.conformity_scores.NaiveConformityScore.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.conformity_scores</span></code>.NaiveConformityScore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/mapie.conformity_scores.LACConformityScore.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.conformity_scores</span></code>.LACConformityScore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/mapie.conformity_scores.APSConformityScore.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.conformity_scores</span></code>.APSConformityScore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/mapie.conformity_scores.RAPSConformityScore.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.conformity_scores</span></code>.RAPSConformityScore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/mapie.conformity_scores.TopKConformityScore.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.conformity_scores</span></code>.TopKConformityScore</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#risk-control">Risk Control</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="generated/mapie.risk_control.MultiLabelClassificationController.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.risk_control</span></code>.MultiLabelClassificationController</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="generated/mapie.risk_control.MultiLabelClassificationController.html#mapie.risk_control.MultiLabelClassificationController"><code class="docutils literal notranslate"><span class="pre">MultiLabelClassificationController</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/mapie.risk_control.MultiLabelClassificationController.html#examples-using-mapie-risk-control-multilabelclassificationcontroller">Examples using <code class="docutils literal notranslate"><span class="pre">mapie.risk_control.MultiLabelClassificationController</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="generated/mapie.risk_control.BinaryClassificationController.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.risk_control</span></code>.BinaryClassificationController</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="generated/mapie.risk_control.BinaryClassificationController.html#mapie.risk_control.BinaryClassificationController"><code class="docutils literal notranslate"><span class="pre">BinaryClassificationController</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/mapie.risk_control.BinaryClassificationController.html#examples-using-mapie-risk-control-binaryclassificationcontroller">Examples using <code class="docutils literal notranslate"><span class="pre">mapie.risk_control.BinaryClassificationController</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="generated/mapie.risk_control.SemanticSegmentationController.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.risk_control</span></code>.SemanticSegmentationController</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="generated/mapie.risk_control.SemanticSegmentationController.html#mapie.risk_control.SemanticSegmentationController"><code class="docutils literal notranslate"><span class="pre">SemanticSegmentationController</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/mapie.risk_control.SemanticSegmentationController.html#examples-using-mapie-risk-control-semanticsegmentationcontroller">Examples using <code class="docutils literal notranslate"><span class="pre">mapie.risk_control.SemanticSegmentationController</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="generated/mapie.risk_control.BinaryClassificationRisk.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.risk_control</span></code>.BinaryClassificationRisk</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="generated/mapie.risk_control.BinaryClassificationRisk.html#mapie.risk_control.BinaryClassificationRisk"><code class="docutils literal notranslate"><span class="pre">BinaryClassificationRisk</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/mapie.risk_control.BinaryClassificationRisk.html#examples-using-mapie-risk-control-binaryclassificationrisk">Examples using <code class="docutils literal notranslate"><span class="pre">mapie.risk_control.BinaryClassificationRisk</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#calibration">Calibration</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api.html#conformalizer">Conformalizer</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="generated/mapie.calibration.TopLabelCalibrator.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.calibration</span></code>.TopLabelCalibrator</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#id4">Metrics</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="generated/mapie.metrics.calibration.expected_calibration_error.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.expected_calibration_error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/mapie.metrics.calibration.top_label_ece.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.top_label_ece</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/mapie.metrics.calibration.cumulative_differences.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.cumulative_differences</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/mapie.metrics.calibration.kolmogorov_smirnov_cdf.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.kolmogorov_smirnov_cdf</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/mapie.metrics.calibration.kolmogorov_smirnov_p_value.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.kolmogorov_smirnov_p_value</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/mapie.metrics.calibration.kolmogorov_smirnov_statistic.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.kolmogorov_smirnov_statistic</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/mapie.metrics.calibration.kuiper_cdf.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.kuiper_cdf</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/mapie.metrics.calibration.kuiper_p_value.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.kuiper_p_value</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/mapie.metrics.calibration.kuiper_statistic.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.kuiper_statistic</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/mapie.metrics.calibration.length_scale.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.length_scale</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/mapie.metrics.calibration.spiegelhalter_p_value.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.spiegelhalter_p_value</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/mapie.metrics.calibration.spiegelhalter_statistic.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.metrics.calibration</span></code>.spiegelhalter_statistic</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#utils">Utils</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="generated/mapie.utils.train_conformalize_test_split.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mapie.utils</span></code>.train_conformalize_test_split</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="generated/mapie.utils.train_conformalize_test_split.html#mapie.utils.train_conformalize_test_split"><code class="docutils literal notranslate"><span class="pre">train_conformalize_test_split()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/mapie.utils.train_conformalize_test_split.html#examples-using-mapie-utils-train-conformalize-test-split">Examples using <code class="docutils literal notranslate"><span class="pre">mapie.utils.train_conformalize_test_split</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">MAPIE</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">MAPIE v1 release notes</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/v1_release_notes.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="mapie-v1-release-notes">
+<h1>MAPIE v1 release notes<a class="headerlink" href="#mapie-v1-release-notes" title="Link to this heading"></a></h1>
+<nav class="contents local" id="table-of-contents">
+<p class="topic-title">Table of Contents</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#introduction" id="id2">Introduction</a></p></li>
+<li><p><a class="reference internal" href="#api-changes-overview" id="id3">API changes overview</a></p></li>
+<li><p><a class="reference internal" href="#python-scikit-learn-and-numpy-versions-support" id="id4">Python, scikit-learn and NumPy versions support</a></p></li>
+<li><p><a class="reference internal" href="#api-changes-in-detail" id="id5">API changes in detail</a></p>
+<ul>
+<li><p><a class="reference internal" href="#regression-and-classification-api-changes-excluding-time-series" id="id6">Regression and classification API changes (excluding time series)</a></p>
+<ul>
+<li><p><a class="reference internal" href="#classes" id="id7">Classes</a></p></li>
+<li><p><a class="reference internal" href="#workflow-and-methods" id="id8">Workflow and methods</a></p></li>
+<li><p><a class="reference internal" href="#parameters" id="id9">Parameters</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#other-api-changes" id="id10">Other API changes</a></p>
+<ul>
+<li><p><a class="reference internal" href="#time-series" id="id11">Time series</a></p></li>
+<li><p><a class="reference internal" href="#risk-control" id="id12">Risk control</a></p></li>
+<li><p><a class="reference internal" href="#calibration" id="id13">Calibration</a></p></li>
+<li><p><a class="reference internal" href="#mondrian" id="id14">Mondrian</a></p></li>
+<li><p><a class="reference internal" href="#metrics" id="id15">Metrics</a></p></li>
+<li><p><a class="reference internal" href="#conformity-scores" id="id16">Conformity scores</a></p></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>These release notes are kept up to date with the latest version of MAPIE v1.</p>
+</div>
+<section id="introduction">
+<h2><a class="toc-backref" href="#id2" role="doc-backlink">Introduction</a><a class="headerlink" href="#introduction" title="Link to this heading"></a></h2>
+<p>MAPIE v1’s primary goal is to make the library easier to use, especially for users unfamiliar with conformal predictions. This release consists of an API and documentation revamp, enhancing MAPIE’s clarity and accessibility.
+Moreover, the new API structure paves the way for efficient development and internal refactoring in the future.</p>
+<p>These release notes will help you easily migrate your code to MAPIE v1 and enjoy upcoming new features!</p>
+</section>
+<section id="api-changes-overview">
+<h2><a class="toc-backref" href="#id3" role="doc-backlink">API changes overview</a><a class="headerlink" href="#api-changes-overview" title="Link to this heading"></a></h2>
+<p>The classification and regression APIs have been thoroughly revamped (except for time series). Other API changes (calibration, multi-label classification, time series, etc.) consist mostly of renaming to bring overall consistency and clarity.</p>
+<p>Below are the high-level, key changes introduced in MAPIE v1. For details and rationales behind these changes, see the section <a class="reference internal" href="#detail-api-changes">“API changes in detail”</a>.</p>
+<ul class="simple">
+<li><p>Regression and classification classes have been split into more specific classes:</p></li>
+</ul>
+<table class="docutils align-default" id="id1">
+<caption><span class="caption-text">Mapie v0.x -&gt; v1 high-level classes correspondence</span><a class="headerlink" href="#id1" title="Link to this table"></a></caption>
+<thead>
+<tr class="row-odd"><th class="head"><p>v0.x class</p></th>
+<th class="head"><p>Corresponding v1 class(es)</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">MapieRegressor</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">SplitConformalRegressor</span></code>, <code class="docutils literal notranslate"><span class="pre">CrossConformalRegressor</span></code>, <code class="docutils literal notranslate"><span class="pre">JackknifeAfterBootstrapRegressor</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">MapieClassifier</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">SplitConformalClassifier</span></code>, <code class="docutils literal notranslate"><span class="pre">CrossConformalClassifier</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">MapieQuantileRegressor</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ConformalizedQuantileRegressor</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">MapieTimeSeriesRegressor</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">TimeSeriesRegressor</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">MapieMultiLabelClassifier</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">PrecisionRecallController</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">MapieCalibrator</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">TopLabelCalibrator</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<ul class="simple">
+<li><p>For classification and regression, the v1 <code class="docutils literal notranslate"><span class="pre">.fit</span></code> method is not equivalent to the <code class="docutils literal notranslate"><span class="pre">.fit</span></code> method of previous MAPIE versions. It has been split into <code class="docutils literal notranslate"><span class="pre">.fit</span></code> and <code class="docutils literal notranslate"><span class="pre">.conformalize</span></code> for split conformal techniques, and replaced by <code class="docutils literal notranslate"><span class="pre">.fit_conformalize</span></code> for cross-conformal techniques.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">alpha</span></code> parameter has been replaced with <code class="docutils literal notranslate"><span class="pre">confidence_level</span></code> (<code class="docutils literal notranslate"><span class="pre">confidence_level</span></code> is equivalent to <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">-</span> <span class="pre">alpha</span></code>).</p></li>
+</ul>
+<p><em>Differences between MAPIE v0.9 and v1.0 on a regression example</em></p>
+<img alt="Differences between MAPIE v0.9 and v1.0 on a regression example" class="align-center" src="_images/v1_release_notes_gitdiff.png" />
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<p>⚠️ MAPIE v1 comes with some functional regressions:</p>
+<ul class="simple">
+<li><p>The <code class="docutils literal notranslate"><span class="pre">MondrianCP</span></code> class is temporarily unavailable in MAPIE v1. Mondrian can still easily be implemented manually (tutorial provided).</p></li>
+<li><p>In regression settings, the naive method no longer exists for cross conformal techniques. It can still be done manually for split conformal techniques by performing the calibration step on the training set.</p></li>
+</ul>
+</section>
+<section id="python-scikit-learn-and-numpy-versions-support">
+<h2><a class="toc-backref" href="#id4" role="doc-backlink">Python, scikit-learn and NumPy versions support</a><a class="headerlink" href="#python-scikit-learn-and-numpy-versions-support" title="Link to this heading"></a></h2>
+<p>Requirements have been updated and clarified. We now support:</p>
+<ul class="simple">
+<li><p>Python &gt;=3.9</p></li>
+<li><p>NumPy &gt;=1.23</p></li>
+<li><p>scikit-learn &gt;=1.4</p></li>
+</ul>
+<p>We no longer officially support Python versions between 3.7 and 3.9, and NumPy versions between 1.21 and 1.23. Note that for now, MAPIE still runs using either:</p>
+<ul class="simple">
+<li><p>Python &lt;3.9</p></li>
+<li><p>scikit-learn &lt;1.4, provided SciPy &lt;=1.10</p></li>
+</ul>
+</section>
+<section id="api-changes-in-detail">
+<span id="detail-api-changes"></span><h2><a class="toc-backref" href="#id5" role="doc-backlink">API changes in detail</a><a class="headerlink" href="#api-changes-in-detail" title="Link to this heading"></a></h2>
+<section id="regression-and-classification-api-changes-excluding-time-series">
+<h3><a class="toc-backref" href="#id6" role="doc-backlink">Regression and classification API changes (excluding time series)</a><a class="headerlink" href="#regression-and-classification-api-changes-excluding-time-series" title="Link to this heading"></a></h3>
+<section id="classes">
+<h4><a class="toc-backref" href="#id7" role="doc-backlink">Classes</a><a class="headerlink" href="#classes" title="Link to this heading"></a></h4>
+<p>MAPIE v1 breaks down the <code class="docutils literal notranslate"><span class="pre">MapieRegressor</span></code> and <code class="docutils literal notranslate"><span class="pre">MapieClassifier</span></code> classes into 5 classes, each dedicated to a particular conformal prediction technique. <code class="docutils literal notranslate"><span class="pre">MapieQuantileRegressor</span></code> has also been revamped, and renamed <code class="docutils literal notranslate"><span class="pre">ConformalizedQuantileRegressor</span></code>.</p>
+<p>The rationale behind this is that <code class="docutils literal notranslate"><span class="pre">MapieRegressor</span></code> and <code class="docutils literal notranslate"><span class="pre">MapieClassifier</span></code> managed several conformal techniques under a single interface, which led to parameter redundancy and ambiguity. In MAPIE v1, each class includes only the relevant parameters specific to its technique.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">cv</span></code> parameter is key to understand what new class to use in the v1 API, in both regression and classification:</p>
+<p><em>Mapie v0.x -&gt; v1 classes correspondence in regression</em></p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>v0.x class</p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">cv</span></code> parameter value</p></th>
+<th class="head"><p>Corresponding v1 class</p></th>
+<th class="head"><p>Conformal prediction type</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td rowspan="4"><p><code class="docutils literal notranslate"><span class="pre">MapieRegressor</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">split</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">SplitConformalRegressor(prefit=False)</span></code></p></td>
+<td><p>Split</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">prefit</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">SplitConformalRegressor(prefit=True)</span></code></p></td>
+<td><p>Split</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">None</span></code>, integer, or any <code class="docutils literal notranslate"><span class="pre">sklearn.model_selection.BaseCrossValidator</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">CrossConformalRegressor</span></code></p></td>
+<td><p>Cross</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">subsample.Subsample</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">JackknifeAfterBootstrapRegressor</span></code></p></td>
+<td><p>Cross</p></td>
+</tr>
+</tbody>
+</table>
+<p><em>Mapie v0.x -&gt; v1 classes correspondence in classification</em></p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>v0.x class</p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">cv</span></code> parameter value</p></th>
+<th class="head"><p>Corresponding v1 class</p></th>
+<th class="head"><p>Conformal prediction type</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td rowspan="3"><p><code class="docutils literal notranslate"><span class="pre">MapieClassifier</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">split</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">SplitConformalClassifier(prefit=False)</span></code></p></td>
+<td><p>Split</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">prefit</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">SplitConformalClassifier(prefit=True)</span></code></p></td>
+<td><p>Split</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">None</span></code>, integer, or any <code class="docutils literal notranslate"><span class="pre">sklearn.model_selection.BaseCrossValidator</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">CrossConformalClassifier</span></code></p></td>
+<td><p>Cross</p></td>
+</tr>
+</tbody>
+</table>
+<p>For more details regarding the difference between split and cross conformal types, see <a class="reference internal" href="split_cross_conformal.html"><span class="doc">The conformalization (or “calibration”) set</span></a>.</p>
+</section>
+<section id="workflow-and-methods">
+<h4><a class="toc-backref" href="#id8" role="doc-backlink">Workflow and methods</a><a class="headerlink" href="#workflow-and-methods" title="Link to this heading"></a></h4>
+<p>The conformal prediction workflow has been changed, to clarify the process involved under-the-hood, and to allow a better control on data splitting.</p>
+<p>In v0.x, the workflow was:</p>
+<ol class="arabic simple">
+<li><p>Data splitting, model training, and calibration, using the <code class="docutils literal notranslate"><span class="pre">.fit</span></code> method with <code class="docutils literal notranslate"><span class="pre">(X,</span> <span class="pre">y)</span></code>.</p></li>
+<li><p>Interval (or set) prediction, using the <code class="docutils literal notranslate"><span class="pre">.predict</span></code> method with <code class="docutils literal notranslate"><span class="pre">(X_test,</span> <span class="pre">y_test)</span></code>.</p></li>
+</ol>
+<p>In v1, the workflow is:</p>
+<ol class="arabic simple">
+<li><p>Data splitting, left to the user. We provide a new utility <a class="reference internal" href="generated/mapie.utils.train_conformalize_test_split.html#mapie.utils.train_conformalize_test_split" title="mapie.utils.train_conformalize_test_split"><code class="xref py py-func docutils literal notranslate"><span class="pre">train_conformalize_test_split()</span></code></a> to split data into train, conformalize, and test sets.</p></li>
+<li><p>Model training, using the <code class="docutils literal notranslate"><span class="pre">.fit</span></code> method with <code class="docutils literal notranslate"><span class="pre">(X_train,</span> <span class="pre">y_train)</span></code>.</p></li>
+<li><p>Model calibration, using the <code class="docutils literal notranslate"><span class="pre">.conformalize</span></code> method with <code class="docutils literal notranslate"><span class="pre">(X_conformalize,</span> <span class="pre">y_conformalize)</span></code>.</p></li>
+<li><p>Interval (or set) prediction, using the <code class="docutils literal notranslate"><span class="pre">.predict_interval</span></code>/<code class="docutils literal notranslate"><span class="pre">.predict_set</span></code> methods with <code class="docutils literal notranslate"><span class="pre">(X_test,</span> <span class="pre">y_test)</span></code>.</p></li>
+</ol>
+<p>The <em>calibration</em> step has been named <em>conformalization</em>, to avoid confusion with probability calibration, and facilitate usage by users unfamiliar with conformal predictions.</p>
+<p>For cross conformal techniques, steps 2 and 3 are performed simultaneously using the <code class="docutils literal notranslate"><span class="pre">.fit_conformalize()</span></code> method. Indeed, these techniques rely on fitting and conformalizing models in a cross-validation fashion, thus the steps are not distinct.</p>
+<p>MAPIE v1 introduces two new methods for prediction: <code class="docutils literal notranslate"><span class="pre">.predict_interval()</span></code> for regression, and <code class="docutils literal notranslate"><span class="pre">.predict_set()</span></code> for classification. They return the model prediction <cite>and</cite> prediction intervals/sets. They thus behave the same way than the <code class="docutils literal notranslate"><span class="pre">.predict(alpha=...)</span></code> v0.x method (with some minor output shape changes to keep consistency across all conformal techniques).
+The <code class="docutils literal notranslate"><span class="pre">.predict()</span></code> method now focuses solely on producing point predictions.</p>
+</section>
+<section id="parameters">
+<h4><a class="toc-backref" href="#id9" role="doc-backlink">Parameters</a><a class="headerlink" href="#parameters" title="Link to this heading"></a></h4>
+<section id="shared-between-classification-and-regression">
+<h5>Shared between classification and regression<a class="headerlink" href="#shared-between-classification-and-regression" title="Link to this heading"></a></h5>
+<section id="alpha">
+<h6><code class="docutils literal notranslate"><span class="pre">alpha</span></code><a class="headerlink" href="#alpha" title="Link to this heading"></a></h6>
+<p>Has been replaced with <code class="docutils literal notranslate"><span class="pre">confidence_level</span></code>, as this is a more usual concept. <code class="docutils literal notranslate"><span class="pre">confidence_level</span></code> indicates the desired coverage rate, and is equivalent to <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">-</span> <span class="pre">alpha</span></code>. It is now set at initialization, to improve consistency across all conformal techniques.</p>
+</section>
+<section id="cv">
+<h6><code class="docutils literal notranslate"><span class="pre">cv</span></code><a class="headerlink" href="#cv" title="Link to this heading"></a></h6>
+<p>See the “Class restructuring” section of this guide for an overview of the breakdown of the <code class="docutils literal notranslate"><span class="pre">cv</span></code> parameter.</p>
+<ul class="simple">
+<li><p><strong>v0.x</strong>: Used to indicate if the model is pretrained or not (<code class="docutils literal notranslate"><span class="pre">&quot;split&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;prefit&quot;</span></code>) in the vanilla split conformal technique, or to specify the cross-validation scheme in cross conformal techniques.</p></li>
+<li><p><strong>v1</strong>:</p>
+<ul>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">cv</span></code> parameter is now only relevant to cross conformal techniques, and accepts different values depending on the specific technique used. See docstrings of the classes introduced in v1 for more details.</p></li>
+<li><p>For split conformal techniques, the new <code class="docutils literal notranslate"><span class="pre">prefit</span></code> parameter is used to specify model pre-training. <code class="docutils literal notranslate"><span class="pre">prefit</span></code> is set by default to <code class="docutils literal notranslate"><span class="pre">True</span></code> for <code class="docutils literal notranslate"><span class="pre">SplitConformalRegressor</span></code>, as we believe this is MAPIE nominal usage.</p></li>
+</ul>
+</li>
+</ul>
+</section>
+<section id="conformity-score">
+<h6><code class="docutils literal notranslate"><span class="pre">conformity_score</span></code><a class="headerlink" href="#conformity-score" title="Link to this heading"></a></h6>
+<ul class="simple">
+<li><p><strong>v0.x</strong>: Only allowed subclass instances of <code class="docutils literal notranslate"><span class="pre">BaseRegressionScore</span></code> or <code class="docutils literal notranslate"><span class="pre">BaseClassificationScore</span></code>, like <code class="docutils literal notranslate"><span class="pre">AbsoluteConformityScore()</span></code></p></li>
+<li><p><strong>v1</strong>: Now also accepts strings, like <code class="docutils literal notranslate"><span class="pre">&quot;absolute&quot;</span></code>.</p></li>
+</ul>
+</section>
+<section id="method">
+<h6><code class="docutils literal notranslate"><span class="pre">method</span></code><a class="headerlink" href="#method" title="Link to this heading"></a></h6>
+<ul class="simple">
+<li><p><strong>v0.x</strong>: Used in <code class="docutils literal notranslate"><span class="pre">MapieRegressor</span></code>, this parameter was only relevant to cross conformal techniques. Its usage in classification (<code class="docutils literal notranslate"><span class="pre">MapieClassifier</span></code>) was deprecated.</p></li>
+<li><p><strong>v1</strong>: Now only used in <code class="docutils literal notranslate"><span class="pre">CrossConformalRegressor</span></code> and <code class="docutils literal notranslate"><span class="pre">JackknifeAfterBootstrapRegressor</span></code>, with the same possible values (<code class="docutils literal notranslate"><span class="pre">&quot;base&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;plus&quot;</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;minmax&quot;</span></code>), except <code class="docutils literal notranslate"><span class="pre">naive</span></code> that has been removed because of its unlikeliness to be used in a real-world scenario.</p></li>
+</ul>
+</section>
+<section id="groups">
+<h6><code class="docutils literal notranslate"><span class="pre">groups</span></code><a class="headerlink" href="#groups" title="Link to this heading"></a></h6>
+<ul class="simple">
+<li><p><strong>v0.x</strong>: Passed as a parameter to the <code class="docutils literal notranslate"><span class="pre">fit</span></code> method, it was effectively used only in cross techniques.</p></li>
+<li><p><strong>v1</strong>: <code class="docutils literal notranslate"><span class="pre">groups</span></code> is used in <code class="docutils literal notranslate"><span class="pre">CrossConformalRegressor</span></code> and <code class="docutils literal notranslate"><span class="pre">CrossConformalClassifier</span></code>. It is passed to the <code class="docutils literal notranslate"><span class="pre">.conformalize()</span></code> method.</p></li>
+</ul>
+</section>
+<section id="fit-params-and-sample-weight">
+<h6><code class="docutils literal notranslate"><span class="pre">fit_params</span></code> and <code class="docutils literal notranslate"><span class="pre">sample_weight</span></code><a class="headerlink" href="#fit-params-and-sample-weight" title="Link to this heading"></a></h6>
+<ul class="simple">
+<li><p><strong>v0.x</strong>: <code class="docutils literal notranslate"><span class="pre">sample_weight</span></code> is a keyword argument of the <code class="docutils literal notranslate"><span class="pre">fit</span></code> method. Other fit parameters are passed in a dictionary through the <code class="docutils literal notranslate"><span class="pre">fit_params</span></code> argument.</p></li>
+<li><p><strong>v1</strong>: The <code class="docutils literal notranslate"><span class="pre">fit</span></code> and <code class="docutils literal notranslate"><span class="pre">fit_conformalize</span></code> methods now take all fit parameters in the <code class="docutils literal notranslate"><span class="pre">fit_params</span></code> argument, including <code class="docutils literal notranslate"><span class="pre">sample_weight</span></code>.</p></li>
+</ul>
+</section>
+<section id="predict-params">
+<h6><code class="docutils literal notranslate"><span class="pre">predict_params</span></code><a class="headerlink" href="#predict-params" title="Link to this heading"></a></h6>
+<p>Note that because the conformalization step includes model inference, predict parameters are used both for conformalization and prediction steps.</p>
+<ul class="simple">
+<li><p><strong>v0.x</strong>: Predict parameters are passed to the <code class="docutils literal notranslate"><span class="pre">fit</span></code> method in a dictionary through the <code class="docutils literal notranslate"><span class="pre">predict_params</span></code> argument. The exact same parameters must be passed at prediction time to the <code class="docutils literal notranslate"><span class="pre">predict</span></code> method.</p></li>
+<li><p><strong>v1</strong>: Predict parameters are now passed only to the <code class="docutils literal notranslate"><span class="pre">fit</span></code> (or  <code class="docutils literal notranslate"><span class="pre">fit_conformalize</span></code>) method, as a dictionary. The same parameters are reused at prediction time, without the need to pass them again.</p></li>
+</ul>
+</section>
+<section id="random-state">
+<h6><code class="docutils literal notranslate"><span class="pre">random_state</span></code><a class="headerlink" href="#random-state" title="Link to this heading"></a></h6>
+<p>This parameter allowed to control the randomness of data splitting in MAPIE v0.x.
+In v1, data splitting is now done manually for split conformal techniques, so the randomness control is left to the user.
+This parameter is now specific to allows to data splitting randomness control for cross conformal techniques.</p>
+<p>Future evolutions may introduce <code class="docutils literal notranslate"><span class="pre">random_state</span></code> as a general purpose randomness control parameter.</p>
+</section>
+</section>
+<section id="regression-specific">
+<h5>Regression-specific<a class="headerlink" href="#regression-specific" title="Link to this heading"></a></h5>
+<section id="agg-function-and-ensemble">
+<h6><code class="docutils literal notranslate"><span class="pre">agg_function</span></code> and <code class="docutils literal notranslate"><span class="pre">ensemble</span></code><a class="headerlink" href="#agg-function-and-ensemble" title="Link to this heading"></a></h6>
+<ul class="simple">
+<li><p><strong>v0.x</strong>: Previously, the <code class="docutils literal notranslate"><span class="pre">agg_function</span></code> parameter had two usage: to aggregate predictions when setting <code class="docutils literal notranslate"><span class="pre">ensemble=True</span></code> in the <code class="docutils literal notranslate"><span class="pre">predict</span></code> method of <code class="docutils literal notranslate"><span class="pre">MapieRegressor</span></code>, and to specify the aggregation used in <code class="docutils literal notranslate"><span class="pre">JackknifeAfterBootstrapRegressor</span></code>.</p></li>
+<li><p><strong>v1</strong>:</p>
+<ul>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">agg_function</span></code> parameter has been split into two distinct parameters: <code class="docutils literal notranslate"><span class="pre">aggregate_predictions</span></code> and <code class="docutils literal notranslate"><span class="pre">aggregation_method</span></code>. <code class="docutils literal notranslate"><span class="pre">aggregate_predictions</span></code> is specific to <code class="docutils literal notranslate"><span class="pre">CrossConformalRegressor</span></code>, and it specifies how predictions from multiple conformal regressors are aggregated when making point predictions. <code class="docutils literal notranslate"><span class="pre">aggregation_method</span></code> is specific to <code class="docutils literal notranslate"><span class="pre">JackknifeAfterBootstrapRegressor</span></code>, and it specifies the aggregation technique for combining predictions across different bootstrap samples during conformalization.</p></li>
+<li><p>Note that for both cross conformal regression techniques, predictions points are now computed by default using mean aggregation. This is to avoid prediction points outside of prediction intervals in the default setting.</p></li>
+</ul>
+</li>
+</ul>
+</section>
+<section id="symmetry">
+<h6><code class="docutils literal notranslate"><span class="pre">symmetry</span></code><a class="headerlink" href="#symmetry" title="Link to this heading"></a></h6>
+<ul class="simple">
+<li><p><strong>v0.x</strong>: This parameter of the <cite>predict</cite> method of <code class="docutils literal notranslate"><span class="pre">MapieQuantileRegressor</span></code> was set to True by default</p></li>
+<li><p><strong>v1</strong>: This parameter is now named <cite>symmetric_correction</cite> and is set to False by default, because the resulting intervals are smaller. It is used in the <cite>predict_interval</cite> method of the ConformalizedQuantileRegressor.</p></li>
+</ul>
+</section>
+<section id="optimize-beta">
+<h6><code class="docutils literal notranslate"><span class="pre">optimize_beta</span></code><a class="headerlink" href="#optimize-beta" title="Link to this heading"></a></h6>
+<p>It has been found during v1 development that this parameter (specific to regression) has never been working as expected (currently does nothing). At v1 release time, the bug hasn’t been fixed yet. See the related GitHub issue.
+Note that in v1, this parameter has been renamed <code class="docutils literal notranslate"><span class="pre">minimize_interval_width</span></code> for clarity.</p>
+</section>
+</section>
+<section id="classification-specific">
+<h5>Classification-specific<a class="headerlink" href="#classification-specific" title="Link to this heading"></a></h5>
+<section id="include-last-label">
+<h6><code class="docutils literal notranslate"><span class="pre">include_last_label</span></code><a class="headerlink" href="#include-last-label" title="Link to this heading"></a></h6>
+<p>Parameter specific to APS or RAPS conformity scores in classification.</p>
+<ul class="simple">
+<li><p><strong>v0.x</strong>: This parameter is passed to the <code class="docutils literal notranslate"><span class="pre">predict</span></code> method of <code class="docutils literal notranslate"><span class="pre">MapieClassifier</span></code>.</p></li>
+<li><p><strong>v1</strong>: This parameter is now passed in a dictionary to the <code class="docutils literal notranslate"><span class="pre">conformity_score_params</span></code> of the <code class="docutils literal notranslate"><span class="pre">predict_set</span></code> method of classification techniques.</p></li>
+</ul>
+</section>
+<section id="size-raps">
+<h6><code class="docutils literal notranslate"><span class="pre">size_raps</span></code><a class="headerlink" href="#size-raps" title="Link to this heading"></a></h6>
+<p>Parameter specific to the RAPS conformity score in classification.</p>
+<ul class="simple">
+<li><p><strong>v0.x</strong>: Passing this parameter to the <code class="docutils literal notranslate"><span class="pre">fit</span></code> method of <code class="docutils literal notranslate"><span class="pre">MapieClassifier</span></code> is deprecated.</p></li>
+<li><p><strong>v1</strong>: This parameter must now be passed to the <code class="docutils literal notranslate"><span class="pre">conformity_score</span></code> argument at initialization. Ex: <code class="docutils literal notranslate"><span class="pre">SplitConformalClassifier(conformity_score=RAPSConformityScore(size_raps=0.3))</span></code></p></li>
+</ul>
+</section>
+</section>
+<section id="none-defaults">
+<h5>None defaults<a class="headerlink" href="#none-defaults" title="Link to this heading"></a></h5>
+<p>No more parameters with misleading <code class="docutils literal notranslate"><span class="pre">None</span></code> defaults.</p>
+<ul class="simple">
+<li><p><strong>v0.x</strong>: Eg: <code class="docutils literal notranslate"><span class="pre">estimator</span></code> in <code class="docutils literal notranslate"><span class="pre">MapieRegressor</span></code> has a <code class="docutils literal notranslate"><span class="pre">None</span></code> default value, even though the actual default value is <code class="docutils literal notranslate"><span class="pre">LinearRegression()</span></code>. This is the case for other parameters as well.</p></li>
+<li><p><strong>v1</strong>: All parameters now have explicit defaults.</p></li>
+</ul>
+</section>
+</section>
+</section>
+<section id="other-api-changes">
+<h3><a class="toc-backref" href="#id10" role="doc-backlink">Other API changes</a><a class="headerlink" href="#other-api-changes" title="Link to this heading"></a></h3>
+<section id="time-series">
+<h4><a class="toc-backref" href="#id11" role="doc-backlink">Time series</a><a class="headerlink" href="#time-series" title="Link to this heading"></a></h4>
+<p>The <code class="docutils literal notranslate"><span class="pre">MapieTimeSeriesRegressor</span></code> class has been renamed <code class="docutils literal notranslate"><span class="pre">TimeSeriesRegressor</span></code>.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">adapt_conformal_inference</span></code>, <code class="docutils literal notranslate"><span class="pre">update</span></code>, <code class="docutils literal notranslate"><span class="pre">predict</span></code> and <code class="docutils literal notranslate"><span class="pre">coverage_width_based</span></code> functions of the class now take <code class="docutils literal notranslate"><span class="pre">confidence_level</span></code> as input, instead of <code class="docutils literal notranslate"><span class="pre">alpha</span></code> (<code class="docutils literal notranslate"><span class="pre">confidence_level</span></code> is equivalent to <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">-</span> <span class="pre">alpha</span></code>).</p>
+<p>The already deprecated path to import the class (<code class="docutils literal notranslate"><span class="pre">from</span> <span class="pre">mapie.time_series_regression</span> <span class="pre">import</span> <span class="pre">TimeSeriesRegressor</span></code>) is now unsupported, use path <cite>mapie.regression</cite> instead.</p>
+</section>
+<section id="risk-control">
+<h4><a class="toc-backref" href="#id12" role="doc-backlink">Risk control</a><a class="headerlink" href="#risk-control" title="Link to this heading"></a></h4>
+<p>The <code class="docutils literal notranslate"><span class="pre">MapieMultiLabelClassifier</span></code> class has been renamed <code class="docutils literal notranslate"><span class="pre">PrecisionRecallController</span></code>.</p>
+</section>
+<section id="calibration">
+<h4><a class="toc-backref" href="#id13" role="doc-backlink">Calibration</a><a class="headerlink" href="#calibration" title="Link to this heading"></a></h4>
+<p>The <code class="docutils literal notranslate"><span class="pre">MapieCalibrator</span></code> class has been renamed <code class="docutils literal notranslate"><span class="pre">TopLabelCalibrator</span></code>.</p>
+<p>This class now being specific to top-label calibration, the <code class="docutils literal notranslate"><span class="pre">method</span></code> parameter, that was accepting only the value <code class="docutils literal notranslate"><span class="pre">&quot;top-label&quot;</span></code>, has been removed.</p>
+</section>
+<section id="mondrian">
+<h4><a class="toc-backref" href="#id14" role="doc-backlink">Mondrian</a><a class="headerlink" href="#mondrian" title="Link to this heading"></a></h4>
+<p>The <code class="docutils literal notranslate"><span class="pre">MondrianCP</span></code> class is temporarily unavailable in v1. We want to rethink the way we integrate Mondrian to MAPIE, in a future-proof way.</p>
+<p>In the mean time, the Mondrian technique can be easily implemented manually: a <a class="reference external" href="https://mapie.readthedocs.io/en/latest/examples_mondrian/1-quickstart/plot_main-tutorial-mondrian-regression.html">tutorial</a> for tabular regression with Mondrian is available in the documentation. This tutorial demonstrates how to implement Mondrian manually (i.e., without using the <code class="docutils literal notranslate"><span class="pre">MondrianCP</span></code> class) on a simple regression example, while shedding light on the benefits of this technique.</p>
+</section>
+<section id="metrics">
+<h4><a class="toc-backref" href="#id15" role="doc-backlink">Metrics</a><a class="headerlink" href="#metrics" title="Link to this heading"></a></h4>
+<p>In MAPIE v1, metrics are divided into three modules: <code class="docutils literal notranslate"><span class="pre">calibration</span></code>, <code class="docutils literal notranslate"><span class="pre">classification</span></code>, and <code class="docutils literal notranslate"><span class="pre">regression</span></code>, which changes the import paths.</p>
+<p>Below is an example of the import needed for the <code class="docutils literal notranslate"><span class="pre">classification_coverage_score</span></code> function:</p>
+<ul>
+<li><p><strong>v0.x</strong>:</p>
+<blockquote>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">mapie.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">classification_coverage_score</span>
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+<li><p><strong>v1</strong>:</p>
+<blockquote>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">mapie.metrics.classification</span><span class="w"> </span><span class="kn">import</span> <span class="n">classification_coverage_score</span>
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+</ul>
+<p>Additionally, a number of classification and regression functions have been updated from v0.x to v1:</p>
+<section id="classification-coverage-score-and-classification-coverage-score-v2">
+<h5><code class="docutils literal notranslate"><span class="pre">classification_coverage_score</span></code> and <code class="docutils literal notranslate"><span class="pre">classification_coverage_score_v2</span></code><a class="headerlink" href="#classification-coverage-score-and-classification-coverage-score-v2" title="Link to this heading"></a></h5>
+<p>Now only one version exists (<code class="docutils literal notranslate"><span class="pre">classification_coverage_score</span></code>), that corresponds to v0.x <code class="docutils literal notranslate"><span class="pre">classification_coverage_score_v2</span></code>.</p>
+</section>
+<section id="classification-mean-width">
+<h5><code class="docutils literal notranslate"><span class="pre">classification_mean_width</span></code><a class="headerlink" href="#classification-mean-width" title="Link to this heading"></a></h5>
+<ul class="simple">
+<li><p><strong>v0.x</strong>: Took the prediction sets in an array of shape (n_samples, n_class) for a given confidence level as input, and returned the effective mean width as a float.</p></li>
+<li><p><strong>v1</strong>: Now takes the prediction sets in an array of shape (n_samples, n_class, n_confidence_level) as input, and returns the effective mean width for each confidence level as an array of shape (n_confidence_level,).</p></li>
+</ul>
+</section>
+<section id="regression-coverage-score-and-regression-coverage-score-v2">
+<h5><code class="docutils literal notranslate"><span class="pre">regression_coverage_score</span></code> and <code class="docutils literal notranslate"><span class="pre">regression_coverage_score_v2</span></code><a class="headerlink" href="#regression-coverage-score-and-regression-coverage-score-v2" title="Link to this heading"></a></h5>
+<p>Now only one version exists (<code class="docutils literal notranslate"><span class="pre">regression_coverage_score</span></code>), that corresponds to v0.x <code class="docutils literal notranslate"><span class="pre">regression_coverage_score_v2</span></code>.</p>
+</section>
+<section id="regression-mean-width">
+<h5><code class="docutils literal notranslate"><span class="pre">regression_mean_width</span></code><a class="headerlink" href="#regression-mean-width" title="Link to this heading"></a></h5>
+<ul class="simple">
+<li><p><strong>v0.x</strong>: Took the lower and upper bounds of the prediction intervals in arrays of shape (n_samples,) for a given confidence level as input, and returned the effective mean width as a float.</p></li>
+<li><p><strong>v1</strong>: Now takes a single array of shape (n_samples, 2, n_confidence_level) as input, and returns the effective mean width for each confidence level as an array of shape (n_confidence_level,).</p></li>
+</ul>
+</section>
+<section id="regression-mwi-score">
+<h5><code class="docutils literal notranslate"><span class="pre">regression_mwi_score</span></code><a class="headerlink" href="#regression-mwi-score" title="Link to this heading"></a></h5>
+<ul class="simple">
+<li><p><strong>v0.x</strong>: Took <code class="docutils literal notranslate"><span class="pre">alpha</span></code> as input.</p></li>
+<li><p><strong>v1</strong>: Now takes <code class="docutils literal notranslate"><span class="pre">confidence_level</span></code> as input (<code class="docutils literal notranslate"><span class="pre">confidence_level</span></code> is equivalent to <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">-</span> <span class="pre">alpha</span></code>).</p></li>
+</ul>
+</section>
+<section id="coverage-width-based">
+<h5><code class="docutils literal notranslate"><span class="pre">coverage_width_based</span></code><a class="headerlink" href="#coverage-width-based" title="Link to this heading"></a></h5>
+<ul class="simple">
+<li><p><strong>v0.x</strong>: Took <code class="docutils literal notranslate"><span class="pre">alpha</span></code> as input.</p></li>
+<li><p><strong>v1</strong>: Now takes <code class="docutils literal notranslate"><span class="pre">confidence_level</span></code> as input (<code class="docutils literal notranslate"><span class="pre">confidence_level</span></code> is equivalent to <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">-</span> <span class="pre">alpha</span></code>).</p></li>
+</ul>
+</section>
+</section>
+<section id="conformity-scores">
+<h4><a class="toc-backref" href="#id16" role="doc-backlink">Conformity scores</a><a class="headerlink" href="#conformity-scores" title="Link to this heading"></a></h4>
+<p>The import of <code class="docutils literal notranslate"><span class="pre">AbsoluteConformityScore</span></code>, <code class="docutils literal notranslate"><span class="pre">GammaConformityScore</span></code> and <code class="docutils literal notranslate"><span class="pre">ResidualNormalisedScore</span></code> from <code class="docutils literal notranslate"><span class="pre">mapie.conformity_scores.residual_conformity_scores</span></code> was deprecated and is now unsupported.</p>
+<p>You can now import those scores from <code class="docutils literal notranslate"><span class="pre">mapie.conformity_scores.bounds</span></code> or simply <code class="docutils literal notranslate"><span class="pre">mapie.conformity_scores</span></code>.</p>
+<p>The usage of <code class="docutils literal notranslate"><span class="pre">ConformityScore</span></code> was deprecated and is now unsupported. The new class to use is <code class="docutils literal notranslate"><span class="pre">BaseRegressionScore</span></code>, that can be found in <code class="docutils literal notranslate"><span class="pre">mapie.conformity_scores.regression</span></code>.</p>
+<p>We may clarify the <code class="docutils literal notranslate"><span class="pre">conformity_scores</span></code> package structure in the future.</p>
+</section>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="choosing_the_right_algorithm.html" class="btn btn-neutral float-left" title="Choosing the right algorithm" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="index_regression.html" class="btn btn-neutral float-right" title="Prediction intervals (regression)" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Capgemini Invent.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

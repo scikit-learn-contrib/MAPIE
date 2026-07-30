@@ -1,0 +1,17 @@
+﻿:mod:`mapie.calibration`.TopLabelCalibrator
+==================================================
+
+.. currentmodule:: mapie.calibration
+
+.. autoclass:: TopLabelCalibrator
+   :members:
+
+   
+   .. automethod:: __init__
+   
+
+.. include:: mapie.calibration.TopLabelCalibrator.examples
+
+.. raw:: html
+
+    <div style='clear:both'></div>

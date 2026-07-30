@@ -4,6 +4,7 @@ mkdocs-gallery generates nav entries like {"Gallery Title": []} for gallery
 index pages, which render as broken links to the homepage. This hook removes
 those empty section entries after the gallery plugin populates the nav.
 """
+
 import logging
 
 log = logging.getLogger("mkdocs.hooks.gallery_nav_fix")
