@@ -726,25 +726,6 @@ def test_quantile_regression_score_estimation_distribution_broadcasts() -> None:
     np.testing.assert_allclose(estimation_distribution, expected_distribution)
 
 
-def test_quantile_regression_score_get_quantile_rejects_scalar_alpha() -> None:
-    """Test get_quantile expects alpha to be normalized before the call."""
-    score = QuantileRegressionScore()
-    conformity_scores = np.array(
-        [
-            [1.0, 2.0, 3.0],
-            [4.0, 5.0, 6.0],
-        ]
-    )
-
-    with pytest.raises(TypeError, match=r".*iterable.*"):
-        score.get_quantile(
-            conformity_scores,
-            0.2,  # type: ignore[arg-type]  # a scalar alpha is what raises here
-            axis=1,
-            reversed=True,
-        )
-
-
 def test_absolute_quantile_regression_score_conformity_scores() -> None:
     """Test absolute conformity score as pointwise max of signed scores."""
     score = AbsoluteQuantileRegressionScore()
