@@ -18,6 +18,7 @@ def test_public_symbols_use_exports_and_exclude_internal_helpers() -> None:
     assert regression_names == {
         "ConformalizedQuantileRegressor",
         "CrossConformalRegressor",
+        "CrossConformalizedQuantileRegressor",
         "JackknifeAfterBootstrapRegressor",
         "SplitConformalRegressor",
         "TimeSeriesRegressor",
