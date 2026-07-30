@@ -606,8 +606,8 @@ class _AACRCLoss(torch.nn.Module):
         detached_predict_params = predict_params.detach()
         parameter_shape = (len(predict_params),) + (1,) * (y_pred.ndim - 1)
 
-        # Only endpoint risk values are needed; the risk itself is not
-        # differentiated.
+        # By the endpoint identity, these values are dI_i / dp_i, where
+        # p_i = model(x_i). The risk itself is not differentiated.
         with torch.no_grad():
             endpoint_losses = self.risk(
                 y_true,
@@ -616,9 +616,12 @@ class _AACRCLoss(torch.nn.Module):
             )
             integrals_endpoint_derivatives = endpoint_losses - self.alpha
 
-        # In the forward pass, predict_params - detached_predict_params is zero.
-        # In the backward pass, its derivative is one, so the proxy's derivative
-        # is integrals_endpoint_derivatives.
+        # The proxy is not numerically zero in the forward pass
+        # because predict_params - detached_predict_params is zero. During
+        # backpropagation, the derivative of this difference with respect to
+        # predict_params is one. Therefore, the proxy supplies dI_i / dp_i,
+        # and PyTorch applies the chain rule through p_i = model(x_i) to obtain
+        # dI_i / dtheta = (dI_i / dp_i) * (dp_i / dtheta).
         integrals_gradient_proxy = integrals_endpoint_derivatives * (
             predict_params.reshape(len(predict_params))
             - detached_predict_params.reshape(len(predict_params))
