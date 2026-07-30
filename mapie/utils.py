@@ -665,15 +665,12 @@ def _check_nan_in_aposteriori_prediction(X: ArrayLike) -> None:
     Increase the number of resamplings
     """
     X_np = np.asarray(X)
-    if X_np.ndim == 1:
-        sample_all_nan = np.isnan(X_np)
-    else:
-        # For 2D and 3D arrays, check whether each sample has only NaN values
-        # across all non-sample dimensions.
-        non_sample_axes = tuple(range(1, X_np.ndim))
-        sample_all_nan = np.all(np.isnan(X_np), axis=non_sample_axes)
+    # Check whether each sample has only NaN values across all non-sample
+    # dimensions: the estimators one for 2D arrays, the estimators and the
+    # confidence levels ones for 3D arrays.
+    non_sample_axes = tuple(range(1, X_np.ndim))
 
-    if np.any(sample_all_nan):
+    if np.any(np.all(np.isnan(X_np), axis=non_sample_axes)):
         warnings.warn(
             "WARNING: at least one point of training set "
             + "belongs to every resamplings.\n"

@@ -51,7 +51,13 @@ class _Conformalizer(ABC):
         ensemble: bool = False,
         **predict_params,
     ) -> Union[NDArray, Tuple[NDArray, NDArray, NDArray]]:
-        pass
+        """
+        Placeholder for `_predict`.
+        Subclasses should implement this method!
+
+        Predict the point predictions from X, together with the bounds to
+        calibrate when the conformalizer produces them.
+        """
 
     @abstractmethod
     def fit(
@@ -62,7 +68,12 @@ class _Conformalizer(ABC):
         groups: Optional[ArrayLike] = None,
         **fit_params,
     ) -> _Conformalizer:
-        pass
+        """
+        Placeholder for `fit`.
+        Subclasses should implement this method!
+
+        Fit the estimators the conformalizer relies on.
+        """
 
     def _aggregate_with_mask(self, x: NDArray, k: NDArray) -> NDArray:
         """
@@ -99,11 +110,9 @@ class _Conformalizer(ABC):
         # However, phi2D contains a np.apply_along_axis loop which
         # is much slower than the matrices multiplication that can
         # be used to compute the means.
-        elif self.agg_function in ["mean", None]:
+        else:
             K = np.nan_to_num(k, nan=0.0)
             return cast(NDArray, np.matmul(x, (K / (K.sum(axis=1, keepdims=True))).T))
-        else:
-            raise ValueError("The value of the aggregation function is not correct")
 
 
 class EnsembleRegressor(_Conformalizer):

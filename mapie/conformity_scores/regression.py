@@ -242,11 +242,10 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
         Predict the point predictions and the bounds to calibrate.
 
         `_Conformalizer._predict` implementations do not share a single output
-        layout: the point predictions may be returned alone, and the bounds may
-        hold one column per estimator, as `EnsembleRegressor` does for the
-        `"plus"` method, or one column per confidence level, as
-        `_QuantileConformalizer` does. This method narrows every layout to the
-        one `get_bounds` calibrates.
+        layout: the bounds may hold one column per estimator, as
+        `EnsembleRegressor` does for the `"plus"` method, or one column per
+        confidence level, as `_QuantileConformalizer` does. This method narrows
+        every layout to the one `get_bounds` calibrates.
 
         Parameters
         ----------
@@ -276,12 +275,9 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
             - The lower bounds to calibrate, of shape (n_samples, n_predictions).
             - The upper bounds to calibrate, of shape (n_samples, n_predictions).
         """
-        predictions = estimator._predict(X, ensemble, **(predict_params or {}))
-
-        # `_predict` may return the point predictions alone, which then also carry
-        # the bounds to calibrate.
-        y_pred, y_pred_low, y_pred_up = (
-            predictions if isinstance(predictions, tuple) else (predictions,) * 3
+        y_pred, y_pred_low, y_pred_up = cast(
+            Tuple[NDArray, NDArray, NDArray],
+            estimator._predict(X, ensemble, **(predict_params or {})),
         )
 
         return (
@@ -297,10 +293,11 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
         """
         Narrow predicted bounds to the confidence levels of `alpha_np`.
 
-        Bounds are handled as column vectors, as `EnsembleRegressor.predict`
-        returns them: they are broadcast against quantiles of shape
-        (1, n_alpha) for the `"base"` method, which silently transposes the
-        result if they are 1-dimensional.
+        Bounds always hold one row per sample and one column per prediction, as
+        both `EnsembleRegressor.predict` and `_QuantileConformalizer._predict`
+        return them: they are broadcast against quantiles of shape (1, n_alpha)
+        for the `"base"` method, which a 1-dimensional array would silently
+        transpose.
 
         Conformalizers fitting one set of quantile estimators per confidence
         level, such as `_QuantileConformalizer`, return one column per level of
@@ -310,7 +307,7 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
 
         Parameters
         ----------
-        bounds: NDArray of shape (n_samples,) or (n_samples, n_predictions)
+        bounds: NDArray of shape (n_samples, n_predictions)
             Predicted bounds of one side of the intervals.
 
         alpha_np: NDArray of shape (n_alpha,)
@@ -326,8 +323,6 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
             Bounds of the requested confidence levels.
         """
         bounds_np = np.asarray(bounds)
-        if bounds_np.ndim == 1:
-            return bounds_np[:, np.newaxis]
 
         levels = getattr(estimator, "alpha", None)
         if levels is None:
@@ -337,11 +332,11 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
         if levels_np.size < 2 or bounds_np.shape[1] != levels_np.size:
             return bounds_np
 
-        columns = [np.flatnonzero(np.isclose(levels_np, alpha)) for alpha in alpha_np]
-        if any(column.size == 0 for column in columns):
-            return bounds_np
+        columns = [
+            int(np.flatnonzero(np.isclose(levels_np, alpha))[0]) for alpha in alpha_np
+        ]
 
-        return bounds_np[:, [int(column[0]) for column in columns]]
+        return bounds_np[:, columns]
 
     def get_bounds(
         self,
