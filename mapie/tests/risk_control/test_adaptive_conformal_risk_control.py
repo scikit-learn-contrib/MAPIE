@@ -5,7 +5,6 @@ import torch
 from mapie.risk_control import RiskLoss, miscoverage_loss, recall_loss
 from mapie.risk_control import adaptive_conformal_risk_control as acrc_module
 from mapie.risk_control.adaptive_conformal_risk_control import (
-    DEVICE,
     ConditionalExpectedRiskController,
     _AACRCLoss,
     _LinearHead,
@@ -14,6 +13,15 @@ from mapie.risk_control.adaptive_conformal_risk_control import (
     _import_torch,
     _train_model,
 )
+
+# These unit tests verify deterministic algorithm semantics, not accelerator
+# behavior. Use CPU on every platform to avoid backend-specific MPS results.
+DEVICE = torch.device("cpu")
+
+
+@pytest.fixture(autouse=True)
+def _use_cpu_device(monkeypatch):
+    monkeypatch.setattr(acrc_module, "DEVICE", DEVICE)
 
 
 def _make_data(n: int = 6, size: int = 3, seed: int = 0):
@@ -89,11 +97,7 @@ def test_conformalize_initializes_default_base_model():
 def test_predict_param_range_is_optional(
     predict_param_range,
     expected_predict_param,
-    monkeypatch,
 ):
-    # This test checks parameter-range semantics, not accelerator behavior.
-    # Run it on CPU to avoid platform-specific MPS numerical issues on macOS.
-    monkeypatch.setattr(acrc_module, "DEVICE", torch.device("cpu"))
     X, y = _make_data()
     head = _LinearHead(9)
     with torch.no_grad():
