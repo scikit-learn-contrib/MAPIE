@@ -87,12 +87,13 @@ plugins:
         - doc/generated/exchangeability_testing
       within_subsection_order: FileNameSortKey
       plot_gallery: true
-      run_stale_examples: true
+      run_stale_examples: false
       download_all_examples: false
       abort_on_example_error: true
       only_warn_on_example_error: false
 
 hooks:
+  - doc/hooks/gallery_memory.py
   - doc/hooks/api_reference.py
   - doc/hooks/gallery_nav_fix.py
 
