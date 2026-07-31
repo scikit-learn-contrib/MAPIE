@@ -1188,7 +1188,8 @@ def test_quantile_conformalizer_predict_multiple_predictions_mean_aggregation() 
 
 
 def test_quantile_conformalizer_predict_multiple_predictions_minmax() -> None:
-    """Test _predict minmax uses min lower, max upper and mean central predictions."""
+    """Test _predict minmax uses min lower, max upper and the requested central
+    aggregation."""
     conformalizer = DummyQuantileConformalizer()
     conformalizer.alpha = [0.2]
     level = str(conformalizer.alpha[0])
@@ -1217,6 +1218,48 @@ def test_quantile_conformalizer_predict_multiple_predictions_minmax() -> None:
     )
 
     np.testing.assert_allclose(y_pred_central, np.array([3.0, 4.0]))
+    np.testing.assert_allclose(y_pred_low, np.array([[1.0], [2.0]]))
+    np.testing.assert_allclose(y_pred_up, np.array([[7.0], [8.0]]))
+
+
+def test_quantile_conformalizer_predict_minmax_honours_median_aggregation() -> None:
+    """Test minmax aggregates the central prediction with the requested function.
+
+    Only the bounds are aggregated by min and max: the central prediction must
+    follow `agg_function`, here the median rather than the mean.
+    """
+    conformalizer = DummyQuantileConformalizer()
+    conformalizer.alpha = [0.2]
+    level = str(conformalizer.alpha[0])
+    conformalizer.quantiles = {level: np.array([0.1, 0.9, 0.5])}
+    conformalizer.method = "minmax"
+    conformalizer.agg_function = "median"
+    conformalizer.estimators_ = {
+        level: {
+            "lower": [
+                FixedPredictor(np.array([1.0, 4.0])),
+                FixedPredictor(np.array([3.0, 2.0])),
+                FixedPredictor(np.array([2.0, 3.0])),
+            ],
+            "upper": [
+                FixedPredictor(np.array([5.0, 6.0])),
+                FixedPredictor(np.array([7.0, 8.0])),
+                FixedPredictor(np.array([6.0, 7.0])),
+            ],
+        },
+    }
+    # Medians are 4.0 and 5.0, whereas the means would be 6.0 and 7.0.
+    conformalizer.central_estimators_ = [
+        FixedPredictor(np.array([2.0, 3.0])),
+        FixedPredictor(np.array([4.0, 5.0])),
+        FixedPredictor(np.array([12.0, 13.0])),
+    ]
+
+    y_pred_central, y_pred_low, y_pred_up = conformalizer._predict(
+        X_toy[:2], ensemble=True
+    )
+
+    np.testing.assert_allclose(y_pred_central, np.array([4.0, 5.0]))
     np.testing.assert_allclose(y_pred_low, np.array([[1.0], [2.0]]))
     np.testing.assert_allclose(y_pred_up, np.array([[7.0], [8.0]]))
 
@@ -2021,12 +2064,37 @@ def test_cross_conformalized_quantile_regressor_auto_aggregation(method: str) ->
 
     np.testing.assert_allclose(y_pred_auto, y_pred_exp)
     np.testing.assert_allclose(y_pis_auto, y_pis_exp)
-    # `predict` resolves the sentinel the same way. Compared against `predict` itself,
-    # since for `minmax` it does not agree with `predict_interval` on the point value.
+    # `predict` resolves the sentinel the same way.
     np.testing.assert_allclose(
         reg.predict(X[:20]),
         reg.predict(X[:20], aggregate_point_predictions=expected),
     )
+
+
+@pytest.mark.parametrize("method", ["plus", "minmax"])
+@pytest.mark.parametrize("aggregation", ["mean", "median", "pinball_weighted_mean"])
+def test_cross_conformalized_quantile_regressor_point_predictions_agree(
+    method: str, aggregation: str
+) -> None:
+    """Test `predict_interval` predicts the same point as `predict`.
+
+    Whatever the method, only the bounds depend on it: the point must be the one
+    the requested aggregation produces.
+    """
+    reg = CrossConformalizedQuantileRegressor(
+        estimator=qt,
+        cv=KFold(n_splits=3),
+        method=method,
+        confidence_level=0.9,
+    )
+    reg.fit_conformalize(X[:100], y[:100])
+
+    y_pred_interval, _ = reg.predict_interval(
+        X[:20], aggregate_point_predictions=aggregation
+    )
+    y_pred = reg.predict(X[:20], aggregate_point_predictions=aggregation)
+
+    np.testing.assert_allclose(y_pred_interval, y_pred)
 
 
 def test_cross_conformalized_quantile_regressor_predict_none_uses_full_data_estimator() -> (

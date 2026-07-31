@@ -818,7 +818,7 @@ class _QuantileConformalizer(_Conformalizer, ABC):
         NDArray of shape (n_samples, n_quantiles)
             Fold predictions aggregated for each sample and each quantile.
         """
-        pinball_weights = 1 / np.asarray(self.pinball_losses[level], dtype=float) + 1e-8
+        pinball_weights = 1 / (np.asarray(self.pinball_losses[level], dtype=float) + 1e-8)
         y_preds = np.asarray(y_preds, dtype=float)
 
         # Losses are of shape (n_split, n_quantiles), one per fold and per quantile.
@@ -924,13 +924,7 @@ class _QuantileConformalizer(_Conformalizer, ABC):
                     X, index=i, **predict_params
                 )
 
-        if self.method == "minmax":
-            y_pred_multi_low = np.min(pred_matrix[:, :, 0], axis=1, keepdims=True)
-            y_pred_multi_up = np.max(pred_matrix[:, :, 1], axis=1, keepdims=True)
-            y_pred_multi_center = np.mean(pred_matrix[:, :, 2], axis=1, keepdims=True)
-            y_pred = np.hstack((y_pred_multi_low, y_pred_multi_up, y_pred_multi_center))
-
-        elif self.agg_function == "pinball_weighted_mean":
+        if self.agg_function == "pinball_weighted_mean":
             y_pred = self._pinball_weighted_mean(pred_matrix[:, :, :n_quantiles], level)
             if n_quantiles < 3:
                 y_pred_multi_center = np.mean(
@@ -939,6 +933,13 @@ class _QuantileConformalizer(_Conformalizer, ABC):
                 y_pred = np.hstack((y_pred, y_pred_multi_center))
         else:
             y_pred = aggregate_all(self.agg_function, pred_matrix)
+
+        # `"minmax"` only changes how the bounds are aggregated: the central
+        # prediction keeps the aggregation requested by the user, so that it matches
+        # the point predicted by `predict`.
+        if self.method == "minmax":
+            y_pred[:, 0] = np.min(pred_matrix[:, :, 0], axis=1)
+            y_pred[:, 1] = np.max(pred_matrix[:, :, 1], axis=1)
 
         return y_pred
 
@@ -1364,7 +1365,7 @@ class CrossConformalizedQuantileRegressor(_QuantileConformalizer):
             self.quantiles[level].size == 3
         ):
             central_weights = (
-                1 / np.asarray(self.pinball_losses[level], dtype=float)[:, 2]
+                1 / (np.asarray(self.pinball_losses[level], dtype=float)[:, 2] + 1e-8)
             )
             weights = central_weights / central_weights.sum()
             return np.asarray(np.sum((np.atleast_2d(weights).T * y_pred_multi), axis=0))
