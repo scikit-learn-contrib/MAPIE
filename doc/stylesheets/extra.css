@@ -81,6 +81,23 @@
   font-size: 0.85rem;
 }
 
+/* API symbol names should remain readable as one identifier. On narrow
+   screens, the enclosing container provides horizontal scrolling instead of
+   splitting a name across lines. */
+.md-typeset .api-overview-table {
+  overflow-x: auto;
+}
+
+.md-typeset .api-overview-table table {
+  min-width: 100%;
+}
+
+.md-typeset .api-overview-table td:first-child,
+.md-typeset .api-overview-table td:first-child code {
+  white-space: nowrap;
+  word-break: normal;
+}
+
 /* Method comparison table */
 .md-typeset .comparison-table th {
   white-space: nowrap;

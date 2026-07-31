@@ -343,6 +343,8 @@ def render_overview(pages: Iterable[ApiPage]) -> str:
                     "",
                     f"### {section.title}",
                     "",
+                    '<div class="api-overview-table" markdown>',
+                    "",
                     "| Item | Description |",
                     "|---|---|",
                 )
@@ -350,6 +352,7 @@ def render_overview(pages: Iterable[ApiPage]) -> str:
             for symbol in section.symbols:
                 link = f"{page.slug}.md#{symbol.path}"
                 chunks.append(f"| [`{symbol.name}`]({link}) | {_summary(symbol)} |")
+            chunks.extend(("", "</div>"))
     return "\n".join(chunks) + "\n"
 
 
