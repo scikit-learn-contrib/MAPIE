@@ -7,7 +7,7 @@ In this example, we explain how to do risk control for binary classification wit
 
 """
 
-# sphinx_gallery_thumbnail_number = 2
+# mkdocs_gallery_thumbnail_number = 2
 
 import matplotlib.pyplot as plt
 import numpy as np

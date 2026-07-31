@@ -69,7 +69,7 @@ Using the same classifier, dataset, and target precision, we illustrate:
 # to optimistic bias and would invalidate the FWER guarantees of the procedure.
 #
 
-# sphinx_gallery_thumbnail_number = 2
+# mkdocs_gallery_thumbnail_number = 2
 
 import matplotlib.pyplot as plt
 import numpy as np

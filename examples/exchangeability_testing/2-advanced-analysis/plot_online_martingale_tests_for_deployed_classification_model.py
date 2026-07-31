@@ -59,7 +59,7 @@ References
      In Proceedings of the 29th ICML. Algorithm 1, page 3.
 """
 
-# sphinx_gallery_thumbnail_number = 4
+# mkdocs_gallery_thumbnail_number = 4
 
 import warnings
 

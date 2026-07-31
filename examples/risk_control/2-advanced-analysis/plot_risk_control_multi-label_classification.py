@@ -8,7 +8,7 @@ classification using the Learn-Then-Test (LTT) procedure implemented in MAPIE.
 
 """
 
-# sphinx_gallery_thumbnail_number = 4
+# mkdocs_gallery_thumbnail_number = 4
 
 import matplotlib.pyplot as plt
 import numpy as np

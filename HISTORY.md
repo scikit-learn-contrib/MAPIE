@@ -2,12 +2,25 @@
 ## 1.x.x (2026-xx-xx)
 - Add `StdConformityScore` for regression models that expose prediction standard deviations through `predict(..., return_std=True)`, enabling standard-deviation-normalized conformal prediction intervals such as J+GP.
 - Add a scientific article example reproducing the Jaber et al. (2025) Gaussian-process surrogate experiment and comparing GP credibility intervals, J+GP, and standard Jackknife+ intervals.
+- Add a dedicated Conditional Conformal Prediction gallery section with examples adapted to the v1 `ConditionalSplitConformalRegressor` and `ConditionalSplitConformalClassifier` APIs.
+- Add a Communities and Crime conditional conformal prediction example adapted from PR #455's `tutorial_ccp_CandC.ipynb`.
+- Back up the Communities and Crime dataset used by that example (`examples/data/communities_and_crime.csv.gz`), now loaded by default so the example no longer depends on the UCI download server.
+- Add Other Notebooks sections to the MkDocs classification and regression galleries.
 - Consolidate quantile computation: extract `_compute_regression_quantile` and `_compute_classification_quantile` functions in `utils.py`, replacing the former `get_quantile` method and `_compute_quantiles` wrapper. No public API changes. (issue #479)
 - Add optional `covmetrics` integration for conditional coverage diagnostics.
 - Add CovGap and WCovGap documentation for conditional coverage diagnostics.
 - Add WSC (`worst_slab_coverage`) for slab-based conditional coverage diagnostics.
 - Add ERT (`excess_risk_target_coverage`) for model-based conditional coverage diagnostics.
+- Consolidate conformal prediction metrics into a single documentation page,
+  organized into general metrics and conditional coverage diagnostics.
+- Generate the MkDocs API reference and navigation automatically from MAPIE's
+  public Python objects, including conditional conformal prediction, metrics,
+  risk control, and exchangeability testing.
+
+## 1.x.x (2026-xx-xx)
+
 - Add `ConditionalSplitConformalRegressor` and `ConditionalSplitConformalClassifier`, implementing conformal prediction with conditional guarantees (Gibbs et al., 2023), adapted from https://github.com/jjcherian/conditional-conformal.
+- Raise `NotImplementedError` from the conditional conformal estimators when the infinite-dimensional (RKHS) component is requested via `infinite_params`; the supporting code is retained for future work.
 - Add experimental multivariate standardized residuals
 - Add `aucroc_score` and `auarc_score` to `mapie/metrics/uncertainty.py` for uncertainty evaluation following Lin et al. (2023); resolves #551.
 - Add a benchmark notebook for exchangeability tests using the current API.
