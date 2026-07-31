@@ -23,7 +23,6 @@
 - Raise `NotImplementedError` from the conditional conformal estimators when the infinite-dimensional (RKHS) component is requested via `infinite_params`; the supporting code is retained for future work.
 - Add experimental multivariate standardized residuals
 - Add `aucroc_score` and `auarc_score` to `mapie/metrics/uncertainty.py` for uncertainty evaluation following Lin et al. (2023); resolves #551.
-## 1.x.x (2026-xx-xx)
 - Add `StdConformityScore` for regression models that expose prediction standard deviations through `predict(..., return_std=True)`, enabling standard-deviation-normalized conformal prediction intervals such as J+GP.
 - Add a scientific article example reproducing the Jaber et al. (2025) Gaussian-process surrogate experiment and comparing GP credibility intervals, J+GP, and standard Jackknife+ intervals.
 - Consolidate quantile computation: extract `_compute_regression_quantile` and `_compute_classification_quantile` functions in `utils.py`, replacing the former `get_quantile` method and `_compute_quantiles` wrapper. No public API changes. (issue #479)
@@ -31,12 +30,7 @@
 - Add CovGap and WCovGap documentation for conditional coverage diagnostics.
 - Add WSC (`worst_slab_coverage`) for slab-based conditional coverage diagnostics.
 - Add ERT (`excess_risk_target_coverage`) for model-based conditional coverage diagnostics.
-
-## 1.x.x (2026-xx-xx)
-
-- Add `ConditionalSplitConformalRegressor` and `ConditionalSplitConformalClassifier`, implementing conformal prediction with conditional guarantees (Gibbs et al., 2023), adapted from https://github.com/jjcherian/conditional-conformal.
-- Add experimental multivariate standardized residuals
-- Add `aucroc_score` and `auarc_score` to `mapie/metrics/uncertainty.py` for uncertainty evaluation following Lin et al. (2023); resolves #551.
+- Add a benchmark notebook for exchangeability tests using the current API.
 
 ## 1.4.1 (2026-06-08)
 
