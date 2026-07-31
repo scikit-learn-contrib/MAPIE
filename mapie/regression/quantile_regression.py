@@ -818,7 +818,9 @@ class _QuantileConformalizer(_Conformalizer, ABC):
         NDArray of shape (n_samples, n_quantiles)
             Fold predictions aggregated for each sample and each quantile.
         """
-        pinball_weights = 1 / (np.asarray(self.pinball_losses[level], dtype=float) + 1e-8)
+        pinball_weights = 1 / (
+            np.asarray(self.pinball_losses[level], dtype=float) + 1e-8
+        )
         y_preds = np.asarray(y_preds, dtype=float)
 
         # Losses are of shape (n_split, n_quantiles), one per fold and per quantile.
@@ -1364,8 +1366,8 @@ class CrossConformalizedQuantileRegressor(_QuantileConformalizer):
         if self.agg_function == "pinball_weighted_mean" and (
             self.quantiles[level].size == 3
         ):
-            central_weights = (
-                1 / (np.asarray(self.pinball_losses[level], dtype=float)[:, 2] + 1e-8)
+            central_weights = 1 / (
+                np.asarray(self.pinball_losses[level], dtype=float)[:, 2] + 1e-8
             )
             weights = central_weights / central_weights.sum()
             return np.asarray(np.sum((np.atleast_2d(weights).T * y_pred_multi), axis=0))
