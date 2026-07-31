@@ -8,18 +8,6 @@ __pycache__/
 # C extensions
 *.so
 
-# documentation specific
-doc_legacy/_build/
-doc_legacy/examples_classification/
-doc_legacy/examples_regression/
-doc_legacy/examples_calibration/
-doc_legacy/examples_risk_control/
-doc_legacy/examples_mondrian/
-doc_legacy/auto_examples/
-doc_legacy/modules/generated/
-doc_legacy/datasets/generated/
-doc_legacy/generated/
-
 # Distribution / packaging
 
 .Python
@@ -67,10 +55,6 @@ coverage.xml
 # Django stuff:
 *.log
 
-# Sphinx documentation
-doc_legacy/_build/
-doc_legacy/generated/
-
 # Notebooks checkpoints
 **.ipynb_checkpoints
 
@@ -96,4 +80,3 @@ uv.lock
 # Docs
 site/
 doc/generated/
-doc_legacy/generated/

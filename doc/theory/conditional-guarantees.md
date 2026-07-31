@@ -1,6 +1,8 @@
 # Conditional Conformal Prediction — Theoretical Description
 
-The Conditional Conformal Prediction (CCP) method [^1] is a model agnostic conformal prediction method which can create adaptative prediction intervals.
+Standard Conformal Prediction provides marginal guarantees: the true label/value is in the prediction set/interval **marginally** on the test data. Many standard methods provide prediction intervals that do not depend on the specific datapoint and thus fail to capture heteroscedasticity (the variance of errors is not constant across a regression model's observations). Some algorithms in MAPIE provide adaptive intervals, that can adapt to specific datapoints, such as Conformalized Quantile Regression (CQR) or the Residual Normalized Score. However, their theoretical guarantees are still marginal.
+
+Here we present a Conditional Conformal Prediction (CCP) method [^1] which is a model agnostic conformal prediction method that can create adaptative prediction intervals and provides coverage guarantees on sub-groups, not only marginally.
 
 In MAPIE, this method has a lot of advantages:
 

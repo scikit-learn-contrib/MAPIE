@@ -1532,7 +1532,7 @@ def _resolve_renamed_parameter(
     """Resolve a renamed keyword argument, warning if the old name is used.
 
     If the deprecated ``old_name`` argument was supplied (i.e. ``old_value``
-    is not the :data:`_UNSET` sentinel), emit a ``FutureWarning`` and return
+    is not the `_UNSET` sentinel), emit a ``FutureWarning`` and return
     that value. Otherwise return ``new_value`` unchanged.
 
     Parameters
@@ -1547,7 +1547,7 @@ def _resolve_renamed_parameter(
         Name of the deprecated parameter.
 
     old_value : Any
-        Value passed for the deprecated parameter, or :data:`_UNSET` if it
+        Value passed for the deprecated parameter, or `_UNSET` if it
         was not supplied.
 
     Returns
