@@ -20,6 +20,7 @@
 
 ## 1.x.x (2026-xx-xx)
 
+- Upgrade JupyterLab and PyTorch development dependencies to fix security vulnerabilities.
 - Add `ConditionalSplitConformalRegressor` and `ConditionalSplitConformalClassifier`, implementing conformal prediction with conditional guarantees (Gibbs et al., 2023), adapted from https://github.com/jjcherian/conditional-conformal.
 - Raise `NotImplementedError` from the conditional conformal estimators when the infinite-dimensional (RKHS) component is requested via `infinite_params`; the supporting code is retained for future work.
 - Add experimental multivariate standardized residuals
