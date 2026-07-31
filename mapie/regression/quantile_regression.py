@@ -9,7 +9,7 @@ from functools import lru_cache
 from joblib import Parallel, delayed
 from numpy.typing import ArrayLike, NDArray
 from sklearn.base import RegressorMixin, clone
-from sklearn.linear_model import QuantileRegressor, LinearRegression
+from sklearn.linear_model import QuantileRegressor
 from sklearn.model_selection import train_test_split, BaseCrossValidator
 from sklearn.pipeline import Pipeline
 from sklearn.utils import check_random_state, _safe_indexing
@@ -818,7 +818,7 @@ class _QuantileConformalizer(_Conformalizer, ABC):
         NDArray of shape (n_samples, n_quantiles)
             Fold predictions aggregated for each sample and each quantile.
         """
-        pinball_weights = 1 / np.asarray(self.pinball_losses[level], dtype=float)
+        pinball_weights = 1 / np.asarray(self.pinball_losses[level], dtype=float) + 1e-8
         y_preds = np.asarray(y_preds, dtype=float)
 
         # Losses are of shape (n_split, n_quantiles), one per fold and per quantile.
@@ -1020,7 +1020,7 @@ class CrossConformalizedQuantileRegressor(_QuantileConformalizer):
 
     Parameters
     ----------
-    estimator : RegressorMixin, default=LinearRegression()
+    estimator : RegressorMixin, default=QuantileRegressor()
         Base regressor used to estimate the lower, upper and central quantiles.
 
     confidence_level : float or Iterable[float], default=0.9
