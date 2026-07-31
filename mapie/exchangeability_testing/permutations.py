@@ -71,7 +71,7 @@ class MaxSplitMeanDifferenceTestStatistic(TestStatistic):
         return float(max_stat)
 
     def __call__(self, scores: NDArray) -> float:
-        """Alias to :meth:`compute`."""
+        """Alias to `compute`."""
         return self.compute(scores)
 
 
@@ -87,11 +87,11 @@ class PermutationTest(ABC):
     mapie_estimator : Optional[MapieEstimator], default=None
         MAPIE estimator used to compute predictions and non-conformity
         scores. Supported estimators are
-        :class:`SplitConformalClassifier`,
-        and :class:`SplitConformalRegressor`.
+        `SplitConformalClassifier`,
+        and `SplitConformalRegressor`.
         If ``None``, a default
-        :class:`SplitConformalClassifier` or
-        :class:`SplitConformalRegressor` is built
+        `SplitConformalClassifier` or
+        `SplitConformalRegressor` is built
         when needed.
         If the estimator is not fitted or not provided, it will be fitted on a
         slice of the data in order to compute non-conformity scores.
@@ -101,7 +101,7 @@ class PermutationTest(ABC):
         Number of permutations used by permutation-based tests.
     warn : bool, default=True
         Whether to raise a warning when the exchangeability test fails at the
-        end of :meth:`run`.
+        end of `run`.
     """
 
     def __init__(
@@ -280,11 +280,11 @@ class PValuePermutationTest(PermutationTest):
     mapie_estimator : Optional[MapieEstimator], default=None
         MAPIE estimator used to compute predictions and non-conformity
         scores. Supported estimators are
-        :class:`SplitConformalClassifier`,
-        and :class:`SplitConformalRegressor`.
+        `SplitConformalClassifier`,
+        and `SplitConformalRegressor`.
         If ``None``, a default
-        :class:`SplitConformalClassifier` or
-        :class:`SplitConformalRegressor` is built
+        `SplitConformalClassifier` or
+        `SplitConformalRegressor` is built
         when needed.
         If the estimator is not fitted or not provided, it will be fitted on a
         slice of the data in order to compute non-conformity scores.
@@ -296,7 +296,7 @@ class PValuePermutationTest(PermutationTest):
         Number of permutations used to estimate the p-value.
     warn : bool, default=True
         Whether to raise a warning when the exchangeability test fails at the
-        end of :meth:`run`.
+        end of `run`.
 
     Examples
     --------
@@ -380,11 +380,11 @@ class SequentialMonteCarloTest(PermutationTest):
     mapie_estimator : Optional[MapieEstimator], default=None
         MAPIE estimator used to compute predictions and non-conformity
         scores. Supported estimators are
-        :class:`SplitConformalClassifier`,
-        and :class:`SplitConformalRegressor`.
+        `SplitConformalClassifier`,
+        and `SplitConformalRegressor`.
         If ``None``, a default
-        :class:`SplitConformalClassifier` or
-        :class:`SplitConformalRegressor` is built
+        `SplitConformalClassifier` or
+        `SplitConformalRegressor` is built
         when needed.
         If the estimator is not fitted or not provided, it will be fitted on a
         slice of the data in order to compute non-conformity scores.
@@ -396,7 +396,7 @@ class SequentialMonteCarloTest(PermutationTest):
         Maximum number of permutations.
     warn : bool, default=True
         Whether to raise a warning when the exchangeability test fails at the
-        end of :meth:`run`.
+        end of `run`.
     burn_in : int, default=100
         Minimum number of permutations before considering early stopping.
     """

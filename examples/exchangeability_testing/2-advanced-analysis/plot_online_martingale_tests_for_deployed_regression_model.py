@@ -7,7 +7,7 @@ When a predictive model is deployed in production, a common question arises:
 for model development?*
 
 This example answers that question with
-:class:`~mapie.exchangeability_testing.OnlineMartingaleTest`,
+`OnlineMartingaleTest`,
 a lightweight sequential test that converts each new observation into a
 conformal p-value and accumulates evidence against exchangeability through a
 martingale process.
@@ -23,7 +23,7 @@ Following standard MAPIE practice, we generate one dataset and split it into:
 3. **Test set** (50 %): future monitoring data, never seen during training.
 
 The monitoring stream given to
-:class:`~mapie.exchangeability_testing.OnlineMartingaleTest`
+`OnlineMartingaleTest`
 is the concatenation of conformalization and test partitions.
 This reflects the practical recommendation:
 *run exchangeability diagnostics on held-out data only.*
@@ -83,7 +83,7 @@ warnings.filterwarnings(
 # We generate one simple linear regression dataset and apply the standard
 # MAPIE train, conformalize, and test split. The linear regressor is fitted on
 # the train partition only, then wrapped in
-# :class:`~mapie.regression.SplitConformalRegressor` in prefit mode.
+# `SplitConformalRegressor` in prefit mode.
 #
 
 rng = np.random.default_rng(RANDOM_STATE)
@@ -195,7 +195,7 @@ plt.tight_layout(rect=(0, 0.08, 1, 1))
 plt.show()
 
 ##############################################################################
-# The helper :func:`~utils.plot_martingale_results_one_scenario` (defined in
+# The helper `plot_martingale_results_one_scenario` (defined in
 # the local ``utils.py``) visualizes martingale trajectories and the plug-in
 # p-value histogram for each scenario.
 #

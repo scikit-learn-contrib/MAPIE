@@ -100,4 +100,4 @@ Separate from interval/set prediction. Controller classes — `BinaryClassificat
 
 ## Documentation
 
-Two doc systems coexist: `doc/` is the current MkDocs site (`mkdocs build --strict`, `mkdocs serve`); `doc_legacy/` is the older Sphinx site (`make doc-legacy`, `make doctest`). Runnable examples in `examples/` are auto-included in the docs.
+The documentation lives in `doc/` and is built with MkDocs Material (`mkdocs build --strict`, `mkdocs serve`). Read the Docs hosts the current site using `.readthedocs.yml` and `mkdocs.yml`. Runnable examples in `examples/` are auto-included in the docs.

@@ -9,10 +9,10 @@ from numpy.typing import NDArray
 
 class _BaseRisk:
     """
-    Base class factoring out the logic shared between :class:`BinaryRisk` and
-    :class:`ContinuousRisk`.
+    Base class factoring out the logic shared between `BinaryRisk` and
+    `ContinuousRisk`.
 
-    Subclasses must implement :meth:`_compute_values_and_effective_mask`, which
+    Subclasses must implement `_compute_values_and_effective_mask`, which
     returns, for each sample, (i) the per-sample risk value and (ii) whether the
     sample is effective (i.e. counts toward the risk average).
 
@@ -146,10 +146,10 @@ class BinaryRisk(_BaseRisk):
     """
     Define a risk (or a performance metric) to be used with the
     BinaryClassificationController. Predefined instances are implemented,
-    see :data:`mapie.risk_control.precision`, :data:`mapie.risk_control.recall`,
-    :data:`mapie.risk_control.accuracy`,
-    :data:`mapie.risk_control.false_positive_rate`, and
-    :data:`mapie.risk_control.predicted_positive_fraction`.
+    see `mapie.risk_control.precision`, `mapie.risk_control.recall`,
+    `mapie.risk_control.accuracy`,
+    `mapie.risk_control.false_positive_rate`, and
+    `mapie.risk_control.predicted_positive_fraction`.
 
     Here, a binary classification risk (or performance) is defined by an occurrence and
     a condition. Let's take the example of precision. Precision is the sum of true
@@ -249,7 +249,7 @@ class BinaryRisk(_BaseRisk):
 
 class BinaryClassificationRisk(BinaryRisk):
     """
-    Deprecated alias for :class:`BinaryRisk`.
+    Deprecated alias for `BinaryRisk`.
 
     Use ``BinaryRisk`` instead.
     """
@@ -380,12 +380,12 @@ class ContinuousRisk(_BaseRisk):
     A continuous risk is defined by a single per-sample function mapping the
     ground-truth and predicted values to a non-negative per-sample risk value.
     The aggregated risk is the mean of these per-sample values across all
-    samples. Unlike :class:`BinaryRisk`, there is no separate "condition": every
+    samples. Unlike `BinaryRisk`, there is no separate "condition": every
     sample counts (``risk_occurrence`` is not needed), so the effective sample
     size is always equal to ``n_samples``.
 
-    Typical instances are :data:`mapie.risk_control.mae` (mean absolute error)
-    and :data:`mapie.risk_control.mse` (mean squared error).
+    Typical instances are `mapie.risk_control.mae` (mean absolute error)
+    and `mapie.risk_control.mse` (mean squared error).
 
     Note: for theoretical risk control guarantees (Hoeffding-Bentkus), the
     per-sample risk values must be bounded. The caller is responsible for

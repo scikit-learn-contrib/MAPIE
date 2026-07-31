@@ -31,8 +31,8 @@ class RiskMonitoring:
     ----------
     risk : RiskLike
         Risk to monitor. If a string is provided, it must be one of the keys in
-        :data:`mapie.risk_control.risks.binary_risk_choice_map` or
-        :data:`mapie.risk_control.risks.continuous_risk_choice_map`.
+        `mapie.risk_control.risks.binary_risk_choice_map` or
+        `mapie.risk_control.risks.continuous_risk_choice_map`.
     test_level : float, default=0.05
         Level used to test the hypothesis that the online risk is greater than the reference risk.
         The probability that the test gives a false positive is at most test_level (type I error).

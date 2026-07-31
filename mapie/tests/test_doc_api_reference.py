@@ -49,6 +49,8 @@ def test_generated_markdown_references_every_public_symbol() -> None:
     pages = api_pages()
     overview = render_overview(pages)
 
+    assert '<div class="api-overview-table" markdown>' in overview
+
     for page in pages:
         detail = render_api_page(page)
         assert f"# {page.title}" in detail

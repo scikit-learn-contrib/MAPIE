@@ -10,8 +10,6 @@ To run and convert the notebooks contained in this folder, create a dedicated vi
 * `pip install -e '.[notebooks]'`
 * `python -m ipykernel install --user --name=mapie_notebooks`
 
-# Create notebooks
+# Use notebooks in documentation
 
-In order to make your notebook readable by the sphinx documentation, you need to convert your `.ipynb` file to a `.rst` format (along with the generated figures) and then copy the files in the `doc` directory. All these steps can be carried out at once with the following command:
-
-* `make convert2rst dir="directory_name" file="file_name"`
+MAPIE's documentation is built with MkDocs. Prefer adding runnable documentation examples as Python scripts in the `examples/` folder so they are rendered by the gallery. Standalone notebooks can be linked from Markdown pages under `doc/` when a notebook format is more appropriate.

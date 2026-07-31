@@ -54,11 +54,11 @@ class OnlineMartingaleTest:
     mapie_estimator : Optional[MapieEstimator], default=None
         MAPIE estimator used to compute predictions and non-conformity
         scores. Supported estimators are
-        :class:`SplitConformalClassifier`,
-        and :class:`SplitConformalRegressor`.
+        `SplitConformalClassifier`,
+        and `SplitConformalRegressor`.
         If ``None``, a default
-        :class:`SplitConformalClassifier` or
-        :class:`SplitConformalRegressor` is built
+        `SplitConformalClassifier` or
+        `SplitConformalRegressor` is built
         when needed.
         If the estimator is not fitted or not provided, it will be fitted on a
         slice of the data in order to compute non-conformity scores.
@@ -166,11 +166,11 @@ class OnlineMartingaleTest:
         mapie_estimator : Optional[MapieEstimator], default=None
             MAPIE estimator used to compute predictions and non-conformity
             scores. Supported estimators are
-            :class:`SplitConformalClassifier`,
-            and :class:`SplitConformalRegressor`.
+            `SplitConformalClassifier`,
+            and `SplitConformalRegressor`.
             If ``None``, a default
-            :class:`SplitConformalClassifier` or
-            :class:`SplitConformalRegressor` is built
+            `SplitConformalClassifier` or
+            `SplitConformalRegressor` is built
             when needed.
             If the estimator is not fitted or not provided, it will be fitted on a
             slice of the data in order to compute non-conformity scores.
@@ -450,9 +450,9 @@ class OnlineMartingaleTest:
 
             p_t = \frac{1 + \#\{i : s_i > s_t\} + U \cdot \#\{i : s_i = s_t\}}{n + 1}
 
-        where :math:`s_t` is the current conformity score, :math:`s_i` are past
-        scores, :math:`U \sim \mathrm{Uniform}(0, 1)` is a random tie-breaker, and
-        :math:`n` is the number of past observations.
+        where $s_t$ is the current conformity score, $s_i$ are past
+        scores, $U \sim \mathrm{Uniform}(0, 1)$ is a random tie-breaker, and
+        $n$ is the number of past observations.
 
         Parameters
         ----------

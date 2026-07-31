@@ -1,5 +1,5 @@
 ### Config ###
-.PHONY: tests doc-legacy build
+.PHONY: tests doc build
 
 
 ### Checks that are run in GitHub CI ###
@@ -34,13 +34,9 @@ long-tests:
 format-fix:
 	ruff format examples mapie notebooks
 
-### Checks that are run in ReadTheDocs CI ###
-doc-legacy:
-	$(MAKE) html -C doc_legacy
-
-doctest:
-	# Tests .. testcode:: blocks in documentation, among other things
-	$(MAKE) doctest -C doc_legacy
+### Checks that are run in Read the Docs CI ###
+doc:
+	mkdocs build --strict
 
 
 ### Other utilities (for local use) ###
@@ -57,7 +53,7 @@ tests:
 		--ignore=mapie/tests/long_tests
 
 clean-doc:
-	$(MAKE) clean -C doc_legacy
+	rm -rf site doc/generated
 
 build:
 	python -m build
