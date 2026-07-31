@@ -2,6 +2,7 @@
 ## 1.x.x (2026-xx-xx)
 - Add `StdConformityScore` for regression models that expose prediction standard deviations through `predict(..., return_std=True)`, enabling standard-deviation-normalized conformal prediction intervals such as J+GP.
 - Add a scientific article example reproducing the Jaber et al. (2025) Gaussian-process surrogate experiment and comparing GP credibility intervals, J+GP, and standard Jackknife+ intervals.
+- Move the MkDocs documentation fully to Read the Docs, removing the legacy documentation tree and old static-site versioning/deployment leftovers.
 - Add a dedicated Conditional Conformal Prediction gallery section with examples adapted to the v1 `ConditionalSplitConformalRegressor` and `ConditionalSplitConformalClassifier` APIs.
 - Add a Communities and Crime conditional conformal prediction example adapted from PR #455's `tutorial_ccp_CandC.ipynb`.
 - Back up the Communities and Crime dataset used by that example (`examples/data/communities_and_crime.csv.gz`), now loaded by default so the example no longer depends on the UCI download server.

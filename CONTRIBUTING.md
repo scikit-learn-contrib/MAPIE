@@ -141,7 +141,7 @@ make tests
 
 ### Documenting your change
 
-If you're adding a public class or function, then you'll need to add a docstring with a doctest to describe the API for the users. We follow the [numpy docstring convention](https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html), so please do too. You can look at e.g., `BinaryClassificationController` for an example of a well-documented class.
+If you're adding a public class or function, then you'll need to add a docstring with a doctest to describe the API for the users. We follow the [NumPy docstring convention](https://numpydoc.readthedocs.io/en/latest/format), so please do too. You can look at e.g., `BinaryClassificationController` for an example of a well-documented class.
 
 Any estimator should follow the [scikit-learn API](https://scikit-learn.org/stable/developers/develop.html), so please follow these guidelines.
 
@@ -164,9 +164,7 @@ Or serve it locally with live reload:
 mkdocs serve
 ```
 
-For each commit pushed to a pull request, the documentation is automatically built and deployed to a temporary URL that you can access from the Continuous Integration (CI) results. This allows you to verify that your changes are correctly documented and you can also look at the diff with the previous version.
-
-
+Read the Docs builds the documentation from `mkdocs.yml`. Check the Read the Docs build linked from the pull request when documentation changes are submitted.
 
 
 

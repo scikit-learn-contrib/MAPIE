@@ -1,5 +1,5 @@
 site_name: MAPIE
-site_url: https://scikit-learn-contrib.github.io/MAPIE
+site_url: !ENV [READTHEDOCS_CANONICAL_URL, "https://mapie.readthedocs.io/en/latest/"]
 site_description: "Model Agnostic Prediction Interval Estimator — Conformal Prediction for Python"
 site_author: MAPIE Team
 repo_url: https://github.com/scikit-learn-contrib/MAPIE
@@ -9,7 +9,7 @@ edit_uri: edit/master/doc/
 theme:
   name: material
   logo: images/mapie_logo_white_cut.png
-  favicon: images/mapie_logo_nobg_cut.png
+  favicon: images/mapie_logo_m_cut.png
   icon:
     repo: fontawesome/brands/github
   palette:
@@ -143,9 +143,6 @@ extra:
       link: https://github.com/scikit-learn-contrib/MAPIE
     - icon: fontawesome/brands/python
       link: https://pypi.org/project/mapie/
-  version:
-    provider: mike
-    alias: true
   generator: false
 
 copyright: Copyright &copy; 2021 - 2026 MAPIE Team — BSD-3-Clause License
