@@ -7,6 +7,7 @@ from numpy.typing import NDArray
 from mapie._machine_precision import EPSILON
 from mapie.conformity_scores.interface import BaseConformityScore
 from mapie.estimator.regressor import EnsembleRegressor
+from mapie.utils import _compute_regression_quantile
 
 
 class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
@@ -326,21 +327,21 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
             conformity_scores_up = self.get_estimation_distribution(
                 y_pred_up, conformity_scores, X=X
             )
-            bound_low = self.get_quantile(
+            bound_low = _compute_regression_quantile(
                 conformity_scores_low,
                 alpha_low,
                 axis=1,
-                reversed=True,
+                reverse=True,
                 unbounded=allow_infinite_bounds,
             )
-            bound_up = self.get_quantile(
+            bound_up = _compute_regression_quantile(
                 conformity_scores_up, alpha_up, axis=1, unbounded=allow_infinite_bounds
             )
 
         else:
             if self.sym:
                 alpha_ref = 1 - alpha_np
-                quantile_ref = self.get_quantile(
+                quantile_ref = _compute_regression_quantile(
                     conformity_scores[..., np.newaxis], alpha_ref, axis=0
                 )
                 quantile_low, quantile_up = -quantile_ref, quantile_ref
@@ -348,14 +349,14 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
             else:
                 alpha_low, alpha_up = beta_np, 1 - alpha_np + beta_np
 
-                quantile_low = self.get_quantile(
+                quantile_low = _compute_regression_quantile(
                     conformity_scores[..., np.newaxis],
                     alpha_low,
                     axis=0,
-                    reversed=True,
+                    reverse=True,
                     unbounded=allow_infinite_bounds,
                 )
-                quantile_up = self.get_quantile(
+                quantile_up = _compute_regression_quantile(
                     conformity_scores[..., np.newaxis],
                     alpha_up,
                     axis=0,

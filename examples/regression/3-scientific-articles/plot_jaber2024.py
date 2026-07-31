@@ -46,9 +46,11 @@ warnings.simplefilter("ignore")
 # Plotting style
 # ---------------------------------------------------------------------------
 
-BLUE = np.array([[26, 54, 105]]) / 255
-ORANGE = np.array([[223, 84, 49]]) / 255
-YELLOW = np.array([[242, 188, 64]]) / 255
+NAVY = "#172B63"
+POSTERIOR_MEAN = "#F2B233"
+GP_BAND = "#F9DFA6"
+JPLUS_BAND = "#C8D8C3"
+JPLUS_GP_BAND = "#676B96"
 
 plt.rcParams["figure.dpi"] = 150
 
@@ -122,7 +124,6 @@ mapie_jplus_gp = CrossConformalRegressor(
     method="plus",
     confidence_level=1 - ALPHA,
     conformity_score=StdConformityScore(),
-    model_has_std=True,
     verbose=0,
     random_state=42,
 )
@@ -134,7 +135,6 @@ mapie_jplus = CrossConformalRegressor(
     method="plus",
     confidence_level=1 - ALPHA,
     conformity_score=AbsoluteConformityScore(),
-    model_has_std=False,
     verbose=0,
     random_state=42,
 )
@@ -182,8 +182,8 @@ print(f"  J+   (AbsoluteScore)     : {cov_jplus:.1%}")
 fig, axes = plt.subplots(1, 3, figsize=(18, 5), sharey=True)
 titles = [
     f"GP credibility interval\n(coverage {cov_gp:.1%})",
-    f"J+GP — StdConformityScore\n(Jaber et al. 2025, coverage {cov_jplus_gp:.1%})",
     f"J+ — AbsoluteConformityScore\n(baseline, coverage {cov_jplus:.1%})",
+    f"J+GP — StdConformityScore\n(Jaber et al. 2025, coverage {cov_jplus_gp:.1%})",
 ]
 
 for ax, title in zip(axes, titles):
@@ -191,21 +191,23 @@ for ax, title in zip(axes, titles):
     ax.plot(
         x_mesh[x_mesh < DISCONTINUITY],
         g(x_mesh)[x_mesh < DISCONTINUITY],
-        color=BLUE[0],
+        color=NAVY,
         lw=1.5,
         label="True function $g$",
     )
     ax.plot(
         x_mesh[x_mesh >= DISCONTINUITY],
         g(x_mesh)[x_mesh >= DISCONTINUITY],
-        color=BLUE[0],
+        color=NAVY,
         lw=1.5,
     )
     # GP mean
-    ax.plot(X_test[:, 0], y_mean, color=YELLOW[0], lw=1.5, label="GP posterior mean")
+    ax.plot(
+        X_test[:, 0], y_mean, color=POSTERIOR_MEAN, lw=1.5, label="GP posterior mean"
+    )
     # Training data
     ax.scatter(
-        X_train[:, 0], y_train, color=BLUE[0], s=30, zorder=5, label="Training points"
+        X_train[:, 0], y_train, color=NAVY, s=30, zorder=5, label="Training points"
     )
     ax.set_xlabel("$x$")
     ax.set_title(title, fontsize=10)
@@ -215,29 +217,29 @@ axes[0].fill_between(
     X_test[:, 0],
     y_mean + y_std * q_lo,
     y_mean + y_std * q_hi,
-    alpha=0.25,
-    color=YELLOW[0],
+    alpha=0.75,
+    color=GP_BAND,
     label="GP ±$z_{{α/2}}$ σ̂(x)",
 )
 
-# Panel 1: J+GP conformal interval
+# Panel 1: J+ conformal interval
 axes[1].fill_between(
-    X_test[:, 0],
-    y_pis_jplus_gp[:, 0, 0],
-    y_pis_jplus_gp[:, 1, 0],
-    alpha=0.3,
-    color="green",
-    label="J+GP conformal PI",
-)
-
-# Panel 2: J+ conformal interval
-axes[2].fill_between(
     X_test[:, 0],
     y_pis_jplus[:, 0, 0],
     y_pis_jplus[:, 1, 0],
-    alpha=0.3,
-    color=ORANGE[0],
+    alpha=0.85,
+    color=JPLUS_BAND,
     label="J+ conformal PI",
+)
+
+# Panel 2: J+GP conformal interval
+axes[2].fill_between(
+    X_test[:, 0],
+    y_pis_jplus_gp[:, 0, 0],
+    y_pis_jplus_gp[:, 1, 0],
+    alpha=0.9,
+    color=JPLUS_GP_BAND,
+    label="J+GP conformal PI",
 )
 
 for ax in axes:

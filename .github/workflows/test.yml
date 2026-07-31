@@ -31,7 +31,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v6.2.0
         with:
-          python-version: "3.13"
+          python-version: "3.10"
           # Reuse pip downloads/wheels between runs to speed up CI.
           cache: pip
           cache-dependency-path: pyproject.toml

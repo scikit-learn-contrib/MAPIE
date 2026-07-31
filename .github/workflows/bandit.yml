@@ -1,0 +1,17 @@
+name: Bandit
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+jobs:
+    analyze:
+        runs-on: ubuntu-latest
+        permissions:
+            security-events: write
+        steps:
+            - name: Perform Bandit Analysis
+              uses: PyCQA/bandit-action@v1

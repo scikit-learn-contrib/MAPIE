@@ -4,6 +4,27 @@ This folder stores datasets used by the examples in `examples/`. They are
 loaded by default so that the examples run without depending on the
 availability of external download servers.
 
+## `communities_and_crime.csv.gz`
+
+Backup of the **Communities and Crime** dataset, used by
+`examples/conditional_cp/2-advanced-analysis/plot_conditional_conformal_tutorial.py`.
+
+- Gzip-compressed CSV; read directly with `pandas.read_csv(...)` (compression is
+  inferred from the `.gz` extension). The column names are stored as the CSV
+  header, and `"?"` missing values are encoded as `NaN`.
+- Shape: 1,994 rows × 128 columns. The target is `ViolentCrimesPerPop`, the
+  normalized per-capita violent crime rate; the example also drops the
+  non-numeric `communityname` column.
+
+The original dataset comes from the UCI Machine Learning Repository:
+<https://archive.ics.uci.edu/ml/machine-learning-databases/communities/>
+(Redmond, M. & Baveja, A. (2002). *A data-driven software tool for enabling
+cooperative information sharing among police departments*. European Journal of
+Operational Research, 141(3), 660-678).
+
+The example loads this backup by default. To fetch the original archive from
+UCI instead, call `get_data(download=True)`.
+
 ## `demand_temperature.csv`
 
 Hourly electricity demand (GW) and temperature (°C) for the state of Victoria,
