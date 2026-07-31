@@ -1069,7 +1069,7 @@ class CrossConformalizedQuantileRegressor(_QuantileConformalizer):
 
     def __init__(
         self,
-        estimator: RegressorMixin = LinearRegression(),
+        estimator: RegressorMixin = QuantileRegressor(),
         confidence_level: Union[float, Iterable[float]] = 0.9,
         conformity_score: Union[
             QuantileRegressionScore, Type[QuantileRegressionScore]
