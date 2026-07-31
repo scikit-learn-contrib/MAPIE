@@ -1278,7 +1278,7 @@ class CrossConformalizedQuantileRegressor(_QuantileConformalizer):
                 method=self.method,
                 optimize_beta=minimize_interval_width,
                 allow_infinite_bounds=allow_infinite_bounds,
-                predict_params=self._predict_params,
+                **self._predict_params,
             )
             # A single level is requested per call, so `get_bounds` returns bounds of
             # shape (n_samples, 1); drop that axis before stacking the levels.

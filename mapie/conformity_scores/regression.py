@@ -1,5 +1,5 @@
 from abc import ABCMeta, abstractmethod
-from typing import Optional, Tuple, cast
+from typing import Tuple, cast
 
 import numpy as np
 from numpy.typing import NDArray
@@ -236,7 +236,7 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
         alpha_np: NDArray,
         estimator: _Conformalizer,
         ensemble: bool,
-        predict_params: Optional[dict] = None,
+        **predict_params,
     ) -> Tuple[NDArray, NDArray, NDArray]:
         """
         Predict the point predictions and the bounds to calibrate.
@@ -262,11 +262,9 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
         ensemble: bool
             Boolean determining whether the predictions are ensembled or not.
 
-        predict_params: Optional[dict]
+        **predict_params: dict
             Parameters to pass to the `predict` method of the regressors held by
             the estimator.
-
-            By default `None`.
 
         Returns
         -------
@@ -277,7 +275,7 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
         """
         y_pred, y_pred_low, y_pred_up = cast(
             Tuple[NDArray, NDArray, NDArray],
-            estimator._predict(X, ensemble, **(predict_params or {})),
+            estimator._predict(X, ensemble, **predict_params),
         )
 
         return (
@@ -348,7 +346,7 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
         method: str = "base",
         optimize_beta: bool = False,
         allow_infinite_bounds: bool = False,
-        predict_params: Optional[dict] = None,
+        **predict_params,
     ) -> Tuple[NDArray, NDArray, NDArray]:
         """
         Compute bounds of the prediction intervals from the observed values,
@@ -393,11 +391,9 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
 
             By default `False`.
 
-        predict_params: Optional[dict]
+        **predict_params: dict
             Parameters to pass to the `predict` method of the regressors held by
             the estimator.
-
-            By default `None`.
 
         Returns
         -------
@@ -430,7 +426,7 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
             conformity_scores_up = conformity_scores[1, ...]
 
         y_pred, y_pred_low, y_pred_up = self._get_predictions(
-            X, alpha_np, estimator, ensemble, predict_params
+            X, alpha_np, estimator, ensemble, **predict_params
         )
         signed = -1 if self.sym else 1
 
