@@ -23,6 +23,7 @@
 - Raise `NotImplementedError` from the conditional conformal estimators when the infinite-dimensional (RKHS) component is requested via `infinite_params`; the supporting code is retained for future work.
 - Add experimental multivariate standardized residuals
 - Add `aucroc_score` and `auarc_score` to `mapie/metrics/uncertainty.py` for uncertainty evaluation following Lin et al. (2023); resolves #551.
+- Add a benchmark notebook for exchangeability tests using the current API.
 
 ## 1.4.1 (2026-06-08)
 
