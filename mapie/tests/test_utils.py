@@ -878,18 +878,31 @@ class TestComputeClassificationQuantile:
         assert len(result) == 2
         assert np.all(np.isfinite(result))
 
-    def test_matches_old_formula(self):
-        """Test that the function reproduces the old classification
-        quantile formula: quantile(v, (n+1)*(1-a)/n, 'higher')."""
+    def test_returns_conformal_order_statistic(self):
+        """Test that the quantile is the k-th smallest conformity score, with
+        k = ceil((1 - alpha) * (n + 1)) the split-conformal order statistic.
+        The grid includes cells where (1 - alpha) * (n + 1) is an integer,
+        where an implementation can easily be one order statistic too high."""
         np.random.seed(0)
-        for n in [50, 100, 500]:
-            scores = np.random.rand(n, 1)
-            alpha = np.array([0.1, 0.2, 0.5])
-            result = _compute_classification_quantile(scores, alpha)
-            for i, a in enumerate(alpha):
-                level = ((n + 1) * (1 - a)) / n
-                expected = np.quantile(scores, level, method="higher")
-                np.testing.assert_allclose(result[i], expected.ravel())
+        for n in [19, 50, 99, 100, 199, 500]:
+            scores = np.sort(np.random.rand(n, 1), axis=0)
+            for alpha in [0.05, 0.1, 0.2, 0.5]:
+                k = int(np.ceil((1 - alpha) * (n + 1)))
+                result = _compute_classification_quantile(scores, np.array([alpha]))
+                assert result[0] == scores[k - 1, 0]
+
+    def test_matches_regression_quantile(self):
+        """Test that the classification and regression helpers select the same
+        order statistic for the same level (issue #479)."""
+        np.random.seed(0)
+        for n in [19, 50, 99, 100]:
+            scores = np.random.rand(n)
+            for alpha in [0.05, 0.1, 0.2]:
+                cls = _compute_classification_quantile(
+                    scores.reshape(-1, 1), np.array([alpha])
+                )
+                reg = _compute_regression_quantile(scores, np.array([1 - alpha]))
+                assert cls[0] == reg[0][0]
 
 
 def test_compute_classification_quantile_value_error():

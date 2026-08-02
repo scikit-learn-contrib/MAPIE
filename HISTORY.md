@@ -12,6 +12,7 @@
 - Back up the Communities and Crime dataset used by that example (`examples/data/communities_and_crime.csv.gz`), now loaded by default so the example no longer depends on the UCI download server.
 - Add Other Notebooks sections to the MkDocs classification and regression galleries.
 - Consolidate quantile computation: extract `_compute_regression_quantile` and `_compute_classification_quantile` functions in `utils.py`, replacing the former `get_quantile` method and `_compute_quantiles` wrapper. No public API changes. (issue #479)
+- Fix `_compute_classification_quantile` selecting one order statistic too many when `(1 - confidence_level) * (n + 1)` is an integer, which made classification prediction sets unnecessarily conservative by `1 / (n + 1)`. It now applies the same `ceil()`-based finite-sample correction as `_compute_regression_quantile`, so both helpers select the same order statistic. (issue #479)
 - Add optional `covmetrics` integration for conditional coverage diagnostics.
 - Add CovGap and WCovGap documentation for conditional coverage diagnostics.
 - Add WSC (`worst_slab_coverage`) for slab-based conditional coverage diagnostics.
