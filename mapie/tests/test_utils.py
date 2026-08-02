@@ -889,7 +889,7 @@ class TestComputeClassificationQuantile:
             for alpha in [0.05, 0.1, 0.2, 0.5]:
                 k = int(np.ceil((1 - alpha) * (n + 1)))
                 result = _compute_classification_quantile(scores, np.array([alpha]))
-                assert result[0] == scores[k - 1, 0]
+                np.testing.assert_array_equal(result[0], scores[k - 1, 0])
 
     def test_matches_regression_quantile(self):
         """Test that the classification and regression helpers select the same
@@ -902,7 +902,7 @@ class TestComputeClassificationQuantile:
                     scores.reshape(-1, 1), np.array([alpha])
                 )
                 reg = _compute_regression_quantile(scores, np.array([1 - alpha]))
-                assert cls[0] == reg[0][0]
+                np.testing.assert_array_equal(cls[0], reg[0][0])
 
 
 def test_compute_classification_quantile_value_error():
