@@ -89,6 +89,7 @@ def public_symbols(module_name: str) -> tuple[ApiSymbol, ...]:
     """
     module = import_module(module_name)
     exported_names = getattr(module, "__all__", None)
+    lazy_imports = getattr(module, "_LAZY_IMPORTS", {})
 
     if exported_names is None:
         excluded = INTERNAL_SYMBOLS.get(module_name, set())
@@ -102,7 +103,11 @@ def public_symbols(module_name: str) -> tuple[ApiSymbol, ...]:
         ]
 
     return tuple(
-        ApiSymbol(name, f"{module_name}.{name}", getattr(module, name))
+        ApiSymbol(
+            name,
+            f"{lazy_imports.get(name, module_name)}.{name}",
+            getattr(module, name),
+        )
         for name in exported_names
     )
 
@@ -251,6 +256,7 @@ examples.
                         "Controllers",
                         _origin_endswith(
                             "binary_classification",
+                            "adaptive_conformal_risk_control",
                             "multi_label_classification",
                             "semantic_segmentation",
                         ),
