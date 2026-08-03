@@ -3,6 +3,8 @@ from .classification import BaseClassificationScore
 from .bounds import (
     AbsoluteConformityScore,
     GammaConformityScore,
+    QuantileRegressionScore,
+    AbsoluteQuantileRegressionScore,
     ResidualNormalisedScore,
     StdConformityScore,
 )
@@ -20,6 +22,8 @@ __all__ = [
     "BaseClassificationScore",
     "AbsoluteConformityScore",
     "GammaConformityScore",
+    "QuantileRegressionScore",
+    "AbsoluteQuantileRegressionScore",
     "ResidualNormalisedScore",
     "NaiveConformityScore",
     "LACConformityScore",

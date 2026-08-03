@@ -498,9 +498,11 @@ class BinaryClassificationController:
             best_index = best_index[np.argmax(first_risk_values[best_index])]
         else:
             best_index = best_index[0]
-        self.best_predict_param = self.valid_predict_params[best_index]
-        if isinstance(self.best_predict_param, np.ndarray):
-            self.best_predict_param = tuple(self.best_predict_param.tolist())
+        best_predict_param = self.valid_predict_params[best_index]
+        if isinstance(best_predict_param, np.ndarray):
+            self.best_predict_param = tuple(best_predict_param.tolist())
+        else:
+            self.best_predict_param = float(best_predict_param)
 
     @staticmethod
     def _get_risk_values_and_eff_sample_sizes(

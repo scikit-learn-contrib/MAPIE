@@ -1,4 +1,7 @@
-from .quantile_regression import ConformalizedQuantileRegressor
+from .quantile_regression import (
+    ConformalizedQuantileRegressor,
+    CrossConformalizedQuantileRegressor,
+)
 from .regression import (
     SplitConformalRegressor,
     CrossConformalRegressor,
@@ -12,4 +15,5 @@ __all__ = [
     "CrossConformalRegressor",
     "JackknifeAfterBootstrapRegressor",
     "ConformalizedQuantileRegressor",
+    "CrossConformalizedQuantileRegressor",
 ]

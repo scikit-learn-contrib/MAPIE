@@ -49,7 +49,7 @@ def _get_binning_groups(
         bins = np.sort(
             np.array([bin_group.max() for bin_group in bin_groups[:-1]] + [np.inf])
         )
-    return bins
+    return cast(NDArray, bins)
 
 
 def _calc_bins(

@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import List, Optional, Tuple, Union, cast
 
 import numpy as np
+from abc import ABC, abstractmethod
 from joblib import Parallel, delayed
 from numpy.typing import ArrayLike, NDArray
 from sklearn.base import RegressorMixin, clone
@@ -19,7 +20,102 @@ from mapie.utils import (
 )
 
 
-class EnsembleRegressor:
+class _Conformalizer(ABC):
+    """
+    Abstract base class for conformalizers.
+    """
+
+    # `alpha` is intentionally not declared here: subclasses disagree on its type
+    # (a single risk level for `EnsembleRegressor`, one per confidence level for
+    # `_QuantileConformalizer`), so each declares the shape it actually stores.
+    conformity_scores_: NDArray[np.float64]
+    n_calib_samples: List[int]
+    cv: BaseCrossValidator
+    n_jobs: Optional[int]
+    verbose: int
+    is_fitted: bool
+    is_conformalized: bool
+    agg_function: Optional[str]
+    method: Optional[str]
+    use_split_method_: bool
+
+    ALLOWED_AGG_FUNCTIONS = ["mean", "median"]
+    cv_need_agg_function_ = ["Subsample"]
+    no_agg_cv_ = ["prefit", "split"]
+    no_agg_methods_ = ["prefit", "split"]
+
+    @abstractmethod
+    def _predict(
+        self,
+        X: ArrayLike,
+        ensemble: bool = False,
+        **predict_params,
+    ) -> Union[NDArray, Tuple[NDArray, NDArray, NDArray]]:
+        """
+        Placeholder for `_predict`.
+        Subclasses should implement this method!
+
+        Predict the point predictions from X, together with the bounds to
+        calibrate when the conformalizer produces them.
+        """
+
+    @abstractmethod
+    def fit(
+        self,
+        X: ArrayLike,
+        y: ArrayLike,
+        sample_weight: Optional[ArrayLike] = None,
+        groups: Optional[ArrayLike] = None,
+        **fit_params,
+    ) -> _Conformalizer:
+        """
+        Placeholder for `fit`.
+        Subclasses should implement this method!
+
+        Fit the estimators the conformalizer relies on.
+        """
+
+    def _aggregate_with_mask(self, x: NDArray, k: NDArray) -> NDArray:
+        """
+        Take the array of predictions, made by the refitted estimators,
+        on the testing set, and the 1-or-nan array indicating for each training
+        sample which one to integrate, and aggregate to produce phi-{t}(x_t)
+        for each training sample x_t.
+
+        Parameters
+        ----------
+        x: ArrayLike of shape (n_samples_test, n_estimators)
+            Array of predictions, made by the refitted estimators,
+            for each sample of the testing set.
+
+        k: ArrayLike of shape (n_samples_training, n_estimators)
+            1-or-nan array: indicates whether to integrate the prediction
+            of a given estimator into the aggregation, for each training
+            sample.
+
+        Returns
+        -------
+        ArrayLike of shape (n_samples_test,)
+            Array of aggregated predictions for each testing sample.
+        """
+        if self.agg_function not in self.ALLOWED_AGG_FUNCTIONS:
+            raise ValueError("The value of the aggregation function is not correct")
+
+        if self.method in self.no_agg_methods_ or self.use_split_method_:
+            raise ValueError("There should not be aggregation of predictions.")
+        elif self.agg_function == "median":
+            return cast(NDArray, phi2D(A=x, B=k, fun=lambda x: np.nanmedian(x, axis=1)))
+        # To aggregate with mean() the aggregation coud be done
+        # with phi2D(A=x, B=k, fun=lambda x: np.nanmean(x, axis=1).
+        # However, phi2D contains a np.apply_along_axis loop which
+        # is much slower than the matrices multiplication that can
+        # be used to compute the means.
+        else:
+            K = np.nan_to_num(k, nan=0.0)
+            return cast(NDArray, np.matmul(x, (K / (K.sum(axis=1, keepdims=True))).T))
+
+
+class EnsembleRegressor(_Conformalizer):
     """
     This class implements methods to handle the training and usage of the
     estimator. This estimator can be unique or composed by cross validated
@@ -261,44 +357,6 @@ class EnsembleRegressor:
             y_pred = np.array([])
         return y_pred, val_index
 
-    def _aggregate_with_mask(self, x: NDArray, k: NDArray) -> NDArray:
-        """
-        Take the array of predictions, made by the refitted estimators,
-        on the testing set, and the 1-or-nan array indicating for each training
-        sample which one to integrate, and aggregate to produce phi-{t}(x_t)
-        for each training sample x_t.
-
-        Parameters
-        ----------
-        x: ArrayLike of shape (n_samples_test, n_estimators)
-            Array of predictions, made by the refitted estimators,
-            for each sample of the testing set.
-
-        k: ArrayLike of shape (n_samples_training, n_estimators)
-            1-or-nan array: indicates whether to integrate the prediction
-            of a given estimator into the aggregation, for each training
-            sample.
-
-        Returns
-        -------
-        ArrayLike of shape (n_samples_test,)
-            Array of aggregated predictions for each testing sample.
-        """
-        if self.method in self.no_agg_methods_ or self.use_split_method_:
-            raise ValueError("There should not be aggregation of predictions.")
-        elif self.agg_function == "median":
-            return cast(NDArray, phi2D(A=x, B=k, fun=lambda x: np.nanmedian(x, axis=1)))
-        # To aggregate with mean() the aggregation coud be done
-        # with phi2D(A=x, B=k, fun=lambda x: np.nanmean(x, axis=1).
-        # However, phi2D contains a np.apply_along_axis loop which
-        # is much slower than the matrices multiplication that can
-        # be used to compute the means.
-        elif self.agg_function in ["mean", None]:
-            K = np.nan_to_num(k, nan=0.0)
-            return cast(NDArray, np.matmul(x, (K / (K.sum(axis=1, keepdims=True))).T))
-        else:
-            raise ValueError("The value of the aggregation function is not correct")
-
     def _pred_multi(self, X: ArrayLike, **predict_params) -> NDArray:
         """
         Return a prediction per train sample for each test sample, by
@@ -365,6 +423,7 @@ class EnsembleRegressor:
         if self.cv == "prefit":
             y_pred = self.single_estimator_.predict(X)
         else:
+            # TODO: Naive method is fitting and conformalizing on the same dataset, this can be suppressed
             if self.method == "naive":
                 y_pred = self.single_estimator_.predict(X)
             else:
@@ -526,6 +585,18 @@ class EnsembleRegressor:
         self._is_fitted = True
 
         return self
+
+    # TODO: harmonize for _Conformalizer
+    def _predict(
+        self,
+        X: ArrayLike,
+        ensemble: bool = False,
+        return_multi_pred: bool = True,
+        **predict_params,
+    ) -> Union[NDArray, Tuple[NDArray, NDArray, NDArray]]:
+        return self.predict(
+            X, ensemble=ensemble, return_multi_pred=return_multi_pred, **predict_params
+        )
 
     def predict(
         self,

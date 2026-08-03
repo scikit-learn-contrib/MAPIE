@@ -6,7 +6,7 @@ from numpy.typing import NDArray
 
 from mapie._machine_precision import EPSILON
 from mapie.conformity_scores.interface import BaseConformityScore
-from mapie.estimator.regressor import EnsembleRegressor
+from mapie.estimator.regressor import _Conformalizer
 from mapie.utils import _compute_regression_quantile
 
 
@@ -73,7 +73,7 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
 
         Returns
         -------
-        NDArray of shape (n_samples,)
+        NDArray of shape (n_samples, )
             Signed conformity scores.
         """
 
@@ -230,21 +230,22 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
 
         return beta_np
 
-    def get_bounds(
+    def _get_predictions(
         self,
         X: NDArray,
         alpha_np: NDArray,
-        estimator: EnsembleRegressor,
-        conformity_scores: NDArray,
-        ensemble: bool = False,
-        method: str = "base",
-        optimize_beta: bool = False,
-        allow_infinite_bounds: bool = False,
+        estimator: _Conformalizer,
+        ensemble: bool,
         **predict_params,
     ) -> Tuple[NDArray, NDArray, NDArray]:
         """
-        Compute bounds of the prediction intervals from the observed values,
-        the estimator of type `EnsembleRegressor` and the conformity scores.
+        Predict the point predictions and the bounds to calibrate.
+
+        `_Conformalizer._predict` implementations do not share a single output
+        layout: the bounds may hold one column per estimator, as
+        `EnsembleRegressor` does for the `"plus"` method, or one column per
+        confidence level, as `_QuantileConformalizer` does. This method narrows
+        every layout to the one `get_bounds` calibrates.
 
         Parameters
         ----------
@@ -255,7 +256,112 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
             NDArray of floats between `0` and `1`, represents the
             uncertainty of the confidence interval.
 
-        estimator: EnsembleRegressor
+        estimator: _Conformalizer
+            Estimator that is fitted to predict y from X.
+
+        ensemble: bool
+            Boolean determining whether the predictions are ensembled or not.
+
+        **predict_params: dict
+            Parameters to pass to the `predict` method of the regressors held by
+            the estimator.
+
+        Returns
+        -------
+        Tuple[NDArray, NDArray, NDArray]
+            - The point predictions of shape (n_samples,).
+            - The lower bounds to calibrate, of shape (n_samples, n_predictions).
+            - The upper bounds to calibrate, of shape (n_samples, n_predictions).
+        """
+        y_pred, y_pred_low, y_pred_up = cast(
+            Tuple[NDArray, NDArray, NDArray],
+            estimator._predict(X, ensemble, **predict_params),
+        )
+
+        return (
+            np.asarray(y_pred),
+            self._narrow_bounds_to_alpha(y_pred_low, alpha_np, estimator),
+            self._narrow_bounds_to_alpha(y_pred_up, alpha_np, estimator),
+        )
+
+    @staticmethod
+    def _narrow_bounds_to_alpha(
+        bounds: NDArray, alpha_np: NDArray, estimator: _Conformalizer
+    ) -> NDArray:
+        """
+        Narrow predicted bounds to the confidence levels of `alpha_np`.
+
+        Bounds always hold one row per sample and one column per prediction, as
+        both `EnsembleRegressor.predict` and `_QuantileConformalizer._predict`
+        return them: they are broadcast against quantiles of shape (1, n_alpha)
+        for the `"base"` method, which a 1-dimensional array would silently
+        transpose.
+
+        Conformalizers fitting one set of quantile estimators per confidence
+        level, such as `_QuantileConformalizer`, return one column per level of
+        `estimator.alpha`, in that order: only the columns of the requested
+        levels are kept. Any other layout, such as the one column per estimator
+        of the `"plus"` method, is left untouched.
+
+        Parameters
+        ----------
+        bounds: NDArray of shape (n_samples, n_predictions)
+            Predicted bounds of one side of the intervals.
+
+        alpha_np: NDArray of shape (n_alpha,)
+            NDArray of floats between `0` and `1`, represents the
+            uncertainty of the confidence interval.
+
+        estimator: _Conformalizer
+            Estimator the bounds were predicted with.
+
+        Returns
+        -------
+        NDArray of shape (n_samples, n_predictions)
+            Bounds of the requested confidence levels.
+        """
+        bounds_np = np.asarray(bounds)
+
+        levels = getattr(estimator, "alpha", None)
+        if levels is None:
+            return bounds_np
+
+        levels_np = np.ravel(np.asarray(levels, dtype=float))
+        if levels_np.size < 2 or bounds_np.shape[1] != levels_np.size:
+            return bounds_np
+
+        columns = [
+            int(np.flatnonzero(np.isclose(levels_np, alpha))[0]) for alpha in alpha_np
+        ]
+
+        return bounds_np[:, columns]
+
+    def get_bounds(
+        self,
+        X: NDArray,
+        alpha_np: NDArray,
+        estimator: _Conformalizer,
+        conformity_scores: NDArray,
+        ensemble: bool = False,
+        method: str = "base",
+        optimize_beta: bool = False,
+        allow_infinite_bounds: bool = False,
+        **predict_params,
+    ) -> Tuple[NDArray, NDArray, NDArray]:
+        """
+        Compute bounds of the prediction intervals from the observed values,
+        the estimator of type `_Conformalizer` and the conformity scores.
+
+        Parameters
+        ----------
+        X: NDArray of shape (n_samples, n_features)
+            Observed feature values.
+
+        alpha_np: NDArray of shape (n_alpha,)
+            NDArray of floats between `0` and `1`, represents the
+            uncertainty of the confidence interval.
+
+        estimator: _Conformalizer
             Estimator that is fitted to predict y from X.
 
         conformity_scores: NDArray of shape (n_samples,)
@@ -285,6 +391,10 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
 
             By default `False`.
 
+        **predict_params: dict
+            Parameters to pass to the `predict` method of the regressors held by
+            the estimator.
+
         Returns
         -------
         Tuple[NDArray, NDArray, NDArray]
@@ -305,14 +415,26 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
                 + "symmetrical conformity score function."
             )
 
-        y_pred, y_pred_low, y_pred_up = estimator.predict(X, ensemble, **predict_params)
+        # Scores are one-dimensional when a single distribution calibrates both bounds,
+        # and hold one row per side otherwise. Every row follows the same `y - y_pred`
+        # orientation, so both cases share the formulas below; only the array each side
+        # reads from differs.
+        conformity_scores_low = conformity_scores_up = conformity_scores
+
+        if conformity_scores.ndim > 1:
+            conformity_scores_low = conformity_scores[0, ...]
+            conformity_scores_up = conformity_scores[1, ...]
+
+        y_pred, y_pred_low, y_pred_up = self._get_predictions(
+            X, alpha_np, estimator, ensemble, **predict_params
+        )
         signed = -1 if self.sym else 1
 
         if optimize_beta:
             beta_np = self._beta_optimize(
                 alpha_np,
-                conformity_scores,
-                conformity_scores,
+                conformity_scores_up,
+                conformity_scores_low,
             )
         else:
             beta_np = alpha_np / 2
@@ -321,21 +443,21 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
             alpha_low = alpha_np if self.sym else beta_np
             alpha_up = 1 - alpha_np if self.sym else 1 - alpha_np + beta_np
 
-            conformity_scores_low = self.get_estimation_distribution(
-                y_pred_low, signed * conformity_scores, X=X
+            distribution_low = self.get_estimation_distribution(
+                y_pred_low, signed * conformity_scores_low, X=X
             )
-            conformity_scores_up = self.get_estimation_distribution(
-                y_pred_up, conformity_scores, X=X
+            distribution_up = self.get_estimation_distribution(
+                y_pred_up, conformity_scores_up, X=X
             )
             bound_low = _compute_regression_quantile(
-                conformity_scores_low,
+                distribution_low,
                 alpha_low,
                 axis=1,
                 reverse=True,
                 unbounded=allow_infinite_bounds,
             )
             bound_up = _compute_regression_quantile(
-                conformity_scores_up, alpha_up, axis=1, unbounded=allow_infinite_bounds
+                distribution_up, alpha_up, axis=1, unbounded=allow_infinite_bounds
             )
 
         else:
@@ -347,22 +469,24 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
                 quantile_low, quantile_up = -quantile_ref, quantile_ref
 
             else:
+                # Each side gets its own one-sided coverage, `beta` below and
+                # `1 - alpha + beta` above, read from its own conformity scores.
                 alpha_low, alpha_up = beta_np, 1 - alpha_np + beta_np
 
                 quantile_low = _compute_regression_quantile(
-                    conformity_scores[..., np.newaxis],
+                    conformity_scores_low[..., np.newaxis],
                     alpha_low,
                     axis=0,
                     reverse=True,
                     unbounded=allow_infinite_bounds,
                 )
+
                 quantile_up = _compute_regression_quantile(
-                    conformity_scores[..., np.newaxis],
+                    conformity_scores_up[..., np.newaxis],
                     alpha_up,
                     axis=0,
                     unbounded=allow_infinite_bounds,
                 )
-
             bound_low = self.get_estimation_distribution(y_pred_low, quantile_low, X=X)
             bound_up = self.get_estimation_distribution(y_pred_up, quantile_up, X=X)
 

@@ -785,7 +785,9 @@ def test_final_low_high_pred(caplog) -> None:
 def test_ensemble_in_predict() -> None:
     """Checking for ensemble defined in predict of CQR"""
     mapie_reg = _MapieQuantileRegressor()
-    mapie_reg.fit(X, y)
+    mapie_reg._initialize_fit_conformalize()
+    mapie_reg._fit_estimators(X, y)
+    mapie_reg.conformalize(X, y)
     with pytest.warns(UserWarning, match=r"WARNING: Alpha should not be spec.*"):
         mapie_reg.predict(X, alpha=0.2)
 
@@ -793,7 +795,9 @@ def test_ensemble_in_predict() -> None:
 def test_alpha_in_predict() -> None:
     """Checking for alpha defined in predict of CQR"""
     mapie_reg = _MapieQuantileRegressor()
-    mapie_reg.fit(X, y)
+    mapie_reg._initialize_fit_conformalize()
+    mapie_reg._fit_estimators(X, y)
+    mapie_reg.conformalize(X, y)
     with pytest.warns(UserWarning, match=r"WARNING: ensemble is not util*"):
         mapie_reg.predict(X, ensemble=True)
 
@@ -952,7 +956,8 @@ def test_quantile_prefit_non_iterable(estimator: Any) -> None:
         match=r".*Estimator for prefit must be an iterable object.*",
     ):
         mapie_reg = _MapieQuantileRegressor(estimator=estimator, cv="prefit")
-        mapie_reg.fit([1, 2, 3], [4, 5, 6])
+        mapie_reg._initialize_fit_conformalize()
+        mapie_reg._initialize_and_check_prefit_estimators()
 
 
 def test_wrong_split_strategy() -> None:
