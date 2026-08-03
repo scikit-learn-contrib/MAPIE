@@ -11,7 +11,7 @@ The limit of the absolute residual conformity score is illustrated.
 We use here the OpenML house_prices dataset:
 https://www.openml.org/search?type=data&sort=runs&id=42165&status=active.
 
-Note : OpenML is down as of 14/01/25, so we'll load the data from Kaggle instead.
+The example loads a copy of the data from Kaggle.
 
 The data is modelled by a Random Forest model
 `RandomForestRegressor` with a fixed parameter set.
@@ -26,11 +26,11 @@ We consider the standard CV+ resampling method.
 We would like to emphasize one main limitation with this example.
 With the default conformity score, the prediction intervals
 are approximately equal over the range of house prices which may
-be inapporpriate when the price range is wide. The Gamma conformity score
+be inappropriate when the price range is wide. The Gamma conformity score
 overcomes this issue by considering prediction intervals with width
 proportional to the predicted mean. For low prices, the Gamma prediction
-intervals are narrower than the default ones, conversely to high prices
-for which the confidence intervals are higher but visually more relevant.
+intervals are narrower than the default ones. For high prices, they are wider
+but visually more relevant.
 The empirical coverage is similar between the two conformity scores.
 """
 
@@ -64,7 +64,7 @@ rf_kwargs = {"n_estimators": 10, "random_state": RANDOM_STATE}
 model = RandomForestRegressor(**rf_kwargs)
 
 ##############################################################################
-# 1. Load dataset with a target following approximativeley a Gamma distribution
+# 1. Load a dataset with a target following approximately a Gamma distribution
 # -----------------------------------------------------------------------------
 #
 # We start by loading a dataset with a target following approximately

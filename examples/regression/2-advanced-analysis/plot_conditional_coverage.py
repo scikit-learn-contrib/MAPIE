@@ -4,17 +4,13 @@ Focus on local (or "conditional") coverage
 
 
 
-This example uses `SplitConformalRegressor`,
-`JackknifeAfterBootstrapRegressor`,
-with conformal scores that returns adaptive intervals i.e.
-(`GammaConformityScore` and
-`ResidualNormalisedScore`) as well as
-`ConformalizedQuantileRegressor` and
-`
-The conditional coverage is computed with the three
-functions that allows to estimate the conditional coverage in regression
-`regression_ssc`,
-`regression_ssc_score` and `hsic`.
+This example uses `SplitConformalRegressor` and
+`JackknifeAfterBootstrapRegressor` with conformity scores that return adaptive
+intervals (`GammaConformityScore` and `ResidualNormalisedScore`), as well as
+`ConformalizedQuantileRegressor`.
+
+Conditional coverage is estimated with three regression metrics:
+`regression_ssc`, `regression_ssc_score`, and `hsic`.
 """
 
 import warnings
@@ -56,8 +52,8 @@ def sin_with_controlled_noise(
     n_samples: int,
 ) -> Tuple[NDArray, NDArray]:
     """
-    Generate a dataset following sinx except that one interval over two 1 or -1
-    (0.5 probability) is added to X
+    Generate a dataset following sin(x), adding 1 or -1 with equal probability
+    to the target in every other interval.
 
     Parameters
     ----------

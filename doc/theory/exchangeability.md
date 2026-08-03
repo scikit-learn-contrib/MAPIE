@@ -53,9 +53,9 @@ This means: knowing everything that happened before, your expected wealth tomorr
 
 ### Sequential Testing Without Error Inflation
 
-Here's why this matters in practice: martingale properties allow to conduct **multiple tests sequentially without inflating error rates**. Normally, running many tests, the probability of finding something wrong by chance increases dramatically. But because martingales maintain certain fairness properties, they sidestep this multiple-testing problem.
+Here's why this matters in practice: martingale properties allow us to conduct **multiple tests sequentially without inflating error rates**. Normally, when running many tests, the probability of finding something wrong by chance increases dramatically. But because martingales maintain certain fairness properties, they sidestep this multiple-testing problem.
 
-This enables online settings where data arrives continuously, while keeping testing without losing statistical validity; even when conducting tests without stopping.
+This enables continuous testing in online settings without losing statistical validity.
 
 ## Offline Tests: Permutation Tests
 
@@ -94,7 +94,7 @@ This is implemented in MAPIE for anytime-valid Monte-Carlo tests ([Fischer & Ram
 
 ## Online Tests: Conformal P-Values and Alternative Approaches
 
-In many scenarios, the dataset is not fixed : observations arrive continuously. You want to detect exchangeability violations as soon as they occur, ideally in real time. This is where **online tests** come in.
+In many scenarios, the dataset is not fixed: observations arrive continuously. You want to detect exchangeability violations as soon as they occur, ideally in real time. This is where **online tests** come in.
 
 The challenge: how do you maintain valid statistical guarantees when you're running tests continuously, accumulating evidence over time? This is where conformal p-values and martingales become essential.
 
@@ -141,17 +141,17 @@ Note that this approach requires labels during production, but they do not have 
 
 ### Statistical Framing
 
-[Podkopaev & Ramdas (2021)](http://arxiv.org/abs/2110.06177) provides non-asymptotic bounds to control the gap between the two empirical risks, even for finite sample sizes. The idea is to control the probability of observing a gap that is too large between reference and production:
+[Podkopaev & Ramdas (2021)](http://arxiv.org/abs/2110.06177) provides non-asymptotic bounds to control the gap between the two empirical risks, even for finite sample sizes. The null hypothesis states that the production risk does not exceed the reference risk by more than the tolerance:
 
 $$
-P\left( R_{\mathrm{prod}} \leq R_{\mathrm{ref}} + \epsilon_{\mathrm{tol}} \right) \leq \delta
+H_0: R_{\mathrm{prod}} \leq R_{\mathrm{ref}} + \epsilon_{\mathrm{tol}}
 $$
 
-where $\epsilon_{\mathrm{tol}}$ is the tolerance and $\delta$ is the target confidence level (the exact form depends on the chosen bound and the considered loss).
+where $\epsilon_{\mathrm{tol}}$ is the tolerance. The test controls the probability of a false alert at the target test level $\delta$.
 
-In practice, this overall level is split across two bounds: $U_{\mathrm{ref}}$ the upper confidence bound for $R_{\mathrm{ref}}$ with confidence level $\delta_{\mathrm{ref}}$ and $L_{\mathrm{prod},t}$ the lower confidence bound for $R_{\mathrm{prod}}$ with confidence level $\delta_{\mathrm{prod}}$, with $\delta_{\mathrm{ref}} + \delta_{\mathrm{prod}} = \delta$. Using bounds allows to take into account the uncertainty in the computation of empirical risks $\hat{R}_{\mathrm{prod}}$ and $\hat{R}_{\mathrm{ref}}$ as we have no access to the real risks $R_{\mathrm{prod}}$ and $R_{\mathrm{ref}}$.
+In practice, this overall level is split across two bounds: $U_{\mathrm{ref}}$, the upper confidence bound for $R_{\mathrm{ref}}$ with test level $\delta_{\mathrm{ref}}$, and $L_{\mathrm{prod},t}$, the lower confidence bound for $R_{\mathrm{prod}}$ with test level $\delta_{\mathrm{prod}}$, with $\delta_{\mathrm{ref}} + \delta_{\mathrm{prod}} = \delta$. Using bounds accounts for uncertainty in the computation of empirical risks $\hat{R}_{\mathrm{prod}}$ and $\hat{R}_{\mathrm{ref}}$, as we have no access to the true risks $R_{\mathrm{prod}}$ and $R_{\mathrm{ref}}$.
 
-With this notation, define the bound gap as $\Delta_t = L_{\mathrm{prod},t} - U_{\mathrm{ref}}$, i.e., the difference between the production lower bound and the reference upper bound. The inequality above then states that the probability of observing a gap larger than $\epsilon_{\mathrm{tol}}$ is controlled by $\delta$.
+With this notation, define the bound gap as $\Delta_t = L_{\mathrm{prod},t} - U_{\mathrm{ref}}$, i.e., the difference between the production lower bound and the reference upper bound. A gap larger than $\epsilon_{\mathrm{tol}}$ leads to rejection of the null hypothesis, with the false-alert probability controlled by $\delta$.
 
 <figure markdown>
   ![RiskMonitoring](../images/risk_monitoring.png){ width="600" style="background-color: white; padding: 8px;" }
@@ -166,4 +166,4 @@ Therefore, when this bound-based gap becomes too large, it constitutes an alert 
 - **No alert** ($\Delta_t \leq \epsilon_{\mathrm{tol}}$): the production lower bound remains compatible with the reference upper bound, meaning no strong signal of harmful drift or exchangeability violation.
 
 
-This bound-based approach controls the false-alert probability at level $1 - \delta$.
+This bound-based approach controls the false-alert probability at level $\delta$.

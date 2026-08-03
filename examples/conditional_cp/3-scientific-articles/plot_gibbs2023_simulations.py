@@ -2,15 +2,14 @@
 Reproduction of experiments of Gibbs et al. (2023)
 ==================================================
 
-``ConditionalSplitConformalRegressor``
-is used to reproduce a part of the paper experiments of Gibbs et al. (2023) in
-their article [1] which we argue is a good procedure to get adaptive
-prediction intervals and a guaranteed coverage on all subgroups of
-interest.
+``ConditionalSplitConformalRegressor`` is used to reproduce part of the
+experiments from Gibbs et al. (2023) [1]. Their method produces adaptive
+prediction intervals with coverage guarantees for all subgroups of interest.
 
-For a given model, the simulation uses the
-``ConditionalSplitConformalRegressor`` class, on a synthetic dataset first considered by Romano et al. (2019)
-[2], and compares the bounds of the intervals with the standard ``SplitConformalRegressor``.
+For a given model, the simulation uses
+``ConditionalSplitConformalRegressor`` on a synthetic dataset first considered
+by Romano et al. (2019) [2], and compares the interval bounds with those from
+the standard ``SplitConformalRegressor``.
 
 This simulation is carried out to check that the conditional method implemented in
 MAPIE gives the same results as [1], and that the bounds of the intervals are
@@ -401,7 +400,7 @@ def plot_results(X_test, y_test, n_trials=20, experiment="Groups"):
 ###############################################################################
 # Group-conditional experiment
 # -----------------------------------------------------------------------------
-# This first experiment consists in performing group-conditional conformal
+# This first experiment consists of performing group-conditional conformal
 # prediction. Groups are defined with intervals of $x$.
 
 plot_results(X_test, y_test, experiment="Groups")

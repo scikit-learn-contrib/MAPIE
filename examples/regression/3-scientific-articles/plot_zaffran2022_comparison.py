@@ -10,23 +10,22 @@ Note: in this example, we use the following terms employed in the scientific lit
 
 —
 
-`TimeSeriesRegressor` is used to reproduce a
-part of the paper experiments of Zaffran et al. (2022) in their article [1]
-which we argue that Adaptive Conformal Inference (ACI, Gibbs & Candès, 2021)
-[2], developed for distribution-shift time series, is a good procedure for
-time series with general dependency.
+`TimeSeriesRegressor` is used to reproduce part of the experiments from
+Zaffran et al. (2022) [1]. The article argues that Adaptive Conformal Inference
+(ACI; Gibbs & Candès, 2021) [2], developed for time series under distribution
+shift, is a good procedure for time series with general dependence.
 
-For a given model, the simulation adjusts the MAPIE regressors using aci
-method, on a dataset taken from the article and available on the github
+For a given model, the simulation adjusts the MAPIE regressors using the ACI
+method on a dataset taken from the article and available in the GitHub
 repository https://github.com/mzaffran/AdaptiveConformalPredictionsTimeSeries
 and compares the bounds of the PIs.
 
-In order to reproduce the results of the github repository, we reuse the
+In order to reproduce the results of the GitHub repository, we reuse the
 `RandomForestRegressor` regression model and follow the same conformal
-prediction procedure (see in AdaptiveConformalPredictionsTimeSeries
-project the `models.py` file).
+prediction procedure (see the `models.py` file in the
+AdaptiveConformalPredictionsTimeSeries project).
 
-This simulation is carried out to check that the aci method implemented in
+This simulation is carried out to check that the ACI method implemented in
 MAPIE gives the same results as [1], and that the bounds of the PIs are
 obtained.
 

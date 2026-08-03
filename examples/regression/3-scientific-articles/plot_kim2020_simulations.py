@@ -23,9 +23,9 @@ We compare jackknife+ and jackknife+-after-bootstrap, with fixed and random
 numbers of bootstraps, for a given training set of size `n`, and different
 resampling sets of size `m`, following the discussion in [1].
 
-This simulation is carried out to assert that the jackknife+ and
-jackknife+-after-bootsrap methods implemented in MAPIE give the same
-results than [1], and that the targeted coverage level is obtained.
+This simulation checks that the jackknife+ and
+jackknife+-after-bootstrap methods implemented in MAPIE give the same
+results as [1], and that the target coverage level is obtained.
 
 [1] Byol Kim, Chen Xu, and Rina Foygel Barber.
 "Predictive Inference Is Free with the Jackknife+-after-Bootstrap."
@@ -343,7 +343,7 @@ def comparison_JAB(
         DataFrame with columns:
         - itrial : the number of the trial
         - model : the estimator's name
-        - method : jackknife+ of jackknife+-after-bootsrap
+        - method : jackknife+ or jackknife+-after-bootstrap
         - coverage : PIs' coverage
         - width : mean PI's width
         - m : the resampling set size

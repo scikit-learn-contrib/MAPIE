@@ -10,7 +10,7 @@ a risk in binary classification.
 """
 
 ###############################################################################
-# Risk control consists in selecting a threshold on predicted probabilities
+# Risk control consists of selecting a threshold on predicted probabilities
 # so that a chosen risk (e.g., 1-recall) is guaranteed to stay below a target
 # level with high probability on unseen data. The guarantee is obtained using
 # a calibration dataset and a multiple testing correction across candidate

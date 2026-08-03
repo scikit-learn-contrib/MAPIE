@@ -12,7 +12,7 @@ different strategies.
 
 The example clearly shows that
 `ConformalizedQuantileRegressor`
-should provide the same coverage for a lower width of intervals because it
+should provide comparable coverage with narrower intervals because it
 adapts the prediction intervals to the local heteroscedastic noise.
 """
 
@@ -45,17 +45,17 @@ def get_heteroscedastic_data(
     n_train: int = 200, n_true: int = 200, sigma: float = 0.1
 ) -> Tuple[NDArray, NDArray, NDArray, NDArray, NDArray]:
     """
-    Generate one-dimensional data from a given function,
-    number of training and test samples and a given standard
-    deviation increases linearly with x.
-    The training data data is generated from an exponential distribution.
+    Generate one-dimensional data from a given function and specified numbers
+    of training and test samples. The noise standard deviation increases
+    linearly with x. The training data is generated from an exponential
+    distribution.
 
     Parameters
     ----------
     n_train : int, optional
-        Number of training samples, by default  200.
+        Number of training samples, by default 200.
     n_true : int, optional
-        Number of test samples, by default 1000.
+        Number of test samples, by default 200.
     sigma : float, optional
         Standard deviation of noise, by default 0.1
 

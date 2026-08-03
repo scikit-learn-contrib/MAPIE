@@ -2,7 +2,7 @@ r"""
 # Tutorial: how to ensure fairness across groups with Mondrian
 
 
-Mondrian is a method that allows to build prediction sets (for classification) and
+Mondrian is a method that builds prediction sets (for classification) and
 prediction intervals (for regression) with a group-conditional coverage guarantee. To
 achieve this, it runs a conformal prediction procedure for each of these groups,
 and hence achieves marginal coverage on each of them.

@@ -1,22 +1,22 @@
 # Conditional Conformal Prediction — Theoretical Description
 
-Standard Conformal Prediction provides marginal guarantees: the true label/value is in the prediction set/interval **marginally** on the test data. Many standard methods provide prediction intervals that do not depend on the specific datapoint and thus fail to capture heteroscedasticity (the variance of errors is not constant across a regression model's observations). Some algorithms in MAPIE provide adaptive intervals, that can adapt to specific datapoints, such as Conformalized Quantile Regression (CQR) or the Residual Normalized Score. However, their theoretical guarantees are still marginal.
+Standard Conformal Prediction provides marginal guarantees: the true label/value is in the prediction set/interval **marginally** on the test data. Many standard methods provide prediction intervals that do not depend on the specific data point and thus fail to capture heteroscedasticity (the variance of errors is not constant across a regression model's observations). Some algorithms in MAPIE provide intervals that adapt to specific data points, such as Conformalized Quantile Regression (CQR) or the Residual Normalized Score. However, their theoretical guarantees are still marginal.
 
-Here we present a Conditional Conformal Prediction (CCP) method [^1] which is a model agnostic conformal prediction method that can create adaptative prediction intervals and provides coverage guarantees on sub-groups, not only marginally.
+Here we present a Conditional Conformal Prediction (CCP) method [^1]. This model-agnostic method can create adaptive prediction intervals and provide coverage guarantees for subgroups, rather than only marginal coverage.
 
-In MAPIE, this method has a lot of advantages:
+In MAPIE, this method has several advantages:
 
-- It is model agnostic (it doesn't depend on the model but only on the predictions, unlike CQR).
-- It can create very adaptative intervals (with a varying width which truly reflects the model uncertainty).
-- While providing coverage guarantee on all sub-groups of interest (avoiding biases).
-- With the possibility to inject prior knowledge about the data or the model.
+- It is model-agnostic (it depends only on the predictions, unlike CQR).
+- It can create highly adaptive intervals whose varying widths reflect model uncertainty.
+- It provides coverage guarantees for all subgroups of interest, helping to avoid bias.
+- It can incorporate prior knowledge about the data or the model.
 
 However, we will also see its disadvantages:
 
-- The adaptativity depends on the feature map which can be difficult to define.
-- The inference is much longer than for the other methods as an optimization process is solved for each test point.
+- Its adaptivity depends on the feature map, which can be difficult to define.
+- Inference is much slower than for other methods because an optimization problem is solved for each test point.
 
-To conclude, it can create more adaptative intervals than the other methods, but it can be difficult to find the best settings and can have a big computational time.
+In summary, it can create more adaptive intervals than other methods, but finding the best settings can be difficult and computationally expensive.
 
 ---
 
@@ -101,7 +101,7 @@ $$
 
 ### Limitations of the current implementation
 
-The original paper [^1] introduced two settings. For the first one, finite-dimensional shifts, coverage is guaranteed on the groups defined by the feature map. The second one, infinite-dimensional shifts, tackles any covariate shift and allows to quantify the coverage error, as an exact coverage guarantee is theoretically impossible in this case. In MAPIE, only the finite-dimensional setting is implemented currently. The infinite-dimensional case needs further optimization as it is very slow (e.g., dozens hours of compute to reproduce Figure 5 of the paper).
+The original paper [^1] introduced two settings. For the first one, finite-dimensional shifts, coverage is guaranteed on the groups defined by the feature map. The second one, infinite-dimensional shifts, tackles any covariate shift and quantifies the coverage error, as an exact coverage guarantee is theoretically impossible in this case. Currently, MAPIE implements only the finite-dimensional setting. The infinite-dimensional case needs further optimization because it is very slow (e.g., reproducing Figure 5 of the paper takes dozens of compute hours).
 
 ## How to use it in practice?
 
@@ -111,15 +111,15 @@ The following will provide some tips on how to use the method. For practical
 examples, see the regression and classification examples using
 `ConditionalSplitConformalRegressor` and `ConditionalSplitConformalClassifier`.
 
-1. If you want to avoid bias on sub-groups and ensure a homogeneous coverage on
+1. If you want to avoid bias across subgroups and ensure homogeneous coverage for
    those, you can add indicator functions corresponding to those groups in
    `feature_map`.
 
-2. You can inject prior knowledge in the method through `feature_map`, if you have
-   information about the conformity scores distribution (domains with different
+2. You can inject prior knowledge into the method through `feature_map` if you have
+   information about the conformity score distribution (domains with different
    behavior, expected model uncertainty depending on a given feature, etc.).
 
-3. Empirically test the obtained coverage on a test set, to make sure that the
+3. Empirically test the obtained coverage on a test set to make sure that the
    expected coverage is achieved.
 
 ### Avoid miscoverage

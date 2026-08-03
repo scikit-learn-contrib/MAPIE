@@ -14,7 +14,7 @@ We will compare the conditional method
 with the standard method, using for both, the LAC conformity score
 (``LACConformityScore``).
 
-Recall that the ``LAC`` method consists in applying a threshold on the
+Recall that the ``LAC`` method consists of applying a threshold to the
 predicted class probabilities, to keep in the set all the classes with predicted
 probabilities above the threshold.
 """
