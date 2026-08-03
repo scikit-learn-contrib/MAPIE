@@ -35,7 +35,8 @@ with ``PolynomialFeatures`` and
 We will compare the different available feature maps of the conditional method
 (using ``ConditionalSplitConformalRegressor``),
 with the standard split-conformal method, the CV+ method
-(``CrossConformalRegressor``) and CQR (``ConformalizedQuantileRegressor``)
+(``CrossConformalRegressor``), CQR (``ConformalizedQuantileRegressor``), and
+cross CQR (``CrossConformalizedQuantileRegressor``)
 
 [1] Isaac Gibbs, John J. Cherian, and Emmanuel J. Candès,
 "Conformal Prediction With Conditional Guarantees",
@@ -57,6 +58,7 @@ from mapie.conditional_conformal_prediction import ConditionalSplitConformalRegr
 from mapie.regression import (
     ConformalizedQuantileRegressor,
     CrossConformalRegressor,
+    CrossConformalizedQuantileRegressor,
     SplitConformalRegressor,
 )
 
@@ -398,8 +400,9 @@ def plot_evaluation(titles, y_pis, X, y):
 ##############################################################################
 # 4. Creation of MAPIE instances
 # --------------------------------------------------------------------------
-# We are going to test different methods : ``CV+``, ``CQR``, ``Conditional``
-# (with default parameters) and the ``residual_normalized`` conformity score
+# We are going to test different methods: ``CV+``, ``CQR``, ``cross CQR``,
+# ``Conditional`` (with default parameters), and the ``residual_normalized``
+# conformity score.
 
 estimator_split = clone(estimator).fit(X_train, y_train)
 mapie_split = SplitConformalRegressor(
@@ -429,6 +432,19 @@ mapie_cqr = ConformalizedQuantileRegressor(
 mapie_cqr.fit(X_train, y_train).conformalize(X_calib, y_calib)
 y_pred_cqr, y_pi_cqr = mapie_cqr.predict_interval(X_test)
 
+mapie_cross_cqr = CrossConformalizedQuantileRegressor(
+    estimator=clone(quantile_estimator),
+    confidence_level=confidence_level,
+    method="plus",
+    cv=3,
+    random_state=random_state,
+)
+mapie_cross_cqr.fit_conformalize(
+    np.vstack([X_train, X_calib]),
+    np.hstack([y_train, y_calib]),
+)
+y_pred_cross_cqr, y_pi_cross_cqr = mapie_cross_cqr.predict_interval(X_test)
+
 mapie_residual = SplitConformalRegressor(
     estimator=estimator_split,
     confidence_level=confidence_level,
@@ -446,13 +462,35 @@ mapie_conditional = ConditionalSplitConformalRegressor(
 ).conformalize(X_calib, y_calib)
 y_pred_conditional, y_pi_conditional = mapie_conditional.predict_interval(X_test)
 
-mapies = [mapie_split, mapie_cv, mapie_cqr, mapie_residual, mapie_conditional]
-y_preds = [y_pred_split, y_pred_cv, y_pred_cqr, y_pred_residual, y_pred_conditional]
-y_pis = [y_pi_split, y_pi_cv, y_pi_cqr, y_pi_residual, y_pi_conditional]
+mapies = [
+    mapie_split,
+    mapie_cv,
+    mapie_cqr,
+    mapie_cross_cqr,
+    mapie_residual,
+    mapie_conditional,
+]
+y_preds = [
+    y_pred_split,
+    y_pred_cv,
+    y_pred_cqr,
+    y_pred_cross_cqr,
+    y_pred_residual,
+    y_pred_conditional,
+]
+y_pis = [
+    y_pi_split,
+    y_pi_cv,
+    y_pi_cqr,
+    y_pi_cross_cqr,
+    y_pi_residual,
+    y_pi_conditional,
+]
 titles = [
     "Basic split",
     "CV+",
     "CQR",
+    "Cross CQR+",
     "Residual normalized",
     "Conditional - Gaussian feature map",
 ]
