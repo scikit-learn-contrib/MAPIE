@@ -155,6 +155,7 @@ nav:
     - Choosing the Right Algorithm: getting-started/choosing-algorithm.md
     - v1 Release Notes: getting-started/v1-release-notes.md
   - Conformal Prediction:
+    - Overview: introductions/conformal-prediction.md
     - Regression Theory: theory/regression.md
     - Regression Examples: generated/regression
     - Classification Theory: theory/classification.md
@@ -165,16 +166,17 @@ nav:
     - Conditional Guarantees: theory/conditional-guarantees.md
     - Conditional CP Examples: generated/conditional_cp
   - Risk Control:
-    - Getting Started: theory/risk-control.md
+    - Overview: theory/risk-control.md
     - LLM Risk Control: theory/llm-risk-control.md
     - Examples: generated/risk_control
   - Calibration:
+    - Overview: introductions/calibration.md
     - Theoretical Description: theory/calibration.md
     - Metrics: theory/metrics-calibration.md
     - Examples: generated/calibration
     - Notebooks: calibration/notebooks.md
   - Exchangeability Testing:
-    - Theoretical Description: theory/exchangeability.md
+    - Overview: theory/exchangeability.md
     - Examples: generated/exchangeability_testing
   - All Examples: all-examples/index.md
   - Q&A:

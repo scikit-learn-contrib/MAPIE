@@ -21,6 +21,8 @@
 - Generate the MkDocs API reference and navigation automatically from MAPIE's
   public Python objects, including conditional conformal prediction, metrics,
   risk control, and exchangeability testing.
+- Add high-level documentation overviews for the main concepts and expose them
+  consistently in the site navigation.
 
 ## 1.x.x (2026-xx-xx)
 
