@@ -60,5 +60,6 @@
 * Damien Bouet <Damien-Bouet>
 * Edgar Jaber <EdgarJaber>
 * Dresden Goehner <dr.dresden0416@gmail.com>
+* Shivam Lalakiya <lalakiya@wustl.edu>
 
 To be continued ...
