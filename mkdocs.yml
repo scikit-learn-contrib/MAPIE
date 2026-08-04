@@ -147,44 +147,44 @@ extra:
 copyright: Copyright &copy; 2021 - 2026 MAPIE Team — BSD-3-Clause License
 
 nav:
-  - Home: text/index.md
+  - Home: content/index.md
   - Getting Started:
-    - Quick Start: text/getting-started/quick-start.md
-    - Choosing the Right Algorithm: text/getting-started/choosing-algorithm.md
-    - Split vs. Cross Conformal: text/getting-started/split-cross-conformal.md
-    - v1 Release Notes: text/getting-started/v1-release-notes.md
+    - Quick Start: content/getting-started/quick-start.md
+    - Choosing the Right Algorithm: content/getting-started/choosing-algorithm.md
+    - Split vs. Cross Conformal: content/getting-started/split-cross-conformal.md
+    - v1 Release Notes: content/getting-started/v1-release-notes.md
   - Conformal Prediction:
-    - Overview: text/conformal-prediction/index.md
-    - Regression Theory: text/conformal-prediction/regression.md
-    - Classification Theory: text/conformal-prediction/classification.md
-    - Binary Classification: text/conformal-prediction/binary-classification.md
-    - Conformity Scores: text/conformal-prediction/conformity-scores.md
-    - Metrics: text/conformal-prediction/metrics.md
-    - Conditional Guarantees: text/conformal-prediction/conditional-guarantees.md
+    - Overview: content/conformal-prediction/index.md
+    - Regression Theory: content/conformal-prediction/regression.md
+    - Classification Theory: content/conformal-prediction/classification.md
+    - Binary Classification: content/conformal-prediction/binary-classification.md
+    - Conformity Scores: content/conformal-prediction/conformity-scores.md
+    - Metrics: content/conformal-prediction/metrics.md
+    - Conditional Guarantees: content/conformal-prediction/conditional-guarantees.md
     - Examples:
       - Regression: generated/regression
       - Classification: generated/classification
       - Conditional: generated/conditional_cp
   - Risk Control:
-    - Overview: text/risk-control/index.md
-    - Theory: text/risk-control/theory.md
-    - LLM Risk Control: text/risk-control/llm-risk-control.md
+    - Overview: content/risk-control/index.md
+    - Theory: content/risk-control/theory.md
+    - LLM Risk Control: content/risk-control/llm-risk-control.md
     - Examples: generated/risk_control
   - Calibration:
-    - Overview: text/calibration/index.md
-    - Theory: text/calibration/theory.md
-    - Metrics: text/calibration/metrics.md
+    - Overview: content/calibration/index.md
+    - Theory: content/calibration/theory.md
+    - Metrics: content/calibration/metrics.md
     - Examples: generated/calibration
-    - Notebooks: text/calibration/notebooks.md
+    - Notebooks: content/calibration/notebooks.md
   - Exchangeability Testing:
-    - Overview: text/exchangeability-testing/index.md
-    - Theory: text/exchangeability-testing/theory.md
+    - Overview: content/exchangeability-testing/index.md
+    - Theory: content/exchangeability-testing/theory.md
     - Examples: generated/exchangeability_testing
-  - All Examples: text/all-examples/index.md
+  - All Examples: content/all-examples/index.md
   # Populated from the public Python API by doc/hooks/api_reference.py.
   - API Reference: []
   - About:
-    - Citation and References: text/about/citation.md
+    - Citation and References: content/about/citation.md
   - Contributing:
     - Coding Contribution Guidelines: https://github.com/scikit-learn-contrib/MAPIE/blob/master/CONTRIBUTING.md
-    - Documentation Contribution Guidelines: text/contributing-docs.md
+    - Documentation Contribution Guidelines: content/contributing-docs.md
