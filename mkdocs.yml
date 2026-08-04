@@ -188,4 +188,5 @@ nav:
   - About:
     - Citation and References: text/about/citation.md
   - Contributing:
-    - Documentation Guide: text/contributing-docs.md
+    - Coding Contribution Guidelines: https://github.com/scikit-learn-contrib/MAPIE/blob/master/CONTRIBUTING.md
+    - Documentation Contribution Guidelines: text/contributing-docs.md
