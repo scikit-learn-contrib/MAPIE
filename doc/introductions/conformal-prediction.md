@@ -43,12 +43,9 @@ narrower outputs while preserving the target coverage.
   and the LAC, APS, RAPS, and Top-K methods.
 - [Conformity scores](../theory/conformity-scores.md) describes how MAPIE
   measures whether a prediction agrees with an observation.
-- [Choosing the right algorithm](../getting-started/choosing-algorithm.md) helps
-  match a MAPIE estimator to a use case.
 - [Conformalization set](../getting-started/split-cross-conformal.md) compares
   split- and cross-conformal workflows.
 - [Metrics](../theory/metrics-conformal.md) covers coverage, interval width,
   prediction-set size, and conditional coverage diagnostics.
 - [Conditional guarantees](../theory/conditional-guarantees.md) introduces
   methods that go beyond marginal coverage.
-
