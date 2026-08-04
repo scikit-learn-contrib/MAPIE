@@ -151,10 +151,11 @@ nav:
   - Home: index.md
   - Getting Started:
     - Quick Start: getting-started/quick-start.md
-    - Conformalization Set: getting-started/split-cross-conformal.md
     - Choosing the Right Algorithm: getting-started/choosing-algorithm.md
+    - Split vs. Cross Conformal: getting-started/split-cross-conformal.md
     - v1 Release Notes: getting-started/v1-release-notes.md
   - Conformal Prediction:
+    - Overview: introductions/conformal-prediction.md
     - Regression Theory: theory/regression.md
     - Regression Examples: generated/regression
     - Classification Theory: theory/classification.md
@@ -165,15 +166,18 @@ nav:
     - Conditional Guarantees: theory/conditional-guarantees.md
     - Conditional CP Examples: generated/conditional_cp
   - Risk Control:
-    - Getting Started: theory/risk-control.md
+    - Overview: introductions/risk-control.md
+    - Theoretical Description: theory/risk-control.md
     - LLM Risk Control: theory/llm-risk-control.md
     - Examples: generated/risk_control
   - Calibration:
+    - Overview: introductions/calibration.md
     - Theoretical Description: theory/calibration.md
     - Metrics: theory/metrics-calibration.md
     - Examples: generated/calibration
     - Notebooks: calibration/notebooks.md
   - Exchangeability Testing:
+    - Overview: introductions/exchangeability-testing.md
     - Theoretical Description: theory/exchangeability.md
     - Examples: generated/exchangeability_testing
   - All Examples: all-examples/index.md
