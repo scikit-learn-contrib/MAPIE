@@ -33,7 +33,6 @@ doc/
 │   ├── calibration/
 │   ├── exchangeability-testing/
 │   ├── all-examples/
-│   ├── q-and-a/
 │   └── contributing-docs.md
 ├── generated/              # Gallery output
 ├── images/                 # Images used in documentation

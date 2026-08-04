@@ -181,8 +181,6 @@ nav:
     - Theoretical Description: text/exchangeability-testing/theory.md
     - Examples: generated/exchangeability_testing
   - All Examples: text/all-examples/index.md
-  - Q&A:
-    - Mondrian: text/q-and-a/mondrian.md
   # Populated from the public Python API by doc/hooks/api_reference.py.
   - API Reference: []
   - About:
