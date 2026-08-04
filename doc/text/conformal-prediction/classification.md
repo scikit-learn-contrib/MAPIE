@@ -31,6 +31,10 @@ For a typical $\alpha = 10\%$, we construct prediction sets that contain the tru
 !!! info
     The guarantee applies only to **marginal coverage**, not conditional coverage $P \{Y_{n+1} \in \hat{C}_{n, \alpha}(X_{n+1}) \mid X_{n+1} = x_{n+1}\}$, which depends on the location of the test point.
 
+The [CIFAR-10 prediction-set notebook](https://github.com/scikit-learn-contrib/MAPIE/blob/master/notebooks/classification/Cifar10.ipynb)
+applies these methods to an image classifier and compares their marginal and
+class-conditional coverage.
+
 ---
 
 ## 1. LAC
