@@ -70,6 +70,32 @@ class QuantileRegressionScore(BaseRegressionScore):
 
         return np.add(y_pred, conformity_scores)
 
+    def get_effective_calibration_samples(self, scores: NDArray[np.float64]):
+        """
+        Calculate the effective number of calibration samples.
+
+        The scores hold one row per side, so the number of entries is twice the number
+        of calibration samples. The count is read from a single row, otherwise the
+        halving `BaseRegressionScore` applies to asymmetric scores — which accounts for
+        each side being calibrated at `alpha / 2` — is cancelled by the two-row layout.
+
+        `AbsoluteQuantileRegressionScore` inherits this method but reduces both rows to
+        a single one-dimensional score, hence the dimension check.
+
+        Parameters
+        ----------
+        scores: NDArray[float] of shape (2, n_samples) or (n_samples,)
+            An array of scores.
+
+        Returns
+        -------
+        n: int
+            The effective number of calibration samples.
+        """
+        return super().get_effective_calibration_samples(
+            scores[0] if scores.ndim > 1 else scores
+        )
+
 
 class AbsoluteQuantileRegressionScore(QuantileRegressionScore):
     """
