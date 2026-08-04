@@ -1,4 +1,4 @@
-# Conformity Scores — Theoretical Description
+# Conformity Scores — Theory
 
 !!! note "Terminology"
     In theoretical parts of the documentation:

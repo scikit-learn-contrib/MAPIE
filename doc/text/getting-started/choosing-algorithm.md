@@ -102,7 +102,7 @@ Choose the method according to the metric and type of guarantee:
 
 CRC is the default for recall and does not require a `confidence_level`. RCPS
 and LTT do require one. The detailed [Risk Control overview](../risk-control/index.md)
-and [theoretical description](../risk-control/theory.md) explain these
+and [Theory](../risk-control/theory.md) explain these
 guarantees and assumptions.
 
 !!! warning "Risk control can be infeasible"

@@ -167,18 +167,18 @@ nav:
       - Conditional: generated/conditional_cp
   - Risk Control:
     - Overview: text/risk-control/index.md
-    - Theoretical Description: text/risk-control/theory.md
+    - Theory: text/risk-control/theory.md
     - LLM Risk Control: text/risk-control/llm-risk-control.md
     - Examples: generated/risk_control
   - Calibration:
     - Overview: text/calibration/index.md
-    - Theoretical Description: text/calibration/theory.md
+    - Theory: text/calibration/theory.md
     - Metrics: text/calibration/metrics.md
     - Examples: generated/calibration
     - Notebooks: text/calibration/notebooks.md
   - Exchangeability Testing:
     - Overview: text/exchangeability-testing/index.md
-    - Theoretical Description: text/exchangeability-testing/theory.md
+    - Theory: text/exchangeability-testing/theory.md
     - Examples: generated/exchangeability_testing
   - All Examples: text/all-examples/index.md
   # Populated from the public Python API by doc/hooks/api_reference.py.

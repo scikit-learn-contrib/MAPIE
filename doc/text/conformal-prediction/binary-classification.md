@@ -1,4 +1,4 @@
-# Binary Classification — Theoretical Description
+# Binary Classification — Theory
 
 The binary classification case relates three approaches for uncertainty quantification:
 

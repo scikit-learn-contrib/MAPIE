@@ -1,4 +1,4 @@
-# Regression — Theoretical Description
+# Regression — Theory
 
 !!! note "Terminology"
     In theoretical parts of the documentation:

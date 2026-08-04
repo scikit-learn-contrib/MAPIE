@@ -1,4 +1,4 @@
-# Conditional Conformal Prediction — Theoretical Description
+# Conditional Conformal Prediction — Theory
 
 Standard Conformal Prediction provides marginal guarantees: the true label/value is in the prediction set/interval **marginally** on the test data. Many standard methods provide prediction intervals that do not depend on the specific data point and thus fail to capture heteroscedasticity (the variance of errors is not constant across a regression model's observations). Some algorithms in MAPIE provide intervals that adapt to specific data points, such as Conformalized Quantile Regression (CQR) or the Residual Normalized Score. However, their theoretical guarantees are still marginal.
 

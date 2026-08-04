@@ -1,4 +1,4 @@
-# Classification — Theoretical Description
+# Classification — Theory
 
 !!! note "Terminology"
     In theoretical parts of the documentation:

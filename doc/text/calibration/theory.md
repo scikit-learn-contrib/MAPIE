@@ -1,4 +1,4 @@
-# Calibration — Theoretical Description
+# Calibration — Theory
 
 
 ## Goal

@@ -85,7 +85,7 @@ class SplitConformalRegressor:
         A custom score function inheriting from BaseRegressionScore may also
         be provided.
 
-        See [theoretical description (conformity scores)](../text/conformal-prediction/conformity-scores.md).
+        See [theory (conformity scores)](../text/conformal-prediction/conformity-scores.md).
 
     prefit : bool, default=True
         If True, the base regressor must be fitted, and the `fit`
@@ -362,7 +362,7 @@ class CrossConformalRegressor:
         A custom score function inheriting from BaseRegressionScore may also
         be provided.
 
-        See [theoretical description (conformity scores)](../text/conformal-prediction/conformity-scores.md).
+        See [theory (conformity scores)](../text/conformal-prediction/conformity-scores.md).
 
     method : str, default="plus"
         The method used to compute prediction intervals. Options are:
@@ -733,7 +733,7 @@ class JackknifeAfterBootstrapRegressor:
         A custom score function inheriting from BaseRegressionScore may also
         be provided.
 
-        See [theoretical description (conformity scores)](../text/conformal-prediction/conformity-scores.md).
+        See [theory (conformity scores)](../text/conformal-prediction/conformity-scores.md).
 
     method : str, default="plus"
 

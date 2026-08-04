@@ -68,7 +68,7 @@ The four methods provide different guarantees:
 
 ---
 
-## 2. Theoretical Description
+## 2. Theory
 
 ### 2.1 Risk-Controlling Prediction Sets (RCPS)
 

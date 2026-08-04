@@ -204,7 +204,7 @@ These estimators require the optional `conditional` dependency:
 pip install "mapie[conditional]"
 ```
 
-See the [theoretical description](../text/conformal-prediction/conditional-guarantees.md) and the
+See [Theory](../text/conformal-prediction/conditional-guarantees.md) and the
 runnable
 [regression](../generated/regression/2-advanced-analysis/plot_conditional_conformal_regression_groups.md)
 and
