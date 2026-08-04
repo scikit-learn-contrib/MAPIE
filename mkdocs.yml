@@ -157,14 +157,15 @@ nav:
   - Conformal Prediction:
     - Overview: text/conformal-prediction/index.md
     - Regression Theory: text/conformal-prediction/regression.md
-    - Regression Examples: generated/regression
     - Classification Theory: text/conformal-prediction/classification.md
     - Binary Classification: text/conformal-prediction/binary-classification.md
-    - Classification Examples: generated/classification
     - Conformity Scores: text/conformal-prediction/conformity-scores.md
     - Metrics: text/conformal-prediction/metrics.md
     - Conditional Guarantees: text/conformal-prediction/conditional-guarantees.md
-    - Conditional CP Examples: generated/conditional_cp
+    - Examples:
+      - Regression: generated/regression
+      - Classification: generated/classification
+      - Conditional: generated/conditional_cp
   - Risk Control:
     - Overview: text/risk-control/index.md
     - Theoretical Description: text/risk-control/theory.md
