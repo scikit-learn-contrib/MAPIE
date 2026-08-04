@@ -26,6 +26,8 @@
 - Refresh the Getting Started guides with current v1 conformal workflows, a
   runnable binary risk-control example, controller-selection guidance, and the
   latest risk-control class names.
+- Organize handwritten documentation under `doc/text/`, with one folder for
+  each main documentation section.
 
 ## 1.x.x (2026-xx-xx)
 

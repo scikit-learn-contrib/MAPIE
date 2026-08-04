@@ -32,7 +32,7 @@ Consider a binary classification model that separates data into two classes usin
 A naive approach: evaluate how precision varies with different thresholds on a validation dataset.
 
 <figure markdown>
-  ![Without risk control](../images/example_without_risk_control.png){ width="600" }
+  ![Without risk control](../../images/example_without_risk_control.png){ width="600" }
   <figcaption>Naive approach: no guarantees on unseen data.</figcaption>
 </figure>
 
@@ -42,7 +42,7 @@ A naive approach: evaluate how precision varies with different thresholds on a v
 **Risk control** adjusts a model parameter $\lambda$ so that a given risk stays below a desired level **with high probability on unseen data**.
 
 <figure markdown>
-  ![With risk control](../images/example_with_risk_control.png){ width="600" }
+  ![With risk control](../../images/example_with_risk_control.png){ width="600" }
   <figcaption>Risk control: statistically guaranteed thresholds.</figcaption>
 </figure>
 
@@ -52,7 +52,7 @@ A naive approach: evaluate how precision varies with different thresholds on a v
 - $\delta$: confidence level associated with the risk control
 
 <figure markdown>
-  ![Alpha plot](../images/plot_alpha.png){ width="600" }
+  ![Alpha plot](../../images/plot_alpha.png){ width="600" }
 </figure>
 
 The four methods provide different guarantees:
@@ -62,7 +62,7 @@ The four methods provide different guarantees:
 - **RCPS** and **LTT**: Require **i.i.d.** data → $\mathbb{P}(R \leq \alpha) \geq 1 - \delta$
 
 <figure markdown>
-  ![Risk distribution](../images/risk_distribution.png){ width="600" }
+  ![Risk distribution](../../images/risk_distribution.png){ width="600" }
   <figcaption>Comparison of expectation vs. probability guarantees.</figcaption>
 </figure>
 
@@ -93,7 +93,7 @@ $$
 $$
 
 <figure markdown>
-  ![R hat plus](../images/r_hat_plus.png){ width="600" }
+  ![R hat plus](../../images/r_hat_plus.png){ width="600" }
 </figure>
 
 !!! success "Guarantee"

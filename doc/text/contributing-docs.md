@@ -25,15 +25,21 @@ Open [http://127.0.0.1:8787](http://127.0.0.1:8787) in your browser. Pages reloa
 ```
 mkdocs.yml                  # Main configuration
 doc/
-├── index.md                # Homepage
-├── getting-started/        # Getting started guides
-├── theory/                 # Theoretical descriptions
-├── calibration/            # Calibration section
-├── api/                    # API reference (auto-generated from docstrings)
+├── text/                   # Handwritten documentation
+│   ├── index.md            # Homepage
+│   ├── getting-started/    # Getting started guides
+│   ├── conformal-prediction/
+│   ├── risk-control/
+│   ├── calibration/
+│   ├── exchangeability-testing/
+│   ├── all-examples/
+│   ├── q-and-a/
+│   └── contributing-docs.md
+├── generated/              # Gallery output
 ├── images/                 # Images used in documentation
 ├── stylesheets/extra.css   # Custom CSS overrides
 ├── javascripts/mathjax.js  # MathJax configuration
-└── hooks/                  # MkDocs build hooks
+└── hooks/                  # MkDocs build and API reference hooks
 examples/
 ├── regression/             # Gallery example scripts
 ├── classification/
@@ -46,10 +52,11 @@ examples/
 
 ### 1. Create the Markdown File
 
-Create a `.md` file in the appropriate directory under `doc/`. For example, to add a new theory page:
+Create a `.md` file in the appropriate section under `doc/text/`. For example,
+to add a new conformal-prediction theory page:
 
 ```bash
-doc/theory/my-new-topic.md
+doc/text/conformal-prediction/my-new-topic.md
 ```
 
 Write your content using standard Markdown:
@@ -78,9 +85,8 @@ Edit `mkdocs.yml` and add your page to the `nav` section:
 ```yaml
 nav:
   - Conformal Prediction:
-    - Regression:
-      - Theoretical Description: theory/regression.md
-      - My New Topic: theory/my-new-topic.md   # ← add here
+    - Regression Theory: text/conformal-prediction/regression.md
+    - My New Topic: text/conformal-prediction/my-new-topic.md   # ← add here
 ```
 
 ### 3. Add Images
@@ -88,7 +94,7 @@ nav:
 Place images in `doc/images/` and reference them:
 
 ```markdown
-![Description](images/my-image.png)
+![Description](../../images/my-image.png)
 ```
 
 ## Adding a New Gallery Example
@@ -182,7 +188,7 @@ To add an entirely new gallery section (e.g., `examples/time_series/`):
            - doc/generated/time_series  # ← add here
   ```
 3. Add a navigation entry in the relevant topic section and add the new
-   gallery link to `doc/all-examples/index.md`:
+   gallery link to `doc/text/all-examples/index.md`:
   ```yaml
    nav:
      - Time Series:

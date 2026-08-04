@@ -19,7 +19,7 @@ $$
 \Pr(Y = 1 \mid h(X) = q) = q
 $$
 
-[:material-arrow-right: Full calibration documentation](calibration.md)
+[:material-arrow-right: Full calibration documentation](../calibration/theory.md)
 
 ---
 
@@ -44,5 +44,5 @@ Confidence intervals for the **predictive distribution** of the model, combining
 ## Learn More
 
 - [Classification methods (LAC, APS, Top-K)](classification.md)
-- [Calibration (Top-Label)](calibration.md)
-- [Risk control for binary classification](risk-control.md)
+- [Calibration (Top-Label)](../calibration/theory.md)
+- [Risk control for binary classification](../risk-control/theory.md)

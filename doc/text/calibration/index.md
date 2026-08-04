@@ -30,13 +30,13 @@ match observed frequencies.
 
 ## Explore Calibration in MAPIE
 
-- [Calibration theory](../theory/calibration.md) introduces binary and
+- [Calibration theory](theory.md) introduces binary and
   top-label calibration.
-- [Calibration metrics](../theory/metrics-calibration.md) describes expected
+- [Calibration metrics](metrics.md) describes expected
   and top-label calibration errors.
-- [Calibration examples](../generated/calibration/index.md) demonstrate the
+- [Calibration examples](../../generated/calibration/index.md) demonstrate the
   available calibrators on practical problems.
-- [Calibration notebooks](../calibration/notebooks.md) links to additional
+- [Calibration notebooks](notebooks.md) links to additional
   tutorials.
 
 For additional post-hoc calibration methods and metrics, see the

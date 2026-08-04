@@ -80,7 +80,7 @@ $$
 $$
 
 <figure markdown>
-  ![Permutation](../images/permutations.png){ width="600" style="background-color: white; padding: 8px;" }
+  ![Permutation](../../images/permutations.png){ width="600" style="background-color: white; padding: 8px;" }
   <figcaption>Illustration of a permutation test. In this example, the test statistic is the difference in means between the group on the left side, and the group on the right side. The group means are shown as dashed lines. For the real data having the original ordering, the test statistic value is much higher than for permuted data. This indicates evidence against exchangeability. From <a href="https://arxiv.org/abs/2411.11824">Angelopoulos et al. (2024)</a>.</figcaption>
 </figure>
 
@@ -154,7 +154,7 @@ In practice, this overall level is split across two bounds: $U_{\mathrm{ref}}$, 
 With this notation, define the bound gap as $\Delta_t = L_{\mathrm{prod},t} - U_{\mathrm{ref}}$, i.e., the difference between the production lower bound and the reference upper bound. A gap larger than $\epsilon_{\mathrm{tol}}$ leads to rejection of the null hypothesis, with the false-alert probability controlled by $\delta$.
 
 <figure markdown>
-  ![RiskMonitoring](../images/risk_monitoring.png){ width="600" style="background-color: white; padding: 8px;" }
+  ![RiskMonitoring](../../images/risk_monitoring.png){ width="600" style="background-color: white; padding: 8px;" }
   <figcaption>Illustration of risk monitoring confidence control.</figcaption>
 </figure>
 

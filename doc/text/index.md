@@ -6,7 +6,7 @@ hide:
 
 <div class="hero" markdown>
 
-![MAPIE Logo](images/mapie_logo_nobg_cut.png){ width="400" }
+![MAPIE Logo](../images/mapie_logo_nobg_cut.png){ width="400" }
 
 # MAPIE — Model Agnostic Prediction Interval Estimator
 
@@ -21,7 +21,7 @@ hide:
 [![Conda](https://img.shields.io/conda/vn/conda-forge/mapie)](https://anaconda.org/conda-forge/mapie)
 
 [Get Started :material-rocket-launch:](getting-started/quick-start.md){ .md-button .md-button--primary }
-[API Reference :material-book-open-variant:](api/index.md){ .md-button }
+[API Reference :material-book-open-variant:](../api/index.md){ .md-button }
 
 </div>
 
@@ -35,7 +35,7 @@ hide:
 
 ---
 
-![Educational Visual](images/educational_visual.png){ width="500", style="display: block; margin: 0 auto;" }
+![Educational Visual](../images/educational_visual.png){ width="500", style="display: block; margin: 0 auto;" }
 
 ## What can MAPIE do?
 
@@ -47,9 +47,9 @@ hide:
 
 Compute **prediction intervals** (regression, time series) or **prediction sets** (classification) using state-of-the-art conformal prediction methods.
 
-[Learn more →](theory/regression.md)
+[Learn more →](conformal-prediction/regression.md)
 <br>
-[Browse examples →](generated/regression/index.md)
+[Browse examples →](../generated/regression/index.md)
 
 </div>
 
@@ -59,9 +59,9 @@ Compute **prediction intervals** (regression, time series) or **prediction sets*
 
 **Control prediction errors** for complex tasks: multi-label classification, semantic segmentation, with probabilistic guarantees on precision and recall.
 
-[Learn more →](theory/risk-control.md)
+[Learn more →](risk-control/theory.md)
 <br>
-[Browse examples →](generated/risk_control/index.md)
+[Browse examples →](../generated/risk_control/index.md)
 
 </div>
 
@@ -81,7 +81,7 @@ Use **any model** — scikit-learn, TensorFlow, PyTorch — thanks to scikit-lea
 
 Implements **peer-reviewed** algorithms with **theoretical guarantees** under minimal assumptions, based on Conformal Prediction and Distribution-Free Inference.
 
-[Read the theory →](theory/regression.md)
+[Read the theory →](conformal-prediction/regression.md)
 
 </div>
 
@@ -99,35 +99,35 @@ Explore our gallery of hands-on examples covering all MAPIE use cases:
 ### :material-chart-line: Regression
 Prediction intervals for regression and time series.
 
-[Browse examples →](generated/regression/index.md)
+[Browse examples →](../generated/regression/index.md)
 </div>
 
 <div class="card" markdown>
 ### :material-shape: Classification
 Prediction sets for single-label and multi-label classification.
 
-[Browse examples →](generated/classification/index.md)
+[Browse examples →](../generated/classification/index.md)
 </div>
 
 <div class="card" markdown>
 ### :material-shield-alert: Risk Control
 Control risks for complex ML tasks with probabilistic guarantees.
 
-[Browse examples →](generated/risk_control/index.md)
+[Browse examples →](../generated/risk_control/index.md)
 </div>
 
 <div class="card" markdown>
 ### :material-target: Calibration
 Calibrate and evaluate probabilistic predictions.
 
-[Browse examples →](generated/calibration/index.md)
+[Browse examples →](../generated/calibration/index.md)
 </div>
 
 <div class="card" markdown>
 ### :material-swap-horizontal: Exchangeability Testing
 Test distribution shifts and monitor exchangeability assumptions.
 
-[Browse examples →](generated/exchangeability_testing/index.md)
+[Browse examples →](../generated/exchangeability_testing/index.md)
 </div>
 
 </div>
@@ -200,7 +200,7 @@ MAPIE has been developed through a collaboration between Capgemini Invent, Inria
 
 [![Capgemini Invent](https://www.capgemini.com/wp-content/themes/capgemini2020/assets/images/capgemini-invent.svg){ height="35px" }](https://www.capgemini.com/about-us/who-we-are/our-brands/capgemini-invent/)
 [![Inria](https://www.inria.fr/themes/custom/inria/logo/logo.svg){ height="35px" }](https://www.inria.fr/)
-[![Projet P16](images/logo_P16.png){ height="45px" }](https://p16.inria.fr/fr/)
+[![Projet P16](../images/logo_P16.png){ height="45px" }](https://p16.inria.fr/fr/)
 [![Michelin](https://agngnconpm.cloudimg.io/v7/https://dgaddcosprod.blob.core.windows.net/corporate-production/attachments/cls05tqdd9e0o0tkdghwi9m7n-clooe1x0c3k3x0tlu4cxi6dpn-bibendum-salut.full.png){ height="50px" }](https://www.michelin.com/en/)
 [![ENS Paris-Saclay](https://ens-paris-saclay.fr/sites/default/files/ENSPS_UPSAY_logo_couleur_2.png){ height="35px" }](https://ens-paris-saclay.fr/en)
 [![Confiance.ai](https://pbs.twimg.com/profile_images/1443838558549258264/EvWlv1Vq_400x400.jpg){ height="45px" }](https://www.confiance.ai/)

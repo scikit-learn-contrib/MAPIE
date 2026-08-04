@@ -60,12 +60,11 @@ tests can be updated when a representative labeled batch becomes available.
 
 ## Explore Exchangeability Testing in MAPIE
 
-- [Exchangeability theory](../theory/exchangeability.md) introduces
+- [Exchangeability theory](theory.md) introduces
   permutation tests, conformal p-values, martingales, and risk monitoring in
   detail.
-- [Exchangeability-testing examples](../generated/exchangeability_testing/index.md)
+- [Exchangeability-testing examples](../../generated/exchangeability_testing/index.md)
   cover fixed datasets, online streams, fitted regression and classification
   models, and deployed-model risk monitoring.
-- [Conformal Prediction overview](conformal-prediction.md) explains where the
+- [Conformal Prediction overview](../conformal-prediction/index.md) explains where the
   exchangeability assumption enters the conformal workflow.
-

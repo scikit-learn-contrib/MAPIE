@@ -16,7 +16,7 @@ choice has been made.
 | Conformalization | Compute conformity scores and their quantiles | Fitting or selecting the base model |
 | Test | Evaluate point predictions and intervals or sets | Training or conformalization |
 
-The [`train_conformalize_test_split`](../api/utils.md#mapie.utils.train_conformalize_test_split)
+The [`train_conformalize_test_split`](../../api/utils.md#mapie.utils.train_conformalize_test_split)
 utility creates these three subsets for a split-conformal workflow.
 
 ```python
@@ -66,7 +66,7 @@ mapie_regressor.conformalize(X_conf, y_conf)
 y_pred, y_intervals = mapie_regressor.predict_interval(X_test)
 ```
 
-![Split conformal with an untrained model](../images/cp_split.png){ width="800" }
+![Split conformal with an untrained model](../../images/cp_split.png){ width="800" }
 
 ### Use an Already-Fitted Model
 
@@ -88,7 +88,7 @@ mapie_regressor.conformalize(X_conf, y_conf)
 y_pred, y_intervals = mapie_regressor.predict_interval(X_test)
 ```
 
-![Split conformal with a pre-trained model](../images/cp_prefit.png){ width="800" }
+![Split conformal with a pre-trained model](../../images/cp_prefit.png){ width="800" }
 
 The corresponding classification class is `SplitConformalClassifier`, whose
 final method is `predict_set` rather than `predict_interval`.
@@ -124,12 +124,12 @@ mapie_regressor.fit_conformalize(X_development, y_development)
 y_pred, y_intervals = mapie_regressor.predict_interval(X_test)
 ```
 
-![Cross-conformal workflow](../images/cp_cross.png){ width="600" }
+![Cross-conformal workflow](../../images/cp_cross.png){ width="600" }
 
 Use `CrossConformalClassifier` and `predict_set` for classification. The exact
 coverage result depends on the selected cross-conformal method; consult the
-[regression theory](../theory/regression.md) or
-[classification theory](../theory/classification.md) before treating it as
+[regression theory](../conformal-prediction/regression.md) or
+[classification theory](../conformal-prediction/classification.md) before treating it as
 equivalent to the split-conformal guarantee.
 
 ## Split and Cross-Conformal Trade-offs
@@ -162,5 +162,5 @@ y_pred = controller.predict(X_test)
 ```
 
 Do not reuse the calibration data to choose the model or risk-control target.
-The [Risk Control overview](../introductions/risk-control.md) describes the full
+The [Risk Control overview](../risk-control/index.md) describes the full
 workflow and its assumptions.

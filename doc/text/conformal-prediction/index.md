@@ -37,15 +37,15 @@ narrower outputs while preserving the target coverage.
 
 ## Explore Conformal Prediction in MAPIE
 
-- [Regression theory](../theory/regression.md) explains prediction intervals
+- [Regression theory](regression.md) explains prediction intervals
   and the split, cross-validation, jackknife, and bootstrap-based methods.
-- [Classification theory](../theory/classification.md) explains prediction sets
+- [Classification theory](classification.md) explains prediction sets
   and the LAC, APS, RAPS, and Top-K methods.
-- [Conformity scores](../theory/conformity-scores.md) describes how MAPIE
+- [Conformity scores](conformity-scores.md) describes how MAPIE
   measures whether a prediction agrees with an observation.
 - [Conformalization set](../getting-started/split-cross-conformal.md) compares
   split- and cross-conformal workflows.
-- [Metrics](../theory/metrics-conformal.md) covers coverage, interval width,
+- [Metrics](metrics.md) covers coverage, interval width,
   prediction-set size, and conditional coverage diagnostics.
-- [Conditional guarantees](../theory/conditional-guarantees.md) introduces
+- [Conditional guarantees](conditional-guarantees.md) introduces
   methods that go beyond marginal coverage.

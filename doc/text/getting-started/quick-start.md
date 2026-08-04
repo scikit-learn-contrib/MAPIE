@@ -200,9 +200,9 @@ For multi-label classification, use
   conformal predictors and risk controllers.
 - [Conformalization set](split-cross-conformal.md) explains split- and
   cross-conformal workflows and their trade-offs.
-- [Conformal Prediction overview](../introductions/conformal-prediction.md)
+- [Conformal Prediction overview](../conformal-prediction/index.md)
   introduces prediction intervals, prediction sets, and coverage guarantees.
-- [Risk Control overview](../introductions/risk-control.md) explains risk
+- [Risk Control overview](../risk-control/index.md) explains risk
   targets, confidence levels, and the available methods.
 - [All examples](../all-examples/index.md) contains complete runnable examples
   for every MAPIE application area.

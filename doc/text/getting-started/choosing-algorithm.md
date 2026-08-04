@@ -55,7 +55,7 @@ workflows.
 
 Conformal prediction provides marginal coverage by default. If the guarantee
 must hold across selected subgroups or feature-defined functions, review the
-[conditional-guarantees documentation](../theory/conditional-guarantees.md)
+[conditional-guarantees documentation](../conformal-prediction/conditional-guarantees.md)
 and its additional assumptions.
 
 ## Choosing a Risk Controller
@@ -101,8 +101,8 @@ Choose the method according to the metric and type of guarantee:
 | Control precision with specified confidence | LTT | i.i.d. data | High-probability risk control |
 
 CRC is the default for recall and does not require a `confidence_level`. RCPS
-and LTT do require one. The detailed [Risk Control overview](../introductions/risk-control.md)
-and [theoretical description](../theory/risk-control.md) explain these
+and LTT do require one. The detailed [Risk Control overview](../risk-control/index.md)
+and [theoretical description](../risk-control/theory.md) explain these
 guarantees and assumptions.
 
 !!! warning "Risk control can be infeasible"
@@ -114,7 +114,7 @@ guarantees and assumptions.
 ## Check the Data Assumptions
 
 Distribution shifts can invalidate conformal prediction and risk-control
-guarantees. Use the [Exchangeability Testing overview](../introductions/exchangeability-testing.md)
+guarantees. Use the [Exchangeability Testing overview](../exchangeability-testing/index.md)
 to choose between fixed-dataset tests, online martingale tests, and deployed
 model risk monitoring. A test can find evidence against exchangeability, but
 cannot prove that every possible violation is absent.

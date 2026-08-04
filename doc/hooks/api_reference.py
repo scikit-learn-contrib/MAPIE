@@ -204,7 +204,7 @@ These estimators require the optional `conditional` dependency:
 pip install "mapie[conditional]"
 ```
 
-See the [theoretical description](../theory/conditional-guarantees.md) and the
+See the [theoretical description](../text/conformal-prediction/conditional-guarantees.md) and the
 runnable
 [regression](../generated/regression/2-advanced-analysis/plot_conditional_conformal_regression_groups.md)
 and
@@ -290,7 +290,7 @@ examples.
                 ),
             ),
             """
-See [Exchangeability Tests](../theory/exchangeability.md) for conceptual
+See [Exchangeability Tests](../text/exchangeability-testing/theory.md) for conceptual
 background and guidance on selecting a test.
 """,
         ),

@@ -61,13 +61,12 @@ decision metric.
 
 ## Explore Risk Control in MAPIE
 
-- [Risk-control theory](../theory/risk-control.md) compares CRC, RCPS, and LTT
+- [Risk-control theory](theory.md) compares CRC, RCPS, and LTT
   and states their guarantees in detail.
-- [LLM risk control](../theory/llm-risk-control.md) explains how risk control can
+- [LLM risk control](llm-risk-control.md) explains how risk control can
   be applied to an LLM-as-a-judge workflow.
-- [Risk-control examples](../generated/risk_control/index.md) demonstrate binary
+- [Risk-control examples](../../generated/risk_control/index.md) demonstrate binary
   classification, multi-label classification, semantic segmentation, custom
   risks, and multi-risk settings.
 - [Choosing the right algorithm](../getting-started/choosing-algorithm.md) places
   risk control within MAPIE's broader set of tools.
-
