@@ -187,6 +187,10 @@ Return $\hat{\Lambda} = \mathcal{A}(\{p_j\})$ — the set of $\lambda$ values th
 !!! success "Guarantee"
     $\mathbb{P}(R(\mathcal{T}_{\lambda}) \leq \alpha) \geq 1 - \delta$ for all $\lambda \in \hat{\Lambda}$.
 
+The [binary-classification validity notebook](https://github.com/scikit-learn-contrib/MAPIE/blob/master/notebooks/risk_control/theoretical_validity_tests.ipynb)
+empirically checks this LTT guarantee with repeated random- and
+logistic-classifier experiments.
+
 ---
 
 ## References

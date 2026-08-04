@@ -10,6 +10,10 @@
 
 The methods in `mapie.regression` use various resampling methods based on the **jackknife strategy** recently introduced by Foygel-Barber et al. (2020) [^1]. They allow the user to estimate robust prediction intervals with any kind of machine learning model for regression purposes on single-output data.
 
+The [regression tutorial notebook](https://github.com/scikit-learn-contrib/MAPIE/blob/master/notebooks/regression/tutorial_regression.ipynb)
+compares these strategies on homoscedastic, heteroscedastic, and
+out-of-distribution data with several scikit-learn-compatible regressors.
+
 ## Mathematical Setting
 
 For a regression problem in a standard i.i.d. case, our training data $(X, Y) = \{(x_1, y_1), \ldots, (x_n, y_n)\}$ has an unknown distribution $P_{X, Y}$. We assume that $Y = \mu(X) + \epsilon$ where $\mu$ is the model function and $\epsilon_i \sim P_{Y \mid X}$ is the noise.
@@ -122,6 +126,10 @@ To reduce computational time, one can use a **cross-validation** approach instea
 !!! success "Guarantee"
     Like jackknife+, CV+ guarantees coverage ≥ $1-2\alpha$. The jackknife+ can be viewed as a special case where $K = n$.
 
+For an applied example, the [exoplanet-mass notebook](https://github.com/scikit-learn-contrib/MAPIE/blob/master/notebooks/regression/exoplanets.ipynb)
+uses CV+ and other MAPIE strategies to quantify uncertainty in mass predictions
+from astronomical observations.
+
 ---
 
 ## 7. The CV and CV-Minmax Methods
@@ -193,6 +201,10 @@ Key features:
 
 !!! tip "Trade-off"
     The bigger the training set, the better the covering guarantee. But if the model is not refitted, larger training sets slow down the residual update.
+
+The [time-series change-point notebook](https://github.com/scikit-learn-contrib/MAPIE/blob/master/notebooks/regression/ts-changepoint.ipynb)
+shows how EnbPI and residual updates respond to a simulated abrupt change in
+electricity demand.
 
 ---
 

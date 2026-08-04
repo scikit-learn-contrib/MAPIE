@@ -92,6 +92,11 @@ The idea is to maintain a "wealth" or cumulative evidence measure as you generat
 
 This is implemented in MAPIE for anytime-valid Monte-Carlo tests ([Fischer & Ramdas (2025)](https://doi.org/10.1093/jrsssb/qkaf014)).
 
+For a numerical implementation check, the
+[gamma-exponential mixture bound notebook](https://github.com/scikit-learn-contrib/MAPIE/blob/master/notebooks/echangeability_test/simple_compare_gamma_exponential_mixture_bound.ipynb)
+compares MAPIE's bound with the corresponding `confseq` implementation over
+several parameter choices.
+
 ## Online Tests: Conformal P-Values and Alternative Approaches
 
 In many scenarios, the dataset is not fixed: observations arrive continuously. You want to detect exchangeability violations as soon as they occur, ideally in real time. This is where **online tests** come in.
