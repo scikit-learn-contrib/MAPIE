@@ -100,13 +100,16 @@ class QuantileRegressionScore(BaseRegressionScore):
 class AbsoluteQuantileRegressionScore(QuantileRegressionScore):
     """
     Absolute conformity score for quantile regression.
+
+    Notes
+    -----
+    `sym` is not exposed: a single distribution of absolute distances calibrates both
+    bounds, so the score is symmetric by construction. Use `QuantileRegressionScore` for
+    the asymmetric variant, which keeps one signed distribution per side.
     """
 
-    def __init__(
-        self,
-        sym: bool = True,
-    ) -> None:
-        super().__init__(sym=sym, consistency_check=False)
+    def __init__(self) -> None:
+        super().__init__(sym=True, consistency_check=False)
 
     def get_conformity_scores(
         self, y: NDArray[np.float64], y_pred: NDArray[np.float64], **kwargs
