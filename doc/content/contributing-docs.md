@@ -25,8 +25,8 @@ Open [http://127.0.0.1:8787](http://127.0.0.1:8787) in your browser. Pages reloa
 ```
 mkdocs.yml                  # Main configuration
 doc/
+├── index.md                # Homepage
 ├── content/                # Handwritten documentation
-│   ├── index.md            # Homepage
 │   ├── getting-started/    # Getting started guides
 │   ├── conformal-prediction/
 │   ├── risk-control/

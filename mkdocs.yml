@@ -147,7 +147,7 @@ extra:
 copyright: Copyright &copy; 2021 - 2026 MAPIE Team — BSD-3-Clause License
 
 nav:
-  - Home: content/index.md
+  - Home: index.md
   - Getting Started:
     - Quick Start: content/getting-started/quick-start.md
     - Choosing the Right Algorithm: content/getting-started/choosing-algorithm.md

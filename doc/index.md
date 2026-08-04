@@ -6,7 +6,7 @@ hide:
 
 <div class="hero" markdown>
 
-![MAPIE Logo](../images/mapie_logo_nobg_cut.png){ width="400" }
+![MAPIE Logo](images/mapie_logo_nobg_cut.png){ width="400" }
 
 # MAPIE — Model Agnostic Prediction Interval Estimator
 
@@ -20,15 +20,15 @@ hide:
 [![Downloads](https://img.shields.io/pypi/dm/mapie)](https://pypistats.org/packages/mapie)
 [![Conda](https://img.shields.io/conda/vn/conda-forge/mapie)](https://anaconda.org/conda-forge/mapie)
 
-[Get Started :material-rocket-launch:](getting-started/quick-start.md){ .md-button .md-button--primary }
-[API Reference :material-book-open-variant:](../api/index.md){ .md-button }
+[Get Started :material-rocket-launch:](content/getting-started/quick-start.md){ .md-button .md-button--primary }
+[API Reference :material-book-open-variant:](api/index.md){ .md-button }
 
 </div>
 
 ---
 
 <div class="announcement" markdown>
-:tada: **MAPIE v1 is live!** This new version introduces major changes to the API. Check out the [release notes](getting-started/v1-release-notes.md).
+:tada: **MAPIE v1 is live!** This new version introduces major changes to the API. Check out the [release notes](content/getting-started/v1-release-notes.md).
 
 :rocket: **MAPIE in 2026** — Explore new support for **risk control** in
 LLM-as-Judge and image segmentation, **exchangeability tests**, and adaptive
@@ -38,7 +38,7 @@ for the latest changes.
 
 ---
 
-![Educational Visual](../images/educational_visual.png){ width="500", style="display: block; margin: 0 auto;" }
+![Educational Visual](images/educational_visual.png){ width="500", style="display: block; margin: 0 auto;" }
 
 <p style="text-align: center;"><small>Image credits: Cemrecan Yurtman
 (portrait) and hogrmahmood (zebra-horse hybrid).</small></p>
@@ -53,9 +53,9 @@ for the latest changes.
 
 Compute **prediction intervals** (regression, time series) or **prediction sets** (classification) using state-of-the-art conformal prediction methods.
 
-[Learn more →](conformal-prediction/regression.md)
+[Learn more →](content/conformal-prediction/regression.md)
 <br>
-[Browse examples →](../generated/regression/index.md)
+[Browse examples →](generated/regression/index.md)
 
 </div>
 
@@ -65,9 +65,9 @@ Compute **prediction intervals** (regression, time series) or **prediction sets*
 
 **Control prediction errors** for complex tasks: multi-label classification, semantic segmentation, with probabilistic guarantees on precision and recall.
 
-[Learn more →](risk-control/theory.md)
+[Learn more →](content/risk-control/theory.md)
 <br>
-[Browse examples →](../generated/risk_control/index.md)
+[Browse examples →](generated/risk_control/index.md)
 
 </div>
 
@@ -77,7 +77,7 @@ Compute **prediction intervals** (regression, time series) or **prediction sets*
 
 Use **any model** — scikit-learn, TensorFlow, PyTorch — thanks to scikit-learn-compatible wrappers. Part of the **scikit-learn-contrib** ecosystem.
 
-[Get started →](getting-started/quick-start.md)
+[Get started →](content/getting-started/quick-start.md)
 
 </div>
 
@@ -87,7 +87,7 @@ Use **any model** — scikit-learn, TensorFlow, PyTorch — thanks to scikit-lea
 
 Implements **peer-reviewed** algorithms with **theoretical guarantees** under minimal assumptions, based on Conformal Prediction and Distribution-Free Inference.
 
-[Read the theory →](conformal-prediction/regression.md)
+[Read the theory →](content/conformal-prediction/regression.md)
 
 </div>
 
@@ -105,35 +105,35 @@ Explore our gallery of hands-on examples covering all MAPIE use cases:
 ### :material-chart-line: Regression
 Prediction intervals for regression and time series.
 
-[Browse examples →](../generated/regression/index.md)
+[Browse examples →](generated/regression/index.md)
 </div>
 
 <div class="card" markdown>
 ### :material-shape: Classification
 Prediction sets for single-label and multi-label classification.
 
-[Browse examples →](../generated/classification/index.md)
+[Browse examples →](generated/classification/index.md)
 </div>
 
 <div class="card" markdown>
 ### :material-shield-alert: Risk Control
 Control risks for complex ML tasks with probabilistic guarantees.
 
-[Browse examples →](../generated/risk_control/index.md)
+[Browse examples →](generated/risk_control/index.md)
 </div>
 
 <div class="card" markdown>
 ### :material-target: Calibration
 Calibrate and evaluate probabilistic predictions.
 
-[Browse examples →](../generated/calibration/index.md)
+[Browse examples →](generated/calibration/index.md)
 </div>
 
 <div class="card" markdown>
 ### :material-swap-horizontal: Exchangeability Testing
 Test distribution shifts and monitor exchangeability assumptions.
 
-[Browse examples →](../generated/exchangeability_testing/index.md)
+[Browse examples →](generated/exchangeability_testing/index.md)
 </div>
 
 </div>
@@ -146,14 +146,14 @@ Test distribution shifts and monitor exchangeability assumptions.
 pip install mapie
 ```
 
-See the [Quick Start](getting-started/quick-start.md) for other installation
+See the [Quick Start](content/getting-started/quick-start.md) for other installation
 methods, requirements, and a first example.
 
 ---
 
 ## :memo: Cite MAPIE
 
-Using MAPIE in research? See [Citation and references](about/citation.md)
+Using MAPIE in research? See [Citation and references](content/about/citation.md)
 for the preferred citation, BibTeX, foundational references, and project
 affiliations.
 
