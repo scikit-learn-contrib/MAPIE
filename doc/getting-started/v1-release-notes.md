@@ -23,7 +23,7 @@ The classification and regression APIs have been thoroughly revamped (except for
 | `MapieClassifier` | `SplitConformalClassifier`, `CrossConformalClassifier` |
 | `MapieQuantileRegressor` | `ConformalizedQuantileRegressor` |
 | `MapieTimeSeriesRegressor` | `TimeSeriesRegressor` |
-| `MapieMultiLabelClassifier` | `PrecisionRecallController` |
+| `MapieMultiLabelClassifier` | `MultiLabelClassificationController` |
 | `MapieCalibrator` | `TopLabelCalibrator` |
 
 ### Key Changes
@@ -139,7 +139,19 @@ Replaced with `confidence_level` (equivalent to `1 - alpha`). Now set at initial
 
 #### Risk Control
 
-- `MapieMultiLabelClassifier` → **`PrecisionRecallController`**
+- `MapieMultiLabelClassifier` → **`MultiLabelClassificationController`**
+- `MultiLabelClassificationController` now receives the fitted model's
+  `predict_proba` method through `predict_function`, then uses
+  `.calibrate(X_calibrate, y_calibrate)` and `.predict(X_test)`.
+- `BinaryClassificationController` controls built-in, custom, or multiple
+  binary risks by selecting one- or multi-dimensional prediction parameters.
+- `SemanticSegmentationController` extends multi-label risk control to
+  pixel-level prediction sets.
+
+!!! note "Early MAPIE v1 releases"
+    `MultiLabelClassificationController` was named
+    `PrecisionRecallController` in early v1 releases. The latter name is no
+    longer part of the public API.
 
 #### Calibration
 

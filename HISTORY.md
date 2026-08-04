@@ -23,6 +23,9 @@
   risk control, and exchangeability testing.
 - Add high-level documentation overviews for the main concepts and expose them
   consistently in the site navigation.
+- Refresh the Getting Started guides with current v1 conformal workflows, a
+  runnable binary risk-control example, controller-selection guidance, and the
+  latest risk-control class names.
 
 ## 1.x.x (2026-xx-xx)
 

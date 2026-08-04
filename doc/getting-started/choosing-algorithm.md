@@ -1,35 +1,120 @@
 # Choosing the Right Algorithm
 
-Following is a simple decision tree to help you get started quickly with MAPIE. Reality is of course a bit more complex, so feel free to browse the documentation for nuanced explanations.
+Start with the guarantee or diagnostic that your application needs. The table
+below directs you to the appropriate MAPIE area before you choose a specific
+class.
 
-<figure markdown>
-  ![Decision Tree](../images/decision_tree.png)
-  <figcaption>Decision tree for choosing the right MAPIE algorithm.</figcaption>
-</figure>
+| Goal | MAPIE area | Output |
+|---|---|---|
+| Quantify uncertainty around a regression prediction | Conformal prediction | Prediction interval |
+| Return several plausible classes | Conformal prediction | Prediction set |
+| Make probability scores reflect observed frequencies | Calibration | Calibrated probabilities |
+| Meet a target precision, recall, or custom decision metric | Risk control | Controlled decision rule |
+| Check assumptions or detect deployment shifts | Exchangeability testing | Test or monitoring decision |
 
----
+## Choosing a Conformal Predictor
 
-## Key Criteria
+Most conformal prediction methods require the data used to compute conformity
+scores and future observations to be exchangeable. First determine whether a
+separate, representative conformalization set is available and whether the base
+model is already fitted.
 
-### Measuring Prediction Uncertainty
+| Situation | Recommended starting point |
+|---|---|
+| Regression with a separate conformalization set | `SplitConformalRegressor` |
+| Classification with a separate conformalization set | `SplitConformalClassifier` |
+| Small dataset where a held-out set would be costly | `CrossConformalRegressor` or `CrossConformalClassifier` |
+| Regression with bootstrap resampling | `JackknifeAfterBootstrapRegressor` |
+| Quantile-regression model | `ConformalizedQuantileRegressor` |
+| Ordered observations with gradually available labels | `TimeSeriesRegressor` |
+| Coverage required across user-defined feature groups | `ConditionalSplitConformalRegressor` or `ConditionalSplitConformalClassifier` |
 
-MAPIE can **measure prediction uncertainty** in the form of computing prediction sets (for classification) or intervals (for regression, including time series), using conformal prediction methods.
+### Split or Cross Conformal?
 
-Many methods assume that data is [exchangeable](https://en.wikipedia.org/wiki/Exchangeable_random_variables), so exchangeability is a **primary criterion** when choosing a method.
+- **Split conformal** is the simplest and fastest option. Fit the model on one
+  subset and compute conformity scores on another. Set `prefit=True` when the
+  supplied model is already fitted; otherwise use `prefit=False` and call
+  `fit` before `conformalize`.
+- **Cross conformal** computes out-of-fold conformity scores with
+  `fit_conformalize`. It uses limited data more efficiently but fits several
+  models and is therefore more computationally expensive.
 
-!!! info "Dataset Size"
-    Another important criterion is the **size of the conformalization dataset**:
+There is no universal dataset-size cutoff between the two. The decision depends
+on model-training cost, the amount of representative data available, and the
+precision needed when estimating a coverage quantile. See the
+[conformalization-set guide](split-cross-conformal.md) for the complete
+workflows.
 
-    - For **small datasets**, cross conformal methods are necessary to use the data as efficiently as possible.
-    - For **larger datasets** (1000+ samples[^1]), split conformal methods are recommended as they are simpler (do not require model retraining).
+### Regression or Classification?
 
-### Controlling Prediction Errors
+- Choose a **regression** conformalizer when the target is numerical and the
+  desired output is an interval.
+- Choose a **classification** conformalizer when the target is categorical and
+  the desired output is a set of labels. The conformity score (`"lac"`,
+  `"aps"`, `"raps"`, or `"top_k"`) controls how those sets are constructed.
 
-MAPIE also implements **risk control methods** to **control prediction errors**:
+Conformal prediction provides marginal coverage by default. If the guarantee
+must hold across selected subgroups or feature-defined functions, review the
+[conditional-guarantees documentation](../theory/conditional-guarantees.md)
+and its additional assumptions.
 
-- **Binary classification**: any metric (or set of metrics) can be controlled — precision, accuracy, or custom functions. The prediction parameters to tune (e.g., a threshold on predicted probability) can be multi-dimensional for complex use cases.
-- **Multilabel classification & image segmentation**: only the precision and recall metrics can be controlled.
+## Choosing a Risk Controller
 
----
+Use risk control when the required guarantee is about a decision metric rather
+than prediction-set or interval coverage. All controllers receive a prediction
+function from an already-fitted model and use separate labeled data in their
+`calibrate` method.
 
-[^1]: Angelopoulos, A. N., & Bates, S. (2021). *A gentle introduction to conformal prediction and distribution-free uncertainty quantification.* arXiv preprint arXiv:2107.07511.
+| Task | Controller | Supported starting points |
+|---|---|---|
+| Binary classification | `BinaryClassificationController` | Precision, recall, accuracy, false-positive rate, predicted-positive fraction, multiple risks, or a custom `BinaryRisk` |
+| Multi-label classification | `MultiLabelClassificationController` | Recall with CRC or RCPS; precision with LTT |
+| Semantic segmentation | `SemanticSegmentationController` | Recall with CRC or RCPS; precision with LTT |
+
+### Binary Classification
+
+`BinaryClassificationController` tests candidate decision parameters using the
+Learn Then Test framework. For a standard probabilistic classifier, the
+parameter is a probability threshold. It can also control multiple risks at
+once or tune multi-dimensional parameters through a custom prediction
+function.
+
+Use it when you can state:
+
+1. the metric or risk to control;
+2. the minimum performance or maximum risk level (`target_level`);
+3. the confidence of the guarantee (`confidence_level`);
+4. the candidate decision parameters, if the default threshold grid is not
+   suitable.
+
+See the [binary risk-control quick start](quick-start.md#4-risk-control-guaranteed-decision-thresholds)
+for a runnable example.
+
+### Multi-label Classification and Semantic Segmentation
+
+Choose the method according to the metric and type of guarantee:
+
+| Goal | Method | Assumption | Guarantee |
+|---|---|---|---|
+| Control expected recall | CRC | Exchangeable data | Expected-risk control |
+| Control recall with specified confidence | RCPS | i.i.d. data | High-probability risk control |
+| Control precision with specified confidence | LTT | i.i.d. data | High-probability risk control |
+
+CRC is the default for recall and does not require a `confidence_level`. RCPS
+and LTT do require one. The detailed [Risk Control overview](../introductions/risk-control.md)
+and [theoretical description](../theory/risk-control.md) explain these
+guarantees and assumptions.
+
+!!! warning "Risk control can be infeasible"
+    A controller may find no candidate parameter that supports the requested
+    target and confidence level. This is a valid outcome, not a software error.
+    More representative calibration data or a better predictive model may be
+    necessary.
+
+## Check the Data Assumptions
+
+Distribution shifts can invalidate conformal prediction and risk-control
+guarantees. Use the [Exchangeability Testing overview](../introductions/exchangeability-testing.md)
+to choose between fixed-dataset tests, online martingale tests, and deployed
+model risk monitoring. A test can find evidence against exchangeability, but
+cannot prove that every possible violation is absent.
