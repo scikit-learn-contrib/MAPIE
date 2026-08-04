@@ -30,12 +30,18 @@ hide:
 <div class="announcement" markdown>
 :tada: **MAPIE v1 is live!** This new version introduces major changes to the API. Check out the [release notes](getting-started/v1-release-notes.md).
 
-:rocket: **MAPIE Roadmap 2026** — New features are coming: **risk control** for LLM-as-Judge and image segmentation, **exchangeability tests**, and improved **adaptability** for conformal prediction methods. [Learn more](https://github.com/scikit-learn-contrib/MAPIE/discussions/822).
+:rocket: **MAPIE in 2026** — Explore new support for **risk control** in
+LLM-as-Judge and image segmentation, **exchangeability tests**, and adaptive
+conformal prediction methods. See [GitHub Releases](https://github.com/scikit-learn-contrib/MAPIE/releases)
+for the latest changes.
 </div>
 
 ---
 
 ![Educational Visual](../images/educational_visual.png){ width="500", style="display: block; margin: 0 auto;" }
+
+<p style="text-align: center;"><small>Image credits: Cemrecan Yurtman
+(portrait) and hogrmahmood (zebra-horse hybrid).</small></p>
 
 ## What can MAPIE do?
 
@@ -136,77 +142,20 @@ Test distribution shifts and monitor exchangeability assumptions.
 
 ## :zap: Quick Install
 
-=== "pip"
-
-    ```bash
-    pip install mapie
-    ```
-
-=== "conda"
-
-    ```bash
-    conda install -c conda-forge mapie
-    ```
-
-=== "From source"
-
-    ```bash
-    pip install git+https://github.com/scikit-learn-contrib/MAPIE
-    ```
-
-**Requirements:** Python ≥3.9 · NumPy ≥1.23 · scikit-learn ≥1.4
-
----
-
-## :books: References
-
-1. Vovk, Vladimir, Alexander Gammerman, and Glenn Shafer. *Algorithmic Learning in a Random World.* Springer Nature, 2022.
-2. Angelopoulos, Anastasios N., and Stephen Bates. "Conformal prediction: A gentle introduction." *Foundations and Trends® in Machine Learning* 16.4 (2023): 494-591.
-3. Rina Foygel Barber, Emmanuel J. Candès, Aaditya Ramdas, and Ryan J. Tibshirani. "Predictive inference with the jackknife+." *Ann. Statist.*, 49(1):486–507, (2021).
-4. Kim, Byol, Chen Xu, and Rina Barber. "Predictive inference is free with the jackknife+-after-bootstrap." *NeurIPS* 33 (2020).
-5. Sadinle, Mauricio, Jing Lei, and Larry Wasserman. "Least ambiguous set-valued classifiers with bounded error levels." *JASA* 114.525 (2019).
-6. Romano, Yaniv, Matteo Sesia, and Emmanuel Candes. "Classification with valid and adaptive coverage." *NeurIPS* 33 (2020).
-7. Angelopoulos, Anastasios, et al. "Uncertainty sets for image classifiers using conformal prediction." *ICLR* (2021).
-8. Romano, Yaniv, Evan Patterson, and Emmanuel Candes. "Conformalized quantile regression." *NeurIPS* 32 (2019).
-9. Xu, Chen, and Yao Xie. "Conformal prediction interval for dynamic time-series." *ICML*. PMLR, (2021).
-10. Bates, Stephen, et al. "Distribution-free, risk-controlling prediction sets." *JACM* 68.6 (2021).
-11. Angelopoulos, et al. "Conformal Risk Control." (2022).
-12. Angelopoulos, et al. "Learn Then Test: Calibrating Predictive Algorithms to Achieve Risk Control." (2022).
-
----
-
-## :memo: Citation
-
-If you use MAPIE in your research, please cite:
-
-> Cordier, Thibault, et al. "Flexible and systematic uncertainty estimation with conformal prediction via the MAPIE library." *Conformal and Probabilistic Prediction with Applications.* PMLR, 2023.
-
-```bibtex
-@inproceedings{Cordier_Flexible_and_Systematic_2023,
-    author = {Cordier, Thibault and Blot, Vincent and Lacombe, Louis and Morzadec, Thomas and Capitaine, Arnaud and Brunel, Nicolas},
-    booktitle = {Conformal and Probabilistic Prediction with Applications},
-    title = {{Flexible and Systematic Uncertainty Estimation with Conformal Prediction via the MAPIE library}},
-    year = {2023}
-}
+```bash
+pip install mapie
 ```
 
+See the [Quick Start](getting-started/quick-start.md) for other installation
+methods, requirements, and a first example.
+
 ---
 
-## :handshake: Affiliations
+## :memo: Cite MAPIE
 
-MAPIE has been developed through a collaboration between Capgemini Invent, Inria, Michelin, ENS Paris-Saclay, and with the financial support from Région Ile de France and Confiance.ai.
-
-<div class="affiliations" markdown>
-
-[![Capgemini Invent](https://www.capgemini.com/wp-content/themes/capgemini2020/assets/images/capgemini-invent.svg){ height="35px" }](https://www.capgemini.com/about-us/who-we-are/our-brands/capgemini-invent/)
-[![Inria](https://www.inria.fr/themes/custom/inria/logo/logo.svg){ height="35px" }](https://www.inria.fr/)
-[![Projet P16](../images/logo_P16.png){ height="45px" }](https://p16.inria.fr/fr/)
-[![Michelin](https://agngnconpm.cloudimg.io/v7/https://dgaddcosprod.blob.core.windows.net/corporate-production/attachments/cls05tqdd9e0o0tkdghwi9m7n-clooe1x0c3k3x0tlu4cxi6dpn-bibendum-salut.full.png){ height="50px" }](https://www.michelin.com/en/)
-[![ENS Paris-Saclay](https://ens-paris-saclay.fr/sites/default/files/ENSPS_UPSAY_logo_couleur_2.png){ height="35px" }](https://ens-paris-saclay.fr/en)
-[![Confiance.ai](https://pbs.twimg.com/profile_images/1443838558549258264/EvWlv1Vq_400x400.jpg){ height="45px" }](https://www.confiance.ai/)
-[![Île-de-France](https://www.iledefrance.fr/sites/default/files/logo/2024-02/logoGagnerok.svg){ height="35px" }](https://www.iledefrance.fr/)
-
-</div>
+Using MAPIE in research? See [Citation and references](about/citation.md)
+for the preferred citation, BibTeX, foundational references, and project
+affiliations.
 
 ---
 

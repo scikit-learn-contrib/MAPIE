@@ -185,5 +185,7 @@ nav:
     - Mondrian: text/q-and-a/mondrian.md
   # Populated from the public Python API by doc/hooks/api_reference.py.
   - API Reference: []
+  - About:
+    - Citation and References: text/about/citation.md
   - Contributing:
     - Documentation Guide: text/contributing-docs.md

@@ -32,6 +32,9 @@ used with models from other frameworks.
     pip install git+https://github.com/scikit-learn-contrib/MAPIE
     ```
 
+MAPIE requires Python 3.9 or later, NumPy 1.23 or later, and scikit-learn 1.4
+or later.
+
 !!! warning "Notebook users"
     After installing, upgrading, or downgrading MAPIE in Jupyter, Colab, or
     Kaggle, restart the kernel before importing MAPIE. Otherwise, Python may
