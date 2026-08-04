@@ -4,11 +4,11 @@ Data with constant uncertainty
 
 
 
-We show here how to use various MAPIE methods on data with homoscedastic data.
+We show here how to use various MAPIE methods on homoscedastic data.
 
 `CrossConformalRegressor`,
 `JackknifeAfterBootstrapRegressor`,
-`ConformalizedQuantileRegressor`,
+`ConformalizedQuantileRegressor`
 are used to estimate the prediction intervals of 1D homoscedastic
 data using different strategies.
 """
@@ -42,17 +42,16 @@ def get_homoscedastic_data(
     n_train: int = 200, n_true: int = 200, sigma: float = 0.1
 ) -> Tuple[NDArray, NDArray, NDArray, NDArray, NDArray]:
     """
-    Generate one-dimensional data from a given function,
-    number of training and test samples and a given standard
-    deviation for the noise.
-    The training data data is generated from an exponential distribution.
+    Generate one-dimensional data from a given function and specified numbers
+    of training and test samples, with a given noise standard deviation.
+    The training data is generated from an exponential distribution.
 
     Parameters
     ----------
     n_train : int, optional
-        Number of training samples, by default  200.
+        Number of training samples, by default 200.
     n_true : int, optional
-        Number of test samples, by default 1000.
+        Number of test samples, by default 200.
     sigma : float, optional
         Standard deviation of noise, by default 0.1
 

@@ -7,9 +7,9 @@ Coverage validity for regression tasks
 This example verifies that conformal claims are valid in the MAPIE package
 when using the CP prefit/split methods.
 
-This notebook is inspired from the notebook used for episode "Uncertainty
+This notebook is inspired by the notebook used for the episode "Uncertainty
 Quantification: Avoid these Missteps in Validating Your Conformal Claims!"
-(link to the [orginal notebook](https://github.com/mtorabirad/MLBoost)).
+(link to the [original notebook](https://github.com/mtorabirad/MLBoost)).
 
 For more details on theoretical guarantees:
 
@@ -198,7 +198,7 @@ X_train, X_conformalize_test, y_train, y_conformalize_test = train_test_split(
 model = DecisionTreeRegressor(random_state=RANDOM_STATE)
 model.fit(X_train, y_train)
 
-# Compute theorical bounds and exact coverage to attempt
+# Compute theoretical bounds and exact target coverage
 lower_bound = confidence_level
 upper_bound = confidence_level + 1 / (n_conformalize + 1)
 exact_cov = (np.ceil((n_conformalize + 1) * confidence_level)) / (n_conformalize + 1)
@@ -494,7 +494,7 @@ for method, params in STRATEGIES.items():
         final_coverage_dict[method][confidence_level].append(final_coverage)
 
 
-# Theorical bounds and exact coverage to attempt
+# Theoretical bounds and exact target coverage
 def lower_bound_fct(delta):
     return delta * np.ones_like(n_calib_array)
 

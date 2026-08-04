@@ -4,17 +4,15 @@ Conformalized quantile regression on gamma distributed data
 
 
 
-We will use the sklearn california housing dataset as the base for the
-comparison of the different methods available on MAPIE. Two classes will
-be used: `ConformalizedQuantileRegressor` for CQR.
-We use `CrossConformalRegressor` and
+We use scikit-learn's California housing dataset to compare different methods
+available in MAPIE. We use `ConformalizedQuantileRegressor` for CQR, and
+`CrossConformalRegressor` and
 `JackknifeAfterBootstrapRegressor` for the other methods.
 
 For this example, the estimator will be `LGBMRegressor` with
-`objective="quantile"` as this is a necessary component for CQR, the
-regression needs to be from a quantile regressor.
+`objective="quantile"`, because CQR requires a quantile regressor.
 
-We then compare the coverage and the intervals width.
+We then compare the coverage and interval widths.
 """
 
 # mkdocs_gallery_thumbnail_number = 3
@@ -228,9 +226,9 @@ def plot_prediction_intervals(
 
 ##############################################################################
 # Here, we use MAPIE to return the predictions and prediction intervals.
-# We will use an `confidence_level=CONFIDENCE_LEVEL`, (this is the target
-# coverage for our prediction intervals).
-# Note that that we will use symmetrical residuals for the CQR.
+# We will use `confidence_level=CONFIDENCE_LEVEL` as the target coverage for
+# our prediction intervals.
+# Note that we will use symmetrical residuals for CQR.
 
 
 STRATEGIES = {
@@ -335,8 +333,8 @@ def get_coverages_widths_by_bins(
     want, y_test, y_pred, lower_bound, upper_bound, STRATEGIES, bins
 ):
     """
-    Given the results from MAPIE, this function split the data
-    according the the test values into bins and calculates coverage
+    Given the results from MAPIE, this function splits the data
+    according to the test values into bins and calculates coverage
     or width per bin.
     """
     cuts = []
@@ -379,7 +377,7 @@ binned_data = get_coverages_widths_by_bins(
 
 ##############################################################################
 # To confirm these insights, we will now observe what happens when we plot
-# the conditional coverage and interval width on these intervals splitted by
+# the conditional coverage and interval width on these intervals split by
 # quantiles.
 
 
@@ -417,7 +415,6 @@ plt.show()
 
 
 ##############################################################################
-# When observing the values of the the interval width we again see what was
-# observed in the previous graphs with the interval widths. It's important to
-# note that the prediction
+# The interval widths follow the same pattern as in the previous plots. It is
+# important to note that the prediction
 # intervals are shorter when the estimator is more certain.

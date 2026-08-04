@@ -81,7 +81,7 @@ warnings.simplefilter("ignore")
 # ------------------------------------------
 #
 # The Victoria electricity demand dataset can be downloaded directly on the
-# MAPIE github repository. It consists in hourly electricity demand (in GW)
+# MAPIE GitHub repository. It consists of hourly electricity demand (in GW)
 # of the Victoria state in Australia together with the temperature
 # (in Celsius degrees). We extract temporal features out of the date and hour.
 

@@ -763,6 +763,6 @@ pd.DataFrame(
 # 4. More Jupyter notebooks for regression
 # ----------------------------------------
 #
-# If you would like to run a series of notebooks hosted on the MAPIE Github
+# If you would like to run a series of notebooks hosted on the MAPIE GitHub
 # repository that can be run on Google Colab, please visit:
 # https://github.com/scikit-learn-contrib/MAPIE/tree/master/notebooks/regression.

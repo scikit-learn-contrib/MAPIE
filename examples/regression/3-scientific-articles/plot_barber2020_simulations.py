@@ -62,7 +62,7 @@ def PIs_vs_dimensions(
     given by the dimensions list.
 
     Here we use MAPIE, with a LinearRegression base model, to estimate
-    the width means and the coverage levels of the prediction intervals
+    the mean widths and coverage levels of the prediction intervals
     estimated by all the available strategies as a function of
     the dataset dimension.
 

@@ -4,10 +4,10 @@ Focus on residual normalised score
 
 
 
-We will use the sklearn california housing dataset to understand how the
-residual normalised score works and show the multiple ways of using it.
+We will use scikit-learn's California housing dataset to understand how the
+residual normalised score works and explore the multiple ways of using it.
 
-We will explicit the experimental setup below.
+We describe the experimental setup below.
 """
 
 # mkdocs_gallery_thumbnail_number = 2

@@ -15,10 +15,10 @@ Following is a simple decision tree to help you get started quickly with MAPIE. 
 
 MAPIE can **measure prediction uncertainty** in the form of computing prediction sets (for classification) or intervals (for regression, including time series), using conformal prediction methods.
 
-Many methods make the hypothesis that data is [exchangeable](https://en.wikipedia.org/wiki/Exchangeable_random_variables), so it is a **first criteria** to consider when choosing a method.
+Many methods assume that data is [exchangeable](https://en.wikipedia.org/wiki/Exchangeable_random_variables), so exchangeability is a **primary criterion** when choosing a method.
 
 !!! info "Dataset Size"
-    Another important criteria is the **size of the conformalization dataset**:
+    Another important criterion is the **size of the conformalization dataset**:
 
     - For **small datasets**, cross conformal methods are necessary to use the data as efficiently as possible.
     - For **larger datasets** (1000+ samples[^1]), split conformal methods are recommended as they are simpler (do not require model retraining).

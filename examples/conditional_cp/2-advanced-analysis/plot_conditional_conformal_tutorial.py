@@ -613,15 +613,15 @@ plot_coverage_width(
 #   ``Split`` method has a strong over-coverage for small target values, and
 #   under-coverage for big target values. Moreover, it seems to have a
 #   strong bias on the ``'racepctblack'`` and ``'racePctWhite'``.
-# - The ``CQR`` method is better than the ``Split`` but suffers from the same
+# - The ``CQR`` method is better than ``Split``, but suffers from the same
 #   issues.
 #
 # $\to$ We managed, with ``ConditionalSplitConformalRegressor``, to have a more
 #   homogeneous coverage on the target value, and a much smaller bias
 #   on the ethnicity groups.
 #
-# $\to$ However its prediction time is longer than the other methods as it
-#   contains an optimization process.
+# $\to$ However, its prediction time is longer than that of the other methods
+#   because it runs an optimization process.
 
 
 ##############################################################################
