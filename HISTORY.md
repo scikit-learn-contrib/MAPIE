@@ -1,51 +1,73 @@
 # History
 ## 1.x.x (2026-xx-xx)
-- Add `ConditionalExpectedRiskController` (experimental, PyTorch-based) in `mapie.risk_control.adaptive_conformal_risk_control`, which controls a bounded monotone PyTorch-compatible loss at `target_level` with a learned, input-dependent prediction parameter. Its default parameter model is a linear head with an unbounded output, as required by the AA-CRC vector-space assumption; optional prediction-parameter bounds provide a practical clipped variant without the strict theoretical guarantee. Built-in recall and symmetric-interval miscoverage losses are selected by their preferred string names; custom losses use `RiskLoss`, whose `higher_is_better` argument distinguishes performance metrics from losses and whose `monotonicity` argument declares how the controlled loss varies with the prediction parameter. Also add a reproduction of Figure 2 from Blot et al. (2025). The controller is exported from `mapie.risk_control` but loaded lazily, so it does not make PyTorch a hard dependency of the core package; importing it raises an actionable error pointing at the `conditional` extra if PyTorch is missing.
-- Fix and simplify the `ConditionalExpectedRiskController` integrated-loss gradient by evaluating risk values only at the prediction-parameter endpoints and applying the exact endpoint identity. Training now uses a zero-valued gradient surrogate, removing the inaccurate and unnecessary 100-point numerical integration grid; derivatives of the risk itself are no longer required.
-- Select the `ConditionalExpectedRiskController` training checkpoint with the lowest full-data AA-CRC objective, evaluated after each epoch.
 
-- Add `StdConformityScore` for regression models that expose prediction standard deviations through `predict(..., return_std=True)`, enabling standard-deviation-normalized conformal prediction intervals such as J+GP.
-- Add a scientific article example reproducing the Jaber et al. (2025) Gaussian-process surrogate experiment and comparing GP credibility intervals, J+GP, and standard Jackknife+ intervals.
-- Move the MkDocs documentation fully to Read the Docs, removing the legacy documentation tree and old static-site versioning/deployment leftovers.
-- Add a dedicated Conditional Conformal Prediction gallery section with examples adapted to the v1 `ConditionalSplitConformalRegressor` and `ConditionalSplitConformalClassifier` APIs.
-- Add a Communities and Crime conditional conformal prediction example adapted from PR #455's `tutorial_ccp_CandC.ipynb`.
-- Back up the Communities and Crime dataset used by that example (`examples/data/communities_and_crime.csv.gz`), now loaded by default so the example no longer depends on the UCI download server.
-- Add Other Notebooks sections to the MkDocs classification and regression galleries.
-- Consolidate quantile computation: extract `_compute_regression_quantile` and `_compute_classification_quantile` functions in `utils.py`, replacing the former `get_quantile` method and `_compute_quantiles` wrapper. No public API changes. (issue #479)
-- Add optional `covmetrics` integration for conditional coverage diagnostics.
-- Add CovGap and WCovGap documentation for conditional coverage diagnostics.
-- Add WSC (`worst_slab_coverage`) for slab-based conditional coverage diagnostics.
-- Add ERT (`excess_risk_target_coverage`) for model-based conditional coverage diagnostics.
-- Consolidate conformal prediction metrics into a single documentation page,
-  organized into general metrics and conditional coverage diagnostics.
-- Generate the MkDocs API reference and navigation automatically from MAPIE's
-  public Python objects, including conditional conformal prediction, metrics,
-  risk control, and exchangeability testing.
-- Add high-level documentation overviews for the main concepts and expose them
-  consistently in the site navigation.
-- Reorganize conformal prediction theory around shared foundations followed by
-  regression and classification, and document both score families together.
-- Refresh the Getting Started guides with current v1 conformal workflows, a
-  runnable binary risk-control example, controller-selection guidance, and the
-  latest risk-control class names.
-- Organize handwritten documentation under `doc/content/`, with one folder for
-  each main documentation section.
 
-## 1.x.x (2026-xx-xx)
 
-- Upgrade JupyterLab and PyTorch development dependencies to fix security vulnerabilities.
-- Add `ConditionalSplitConformalRegressor` and `ConditionalSplitConformalClassifier`, implementing conformal prediction with conditional guarantees (Gibbs et al., 2023), adapted from https://github.com/jjcherian/conditional-conformal.
-- Raise `NotImplementedError` from the conditional conformal estimators when the infinite-dimensional (RKHS) component is requested via `infinite_params`; the supporting code is retained for future work.
-- Add experimental multivariate standardized residuals
-- Add `aucroc_score` and `auarc_score` to `mapie/metrics/uncertainty.py` for uncertainty evaluation following Lin et al. (2023); resolves #551.
-- Add `StdConformityScore` for regression models that expose prediction standard deviations through `predict(..., return_std=True)`, enabling standard-deviation-normalized conformal prediction intervals such as J+GP.
-- Add a scientific article example reproducing the Jaber et al. (2025) Gaussian-process surrogate experiment and comparing GP credibility intervals, J+GP, and standard Jackknife+ intervals.
-- Consolidate quantile computation: extract `_compute_regression_quantile` and `_compute_classification_quantile` functions in `utils.py`, replacing the former `get_quantile` method and `_compute_quantiles` wrapper. No public API changes. (issue #479)
-- Add optional `covmetrics` integration for conditional coverage diagnostics.
-- Add CovGap and WCovGap documentation for conditional coverage diagnostics.
-- Add WSC (`worst_slab_coverage`) for slab-based conditional coverage diagnostics.
-- Add ERT (`excess_risk_target_coverage`) for model-based conditional coverage diagnostics.
-- Add a benchmark notebook for exchangeability tests using the current API.
+## 1.5.0 (2026-xx-xx)
+
+### Features
+
+- Add `ConditionalSplitConformalRegressor` and
+  `ConditionalSplitConformalClassifier`, implementing conformal prediction with
+  conditional guarantees following Gibbs et al. (2023). Only in the case of finite-dimensional classes for now.
+- Add `CrossConformalizedQuantileRegressor` for cross-conformalized quantile
+  regression, with dedicated conformity scores and examples.
+- Add PyTorch-based `ConditionalExpectedRiskController` for
+  Automatically Adaptive Conformal Risk Control (AA-CRC), together with built-in
+  recall and symmetric-interval miscoverage losses and support for custom
+  `RiskLoss` instances.
+- Add `StdConformityScore` for estimators that expose prediction standard
+  deviations through `predict(..., return_std=True)`, enabling methods such as
+  J+GP.
+- Add multivariate standardized residual conformity scores (in mapie.experimental for now).
+- Add `aucroc_score` and `auarc_score` for uncertainty evaluation following Lin
+  et al. (2023). (issue #551)
+- Add the `classwise` option to `expected_calibration_error` for classwise ECE.
+  (issue #277)
+- Add conditional coverage diagnostics: WSC (`worst_slab_coverage`), ERT
+  (`excess_risk_target_coverage`), and optional `covmetrics` integration for
+  CovGap and WCovGap.
+
+### Improvements and refactoring
+
+- Consolidate regression and classification quantile computation in shared
+  utilities, replacing the former `get_quantile` method and `_compute_quantiles`
+  wrapper. No public API changes. (issue #479)
+
+### Bug fixes
+
+- Reduce memory usage while generating the example gallery on Read the Docs.
+
+### Documentation
+
+- Big update to the documentation: now based on MkDocs, still hosted on Read the Docs. The legacy Sphinx tree
+  and obsolete static-site deployment files have been removed.
+- Add a dedicated conditional conformal prediction gallery, including Gibbs et
+  al. (2023) simulations and a Communities and Crime example backed by a local
+  copy of the dataset.
+- Add scientific examples for J+GP and AA-CRC, plus an exchangeability-testing
+  benchmark notebook.
+- Update the time-series change-point notebook for the quantile refactoring.
+- Generate the API reference and navigation automatically from MAPIE's public
+  objects.
+- Consolidate the conformal-prediction metrics documentation and expand the
+  theory for conditional coverage diagnostics.
+- Reorganize the documentation around high-level introductions, shared
+  conformal-prediction foundations, refreshed v1 getting-started workflows, and
+  one `doc/content/` content folder per main section.
+- Add “Other Notebooks” sections to the classification and regression galleries
+  and make assorted wording, notation, navigation, and example refinements.
+
+
+### CI, release, and developer experience
+
+- Upgrade JupyterLab, PyTorch, pytest, and other development dependencies to
+  address security vulnerabilities.
+- Add SonarQube and Bandit analysis and update GitHub Actions to supported Node
+  runtimes.
+- Simplify release automation by removing the job that rewrote `CITATION.cff`.
+- Refresh the release checklist with GitHub release guidance.
+- Add `AGENTS.md` as the canonical guide for coding agents.
 
 ## 1.4.1 (2026-06-08)
 
@@ -55,18 +77,9 @@
 * Add `reset()` method on `CrossConformalRegressor` and allow refitting via `fit_conformalize` (now emits a `UserWarning` and discards prior conformity scores instead of raising). Same pattern can be propagated to other conformal classes in follow-up PRs. (issue #710)
 * Add `reset()` method on `JackknifeAfterBootstrapRegressor` and allow refitting via `fit_conformalize` (mirrors the pattern landed for `CrossConformalRegressor` in #931).
 * Add `reset()` method on `CrossConformalClassifier` and allow refitting via `fit_conformalize` (mirrors the pattern landed in #931 and #936); completes the warn-on-refit pattern across all Cross/Jackknife conformal techniques.
-* Add `classwise` boolean flag to `expected_calibration_error()` to support classwise-ECE in addition to the existing confidence-ECE. (issue #277)
 
 ### Improvements and refactoring
 
-* Relax the monotonicity check in the `fixed_sequence` FWER procedure: a non-monotonic risk now emits a `UserWarning` (suggesting `split_fixed_sequence`) and infers a direction, instead of raising a `ValueError`. (issue #942)
-* Add validation that a custom `BinaryRisk` returns per-sample occurrence values that are binary indicators (booleans, or values equal to 0 or 1); a `ValueError` is now raised otherwise, as the binary Hoeffding-Bentkus guarantees require it.
-* Add validation to reject `Subsample` as `cv` in `CrossConformalRegressor`, directing users to `JackknifeAfterBootstrapRegressor` instead. (issue #924)
-* Add defensive validation: `_MapieRegressor` and `_MapieClassifier` now raise `TypeError` when `sample_weight` is passed as a top-level keyword argument instead of inside `fit_params`. Previously, top-level `sample_weight` was silently ignored. Also fix `TimeSeriesRegressor` tests that were affected by the same silent-ignore bug.
-* Add notebook kernel restart warning for Kaggle/Jupyter/Colab users after installation or version changes. (issue #916)
-* Simplify internal `sample_weight` handling in classification module: `sample_weight` now flows through `fit_params` instead of being passed as a separate argument through the call chain. No public API changes. (issue #753)
-* Simplify internal `sample_weight` handling in quantile regression module: `sample_weight` now flows through `fit_params` instead of being passed as a separate argument through the call chain. No public API changes. (issue #753)
-* Remove `_prepare_fit_params_and_sample_weight` utility (no longer needed after regression, classification, and quantile regression refactors). (issue #753)
 * Relax the monotonicity check in the `fixed_sequence` FWER procedure: a non-monotonic risk now emits a `UserWarning` (suggesting `split_fixed_sequence`) and infers a direction, instead of raising a `ValueError`. (issue #942)
 * Add validation that a custom `BinaryRisk` returns per-sample occurrence values that are binary indicators (booleans, or values equal to 0 or 1); a `ValueError` is now raised otherwise, as the binary Hoeffding-Bentkus guarantees require it.
 * Add validation to reject `Subsample` as `cv` in `CrossConformalRegressor`, directing users to `JackknifeAfterBootstrapRegressor` instead. (issue #924)
@@ -82,17 +95,9 @@
 * Fix `optimize_beta` in regression conformity scores so prediction interval width minimization actually optimizes β (was previously a no-op due to a shape-collapsing reshape); also resolves incorrect prediction interval shape when used with multiple confidence levels. (issues #588, #484)
 * Propagate `random_state` to the internal `Subsample` in `JackknifeAfterBootstrapRegressor` so bootstrap resampling is reproducible and no longer depends on the global NumPy RNG state. (issue #940)
 * Restore backward compatibility for the predict-argument renames introduced in #919: `CrossConformalRegressor`'s `aggregate_predictions` and `JackknifeAfterBootstrapRegressor`'s `ensemble` (in `predict` and `predict_interval`) keep working as deprecated aliases for `aggregate_point_predictions`, now emitting a `FutureWarning` instead of raising a `TypeError`. (issue #906)
-* Fix `BinaryClassificationController` so the selected best threshold is optimal: when several parameters reach the minimum secondary risk, ties are now broken in favor of the least conservative threshold. (issue #942)
-* Fix `optimize_beta` in regression conformity scores so prediction interval width minimization actually optimizes β (was previously a no-op due to a shape-collapsing reshape); also resolves incorrect prediction interval shape when used with multiple confidence levels. (issues #588, #484)
-* Propagate `random_state` to the internal `Subsample` in `JackknifeAfterBootstrapRegressor` so bootstrap resampling is reproducible and no longer depends on the global NumPy RNG state. (issue #940)
-* Restore backward compatibility for the predict-argument renames introduced in #919: `CrossConformalRegressor`'s `aggregate_predictions` and `JackknifeAfterBootstrapRegressor`'s `ensemble` (in `predict` and `predict_interval`) keep working as deprecated aliases for `aggregate_point_predictions`, now emitting a `FutureWarning` instead of raising a `TypeError`. (issue #906)
 
 ### Documentation
 
-* Add a risk control advanced-analysis example showing how to define and control a custom risk (specificity) with `BinaryRisk` and the `BinaryClassificationController`.
-* Add a repository backup of the BlogFeedback dataset (`examples/data/blogData_train.csv.gz`) used by the Kim et al. (2020) example, now loaded by default so the example no longer depends on the UCI download server.
-* Add repository backups of the Zaffran et al. (2022) data used by the ACI comparison example — the prices dataset (`examples/data/zaffran2022_prices.csv.gz`) and the reference results (`examples/data/zaffran2022_aci_reference.csv`) — now loaded by default so the example no longer depends on external downloads (also fixes an `UnboundLocalError` that surfaced when the reference download failed).
-* Fix the documentation site navigation dropdown and even out the vertical spacing between sidebar nav entries.
 * Add a risk control advanced-analysis example showing how to define and control a custom risk (specificity) with `BinaryRisk` and the `BinaryClassificationController`.
 * Add a repository backup of the BlogFeedback dataset (`examples/data/blogData_train.csv.gz`) used by the Kim et al. (2020) example, now loaded by default so the example no longer depends on the UCI download server.
 * Add repository backups of the Zaffran et al. (2022) data used by the ACI comparison example — the prices dataset (`examples/data/zaffran2022_prices.csv.gz`) and the reference results (`examples/data/zaffran2022_aci_reference.csv`) — now loaded by default so the example no longer depends on external downloads (also fixes an `UnboundLocalError` that surfaced when the reference download failed).
@@ -103,13 +108,8 @@
 * Fix the release process (release-candidate/final-release workflows, docs deployment, and release checklist).
 * Make tests compatible with scikit-learn 1.9 (calibration tests).
 * Silence intentional `UserWarning`s emitted during test runs to keep the test output clean.
-* Fix the release process (release-candidate/final-release workflows, docs deployment, and release checklist).
-* Make tests compatible with scikit-learn 1.9 (calibration tests).
-* Silence intentional `UserWarning`s emitted during test runs to keep the test output clean.
-
 ### Breaking changes
 
-* Drop support for Python 3.9 (EOL since October 2025). Minimum supported version is now Python 3.10. This was required to upgrade `pytest` to 9.0.3, which fixes a security advisory (CVE on `/tmp/pytest-of-{user}` directory handling).
 * Drop support for Python 3.9 (EOL since October 2025). Minimum supported version is now Python 3.10. This was required to upgrade `pytest` to 9.0.3, which fixes a security advisory (CVE on `/tmp/pytest-of-{user}` directory handling).
 
 ## 1.4.0 (2026-04-30)
