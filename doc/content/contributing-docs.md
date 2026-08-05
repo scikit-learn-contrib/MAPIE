@@ -1,5 +1,8 @@
 # Contributing to MAPIE Documentation
 
+For coding contributions, see the
+[MAPIE contribution guidelines](https://github.com/scikit-learn-contrib/MAPIE/blob/master/CONTRIBUTING.md).
+
 This guide explains how to add, edit, and preview MAPIE's documentation built with [MkDocs Material](https://squidfunk.github.io/mkdocs-material/).
 
 ## Prerequisites
