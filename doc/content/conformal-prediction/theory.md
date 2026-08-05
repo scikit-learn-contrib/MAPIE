@@ -22,7 +22,7 @@ For a standard i.i.d. case, our data
 $(X, Y) = \{(x_1, y_1), \ldots, (x_n, y_n)\}$ has an unknown distribution
 $P_{X, Y}$.
 
-Given some target quantile $\alpha$, we aim at constructing a prediction
+Given some target risk level $\alpha$, we aim at constructing a prediction
 region $\hat{C}_{n, \alpha}$ such that:
 
 $$

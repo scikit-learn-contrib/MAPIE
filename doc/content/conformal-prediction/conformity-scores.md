@@ -13,8 +13,8 @@ The only requirement for the score function $s(X, Y) \in \mathbb{R}$ is that **l
 
 There are two types of scores:
 
-- **Symmetric**: Two quantiles are computed (right and left side of the distribution).
-- **Asymmetric**: A single quantile direction.
+- **Symmetric**: Absolute scores are used, with a single quantile applied to both sides of the interval.
+- **Asymmetric**: Signed scores are used, with separate lower and upper quantiles.
 
 ---
 
@@ -47,11 +47,11 @@ where $q(s)$ is the $(1-\alpha)$ quantile of the conformity scores.
 
 ### 2. Gamma Score
 
-The **gamma score** [^2] (`GammaConformityScore`) adds **adaptivity** by normalizing residuals by predictions:
+The **gamma score** [^2] (`GammaConformityScore`) adds **adaptivity** by normalizing signed residuals by predictions:
 
 
 $$
-s(X, Y) = \frac{|Y - \hat{\mu}(X)|}{\hat{\mu}(X)}
+s(X, Y) = \frac{Y - \hat{\mu}(X)}{\hat{\mu}(X)}
 $$
 
 
@@ -59,12 +59,15 @@ Adaptive prediction intervals:
 
 
 $$
-[\hat{\mu}(X) \cdot (1 - q(s)),  \hat{\mu}(X) \cdot (1 + q(s))]
+\left[
+\hat{\mu}(X) \cdot \left(1 + q_{\alpha / 2}(s)\right),
+\hat{\mu}(X) \cdot \left(1 + q_{1 - \alpha / 2}(s)\right)
+\right]
 $$
 
 
 !!! info
-    This score is **asymmetric** by default. It produces intervals proportional to the magnitude of predictions — useful when you expect greater uncertainty for larger predictions.
+    This score is **asymmetric** by default. It produces intervals proportional to the magnitude of predictions — useful when you expect greater uncertainty for larger predictions. Observed and predicted values must be strictly positive.
 
 ---
 
@@ -91,6 +94,23 @@ $$
 !!! info
     This score is **symmetric** by default. Due to the additional model, it can only be used with **split methods**.
 
+---
+
+### 4. Standard Deviation Normalized Score
+
+The **standard deviation normalized score** [^3] (`StdConformityScore`) uses the predictive standard deviation $\hat{\sigma}(X)$ returned by the base estimator:
+
+
+$$
+s(X, Y) = \frac{|Y - \hat{\mu}(X)|}{\hat{\sigma}(X)^p}
+$$
+
+
+where $p=1$ by default. Unlike `ResidualNormalisedScore`, it uses the uncertainty estimate from the base estimator instead of fitting an additional residual model.
+
+!!! info
+    This score is **symmetric** by default and requires an estimator that supports `predict(X, return_std=True)`. It is available through the `"std_normalized"` alias.
+
 ### Key Takeaways
 
 
@@ -99,6 +119,7 @@ $$
 | **Absolute Residual**   | Constant intervals                    | Symmetric        | Simplest, default for regression                       |
 | **Gamma**               | Adaptive, proportional to predictions | Asymmetric       | Good when uncertainty scales with prediction magnitude |
 | **Residual Normalized** | Highly adaptive                       | Symmetric        | Requires additional model, no assumptions on data      |
+| **Standard Deviation Normalized** | Adaptive, based on predictive standard deviation | Symmetric | Requires an estimator returning predictive standard deviation |
 
 
 ---
@@ -107,7 +128,7 @@ $$
 
 ### 1. LAC
 
-In the LAC method [^3], the conformity score is **one minus the score of the true label**:
+In the LAC method [^4], the conformity score is **one minus the score of the true label**:
 
 
 $$
@@ -123,7 +144,7 @@ $$
 $$
 
 
-The prediction set includes all labels with score higher than the threshold:
+The prediction set includes all labels whose conformity score is lower than or equal to the threshold, equivalently whose predicted score is high enough:
 
 
 $$
@@ -138,11 +159,11 @@ $$
 
 ### 2. Top-K
 
-Introduced in [^5], the **Top-K** method gives the **same prediction set size** for all observations. The conformity score is the rank of the true label:
+Introduced in [^6], the **Top-K** method gives the **same prediction set size** for all observations, except when predicted scores are tied. The conformity score is the rank of the true label:
 
 
 $$
-s_i(X_i, Y_i) = j \quad \text{where} \quad Y_i = \pi_j \quad \text{and} \quad \hat{\mu}(X_i)_{\pi_1} > \cdots > \hat{\mu}(X_i)_{\pi_n}
+s_i(X_i, Y_i) = j \quad \text{where} \quad Y_i = \pi_j \quad \text{and} \quad \hat{\mu}(X_i)_{\pi_1} > \cdots > \hat{\mu}(X_i)_{\pi_K}
 $$
 
 
@@ -178,13 +199,13 @@ $$
 $$
 
 
-By default, the label whose cumulative score exceeds the quantile is included. Its incorporation can also be randomized for tighter effective coverage [^4] [^5].
+By default, the label whose cumulative score exceeds the quantile is included. Its incorporation can also be randomized for tighter effective coverage [^5] [^6].
 
 ---
 
 ### 4. Regularized Adaptive Prediction Sets (RAPS)
 
-RAPS [^5] improves APS by **regularizing** to avoid very large prediction sets:
+RAPS [^6] improves APS by **regularizing** to avoid very large prediction sets:
 
 
 $$
@@ -220,6 +241,7 @@ To achieve exact coverage, randomization on the last label can be applied:
 
 [^1]: Lei, J., G'Sell, M., Rinaldo, A., Tibshirani, R. J. & Wasserman, L. (2018). *Distribution-Free Predictive Inference for Regression.* JASA, 113(523), 1094–1111.
 [^2]: Cordier, T., Blot, V., Lacombe, L., Morzadec, T., Capitaine, A. & Brunel, N. (2023). *Flexible and Systematic Uncertainty Estimation with Conformal Prediction via the MAPIE library.* PMLR.
-[^3]: Sadinle, Mauricio, Jing Lei, & Larry Wasserman. "Least Ambiguous Set-Valued Classifiers With Bounded Error Levels." *JASA*, 114:525, 223-234, 2019.
-[^4]: Romano, Yaniv, Matteo Sesia and Emmanuel J. Candès. "Classification with Valid and Adaptive Coverage." *NeurIPS* 2020 (spotlight).
-[^5]: Angelopoulos, Anastasios N., Stephen Bates, Michael Jordan and Jitendra Malik. "Uncertainty Sets for Image Classifiers using Conformal Prediction." *ICLR* 2021.
+[^3]: Jaber, E., Blot, V. et al. "Conformal approach to Gaussian process surrogate evaluation with marginal coverage guarantees." *Journal of Machine Learning for Modeling and Computing*, 6(3), 2025.
+[^4]: Sadinle, Mauricio, Jing Lei, & Larry Wasserman. "Least Ambiguous Set-Valued Classifiers With Bounded Error Levels." *JASA*, 114:525, 223-234, 2019.
+[^5]: Romano, Yaniv, Matteo Sesia and Emmanuel J. Candès. "Classification with Valid and Adaptive Coverage." *NeurIPS* 2020 (spotlight).
+[^6]: Angelopoulos, Anastasios N., Stephen Bates, Michael Jordan and Jitendra Malik. "Uncertainty Sets for Image Classifiers using Conformal Prediction." *ICLR* 2021.

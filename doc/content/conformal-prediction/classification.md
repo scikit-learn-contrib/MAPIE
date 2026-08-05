@@ -1,6 +1,6 @@
 # Classification — Theory
 
-Three methods for multi-class uncertainty quantification have been implemented in MAPIE: **LAC** (Least Ambiguous set-valued Classifier) [^1], **APS** (Adaptive Prediction Sets) [^2] [^3], and **Top-K** [^3].
+Four methods for multi-class uncertainty quantification have been implemented in MAPIE: **LAC** (Least Ambiguous set-valued Classifier) [^1], **APS** (Adaptive Prediction Sets) [^2] [^3], **Top-K** [^3], and **RAPS** [^3].
 
 ![Classification methods](../../images/classification_methods.png){ width="600" }
 
@@ -34,7 +34,7 @@ The LAC, Top-K, APS, and RAPS methods are described in
 
 ## Split- and Cross-Conformal Strategies
 
-MAPIE includes both split- and cross-conformal strategies for LAC and APS, but **only split-conformal for Top-K**.
+MAPIE includes both split- and cross-conformal strategies for LAC and APS, but **only split-conformal for Top-K and RAPS**.
 
 The cross-conformal implementation follows Algorithm 2 of [^2]:
 
