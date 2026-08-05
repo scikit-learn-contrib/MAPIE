@@ -1,4 +1,4 @@
-# Metrics for Calibration — Theoretical Description
+# Metrics for Calibration — Theory
 
 ---
 

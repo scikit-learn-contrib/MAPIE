@@ -1,5 +1,8 @@
 # Contributing to MAPIE Documentation
 
+For coding contributions, see the
+[MAPIE contribution guidelines](https://github.com/scikit-learn-contrib/MAPIE/blob/master/CONTRIBUTING.md).
+
 This guide explains how to add, edit, and preview MAPIE's documentation built with [MkDocs Material](https://squidfunk.github.io/mkdocs-material/).
 
 ## Prerequisites
@@ -25,15 +28,14 @@ Open [http://127.0.0.1:8787](http://127.0.0.1:8787) in your browser. Pages reloa
 ```
 mkdocs.yml                  # Main configuration
 doc/
-├── text/                   # Handwritten documentation
-│   ├── index.md            # Homepage
+├── index.md                # Homepage
+├── content/                # Handwritten documentation
 │   ├── getting-started/    # Getting started guides
 │   ├── conformal-prediction/
 │   ├── risk-control/
 │   ├── calibration/
 │   ├── exchangeability-testing/
 │   ├── all-examples/
-│   ├── q-and-a/
 │   └── contributing-docs.md
 ├── generated/              # Gallery output
 ├── images/                 # Images used in documentation
@@ -52,11 +54,11 @@ examples/
 
 ### 1. Create the Markdown File
 
-Create a `.md` file in the appropriate section under `doc/text/`. For example,
+Create a `.md` file in the appropriate section under `doc/content/`. For example,
 to add a new conformal-prediction theory page:
 
 ```bash
-doc/text/conformal-prediction/my-new-topic.md
+doc/content/conformal-prediction/my-new-topic.md
 ```
 
 Write your content using standard Markdown:
@@ -85,8 +87,9 @@ Edit `mkdocs.yml` and add your page to the `nav` section:
 ```yaml
 nav:
   - Conformal Prediction:
-    - Regression Theory: text/conformal-prediction/regression.md
-    - My New Topic: text/conformal-prediction/my-new-topic.md   # ← add here
+    - Theory:
+      - Foundations: content/conformal-prediction/theory.md
+      - My New Topic: content/conformal-prediction/my-new-topic.md   # ← add here
 ```
 
 ### 3. Add Images
@@ -188,7 +191,7 @@ To add an entirely new gallery section (e.g., `examples/time_series/`):
            - doc/generated/time_series  # ← add here
   ```
 3. Add a navigation entry in the relevant topic section and add the new
-   gallery link to `doc/text/all-examples/index.md`:
+   gallery link to `doc/content/all-examples/index.md`:
   ```yaml
    nav:
      - Time Series:

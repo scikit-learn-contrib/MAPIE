@@ -1,4 +1,4 @@
-# Metrics for Conformal Prediction — Theoretical Description
+# Metrics for Conformal Prediction — Theory
 
 !!! note "Terminology"
     In theoretical parts of the documentation:
@@ -229,6 +229,10 @@ controls the cross-validation estimate.
 For more advanced use of ERT, you can directly import ERT from `covmetrics` and
 follow the guidelines of the official GitHub
 [repository](https://github.com/ElSacho/covmetrics/).
+
+The [conditional-metrics comparison notebook](https://github.com/scikit-learn-contrib/MAPIE/blob/master/notebooks/metrics/conditional_metrics_covmetrics_comparison.ipynb)
+computes CovGap, WSC, and ERT on MAPIE regression intervals and classification
+prediction sets, then checks the results against `covmetrics` directly.
 
 
 ---

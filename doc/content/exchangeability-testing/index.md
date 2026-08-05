@@ -35,7 +35,10 @@ MAPIE supports three related workflows:
 
 - **Fixed-dataset testing** applies permutation-based or martingale-based tests
   to a labeled dataset. This is useful before conformalizing a model or when
-  auditing a historical batch of observations.
+  auditing a historical batch of observations. The
+  [synthetic benchmark notebook](https://github.com/scikit-learn-contrib/MAPIE/blob/master/notebooks/echangeability_test/exchangeability_test_benchmark.ipynb)
+  compares the fixed-dataset methods across exchangeable data, distribution
+  shifts, and temporal dependence.
 - **Online testing** updates martingale tests as labeled observations arrive.
   It is designed to detect departures from exchangeability during deployment
   without repeatedly inflating the false-alarm rate.

@@ -23,10 +23,12 @@
   risk control, and exchangeability testing.
 - Add high-level documentation overviews for the main concepts and expose them
   consistently in the site navigation.
+- Reorganize conformal prediction theory around shared foundations followed by
+  regression and classification, and document both score families together.
 - Refresh the Getting Started guides with current v1 conformal workflows, a
   runnable binary risk-control example, controller-selection guidance, and the
   latest risk-control class names.
-- Organize handwritten documentation under `doc/text/`, with one folder for
+- Organize handwritten documentation under `doc/content/`, with one folder for
   each main documentation section.
 
 ## 1.x.x (2026-xx-xx)

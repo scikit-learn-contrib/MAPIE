@@ -34,7 +34,10 @@ The classification and regression APIs have been thoroughly revamped (except for
 ![v1 git diff](../../images/v1_release_notes_gitdiff.png){ style="display: block; margin: 0 auto;" }
 
 !!! warning "Functional Regressions"
-    - The `MondrianCP` class is temporarily unavailable in MAPIE v1. Mondrian can still easily be implemented manually (tutorial provided).
+    - MAPIE v1 does not provide a dedicated Mondrian implementation. See the
+      [Mondrian conformal prediction documentation](../conformal-prediction/conditional-guarantees.md#mondrian-conformal-prediction)
+      to reproduce the original algorithm by applying conformal prediction
+      independently within predefined groups.
     - In regression settings, the naive method no longer exists for cross conformal techniques.
 
 ---
@@ -160,7 +163,10 @@ Replaced with `confidence_level` (equivalent to `1 - alpha`). Now set at initial
 
 #### Mondrian
 
-The `MondrianCP` class is temporarily unavailable in v1. A [manual implementation tutorial](../q-and-a/mondrian.md) is available.
+MAPIE v1 does not provide a dedicated Mondrian implementation. See the
+[Mondrian conformal prediction documentation](../conformal-prediction/conditional-guarantees.md#mondrian-conformal-prediction)
+to reproduce the original algorithm by applying conformal prediction
+independently within predefined groups.
 
 #### Metrics
 
