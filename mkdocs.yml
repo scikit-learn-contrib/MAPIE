@@ -183,8 +183,6 @@ nav:
   - All Examples: content/all-examples/index.md
   # Populated from the public Python API by doc/hooks/api_reference.py.
   - API Reference: []
-  - About:
-    - Citation and References: content/about/citation.md
   - Contributing:
     - Coding Contribution Guidelines: https://github.com/scikit-learn-contrib/MAPIE/blob/master/CONTRIBUTING.md
     - Documentation Contribution Guidelines: content/contributing-docs.md
