@@ -51,7 +51,11 @@ hide:
 
 Compute **prediction intervals** (regression, time series) or **prediction sets** (classification) using state-of-the-art conformal prediction methods.
 
-[Learn more →](content/conformal-prediction/theory.md)
+MAPIE implements **peer-reviewed algorithms** with **theoretical guarantees**
+under minimal assumptions, based on Conformal Prediction and Distribution-Free
+Inference.
+
+[Learn more →](content/conformal-prediction/index.md)
 <br>
 [Browse examples →](generated/regression/index.md)
 
@@ -63,7 +67,7 @@ Compute **prediction intervals** (regression, time series) or **prediction sets*
 
 **Control prediction errors** for complex tasks: multi-label classification, semantic segmentation, with probabilistic guarantees on precision and recall.
 
-[Learn more →](content/risk-control/theory.md)
+[Learn more →](content/risk-control/index.md)
 <br>
 [Browse examples →](generated/risk_control/index.md)
 
@@ -76,16 +80,6 @@ Compute **prediction intervals** (regression, time series) or **prediction sets*
 Use **any model** — scikit-learn, TensorFlow, PyTorch — thanks to scikit-learn-compatible wrappers. Part of the **scikit-learn-contrib** ecosystem.
 
 [Get started →](content/getting-started/quick-start.md)
-
-</div>
-
-<div class="card" markdown>
-
-### :material-school: Theoretically Grounded
-
-Implements **peer-reviewed** algorithms with **theoretical guarantees** under minimal assumptions, based on Conformal Prediction and Distribution-Free Inference.
-
-[Read the theory →](content/conformal-prediction/theory.md)
 
 </div>
 
