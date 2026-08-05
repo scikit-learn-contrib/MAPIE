@@ -183,42 +183,6 @@ You can also cite the ICML workshop manuscript:
 
 ---
 
-## :books: References
-
-1. Vovk, Vladimir, Alexander Gammerman, and Glenn Shafer. *Algorithmic
-   Learning in a Random World.* Springer Nature, 2022.
-2. Angelopoulos, Anastasios N., and Stephen Bates. "Conformal prediction: A
-   gentle introduction." *Foundations and Trends® in Machine Learning* 16.4
-   (2023): 494–591.
-3. Barber, Rina Foygel, Emmanuel J. Candès, Aaditya Ramdas, and Ryan J.
-   Tibshirani. "Predictive inference with the jackknife+." *Annals of
-   Statistics* 49.1 (2021): 486–507.
-4. Kim, Byol, Chen Xu, and Rina Barber. "Predictive inference is free with the
-   jackknife+-after-bootstrap." *Advances in Neural Information Processing
-   Systems* 33 (2020): 4138–4149.
-5. Sadinle, Mauricio, Jing Lei, and Larry Wasserman. "Least ambiguous
-   set-valued classifiers with bounded error levels." *Journal of the American
-   Statistical Association* 114.525 (2019): 223–234.
-6. Romano, Yaniv, Matteo Sesia, and Emmanuel Candès. "Classification with valid
-   and adaptive coverage." *Advances in Neural Information Processing Systems*
-   33 (2020): 3581–3591.
-7. Angelopoulos, Anastasios N., et al. "Uncertainty sets for image classifiers
-   using conformal prediction." *International Conference on Learning
-   Representations* (2021).
-8. Romano, Yaniv, Evan Patterson, and Emmanuel Candès. "Conformalized quantile
-   regression." *Advances in Neural Information Processing Systems* 32 (2019).
-9. Xu, Chen, and Yao Xie. "Conformal prediction interval for dynamic
-   time-series." *International Conference on Machine Learning.* PMLR, 2021.
-10. Bates, Stephen, et al. "Distribution-free, risk-controlling prediction
-    sets." *Journal of the ACM* 68.6 (2021): 1–34.
-11. Angelopoulos, Anastasios N., Stephen Bates, Adam Fisch, Lihua Lei, and Tal
-    Schuster. "Conformal Risk Control." (2022).
-12. Angelopoulos, Anastasios N., Stephen Bates, Emmanuel J. Candès, et al.
-    "Learn Then Test: Calibrating Predictive Algorithms to Achieve Risk
-    Control." (2022).
-
----
-
 ## :handshake: Affiliations
 
 MAPIE has been developed through a collaboration between Capgemini Invent,
