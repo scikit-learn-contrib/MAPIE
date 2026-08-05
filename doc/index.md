@@ -108,6 +108,13 @@ Prediction sets for single-label and multi-label classification.
 </div>
 
 <div class="card" markdown>
+### :material-vector-polyline: Conditional Conformal Prediction
+Conditional prediction intervals and prediction sets.
+
+[Browse examples →](generated/conditional_cp/index.md)
+</div>
+
+<div class="card" markdown>
 ### :material-shield-alert: Risk Control
 Control risks for complex ML tasks with probabilistic guarantees.
 
