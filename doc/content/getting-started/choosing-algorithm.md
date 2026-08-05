@@ -4,6 +4,8 @@ Start with the guarantee or diagnostic that your application needs. The table
 below directs you to the appropriate MAPIE area before you choose a specific
 class.
 
+![MAPIE algorithm decision tree](../../images/decision_tree.png)
+
 | Goal | MAPIE area | Output |
 |---|---|---|
 | Quantify uncertainty around a regression prediction | Conformal prediction | Prediction interval |
