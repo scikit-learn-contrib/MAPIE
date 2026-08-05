@@ -99,13 +99,40 @@ $$
 
 ---
 
+### Limitations of the current implementation
+
+The original paper [^1] introduced two settings. For the first one, finite-dimensional shifts, coverage is guaranteed on the groups defined by the feature map. The second one, infinite-dimensional shifts, tackles any covariate shift and quantifies the coverage error, as an exact coverage guarantee is theoretically impossible in this case. Currently, MAPIE implements only the finite-dimensional setting. The infinite-dimensional case needs further optimization because it is very slow (e.g., reproducing Figure 5 of the paper takes dozens of compute hours).
+
+## How to use it in practice?
+
+### Creating a class of functions adapted to our needs
+
+The following will provide some tips on how to use the method. For practical
+examples, see the regression and classification examples using
+`ConditionalSplitConformalRegressor` and `ConditionalSplitConformalClassifier`.
+
+1. If you want to avoid bias across subgroups and ensure homogeneous coverage for
+   those, you can add indicator functions corresponding to those groups in
+   `feature_map`.
+
+2. You can inject prior knowledge into the method through `feature_map` if you have
+   information about the conformity score distribution (domains with different
+   behavior, expected model uncertainty depending on a given feature, etc.).
+
+3. Empirically test the obtained coverage on a test set to make sure that the
+   expected coverage is achieved.
+
+### Avoid miscoverage
+
+- To guarantee marginal coverage, you need to have an intercept term in the
+  $\Phi$ function (meaning, a feature equal to $1$ for all $X_i$).
+
+- Keep the number of dimensions $d$ reasonable compared with the
+  conformalization set size.
+
+---
+
 ## Mondrian Conformal Prediction
-
-!!! note "Terminology"
-    In theoretical parts of the documentation:
-
-    - `alpha` is equivalent to `1 - confidence_level` — it can be seen as a *risk level*.
-    - *calibrate* and *calibration* are equivalent to *conformalize* and *conformalization*.
 
 **Mondrian Conformal Prediction (MCP)** [^2] is a method that builds prediction sets with a **group-conditional coverage guarantee**:
 
@@ -146,39 +173,6 @@ where $s_1, \ldots, s_{n^g}$ are the conformity scores of training points in gro
   ![Mondrian](../../images/mondrian.png){ width="600" }
   <figcaption>Illustration of Mondrian conformal prediction (from [^2]).</figcaption>
 </figure>
-
----
-
-### Limitations of the current implementation
-
-The original paper [^1] introduced two settings. For the first one, finite-dimensional shifts, coverage is guaranteed on the groups defined by the feature map. The second one, infinite-dimensional shifts, tackles any covariate shift and quantifies the coverage error, as an exact coverage guarantee is theoretically impossible in this case. Currently, MAPIE implements only the finite-dimensional setting. The infinite-dimensional case needs further optimization because it is very slow (e.g., reproducing Figure 5 of the paper takes dozens of compute hours).
-
-## How to use it in practice?
-
-### Creating a class of functions adapted to our needs
-
-The following will provide some tips on how to use the method. For practical
-examples, see the regression and classification examples using
-`ConditionalSplitConformalRegressor` and `ConditionalSplitConformalClassifier`.
-
-1. If you want to avoid bias across subgroups and ensure homogeneous coverage for
-   those, you can add indicator functions corresponding to those groups in
-   `feature_map`.
-
-2. You can inject prior knowledge into the method through `feature_map` if you have
-   information about the conformity score distribution (domains with different
-   behavior, expected model uncertainty depending on a given feature, etc.).
-
-3. Empirically test the obtained coverage on a test set to make sure that the
-   expected coverage is achieved.
-
-### Avoid miscoverage
-
-- To guarantee marginal coverage, you need to have an intercept term in the
-  $\Phi$ function (meaning, a feature equal to $1$ for all $X_i$).
-
-- Keep the number of dimensions $d$ reasonable compared with the
-  conformalization set size.
 
 ---
 
