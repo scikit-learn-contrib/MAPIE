@@ -42,8 +42,8 @@ model is already fitted.
 There is no universal dataset-size cutoff between the two. The decision depends
 on model-training cost, the amount of representative data available, and the
 precision needed when estimating a coverage quantile. See the
-[conformalization-set guide](split-cross-conformal.md) for the complete
-workflows.
+[conformalization-set guide](../conformal-prediction/split-cross-conformal.md)
+for the complete workflows.
 
 ### Regression or Classification?
 

@@ -201,8 +201,8 @@ For multi-label classification, use
 
 - [Choosing the right algorithm](choosing-algorithm.md) compares the available
   conformal predictors and risk controllers.
-- [Conformalization set](split-cross-conformal.md) explains split- and
-  cross-conformal workflows and their trade-offs.
+- [Conformalization set](../conformal-prediction/split-cross-conformal.md)
+  explains split- and cross-conformal workflows and their trade-offs.
 - [Conformal Prediction overview](../conformal-prediction/index.md)
   introduces prediction intervals, prediction sets, and coverage guarantees.
 - [Risk Control overview](../risk-control/index.md) explains risk

@@ -26,7 +26,7 @@ individual observation.
 - [Conformity scores](conformity-scores.md) describes how MAPIE
   measures whether a prediction agrees with an observation in regression and
   classification.
-- [Conformalization set](../getting-started/split-cross-conformal.md) compares
+- [Conformalization set](split-cross-conformal.md) compares
   split- and cross-conformal workflows.
 - [Metrics](metrics.md) covers coverage, interval width,
   prediction-set size, and conditional coverage diagnostics.

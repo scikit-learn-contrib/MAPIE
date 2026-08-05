@@ -151,12 +151,12 @@ nav:
   - Getting Started:
     - Quick Start: content/getting-started/quick-start.md
     - Choosing the Right Algorithm: content/getting-started/choosing-algorithm.md
-    - Split vs. Cross Conformal: content/getting-started/split-cross-conformal.md
     - v1 Release Notes: content/getting-started/v1-release-notes.md
   - Conformal Prediction:
     - Overview: content/conformal-prediction/index.md
     - Theory:
       - Foundations: content/conformal-prediction/theory.md
+      - Split vs. Cross Conformal: content/conformal-prediction/split-cross-conformal.md
       - Regression: content/conformal-prediction/regression.md
       - Classification: content/conformal-prediction/classification.md
       - Conformity Scores: content/conformal-prediction/conformity-scores.md
