@@ -16,25 +16,6 @@ least 90% of future observations. This is a **marginal coverage** guarantee: it
 holds on average over new observations, not necessarily for every subgroup or
 individual observation.
 
-## How It Works
-
-A typical MAPIE workflow has three steps:
-
-1. **Fit** a base estimator on training data.
-2. **Conformalize** it by measuring prediction errors, called conformity
-   scores, on data that was not used to fit the estimator.
-3. **Predict** intervals or sets at the requested confidence level.
-
-The conformalization data can be a separate held-out set, or it can be obtained
-through a cross-validation or resampling strategy. The resulting guarantees
-require the conformalization observations and future observations to be
-exchangeable.
-
-Conformal prediction does not make an inaccurate model more accurate. It adds
-an uncertainty layer whose intervals or sets reflect the errors observed during
-conformalization. Better base models generally produce more informative,
-narrower outputs while preserving the target coverage.
-
 ## Explore Conformal Prediction in MAPIE
 
 - [Theory](theory.md) presents the foundational elements of conformal prediction.
