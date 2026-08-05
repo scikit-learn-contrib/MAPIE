@@ -51,7 +51,7 @@ hide:
 
 Compute **prediction intervals** (regression, time series) or **prediction sets** (classification) using state-of-the-art conformal prediction methods.
 
-[Learn more →](content/conformal-prediction/regression.md)
+[Learn more →](content/conformal-prediction/theory.md)
 <br>
 [Browse examples →](generated/regression/index.md)
 
@@ -85,7 +85,7 @@ Use **any model** — scikit-learn, TensorFlow, PyTorch — thanks to scikit-lea
 
 Implements **peer-reviewed** algorithms with **theoretical guarantees** under minimal assumptions, based on Conformal Prediction and Distribution-Free Inference.
 
-[Read the theory →](content/conformal-prediction/regression.md)
+[Read the theory →](content/conformal-prediction/theory.md)
 
 </div>
 

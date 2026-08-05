@@ -155,12 +155,13 @@ nav:
     - v1 Release Notes: content/getting-started/v1-release-notes.md
   - Conformal Prediction:
     - Overview: content/conformal-prediction/index.md
-    - Regression Theory: content/conformal-prediction/regression.md
-    - Classification Theory: content/conformal-prediction/classification.md
-    - Binary Classification: content/conformal-prediction/binary-classification.md
-    - Conformity Scores: content/conformal-prediction/conformity-scores.md
+    - Theory:
+      - Foundations: content/conformal-prediction/theory.md
+      - Regression: content/conformal-prediction/regression.md
+      - Classification: content/conformal-prediction/classification.md
+      - Conformity Scores: content/conformal-prediction/conformity-scores.md
+      - Conditional Guarantees: content/conformal-prediction/conditional-guarantees.md
     - Metrics: content/conformal-prediction/metrics.md
-    - Conditional Guarantees: content/conformal-prediction/conditional-guarantees.md
     - Examples:
       - Regression: generated/regression
       - Classification: generated/classification

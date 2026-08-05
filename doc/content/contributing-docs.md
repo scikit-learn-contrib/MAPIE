@@ -87,8 +87,9 @@ Edit `mkdocs.yml` and add your page to the `nav` section:
 ```yaml
 nav:
   - Conformal Prediction:
-    - Regression Theory: content/conformal-prediction/regression.md
-    - My New Topic: content/conformal-prediction/my-new-topic.md   # ← add here
+    - Theory:
+      - Foundations: content/conformal-prediction/theory.md
+      - My New Topic: content/conformal-prediction/my-new-topic.md   # ← add here
 ```
 
 ### 3. Add Images

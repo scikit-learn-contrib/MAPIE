@@ -1,13 +1,5 @@
 # Classification — Theory
 
-!!! note "Terminology"
-    In theoretical parts of the documentation:
-
-    - `alpha` is equivalent to `1 - confidence_level` — it can be seen as a *risk level*.
-    - *calibrate* and *calibration* are equivalent to *conformalize* and *conformalization*.
-
----
-
 Three methods for multi-class uncertainty quantification have been implemented in MAPIE: **LAC** (Least Ambiguous set-valued Classifier) [^1], **APS** (Adaptive Prediction Sets) [^2] [^3], and **Top-K** [^3].
 
 ![Classification methods](../../images/classification_methods.png){ width="600" }
@@ -35,120 +27,12 @@ The [CIFAR-10 prediction-set notebook](https://github.com/scikit-learn-contrib/M
 applies these methods to an image classifier and compares their marginal and
 class-conditional coverage.
 
----
-
-## 1. LAC
-
-In the LAC method, the conformity score is **one minus the score of the true label**:
-
-
-$$
-s_i(X_i, Y_i) = 1 - \hat{\mu}(X_i)_{Y_i}
-$$
-
-
-The quantile $\hat{q}$ is computed as:
-
-
-$$
-\hat{q} = \text{Quantile}\left(s_1, \ldots, s_n ; \frac{\lceil(n+1)(1-\alpha)\rceil}{n}\right)
-$$
-
-
-The prediction set includes all labels with score higher than the threshold:
-
-
-$$
-\hat{C}(X_{\text{test}}) = \{y : \hat{\mu}(X_{\text{test}})_y \geq 1 - \hat{q}\}
-$$
-
-
-!!! warning
-    Although LAC generally results in small prediction sets, it tends to produce **empty sets** when the model is uncertain (e.g., at the border between two classes).
+The LAC, Top-K, APS, and RAPS methods are described in
+[Conformity Scores](conformity-scores.md#classification-scores).
 
 ---
 
-## 2. Top-K
-
-Introduced in [^3], the **Top-K** method gives the **same prediction set size** for all observations. The conformity score is the rank of the true label:
-
-
-$$
-s_i(X_i, Y_i) = j \quad \text{where} \quad Y_i = \pi_j \quad \text{and} \quad \hat{\mu}(X_i)_{\pi_1} > \cdots > \hat{\mu}(X_i)_{\pi_n}
-$$
-
-
-
-$$
-\hat{q} = \left\lceil \text{Quantile}\left(s_1, \ldots, s_n ; \frac{\lceil(n+1)(1-\alpha)\rceil}{n}\right) \right\rceil
-$$
-
-
-
-$$
-\hat{C}(X_{\text{test}}) = \{\pi_1, \ldots, \pi_{\hat{q}}\}
-$$
-
-
----
-
-## 3. Adaptive Prediction Sets (APS)
-
-The APS method overcomes LAC's empty set problem by constructing **non-empty** prediction sets. Conformity scores are computed by **summing ranked scores** until reaching the true label:
-
-
-$$
-s_i(X_i, Y_i) = \sum^k_{j=1} \hat{\mu}(X_i)_{\pi_j} \quad \text{where} \quad Y_i = \pi_k
-$$
-
-
-Prediction sets are built similarly:
-
-
-$$
-\hat{C}(X_{\text{test}}) = \{\pi_1, \ldots, \pi_k\} \quad \text{where} \quad k = \inf\left\{k : \sum^k_{j=1} \hat{\mu}(X_{\text{test}})_{\pi_j} \geq \hat{q}\right\}
-$$
-
-
-By default, the label whose cumulative score exceeds the quantile is included. Its incorporation can also be randomized for tighter effective coverage [^2] [^3].
-
----
-
-## 4. Regularized Adaptive Prediction Sets (RAPS)
-
-RAPS [^3] improves APS by **regularizing** to avoid very large prediction sets:
-
-
-$$
-s_i(X_i, Y_i) = \sum^k_{j=1} \hat{\mu}(X_i)_{\pi_j} + \lambda (k - k_{\text{reg}})^+ \quad \text{where} \quad Y_i = \pi_k
-$$
-
-
-Where:
-
-- $(z)^+$ denotes the positive part of $z$
-- $k_{\text{reg}}$ is the optimal set size (determined by the Top-K method on a held-out split)
-- $\lambda$ is a regularization parameter (grid search over 0.001, 0.01, 0.1, 0.2, 0.5)
-
-Prediction set construction:
-
-
-$$
-\hat{C}(X_{\text{test}}) = \{\pi_1, \ldots, \pi_k\} \quad \text{where} \quad k = \inf\left\{k : \sum^k_{j=1} \hat{\mu}(X_{\text{test}})_{\pi_j} + \lambda(k - k_{\text{reg}})^+ \geq \hat{q}\right\}
-$$
-
-
-### Exact Coverage via Randomization
-
-To achieve exact coverage, randomization on the last label can be applied:
-
-1. Define $V_i = \frac{s_i(X_i, Y_i) - \hat{q}_{1-\alpha}}{\hat{\mu}(X_i)_{\pi_k} + \lambda \mathbb{1}(k > k_{\text{reg}})}$.
-2. Compare each $V_i$ to $U \sim \text{Unif}(0, 1)$.
-3. If $V_i \leq U$, the last included label is removed.
-
----
-
-## 5. Split- and Cross-Conformal Strategies
+## Split- and Cross-Conformal Strategies
 
 MAPIE includes both split- and cross-conformal strategies for LAC and APS, but **only split-conformal for Top-K**.
 

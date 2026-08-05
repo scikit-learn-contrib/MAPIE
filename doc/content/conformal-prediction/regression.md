@@ -1,13 +1,5 @@
 # Regression — Theory
 
-!!! note "Terminology"
-    In theoretical parts of the documentation:
-
-    - `alpha` is equivalent to `1 - confidence_level` — it can be seen as a *risk level*.
-    - *calibrate* and *calibration* are equivalent to *conformalize* and *conformalization*.
-
----
-
 The methods in `mapie.regression` use various resampling methods based on the **jackknife strategy** recently introduced by Foygel-Barber et al. (2020) [^1]. They allow the user to estimate robust prediction intervals with any kind of machine learning model for regression purposes on single-output data.
 
 The [regression tutorial notebook](https://github.com/scikit-learn-contrib/MAPIE/blob/master/notebooks/regression/tutorial_regression.ipynb)
