@@ -128,9 +128,8 @@ y_pred, y_intervals = mapie_regressor.predict_interval(X_test)
 
 Use `CrossConformalClassifier` and `predict_set` for classification. The exact
 coverage result depends on the selected cross-conformal method; consult the
-[regression theory](../conformal-prediction/regression.md) or
-[classification theory](../conformal-prediction/classification.md) before treating it as
-equivalent to the split-conformal guarantee.
+[regression theory](regression.md) or [classification theory](classification.md)
+before treating it as equivalent to the split-conformal guarantee.
 
 ## Split and Cross-Conformal Trade-offs
 
@@ -148,19 +147,3 @@ choice. With very small conformalization sets, attainable confidence levels are
 limited and coverage estimates are variable. With expensive models,
 cross-validation may be impractical even when it would use data more
 efficiently.
-
-## Risk-Control Calibration Data
-
-Risk controllers also require labeled data that was not used to fit the
-predictive model, but their API calls the step `calibrate` because it selects a
-decision parameter rather than computing conformal prediction intervals or
-sets.
-
-```python
-controller.calibrate(X_conf, y_conf)
-y_pred = controller.predict(X_test)
-```
-
-Do not reuse the calibration data to choose the model or risk-control target.
-The [Risk Control overview](../risk-control/index.md) describes the full
-workflow and its assumptions.

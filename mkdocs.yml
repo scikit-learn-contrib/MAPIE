@@ -32,7 +32,6 @@ theme:
     - navigation.tracking
     - navigation.tabs
     - navigation.tabs.sticky
-    - navigation.sections
     - navigation.top
     - navigation.indexes
     - toc.integrate
@@ -148,42 +147,41 @@ extra:
 copyright: Copyright &copy; 2021 - 2026 MAPIE Team — BSD-3-Clause License
 
 nav:
-  - Home: text/index.md
+  - Home: index.md
   - Getting Started:
-    - Quick Start: text/getting-started/quick-start.md
-    - Choosing the Right Algorithm: text/getting-started/choosing-algorithm.md
-    - Split vs. Cross Conformal: text/getting-started/split-cross-conformal.md
-    - v1 Release Notes: text/getting-started/v1-release-notes.md
+    - Quick Start: content/getting-started/quick-start.md
+    - Choosing the Right Algorithm: content/getting-started/choosing-algorithm.md
+    - v1 Release Notes: content/getting-started/v1-release-notes.md
   - Conformal Prediction:
-    - Overview: text/conformal-prediction/index.md
-    - Regression Theory: text/conformal-prediction/regression.md
-    - Regression Examples: generated/regression
-    - Classification Theory: text/conformal-prediction/classification.md
-    - Binary Classification: text/conformal-prediction/binary-classification.md
-    - Classification Examples: generated/classification
-    - Conformity Scores: text/conformal-prediction/conformity-scores.md
-    - Metrics: text/conformal-prediction/metrics.md
-    - Conditional Guarantees: text/conformal-prediction/conditional-guarantees.md
-    - Conditional CP Examples: generated/conditional_cp
+    - Overview: content/conformal-prediction/index.md
+    - Theory:
+      - Foundations: content/conformal-prediction/theory.md
+      - Split vs. Cross Conformal: content/conformal-prediction/split-cross-conformal.md
+      - Regression: content/conformal-prediction/regression.md
+      - Classification: content/conformal-prediction/classification.md
+      - Conformity Scores: content/conformal-prediction/conformity-scores.md
+      - Conditional Guarantees: content/conformal-prediction/conditional-guarantees.md
+    - Metrics: content/conformal-prediction/metrics.md
+    - Examples:
+      - Regression: generated/regression
+      - Classification: generated/classification
+      - Conditional: generated/conditional_cp
   - Risk Control:
-    - Overview: text/risk-control/index.md
-    - Theoretical Description: text/risk-control/theory.md
-    - LLM Risk Control: text/risk-control/llm-risk-control.md
+    - Overview: content/risk-control/index.md
+    - Theory: content/risk-control/theory.md
+    - LLM Risk Control: content/risk-control/llm-risk-control.md
     - Examples: generated/risk_control
   - Calibration:
-    - Overview: text/calibration/index.md
-    - Theoretical Description: text/calibration/theory.md
-    - Metrics: text/calibration/metrics.md
+    - Overview: content/calibration/index.md
+    - Theory: content/calibration/theory.md
+    - Metrics: content/calibration/metrics.md
     - Examples: generated/calibration
-    - Notebooks: text/calibration/notebooks.md
+    - Notebooks: content/calibration/notebooks.md
   - Exchangeability Testing:
-    - Overview: text/exchangeability-testing/index.md
-    - Theoretical Description: text/exchangeability-testing/theory.md
+    - Overview: content/exchangeability-testing/index.md
+    - Theory: content/exchangeability-testing/theory.md
     - Examples: generated/exchangeability_testing
-  - All Examples: text/all-examples/index.md
-  - Q&A:
-    - Mondrian: text/q-and-a/mondrian.md
+  - All Examples: content/all-examples/index.md
   # Populated from the public Python API by doc/hooks/api_reference.py.
   - API Reference: []
-  - Contributing:
-    - Documentation Guide: text/contributing-docs.md
+  - Contributing: content/contributing-docs.md

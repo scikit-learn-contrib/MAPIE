@@ -1,8 +1,19 @@
 # Choosing the Right Algorithm
 
-Start with the guarantee or diagnostic that your application needs. The table
-below directs you to the appropriate MAPIE area before you choose a specific
-class.
+Use the decision tree below as a quick route through MAPIE's conformal
+prediction and classification risk-control methods. Start by deciding whether
+you want to measure prediction uncertainty or control prediction errors. For
+prediction uncertainty, the next choices depend on the task type, whether the
+observations are exchangeable, the size of the conformalization dataset, and,
+for non-exchangeable regression data, whether ground truth becomes available
+gradually. Dark-green methods can be used with pre-trained models, whereas
+turquoise methods fit models as part of the MAPIE workflow.
+
+![MAPIE algorithm decision tree](../../images/decision_tree.png)
+
+The diagram is a starting point rather than an exhaustive list. The table below
+also covers calibration and exchangeability testing, and the following sections
+describe additional methods and the trade-offs between them.
 
 | Goal | MAPIE area | Output |
 |---|---|---|
@@ -42,8 +53,8 @@ model is already fitted.
 There is no universal dataset-size cutoff between the two. The decision depends
 on model-training cost, the amount of representative data available, and the
 precision needed when estimating a coverage quantile. See the
-[conformalization-set guide](split-cross-conformal.md) for the complete
-workflows.
+[conformalization-set guide](../conformal-prediction/split-cross-conformal.md)
+for the complete workflows.
 
 ### Regression or Classification?
 
@@ -102,7 +113,7 @@ Choose the method according to the metric and type of guarantee:
 
 CRC is the default for recall and does not require a `confidence_level`. RCPS
 and LTT do require one. The detailed [Risk Control overview](../risk-control/index.md)
-and [theoretical description](../risk-control/theory.md) explain these
+and [Theory](../risk-control/theory.md) explain these
 guarantees and assumptions.
 
 !!! warning "Risk control can be infeasible"

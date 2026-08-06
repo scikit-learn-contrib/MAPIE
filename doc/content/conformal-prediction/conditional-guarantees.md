@@ -1,8 +1,59 @@
-# Conditional Conformal Prediction — Theoretical Description
+# Conditional Conformal Prediction — Theory
 
 Standard Conformal Prediction provides marginal guarantees: the true label/value is in the prediction set/interval **marginally** on the test data. Many standard methods provide prediction intervals that do not depend on the specific data point and thus fail to capture heteroscedasticity (the variance of errors is not constant across a regression model's observations). Some algorithms in MAPIE provide intervals that adapt to specific data points, such as Conformalized Quantile Regression (CQR) or the Residual Normalized Score. However, their theoretical guarantees are still marginal.
 
-Here we present a Conditional Conformal Prediction (CCP) method [^1]. This model-agnostic method can create adaptive prediction intervals and provide coverage guarantees for subgroups, rather than only marginal coverage.
+We present below two methods that provide **group-conditional coverage guarantees**. The first is Mondrian Conformal Prediction, and the second is a more advanced Conditional Conformal Prediction method [^2].
+
+
+## Mondrian Conformal Prediction
+
+Mondrian Conformal Prediction (MCP) [^1] is a method that builds prediction sets with a group-conditional coverage guarantee:
+
+$$
+P \{Y_{n+1} \in \hat{C}_{n, \alpha}(X_{n+1}) \mid G_{n+1} = g\} \geq 1 - \alpha
+$$
+
+where $G_{n+1}$ is the group of the new test point.
+
+!!! important "No dedicated MAPIE implementation"
+    MAPIE does not provide a dedicated Mondrian estimator. To follow the
+    original algorithm, split the data into the predefined groups and apply
+    conformal prediction independently within each group. However, the
+    Conditional Conformal Prediction, explained below, is implemented in 
+    MAPIE and is more general than Mondrian.
+
+### When to Use Mondrian
+
+MCP can be used with any split conformal predictor and is particularly useful when you have prior knowledge about existing groups — whether the group information is in the features or not.
+
+!!! example "Classification Example"
+    In a classification setting, groups can be defined as the predicted classes. This ensures the coverage guarantee is satisfied for each predicted class.
+
+### How It Works
+
+Following the original algorithm, MCP simply:
+
+1. Stratifies the data by group
+2. Applies split conformal prediction independently within each group
+
+The quantile for each group:
+
+$$
+\hat{q}^g = \text{Quantile}\left(s_1, \ldots, s_{n^g}, \frac{\lceil(n^{(g)} + 1)(1-\alpha)\rceil}{n^{(g)}}\right)
+$$
+
+where $s_1, \ldots, s_{n^g}$ are the conformity scores of training points in group $g$.
+
+<figure markdown>
+  ![Mondrian](../../images/mondrian.png){ width="600" }
+  <figcaption>Illustration of Mondrian conformal prediction (from [^1]).</figcaption>
+</figure>
+
+---
+
+## Conditional Conformal Prediction
+
+Here we present a Conditional Conformal Prediction method [^2]. This model-agnostic method can create adaptive prediction intervals and provide coverage guarantees for subgroups, rather than only marginal coverage.
 
 In MAPIE, this method has several advantages:
 
@@ -101,7 +152,7 @@ $$
 
 ### Limitations of the current implementation
 
-The original paper [^1] introduced two settings. For the first one, finite-dimensional shifts, coverage is guaranteed on the groups defined by the feature map. The second one, infinite-dimensional shifts, tackles any covariate shift and quantifies the coverage error, as an exact coverage guarantee is theoretically impossible in this case. Currently, MAPIE implements only the finite-dimensional setting. The infinite-dimensional case needs further optimization because it is very slow (e.g., reproducing Figure 5 of the paper takes dozens of compute hours).
+The original paper [^2] introduced two settings. For the first one, finite-dimensional shifts, coverage is guaranteed on the groups defined by the feature map. The second one, infinite-dimensional shifts, tackles any covariate shift and quantifies the coverage error, as an exact coverage guarantee is theoretically impossible in this case. Currently, MAPIE implements only the finite-dimensional setting. The infinite-dimensional case needs further optimization because it is very slow (e.g., reproducing Figure 5 of the paper takes dozens of compute hours).
 
 ## How to use it in practice?
 
@@ -132,6 +183,8 @@ examples, see the regression and classification examples using
 
 ---
 
+
 ## References
 
-[^1]: Isaac Gibbs, John J Cherian, Emmanuel J Candès, Conformal prediction with conditional guarantees, Journal of the Royal Statistical Society Series B: Statistical Methodology, Volume 87, Issue 4, September 2025, Pages 1100–1126, [https://doi.org/10.1093/jrsssb/qkaf008](https://doi.org/10.1093/jrsssb/qkaf008).
+[^1]: Vladimir Vovk, David Lindsay, Ilia Nouretdinov, and Alex Gammerman. "Mondrian confidence machine." Technical report, Royal Holloway University of London, 2003.
+[^2]: Isaac Gibbs, John J Cherian, Emmanuel J Candès, Conformal prediction with conditional guarantees, Journal of the Royal Statistical Society Series B: Statistical Methodology, Volume 87, Issue 4, September 2025, Pages 1100–1126, [https://doi.org/10.1093/jrsssb/qkaf008](https://doi.org/10.1093/jrsssb/qkaf008).
