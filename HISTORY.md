@@ -1,6 +1,14 @@
 # History
 ## 1.x.x (2026-xx-xx)
 
+- Fix `QuantileRegressionScore` reporting twice the effective number of calibration
+  samples: its scores hold one row per side, which cancelled the halving applied to
+  asymmetric scores. Calibration sets too small for the `alpha / 2` each side is
+  calibrated at are now rejected instead of silently falling back to the extreme order
+  statistic.
+- Remove the `sym` argument of `AbsoluteQuantileRegressionScore`: a single distribution
+  of absolute distances calibrates both bounds, so the score is symmetric by
+  construction. Use `QuantileRegressionScore` for the asymmetric variant.
 
 
 ## 1.5.0 (2026-xx-xx)
