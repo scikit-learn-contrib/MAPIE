@@ -842,6 +842,12 @@ def _compute_classification_quantile(
 ) -> NDArray:
     """Compute the desired quantiles of conformity scores for classification.
 
+    Uses the same ``ceil()``-based finite-sample correction as
+    ``_compute_regression_quantile``: quantile level
+    ``ceil((1 - alpha) * (n + 1)) / n`` with numpy ``method="lower"``, so the
+    returned value is the ``ceil((1 - alpha) * (n + 1))``-th smallest
+    conformity score, i.e. the split-conformal order statistic.
+
     Parameters
     ----------
     conformity_scores: NDArray of shape Union[(n_samples, 1),
@@ -863,8 +869,8 @@ def _compute_classification_quantile(
             [
                 np.quantile(
                     conformity_scores,
-                    ((n + 1) * (1 - _alpha)) / n,
-                    method="higher",
+                    np.ceil((n + 1) * (1 - _alpha)) / n,
+                    method="lower",
                 )
                 for _alpha in alpha_np
             ]

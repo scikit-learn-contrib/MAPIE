@@ -1,6 +1,7 @@
 # History
 ## 1.x.x (2026-xx-xx)
 
+- Fix `_compute_classification_quantile` selecting one order statistic too many for some combinations of calibration size and `confidence_level`, which made classification prediction sets unnecessarily conservative by `1 / (n + 1)`. It now applies the same `ceil()`-based finite-sample correction as `_compute_regression_quantile`, so both helpers select the same order statistic. (issue #479)
 
 
 ## 1.5.0 (2026-xx-xx)
