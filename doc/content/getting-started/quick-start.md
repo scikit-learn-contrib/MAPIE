@@ -32,6 +32,9 @@ used with models from other frameworks.
     pip install git+https://github.com/scikit-learn-contrib/MAPIE
     ```
 
+MAPIE requires Python 3.9 or later, NumPy 1.23 or later, and scikit-learn 1.4
+or later.
+
 !!! warning "Notebook users"
     After installing, upgrading, or downgrading MAPIE in Jupyter, Colab, or
     Kaggle, restart the kernel before importing MAPIE. Otherwise, Python may
@@ -198,8 +201,8 @@ For multi-label classification, use
 
 - [Choosing the right algorithm](choosing-algorithm.md) compares the available
   conformal predictors and risk controllers.
-- [Conformalization set](split-cross-conformal.md) explains split- and
-  cross-conformal workflows and their trade-offs.
+- [Conformalization set](../conformal-prediction/split-cross-conformal.md)
+  explains split- and cross-conformal workflows and their trade-offs.
 - [Conformal Prediction overview](../conformal-prediction/index.md)
   introduces prediction intervals, prediction sets, and coverage guarantees.
 - [Risk Control overview](../risk-control/index.md) explains risk
