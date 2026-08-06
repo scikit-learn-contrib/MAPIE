@@ -61,6 +61,6 @@
 * Edgar Jaber <EdgarJaber>
 * Dresden Goehner <dr.dresden0416@gmail.com>
 * Code-ve <vishnuarya7983@gmail.com>
-* Shivam Lalakiya <lalakiya@wustl.edu>
+* Shivam Lalakiya <shivamlalakiya151299@gmail.com>
 
 To be continued ...
