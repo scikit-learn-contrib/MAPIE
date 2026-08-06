@@ -33,15 +33,15 @@ class QuantileRegressionScore(BaseRegressionScore):
 
         Parameters
         ----------
-        y: NDArray[float] of shape (2, n_samples)
+        y: NDArray[float] of shape (n_samples,)
             Observed target values.
 
-        y_pred: NDArray[float] of shape (n_samples,)
-            Predicted target values.
+        y_pred: NDArray[float] of shape (2, n_samples)
+            Predicted lower and upper quantiles.
 
         Returns
         -------
-        NDArray[float] of shape (n_samples, 2)
+        NDArray[float] of shape (2, n_samples)
             Signed conformity scores.
         """
         return np.vstack((y - y_pred[0], y - y_pred[1]))
