@@ -881,28 +881,35 @@ class TestComputeClassificationQuantile:
     def test_returns_conformal_order_statistic(self):
         """Test that the quantile is the k-th smallest conformity score, with
         k = ceil((1 - alpha) * (n + 1)) the split-conformal order statistic.
-        The grid includes cells where (1 - alpha) * (n + 1) is an integer,
-        where an implementation can easily be one order statistic too high."""
+        The cells cover both ways an implementation can be one order statistic
+        too high: (1 - alpha) * (n + 1) an integer, and the non-integer cells
+        appended below, which the first grid does not reach for any n."""
         np.random.seed(0)
-        for n in [19, 50, 99, 100, 199, 500]:
+        cells = [
+            (n, alpha)
+            for n in [19, 50, 99, 100, 199, 500]
+            for alpha in [0.05, 0.1, 0.2, 0.5]
+        ]
+        cells += [(6, 0.3), (13, 0.3)]
+        for n, alpha in cells:
             scores = np.sort(np.random.rand(n, 1), axis=0)
-            for alpha in [0.05, 0.1, 0.2, 0.5]:
-                k = int(np.ceil((1 - alpha) * (n + 1)))
-                result = _compute_classification_quantile(scores, np.array([alpha]))
-                np.testing.assert_array_equal(result[0], scores[k - 1, 0])
+            k = int(np.ceil((1 - alpha) * (n + 1)))
+            result = _compute_classification_quantile(scores, np.array([alpha]))
+            np.testing.assert_array_equal(result[0], scores[k - 1, 0])
 
     def test_matches_regression_quantile(self):
         """Test that the classification and regression helpers select the same
         order statistic for the same level (issue #479)."""
         np.random.seed(0)
-        for n in [19, 50, 99, 100]:
+        cells = [(n, alpha) for n in [19, 50, 99, 100] for alpha in [0.05, 0.1, 0.2]]
+        cells += [(6, 0.3), (13, 0.3)]
+        for n, alpha in cells:
             scores = np.random.rand(n)
-            for alpha in [0.05, 0.1, 0.2]:
-                cls = _compute_classification_quantile(
-                    scores.reshape(-1, 1), np.array([alpha])
-                )
-                reg = _compute_regression_quantile(scores, np.array([1 - alpha]))
-                np.testing.assert_array_equal(cls[0], reg[0][0])
+            cls = _compute_classification_quantile(
+                scores.reshape(-1, 1), np.array([alpha])
+            )
+            reg = _compute_regression_quantile(scores, np.array([1 - alpha]))
+            np.testing.assert_array_equal(cls[0], reg[0][0])
 
 
 def test_compute_classification_quantile_value_error():
