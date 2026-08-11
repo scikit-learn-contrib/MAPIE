@@ -148,6 +148,7 @@ exclude = [
     "build",
     "dist",
     "node_modules",
+    "notebooks/educational-content",
     "site-packages",
     "venv",
     "list"
