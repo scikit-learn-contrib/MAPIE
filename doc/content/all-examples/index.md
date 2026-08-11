@@ -46,4 +46,12 @@ Exchangeability testing and deployed-model monitoring examples.
 [Open Exchangeability Testing examples](../../generated/exchangeability_testing/index.md)
 </div>
 
+<div class="card" markdown>
+### :material-notebook: Educational Notebooks
+Guided regression and LLM conformal-prediction exercises, with completed
+versions and supporting data.
+
+[Open educational notebooks](https://github.com/scikit-learn-contrib/MAPIE/tree/master/notebooks/educational-content)
+</div>
+
 </div>
