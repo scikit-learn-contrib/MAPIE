@@ -1,7 +1,13 @@
 # History
 ## 1.x.x (2026-xx-xx)
 
-- Fix `_compute_classification_quantile` selecting one order statistic too many for some combinations of calibration size and `confidence_level`, which made classification prediction sets unnecessarily conservative by `1 / (n + 1)`. It now applies the same `ceil()`-based finite-sample correction as `_compute_regression_quantile`, so both helpers select the same order statistic. (issue #479)
+- Add educational MAPIE notebooks covering regression and conformal prediction
+  for language models. Shown in the documentation homepage and All Examples.
+- Fix `_compute_classification_quantile` to select the intended split-conformal
+  order statistic. For some calibration sizes and confidence levels, the previous
+  computation selected the next higher order statistic, making prediction sets
+  unnecessarily conservative. Classification and regression now apply the same
+  finite-sample correction. (issue #479)
 
 
 ## 1.5.0 (2026-xx-xx)

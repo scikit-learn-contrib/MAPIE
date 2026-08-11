@@ -135,6 +135,14 @@ Test distribution shifts and monitor exchangeability assumptions.
 [Browse examples →](generated/exchangeability_testing/index.md)
 </div>
 
+<div class="card" markdown>
+### :material-notebook: Educational Notebooks
+Work through guided regression and LLM conformal-prediction exercises, then
+compare your solutions with the completed versions.
+
+[Open educational notebooks →](https://github.com/scikit-learn-contrib/MAPIE/tree/master/notebooks/educational-content)
+</div>
+
 </div>
 
 ---
