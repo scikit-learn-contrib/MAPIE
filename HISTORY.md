@@ -2,7 +2,7 @@
 ## 1.x.x (2026-xx-xx)
 
 - Add educational MAPIE notebooks covering regression and conformal prediction
-  for language models.
+  for language models. Shown in the documentation homepage and All Examples.
 
 
 ## 1.5.0 (2026-xx-xx)
