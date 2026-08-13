@@ -84,7 +84,7 @@ docs = [
     "albumentations>=1.4",
     "opencv-python>=4.8",
     "huggingface-hub==1.18.0",
-    "tqdm>=4.66",
+    "tqdm==4.68.1",
 ]
 notebooks = [
     "ipykernel==6.31.0",
