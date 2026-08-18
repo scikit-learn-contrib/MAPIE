@@ -8,6 +8,10 @@
   computation selected the next higher order statistic, making prediction sets
   unnecessarily conservative. Classification and regression now apply the same
   finite-sample correction. (issue #479)
+- Fix `OnlineMartingaleTest.compute_p_value` to put the smoothing term's `+1`
+  inside the tie count rather than outside it. The p-value stayed valid, but
+  the biased mean caused the default `jumper_martingale` exchangeability test
+  to over-reject relative to `test_level`. (issue #984)
 
 
 ## 1.5.0 (2026-xx-xx)
