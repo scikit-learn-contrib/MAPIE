@@ -308,7 +308,7 @@ def test_compute_p_value_with_history_and_ties():
     history = np.array([1.0, 2.0, 2.0, 3.0])
 
     rng = np.random.default_rng(1234)
-    expected = float((1.0 + 1 + rng.uniform() * 2) / 5.0)
+    expected = float((1 + rng.uniform() * (2 + 1)) / 5.0)
 
     actual = omt.compute_p_value(
         current_conformity_score=2.0, conformity_score_history=history
@@ -316,6 +316,38 @@ def test_compute_p_value_with_history_and_ties():
 
     assert actual == pytest.approx(expected)
     assert 0.0 <= actual <= 1.0
+
+
+def test_compute_p_value_tie_free_depends_on_draw():
+    """Different random states must give different p-values on tie-free input."""
+    history = np.array([1.0, 2.0, 3.0])
+
+    p_a = OnlineMartingaleTest(random_state=1).compute_p_value(
+        current_conformity_score=2.0, conformity_score_history=history
+    )
+    p_b = OnlineMartingaleTest(random_state=2).compute_p_value(
+        current_conformity_score=2.0, conformity_score_history=history
+    )
+
+    assert p_a != p_b
+
+
+def test_compute_p_value_mean_is_one_half():
+    """Under exchangeability, the p-value's mean must be 1/2."""
+    data_rng = np.random.default_rng(0)
+    n = 5
+
+    pvalues = []
+    for seed in range(20000):
+        draws = data_rng.normal(size=n + 1)
+        pvalues.append(
+            OnlineMartingaleTest(random_state=seed).compute_p_value(
+                current_conformity_score=draws[-1],
+                conformity_score_history=draws[:-1],
+            )
+        )
+
+    assert np.mean(pvalues) == pytest.approx(0.5, abs=0.01)
 
 
 def test_is_exchangeable_returns_false_for_one_value_above_threshold():
@@ -459,7 +491,11 @@ def test_update_appends_scores_and_pvalues():
 
     assert len(omt.conformity_score_history) == 2
     assert len(omt.pvalue_history) == 2
-    assert omt.current_martingale_value == pytest.approx(1.0)
+    # Was pytest.approx(1.0): under the pre-fix tie-term bug the second
+    # p-value (no history ties) was forced to exactly 0.5, so the jumper
+    # martingale's single bet was a no-op. The corrected p-value is a genuine
+    # draw, so only a sanity bound on the martingale value holds here.
+    assert 0.0 < omt.current_martingale_value < 2.0
 
 
 def test_summary_without_values():
