@@ -3,6 +3,11 @@
 
 - Add educational MAPIE notebooks covering regression and conformal prediction
   for language models. Shown in the documentation homepage and All Examples.
+- Fix `_compute_classification_quantile` to select the intended split-conformal
+  order statistic. For some calibration sizes and confidence levels, the previous
+  computation selected the next higher order statistic, making prediction sets
+  unnecessarily conservative. Classification and regression now apply the same
+  finite-sample correction. (issue #479)
 - Fix `QuantileRegressionScore` reporting twice the effective number of calibration
   samples: its scores hold one row per side, which cancelled the halving applied to
   asymmetric scores. Calibration sets too small for the `alpha / 2` each side is
@@ -11,7 +16,6 @@
 - Remove the `sym` argument of `AbsoluteQuantileRegressionScore`: a single distribution
   of absolute distances calibrates both bounds, so the score is symmetric by
   construction. Use `QuantileRegressionScore` for the asymmetric variant.
-
 
 
 ## 1.5.0 (2026-xx-xx)
@@ -80,6 +84,10 @@
 - Refresh the release checklist with GitHub release guidance.
 - Add `AGENTS.md` as the canonical guide for coding agents.
 
+### Breaking changes
+
+* Drop support for Python 3.9 (EOL since October 2025). Minimum supported version is now Python 3.10. This was required to upgrade `pytest` to 9.0.3, which fixes a security advisory (CVE on `/tmp/pytest-of-{user}` directory handling).
+
 ## 1.4.1 (2026-06-08)
 
 ### Features
@@ -119,9 +127,6 @@
 * Fix the release process (release-candidate/final-release workflows, docs deployment, and release checklist).
 * Make tests compatible with scikit-learn 1.9 (calibration tests).
 * Silence intentional `UserWarning`s emitted during test runs to keep the test output clean.
-### Breaking changes
-
-* Drop support for Python 3.9 (EOL since October 2025). Minimum supported version is now Python 3.10. This was required to upgrade `pytest` to 9.0.3, which fixes a security advisory (CVE on `/tmp/pytest-of-{user}` directory handling).
 
 ## 1.4.0 (2026-04-30)
 
