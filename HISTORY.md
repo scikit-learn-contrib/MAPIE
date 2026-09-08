@@ -3,6 +3,9 @@
 
 - Add educational MAPIE notebooks covering regression and conformal prediction
   for language models. Shown in the documentation homepage and All Examples.
+- Add a Getting Started guide for wrapping statsmodels, saved LightGBM Booster,
+  and PyTorch estimators, including a PyTorch time-series forecasting example
+  with exogenous variables. (issues #884, #403, and #501)
 - Fix `_compute_classification_quantile` to select the intended split-conformal
   order statistic. For some calibration sizes and confidence levels, the previous
   computation selected the next higher order statistic, making prediction sets
