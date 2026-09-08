@@ -350,6 +350,54 @@ def test_compute_p_value_mean_is_one_half():
     assert np.mean(pvalues) == pytest.approx(0.5, abs=0.01)
 
 
+def test_compute_p_value_transcribes_algorithm_1():
+    """p-value must match Algorithm 1 of Fedorova et al. (2012), j running to i.
+
+    Algorithm 1 computes
+    p_i = (#{j <= i : a_j > a_i} + theta_i * #{j <= i : a_j = a_i}) / i,
+    where the inner loop runs to i, so the current score is in its own
+    comparison set and contributes one to the tie count at every step.
+    """
+
+    class _FixedTheta:
+        """RNG stand-in returning the step's theta on every call."""
+
+        theta: float = 0.0
+
+        def uniform(self) -> float:
+            return self.theta
+
+    def algorithm_1(scores: list[float], thetas: list[float]) -> list[float]:
+        pvalues = []
+        for i in range(1, len(scores) + 1):
+            seen = scores[:i]  # includes scores[i - 1] itself
+            n_greater = sum(1 for s in seen if s > scores[i - 1])
+            n_equal = sum(1 for s in seen if s == scores[i - 1])
+            pvalues.append((n_greater + thetas[i - 1] * n_equal) / i)
+        return pvalues
+
+    tie_free = [0.3, 0.9, 0.1, 0.7, 0.5]
+    tied = [0.3, 0.5, 0.5, 0.5, 0.7, 0.5]
+
+    for scores in (tie_free, tied):
+        thetas = [0.1 * (k + 1) for k in range(len(scores))]
+        omt = OnlineMartingaleTest()
+        theta_rng = _FixedTheta()
+        omt.rng = theta_rng  # type: ignore[assignment]
+
+        actual = []
+        for i, theta in enumerate(thetas):
+            theta_rng.theta = theta
+            actual.append(
+                omt.compute_p_value(
+                    current_conformity_score=scores[i],
+                    conformity_score_history=np.asarray(scores[:i]),
+                )
+            )
+
+        assert actual == pytest.approx(algorithm_1(scores, thetas))
+
+
 def test_is_exchangeable_returns_false_for_one_value_above_threshold():
     """Test is_exchangeable returns False when at least one value is above threshold."""
     omt = OnlineMartingaleTest(burn_in=1)
