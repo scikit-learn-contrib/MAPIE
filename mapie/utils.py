@@ -814,26 +814,36 @@ def _compute_regression_quantile(
 
     # Adjust alpha w.r.t quantile correction
     alpha_cor = np.ceil(alpha_ref * (n_calib + 1)) / n_calib
-    alpha_cor = np.clip(alpha_cor, a_min=0, a_max=1)
 
-    # Compute the target quantiles:
-    # If unbounded is True and alpha is greater than or equal to 1,
-    # the quantile is set to infinity.
-    # Otherwise, the quantile is calculated as the corrected lower
-    # quantile of the signed conformity scores.
-    quantile: NDArray = signed * np.column_stack(
-        [
-            np.nanquantile(
+    # The conformal quantile at a level does not exist when the corrected
+    # level exceeds 1.0 (i.e. ceil(alpha_ref * (n + 1)) > n). The previous
+    # clip to 1.0 silently returned the extreme order statistic — a finite
+    # bound — instead of +inf / an error. Handle the infeasible case next
+    # to the arithmetic so every caller is covered (asymmetric scores that
+    # halve the effective n, and allow_infinite_bounds=True which skips the
+    # calibration-size guard entirely). See issues #974 and #980.
+    quantile: NDArray = np.empty((n_ref, len(alpha_np)))
+    for j, (_alpha, _alpha_cor) in enumerate(zip(alpha_ref, alpha_cor)):
+        if _alpha_cor > 1.0:
+            if unbounded:
+                quantile[:, j] = signed * np.inf
+            else:
+                need = int(np.ceil((1 - _alpha) * (n_calib + 1)))
+                raise ValueError(
+                    "The number of calibration samples "
+                    f"({n_calib}) is too low to reach the requested "
+                    f"level. The corrected quantile level "
+                    f"({_alpha_cor:.4f}) exceeds 1.0. Increase the "
+                    f"calibration set size to at least {need} or set "
+                    "unbounded=True."
+                )
+        else:
+            quantile[:, j] = signed * np.nanquantile(
                 signed * conformity_scores,
                 _alpha_cor,
                 axis=axis,
                 method="lower",
             )
-            if not (unbounded and _alpha >= 1)
-            else np.inf * np.ones(n_ref)
-            for _alpha, _alpha_cor in zip(alpha_ref, alpha_cor)
-        ]
-    )
     return quantile
 
 
