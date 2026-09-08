@@ -20,7 +20,7 @@
 
 🚀 MAPIE in 2026 🚀 New features have been implemented, starting with the application of **risk control** to emerging use cases such as **LLM-as-Judge** and **image segmentation**. In addition, **exchangeability tests** have been introduced to help users verify when MAPIE can be legitimately applied. Also, new **adaptive** conformal prediction methods have been added. Finally, the documentation has been updated with a new design!
 
-🎉 MAPIE in 2025 🎉 MAPIE v1 is live! This new version introduces major changes to the API. Check out the [release notes](content/getting-started/v1-release-notes.md).
+🎉 MAPIE in 2025 🎉 MAPIE v1 is live! This new version introduces major changes to the API. Check out the [release notes](doc/content/getting-started/v1-release-notes.md).
 
 See [GitHub Releases](https://github.com/scikit-learn-contrib/MAPIE/releases) and [HISTORY.md](https://github.com/scikit-learn-contrib/MAPIE/blob/master/HISTORY.md) for up-to-date details on the new features.
 
