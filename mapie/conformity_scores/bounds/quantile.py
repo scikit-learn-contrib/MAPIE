@@ -74,12 +74,40 @@ class QuantileRegressionScore(BaseRegressionScore):
 class AbsoluteQuantileRegressionScore(QuantileRegressionScore):
     """
     Absolute conformity score for quantile regression.
+
+    This score is symmetrical by construction and cannot be made otherwise.
+    `get_conformity_scores` collapses the two signed rows into a single
+    non-negative distance per sample, so one distribution calibrates both
+    bounds and `sym` must stay `True`.
+
+    Parameters
+    ----------
+    sym: bool, default=True
+        Kept for signature compatibility with the other conformity scores.
+        Only `True` is accepted.
+
+    Raises
+    ------
+    ValueError
+        If `sym` is not `True`.
     """
 
     def __init__(
         self,
         sym: bool = True,
     ) -> None:
+        # An asymmetrical setting silently mis-calibrates the interval rather
+        # than failing: with one-dimensional scores, `get_bounds` hands the same
+        # array to both sides, flips the sign of the lower correction, splits a
+        # single one-sided level into two, and `get_effective_calibration_samples`
+        # halves the sample count. The result is a wider interval whose coverage
+        # no longer matches the requested one.
+        if sym is not True:
+            raise ValueError(
+                "AbsoluteQuantileRegressionScore is symmetrical by construction "
+                "and does not support sym=False. Use QuantileRegressionScore for "
+                "an asymmetrical quantile score."
+            )
         super().__init__(sym=sym, consistency_check=False)
 
     def get_conformity_scores(

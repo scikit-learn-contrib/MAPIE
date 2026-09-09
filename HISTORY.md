@@ -12,6 +12,9 @@
   inside the tie count rather than outside it. The p-value stayed valid, but
   the biased mean caused the default `jumper_martingale` exchangeability test
   to over-reject relative to `test_level`. (issue #984)
+- Fix `AbsoluteQuantileRegressionScore` to reject `sym=False`. The score is
+  symmetrical by construction, and an asymmetrical setting silently
+  mis-calibrated the interval instead of failing. (issue #989)
 
 
 ## 1.5.0 (2026-xx-xx)
