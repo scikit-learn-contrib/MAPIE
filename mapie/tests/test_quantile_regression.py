@@ -2633,3 +2633,32 @@ def test_cross_conformalized_quantile_regressor_fit_conformalize_twice_warns() -
     assert reg.is_fitted_and_conformalized
     assert len(reg.estimators_["0.1"]["lower"]) == n_splits
     assert list(reg.n_calib_samples) == n_calib_samples
+
+
+def test_absolute_quantile_regression_score_rejects_asymmetry() -> None:
+    """`sym=False` mis-calibrates the interval instead of failing (issue #989).
+
+    The score collapses the two signed rows into one non-negative distance per
+    sample, so a single distribution calibrates both bounds. Left asymmetrical,
+    `get_bounds` hands that one-dimensional array to both sides, flips the sign
+    of the lower correction, splits a single one-sided level in two, and
+    `get_effective_calibration_samples` halves the sample count.
+    """
+    with pytest.raises(
+        ValueError,
+        match=r".*symmetrical by construction and does not support sym=False.*",
+    ):
+        AbsoluteQuantileRegressionScore(sym=False)
+
+
+def test_absolute_quantile_regression_score_defaults_to_symmetrical() -> None:
+    """The default construction is unchanged and stays symmetrical."""
+    score = AbsoluteQuantileRegressionScore()
+    assert score.sym is True
+    assert AbsoluteQuantileRegressionScore(sym=True).sym is True
+
+
+def test_quantile_regression_score_still_accepts_both_settings() -> None:
+    """The guard is specific to the absolute score; the base one is untouched."""
+    assert QuantileRegressionScore(sym=False).sym is False
+    assert QuantileRegressionScore(sym=True).sym is True
