@@ -1,6 +1,8 @@
 # History
 ## 1.x.x (2026-xx-xx)
 
+- Add example demonstrating RAPS (Regularized Adaptive Prediction Sets)
+  conformity score for classification, comparing it with APS. (issue #268)
 - Add educational MAPIE notebooks covering regression and conformal prediction
   for language models. Shown in the documentation homepage and All Examples.
 - Fix `_compute_classification_quantile` to select the intended split-conformal
