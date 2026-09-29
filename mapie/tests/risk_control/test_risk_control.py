@@ -15,6 +15,7 @@ from mapie.risk_control.methods import (
     _check_risk_monotonicity,
     compute_hoeffding_bentkus_p_value,
     find_precision_best_predict_param,
+    get_r_hat_plus,
     ltt_procedure,
 )
 
@@ -244,6 +245,25 @@ def test_ltt_fst_increasing():
         r_hat, alpha_np, 0.1, n_obs, fwer_method=FWERFixedSequenceTesting()
     )
     assert np.array_equal(valid_index_1, valid_index_2)
+
+
+def test_bernstein_bound_uses_each_lambda_variance() -> None:
+    risks = np.array(
+        [
+            [0.0, 1.0],
+            [0.0, 1.0],
+            [0.0, 1.0],
+            [0.0, 1.0],
+        ]
+    )
+    delta = 0.1
+    _, r_hat_plus = get_r_hat_plus(
+        risks, np.array([0.1, 0.2]), "rcps", "bernstein", delta, None
+    )
+    n_obs = risks.shape[0]
+    shared = (7 * np.log(2 / delta)) / (3 * (n_obs - 1))
+    expected = risks.mean(axis=0) + shared
+    np.testing.assert_allclose(r_hat_plus, expected)
 
 
 def test_ltt_fst_decreasing_reorder():
