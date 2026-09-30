@@ -175,6 +175,8 @@ def find_best_predict_param(
     When no lambda values are valid:
     - if r_hat_plus is increasing, then return the first lambda
     - else return the last lambda.
+    Non-finite bounds are treated as invalid. A warning is emitted if at
+    least one requested risk level has no valid lambda.
 
     Parameters
     ----------
@@ -212,8 +214,8 @@ def find_best_predict_param(
     bound_rep = np.repeat(np.expand_dims(r_hat_plus, axis=0), len(alphas_np), axis=0)
     increasing_risk = _is_increasing_risk(r_hat_plus)
 
-    arr = np.greater_equal(bound_rep, alphas_np).astype(int)
-    if arr.min() == 1:
+    arr = (~np.isfinite(bound_rep) | np.greater_equal(bound_rep, alphas_np)).astype(int)
+    if np.any(np.all(arr, axis=1)):
         warnings.warn(
             "The risk cannot be controlled. Returning the extreme value according to risk direction."
         )

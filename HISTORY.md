@@ -1,6 +1,9 @@
 # History
 ## 1.x.x (2026-xx-xx)
 
+- Treat non-finite risk bounds as invalid when selecting a prediction
+  parameter, and warn if any requested risk level has no valid parameter.
+  (issue #993)
 - Add educational MAPIE notebooks covering regression and conformal prediction
   for language models. Shown in the documentation homepage and All Examples.
 - Fix `_compute_classification_quantile` to select the intended split-conformal
