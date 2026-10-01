@@ -25,6 +25,7 @@ from mapie.utils import (
     _check_if_param_in_allowed_values,
     _check_lower_upper_bounds,
     _check_null_weight,
+    _compute_regression_quantile,
     _fit_estimator,
     _prepare_params,
     _raise_error_if_fit_called_in_prefit_mode,
@@ -2314,8 +2315,7 @@ class _MapieQuantileRegressor(_MapieRegressor):
         alpha = self.alpha if symmetry else self.alpha / 2
         _check_alpha_and_n_samples(alpha, self.n_calib_samples)
 
-        n = self.n_calib_samples
-        q = (1 - (alpha)) * (1 + (1 / n))
+        alpha_ref = np.array([1 - alpha])
 
         y_preds = np.full(
             shape=(3, _num_samples(X)),
@@ -2325,16 +2325,17 @@ class _MapieQuantileRegressor(_MapieRegressor):
         for i, est in enumerate(self.estimators_):
             y_preds[i] = est.predict(X, **predict_params)
         _check_lower_upper_bounds(y_preds[0], y_preds[1], y_preds[2])
+        scores = self.conformity_scores
         quantile: NDArray
         if symmetry:
             quantile = np.full(
-                2, np.quantile(self.conformity_scores[2], q, method="higher")
+                2, _compute_regression_quantile(scores[2], alpha_ref)[0, 0]
             )
         else:
             quantile = np.array(
                 [
-                    np.quantile(self.conformity_scores[0], q, method="higher"),
-                    np.quantile(self.conformity_scores[1], q, method="higher"),
+                    _compute_regression_quantile(scores[0], alpha_ref)[0, 0],
+                    _compute_regression_quantile(scores[1], alpha_ref)[0, 0],
                 ]
             )
         y_pred_low = y_preds[0][:, np.newaxis] - quantile[0]
