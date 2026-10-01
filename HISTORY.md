@@ -2,7 +2,9 @@
 ## 1.x.x (2026-xx-xx)
 
 - Treat non-finite risk bounds as invalid when selecting a prediction
-  parameter, and warn if any requested risk level has no valid parameter.
+  parameter, and warn if any requested risk level has no valid parameter,
+  including for finite bounds with multiple risk levels. Endpoint-based
+  risk-direction inference and the extreme-value fallback are unchanged.
   (issue #993)
 - Add educational MAPIE notebooks covering regression and conformal prediction
   for language models. Shown in the documentation homepage and All Examples.

@@ -175,8 +175,11 @@ def find_best_predict_param(
     When no lambda values are valid:
     - if r_hat_plus is increasing, then return the first lambda
     - else return the last lambda.
-    Non-finite bounds are treated as invalid. A warning is emitted if at
-    least one requested risk level has no valid lambda.
+    Non-finite bounds are marked as invalid in the selection mask. A warning
+    is emitted if at least one requested risk level has no valid lambda,
+    including when all bounds are finite. Direction inference still compares
+    the endpoint bounds. Non-finite endpoints can affect that inference, and
+    the extreme-value fallback can return a parameter with a non-finite bound.
 
     Parameters
     ----------
