@@ -10,6 +10,7 @@ from numpy.typing import NDArray
 from sklearn.base import BaseEstimator, RegressorMixin, clone
 from sklearn.compose import ColumnTransformer
 from sklearn.datasets import make_regression
+from sklearn.dummy import DummyRegressor
 from sklearn.ensemble import GradientBoostingRegressor, RandomForestClassifier
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LinearRegression, QuantileRegressor
@@ -25,6 +26,7 @@ from mapie.conformity_scores import (
     QuantileRegressionScore,
 )
 from mapie.regression.quantile_regression import (
+    ConformalizedQuantileRegressor,
     CrossConformalizedQuantileRegressor,
     _QuantileConformalizer,
     _MapieQuantileRegressor,
@@ -618,6 +620,45 @@ def test_prefit_different_type_list_tuple_array(alpha: float) -> None:
 
     np.testing.assert_allclose(y_pred_prefit_list, y_pred_prefit_array)
     np.testing.assert_allclose(y_pis_prefit_list, y_pis_prefit_array)
+
+
+@pytest.mark.parametrize(
+    "n_calib, alpha, symmetry",
+    [
+        (199, 0.1, True),
+        (29, 0.1, True),
+        (6, 0.3, True),
+        (199, 0.1, False),
+        (39, 0.1, False),
+        (26, 0.3, False),
+    ],
+)
+def test_correction_is_conformal_order_statistic(
+    n_calib: int, alpha: float, symmetry: bool
+) -> None:
+    """
+    Test that the correction is the k-th smallest conformity score, with
+    k = ceil((1 - level) * (n + 1)) and level = alpha (symmetric) or alpha / 2
+    (asymmetric). The quantile estimators all predict 0, so the conformity
+    scores are -y, y and |y|.
+    """
+    X_calib_ = np.zeros((n_calib, 1))
+    y_calib_ = np.random.RandomState(random_state).normal(size=n_calib)
+    zero = DummyRegressor(strategy="constant", constant=0.0).fit(X_calib_, y_calib_)
+    cqr = ConformalizedQuantileRegressor(
+        [zero, zero, zero], confidence_level=1 - alpha, prefit=True
+    ).conformalize(X_calib_, y_calib_)
+    _, y_pis = cqr.predict_interval(X_calib_[:1], symmetric_correction=symmetry)
+
+    if symmetry:
+        k = int(np.ceil((1 - alpha) * (n_calib + 1)))
+        up = np.sort(np.abs(y_calib_))[k - 1]
+        low = -up
+    else:
+        k = int(np.ceil((1 - alpha / 2) * (n_calib + 1)))
+        low = -np.sort(-y_calib_)[k - 1]
+        up = np.sort(y_calib_)[k - 1]
+    np.testing.assert_array_equal(y_pis[0, :, 0], [low, up])
 
 
 @pytest.mark.parametrize("estimator", ESTIMATOR)
