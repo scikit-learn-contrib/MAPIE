@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import warnings
+from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any, Callable, List, Literal, Tuple, Union, cast
 
 import numpy as np
@@ -145,7 +146,76 @@ class _BaseRisk:
         return cast(NDArray, risk_sequence)
 
 
-class BinaryRisk(_BaseRisk):
+class ClassSpecificRisk(_BaseRisk):
+    """
+    Define a class-specific risk (or performance metric), to be used for
+    multiclass classification problems handled one-vs-rest, e.g. with
+    `MultiClassificationController`.
+
+    Given a `class_label`, the (possibly multiclass) ground truth `y_true` is
+    binarized relative to it before evaluating `risk_occurrence` and
+    `risk_condition`: samples where `y_true == class_label` become `1`, every
+    other sample becomes `0`. `risk_occurrence` and `risk_condition` then
+    receive this binarized ground truth together with `y_pred`.
+
+    `BinaryRisk` is the special case of this class for genuinely binary
+    classification problems, where `class_label` is fixed to `1`.
+
+    Parameters
+    ----------
+    class_label : Union[int, str]
+        The class this risk is evaluated for. Ground-truth labels equal to
+        `class_label` are treated as the positive class.
+
+    risk_occurrence : Callable[[NDArray, NDArray], NDArray]
+        A function defining the occurrence of the risk for a given sample.
+        Must take the binarized `y_true` (relative to `class_label`) and
+        `y_pred` as input and return a boolean array.
+
+    risk_condition : Callable[[NDArray, NDArray], NDArray]
+        A function defining the condition of the risk for a given sample.
+        Must take the binarized `y_true` (relative to `class_label`) and
+        `y_pred` as input and return a boolean array.
+
+    higher_is_better : bool
+        Whether this ClassSpecificRisk instance is a risk
+        (higher_is_better=False) or a performance metric (higher_is_better=True).
+
+    Attributes
+    ----------
+    class_label : Union[int, str]
+        See params.
+
+    higher_is_better : bool
+        See params.
+    """
+
+    def __init__(
+        self,
+        class_label: Union[int, str],
+        risk_occurrence: Callable[
+            [NDArray[np.integer], NDArray[np.integer]], NDArray[np.bool_]
+        ],
+        risk_condition: Callable[
+            [NDArray[np.integer], NDArray[np.integer]], NDArray[np.bool_]
+        ],
+        higher_is_better: bool,
+    ):
+        super().__init__(higher_is_better=higher_is_better)
+        self.class_label = class_label
+        self._risk_occurrence = risk_occurrence
+        self._risk_condition = risk_condition
+
+    def _compute_values_and_effective_mask(
+        self,
+        y_true: NDArray,
+        y_pred: NDArray,
+    ) -> Tuple[NDArray, NDArray]:
+        risk_occurrences = np.asarray(self._risk_occurrence(y_true, y_pred))
+        risk_conditions = self._risk_condition(y_true, y_pred)
+        return risk_occurrences.astype(int), risk_conditions
+
+class BinaryRisk(ClassSpecificRisk):
     """
     Define a risk (or a performance metric) to be used with the
     BinaryClassificationController. Predefined instances are implemented,
@@ -153,6 +223,10 @@ class BinaryRisk(_BaseRisk):
     `mapie.risk_control.accuracy`,
     `mapie.risk_control.false_positive_rate`, and
     `mapie.risk_control.predicted_positive_fraction`.
+
+    This is the special case of `ClassSpecificRisk` for genuinely binary
+    classification problems, where the ground truth is already encoded as
+    `0`/`1`: it is equivalent to `ClassSpecificRisk` with `class_label=1`.
 
     Here, a binary classification risk (or performance) is defined by an occurrence and
     a condition. Let's take the example of precision. Precision is the sum of true
@@ -206,19 +280,15 @@ class BinaryRisk(_BaseRisk):
         ],
         higher_is_better: bool,
     ):
-        super().__init__(higher_is_better=higher_is_better)
-        self._risk_occurrence = risk_occurrence
-        self._risk_condition = risk_condition
+        super().__init__(
+            class_label=1,
+            risk_occurrence=risk_occurrence,
+            risk_condition=risk_condition,
+            higher_is_better=higher_is_better,
+        )
 
-    def _compute_values_and_effective_mask(
-        self,
-        y_true: NDArray,
-        y_pred: NDArray,
-    ) -> Tuple[NDArray, NDArray]:
-        risk_occurrences = np.asarray(self._risk_occurrence(y_true, y_pred))
-        self._check_occurrences_are_binary(risk_occurrences)
-        risk_conditions = self._risk_condition(y_true, y_pred)
-        return risk_occurrences.astype(int), risk_conditions
+    def _validate_risk_occurrences(self, occurrences: NDArray) -> None:
+        self._check_occurrences_are_binary(occurrences)
 
     @staticmethod
     def _check_occurrences_are_binary(occurrences: NDArray) -> None:
@@ -248,6 +318,40 @@ class BinaryRisk(_BaseRisk):
                 f"following invalid values were found: {invalid_values}. Make sure "
                 "`risk_occurrence` returns a boolean array."
             )
+
+
+def build_precision_ovr(
+    class_labels: List[Union[int, str]],
+) -> List[ClassSpecificRisk]:
+    """
+    Build one-vs-rest `ClassSpecificRisk` instances defining precision for
+    each of the given class labels
+    Parameters
+    ----------
+    class_labels : List[Union[int, str]]
+        The class labels precision is evaluated for.
+
+    Returns
+    -------
+    List[ClassSpecificRisk]
+        One precision risk per class label in `class_labels`.
+    """
+    return [
+        ClassSpecificRisk(
+            class_label=class_label,
+            risk_occurrence=lambda y_true, y_pred: y_pred.ravel() == y_true.ravel(),
+            risk_condition=lambda y_true, y_pred: y_pred.ravel() == class_label,
+            higher_is_better=True,
+        )
+        for class_label in class_labels
+    ]
+
+precision_multiclass_ovr = build_precision_ovr
+
+MultiClassificationRiskNames = Literal["precision_multiclass_ovr"]
+MultiClassificationRiskLike = Union[
+    List[MultiClassificationRiskNames],
+]
 
 
 class BinaryClassificationRisk(BinaryRisk):
@@ -359,9 +463,10 @@ _best_predict_param_choice_map = {
     recall: precision,
     accuracy: accuracy,
     false_positive_rate: recall,
+    precision_multiclass_ovr: precision_multiclass_ovr,
 }
 
-
+multiclass_risk_choice_map = {"precision_multiclass_ovr": precision_multiclass_ovr}
 binary_risk_choice_map = {
     "precision": precision,
     "recall": recall,
