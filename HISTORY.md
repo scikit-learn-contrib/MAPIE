@@ -1,6 +1,8 @@
 # History
 ## 1.x.x (2026-xx-xx)
 
+- Add a v0.x migration pointer to the quick start and fix the README link to
+  the v1 release notes. (issue #915)
 - Add educational MAPIE notebooks covering regression and conformal prediction
   for language models. Shown in the documentation homepage and All Examples.
 - Fix `_compute_classification_quantile` to select the intended split-conformal

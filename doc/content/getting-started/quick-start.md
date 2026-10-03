@@ -40,6 +40,13 @@ or later.
     Kaggle, restart the kernel before importing MAPIE. Otherwise, Python may
     continue using an already-imported version from `sys.modules`.
 
+!!! note "Coming from MAPIE 0.x?"
+    Older tutorials may use `from mapie.regression import MapieRegressor`,
+    which raises `ImportError: cannot import name 'MapieRegressor'` in MAPIE v1.
+    See the [v1 migration guide](v1-release-notes.md#regression-and-classification)
+    to choose the replacement class for your previous `cv` setting and update
+    the fit/predict workflow and `alpha` parameter (`confidence_level = 1 - alpha`).
+
 ## 2. Regression: Prediction Intervals
 
 The split-conformal workflow uses separate training, conformalization, and test
