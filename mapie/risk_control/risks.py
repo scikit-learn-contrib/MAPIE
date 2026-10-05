@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import warnings
-from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any, Callable, List, Literal, Tuple, Union, cast
 
 import numpy as np
@@ -215,6 +214,7 @@ class ClassSpecificRisk(_BaseRisk):
         risk_conditions = self._risk_condition(y_true, y_pred)
         return risk_occurrences.astype(int), risk_conditions
 
+
 class BinaryRisk(ClassSpecificRisk):
     """
     Define a risk (or a performance metric) to be used with the
@@ -287,6 +287,26 @@ class BinaryRisk(ClassSpecificRisk):
             higher_is_better=higher_is_better,
         )
 
+    def get_value_and_effective_sample_size(
+        self,
+        y_true: NDArray,
+        y_pred: NDArray,
+    ) -> Tuple[float, int]:
+        result = super().get_value_and_effective_sample_size(y_true, y_pred)
+        occurrences = np.asarray(self._risk_occurrence(y_true, y_pred))
+        self._validate_risk_occurrences(occurrences)
+        return result
+
+    def get_risk_sequence(
+        self,
+        y_true: NDArray,
+        y_pred: NDArray,
+    ) -> NDArray:
+        result = super().get_risk_sequence(y_true, y_pred)
+        occurrences = np.asarray(self._risk_occurrence(y_true, y_pred))
+        self._validate_risk_occurrences(occurrences)
+        return result
+
     def _validate_risk_occurrences(self, occurrences: NDArray) -> None:
         self._check_occurrences_are_binary(occurrences)
 
@@ -346,12 +366,11 @@ def build_precision_ovr(
         for class_label in class_labels
     ]
 
+
 precision_multiclass_ovr = build_precision_ovr
 
 MultiClassificationRiskNames = Literal["precision_multiclass_ovr"]
-MultiClassificationRiskLike = Union[
-    List[MultiClassificationRiskNames],
-]
+MultiClassificationRiskLike = Union[List[MultiClassificationRiskNames],]
 
 
 class BinaryClassificationRisk(BinaryRisk):
@@ -463,7 +482,6 @@ _best_predict_param_choice_map = {
     recall: precision,
     accuracy: accuracy,
     false_positive_rate: recall,
-    precision_multiclass_ovr: precision_multiclass_ovr,
 }
 
 multiclass_risk_choice_map = {"precision_multiclass_ovr": precision_multiclass_ovr}
