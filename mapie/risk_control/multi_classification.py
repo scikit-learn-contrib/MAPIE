@@ -99,6 +99,14 @@ class MultiClassificationController(_BaseLTTController):
         Note that performance is degraded when `len(list_predict_params)` is
         large as it is used by the Bonferroni correction [1].
 
+    proba_to_label_function : Optional[Callable[[NDArray, NDArray], NDArray]], default=None
+        Custom function turning per-class probabilities and thresholds into
+        predicted labels, with signature
+        `(params, predictions_proba) -> y_pred` of shape (n_params, n_samples).
+        Defaults to `default_agg_class_pba`: predict the class with the
+        highest probability, or abstain (`np.nan`) if that probability is
+        below the threshold.
+
     fwer_method : {"bonferroni", "bonferroni_holm", "split_fixed_sequence"} or FWERProcedure instance, default="bonferroni_holm"
         Method used to control the family-wise error rate (FWER).
 
@@ -180,6 +188,7 @@ class MultiClassificationController(_BaseLTTController):
         confidence_level: float = 0.9,
         best_predict_param_choice: Literal["auto"] = "auto",
         list_predict_params: NDArray = np.linspace(0, 0.99, 100),
+        proba_to_label_function: Optional[Callable[[NDArray, NDArray], NDArray]] = None,
         fwer_method: Union[FWER_METHODS, FWERProcedure] = "bonferroni_holm",
     ):
         self.risk_combination_method = risk_combination_method
@@ -195,7 +204,11 @@ class MultiClassificationController(_BaseLTTController):
         self._best_predict_param_choice = self._set_best_predict_param_choice(
             best_predict_param_choice
         )
-
+        self.proba_to_label_function = (
+            proba_to_label_function
+            if proba_to_label_function is not None
+            else self.default_agg_class_pba
+        )
         self._predict_params = list_predict_params
         self.is_multi_dimensional_param = self._check_if_multi_dimensional_param(
             self._predict_params
@@ -384,7 +397,6 @@ class MultiClassificationController(_BaseLTTController):
         X: ArrayLike,
         params: NDArray,
         is_calibration_step=False,
-        custom_agg_class_pba=default_agg_class_pba,
     ) -> Any:
         """Returns y_pred of shape (n_samples)"""
         try:
@@ -401,5 +413,5 @@ class MultiClassificationController(_BaseLTTController):
                 raise
         predictions_proba = np.asarray(predictions_proba)
         self._check_predictions_multiclassification(predictions_proba)
-        y_pred = custom_agg_class_pba(params, predictions_proba)
+        y_pred = self.proba_to_label_function(params, predictions_proba)
         return y_pred
