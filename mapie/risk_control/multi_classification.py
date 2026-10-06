@@ -17,6 +17,162 @@ from .risks import ClassSpecificRisk
 
 
 class MultiClassificationController(_BaseLTTController):
+    """
+    Controls the risk or performance of a multiclass classifier, treating each
+    class as a one-vs-rest (OVR) binary problem.
+
+    MultiClassificationController finds, among a set of candidate thresholds, the
+    single threshold (λ) that statistically guarantees one or several
+    class-specific risks (each defined by a `ClassSpecificRisk` instance, see
+    e.g. `build_precision_ovr`) to be below their target level(s) (the risks are
+    "controlled"). It can be used to control performance metrics as well, such
+    as the per-class precision. In that case, the threshold guarantees that the
+    performance is above the target level(s).
+
+    At prediction time, a sample is assigned the class with the highest
+    predicted probability, unless that probability is below the selected
+    threshold, in which case the controller abstains (returns `np.nan`).
+
+    Usage:
+
+    1. Instantiate a MultiClassificationController, providing the predict_proba
+       method of your fitted multiclass classifier and one `ClassSpecificRisk`
+       per class to control (e.g. via `build_precision_ovr`)
+    2. Call the calibrate method to find the threshold
+    3. Use the predict method to predict using the best threshold
+
+    Note: for a given model, calibration dataset, target level(s), and
+    confidence level, there may not be any threshold controlling the risk(s).
+
+    Parameters
+    ----------
+    risk_combination_method : Union[int, str, Callable[[NDArray], NDArray]]
+        How the per-class risk values are combined into the single secondary
+        score used to select `best_predict_param` among the thresholds that
+        control the risk(s).
+        Valid options:
+
+        - A class label (must be one of the labels found in `y_calibrate`):
+          the threshold is chosen to minimize that class's own risk, ignoring
+          the others.
+        - A callable that takes an array of shape (n_risks, n_valid_params) --
+          the value of each risk in `risks`, for every valid threshold -- and
+          returns an array of shape (n_valid_params,) combining them into a
+          single score per threshold. The threshold minimizing this score is
+          selected.
+
+    predict_function : Callable[[ArrayLike], NDArray]
+        predict_proba method of a fitted multiclass classifier.
+        Its output signature must be of shape (len(X), n_classes).
+
+        Or, in the general case of multi-dimensional parameters, a function
+        that takes (X, \\*params) and outputs predicted class labels. In that
+        case, `list_predict_params` must be provided.
+
+    risks : List[ClassSpecificRisk]
+        The class-specific risks (or performance metrics) to control, one per
+        tested class (or several per class). See e.g. `build_precision_ovr`,
+        which builds one-vs-rest precision risks for a list of class labels.
+
+    target_level : Union[float, List[float]]
+        The maximum risk level (or minimum performance level). Must be between
+        0 and 1. If a single float is provided, it applies to every risk in
+        `risks`. Can be a list matching the length of `risks` to set a
+        different target level per risk.
+
+    confidence_level : float, default=0.9
+        The confidence level with which the risks (or performance) are
+        controlled. Must be between 0 and 1. See the documentation for
+        detailed explanations.
+
+    best_predict_param_choice : Literal["auto"], default="auto"
+        How to select the best threshold from the valid thresholds that
+        control the risks (or performance). "auto" is currently the only
+        supported value: it uses every risk in `risks` as the secondary
+        objective, combined through `risk_combination_method`.
+
+    list_predict_params : NDArray, default=np.linspace(0, 0.99, 100)
+        The set of thresholds (noted λ in [1]) to consider for controlling the
+        risks (or performance). When `predict_function` is a `predict_proba`
+        method, the shape is (n_params,) and the values threshold the
+        predicted probability of the most likely class. When
+        `predict_function` is a general function with multi-dimensional
+        parameters, the shape is (n_params, params_dim).
+        Note that performance is degraded when `len(list_predict_params)` is
+        large as it is used by the Bonferroni correction [1].
+
+    fwer_method : {"bonferroni", "bonferroni_holm", "split_fixed_sequence"} or FWERProcedure instance, default="bonferroni_holm"
+        Method used to control the family-wise error rate (FWER).
+
+        Supported methods:
+        - `"bonferroni"` : Classical Bonferroni correction.
+        It is valid in all settings but can be conservative, especially when the number of tested parameters is large.
+        - `"bonferroni_holm"` : Sequential Graphical Testing corresponding
+        to the Bonferroni–Holm procedure. This is the default method and is suitable for general settings.
+        - `"split_fixed_sequence"` : Split Fixed Sequence Testing (SFST). Requires
+        calling `learn_fixed_sequence_order` on independent data before `calibrate`.
+
+        Note: `"fixed_sequence"` is not supported here, since
+        MultiClassificationController always controls multiple risks (one per
+        tested class); use `"split_fixed_sequence"` instead.
+
+    Attributes
+    ----------
+    valid_predict_params : NDArray
+        The valid thresholds that control the risks (or performance).
+        Use the calibrate method to compute these.
+
+    best_predict_param : Optional[float]
+        The best threshold that controls the risks (or performance), selected
+        according to `risk_combination_method`.
+        Use the calibrate method to compute it.
+
+    p_values : NDArray
+        P-values associated with each tested threshold in
+        `list_predict_params`, one row per risk in `risks`.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from sklearn.linear_model import LogisticRegression
+    >>> from sklearn.datasets import make_classification
+    >>> from sklearn.model_selection import train_test_split
+    >>> from mapie.risk_control import MultiClassificationController
+    >>> from mapie.risk_control.risks import build_precision_ovr
+
+    >>> X, y = make_classification(
+    ...     n_samples=600,
+    ...     n_features=5,
+    ...     n_informative=5,
+    ...     n_redundant=0,
+    ...     n_classes=3,
+    ...     n_clusters_per_class=1,
+    ...     random_state=42,
+    ... )
+    >>> X_train, X_temp, y_train, y_temp = train_test_split(
+    ...     X, y, test_size=0.4, random_state=42
+    ... )
+    >>> X_calib, X_test, y_calib, y_test = train_test_split(
+    ...     X_temp, y_temp, test_size=0.1, random_state=42
+    ... )
+
+    >>> clf = LogisticRegression().fit(X_train, y_train)
+
+    >>> controller = MultiClassificationController(
+    ...     predict_function=clf.predict_proba,
+    ...     risks=build_precision_ovr(np.unique(y_train)),
+    ...     target_level=0.7,
+    ...     risk_combination_method=1,
+    ... )
+
+    >>> predictions = controller.calibrate(X_calib, y_calib).predict(X_test)
+
+    References
+    ----------
+    [1] Angelopoulos, Anastasios N., Stephen, Bates, Emmanuel J. Candès, et al.
+    "Learn Then Test: Calibrating Predictive Algorithms to Achieve Risk Control." (2022)
+    """
+
     def __init__(
         self,
         risk_combination_method: str | int | Callable[[NDArray], NDArray],
@@ -83,7 +239,7 @@ class MultiClassificationController(_BaseLTTController):
         self, X_calibrate: ArrayLike, y_calibrate: ArrayLike
     ) -> MultiClassificationController:
         """
-        Calibrate the BinaryClassificationController.
+        Calibrate the MultiClassificationController.
         Sets attributes valid_predict_params and best_predict_param (if the risk
         or performance can be controlled at the target level).
 
@@ -93,11 +249,11 @@ class MultiClassificationController(_BaseLTTController):
             Features of the calibration set.
 
         y_calibrate : ArrayLike
-            Binary labels of the calibration set.
+            Labels of the calibration set.
 
         Returns
         -------
-        BinaryClassificationController
+        MultiClassificationController
             The calibrated controller instance.
 
         Notes
@@ -170,9 +326,6 @@ class MultiClassificationController(_BaseLTTController):
         self,
         best_predict_param_choice: Literal["auto"] = "auto",
     ) -> Sequence[ClassSpecificRisk]:
-        """
-        only works for == auto
-        """
         if best_predict_param_choice == "auto":
             # when multi risk, we minimize the first risk in the list
             return self._risk
@@ -247,23 +400,34 @@ class MultiClassificationController(_BaseLTTController):
                 if "object is not callable" in str(e):
                     raise TypeError(
                         "Error when calling the predict_function. "
-                        "Maybe you provided a binary classifier to the "
-                        "predict_function parameter of the BinaryClassificationController. "
+                        "Maybe you provided a classifier to the "
+                        "predict_function parameter of the MultiClassificationController. "
                         "You should provide your classifier's predict_proba method instead."
                     ) from e
                 else:
                     raise
-            except IndexError as e:
-                if "array is 1-dimensional, but 2 were indexed" in str(e):
-                    raise IndexError(
-                        "Error when calling the predict_function. "
-                        "Maybe the predict function you provided returns only the "
-                        "probability of the positive class. "
-                        "You should provide a predict function that returns the "
-                        "probabilities of both classes, like scikit-learn estimators."
-                    ) from e
-                else:
-                    raise
+            predictions_proba = np.asarray(predictions_proba)
+            if predictions_proba.ndim != 2:
+                raise ValueError(
+                    "Error when calling the predict_function. "
+                    "Maybe you provided a predict method instead of a "
+                    "predict_proba method to the predict_function parameter "
+                    "of the MultiClassificationController. "
+                    "You should provide a predict function that returns the "
+                    "probabilities of each class, like scikit-learn's "
+                    "predict_proba method, with shape (n_samples, n_classes)."
+                )
+            if np.any((predictions_proba < 0) | (predictions_proba > 1)) or (
+                not np.allclose(predictions_proba.sum(axis=1), 1)
+            ):
+                raise ValueError(
+                    "Error when calling the predict_function. "
+                    "The values it returns must be valid probabilities: "
+                    "each value must lie in [0, 1] and each row must sum to 1. "
+                    "Maybe you provided a decision_function method or another "
+                    "scoring method instead of a predict_proba method to the "
+                    "predict_function parameter of the MultiClassificationController."
+                )
             if is_calibration_step:
                 self._check_predictions(predictions_proba)
             y_pred = custom_agg_class_pba(params, predictions_proba)
