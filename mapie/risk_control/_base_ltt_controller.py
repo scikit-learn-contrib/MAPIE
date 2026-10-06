@@ -240,6 +240,31 @@ class _BaseLTTController:
                 "(params_dim=1 is allowed for the case when a one-dimensional parameter is not used as a threshold)."
             )
 
+    def _check_predictions_multiclassification(
+        self, predictions_per_param: NDArray
+    ) -> None:
+        if predictions_per_param.ndim != 2:
+            raise ValueError(
+                "Error when calling the predict_function. "
+                "Maybe you provided a predict method instead of a "
+                "predict_proba method to the predict_function parameter "
+                "of the MultiClassificationController. "
+                "You should provide a predict function that returns the "
+                "probabilities of each class, like scikit-learn's "
+                "predict_proba method, with shape (n_samples, n_classes)."
+            )
+        if np.any((predictions_per_param < 0) | (predictions_per_param > 1)) or (
+            not np.allclose(predictions_per_param.sum(axis=1), 1)
+        ):
+            raise ValueError(
+                "Error when calling the predict_function. "
+                "The values it returns must be valid probabilities: "
+                "each value must lie in [0, 1] and each row must sum to 1. "
+                "Maybe you provided a decision_function method or another "
+                "scoring method instead of a predict_proba method to the "
+                "predict_function parameter of the MultiClassificationController."
+            )
+
     def _check_predictions(self, predictions_per_param: NDArray) -> None:
         """
         Checks if predictions are probabilities for one-dimensional parameters,

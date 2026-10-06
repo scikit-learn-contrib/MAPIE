@@ -65,9 +65,10 @@ class MultiClassificationController(_BaseLTTController):
         predict_proba method of a fitted multiclass classifier.
         Its output signature must be of shape (len(X), n_classes).
 
-        Or, in the general case of multi-dimensional parameters, a function
-        that takes (X, \\*params) and outputs predicted class labels. In that
-        case, `list_predict_params` must be provided.
+        Note: only this predict_proba case is currently implemented. The
+        general case of multi-dimensional parameters (a function taking
+        (X, \\*params) and outputting predicted class labels directly) is not
+        supported yet.
 
     risks : List[ClassSpecificRisk]
         The class-specific risks (or performance metrics) to control, one per
@@ -93,11 +94,8 @@ class MultiClassificationController(_BaseLTTController):
 
     list_predict_params : NDArray, default=np.linspace(0, 0.99, 100)
         The set of thresholds (noted λ in [1]) to consider for controlling the
-        risks (or performance). When `predict_function` is a `predict_proba`
-        method, the shape is (n_params,) and the values threshold the
-        predicted probability of the most likely class. When
-        `predict_function` is a general function with multi-dimensional
-        parameters, the shape is (n_params, params_dim).
+        risks (or performance), of shape (n_params,). The values threshold the
+        predicted probability of the most likely class.
         Note that performance is degraded when `len(list_predict_params)` is
         large as it is used by the Bonferroni correction [1].
 
@@ -329,6 +327,8 @@ class MultiClassificationController(_BaseLTTController):
         if best_predict_param_choice == "auto":
             # when multi risk, we minimize the first risk in the list
             return self._risk
+        else:
+            raise NotImplementedError
 
     def _set_best_predict_param(
         self,
@@ -353,19 +353,21 @@ class MultiClassificationController(_BaseLTTController):
             f" into an output ({secondary_risks_per_param.shape[1]}) "
         )
         best_index = np.flatnonzero(risk_score == risk_score.min())
-
-        if len(best_index) > 1:
-            # When several parameters reach the minimum secondary risk, break ties by
-            # selecting the one that maximizes the first risk (to be less conservative).
-            first_risk_values = risk_values[0, valid_params_index]
-            best_index = best_index[np.argmax(first_risk_values[best_index])]
-        else:
-            best_index = best_index[0]
+        # Break ties on the minimum secondary risk by selecting, among the tied
+        # parameters, the one that maximizes the first risk (to be less
+        # conservative).
+        first_risk_values = risk_values[0, valid_params_index]
+        best_index = best_index[np.argmax(first_risk_values[best_index])]
         best_predict_param = self.valid_predict_params[best_index]
-        if isinstance(best_predict_param, np.ndarray):
-            self.best_predict_param = tuple(best_predict_param.tolist())
-        else:
-            self.best_predict_param = float(best_predict_param)
+        # Multi-dimensional parameters are not implemented yet for
+        # MultiClassificationController (only predict_function == predict_proba,
+        # i.e. one-dimensional thresholds, is currently supported), so
+        # best_predict_param is always a scalar:
+        # if isinstance(best_predict_param, np.ndarray):
+        #     self.best_predict_param = tuple(best_predict_param.tolist())
+        # else:
+        #     self.best_predict_param = float(best_predict_param)
+        self.best_predict_param = float(best_predict_param)
 
     @staticmethod
     def default_agg_class_pba(params, predictions_proba) -> NDArray:
@@ -383,52 +385,21 @@ class MultiClassificationController(_BaseLTTController):
         params: NDArray,
         is_calibration_step=False,
         custom_agg_class_pba=default_agg_class_pba,
-    ) -> NDArray:
+    ) -> Any:
         """Returns y_pred of shape (n_samples)"""
-        n_params = len(params)
-        n_samples = len(np.asarray(X))
-        if self.is_multi_dimensional_param:
-            y_pred: NDArray[np.float64] = np.empty((n_params, n_samples), dtype=float)
-            for i in range(n_params):
-                y_pred[i] = self._predict_function(X, *params[i])
-            if is_calibration_step:
-                self._check_predictions(y_pred)
-        else:
-            try:
-                predictions_proba = self._predict_function(X)
-            except TypeError as e:
-                if "object is not callable" in str(e):
-                    raise TypeError(
-                        "Error when calling the predict_function. "
-                        "Maybe you provided a classifier to the "
-                        "predict_function parameter of the MultiClassificationController. "
-                        "You should provide your classifier's predict_proba method instead."
-                    ) from e
-                else:
-                    raise
-            predictions_proba = np.asarray(predictions_proba)
-            if predictions_proba.ndim != 2:
-                raise ValueError(
+        try:
+            predictions_proba = self._predict_function(X)
+        except TypeError as e:
+            if "object is not callable" in str(e):
+                raise TypeError(
                     "Error when calling the predict_function. "
-                    "Maybe you provided a predict method instead of a "
-                    "predict_proba method to the predict_function parameter "
-                    "of the MultiClassificationController. "
-                    "You should provide a predict function that returns the "
-                    "probabilities of each class, like scikit-learn's "
-                    "predict_proba method, with shape (n_samples, n_classes)."
-                )
-            if np.any((predictions_proba < 0) | (predictions_proba > 1)) or (
-                not np.allclose(predictions_proba.sum(axis=1), 1)
-            ):
-                raise ValueError(
-                    "Error when calling the predict_function. "
-                    "The values it returns must be valid probabilities: "
-                    "each value must lie in [0, 1] and each row must sum to 1. "
-                    "Maybe you provided a decision_function method or another "
-                    "scoring method instead of a predict_proba method to the "
-                    "predict_function parameter of the MultiClassificationController."
-                )
-            if is_calibration_step:
-                self._check_predictions(predictions_proba)
-            y_pred = custom_agg_class_pba(params, predictions_proba)
+                    "Maybe you provided a classifier to the "
+                    "predict_function parameter of the MultiClassificationController. "
+                    "You should provide your classifier's predict_proba method instead."
+                ) from e
+            else:
+                raise
+        predictions_proba = np.asarray(predictions_proba)
+        self._check_predictions_multiclassification(predictions_proba)
+        y_pred = custom_agg_class_pba(params, predictions_proba)
         return y_pred
