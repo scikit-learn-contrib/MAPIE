@@ -13,6 +13,9 @@
   the biased mean caused the default `jumper_martingale` exchangeability test
   to over-reject relative to `test_level`. (issue #984)
 - Fix the RCPS Bernstein bound to use each lambda's loss variance.
+- Fix `AbsoluteQuantileRegressionScore` to raise a `ValueError` when
+  instantiated with `sym=True`, since this score is asymmetrical by
+  construction. The default value of `sym` is now `False`. (issue #989)
 
 
 ## 1.5.0 (2026-xx-xx)
