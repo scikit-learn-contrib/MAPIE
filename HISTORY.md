@@ -15,7 +15,7 @@
 - Fix `AbsoluteQuantileRegressionScore` to raise a `ValueError` when
   instantiated with `sym=True`, since this score is asymmetrical by
   construction. The default value of `sym` is now `False`. (issue #989)
-
+- Add `MultiClassificationController` for risk control with multiclassification problems. Added one notebook `impact_study_ltt_multiclass_` for checking the feasibility of controlling risk with multiple classes. 
 
 ## 1.5.0 (2026-xx-xx)
 
