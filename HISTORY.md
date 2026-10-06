@@ -12,9 +12,7 @@
   inside the tie count rather than outside it. The p-value stayed valid, but
   the biased mean caused the default `jumper_martingale` exchangeability test
   to over-reject relative to `test_level`. (issue #984)
-- Fix the RCPS Bernstein bound to use each lambda's loss variance. The bound
-  used the variance of the average risks across lambdas, so a constant loss
-  of 0 was returned as about 3.195 instead of about 2.330 at `delta=0.1`.
+- Fix the RCPS Bernstein bound to use each lambda's loss variance.
 
 
 ## 1.5.0 (2026-xx-xx)
