@@ -211,9 +211,9 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
         for ind_alpha, _alpha in enumerate(alpha_np):
             _alpha = float(_alpha)
             betas = np.linspace(
-                _alpha / (n + 1),
+                1 - (n / (n + 1)),
                 _alpha,
-                num=n,
+                num=100,
                 endpoint=True,
             )
             one_alpha_beta = np.nanquantile(
