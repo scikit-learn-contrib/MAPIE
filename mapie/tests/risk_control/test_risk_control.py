@@ -15,6 +15,7 @@ from mapie.risk_control.methods import (
     _check_risk_monotonicity,
     compute_hoeffding_bentkus_p_value,
     find_precision_best_predict_param,
+    get_r_hat_plus,
     ltt_procedure,
 )
 
@@ -244,6 +245,19 @@ def test_ltt_fst_increasing():
         r_hat, alpha_np, 0.1, n_obs, fwer_method=FWERFixedSequenceTesting()
     )
     assert np.array_equal(valid_index_1, valid_index_2)
+
+
+def test_bernstein_bound_uses_each_lambda_variance() -> None:
+    """
+    Test that each lambda is used to compute the Bernstein bound.
+    If the bound is not computed over every lambda, r_hat_plus will be NaN.
+    """
+    risks = np.array([[1.0], [1.0], [1.0], [1.0], [1.0]])
+    delta = 0.1
+    _, r_hat_plus = get_r_hat_plus(
+        risks, np.array([0.1]), "rcps", "bernstein", delta, None
+    )
+    assert not np.isnan(r_hat_plus).any()
 
 
 def test_ltt_fst_decreasing_reorder():
