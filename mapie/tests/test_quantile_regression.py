@@ -29,7 +29,7 @@ from mapie.regression.quantile_regression import (
     _QuantileConformalizer,
     _MapieQuantileRegressor,
 )
-from mapie.utils import check_is_fitted
+from mapie.utils import _compute_regression_quantile, check_is_fitted
 
 X_toy = np.array(
     [0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5]
@@ -448,6 +448,25 @@ def test_for_small_dataset() -> None:
         mapie_reg._initialize_fit_conformalize()
         mapie_reg._fit_estimators(X_train_toy, y_train_toy)
         mapie_reg.conformalize(X_calib_toy_small, y_calib_toy_small)
+
+
+def test_compute_regression_quantile_raises_when_level_infeasible() -> None:
+    """A corrected level above 1.0 must raise, not silently clip to max(scores)."""
+    # n_eff=7, alpha_up=0.95 -> ceil(0.95 * 8) / 7 = 1.142... > 1.0
+    scores = np.linspace(-1, 1, 7).reshape(-1, 1)
+    alpha_up = np.array([0.95])
+    with pytest.raises(ValueError, match="too low to reach the requested level"):
+        _compute_regression_quantile(scores, alpha_up, axis=0, unbounded=False)
+
+
+def test_compute_regression_quantile_returns_inf_when_unbounded_and_infeasible() -> (
+    None
+):
+    """With unbounded=True the infeasible level yields +inf, not the sample max."""
+    scores = np.linspace(-1, 1, 7).reshape(-1, 1)
+    alpha_up = np.array([0.95])
+    q = _compute_regression_quantile(scores, alpha_up, axis=0, unbounded=True)
+    assert np.all(np.isinf(q))
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
