@@ -828,7 +828,7 @@ def _compute_regression_quantile(
             if unbounded:
                 quantile[:, j] = signed * np.inf
             else:
-                need = int(np.ceil((1 - _alpha) * (n_calib + 1)))
+                need = int(np.ceil((_alpha) * (n_calib + 1)))
                 raise ValueError(
                     "The number of calibration samples "
                     f"({n_calib}) is too low to reach the requested "
