@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import warnings
 from typing import Any, Callable, List, Literal, Optional, Tuple, Union, cast
 
 import numpy as np
@@ -11,8 +12,8 @@ from mapie.risk_control.fwer_control import (
 )
 from mapie.utils import check_valid_ltt_params_index
 
-from ._base_ltt_controller import _BaseLTTController
-from .methods import ltt_procedure
+from ._base_controller import _BaseLTTController
+from ._base_controller import ltt_procedure
 from .risks import (
     BinaryRisk,
     BinaryRiskLike,
@@ -394,6 +395,38 @@ class BinaryClassificationController(_BaseLTTController):
                 self._check_predictions(predictions_proba)
             y_pred = (predictions_proba[:, np.newaxis] >= params).T.astype(int)
         return y_pred
+
+    def _check_predictions(self, predictions_per_param: NDArray) -> None:
+        """
+        Checks if predictions are probabilities for one-dimensional parameters,
+        or binary predictions for multi-dimensional parameters.
+        """
+        if (
+            not self.is_multi_dimensional_param
+            and np.logical_or(
+                predictions_per_param == 0, predictions_per_param == 1
+            ).all()
+        ):
+            warnings.warn(
+                "All predictions are either 0 or 1 while the parameters are one-dimensional. "
+                "Make sure that the provided predict_function is a "
+                "predict_proba method or a function that outputs probabilities.",
+            )
+
+        if (
+            self.is_multi_dimensional_param
+            and not np.logical_or.reduce(
+                (
+                    predictions_per_param == 0,
+                    predictions_per_param == 1,
+                    np.isnan(predictions_per_param),
+                )
+            ).all()
+        ):
+            raise ValueError(
+                "The provided predict_function with multi-dimensional "
+                "parameters must return binary predictions (0, 1, np.nan)."
+            )
 
     @staticmethod
     def _check_if_multi_risk_control(

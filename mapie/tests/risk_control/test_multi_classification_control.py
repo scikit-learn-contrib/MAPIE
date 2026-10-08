@@ -5,7 +5,7 @@ import pytest
 from sklearn.datasets import make_classification
 from sklearn.linear_model import LogisticRegression
 
-from mapie.risk_control import MultiClassificationController
+from mapie.risk_control import MultiClassificationLTTController
 from mapie.risk_control.risks import build_precision_ovr
 
 random_state = 42
@@ -20,7 +20,7 @@ def dummy_predict(X):
 
 @pytest.fixture
 def mcc_dummy():
-    return MultiClassificationController(
+    return MultiClassificationLTTController(
         predict_function=dummy_predict,
         target_level=dummy_target,
         risks=build_precision_ovr([0, 1, 2]),
@@ -45,13 +45,13 @@ clf = LogisticRegression().fit(X_toy, y_toy)
 class TestSplitFixedSequence:
     def test_workflow_split_fixed_sequence(self) -> None:
         """
-        Reproduce a workflow for MultiClassificationController.
+        Reproduce a workflow for MultiClassificationLTTController.
         calibrate() must raise a ValueError if learn_fixed_sequence_order was
         not called beforehand. Then, build one-vs-rest precision risks,
         calibrate with fwer_method="split_fixed_sequence" (requiring
         learn_fixed_sequence_order beforehand), and predict.
         """
-        mapie_clf = MultiClassificationController(
+        mapie_clf = MultiClassificationLTTController(
             predict_function=clf.predict_proba,
             target_level=0.75,
             risks=build_precision_ovr(np.unique(y_toy)),
@@ -111,7 +111,7 @@ class TestMulticlassificationControllerGetPredictionsPerParam:
         re-raised without modification, mirroring BinaryClassificationController's
         equivalent test.
         """
-        mapie_clf = MultiClassificationController(
+        mapie_clf = MultiClassificationLTTController(
             predict_function=predict_function,
             target_level=dummy_target,
             risks=build_precision_ovr([0, 1, 2]),
@@ -138,18 +138,18 @@ class TestCheckPredictionsMulticlassification:
     )
     def test_errors(
         self,
-        mcc_dummy: MultiClassificationController,
+        mcc_dummy: MultiClassificationLTTController,
         predictions: Any,
         expected_error_message: str,
     ) -> None:
         """
-        _check_predictions_multiclassification must raise a ValueError when
+        _check_predictions must raise a ValueError when
         predictions are not 2D (e.g. a predict method was provided instead of
         a predict_proba method), or when probabilities are invalid (out of
         [0, 1], or rows that don't sum to 1).
         """
         with pytest.raises(ValueError, match=expected_error_message):
-            mcc_dummy._check_predictions_multiclassification(predictions)
+            mcc_dummy._check_predictions(predictions)
 
 
 def _custom_combination(array: Any) -> Any:
@@ -173,7 +173,7 @@ class TestCheckRiskCombinationMethod:
     )
     def test_valid_inputs(
         self,
-        mcc_dummy: MultiClassificationController,
+        mcc_dummy: MultiClassificationLTTController,
         y_calibrate: Any,
         risk_combination_method: Any,
         expected_index: Optional[int],
@@ -209,7 +209,7 @@ class TestCheckRiskCombinationMethod:
     )
     def test_invalid_inputs_raise(
         self,
-        mcc_dummy: MultiClassificationController,
+        mcc_dummy: MultiClassificationLTTController,
         y_calibrate: Any,
         risk_combination_method: Any,
         expected_error_type: Any,
@@ -235,7 +235,7 @@ class TestSetBestPredictParamChoice:
         raises a NotImplementedError.
         """
         risks = build_precision_ovr([0, 1, 2])
-        mcc = MultiClassificationController(
+        mcc = MultiClassificationLTTController(
             predict_function=dummy_predict,
             target_level=dummy_target,
             risks=risks,

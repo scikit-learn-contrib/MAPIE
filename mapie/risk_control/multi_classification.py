@@ -11,23 +11,24 @@ from mapie.risk_control.fwer_control import (
 )
 from mapie.utils import check_valid_ltt_params_index
 
-from ._base_ltt_controller import _BaseLTTController
-from .methods import ltt_procedure
+from ._base_controller import _BaseLTTController
+from ._base_controller import ltt_procedure
 from .risks import ClassSpecificRisk
 
 
-class MultiClassificationController(_BaseLTTController):
+class MultiClassificationLTTController(_BaseLTTController):
     """
     Controls the risk or performance of a multiclass classifier, treating each
     class as a one-vs-rest (OVR) binary problem.
 
-    MultiClassificationController finds, among a set of candidate thresholds, the
+    MultiClassificationLTTController finds, among a set of candidate thresholds, the
     single threshold (λ) that statistically guarantees one or several
     class-specific risks (each defined by a `ClassSpecificRisk` instance, see
-    e.g. `build_precision_ovr`) to be below their target level(s) (the risks are
-    "controlled"). It can be used to control performance metrics as well, such
-    as the per-class precision. In that case, the threshold guarantees that the
-    performance is above the target level(s).
+    e.g. :func:`mapie.risk_control.risks.build_precision_ovr`) to be below
+    their target level(s) (the risks are "controlled"). It can be used to
+    control performance metrics as well, such as the per-class precision. In
+    that case, the threshold guarantees that the performance is above the
+    target level(s).
 
     At prediction time, a sample is assigned the class with the highest
     predicted probability, unless that probability is below the selected
@@ -35,9 +36,10 @@ class MultiClassificationController(_BaseLTTController):
 
     Usage:
 
-    1. Instantiate a MultiClassificationController, providing the predict_proba
+    1. Instantiate a MultiClassificationLTTController, providing the predict_proba
        method of your fitted multiclass classifier and one `ClassSpecificRisk`
-       per class to control (e.g. via `build_precision_ovr`)
+       per class to control (e.g. via
+       :func:`mapie.risk_control.risks.build_precision_ovr`)
     2. Call the calibrate method to find the threshold
     3. Use the predict method to predict using the best threshold
 
@@ -72,8 +74,9 @@ class MultiClassificationController(_BaseLTTController):
 
     risks : List[ClassSpecificRisk]
         The class-specific risks (or performance metrics) to control, one per
-        tested class (or several per class). See e.g. `build_precision_ovr`,
-        which builds one-vs-rest precision risks for a list of class labels.
+        tested class (or several per class). See e.g.
+        :func:`mapie.risk_control.risks.build_precision_ovr`, which builds
+        one-vs-rest precision risks for a list of class labels.
 
     target_level : Union[float, List[float]]
         The maximum risk level (or minimum performance level). Must be between
@@ -119,7 +122,7 @@ class MultiClassificationController(_BaseLTTController):
         calling `learn_fixed_sequence_order` on independent data before `calibrate`.
 
         Note: `"fixed_sequence"` is not supported here, since
-        MultiClassificationController always controls multiple risks (one per
+        MultiClassificationLTTController always controls multiple risks (one per
         tested class); use `"split_fixed_sequence"` instead.
 
     Attributes
@@ -143,7 +146,7 @@ class MultiClassificationController(_BaseLTTController):
     >>> from sklearn.linear_model import LogisticRegression
     >>> from sklearn.datasets import make_classification
     >>> from sklearn.model_selection import train_test_split
-    >>> from mapie.risk_control import MultiClassificationController
+    >>> from mapie.risk_control import MultiClassificationLTTController
     >>> from mapie.risk_control.risks import build_precision_ovr
 
     >>> X, y = make_classification(
@@ -164,7 +167,7 @@ class MultiClassificationController(_BaseLTTController):
 
     >>> clf = LogisticRegression().fit(X_train, y_train)
 
-    >>> controller = MultiClassificationController(
+    >>> controller = MultiClassificationLTTController(
     ...     predict_function=clf.predict_proba,
     ...     risks=build_precision_ovr(np.unique(y_train)),
     ...     target_level=0.7,
@@ -248,9 +251,9 @@ class MultiClassificationController(_BaseLTTController):
     # we don't include .calibrate in the coverage report
     def calibrate(  # pragma: no cover
         self, X_calibrate: ArrayLike, y_calibrate: ArrayLike
-    ) -> MultiClassificationController:
+    ) -> MultiClassificationLTTController:
         """
-        Calibrate the MultiClassificationController.
+        Calibrate the MultiClassificationLTTController.
         Sets attributes valid_predict_params and best_predict_param (if the risk
         or performance can be controlled at the target level).
 
@@ -264,7 +267,7 @@ class MultiClassificationController(_BaseLTTController):
 
         Returns
         -------
-        MultiClassificationController
+        MultiClassificationLTTController
             The calibrated controller instance.
 
         Notes
@@ -297,7 +300,8 @@ class MultiClassificationController(_BaseLTTController):
         )
         # broadcast one _alpha_level per risk.
         if self._alpha.shape[0] != len(self._risk):
-            self._alpha = np.repeat(self._alpha, len(self._risk))
+            if isinstance(self._alpha, float):
+                self._alpha = np.repeat(self._alpha, len(self._risk))
         # aggregates all risks
         risk_values, eff_sample_sizes = self._get_risk_values_and_eff_sample_sizes(
             y_calibrate_, predictions_per_param, self._risk
@@ -373,7 +377,7 @@ class MultiClassificationController(_BaseLTTController):
         best_index = best_index[np.argmax(first_risk_values[best_index])]
         best_predict_param = self.valid_predict_params[best_index]
         # Multi-dimensional parameters are not implemented yet for
-        # MultiClassificationController (only predict_function == predict_proba,
+        # MultiClassificationLTTController (only predict_function == predict_proba,
         # i.e. one-dimensional thresholds, is currently supported), so
         # best_predict_param is always a scalar:
         # if isinstance(best_predict_param, np.ndarray):
@@ -381,6 +385,29 @@ class MultiClassificationController(_BaseLTTController):
         # else:
         #     self.best_predict_param = float(best_predict_param)
         self.best_predict_param = float(best_predict_param)
+
+    def _check_predictions(self, predictions_per_param: NDArray) -> None:
+        if predictions_per_param.ndim != 2:
+            raise ValueError(
+                "Error when calling the predict_function. "
+                "Maybe you provided a predict method instead of a "
+                "predict_proba method to the predict_function parameter "
+                "of the MultiClassificationLTTController. "
+                "You should provide a predict function that returns the "
+                "probabilities of each class, like scikit-learn's "
+                "predict_proba method, with shape (n_samples, n_classes)."
+            )
+        if np.any((predictions_per_param < 0) | (predictions_per_param > 1)) or (
+            not np.allclose(predictions_per_param.sum(axis=1), 1)
+        ):
+            raise ValueError(
+                "Error when calling the predict_function. "
+                "The values it returns must be valid probabilities: "
+                "each value must lie in [0, 1] and each row must sum to 1. "
+                "Maybe you provided a decision_function method or another "
+                "scoring method instead of a predict_proba method to the "
+                "predict_function parameter of the MultiClassificationLTTController."
+            )
 
     @staticmethod
     def default_agg_class_pba(params, predictions_proba) -> NDArray:
@@ -398,7 +425,7 @@ class MultiClassificationController(_BaseLTTController):
         params: NDArray,
         is_calibration_step=False,
     ) -> Any:
-        """Returns y_pred of shape (n_samples)"""
+        """Returns y_pred of shape (n_params,n_samples)"""
         try:
             predictions_proba = self._predict_function(X)
         except TypeError as e:
@@ -406,12 +433,12 @@ class MultiClassificationController(_BaseLTTController):
                 raise TypeError(
                     "Error when calling the predict_function. "
                     "Maybe you provided a classifier to the "
-                    "predict_function parameter of the MultiClassificationController. "
+                    "predict_function parameter of the MultiClassificationLTTController. "
                     "You should provide your classifier's predict_proba method instead."
                 ) from e
             else:
                 raise
         predictions_proba = np.asarray(predictions_proba)
-        self._check_predictions_multiclassification(predictions_proba)
+        self._check_predictions(predictions_proba)
         y_pred = self.proba_to_label_function(params, predictions_proba)
         return y_pred

@@ -149,7 +149,7 @@ class ClassSpecificRisk(_BaseRisk):
     """
     Define a class-specific risk (or performance metric), to be used for
     multiclass classification problems handled one-vs-rest, e.g. with
-    `MultiClassificationController`.
+    `MultiClassificationLTTController`.
 
     Given a `class_label`, the (possibly multiclass) ground truth `y_true` is
     binarized relative to it before evaluating `risk_occurrence` and
@@ -340,6 +340,33 @@ class BinaryRisk(ClassSpecificRisk):
             )
 
 
+def build_recall_ovr(
+    class_labels: List[Union[int, str]],
+) -> List[ClassSpecificRisk]:
+    """
+    Build one-vs-rest `ClassSpecificRisk` instances defining recall for
+    each of the given class labels
+    Parameters
+    ----------
+    class_labels : List[Union[int, str]]
+        The class labels precision is evaluated for.
+
+    Returns
+    -------
+    List[ClassSpecificRisk]
+        One precision risk per class label in `class_labels`.
+    """
+    return [
+        ClassSpecificRisk(
+            class_label=class_label,
+            risk_occurrence=lambda y_true, y_pred: y_pred.ravel() == y_true.ravel(),
+            risk_condition=lambda y_true, y_pred: y_pred.ravel() == class_label,
+            higher_is_better=True,
+        )
+        for class_label in class_labels
+    ]
+
+
 def build_precision_ovr(
     class_labels: List[Union[int, str]],
 ) -> List[ClassSpecificRisk]:
@@ -367,10 +394,31 @@ def build_precision_ovr(
     ]
 
 
-precision_multiclass_ovr = build_precision_ovr
+def build_abstention_rate_ovr(
+    class_labels: List[Union[int, str]],
+) -> List[ClassSpecificRisk]:
+    """
+    Build one-vs-rest `ClassSpecificRisk` instances defining abstention for
+    each of the given class labels
+    Parameters
+    ----------
+    class_labels : List[Union[int, str]]
+        The class labels precision is evaluated for.
 
-MultiClassificationRiskNames = Literal["precision_multiclass_ovr"]
-MultiClassificationRiskLike = Union[List[MultiClassificationRiskNames],]
+    Returns
+    -------
+    List[ClassSpecificRisk]
+        One precision risk per class label in `class_labels`.
+    """
+    return [
+        ClassSpecificRisk(
+            class_label=class_label,
+            risk_occurrence=lambda y_true, y_pred: np.isnan(y_pred),
+            risk_condition=lambda y_true, y_pred: np.repeat(class_label, len(y_true)),
+            higher_is_better=False,
+        )
+        for class_label in class_labels
+    ]
 
 
 class BinaryClassificationRisk(BinaryRisk):
@@ -428,7 +476,6 @@ ContinuousRiskLike = Union[
 
 RiskLike = Union[BinaryRiskLike, ContinuousRiskLike]
 
-
 precision = BinaryRisk(
     risk_occurrence=lambda y_true, y_pred: y_pred.ravel() == y_true.ravel(),
     risk_condition=lambda y_true, y_pred: y_pred.ravel() == 1,
@@ -484,7 +531,6 @@ _best_predict_param_choice_map = {
     false_positive_rate: recall,
 }
 
-multiclass_risk_choice_map = {"precision_multiclass_ovr": precision_multiclass_ovr}
 binary_risk_choice_map = {
     "precision": precision,
     "recall": recall,

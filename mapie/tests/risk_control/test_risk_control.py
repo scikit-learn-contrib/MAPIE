@@ -15,8 +15,8 @@ from mapie.risk_control.methods import (
     _check_risk_monotonicity,
     compute_hoeffding_bentkus_p_value,
     find_precision_best_predict_param,
-    ltt_procedure,
 )
+from mapie.risk_control._base_controller import ltt_procedure
 
 lambdas = np.array([0.5, 0.9])
 
