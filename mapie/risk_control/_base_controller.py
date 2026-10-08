@@ -7,6 +7,7 @@ import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
 from mapie.risk_control.fwer_control import (
+    FWER_IMPLEMENTED,
     FWER_METHODS,
     FWERFixedSequenceTesting,
     FWERProcedure,

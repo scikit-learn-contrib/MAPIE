@@ -300,8 +300,7 @@ class MultiClassificationLTTController(_BaseLTTController):
         )
         # broadcast one _alpha_level per risk.
         if self._alpha.shape[0] != len(self._risk):
-            if isinstance(self._alpha, float):
-                self._alpha = np.repeat(self._alpha, len(self._risk))
+            self._alpha = np.repeat(self._alpha, len(self._risk))
         # aggregates all risks
         risk_values, eff_sample_sizes = self._get_risk_values_and_eff_sample_sizes(
             y_calibrate_, predictions_per_param, self._risk
