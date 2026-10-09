@@ -48,20 +48,6 @@ class MultiClassificationLTTController(_BaseLTTController):
 
     Parameters
     ----------
-    risk_combination_method : Union[int, str, Callable[[NDArray], NDArray]]
-        How the per-class risk values are combined into the single secondary
-        score used to select `best_predict_param` among the thresholds that
-        control the risk(s).
-        Valid options:
-
-        - A class label (must be one of the labels found in `y_calibrate`):
-          the threshold is chosen to minimize that class's own risk, ignoring
-          the others.
-        - A callable that takes an array of shape (n_risks, n_valid_params) --
-          the value of each risk in `risks`, for every valid threshold -- and
-          returns an array of shape (n_valid_params,) combining them into a
-          single score per threshold. The threshold minimizing this score is
-          selected.
 
     predict_function : Callable[[ArrayLike], NDArray]
         predict_proba method of a fitted multiclass classifier.
@@ -93,7 +79,7 @@ class MultiClassificationLTTController(_BaseLTTController):
         How to select the best threshold from the valid thresholds that
         control the risks (or performance). "auto" is currently the only
         supported value: it uses every risk in `risks` as the secondary
-        objective, combined through `risk_combination_method`.
+        objective.
 
     list_predict_params : NDArray, default=np.linspace(0, 0.99, 100)
         The set of thresholds (noted λ in [1]) to consider for controlling the
@@ -184,17 +170,17 @@ class MultiClassificationLTTController(_BaseLTTController):
 
     def __init__(
         self,
-        risk_combination_method: str | int | Callable[[NDArray], NDArray],
         predict_function: Callable[[ArrayLike], NDArray],
         risks: list[ClassSpecificRisk],
         target_level: Union[float, List[float]],
         confidence_level: float = 0.9,
-        best_predict_param_choice: Literal["auto"] = "auto",
+        best_predict_param_choice: Union[
+            Literal["auto"], ClassSpecificRisk
+        ] = "auto", 
         list_predict_params: NDArray = np.linspace(0, 0.99, 100),
         proba_to_label_function: Optional[Callable[[NDArray, NDArray], NDArray]] = None,
         fwer_method: Union[FWER_METHODS, FWERProcedure] = "bonferroni_holm",
     ):
-        self.risk_combination_method = risk_combination_method
         self.is_multi_risk = True
         self._predict_function = predict_function
         self._risk = risks
@@ -203,7 +189,7 @@ class MultiClassificationLTTController(_BaseLTTController):
         )
         self._alpha = self._convert_target_level_to_alpha(target_level_list)
         self._delta = 1 - confidence_level
-
+        self.is_multi_dimensional_param = self._check_if_multi_dimensional_param(list_predict_params)
         self._best_predict_param_choice = self._set_best_predict_param_choice(
             best_predict_param_choice
         )
@@ -222,29 +208,6 @@ class MultiClassificationLTTController(_BaseLTTController):
         self.valid_predict_params: NDArray = np.array([])
         self.best_predict_param = None
         self.p_values: Optional[NDArray] = None
-
-    def _check_risk_combination_method(
-        self, risk_combination_method, y_calibrate
-    ) -> Callable[[NDArray], NDArray]:
-        list_class_label = np.unique(y_calibrate).tolist()
-        dict_class_label = {
-            value: index for index, value in enumerate(list_class_label)
-        }
-        if isinstance(risk_combination_method, int | str):
-            # the user want the risk_combination_method to take only a specific class
-            class_label = risk_combination_method
-            assert risk_combination_method in list_class_label, (
-                f""" risk_combination_method : {class_label} must be in list_class_label  : {list_class_label}"""
-            )
-            return lambda array: array[dict_class_label[class_label], :]
-
-        if callable(risk_combination_method):
-            return cast(
-                Callable[[NDArray], NDArray],
-                risk_combination_method,
-            )
-
-        raise TypeError("risk_combination_method must be a class label or a callable")
 
     # All subfunctions are unit-tested. To avoid having to write
     # tests just to make sure those subfunctions are called,
@@ -282,9 +245,6 @@ class MultiClassificationLTTController(_BaseLTTController):
         """
         y_calibrate_ = np.asarray(y_calibrate, dtype=int)
 
-        self.risk_combination_method = self._check_risk_combination_method(
-            self.risk_combination_method, y_calibrate
-        )
 
         original_params = self._predict_params
         if self.fwer_method == "split_fixed_sequence":
@@ -323,6 +283,7 @@ class MultiClassificationLTTController(_BaseLTTController):
 
         if len(self.valid_predict_params) == 0:
             self.best_predict_param = None
+
         else:
             self._set_best_predict_param(
                 y_calibrate_,
@@ -338,11 +299,14 @@ class MultiClassificationLTTController(_BaseLTTController):
 
     def _set_best_predict_param_choice(
         self,
-        best_predict_param_choice: Literal["auto"] = "auto",
-    ) -> Sequence[ClassSpecificRisk]:
+        best_predict_param_choice:Union[
+            Literal["auto"], ClassSpecificRisk]
+    ) -> ClassSpecificRisk:
         if best_predict_param_choice == "auto":
             # when multi risk, we minimize the first risk in the list
-            return self._risk
+            return self._risk[0]
+        elif isinstance(best_predict_param_choice, ClassSpecificRisk):
+            return best_predict_param_choice
         else:
             raise NotImplementedError
 
@@ -356,34 +320,52 @@ class MultiClassificationLTTController(_BaseLTTController):
         secondary_risks_per_param, _ = self._get_risk_values_and_eff_sample_sizes(
             y_calibrate_,
             predictions_per_param[valid_params_index],
-            self._best_predict_param_choice,
+            [self._best_predict_param_choice],
         )
 
-        assert callable(self.risk_combination_method), (
-            """ internal bug, self.risk_combination_method must be a callable"""
-        )
-        risk_score = self.risk_combination_method(secondary_risks_per_param)
-        assert risk_score.shape[0] == secondary_risks_per_param.shape[1], (
-            "risk_combination_method must be a function "
-            f"that transform an input of shape ({secondary_risks_per_param.shape[0]}, {secondary_risks_per_param.shape[1]})"
-            f" into an output ({secondary_risks_per_param.shape[1]}) "
-        )
-        best_index = np.flatnonzero(risk_score == risk_score.min())
+
+        best_index = np.flatnonzero(secondary_risks_per_param == secondary_risks_per_param.min())
         # Break ties on the minimum secondary risk by selecting, among the tied
         # parameters, the one that maximizes the first risk (to be less
         # conservative).
         first_risk_values = risk_values[0, valid_params_index]
         best_index = best_index[np.argmax(first_risk_values[best_index])]
         best_predict_param = self.valid_predict_params[best_index]
-        # Multi-dimensional parameters are not implemented yet for
-        # MultiClassificationLTTController (only predict_function == predict_proba,
-        # i.e. one-dimensional thresholds, is currently supported), so
-        # best_predict_param is always a scalar:
-        # if isinstance(best_predict_param, np.ndarray):
-        #     self.best_predict_param = tuple(best_predict_param.tolist())
-        # else:
-        #     self.best_predict_param = float(best_predict_param)
-        self.best_predict_param = float(best_predict_param)
+        if isinstance(best_predict_param, np.ndarray):
+            self.best_predict_param = tuple(best_predict_param.tolist())
+        else:
+            self.best_predict_param = float(best_predict_param)
+
+    def _get_predictions_per_param(
+        self,
+        X: ArrayLike,
+        params: NDArray,
+        is_calibration_step=False,
+    ) -> Any:
+        """Returns y_pred of shape (n_params, n_samples)"""
+        n_params = len(params)
+        n_samples = len(np.asarray(X))
+        if self.is_multi_dimensional_param:
+            y_pred: NDArray[np.float64] = np.empty((n_params, n_samples), dtype=float)
+            for i in range(n_params):
+                y_pred[i] = self._predict_function(X, *params[i])
+            return y_pred
+        try:
+            predictions_proba = self._predict_function(X)
+        except TypeError as e:
+            if "object is not callable" in str(e):
+                raise TypeError(
+                    "Error when calling the predict_function. "
+                    "Maybe you provided a classifier to the "
+                    "predict_function parameter of the MultiClassificationLTTController. "
+                    "You should provide your classifier's predict_proba method instead."
+                ) from e
+            else:
+                raise
+        predictions_proba = np.asarray(predictions_proba)
+        self._check_predictions(predictions_proba)
+        y_pred = self.proba_to_label_function(params, predictions_proba)
+        return y_pred
 
     def _check_predictions(self, predictions_per_param: NDArray) -> None:
         if predictions_per_param.ndim != 2:
@@ -418,26 +400,3 @@ class MultiClassificationLTTController(_BaseLTTController):
         y_pred = np.where(is_above_param, class_label[np.newaxis, :], np.nan)
         return y_pred
 
-    def _get_predictions_per_param(
-        self,
-        X: ArrayLike,
-        params: NDArray,
-        is_calibration_step=False,
-    ) -> Any:
-        """Returns y_pred of shape (n_params,n_samples)"""
-        try:
-            predictions_proba = self._predict_function(X)
-        except TypeError as e:
-            if "object is not callable" in str(e):
-                raise TypeError(
-                    "Error when calling the predict_function. "
-                    "Maybe you provided a classifier to the "
-                    "predict_function parameter of the MultiClassificationLTTController. "
-                    "You should provide your classifier's predict_proba method instead."
-                ) from e
-            else:
-                raise
-        predictions_proba = np.asarray(predictions_proba)
-        self._check_predictions(predictions_proba)
-        y_pred = self.proba_to_label_function(params, predictions_proba)
-        return y_pred

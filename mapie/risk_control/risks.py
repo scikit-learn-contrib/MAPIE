@@ -360,7 +360,11 @@ def build_recall_ovr(
         ClassSpecificRisk(
             class_label=class_label,
             risk_occurrence=lambda y_true, y_pred: y_pred.ravel() == y_true.ravel(),
-            risk_condition=lambda y_true, y_pred: y_pred.ravel() == class_label,
+            risk_condition=(
+                lambda y_true, y_pred, class_label=class_label: (
+                    y_true.ravel() == class_label
+                )
+            ),
             higher_is_better=True,
         )
         for class_label in class_labels
@@ -387,7 +391,11 @@ def build_precision_ovr(
         ClassSpecificRisk(
             class_label=class_label,
             risk_occurrence=lambda y_true, y_pred: y_pred.ravel() == y_true.ravel(),
-            risk_condition=lambda y_true, y_pred: y_pred.ravel() == class_label,
+            risk_condition=(
+                lambda y_true, y_pred, class_label=class_label: (
+                    y_pred.ravel() == class_label
+                )
+            ),
             higher_is_better=True,
         )
         for class_label in class_labels
@@ -403,18 +411,22 @@ def build_abstention_rate_ovr(
     Parameters
     ----------
     class_labels : List[Union[int, str]]
-        The class labels precision is evaluated for.
+        The class labels abstention is evaluated for.
 
     Returns
     -------
     List[ClassSpecificRisk]
-        One precision risk per class label in `class_labels`.
+        One abstention risk per class label in `class_labels`.
     """
     return [
         ClassSpecificRisk(
             class_label=class_label,
             risk_occurrence=lambda y_true, y_pred: np.isnan(y_pred),
-            risk_condition=lambda y_true, y_pred: np.repeat(class_label, len(y_true)),
+            risk_condition=(
+                lambda y_true, y_pred, class_label=class_label: (
+                    np.repeat(True, len(y_true))
+                )
+            ),
             higher_is_better=False,
         )
         for class_label in class_labels

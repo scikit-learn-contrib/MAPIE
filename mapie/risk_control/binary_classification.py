@@ -12,8 +12,7 @@ from mapie.risk_control.fwer_control import (
 )
 from mapie.utils import check_valid_ltt_params_index
 
-from ._base_controller import _BaseLTTController
-from ._base_controller import ltt_procedure
+from ._base_controller import _BaseLTTController,ltt_procedure
 from .risks import (
     BinaryRisk,
     BinaryRiskLike,
