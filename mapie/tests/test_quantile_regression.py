@@ -2521,6 +2521,24 @@ def test_asymmetric_bounds_split_the_miscoverage_between_both_sides() -> None:
     assert 0.08 < miss_low + miss_up < 0.12
 
 
+def test_effective_calibration_samples_are_counted_per_side() -> None:
+    """
+    Test the two-row layout of the asymmetric scores does not inflate the effective
+    sample count: it must match what a one-dimensional asymmetric score reports for the
+    same number of calibration samples, since both calibrate each side at `alpha / 2`.
+    """
+    n_calib = 15
+    asymmetric = QuantileRegressionScore().get_effective_calibration_samples(
+        np.zeros((2, n_calib))
+    )
+    symmetric = AbsoluteQuantileRegressionScore().get_effective_calibration_samples(
+        np.zeros(n_calib)
+    )
+
+    assert asymmetric == n_calib // 2
+    assert symmetric == n_calib
+
+
 def test_cross_conformalized_quantile_regressor_fits_central_estimator() -> None:
     """Test a supplied central_estimator is fitted once per cross-validation fold."""
     n_splits = 3

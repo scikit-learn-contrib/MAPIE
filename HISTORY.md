@@ -8,6 +8,8 @@
   computation selected the next higher order statistic, making prediction sets
   unnecessarily conservative. Classification and regression now apply the same
   finite-sample correction. (issue #479)
+- Fix `QuantileRegressionScore` reporting twice the effective number of calibration
+  samples.
 - Fix `OnlineMartingaleTest.compute_p_value` to put the smoothing term's `+1`
   inside the tie count rather than outside it. The p-value stayed valid, but
   the biased mean caused the default `jumper_martingale` exchangeability test
