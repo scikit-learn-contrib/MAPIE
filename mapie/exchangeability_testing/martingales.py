@@ -448,7 +448,7 @@ class OnlineMartingaleTest:
 
         .. math::
 
-            p_t = \frac{1 + \#\{i : s_i > s_t\} + U \cdot \#\{i : s_i = s_t\}}{n + 1}
+            p_t = \frac{\#\{i : s_i > s_t\} + U \cdot (\#\{i : s_i = s_t\} + 1)}{n + 1}
 
         where $s_t$ is the current conformity score, $s_i$ are past
         scores, $U \sim \mathrm{Uniform}(0, 1)$ is a random tie-breaker, and
@@ -494,7 +494,7 @@ class OnlineMartingaleTest:
         n_greater: int = int(np.sum(history > current_conformity_score))
         n_equal: int = int(np.sum(history == current_conformity_score))
 
-        return float((1.0 + n_greater + u * n_equal) / (n + 1.0))
+        return float((n_greater + u * (n_equal + 1)) / (n + 1.0))
 
     def _estimate_pvalues_density(self, pvalue: float) -> float:
         """
