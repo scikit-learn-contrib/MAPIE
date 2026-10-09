@@ -530,7 +530,9 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
         n: int
             The effective number of calibration samples.
         """
+        scores = scores[0] if scores.ndim > 1 else scores
         n: int = np.sum(~np.isnan(scores))
+        # if is needed for bi-lateral quantile
         if not self.sym:
             n //= 2
         return n

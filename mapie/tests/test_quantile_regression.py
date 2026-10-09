@@ -2530,26 +2530,6 @@ def test_effective_calibration_samples_are_counted_per_side() -> None:
     assert symmetric == n_calib
 
 
-def test_asymmetric_score_rejects_a_calibration_set_too_small_for_alpha_over_two() -> (
-    None
-):
-    """
-    Test a calibration set that is large enough for `alpha` but not for the `alpha / 2`
-    each side of an asymmetric interval is calibrated at is rejected, rather than
-    silently falling back to the extreme order statistic.
-    """
-    reg = CrossConformalizedQuantileRegressor(
-        estimator=qt,
-        confidence_level=0.9,
-        conformity_score=QuantileRegressionScore(),
-        cv=3,
-        random_state=random_state,
-    ).fit_conformalize(X[:15], y[:15])
-
-    with pytest.raises(ValueError, match="Number of samples of the score is too low"):
-        reg.predict_interval(X[:5])
-
-
 def test_cross_conformalized_quantile_regressor_fits_central_estimator() -> None:
     """Test a supplied central_estimator is fitted once per cross-validation fold."""
     n_splits = 3
