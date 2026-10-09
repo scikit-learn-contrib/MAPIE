@@ -36,7 +36,7 @@ class QuantileRegressionScore(BaseRegressionScore):
         y: NDArray[float] of shape (n_samples,)
             Observed target values.
 
-        y_pred: NDArray[float] of shape (2, n_samples)
+        y_pred: NDArray[float] of shape (3, n_samples)
             Predicted lower and upper quantiles.
 
         Returns
