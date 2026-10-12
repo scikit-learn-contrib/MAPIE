@@ -96,9 +96,12 @@ def get_r_hat_plus(
             )
             nu = np.minimum(1, np.sqrt((2 * np.log(1 / delta)) / (n_obs * sigma_hat)))
 
-            # Split the calculation in two to prevent memory issues
-            batches = [range(int(n_obs / 2)), range(n_obs - int(n_obs / 2), n_obs)]
-            K_R_max = np.zeros((n_lambdas, n_lambdas))
+            # Split the calculation in two to prevent memory issues. The
+            # cumulative sum of the second batch continues from the end of the
+            # first one, so that the maximum is taken over the whole sequence.
+            batches = [range(n_obs // 2), range(n_obs // 2, n_obs)]
+            K_R_max = np.full((n_lambdas, n_lambdas), -np.inf)
+            K_R_last = np.zeros((n_lambdas, n_lambdas))
             for batch in batches:
                 nu_batch = nu[batch]
                 losses_batch = risks[batch]
@@ -111,14 +114,14 @@ def get_r_hat_plus(
                 )
 
                 R = lambdas
-                K_R = np.cumsum(
+                K_R = K_R_last + np.cumsum(
                     np.log(
                         (1 - nu_batch * (losses_batch - R)) + np.finfo(np.float64).eps
                     ),
                     axis=0,
                 )
-                K_R = np.max(K_R, axis=0)
-                K_R_max += K_R
+                K_R_max = np.maximum(K_R_max, np.max(K_R, axis=0))
+                K_R_last = K_R[-1]
 
             r_hat_plus_tronc = lambdas[
                 np.argwhere(np.cumsum(K_R_max > -np.log(delta), axis=1) == 1)[:, 1]

@@ -260,6 +260,28 @@ def test_bernstein_bound_uses_each_lambda_variance() -> None:
     assert not np.isnan(r_hat_plus).any()
 
 
+def test_wsr_bound_uses_the_whole_sequence() -> None:
+    """
+    Test that the WSR bound takes the maximum of the capital process over all
+    the observations, as in the reference implementation of [1] in RCPS. The
+    expected value 0.3144 was computed with that implementation (brentq on the
+    same capital process), and with a grid step of 0.005 the bound must be the
+    next grid value. 101 observations also check the middle one is used.
+    """
+    risks = np.random.default_rng(3).binomial(1, 0.25, 101).astype(float)
+    lambdas = np.linspace(0, 1, 201)
+    r_hat, r_hat_plus = get_r_hat_plus(
+        np.repeat(risks[:, np.newaxis], len(lambdas), axis=1),
+        lambdas,
+        "rcps",
+        "wsr",
+        0.1,
+        0.25,
+    )
+    np.testing.assert_allclose(r_hat_plus, 0.315)
+    assert np.all(r_hat_plus > r_hat)
+
+
 def test_ltt_fst_decreasing_reorder():
     r_hat = np.array([[5.0, 4.0, 3.0, 2.0, 1.0]])
     n_obs = np.ones_like(r_hat)
