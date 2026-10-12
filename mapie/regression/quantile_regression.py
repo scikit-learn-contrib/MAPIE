@@ -2329,13 +2329,13 @@ class _MapieQuantileRegressor(_MapieRegressor):
         quantile: NDArray
         if symmetry:
             quantile = np.full(
-                2, _compute_regression_quantile(scores[2], alpha_ref)[0, 0]
+                2, _compute_regression_quantile(scores[2], alpha_ref).item()
             )
         else:
             quantile = np.array(
                 [
-                    _compute_regression_quantile(scores[0], alpha_ref)[0, 0],
-                    _compute_regression_quantile(scores[1], alpha_ref)[0, 0],
+                    _compute_regression_quantile(scores[0], alpha_ref).item(),
+                    _compute_regression_quantile(scores[1], alpha_ref).item(),
                 ]
             )
         y_pred_low = y_preds[0][:, np.newaxis] - quantile[0]
