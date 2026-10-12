@@ -60,7 +60,7 @@ print(f"Test accuracy: {clf.score(X_test, y_test):.3f}")
 
 ##############################################################################
 # Now we compare APS and RAPS. Both produce valid prediction sets (coverage
-# >= 1 - alpha), but RAPS adds a regularization penalty that shrinks the
+# \>= 1 - alpha), but RAPS adds a regularization penalty that shrinks the
 # average set size.
 
 confidence_levels = [0.90, 0.95]
