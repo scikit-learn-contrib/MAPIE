@@ -18,6 +18,8 @@
 - Fix `AbsoluteQuantileRegressionScore` to raise a `ValueError` when
   instantiated with `sym=True`, since this score is asymmetrical by
   construction. The default value of `sym` is now `False`. (issue #989)
+- Fix `QuantileRegressionScore` reporting twice the effective number of calibration
+  samples.
 
 
 ## 1.5.0 (2026-xx-xx)
