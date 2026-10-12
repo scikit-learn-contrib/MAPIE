@@ -512,7 +512,7 @@ def test_std_bounds_plus() -> None:
     X = np.arange(5).reshape(-1, 1)
     estimator: Any = DummyStdEstimator()
 
-    conformity_scores = np.ones((5, 1))
+    conformity_scores = np.ones((5, 11))
     alpha = np.array([0.1])
 
     y_pred, low, up = score.get_bounds(
@@ -535,7 +535,7 @@ def test_std_bounds_base() -> None:
     X = np.arange(5).reshape(-1, 1)
     estimator: Any = DummyStdEstimator()
 
-    conformity_scores = np.ones((5, 1))
+    conformity_scores = np.ones((5, 11))
     alpha = np.array([0.1])
 
     y_pred, low, up = score.get_bounds(
@@ -579,7 +579,7 @@ def test_std_predict_set() -> None:
 
     X = np.arange(5).reshape(-1, 1)
     estimator: Any = DummyStdEstimator()
-    conformity_scores = np.ones((5, 1))
+    conformity_scores = np.ones((5, 11))
     alpha = np.array([0.1])
 
     y_pred, low, up = score.predict_set(

@@ -31,7 +31,7 @@ from mapie.regression.quantile_regression import (
     _QuantileConformalizer,
     _MapieQuantileRegressor,
 )
-from mapie.utils import check_is_fitted
+from mapie.utils import _compute_regression_quantile, check_is_fitted
 
 X_toy = np.array(
     [0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5]
@@ -452,6 +452,25 @@ def test_for_small_dataset() -> None:
         mapie_reg.conformalize(X_calib_toy_small, y_calib_toy_small)
 
 
+def test_compute_regression_quantile_raises_when_level_infeasible() -> None:
+    """A corrected level above 1.0 must raise, not silently clip to max(scores)."""
+    # n_eff=7, alpha_up=0.95 -> ceil(0.95 * 8) / 7 = 1.142... > 1.0
+    scores = np.linspace(-1, 1, 7).reshape(-1, 1)
+    alpha_up = np.array([0.95])
+    with pytest.raises(ValueError, match="too low to reach the requested level"):
+        _compute_regression_quantile(scores, alpha_up, axis=0, unbounded=False)
+
+
+def test_compute_regression_quantile_returns_inf_when_unbounded_and_infeasible() -> (
+    None
+):
+    """With unbounded=True the infeasible level yields +inf, not the sample max."""
+    scores = np.linspace(-1, 1, 7).reshape(-1, 1)
+    alpha_up = np.array([0.95])
+    q = _compute_regression_quantile(scores, alpha_up, axis=0, unbounded=True)
+    assert np.all(np.isinf(q))
+
+
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
 @pytest.mark.parametrize("estimator", ESTIMATOR)
 @pytest.mark.parametrize(
@@ -792,13 +811,13 @@ def test_absolute_quantile_regression_score_conformity_scores() -> None:
     np.testing.assert_allclose(conformity_scores, expected_scores)
 
 
-def test_absolute_quantile_regression_score_rejects_sym_true() -> None:
-    """Test that sym=True raises, since this score is asymmetrical by construction."""
+def test_absolute_quantile_regression_score_rejects_sym_false() -> None:
+    """Test that sym=False raises, since this score is symmetrical by construction."""
     with pytest.raises(
         ValueError,
-        match=r".*cannot be instantiated with sym=True.*",
+        match=r".*cannot be instantiated with sym=False.*",
     ):
-        AbsoluteQuantileRegressionScore(sym=True)
+        AbsoluteQuantileRegressionScore(sym=False)
 
 
 def test_quantile_conformalizer_check_alpha_without_central_estimator() -> None:
@@ -2560,6 +2579,24 @@ def test_asymmetric_bounds_split_the_miscoverage_between_both_sides() -> None:
     assert 0.03 < miss_low < 0.07
     assert 0.03 < miss_up < 0.07
     assert 0.08 < miss_low + miss_up < 0.12
+
+
+def test_effective_calibration_samples_are_counted_per_side() -> None:
+    """
+    Test the two-row layout of the asymmetric scores does not inflate the effective
+    sample count: it must match what a one-dimensional asymmetric score reports for the
+    same number of calibration samples, since both calibrate each side at `alpha / 2`.
+    """
+    n_calib = 15
+    asymmetric = QuantileRegressionScore().get_effective_calibration_samples(
+        np.zeros((2, n_calib))
+    )
+    symmetric = AbsoluteQuantileRegressionScore().get_effective_calibration_samples(
+        np.zeros(n_calib)
+    )
+
+    assert asymmetric == n_calib // 2
+    assert symmetric == n_calib
 
 
 def test_cross_conformalized_quantile_regressor_fits_central_estimator() -> None:

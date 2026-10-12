@@ -1,6 +1,8 @@
 # History
 ## 1.x.x (2026-xx-xx)
 
+- Add a v0.x migration pointer to the quick start and fix the README link to
+  the v1 release notes. (issue #915)
 - Add educational MAPIE notebooks covering regression and conformal prediction
   for language models. Shown in the documentation homepage and All Examples.
 - Fix `_compute_classification_quantile` to select the intended split-conformal
@@ -12,9 +14,12 @@
   inside the tie count rather than outside it. The p-value stayed valid, but
   the biased mean caused the default `jumper_martingale` exchangeability test
   to over-reject relative to `test_level`. (issue #984)
+- Fix the RCPS Bernstein bound to use each lambda's loss variance.
 - Fix `AbsoluteQuantileRegressionScore` to raise a `ValueError` when
   instantiated with `sym=True`, since this score is asymmetrical by
   construction. The default value of `sym` is now `False`. (issue #989)
+- Fix `QuantileRegressionScore` reporting twice the effective number of calibration
+  samples.
 - Fix `ConformalizedQuantileRegressor` to select the intended split-conformal
   order statistic, using the same finite-sample correction as the other
   regression methods. For some calibration sizes and confidence levels, the

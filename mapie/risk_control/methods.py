@@ -77,7 +77,7 @@ def get_r_hat_plus(
             r_hat_plus = r_hat + np.sqrt((1 / (2 * n_obs)) * np.log(1 / delta))
 
         elif bound == "bernstein":
-            sigma_hat_bern = np.var(r_hat, axis=0, ddof=1)
+            sigma_hat_bern = np.var(risks, axis=0, ddof=1)
             r_hat_plus = (
                 r_hat
                 + np.sqrt((sigma_hat_bern * 2 * np.log(2 / delta)) / n_obs)
