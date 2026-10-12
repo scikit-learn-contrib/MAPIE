@@ -243,20 +243,13 @@ class _BaseLTTController:
             )
     def _get_predictions_per_param_multi_params(self, X: ArrayLike, params: NDArray, is_calibration_step=False):
         n_params = len(params)
-        if self.is_multi_dimensional_param:
-            predictions = [self._predict_function(X, *params[i]) for i in range(n_params)]
-            # predict_function is expected to directly output class labels
-            # (see MultiClassificationLTTController's predict_function doc):
-            # keep them as-is (object dtype) instead of forcing float, so str
-            # labels aren't silently coerced/raise a conversion error.
-            dtype = (
-                float
-                if all(np.issubdtype(np.asarray(p).dtype, np.number) for p in predictions)
-                else object
-            )
-            y_pred = np.array(predictions, dtype=dtype)
-            if is_calibration_step:
-                self._check_predictions(y_pred)
+        y_pred = []
+        for i in range(n_params):
+            y_pred.append(self._predict_function(X, *params[i]))
+
+        y_pred = np.array(y_pred)
+        if is_calibration_step:
+            self._check_predictions(y_pred)
         return y_pred
     
     def _check_predictions(self, predictions_per_param: NDArray) -> None:
