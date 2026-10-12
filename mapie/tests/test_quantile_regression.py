@@ -751,13 +751,13 @@ def test_absolute_quantile_regression_score_conformity_scores() -> None:
     np.testing.assert_allclose(conformity_scores, expected_scores)
 
 
-def test_absolute_quantile_regression_score_rejects_sym_true() -> None:
-    """Test that sym=True raises, since this score is asymmetrical by construction."""
+def test_absolute_quantile_regression_score_rejects_sym_false() -> None:
+    """Test that sym=False raises, since this score is symmetrical by construction."""
     with pytest.raises(
         ValueError,
-        match=r".*cannot be instantiated with sym=True.*",
+        match=r".*cannot be instantiated with sym=False.*",
     ):
-        AbsoluteQuantileRegressionScore(sym=True)
+        AbsoluteQuantileRegressionScore(sym=False)
 
 
 def test_quantile_conformalizer_check_alpha_without_central_estimator() -> None:
