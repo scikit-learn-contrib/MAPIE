@@ -78,14 +78,14 @@ class AbsoluteQuantileRegressionScore(QuantileRegressionScore):
 
     def __init__(
         self,
-        sym: bool = False,
+        sym: bool = True,
     ) -> None:
-        if sym:
+        if not sym:
             raise ValueError(
                 "AbsoluteQuantileRegressionScore is an asymmetrical conformity "
                 "score by construction (it combines the lower and upper "
                 "quantile residuals via a max operation). "
-                "It cannot be instantiated with sym=True."
+                "It cannot be instantiated with sym=False."
             )
         super().__init__(sym=sym, consistency_check=False)
 
