@@ -20,6 +20,11 @@
   construction. The default value of `sym` is now `False`. (issue #989)
 - Fix `QuantileRegressionScore` reporting twice the effective number of calibration
   samples.
+- Fix `ConformalizedQuantileRegressor` to select the intended split-conformal
+  order statistic, using the same finite-sample correction as the other
+  regression methods. For some calibration sizes and confidence levels, the
+  previous computation selected the next higher order statistic, making
+  intervals unnecessarily conservative. (issue #991)
 
 
 ## 1.5.0 (2026-xx-xx)
