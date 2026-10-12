@@ -354,45 +354,43 @@ class BinaryClassificationController(_BaseLTTController):
         else:
             self.best_predict_param = float(best_predict_param)
 
+    def _get_predictions_per_param_mono_param(self, X, params, is_calibration_step=False):
+        try:
+            predictions_proba = self._predict_function(X)[:, 1]
+        except TypeError as e:
+            if "object is not callable" in str(e):
+                raise TypeError(
+                    "Error when calling the predict_function. "
+                    "Maybe you provided a binary classifier to the "
+                    "predict_function parameter of the BinaryClassificationController. "
+                    "You should provide your classifier's predict_proba method instead."
+                ) from e
+            else:
+                raise
+        except IndexError as e:
+            if "array is 1-dimensional, but 2 were indexed" in str(e):
+                raise IndexError(
+                    "Error when calling the predict_function. "
+                    "Maybe the predict function you provided returns only the "
+                    "probability of the positive class. "
+                    "You should provide a predict function that returns the "
+                    "probabilities of both classes, like scikit-learn estimators."
+                ) from e
+            else:
+                raise
+        if is_calibration_step:
+            self._check_predictions(predictions_proba)
+        y_pred = (predictions_proba[:, np.newaxis] >= params).T.astype(int)
+        return y_pred
+    
     def _get_predictions_per_param(
         self, X: ArrayLike, params: NDArray, is_calibration_step=False
     ) -> NDArray:
         """Returns y_pred of shape (n_params, n_samples)"""
-        n_params = len(params)
-        n_samples = len(np.asarray(X))
         if self.is_multi_dimensional_param:
-            y_pred: NDArray[np.float64] = np.empty((n_params, n_samples), dtype=float)
-            for i in range(n_params):
-                y_pred[i] = self._predict_function(X, *params[i])
-            if is_calibration_step:
-                self._check_predictions(y_pred)
-        else:
-            try:
-                predictions_proba = self._predict_function(X)[:, 1]
-            except TypeError as e:
-                if "object is not callable" in str(e):
-                    raise TypeError(
-                        "Error when calling the predict_function. "
-                        "Maybe you provided a binary classifier to the "
-                        "predict_function parameter of the BinaryClassificationController. "
-                        "You should provide your classifier's predict_proba method instead."
-                    ) from e
-                else:
-                    raise
-            except IndexError as e:
-                if "array is 1-dimensional, but 2 were indexed" in str(e):
-                    raise IndexError(
-                        "Error when calling the predict_function. "
-                        "Maybe the predict function you provided returns only the "
-                        "probability of the positive class. "
-                        "You should provide a predict function that returns the "
-                        "probabilities of both classes, like scikit-learn estimators."
-                    ) from e
-                else:
-                    raise
-            if is_calibration_step:
-                self._check_predictions(predictions_proba)
-            y_pred = (predictions_proba[:, np.newaxis] >= params).T.astype(int)
+            y_pred = self._get_predictions_per_param_multi_params(X,params,is_calibration_step)
+        else : 
+            y_pred = self._get_predictions_per_param_mono_param(X,params,is_calibration_step)
         return y_pred
 
     def _check_predictions(self, predictions_per_param: NDArray) -> None:

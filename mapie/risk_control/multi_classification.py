@@ -245,7 +245,6 @@ class MultiClassificationLTTController(_BaseLTTController):
         """
         y_calibrate_ = np.asarray(y_calibrate, dtype=int)
 
-
         original_params = self._predict_params
         if self.fwer_method == "split_fixed_sequence":
             if self._learned_fixed_sequence is None:
@@ -323,7 +322,6 @@ class MultiClassificationLTTController(_BaseLTTController):
             [self._best_predict_param_choice],
         )
 
-
         best_index = np.flatnonzero(secondary_risks_per_param == secondary_risks_per_param.min())
         # Break ties on the minimum secondary risk by selecting, among the tied
         # parameters, the one that maximizes the first risk (to be less
@@ -335,21 +333,8 @@ class MultiClassificationLTTController(_BaseLTTController):
             self.best_predict_param = tuple(best_predict_param.tolist())
         else:
             self.best_predict_param = float(best_predict_param)
-
-    def _get_predictions_per_param(
-        self,
-        X: ArrayLike,
-        params: NDArray,
-        is_calibration_step=False,
-    ) -> Any:
-        """Returns y_pred of shape (n_params, n_samples)"""
-        n_params = len(params)
-        n_samples = len(np.asarray(X))
-        if self.is_multi_dimensional_param:
-            y_pred: NDArray[np.float64] = np.empty((n_params, n_samples), dtype=float)
-            for i in range(n_params):
-                y_pred[i] = self._predict_function(X, *params[i])
-            return y_pred
+            
+    def _get_predictions_per_param_mono_param(self, X, params, is_calibration_step=False):
         try:
             predictions_proba = self._predict_function(X)
         except TypeError as e:
@@ -365,6 +350,19 @@ class MultiClassificationLTTController(_BaseLTTController):
         predictions_proba = np.asarray(predictions_proba)
         self._check_predictions(predictions_proba)
         y_pred = self.proba_to_label_function(params, predictions_proba)
+        return y_pred
+    
+    def _get_predictions_per_param(
+        self,
+        X: ArrayLike,
+        params: NDArray,
+        is_calibration_step=False,
+    ) -> Any:
+        """Returns y_pred of shape (n_params, n_samples)"""
+        if self.is_multi_dimensional_param:
+            y_pred = self._get_predictions_per_param_multi_params(X,params,is_calibration_step)
+        else : 
+            y_pred = self._get_predictions_per_param_mono_param(X,params,is_calibration_step)
         return y_pred
 
     def _check_predictions(self, predictions_per_param: NDArray) -> None:
@@ -399,4 +397,3 @@ class MultiClassificationLTTController(_BaseLTTController):
         # This is probably to be changed.
         y_pred = np.where(is_above_param, class_label[np.newaxis, :], np.nan)
         return y_pred
-

@@ -5,7 +5,7 @@ from typing import Any, List, Optional, Sequence, Tuple, Union, cast
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
-
+from mapie.risk_control.methods import _check_risk_monotonicity
 from mapie.risk_control.fwer_control import (
     FWER_IMPLEMENTED,
     FWER_METHODS,
@@ -241,11 +241,23 @@ class _BaseLTTController:
                 "or a 2D array of shape (n_params, params_dim) for multi-dimensional parameters "
                 "(params_dim=1 is allowed for the case when a one-dimensional parameter is not used as a threshold)."
             )
-
+    def _get_predictions_per_param_multi_params(self, X: ArrayLike, params: NDArray, is_calibration_step=False): 
+        n_params = len(params)
+        n_samples = len(np.asarray(X))
+        if self.is_multi_dimensional_param:
+            y_pred: NDArray[np.float64] = np.empty((n_params, n_samples), dtype=float)
+            for i in range(n_params):
+                y_pred[i] = self._predict_function(X, *params[i])
+            if is_calibration_step:
+                self._check_predictions(y_pred)
+        return y_pred
+    
     def _check_predictions(self, predictions_per_param: NDArray) -> None:
         raise NotImplementedError  # pragma: no cover
-
-
+    def _get_predictions_per_param_mono_param(self, X: ArrayLike, params: NDArray, is_calibration_step=False): 
+        raise NotImplementedError # pragma: no cover
+    
+# Warning ltt_procedure is used both in Multilabel classification (CRC) and Binary/Multi Classification (LTT)
 def ltt_procedure(
     r_hat: NDArray,
     alpha_np: NDArray,
@@ -253,125 +265,126 @@ def ltt_procedure(
     n_obs: NDArray,
     binary: bool = False,
     fwer_method: Union[FWER_METHODS, FWERProcedure] = "bonferroni_holm",
-) -> Tuple[List[List[Any]], NDArray]:
-    """
-    Apply the Learn-Then-Test procedure for risk control.
-    Note that we will do a multiple test for `r_hat` that are
-    less than level `alpha_np`.
-    The procedure follows the instructions in [1]:
-        - Calculate p-values for each lambdas discretized
-        - Apply a family wise error rate algorithm, here Bonferonni correction
-        - Return the index lambdas that give you the control at alpha level
+    ) -> Tuple[List[List[Any]], NDArray]:
+        """
+        Apply the Learn-Then-Test procedure for risk control.
+        Note that we will do a multiple test for `r_hat` that are
+        less than level `alpha_np`.
+        The procedure follows the instructions in [1]:
+            - Calculate p-values for each lambdas discretized
+            - Apply a family wise error rate algorithm, here Bonferonni correction
+            - Return the index lambdas that give you the control at alpha level
 
-    Note that in the case of multi-risk, the arrays r_hat, alpha_np, and n_obs
-    should have the same length for the first dimension which corresponds
-    to the number of risks. In the case of a single risk, the length should be 1.
+        Note that in the case of multi-risk, the arrays r_hat, alpha_np, and n_obs
+        should have the same length for the first dimension which corresponds
+        to the number of risks. In the case of a single risk, the length should be 1.
 
-    Parameters
-    ----------
-    r_hat: NDArray of shape (n_risks, n_lambdas).
-        Empirical risk with respect to the lambdas.
-        Here lambdas are thresholds that impact decision-making,
-        therefore empirical risk.
+        Parameters
+        ----------
+        r_hat: NDArray of shape (n_risks, n_lambdas).
+            Empirical risk with respect to the lambdas.
+            Here lambdas are thresholds that impact decision-making,
+            therefore empirical risk.
 
-    alpha_np: NDArray of shape (n_risks, n_alpha).
-        Contains the different alphas control level.
-        The empirical risk should be less than alpha with
-        probability 1-delta.
-        For MultiLabelClassificationController, the shape should be (1, n_alpha).
-        For BinaryClassificationController, the shape should be (n_risks, 1).
+        alpha_np: NDArray of shape (n_risks, n_alpha).
+            Contains the different alphas control level.
+            The empirical risk should be less than alpha with
+            probability 1-delta.
+            For MultiLabelClassificationController, the shape should be (1, n_alpha).
+            For BinaryClassificationController, the shape should be (n_risks, 1).
 
-    delta: float.
-        Probability of not controlling empirical risk.
-        Correspond to proportion of failure we don't
-        want to exceed.
+        delta: float.
+            Probability of not controlling empirical risk.
+            Correspond to proportion of failure we don't
+            want to exceed.
 
-    n_obs: NDArray of shape (n_risks, n_lambdas).
-        Correspond to the number of observations used to compute the risk.
-        In the case of a conditional loss, n_obs must be the
-        number of effective observations used to compute the empirical risk
-        for each lambda.
+        n_obs: NDArray of shape (n_risks, n_lambdas).
+            Correspond to the number of observations used to compute the risk.
+            In the case of a conditional loss, n_obs must be the
+            number of effective observations used to compute the empirical risk
+            for each lambda.
 
-    binary: bool, default=False
-        Must be True if the loss associated to the risk is binary.
+        binary: bool, default=False
+            Must be True if the loss associated to the risk is binary.
 
-    fwer_method : {"bonferroni", "bonferroni_holm", "fixed_sequence", "split_fixed_sequence"} or FWERProcedure instance, default="bonferroni_holm"
-        FWER control strategy.
+        fwer_method : {"bonferroni", "bonferroni_holm", "fixed_sequence", "split_fixed_sequence"} or FWERProcedure instance, default="bonferroni_holm"
+            FWER control strategy.
 
-    Returns
-    -------
-    valid_index: List[List[Any]].
-        Contain the valid index that satisfy FWER control
-        for each alpha (length aren't the same for each alpha).
+        Returns
+        -------
+        valid_index: List[List[Any]].
+            Contain the valid index that satisfy FWER control
+            for each alpha (length aren't the same for each alpha).
 
-    p_values : NDArray of shape (n_lambdas, n_alpha)
-        P-values associated with each tested parameter. In the multi-risk setting,
-        they correspond to the maximum over the tested risks.
+        p_values : NDArray of shape (n_lambdas, n_alpha)
+            P-values associated with each tested parameter. In the multi-risk setting,
+            they correspond to the maximum over the tested risks.
 
-    Notes
-    -----
-    fwer_method="fixed_sequence" corresponds to the fixed sequence testing procedure with one start.
-    However, users can use multi-start by instantiating FWERFixedSequenceTesting with
-    any desired number of starts and passing the instance to control_fwer.
+        Notes
+        -----
+        fwer_method="fixed_sequence" corresponds to the fixed sequence testing procedure with one start.
+        However, users can use multi-start by instantiating FWERFixedSequenceTesting with
+        any desired number of starts and passing the instance to control_fwer.
 
-    fwer_method="split_fixed_sequence" behaves identically to "fixed_sequence" at this stage.
-    The ordering must have been learned beforehand on independent data (typically by the controller).
+        fwer_method="split_fixed_sequence" behaves identically to "fixed_sequence" at this stage.
+        The ordering must have been learned beforehand on independent data (typically by the controller).
 
-    References
-    ----------
-    [1] Angelopoulos, A. N., Bates, S., Candès, E. J., Jordan,
-    M. I., & Lei, L. (2021). Learn then test:
-    "Calibrating predictive algorithms to achieve risk control".
-    """
-    if not (r_hat.shape[0] == n_obs.shape[0] == alpha_np.shape[0]):
-        raise ValueError("r_hat, n_obs, and alpha_np must have the same length.")
-    p_values = np.array(
-        [
-            compute_hoeffding_bentkus_p_value(r_hat_i, n_obs_i, alpha_np_i, binary)
-            for r_hat_i, n_obs_i, alpha_np_i in zip(r_hat, n_obs, alpha_np)
-        ]
-    )
-    p_values = p_values.max(
-        axis=0
-    )  # to handle multiple risks, take max over risks (no effect if mono risk)
+        References
+        ----------
+        [1] Angelopoulos, A. N., Bates, S., Candès, E. J., Jordan,
+        M. I., & Lei, L. (2021). Learn then test:
+        "Calibrating predictive algorithms to achieve risk control".
+        """
+        if not (r_hat.shape[0] == n_obs.shape[0] == alpha_np.shape[0]):
+            raise ValueError("r_hat, n_obs, and alpha_np must have the same length.")
+        p_values = np.array(
+            [
+                compute_hoeffding_bentkus_p_value(r_hat_i, n_obs_i, alpha_np_i, binary)
+                for r_hat_i, n_obs_i, alpha_np_i in zip(r_hat, n_obs, alpha_np)
+            ]
+        )
+        p_values = p_values.max(
+            axis=0
+        )  # to handle multiple risks, take max over risks (no effect if mono risk)
 
-    # Fixed Sequence Testing (FST) only supports a single monotonic risk.
-    # - If non-monotonic: raise warning.
-    # - If decreasing: reverse order so FST tests easiest -> hardest;
-    #   store permutation to remap indices afterward.
-    order = None
-    p_values_original = p_values
-    if (fwer_method == "fixed_sequence") or (
-        isinstance(fwer_method, FWERFixedSequenceTesting)
-    ):
-        if r_hat.shape[0] > 1:
-            raise ValueError("fixed_sequence cannot be used with multiple risks.")
+        # Fixed Sequence Testing (FST) only supports a single monotonic risk.
+        # - If non-monotonic: raise warning.
+        # - If decreasing: reverse order so FST tests easiest -> hardest;
+        #   store permutation to remap indices afterward.
+        order = None
+        p_values_original = p_values
+        if (fwer_method == "fixed_sequence") or (
+            isinstance(fwer_method, FWERFixedSequenceTesting)
+        ):
+            if r_hat.shape[0] > 1:
+                raise ValueError("fixed_sequence cannot be used with multiple risks.")
 
-        direction = _check_risk_monotonicity(r_hat[0])
+            direction = _check_risk_monotonicity(r_hat[0])
 
-        if direction == "none":
-            warnings.warn(
-                "Fixed sequence testing requires a monotonic risk over lambdas (thresholds) to find "
-                "optimal solutions but this hypothesis is not verified here. "
-                "We recommand you try split_fixed_sequence instead if the hypothesis ordering is not known a priori.",
-                UserWarning,
-            )
-            average_variation = np.mean(np.diff(r_hat[0]))
-            direction = "increasing" if average_variation > 0 else "decreasing"
+            if direction == "none":
+                warnings.warn(
+                    "Fixed sequence testing requires a monotonic risk over lambdas (thresholds) to find "
+                    "optimal solutions but this hypothesis is not verified here. "
+                    "We recommand you try split_fixed_sequence instead if the hypothesis ordering is not known a priori.",
+                    UserWarning,
+                )
+                average_variation = np.mean(np.diff(r_hat[0]))
+                direction = "increasing" if average_variation > 0 else "decreasing"
 
-        if direction == "decreasing":
-            order = np.arange(len(p_values))[::-1]
-            p_values = p_values[order]
+            if direction == "decreasing":
+                order = np.arange(len(p_values))[::-1]
+                p_values = p_values[order]
 
-        # To have 100% coverage
-        if direction == "increasing":
-            pass
+            # To have 100% coverage
+            if direction == "increasing":
+                pass
 
-    valid_index = []
-    for i in range(alpha_np.shape[1]):
-        idx = control_fwer(p_values[:, i], delta, fwer_method=fwer_method)
-        if order is not None:
-            idx = order[idx]
-        l_index = idx.tolist()
-        valid_index.append(l_index)
-    return valid_index, p_values_original
+        valid_index = []
+        for i in range(alpha_np.shape[1]):
+            idx = control_fwer(p_values[:, i], delta, fwer_method=fwer_method)
+            if order is not None:
+                idx = order[idx]
+            l_index = idx.tolist()
+            valid_index.append(l_index)
+        return valid_index, p_values_original
+
