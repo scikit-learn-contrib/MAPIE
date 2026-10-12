@@ -241,13 +241,20 @@ class _BaseLTTController:
                 "or a 2D array of shape (n_params, params_dim) for multi-dimensional parameters "
                 "(params_dim=1 is allowed for the case when a one-dimensional parameter is not used as a threshold)."
             )
-    def _get_predictions_per_param_multi_params(self, X: ArrayLike, params: NDArray, is_calibration_step=False): 
+    def _get_predictions_per_param_multi_params(self, X: ArrayLike, params: NDArray, is_calibration_step=False):
         n_params = len(params)
-        n_samples = len(np.asarray(X))
         if self.is_multi_dimensional_param:
-            y_pred: NDArray[np.float64] = np.empty((n_params, n_samples), dtype=float)
-            for i in range(n_params):
-                y_pred[i] = self._predict_function(X, *params[i])
+            predictions = [self._predict_function(X, *params[i]) for i in range(n_params)]
+            # predict_function is expected to directly output class labels
+            # (see MultiClassificationLTTController's predict_function doc):
+            # keep them as-is (object dtype) instead of forcing float, so str
+            # labels aren't silently coerced/raise a conversion error.
+            dtype = (
+                float
+                if all(np.issubdtype(np.asarray(p).dtype, np.number) for p in predictions)
+                else object
+            )
+            y_pred = np.array(predictions, dtype=dtype)
             if is_calibration_step:
                 self._check_predictions(y_pred)
         return y_pred

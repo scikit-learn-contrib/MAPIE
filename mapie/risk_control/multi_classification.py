@@ -204,6 +204,7 @@ class MultiClassificationLTTController(_BaseLTTController):
         )
         self.fwer_method = self._check_fwer_method(fwer_method)
         self._learned_fixed_sequence: Optional[NDArray[Any]] = None
+        self._classes_: Optional[NDArray] = None
 
         self.valid_predict_params: NDArray = np.array([])
         self.best_predict_param = None
@@ -243,7 +244,8 @@ class MultiClassificationLTTController(_BaseLTTController):
 
         Using the same data for both steps would invalidate guarantees.
         """
-        y_calibrate_ = np.asarray(y_calibrate, dtype=int)
+        y_calibrate_ = np.asarray(y_calibrate)
+        self._classes_ = np.unique(y_calibrate_)
 
         original_params = self._predict_params
         if self.fwer_method == "split_fixed_sequence":
@@ -257,6 +259,7 @@ class MultiClassificationLTTController(_BaseLTTController):
         predictions_per_param = self._get_predictions_per_param(
             X_calibrate, self._predict_params, is_calibration_step=True
         )
+        self._check_predictions_type(predictions_per_param, y_calibrate_)
         # broadcast one _alpha_level per risk.
         if self._alpha.shape[0] != len(self._risk):
             self._alpha = np.repeat(self._alpha, len(self._risk))
@@ -295,6 +298,23 @@ class MultiClassificationLTTController(_BaseLTTController):
         self._predict_params = original_params
 
         return self
+
+    @staticmethod
+    def _check_predictions_type(
+        predictions_per_param: NDArray, y_calibrate_: NDArray
+    ) -> None:
+        """
+        check if predictions type is different than y_calibrate, else raise an error
+        """
+        predictions_dtype = np.asarray(predictions_per_param).dtype
+        y_calibrate_dtype = np.asarray(y_calibrate_).dtype
+        if np.issubdtype(predictions_dtype, np.number) != np.issubdtype(
+            y_calibrate_dtype, np.number
+        ):
+            raise TypeError(
+                f"predictions type ({predictions_dtype}) is different from "
+                f"y_calibrate type ({y_calibrate_dtype})."
+            )
 
     def _set_best_predict_param_choice(
         self,
@@ -366,6 +386,11 @@ class MultiClassificationLTTController(_BaseLTTController):
         return y_pred
 
     def _check_predictions(self, predictions_per_param: NDArray) -> None:
+        if self.is_multi_dimensional_param:
+            # In this mode, predict_function already outputs the final class
+            # labels directly (not predict_proba output), so the probability
+            # checks below don't apply.
+            return
         if predictions_per_param.ndim != 2:
             raise ValueError(
                 "Error when calling the predict_function. "
@@ -388,12 +413,15 @@ class MultiClassificationLTTController(_BaseLTTController):
                 "predict_function parameter of the MultiClassificationLTTController."
             )
 
-    @staticmethod
-    def default_agg_class_pba(params, predictions_proba) -> NDArray:
+    def default_agg_class_pba(self, params, predictions_proba) -> NDArray:
         max_proba = predictions_proba.max(axis=1)
-        class_label = predictions_proba.argmax(axis=1)
+        predicted_index = predictions_proba.argmax(axis=1)
+        if self._classes_ is None:
+            class_label = predicted_index
+        elif np.issubdtype(self._classes_.dtype, np.number):
+            class_label = self._classes_[predicted_index]
+        else:
+            class_label = self._classes_.astype(object)[predicted_index]
         is_above_param = max_proba[np.newaxis, :] >= params[:, np.newaxis]
-        # When no class reaches the threshold, we default to class np.nan.
-        # This is probably to be changed.
         y_pred = np.where(is_above_param, class_label[np.newaxis, :], np.nan)
         return y_pred
