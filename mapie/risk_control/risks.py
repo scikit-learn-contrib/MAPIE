@@ -4,7 +4,6 @@ import warnings
 from typing import TYPE_CHECKING, Any, Callable, List, Literal, Tuple, Union, cast
 
 import numpy as np
-import pandas as pd
 from numpy.typing import NDArray
 
 if TYPE_CHECKING:
@@ -422,8 +421,7 @@ def build_abstention_rate_ovr(
     return [
         ClassSpecificRisk(
             class_label=class_label,
-            # TO DO : check si on ne peut pas se passer de pandas
-            risk_occurrence=lambda y_true, y_pred: pd.isna(y_pred),
+            risk_occurrence=lambda y_true, y_pred: y_pred != y_pred,
             risk_condition=(
                 lambda y_true, y_pred, class_label=class_label: (
                     np.repeat(True, len(y_true))
