@@ -356,15 +356,20 @@ def build_recall_ovr(
     List[ClassSpecificRisk]
         One precision risk per class label in `class_labels`.
     """
+
+    def _make_risk_condition(
+        class_label: Union[int, str],
+    ) -> Callable[[NDArray, NDArray], NDArray]:
+        def risk_condition(y_true: NDArray, y_pred: NDArray) -> NDArray:
+            return cast(NDArray, y_true.ravel() == class_label)
+
+        return risk_condition
+
     return [
         ClassSpecificRisk(
             class_label=class_label,
             risk_occurrence=lambda y_true, y_pred: y_pred.ravel() == y_true.ravel(),
-            risk_condition=(
-                lambda y_true, y_pred, class_label=class_label: (
-                    y_true.ravel() == class_label
-                )
-            ),
+            risk_condition=_make_risk_condition(class_label),
             higher_is_better=True,
         )
         for class_label in class_labels
@@ -387,15 +392,20 @@ def build_precision_ovr(
     List[ClassSpecificRisk]
         One precision risk per class label in `class_labels`.
     """
+
+    def _make_risk_condition(
+        class_label: Union[int, str],
+    ) -> Callable[[NDArray, NDArray], NDArray]:
+        def risk_condition(y_true: NDArray, y_pred: NDArray) -> NDArray:
+            return cast(NDArray, y_pred.ravel() == class_label)
+
+        return risk_condition
+
     return [
         ClassSpecificRisk(
             class_label=class_label,
             risk_occurrence=lambda y_true, y_pred: y_pred.ravel() == y_true.ravel(),
-            risk_condition=(
-                lambda y_true, y_pred, class_label=class_label: (
-                    y_pred.ravel() == class_label
-                )
-            ),
+            risk_condition=_make_risk_condition(class_label),
             higher_is_better=True,
         )
         for class_label in class_labels
@@ -422,11 +432,7 @@ def build_abstention_rate_ovr(
         ClassSpecificRisk(
             class_label=class_label,
             risk_occurrence=lambda y_true, y_pred: y_pred != y_pred,
-            risk_condition=(
-                lambda y_true, y_pred, class_label=class_label: (
-                    np.repeat(True, len(y_true))
-                )
-            ),
+            risk_condition=lambda y_true, y_pred: np.repeat(True, len(y_true)),
             higher_is_better=False,
         )
         for class_label in class_labels

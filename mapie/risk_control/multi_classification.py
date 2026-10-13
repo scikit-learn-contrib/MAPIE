@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Callable, List, Literal, Optional, Sequence, Union, cast
+from typing import Any, Callable, List, Literal, Optional, Union
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -49,14 +49,13 @@ class MultiClassificationLTTController(_BaseLTTController):
     Parameters
     ----------
 
-    predict_function : Callable[[ArrayLike], NDArray]
-        predict_proba method of a fitted multiclass classifier.
-        Its output signature must be of shape (len(X), n_classes).
+    predict_function : Callable[..., NDArray]
+        predict_proba method of a fitted multiclass classifier, with output
+        of shape (len(X), n_classes).
 
-        Note: only this predict_proba case is currently implemented. The
-        general case of multi-dimensional parameters (a function taking
-        (X, \\*params) and outputting predicted class labels directly) is not
-        supported yet.
+        For multi-dimensional parameters (when `list_predict_params` is 2D),
+        predict_function must instead take (X, \\*params) and output the
+        predicted class labels directly, of shape (len(X),).
 
     risks : List[ClassSpecificRisk]
         The class-specific risks (or performance metrics) to control, one per
@@ -78,7 +77,7 @@ class MultiClassificationLTTController(_BaseLTTController):
     best_predict_param_choice : Literal["auto"], default="auto"
         How to select the best threshold from the valid thresholds that
         control the risks (or performance). "auto" is currently the only
-        supported value: it uses every risk in `risks` as the secondary
+        supported value: it uses the first risk in `risks` as the secondary
         objective.
 
     list_predict_params : NDArray, default=np.linspace(0, 0.99, 100)
@@ -118,8 +117,7 @@ class MultiClassificationLTTController(_BaseLTTController):
         Use the calibrate method to compute these.
 
     best_predict_param : Optional[float]
-        The best threshold that controls the risks (or performance), selected
-        according to `risk_combination_method`.
+        The best threshold that controls the risks (or performance).
         Use the calibrate method to compute it.
 
     p_values : NDArray
@@ -157,7 +155,6 @@ class MultiClassificationLTTController(_BaseLTTController):
     ...     predict_function=clf.predict_proba,
     ...     risks=build_precision_ovr(np.unique(y_train)),
     ...     target_level=0.7,
-    ...     risk_combination_method=1,
     ... )
 
     >>> predictions = controller.calibrate(X_calib, y_calib).predict(X_test)
@@ -170,13 +167,11 @@ class MultiClassificationLTTController(_BaseLTTController):
 
     def __init__(
         self,
-        predict_function: Callable[[ArrayLike], NDArray],
+        predict_function: Callable[..., NDArray],
         risks: list[ClassSpecificRisk],
         target_level: Union[float, List[float]],
         confidence_level: float = 0.9,
-        best_predict_param_choice: Union[
-            Literal["auto"], ClassSpecificRisk
-        ] = "auto", 
+        best_predict_param_choice: Union[Literal["auto"], ClassSpecificRisk] = "auto",
         list_predict_params: NDArray = np.linspace(0, 0.99, 100),
         proba_to_label_function: Optional[Callable[[NDArray, NDArray], NDArray]] = None,
         fwer_method: Union[FWER_METHODS, FWERProcedure] = "bonferroni_holm",
@@ -189,7 +184,9 @@ class MultiClassificationLTTController(_BaseLTTController):
         )
         self._alpha = self._convert_target_level_to_alpha(target_level_list)
         self._delta = 1 - confidence_level
-        self.is_multi_dimensional_param = self._check_if_multi_dimensional_param(list_predict_params)
+        self.is_multi_dimensional_param = self._check_if_multi_dimensional_param(
+            list_predict_params
+        )
         self._best_predict_param_choice = self._set_best_predict_param_choice(
             best_predict_param_choice
         )
@@ -317,9 +314,7 @@ class MultiClassificationLTTController(_BaseLTTController):
             )
 
     def _set_best_predict_param_choice(
-        self,
-        best_predict_param_choice:Union[
-            Literal["auto"], ClassSpecificRisk]
+        self, best_predict_param_choice: Union[Literal["auto"], ClassSpecificRisk]
     ) -> ClassSpecificRisk:
         if best_predict_param_choice == "auto":
             # when multi risk, we minimize the first risk in the list
@@ -342,7 +337,9 @@ class MultiClassificationLTTController(_BaseLTTController):
             [self._best_predict_param_choice],
         )
 
-        best_index = np.flatnonzero(secondary_risks_per_param == secondary_risks_per_param.min())
+        best_index = np.flatnonzero(
+            secondary_risks_per_param == secondary_risks_per_param.min()
+        )
         # Break ties on the minimum secondary risk by selecting, among the tied
         # parameters, the one that maximizes the first risk (to be less
         # conservative).
@@ -353,8 +350,10 @@ class MultiClassificationLTTController(_BaseLTTController):
             self.best_predict_param = tuple(best_predict_param.tolist())
         else:
             self.best_predict_param = float(best_predict_param)
-            
-    def _get_predictions_per_param_mono_param(self, X, params, is_calibration_step=False):
+
+    def _get_predictions_per_param_mono_param(
+        self, X, params, is_calibration_step=False
+    ):
         try:
             predictions_proba = self._predict_function(X)
         except TypeError as e:
@@ -371,7 +370,7 @@ class MultiClassificationLTTController(_BaseLTTController):
         self._check_predictions(predictions_proba)
         y_pred = self.proba_to_label_function(params, predictions_proba)
         return y_pred
-    
+
     def _get_predictions_per_param(
         self,
         X: ArrayLike,
@@ -380,9 +379,13 @@ class MultiClassificationLTTController(_BaseLTTController):
     ) -> Any:
         """Returns y_pred of shape (n_params, n_samples)"""
         if self.is_multi_dimensional_param:
-            y_pred = self._get_predictions_per_param_multi_params(X,params,is_calibration_step)
-        else : 
-            y_pred = self._get_predictions_per_param_mono_param(X,params,is_calibration_step)
+            y_pred = self._get_predictions_per_param_multi_params(
+                X, params, is_calibration_step
+            )
+        else:
+            y_pred = self._get_predictions_per_param_mono_param(
+                X, params, is_calibration_step
+            )
         return y_pred
 
     def _check_predictions(self, predictions_per_param: NDArray) -> None:

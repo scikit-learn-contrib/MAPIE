@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 import pytest
@@ -6,7 +6,7 @@ from sklearn.datasets import make_classification
 from sklearn.linear_model import LogisticRegression
 
 from mapie.risk_control import MultiClassificationLTTController
-from mapie.risk_control.risks import build_precision_ovr
+from mapie.risk_control.risks import build_abstention_rate_ovr, build_precision_ovr
 
 random_state = 42
 dummy_target = 0.75
@@ -18,14 +18,8 @@ def dummy_predict(X):
     return np.random.rand(1, 3)  # pragma: no cover
 
 
-@pytest.fixture
-def mcc_dummy():
-    return MultiClassificationLTTController(
-        predict_function=dummy_predict,
-        target_level=dummy_target,
-        risks=build_precision_ovr([0, 1, 2]),
-        risk_combination_method=1,
-    )
+def dummy_predict_multi_dim(X, param1, param2):
+    return np.full(len(X), param1 + param2)  # pragma: no cover
 
 
 X_toy, y_toy = make_classification(
@@ -40,6 +34,25 @@ X_toy, y_toy = make_classification(
     random_state=random_state,
 )
 clf = LogisticRegression().fit(X_toy, y_toy)
+
+_CLASS_LABELS_STR = np.array(["a", "b", "c", "d", "e"])
+y_toy_str = _CLASS_LABELS_STR[y_toy]
+
+
+def predict_multi_dim_str(X, min_proba, min_margin):
+    """
+    predict_function for multi-dimensional params: it must return labels
+    directly (not probabilities), here applying a confidence threshold
+    (min_proba) and a margin threshold (min_margin) on top of clf's
+    predict_proba, abstaining (np.nan) when not confident enough.
+    """
+    probas = clf.predict_proba(X)
+    sorted_probas = np.sort(probas, axis=1)
+    max_proba = sorted_probas[:, -1]
+    margin = max_proba - sorted_probas[:, -2]
+    predicted_label = _CLASS_LABELS_STR[probas.argmax(axis=1)].astype(object)
+    is_confident = (max_proba >= min_proba) & (margin >= min_margin)
+    return np.where(is_confident, predicted_label, np.nan)
 
 
 class TestSplitFixedSequence:
@@ -56,9 +69,8 @@ class TestSplitFixedSequence:
             target_level=0.75,
             risks=build_precision_ovr(np.unique(y_toy)),
             confidence_level=0.9,
-            list_predict_params=np.linspace(0.05, 0.9, 90),
+            list_predict_params=np.linspace(0.9, 0.05, 90),
             fwer_method="split_fixed_sequence",
-            risk_combination_method=1,
         )
 
         with pytest.raises(
@@ -72,6 +84,39 @@ class TestSplitFixedSequence:
 
         assert mapie_clf.p_values is not None
         assert mapie_clf.valid_predict_params is not None
+
+        predictions = mapie_clf.predict(X_toy)
+        assert predictions.shape == (len(X_toy),)
+
+
+class TestMultiDimensionalStrClassesWorkflow:
+    def test_workflow_multi_dimensional_str_classes(self) -> None:
+        """
+        Reproduce a full workflow combining multi-dimensional predict params
+        (predict_function returns labels directly, bypassing
+        default_agg_class_pba) with string class labels: build one-vs-rest
+        abstention rate risks from string classes, calibrate, then predict.
+        """
+        params = np.array(
+            [
+                [min_proba, min_margin]
+                for min_proba in [0.2, 0.3, 0.4, 0.5, 0.6]
+                for min_margin in [0.0, 0.02, 0.05, 0.1]
+            ]
+        )
+        mapie_clf = MultiClassificationLTTController(
+            predict_function=predict_multi_dim_str,
+            target_level=0.5,
+            risks=build_abstention_rate_ovr(np.unique(y_toy_str)),
+            confidence_level=0.9,
+            list_predict_params=params,
+        )
+        assert mapie_clf.is_multi_dimensional_param
+
+        mapie_clf.calibrate(X_toy, y_toy_str)
+
+        assert len(mapie_clf.valid_predict_params) > 0
+        assert isinstance(mapie_clf.best_predict_param, tuple)
 
         predictions = mapie_clf.predict(X_toy)
         assert predictions.shape == (len(X_toy),)
@@ -115,135 +160,186 @@ class TestMulticlassificationControllerGetPredictionsPerParam:
             predict_function=predict_function,
             target_level=dummy_target,
             risks=build_precision_ovr([0, 1, 2]),
-            risk_combination_method=1,
         )
 
         with pytest.raises(expected_error_type, match=expected_error_message):
             mapie_clf._get_predictions_per_param(X_toy, np.array([0.5]))
 
-
-class TestCheckPredictionsMulticlassification:
-    @pytest.mark.parametrize(
-        "predictions,expected_error_message",
-        [
-            (
-                np.array([0.1, 0.2, 0.3]),
-                r"Maybe you provided a predict method instead of a",
-            ),
-            (
-                np.array([[0.5, 0.6], [0.3, 0.3]]),
-                r"must lie in \[0, 1\]",
-            ),
-        ],
-    )
-    def test_errors(
-        self,
-        mcc_dummy: MultiClassificationLTTController,
-        predictions: Any,
-        expected_error_message: str,
-    ) -> None:
+    def test_multi_dimensional_param(self) -> None:
         """
-        _check_predictions must raise a ValueError when
-        predictions are not 2D (e.g. a predict method was provided instead of
-        a predict_proba method), or when probabilities are invalid (out of
-        [0, 1], or rows that don't sum to 1).
+        When list_predict_params is 2D, is_multi_dimensional_param is True
+        and _get_predictions_per_param must delegate to
+        _get_predictions_per_param_multi_params, which calls
+        predict_function(X, *params[i]) for each row of params directly
+        (predict_function already returns labels, not probabilities).
         """
-        with pytest.raises(ValueError, match=expected_error_message):
-            mcc_dummy._check_predictions(predictions)
+        params = np.array([[0.1, 0.2], [0.3, 0.4]])
+        mapie_clf = MultiClassificationLTTController(
+            predict_function=dummy_predict_multi_dim,
+            target_level=dummy_target,
+            risks=build_precision_ovr([0, 1, 2]),
+            list_predict_params=params,
+        )
+        assert mapie_clf.is_multi_dimensional_param
 
-
-def _custom_combination(array: Any) -> Any:
-    return array.max(axis=0)  # pragma: no cover
-
-
-class TestCheckRiskCombinationMethod:
-    @pytest.mark.parametrize(
-        "y_calibrate, risk_combination_method, expected_index",
-        [
-            (np.array([0, 1, 2, 1, 0]), 0, 0),
-            (np.array([0, 1, 2, 1, 0]), 1, 1),
-            (np.array([0, 1, 2, 1, 0]), 2, 2),
-            # Labels not sorted/contiguous in the data: dict_class_label is
-            # built from np.unique, so it is always sorted ascending.
-            (np.array([5, 2, 8]), 8, 2),
-            (np.array(["b", "a", "c"]), "b", 1),
-            # A callable must be passed through as-is (expected_index unused).
-            (np.array([0, 1, 2]), _custom_combination, None),
-        ],
-    )
-    def test_valid_inputs(
-        self,
-        mcc_dummy: MultiClassificationLTTController,
-        y_calibrate: Any,
-        risk_combination_method: Any,
-        expected_index: Optional[int],
-    ) -> None:
-        """
-        When risk_combination_method is a class label, the returned callable
-        must select the row of the input array corresponding to that label's
-        position in np.unique(y_calibrate). When it is already a callable, it
-        must be passed through unchanged.
-        """
-        result = mcc_dummy._check_risk_combination_method(
-            risk_combination_method, y_calibrate
+        y_pred = mapie_clf._get_predictions_per_param(
+            X_toy, params, is_calibration_step=True
         )
 
-        if callable(risk_combination_method):
-            assert result is risk_combination_method
-        else:
-            array = np.array([[10, 20], [30, 40], [50, 60]])
-            np.testing.assert_array_equal(result(array), array[expected_index, :])
-
-    @pytest.mark.parametrize(
-        "y_calibrate, risk_combination_method, expected_error_type, expected_error_message",
-        [
-            (_Y_INT, 3, AssertionError, r"must be in list_class_label"),
-            (_Y_INT, -1, AssertionError, r"must be in list_class_label"),
-            (_Y_STR, "z", AssertionError, r"must be in list_class_label"),
-            (_Y_INT, 2.5, TypeError, r"class label or a callable"),
-            (_Y_INT, [1, 2], TypeError, r"class label or a callable"),
-            (_Y_INT, (1,), TypeError, r"class label or a callable"),
-            (_Y_INT, None, TypeError, r"class label or a callable"),
-            (_Y_INT, {1: 2}, TypeError, r"class label or a callable"),
-        ],
-    )
-    def test_invalid_inputs_raise(
-        self,
-        mcc_dummy: MultiClassificationLTTController,
-        y_calibrate: Any,
-        risk_combination_method: Any,
-        expected_error_type: Any,
-        expected_error_message: str,
-    ) -> None:
-        """
-        An unknown class label must raise an AssertionError. A
-        risk_combination_method that is neither a class label nor a callable
-        must raise a TypeError.
-        """
-        with pytest.raises(expected_error_type, match=expected_error_message):
-            mcc_dummy._check_risk_combination_method(
-                risk_combination_method, y_calibrate
-            )
+        expected = np.array(
+            [np.full(len(X_toy), 0.1 + 0.2), np.full(len(X_toy), 0.3 + 0.4)]
+        )
+        np.testing.assert_array_equal(y_pred, expected)
 
 
 class TestSetBestPredictParamChoice:
     def test_set_best_predict_param_choice(self) -> None:
         """
-        "auto" is the only supported value: it must return the full list of
-        risks (unlike BinaryClassificationController, which picks a single
-        complementary risk), and is set automatically at init. Anything else
-        raises a NotImplementedError.
+        "auto" is the only supported value: it must return the first risk in
+        the list (used to minimize the secondary risk when selecting the best
+        predict param among valid ones), and is set automatically at init.
+        Anything else raises a NotImplementedError.
         """
         risks = build_precision_ovr([0, 1, 2])
         mcc = MultiClassificationLTTController(
             predict_function=dummy_predict,
             target_level=dummy_target,
             risks=risks,
-            risk_combination_method=1,
         )
 
-        assert mcc._set_best_predict_param_choice("auto") is risks
-        assert mcc._best_predict_param_choice is risks
+        assert mcc._set_best_predict_param_choice("auto") is risks[0]
+        assert mcc._best_predict_param_choice is risks[0]
+
+        # Passing a ClassSpecificRisk instance directly must return it as-is.
+        assert mcc._set_best_predict_param_choice(risks[0]) is risks[0]
 
         with pytest.raises(NotImplementedError):
             mcc._set_best_predict_param_choice("not_auto")  # type: ignore[arg-type]
+
+
+class TestCheckPredictionsType:
+    def test_check_predictions_type(self) -> None:
+        """
+        No error must be raised when predictions and y_calibrate share the
+        same "is numeric" status, whether both are numeric labels or both
+        are string labels. A TypeError must be raised when predictions are
+        numeric but y_calibrate is made of string labels (or vice versa).
+        """
+        MultiClassificationLTTController._check_predictions_type(_Y_INT, _Y_INT)
+        MultiClassificationLTTController._check_predictions_type(_Y_STR, _Y_STR)
+
+        with pytest.raises(
+            TypeError,
+            match=r"predictions type .* is different from y_calibrate type",
+        ):
+            MultiClassificationLTTController._check_predictions_type(_Y_INT, _Y_STR)
+
+
+class TestSetBestPredictParam:
+    @pytest.mark.parametrize(
+        "valid_predict_params, expected_best_predict_param",
+        [
+            # mono-dimensional: valid_predict_params[best_index] is a numpy
+            # scalar, stored as a float.
+            (np.array([0.3, 0.7]), 0.7),
+            # multi-dimensional: valid_predict_params[best_index] is a 1D
+            # array, stored as a tuple.
+            (np.array([[0.3, 0.1], [0.7, 0.2]]), (0.7, 0.2)),
+        ],
+    )
+    def test_set_best_predict_param(
+        self, valid_predict_params, expected_best_predict_param
+    ) -> None:
+        """
+        _set_best_predict_param must select, among the valid params, the one
+        minimizing the secondary risk (here the first risk in `risks`, i.e.
+        precision for class 0), and store it as a float for a
+        mono-dimensional param, or as a tuple for a multi-dimensional one.
+        """
+        risks = build_precision_ovr([0, 1])
+        mcc = MultiClassificationLTTController(
+            predict_function=dummy_predict,
+            target_level=dummy_target,
+            risks=risks,
+        )
+        mcc.valid_predict_params = valid_predict_params
+
+        y_calibrate_ = np.array([0, 1, 0, 1])
+        # param 0: precision for class 0 is 1/2; param 1: precision for
+        # class 0 is 1/1 (perfect), so param 1 has the lowest secondary risk
+        # (1 - precision) and must be selected.
+        predictions_per_param = np.array(
+            [
+                [0, 1, 1, 0],
+                [0, 1, 0, 1],
+            ]
+        )
+        valid_params_index = [0, 1]
+        risk_values = np.array([[0.1, 0.2], [0.3, 0.4]])
+
+        mcc._set_best_predict_param(
+            y_calibrate_, predictions_per_param, valid_params_index, risk_values
+        )
+
+        assert mcc.best_predict_param == expected_best_predict_param
+
+
+class TestCheckPredictions:
+    def test_check_predictions(self) -> None:
+        """
+        _check_predictions must raise a ValueError when predict_function's
+        output is not 2D (e.g. a predict method was provided instead of a
+        predict_proba method), and also when its output rows are not valid
+        probabilities (do not lie in [0, 1] or do not sum to 1, e.g. a
+        decision_function or other scoring method was provided instead).
+        """
+        mcc = MultiClassificationLTTController(
+            predict_function=dummy_predict,
+            target_level=dummy_target,
+            risks=build_precision_ovr([0, 1, 2]),
+        )
+        with pytest.raises(ValueError, match=r"provided a predict method instead of a"):
+            mcc._check_predictions(np.array([0.1, 0.2, 0.3]))
+
+        invalid_probas = np.array([[0.5, 0.6], [0.2, 0.2]])
+        with pytest.raises(ValueError, match=r"must be valid probabilities"):
+            mcc._check_predictions(invalid_probas)
+
+
+class TestDefaultAggClassPba:
+    def test_classes_none_uses_predicted_index(self) -> None:
+        """
+        Before calibrate() has run, _classes_ is None: default_agg_class_pba
+        must fall back to using the predicted index itself as the label.
+        """
+        mcc = MultiClassificationLTTController(
+            predict_function=dummy_predict,
+            target_level=dummy_target,
+            risks=build_precision_ovr([0, 1, 2]),
+        )
+        assert mcc._classes_ is None
+
+        params = np.array([0.3])
+        predictions_proba = np.array([[0.1, 0.7, 0.2], [0.6, 0.3, 0.1]])
+        y_pred = mcc.default_agg_class_pba(params, predictions_proba)
+
+        np.testing.assert_array_equal(y_pred, np.array([[1, 0]]))
+
+    def test_string_classes_are_used_as_labels(self) -> None:
+        """
+        When _classes_ holds non-numeric (e.g. string) labels,
+        default_agg_class_pba must index into them to return the predicted
+        class label, rather than the predicted index.
+        """
+        mcc = MultiClassificationLTTController(
+            predict_function=dummy_predict,
+            target_level=dummy_target,
+            risks=build_precision_ovr([0, 1, 2]),
+        )
+        mcc._classes_ = np.array(["a", "b", "c"])
+
+        params = np.array([0.3])
+        predictions_proba = np.array([[0.1, 0.7, 0.2]])
+        y_pred = mcc.default_agg_class_pba(params, predictions_proba)
+
+        assert y_pred[0, 0] == "b"

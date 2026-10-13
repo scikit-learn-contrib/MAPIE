@@ -16,7 +16,8 @@ from mapie.risk_control.methods import (
     compute_hoeffding_bentkus_p_value,
     find_precision_best_predict_param,
 )
-from mapie.risk_control._base_controller import _BaseLTTController
+from mapie.risk_control._base_controller import ltt_procedure
+from mapie.risk_control.risks import build_abstention_rate_ovr, build_recall_ovr
 
 lambdas = np.array([0.5, 0.9])
 
@@ -65,7 +66,7 @@ def test_p_values_different_alpha(alpha: Union[float, NDArray]) -> None:
 @pytest.mark.parametrize("delta", [0.1, 0.2])
 def test_ltt_different_delta(delta: float) -> None:
     """Test _ltt_procedure for different delta"""
-    assert _BaseLTTController.ltt_procedure(r_hat, alpha, delta, n)
+    assert ltt_procedure(r_hat, alpha, delta, n)
 
 
 def test_find_precision_best_predict_param() -> None:
@@ -77,7 +78,7 @@ def test_find_precision_best_predict_param() -> None:
 @pytest.mark.parametrize("alpha", [np.array([[0.5]]), np.array([[0.6, 0.8]])])
 def test_ltt_type_output_alpha_delta(alpha: NDArray, delta: float) -> None:
     """Test type output _ltt_procedure"""
-    valid_index, _ = _BaseLTTController.ltt_procedure(r_hat, alpha, delta, n)
+    valid_index, _ = ltt_procedure(r_hat, alpha, delta, n)
     assert isinstance(valid_index, list)
 
 
@@ -174,13 +175,13 @@ def test_ltt_procedure_n_obs_negative() -> None:
     n_obs = np.array([[-1]])
     alpha_np = np.array([[0.6]])
     binary = True
-    valid_index, _ = _BaseLTTController.ltt_procedure(r_hat, alpha_np, 0.1, n_obs, binary)
+    valid_index, _ = ltt_procedure(r_hat, alpha_np, 0.1, n_obs, binary)
     assert valid_index == [[]]
 
 
 def test_ltt_multi_risk() -> None:
     """Test _ltt_procedure for multi risk scenario"""
-    assert _BaseLTTController.ltt_procedure(
+    assert ltt_procedure(
         np.repeat(r_hat, 2, axis=0),
         np.repeat(alpha, 2, axis=0),
         0.1,
@@ -193,7 +194,7 @@ def test_ltt_multi_risk_error() -> None:
     with pytest.raises(
         ValueError, match=r"r_hat, n_obs, and alpha_np must have the same length."
     ):
-        _BaseLTTController.ltt_procedure(
+        ltt_procedure(
             np.repeat(r_hat, 2, axis=0),
             np.repeat(alpha, 1, axis=0),
             0.1,
@@ -214,7 +215,7 @@ def test_ltt_fst_multirisk_error():
     alpha_np = np.array([[0.5], [0.5]])
     delta = 0.1
     with pytest.raises(ValueError, match=r".*fixed_sequence cannot be used.*"):
-        _BaseLTTController.ltt_procedure(r_hat, alpha_np, delta, n_obs, fwer_method="fixed_sequence")
+        ltt_procedure(r_hat, alpha_np, delta, n_obs, fwer_method="fixed_sequence")
 
 
 @pytest.mark.parametrize(
@@ -229,7 +230,7 @@ def test_ltt_fst_non_monotone_warns(r_hat):
     alpha_np = np.array([[0.5]])
 
     with pytest.warns(UserWarning, match=r".*requires a monotonic risk.*"):
-        _BaseLTTController.ltt_procedure(r_hat, alpha_np, 0.1, n_obs, fwer_method="fixed_sequence")
+        ltt_procedure(r_hat, alpha_np, 0.1, n_obs, fwer_method="fixed_sequence")
 
 
 def test_ltt_fst_increasing():
@@ -237,13 +238,77 @@ def test_ltt_fst_increasing():
     n_obs = np.ones_like(r_hat)
     alpha_np = np.array([[0.1]])
 
-    valid_index_1, _ = _BaseLTTController.ltt_procedure(
+    valid_index_1, _ = ltt_procedure(
         r_hat, alpha_np, 0.1, n_obs, fwer_method="fixed_sequence"
     )
-    valid_index_2, _ = _BaseLTTController.ltt_procedure(
+    valid_index_2, _ = ltt_procedure(
         r_hat, alpha_np, 0.1, n_obs, fwer_method=FWERFixedSequenceTesting()
     )
     assert np.array_equal(valid_index_1, valid_index_2)
+
+
+@pytest.mark.parametrize(
+    "class_labels, y_true, y_pred",
+    [
+        ([0, 1, 2], np.array([0, 1, 2, 1, 0]), np.array([0, 1, 1, 1, 2])),
+        (
+            ["a", "b"],
+            np.array(["a", "b", "a", "b"]),
+            np.array(["a", "a", "a", "b"]),
+        ),
+    ],
+)
+def test_build_recall_ovr(class_labels, y_true, y_pred):
+    """
+    build_recall_ovr's ClassSpecificRisk for a given class_label must return
+    1 - recall (recall is a performance metric, so higher_is_better=True),
+    where recall = (correctly predicted samples among y_true == class_label)
+    / (number of samples with y_true == class_label).
+    """
+    risks = build_recall_ovr(class_labels)
+    for risk, class_label in zip(risks, class_labels):
+        condition = y_true == class_label
+        n_effective = condition.sum()
+        recall = (y_pred[condition] == y_true[condition]).sum() / n_effective
+
+        value, n = risk.get_value_and_effective_sample_size(y_true, y_pred)
+
+        assert n == n_effective
+        assert value == pytest.approx(1 - recall)
+
+
+@pytest.mark.parametrize(
+    "class_labels, y_pred",
+    [
+        # int class labels: default_agg_class_pba's np.where upcasts to a
+        # plain float array, NaN marking abstention.
+        ([0, 1, 2], np.array([0.0, np.nan, 2.0])),
+        # str class labels: default_agg_class_pba's np.where keeps an
+        # object array mixing strings and NaN, which np.isnan can't handle.
+        (
+            ["a", "b", "c"],
+            np.where(
+                [True, False, True],
+                np.array(["a", "b", "c"], dtype=object),
+                np.nan,
+            ),
+        ),
+    ],
+)
+def test_build_abstention_rate_ovr(class_labels, y_pred):
+    """
+    build_abstention_rate_ovr's risk_occurrence must flag abstained (NaN)
+    samples without raising, both for a numeric float y_pred (int class
+    labels) and for an object-dtype y_pred mixing strings and NaN (str
+    class labels) -- the exact shapes produced by default_agg_class_pba.
+    """
+    y_true = np.repeat(class_labels[0], len(y_pred))
+    risk = build_abstention_rate_ovr(class_labels)[0]
+
+    value, n = risk.get_value_and_effective_sample_size(y_true, y_pred)
+
+    assert n == len(y_pred)
+    assert value == 1 / 3
 
 
 def test_ltt_fst_decreasing_reorder():
@@ -251,10 +316,10 @@ def test_ltt_fst_decreasing_reorder():
     n_obs = np.ones_like(r_hat)
     alpha_np = np.array([[0.1]])
 
-    valid_index_1, _ = _BaseLTTController.ltt_procedure(
+    valid_index_1, _ = ltt_procedure(
         r_hat, alpha_np, 0.1, n_obs, fwer_method="fixed_sequence"
     )
-    valid_index_2, _ = _BaseLTTController.ltt_procedure(
+    valid_index_2, _ = ltt_procedure(
         r_hat, alpha_np, 0.1, n_obs, fwer_method=FWERFixedSequenceTesting()
     )
     assert np.array_equal(valid_index_1, valid_index_2)
