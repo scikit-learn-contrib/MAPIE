@@ -310,6 +310,8 @@ def test_build_abstention_rate_ovr(class_labels, y_pred):
 
     assert n == len(y_pred)
     assert value == 1 / 3
+
+
 def test_bernstein_bound_uses_each_lambda_variance() -> None:
     """
     Test that each lambda is used to compute the Bernstein bound.

@@ -38,7 +38,16 @@ class _BaseLTTController:
     def _get_predictions_per_param(
         self, X: ArrayLike, params: NDArray, is_calibration_step: bool = False
     ) -> NDArray:
-        raise NotImplementedError  # pragma: no cover
+        """Returns y_pred of shape (n_params, n_samples)"""
+        if self.is_multi_dimensional_param:
+            y_pred = self._get_predictions_per_param_multi_params(
+                X, params, is_calibration_step
+            )
+        else:
+            y_pred = self._get_predictions_per_param_mono_param(
+                X, params, is_calibration_step
+            )
+        return y_pred
 
     def _check_fwer_method(self, fwer_method):
         if isinstance(fwer_method, str):

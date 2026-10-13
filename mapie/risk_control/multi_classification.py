@@ -87,14 +87,6 @@ class MultiClassificationLTTController(_BaseLTTController):
         Note that performance is degraded when `len(list_predict_params)` is
         large as it is used by the Bonferroni correction [1].
 
-    proba_to_label_function : Optional[Callable[[NDArray, NDArray], NDArray]], default=None
-        Custom function turning per-class probabilities and thresholds into
-        predicted labels, with signature
-        `(params, predictions_proba) -> y_pred` of shape (n_params, n_samples).
-        Defaults to `default_agg_class_pba`: predict the class with the
-        highest probability, or abstain (`np.nan`) if that probability is
-        below the threshold.
-
     fwer_method : {"bonferroni", "bonferroni_holm", "split_fixed_sequence"} or FWERProcedure instance, default="bonferroni_holm"
         Method used to control the family-wise error rate (FWER).
 
@@ -173,7 +165,6 @@ class MultiClassificationLTTController(_BaseLTTController):
         confidence_level: float = 0.9,
         best_predict_param_choice: Union[Literal["auto"], ClassSpecificRisk] = "auto",
         list_predict_params: NDArray = np.linspace(0, 0.99, 100),
-        proba_to_label_function: Optional[Callable[[NDArray, NDArray], NDArray]] = None,
         fwer_method: Union[FWER_METHODS, FWERProcedure] = "bonferroni_holm",
     ):
         self.is_multi_risk = True
@@ -189,11 +180,6 @@ class MultiClassificationLTTController(_BaseLTTController):
         )
         self._best_predict_param_choice = self._set_best_predict_param_choice(
             best_predict_param_choice
-        )
-        self.proba_to_label_function = (
-            proba_to_label_function
-            if proba_to_label_function is not None
-            else self.default_agg_class_pba
         )
         self._predict_params = list_predict_params
         self.is_multi_dimensional_param = self._check_if_multi_dimensional_param(
@@ -354,8 +340,22 @@ class MultiClassificationLTTController(_BaseLTTController):
     def _get_predictions_per_param_mono_param(
         self, X, params, is_calibration_step=False
     ):
+        if self._is_predict_proba_method(X):
+            y_pred = self._predict_pba_function(X, params)
+        else:
+            y_pred = self._predict_function(X, params)
+        return y_pred
+
+    def _is_predict_proba_method(self, X: ArrayLike) -> bool:
+        """
+        Check if self._predict_function behaves like a predict_proba method,
+        by calling it with X alone and inspecting the shape of the output:
+        (n_samples, n_classes) with n_classes > 1 means it is (True),
+        (n_samples, 1) means it is not (False).
+        """
         try:
-            predictions_proba = self._predict_function(X)
+            predictions = np.asarray(self._predict_function(X))
+            return predictions.ndim == 2 and predictions.shape[1] > 1
         except TypeError as e:
             if "object is not callable" in str(e):
                 raise TypeError(
@@ -364,29 +364,12 @@ class MultiClassificationLTTController(_BaseLTTController):
                     "predict_function parameter of the MultiClassificationLTTController. "
                     "You should provide your classifier's predict_proba method instead."
                 ) from e
+            elif "positional argument" in str(e):
+                # predict_function requires more than just X (e.g. params),
+                # so it cannot be a predict_proba method.
+                return False
             else:
                 raise
-        predictions_proba = np.asarray(predictions_proba)
-        self._check_predictions(predictions_proba)
-        y_pred = self.proba_to_label_function(params, predictions_proba)
-        return y_pred
-
-    def _get_predictions_per_param(
-        self,
-        X: ArrayLike,
-        params: NDArray,
-        is_calibration_step=False,
-    ) -> Any:
-        """Returns y_pred of shape (n_params, n_samples)"""
-        if self.is_multi_dimensional_param:
-            y_pred = self._get_predictions_per_param_multi_params(
-                X, params, is_calibration_step
-            )
-        else:
-            y_pred = self._get_predictions_per_param_mono_param(
-                X, params, is_calibration_step
-            )
-        return y_pred
 
     def _check_predictions(self, predictions_per_param: NDArray) -> None:
         if self.is_multi_dimensional_param:
@@ -416,7 +399,10 @@ class MultiClassificationLTTController(_BaseLTTController):
                 "predict_function parameter of the MultiClassificationLTTController."
             )
 
-    def default_agg_class_pba(self, params, predictions_proba) -> NDArray:
+    def _predict_pba_function(self, X, params) -> NDArray:
+        predictions_proba = self._predict_function(X)
+        predictions_proba = np.asarray(predictions_proba)
+        self._check_predictions(predictions_proba)
         max_proba = predictions_proba.max(axis=1)
         predicted_index = predictions_proba.argmax(axis=1)
         if self._classes_ is None:

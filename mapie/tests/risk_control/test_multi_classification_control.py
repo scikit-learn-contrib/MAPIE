@@ -94,7 +94,7 @@ class TestMultiDimensionalStrClassesWorkflow:
         """
         Reproduce a full workflow combining multi-dimensional predict params
         (predict_function returns labels directly, bypassing
-        default_agg_class_pba) with string class labels: build one-vs-rest
+        _predict_pba_function) with string class labels: build one-vs-rest
         abstention rate risks from string classes, calibrate, then predict.
         """
         params = np.array(
@@ -132,6 +132,19 @@ def _raise_index_error(X):
 
 def _raise_type_error(X):
     raise TypeError("Your Father")
+
+
+def predict_mono_dim_direct_labels(X, params):
+    """
+    predict_function for mono-dimensional params: it must return labels
+    directly (not probabilities), applying a confidence threshold on top of
+    clf's predict_proba, vectorized over params like _predict_pba_function.
+    """
+    probas = clf.predict_proba(X)
+    max_proba = probas.max(axis=1)
+    predicted_label = probas.argmax(axis=1)
+    is_confident = max_proba[np.newaxis, :] >= np.asarray(params)[:, np.newaxis]
+    return np.where(is_confident, predicted_label[np.newaxis, :], np.nan)
 
 
 class TestMulticlassificationControllerGetPredictionsPerParam:
@@ -190,6 +203,27 @@ class TestMulticlassificationControllerGetPredictionsPerParam:
             [np.full(len(X_toy), 0.1 + 0.2), np.full(len(X_toy), 0.3 + 0.4)]
         )
         np.testing.assert_array_equal(y_pred, expected)
+
+    def test_mono_dimensional_param_direct_labels(self) -> None:
+        """
+        When list_predict_params is 1D and predict_function requires a
+        "params" argument besides X, _is_predict_proba_method must catch the
+        resulting "positional argument" TypeError and return False, so that
+        _get_predictions_per_param_mono_param calls predict_function(X,
+        params) directly instead of going through _predict_pba_function.
+        """
+        params = np.array([0.3, 0.9])
+        mapie_clf = MultiClassificationLTTController(
+            predict_function=predict_mono_dim_direct_labels,
+            target_level=dummy_target,
+            risks=build_precision_ovr([0, 1, 2]),
+            list_predict_params=params,
+        )
+        assert not mapie_clf.is_multi_dimensional_param
+
+        y_pred = mapie_clf._get_predictions_per_param(X_toy, params)
+
+        assert y_pred.shape == (len(params), len(X_toy))
 
 
 class TestSetBestPredictParamChoice:
@@ -306,40 +340,40 @@ class TestCheckPredictions:
             mcc._check_predictions(invalid_probas)
 
 
-class TestDefaultAggClassPba:
+class TestPredictPbaFunction:
     def test_classes_none_uses_predicted_index(self) -> None:
         """
-        Before calibrate() has run, _classes_ is None: default_agg_class_pba
+        Before calibrate() has run, _classes_ is None: _predict_pba_function
         must fall back to using the predicted index itself as the label.
         """
+        predictions_proba = np.array([[0.1, 0.7, 0.2], [0.6, 0.3, 0.1]])
         mcc = MultiClassificationLTTController(
-            predict_function=dummy_predict,
+            predict_function=lambda X: predictions_proba,
             target_level=dummy_target,
             risks=build_precision_ovr([0, 1, 2]),
         )
         assert mcc._classes_ is None
 
         params = np.array([0.3])
-        predictions_proba = np.array([[0.1, 0.7, 0.2], [0.6, 0.3, 0.1]])
-        y_pred = mcc.default_agg_class_pba(params, predictions_proba)
+        y_pred = mcc._predict_pba_function(X_toy, params)
 
         np.testing.assert_array_equal(y_pred, np.array([[1, 0]]))
 
     def test_string_classes_are_used_as_labels(self) -> None:
         """
         When _classes_ holds non-numeric (e.g. string) labels,
-        default_agg_class_pba must index into them to return the predicted
+        _predict_pba_function must index into them to return the predicted
         class label, rather than the predicted index.
         """
+        predictions_proba = np.array([[0.1, 0.7, 0.2]])
         mcc = MultiClassificationLTTController(
-            predict_function=dummy_predict,
+            predict_function=lambda X: predictions_proba,
             target_level=dummy_target,
             risks=build_precision_ovr([0, 1, 2]),
         )
         mcc._classes_ = np.array(["a", "b", "c"])
 
         params = np.array([0.3])
-        predictions_proba = np.array([[0.1, 0.7, 0.2]])
-        y_pred = mcc.default_agg_class_pba(params, predictions_proba)
+        y_pred = mcc._predict_pba_function(X_toy, params)
 
         assert y_pred[0, 0] == "b"

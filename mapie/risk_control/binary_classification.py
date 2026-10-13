@@ -385,20 +385,6 @@ class BinaryClassificationController(_BaseLTTController):
         y_pred = (predictions_proba[:, np.newaxis] >= params).T.astype(int)
         return y_pred
 
-    def _get_predictions_per_param(
-        self, X: ArrayLike, params: NDArray, is_calibration_step=False
-    ) -> NDArray:
-        """Returns y_pred of shape (n_params, n_samples)"""
-        if self.is_multi_dimensional_param:
-            y_pred = self._get_predictions_per_param_multi_params(
-                X, params, is_calibration_step
-            )
-        else:
-            y_pred = self._get_predictions_per_param_mono_param(
-                X, params, is_calibration_step
-            )
-        return y_pred
-
     def _check_predictions(self, predictions_per_param: NDArray) -> None:
         """
         Checks if predictions are probabilities for one-dimensional parameters,
