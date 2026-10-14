@@ -25,6 +25,7 @@
   regression methods. For some calibration sizes and confidence levels, the
   previous computation selected the next higher order statistic, making
   intervals unnecessarily conservative. (issue #991)
+- Fix `CrossConformalizedQuantileRegressor` CV+ algorithm to compute quantiles of pprediction + scores instead of quantiles of aggregated predictions + scores.
 
 
 ## 1.5.0 (2026-xx-xx)
