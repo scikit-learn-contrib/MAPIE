@@ -107,7 +107,7 @@ class TestMultiDimensionalStrClassesWorkflow:
         mapie_clf = MultiClassificationLTTController(
             predict_function=predict_multi_dim_str,
             target_level=0.5,
-            risks=build_abstention_rate_ovr(np.unique(y_toy_str)),
+            risks=build_abstention_rate_ovr(),
             confidence_level=0.9,
             list_predict_params=params,
         )

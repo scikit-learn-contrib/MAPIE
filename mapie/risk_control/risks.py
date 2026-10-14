@@ -412,30 +412,23 @@ def build_precision_ovr(
     ]
 
 
-def build_abstention_rate_ovr(
-    class_labels: List[Union[int, str]],
-) -> List[ClassSpecificRisk]:
+def build_abstention_rate_ovr() -> List[ClassSpecificRisk]:
     """
-    Build one-vs-rest `ClassSpecificRisk` instances defining abstention for
-    each of the given class labels
-    Parameters
-    ----------
-    class_labels : List[Union[int, str]]
-        The class labels abstention is evaluated for.
+    Build a single `ClassSpecificRisk` instance defining the abstention rate,
+    i.e. the proportion of samples for which `y_pred` is `NaN`.
 
     Returns
     -------
     List[ClassSpecificRisk]
-        One abstention risk per class label in `class_labels`.
+        A single-element list containing the abstention risk.
     """
     return [
         ClassSpecificRisk(
-            class_label=class_label,
+            class_label="global_risk",
             risk_occurrence=lambda y_true, y_pred: y_pred != y_pred,
             risk_condition=lambda y_true, y_pred: np.repeat(True, len(y_true)),
             higher_is_better=False,
         )
-        for class_label in class_labels
     ]
 
 

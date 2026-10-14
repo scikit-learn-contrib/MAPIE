@@ -304,7 +304,7 @@ def test_build_abstention_rate_ovr(class_labels, y_pred):
     class labels) -- the exact shapes produced by default_agg_class_pba.
     """
     y_true = np.repeat(class_labels[0], len(y_pred))
-    risk = build_abstention_rate_ovr(class_labels)[0]
+    risk = build_abstention_rate_ovr()[0]
 
     value, n = risk.get_value_and_effective_sample_size(y_true, y_pred)
 
