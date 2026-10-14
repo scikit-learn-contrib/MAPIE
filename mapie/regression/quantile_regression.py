@@ -961,6 +961,12 @@ class _QuantileConformalizer(_Conformalizer, ABC):
         The bounds are the minimum and the maximum over the folds of the lower and
         upper quantiles, whereas the central prediction aggregates the folds with
         `agg_function`.
+
+        Returns
+        -------
+        Tuple[NDArray, NDArray, NDArray]
+            Central prediction, lower and upper bounds, each of shape
+            `(n_samples,)`.
         """
         pred_matrix = self._get_prediction_matrix(X, level, **predict_params)
         return (
