@@ -17,7 +17,7 @@ from mapie.risk_control.fwer_control import (
 from mapie.utils import check_valid_ltt_params_index
 
 from .methods import compute_hoeffding_bentkus_p_value
-from .risks import ClassSpecificRisk
+from .risks import _BaseRisk
 
 
 class _BaseLTTController:
@@ -32,10 +32,10 @@ class _BaseLTTController:
     is_multi_dimensional_param: bool
     _predict_function: Callable[..., Any]
     _predict_params: NDArray
-    _risk: Sequence[ClassSpecificRisk]
+    _risk: Sequence[_BaseRisk]
     _alpha: NDArray
     _learned_fixed_sequence: Optional[NDArray[Any]]
-    _best_predict_param_choice: ClassSpecificRisk
+    _best_predict_param_choice: _BaseRisk
     _delta: float
     fwer_method: Union[FWER_METHODS, FWERProcedure]
     valid_predict_params: NDArray
@@ -59,7 +59,7 @@ class _BaseLTTController:
     def _init_ltt(
         self,
         predict_function: Callable[..., Any],
-        risks: Sequence[ClassSpecificRisk],
+        risks: Sequence[_BaseRisk],
         target_level: List[float],
         confidence_level: float,
         best_predict_param_choice: Any,
@@ -91,7 +91,7 @@ class _BaseLTTController:
 
     def _set_best_predict_param_choice(
         self, best_predict_param_choice: Any
-    ) -> ClassSpecificRisk:
+    ) -> _BaseRisk:
         raise NotImplementedError  # pragma: no cover
 
     def _prepare_y(self, y: ArrayLike) -> NDArray:
@@ -348,7 +348,7 @@ class _BaseLTTController:
     def _get_risk_values_and_eff_sample_sizes(
         y_true: NDArray,
         predictions_per_param: NDArray,
-        risks: Sequence[ClassSpecificRisk],
+        risks: Sequence[_BaseRisk],
     ) -> Tuple[NDArray, NDArray]:
         """
         Compute the values of risks and effective sample sizes for multiple risks

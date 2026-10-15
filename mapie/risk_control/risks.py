@@ -12,8 +12,8 @@ if TYPE_CHECKING:
 
 class _BaseRisk:
     """
-    Base class factoring out the logic shared between `BinaryRisk` and
-    `ContinuousRisk`.
+    Base class factoring out the logic shared between `BinaryRisk`,
+    `ClassSpecificRisk` and `ContinuousRisk`.
 
     Subclasses must implement `_compute_values_and_effective_mask`, which
     returns, for each sample, (i) the per-sample risk value and (ii) whether the
@@ -145,36 +145,74 @@ class _BaseRisk:
         return cast(NDArray, risk_sequence)
 
 
-class ClassSpecificRisk(_BaseRisk):
+class _OccurrenceConditionRisk(_BaseRisk):
+    """
+    Base class factoring out the logic shared between `BinaryRisk` and
+    `ClassSpecificRisk`: a risk (or performance metric) defined by an occurrence
+    and a condition, i.e. `sum(occurrence if condition) / sum(condition)`.
+
+    Parameters
+    ----------
+    risk_occurrence : Callable[[NDArray, NDArray], NDArray]
+        A function defining the occurrence of the risk for a given sample.
+        Must take `y_true` and `y_pred` as input and return a boolean array.
+
+    risk_condition : Callable[[NDArray, NDArray], NDArray]
+        A function defining the condition of the risk for a given sample.
+        Must take `y_true` and `y_pred` as input and return a boolean array.
+
+    higher_is_better : bool
+        Whether this instance is a risk (higher_is_better=False) or a
+        performance metric (higher_is_better=True).
+    """
+
+    def __init__(
+        self,
+        risk_occurrence: Callable[
+            [NDArray[np.integer], NDArray[np.integer]], NDArray[np.bool_]
+        ],
+        risk_condition: Callable[
+            [NDArray[np.integer], NDArray[np.integer]], NDArray[np.bool_]
+        ],
+        higher_is_better: bool,
+    ):
+        super().__init__(higher_is_better=higher_is_better)
+        self._risk_occurrence = risk_occurrence
+        self._risk_condition = risk_condition
+
+    def _compute_values_and_effective_mask(
+        self,
+        y_true: NDArray,
+        y_pred: NDArray,
+    ) -> Tuple[NDArray, NDArray]:
+        risk_occurrences = np.asarray(self._risk_occurrence(y_true, y_pred))
+        risk_conditions = self._risk_condition(y_true, y_pred)
+        return risk_occurrences.astype(int), risk_conditions
+
+
+class ClassSpecificRisk(_OccurrenceConditionRisk):
     """
     Define a class-specific risk (or performance metric), to be used for
     multiclass classification problems handled one-vs-rest, e.g. with
     `MultiClassificationLTTController`.
 
-    Given a `class_label`, the (possibly multiclass) ground truth `y_true` is
-    binarized relative to it before evaluating `risk_occurrence` and
-    `risk_condition`: samples where `y_true == class_label` become `1`, every
-    other sample becomes `0`. `risk_occurrence` and `risk_condition` then
-    receive this binarized ground truth together with `y_pred`.
-
-    `BinaryRisk` is the special case of this class for genuinely binary
-    classification problems, where `class_label` is fixed to `1`.
+    `risk_occurrence` and `risk_condition` receive the ground truth `y_true`
+    and the predictions `y_pred` as they are, not binarized: they are
+    responsible for singling out `class_label` (see e.g.
+    :func:`mapie.risk_control.risks.build_precision_ovr`).
 
     Parameters
     ----------
     class_label : Union[int, str]
-        The class this risk is evaluated for. Ground-truth labels equal to
-        `class_label` are treated as the positive class.
+        The class this risk is evaluated for.
 
     risk_occurrence : Callable[[NDArray, NDArray], NDArray]
         A function defining the occurrence of the risk for a given sample.
-        Must take the binarized `y_true` (relative to `class_label`) and
-        `y_pred` as input and return a boolean array.
+        Must take `y_true` and `y_pred` as input and return a boolean array.
 
     risk_condition : Callable[[NDArray, NDArray], NDArray]
         A function defining the condition of the risk for a given sample.
-        Must take the binarized `y_true` (relative to `class_label`) and
-        `y_pred` as input and return a boolean array.
+        Must take `y_true` and `y_pred` as input and return a boolean array.
 
     higher_is_better : bool
         Whether this ClassSpecificRisk instance is a risk
@@ -200,22 +238,15 @@ class ClassSpecificRisk(_BaseRisk):
         ],
         higher_is_better: bool,
     ):
-        super().__init__(higher_is_better=higher_is_better)
+        super().__init__(
+            risk_occurrence=risk_occurrence,
+            risk_condition=risk_condition,
+            higher_is_better=higher_is_better,
+        )
         self.class_label = class_label
-        self._risk_occurrence = risk_occurrence
-        self._risk_condition = risk_condition
-
-    def _compute_values_and_effective_mask(
-        self,
-        y_true: NDArray,
-        y_pred: NDArray,
-    ) -> Tuple[NDArray, NDArray]:
-        risk_occurrences = np.asarray(self._risk_occurrence(y_true, y_pred))
-        risk_conditions = self._risk_condition(y_true, y_pred)
-        return risk_occurrences.astype(int), risk_conditions
 
 
-class BinaryRisk(ClassSpecificRisk):
+class BinaryRisk(_OccurrenceConditionRisk):
     """
     Define a risk (or a performance metric) to be used with the
     BinaryClassificationController. Predefined instances are implemented,
@@ -223,10 +254,6 @@ class BinaryRisk(ClassSpecificRisk):
     `mapie.risk_control.accuracy`,
     `mapie.risk_control.false_positive_rate`, and
     `mapie.risk_control.predicted_positive_fraction`.
-
-    This is the special case of `ClassSpecificRisk` for genuinely binary
-    classification problems, where the ground truth is already encoded as
-    `0`/`1`: it is equivalent to `ClassSpecificRisk` with `class_label=1`.
 
     Here, a binary classification risk (or performance) is defined by an occurrence and
     a condition. Let's take the example of precision. Precision is the sum of true
@@ -281,7 +308,6 @@ class BinaryRisk(ClassSpecificRisk):
         higher_is_better: bool,
     ):
         super().__init__(
-            class_label=1,
             risk_occurrence=risk_occurrence,
             risk_condition=risk_condition,
             higher_is_better=higher_is_better,

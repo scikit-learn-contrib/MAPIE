@@ -307,7 +307,7 @@ class MultiClassificationLTTController(_BaseLTTController):
     ) -> ClassSpecificRisk:
         if best_predict_param_choice == "auto":
             # when multi risk, we minimize the first risk in the list
-            return self._risk[0]
+            return cast(ClassSpecificRisk, self._risk[0])
         if isinstance(best_predict_param_choice, ClassSpecificRisk):
             return best_predict_param_choice
         raise TypeError(
