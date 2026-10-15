@@ -514,3 +514,39 @@ class TestPrepareY:
         np.testing.assert_array_equal(mcc._classes_, np.array([0, 1, 2]))
         with pytest.raises(ValueError, match=r"not in classes"):
             mcc._prepare_y([1, 5])
+
+
+class TestLearnFixedSequenceOrder:
+    @pytest.mark.parametrize("labels", [[1, 2, 3], ["a", "b", "c"]])
+    def test_sequence_does_not_depend_on_label_names(self, labels) -> None:
+        """
+        The learned sequence must be the same whatever the names of the
+        classes: integer labels not starting at 0 and string labels used to
+        be mislabelled or to raise an error.
+        """
+        X_3, y_3 = make_classification(
+            n_samples=300,
+            n_features=5,
+            n_informative=5,
+            n_redundant=0,
+            n_classes=3,
+            n_clusters_per_class=1,
+            flip_y=0,
+            random_state=0,
+        )
+        sequences = []
+        for class_labels in ([0, 1, 2], labels):
+            y_labels = np.asarray(class_labels)[y_3]
+            clf_3 = LogisticRegression().fit(X_3, y_labels)
+            mcc = MultiClassificationLTTController(
+                predict_function=clf_3.predict_proba,
+                target_level=[0.7] * 3,
+                risks=build_precision_ovr(class_labels),
+                list_predict_params=np.linspace(0.9, 0.05, 90),
+                fwer_method="split_fixed_sequence",
+            )
+            mcc.learn_fixed_sequence_order(X_3, y_labels)
+            sequences.append(mcc._learned_fixed_sequence)
+
+        assert len(sequences[0]) > 1
+        np.testing.assert_array_equal(sequences[0], sequences[1])

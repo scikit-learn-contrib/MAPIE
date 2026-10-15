@@ -108,7 +108,7 @@ class _BaseLTTController:
             Features used only to learn the parameter order.
 
         y_learn : ArrayLike
-            Binary labels associated with X_learn.
+            Labels associated with X_learn.
 
         beta_grid : NDArray, default=np.logspace(-25, 0, 1000)
             Grid of target p-values used to construct the ordering.
@@ -128,7 +128,7 @@ class _BaseLTTController:
         It only determines an order of parameters.
         Statistical guarantees are provided later when calling `calibrate`.
         """
-        y_learn = np.asarray(y_learn, dtype=int)
+        y_learn = self._prepare_y(y_learn)
         predictions_per_param = self._get_predictions_per_param(
             X_learn, self._predict_params, is_calibration_step=True
         )
