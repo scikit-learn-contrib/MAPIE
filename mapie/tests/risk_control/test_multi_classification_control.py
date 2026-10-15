@@ -232,7 +232,7 @@ class TestSetBestPredictParamChoice:
         "auto" is the only supported value: it must return the first risk in
         the list (used to minimize the secondary risk when selecting the best
         predict param among valid ones), and is set automatically at init.
-        Anything else raises a NotImplementedError.
+        Anything else raises a TypeError.
         """
         risks = build_precision_ovr([0, 1, 2])
         mcc = MultiClassificationLTTController(
@@ -247,7 +247,9 @@ class TestSetBestPredictParamChoice:
         # Passing a ClassSpecificRisk instance directly must return it as-is.
         assert mcc._set_best_predict_param_choice(risks[0]) is risks[0]
 
-        with pytest.raises(NotImplementedError):
+        with pytest.raises(
+            TypeError, match=r"best_predict_param_choice must be either 'auto'"
+        ):
             mcc._set_best_predict_param_choice("not_auto")  # type: ignore[arg-type]
 
 

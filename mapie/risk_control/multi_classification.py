@@ -308,10 +308,13 @@ class MultiClassificationLTTController(_BaseLTTController):
         if best_predict_param_choice == "auto":
             # when multi risk, we minimize the first risk in the list
             return self._risk[0]
-        elif isinstance(best_predict_param_choice, ClassSpecificRisk):
+        if isinstance(best_predict_param_choice, ClassSpecificRisk):
             return best_predict_param_choice
-        else:
-            raise NotImplementedError
+        raise TypeError(
+            f"Got object of type {type(best_predict_param_choice)}. "
+            "best_predict_param_choice must be either 'auto' "
+            "or a ClassSpecificRisk instance."
+        )
 
     def _get_predictions_per_param_mono_param(
         self, X, params, is_calibration_step=False
