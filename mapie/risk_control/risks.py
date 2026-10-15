@@ -540,7 +540,9 @@ negative_predictive_value = BinaryRisk(
 npv = negative_predictive_value
 
 abstention_rate = BinaryRisk(
-    risk_occurrence=lambda y_true, y_pred: np.isnan(y_pred),
+    # y_pred != y_pred is True only for NaN, and unlike np.isnan it also handles
+    # object arrays mixing string labels and NaN (multiclass with str labels).
+    risk_occurrence=lambda y_true, y_pred: y_pred != y_pred,
     risk_condition=lambda y_true, y_pred: np.repeat(True, len(y_true)),
     higher_is_better=False,
 )

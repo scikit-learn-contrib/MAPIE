@@ -11,7 +11,9 @@ from mapie.risk_control.fwer_control import (
 )
 
 from ._base_controller import _BaseLTTController
-from .risks import ClassSpecificRisk
+from .risks import BinaryRisk, ClassSpecificRisk
+
+_MulticlassRisk = Union[ClassSpecificRisk, BinaryRisk]
 
 
 class MultiClassificationLTTController(_BaseLTTController):
@@ -35,8 +37,8 @@ class MultiClassificationLTTController(_BaseLTTController):
     Usage:
 
     1. Instantiate a MultiClassificationLTTController, providing the predict_proba
-       method of your fitted multiclass classifier and one `ClassSpecificRisk`
-       per class to control (e.g. via
+       method of your fitted multiclass classifier and the risks to control, e.g.
+       one `ClassSpecificRisk` per class (via
        :func:`mapie.risk_control.risks.build_precision_ovr`)
     2. Call the calibrate method to find the threshold
     3. Use the predict method to predict using the best threshold
@@ -55,11 +57,14 @@ class MultiClassificationLTTController(_BaseLTTController):
         predict_function must instead take (X, \\*params) and output the
         predicted class labels directly, of shape (len(X),).
 
-    risks : List[ClassSpecificRisk]
-        The class-specific risks (or performance metrics) to control, one per
-        tested class (or several per class). See e.g.
-        :func:`mapie.risk_control.risks.build_precision_ovr`, which builds
-        one-vs-rest precision risks for a list of class labels.
+    risks : List[Union[ClassSpecificRisk, BinaryRisk]]
+        The risks (or performance metrics) to control. These can be
+        class-specific risks, one per tested class (or several per class), see
+        e.g. :func:`mapie.risk_control.risks.build_precision_ovr`, which builds
+        one-vs-rest precision risks for a list of class labels. They can also
+        be class-agnostic `BinaryRisk` instances, such as
+        `mapie.risk_control.abstention_rate`, which measures the proportion of
+        abstentions (`np.nan` predictions) over all the samples.
 
     target_level : List[float]
         The maximum risk level (or minimum performance level) of each risk in
@@ -164,10 +169,10 @@ class MultiClassificationLTTController(_BaseLTTController):
     def __init__(
         self,
         predict_function: Callable[..., NDArray],
-        risks: list[ClassSpecificRisk],
+        risks: list[_MulticlassRisk],
         target_level: List[float],
         confidence_level: float = 0.9,
-        best_predict_param_choice: Union[Literal["auto"], ClassSpecificRisk] = "auto",
+        best_predict_param_choice: Union[Literal["auto"], _MulticlassRisk] = "auto",
         list_predict_params: NDArray = np.linspace(0, 0.99, 100),
         classes: Optional[ArrayLike] = None,
         fwer_method: Union[FWER_METHODS, FWERProcedure] = "bonferroni_holm",
@@ -261,7 +266,7 @@ class MultiClassificationLTTController(_BaseLTTController):
 
     @staticmethod
     def _check_if_multi_risk_control(
-        risks: list[ClassSpecificRisk],
+        risks: list[_MulticlassRisk],
         target_level: List[float],
     ) -> bool:
         """
@@ -303,17 +308,17 @@ class MultiClassificationLTTController(_BaseLTTController):
             )
 
     def _set_best_predict_param_choice(
-        self, best_predict_param_choice: Union[Literal["auto"], ClassSpecificRisk]
-    ) -> ClassSpecificRisk:
+        self, best_predict_param_choice: Union[Literal["auto"], _MulticlassRisk]
+    ) -> _MulticlassRisk:
         if best_predict_param_choice == "auto":
             # when multi risk, we minimize the first risk in the list
-            return cast(ClassSpecificRisk, self._risk[0])
-        if isinstance(best_predict_param_choice, ClassSpecificRisk):
+            return cast(_MulticlassRisk, self._risk[0])
+        if isinstance(best_predict_param_choice, (ClassSpecificRisk, BinaryRisk)):
             return best_predict_param_choice
         raise TypeError(
             f"Got object of type {type(best_predict_param_choice)}. "
             "best_predict_param_choice must be either 'auto' "
-            "or a ClassSpecificRisk instance."
+            "or a ClassSpecificRisk or BinaryRisk instance."
         )
 
     def _get_predictions_per_param_mono_param(

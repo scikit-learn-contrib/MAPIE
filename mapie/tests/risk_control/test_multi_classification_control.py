@@ -5,7 +5,7 @@ import pytest
 from sklearn.datasets import make_classification
 from sklearn.linear_model import LogisticRegression
 
-from mapie.risk_control import MultiClassificationLTTController
+from mapie.risk_control import MultiClassificationLTTController, abstention_rate
 from mapie.risk_control.risks import build_abstention_rate_ovr, build_precision_ovr
 
 random_state = 42
@@ -552,3 +552,34 @@ class TestLearnFixedSequenceOrder:
 
         assert len(sequences[0]) > 1
         np.testing.assert_array_equal(sequences[0], sequences[1])
+
+
+class TestBinaryRiskInMulticlass:
+    def test_abstention_rate_as_single_risk(self) -> None:
+        """
+        A class-agnostic BinaryRisk such as abstention_rate can be controlled
+        on its own by the multiclass controller, with string labels too.
+        """
+        mcc = MultiClassificationLTTController(
+            predict_function=clf.predict_proba,
+            target_level=[0.5],
+            risks=[abstention_rate],
+            list_predict_params=np.linspace(0.05, 0.9, 30),
+        )
+        assert not mcc.is_multi_risk
+
+        mcc.calibrate(X_toy, y_toy_str)
+
+        assert len(mcc.valid_predict_params) > 0
+        assert mcc.predict(X_toy).shape == (len(X_toy),)
+
+    def test_abstention_rate_with_class_specific_risks(self) -> None:
+        risks = [abstention_rate, *build_precision_ovr([0, 1, 2])]
+        mcc = MultiClassificationLTTController(
+            predict_function=dummy_predict,
+            target_level=[0.5, 0.75, 0.75, 0.75],
+            risks=risks,
+        )
+        assert mcc.is_multi_risk
+        # a BinaryRisk is accepted as best_predict_param_choice too
+        assert mcc._set_best_predict_param_choice(abstention_rate) is abstention_rate

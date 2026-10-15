@@ -18,6 +18,7 @@ from mapie.risk_control.methods import (
     get_r_hat_plus,
 )
 from mapie.risk_control._base_controller import ltt_procedure
+from mapie.risk_control import abstention_rate
 from mapie.risk_control.risks import (
     ClassSpecificRisk,
     build_abstention_rate_ovr,
@@ -359,3 +360,26 @@ def test_class_specific_risk_non_binary_occurrence_raises() -> None:
         bad_risk.get_value_and_effective_sample_size(y_true, y_pred)
     with pytest.raises(ValueError, match=r".*must be binary indicators.*"):
         bad_risk.get_risk_sequence(y_true, y_pred)
+
+
+@pytest.mark.parametrize(
+    "y_pred",
+    [
+        np.array([0.0, np.nan, 2.0]),
+        np.where(
+            [True, False, True],
+            np.array(["a", "b", "c"], dtype=object),
+            np.nan,
+        ),
+    ],
+)
+def test_abstention_rate_binary_risk(y_pred) -> None:
+    """
+    The binary abstention_rate risk must flag abstained (NaN) samples for a
+    float y_pred as well as for an object-dtype y_pred mixing strings and NaN.
+    """
+    y_true = np.repeat(y_pred[0], len(y_pred))
+    value, n = abstention_rate.get_value_and_effective_sample_size(y_true, y_pred)
+
+    assert n == len(y_pred)
+    assert value == 1 / 3
