@@ -344,10 +344,7 @@ class BinaryClassificationController(_BaseLTTController):
             and len(risk) == len(target_level)
             and len(risk) > 0
         ):
-            if len(risk) == 1:
-                return False
-            else:
-                return True
+            return len(risk) > 1
         elif (isinstance(risk, BinaryRisk) or isinstance(risk, str)) and isinstance(
             target_level, float
         ):
