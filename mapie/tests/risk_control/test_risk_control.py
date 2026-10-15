@@ -18,7 +18,11 @@ from mapie.risk_control.methods import (
     get_r_hat_plus,
 )
 from mapie.risk_control._base_controller import ltt_procedure
-from mapie.risk_control.risks import build_abstention_rate_ovr, build_recall_ovr
+from mapie.risk_control.risks import (
+    ClassSpecificRisk,
+    build_abstention_rate_ovr,
+    build_recall_ovr,
+)
 
 lambdas = np.array([0.5, 0.9])
 
@@ -337,3 +341,21 @@ def test_ltt_fst_decreasing_reorder():
         r_hat, alpha_np, 0.1, n_obs, fwer_method=FWERFixedSequenceTesting()
     )
     assert np.array_equal(valid_index_1, valid_index_2)
+
+
+def test_class_specific_risk_non_binary_occurrence_raises() -> None:
+    """
+    A ClassSpecificRisk is controlled with the binary Hoeffding-Bentkus
+    p-values too, so an occurrence which is not a 0/1/bool indicator must raise.
+    """
+    bad_risk = ClassSpecificRisk(
+        class_label=1,
+        risk_occurrence=lambda y_true, y_pred: 0.5 * np.ones(len(y_true)),
+        risk_condition=lambda y_true, y_pred: np.repeat(True, len(y_true)),
+        higher_is_better=False,
+    )
+    y_true, y_pred = np.array([0, 1, 2, 1]), np.array([0, 1, 1, 1])
+    with pytest.raises(ValueError, match=r".*must be binary indicators.*"):
+        bad_risk.get_value_and_effective_sample_size(y_true, y_pred)
+    with pytest.raises(ValueError, match=r".*must be binary indicators.*"):
+        bad_risk.get_risk_sequence(y_true, y_pred)
