@@ -282,6 +282,40 @@ def test_build_recall_ovr(class_labels, y_true, y_pred):
         assert value == pytest.approx(1 - recall)
 
 
+@pytest.mark.parametrize(
+    "class_labels, y_pred",
+    [
+        # int class labels: default_agg_class_pba's np.where upcasts to a
+        # plain float array, NaN marking abstention.
+        ([0, 1, 2], np.array([0.0, np.nan, 2.0])),
+        # str class labels: default_agg_class_pba's np.where keeps an
+        # object array mixing strings and NaN, which np.isnan can't handle.
+        (
+            ["a", "b", "c"],
+            np.where(
+                [True, False, True],
+                np.array(["a", "b", "c"], dtype=object),
+                np.nan,
+            ),
+        ),
+    ],
+)
+def test_build_abstention_rate_ovr(class_labels, y_pred):
+    """
+    build_abstention_rate_ovr's risk_occurrence must flag abstained (NaN)
+    samples without raising, both for a numeric float y_pred (int class
+    labels) and for an object-dtype y_pred mixing strings and NaN (str
+    class labels) -- the exact shapes produced by default_agg_class_pba.
+    """
+    y_true = np.repeat(class_labels[0], len(y_pred))
+    risk = build_abstention_rate_ovr()[0]
+
+    value, n = risk.get_value_and_effective_sample_size(y_true, y_pred)
+
+    assert n == len(y_pred)
+    assert value == 1 / 3
+
+
 def test_bernstein_bound_uses_each_lambda_variance() -> None:
     """
     Test that each lambda is used to compute the Bernstein bound.

@@ -414,6 +414,26 @@ def build_precision_ovr(
     ]
 
 
+def build_abstention_rate_ovr() -> List[ClassSpecificRisk]:
+    """
+    Build a single `ClassSpecificRisk` instance defining the abstention rate,
+    i.e. the proportion of samples for which `y_pred` is `NaN`.
+
+    Returns
+    -------
+    List[ClassSpecificRisk]
+        A single-element list containing the abstention risk.
+    """
+    return [
+        ClassSpecificRisk(
+            class_label="global_risk",
+            risk_occurrence=lambda y_true, y_pred: y_pred != y_pred,
+            risk_condition=lambda y_true, y_pred: np.repeat(True, len(y_true)),
+            higher_is_better=False,
+        )
+    ]
+
+
 class BinaryClassificationRisk(BinaryRisk):
     """
     Deprecated alias for `BinaryRisk`.
