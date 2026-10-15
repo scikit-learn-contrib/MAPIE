@@ -20,7 +20,9 @@
   construction. The default value of `sym` is now `False`. (issue #989)
 - Add `MultiClassificationLTTController` for risk control with multiclassification problems. Added one notebook `impact_study_ltt_multiclass_` for checking the feasibility of controlling risk with multiple classes.
   `risks` and `target_level` must be lists of the same length; `fwer_method="fixed_sequence"`
-  is supported when a single risk is controlled.
+  is supported when a single risk is controlled. The optional `classes` parameter
+  gives the labels in the order of the columns of `predict_function`, which keeps
+  predictions correctly labelled when a class is missing from the calibration set.
 - Fix `QuantileRegressionScore` reporting twice the effective number of calibration
   samples.
 - Fix `ConformalizedQuantileRegressor` to select the intended split-conformal

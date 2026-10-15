@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Callable, List, Literal, Optional, Union
+from typing import Any, Callable, List, Literal, Optional, Union, cast
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -86,6 +86,12 @@ class MultiClassificationLTTController(_BaseLTTController):
         Note that performance is degraded when `len(list_predict_params)` is
         large as it is used by the Bonferroni correction [1].
 
+    classes : Optional[ArrayLike], default=None
+        The class labels, in the order of the columns of `predict_function`'s
+        output (e.g. the `classes_` attribute of your classifier). If None, the
+        classes are inferred from the labels of the calibration set, which is
+        only correct if every class appears in it.
+
     fwer_method : {"bonferroni", "bonferroni_holm", "split_fixed_sequence"} or FWERProcedure instance, default="bonferroni_holm"
         Method used to control the family-wise error rate (FWER).
 
@@ -146,6 +152,7 @@ class MultiClassificationLTTController(_BaseLTTController):
     ...     predict_function=clf.predict_proba,
     ...     risks=build_precision_ovr(np.unique(y_train)),
     ...     target_level=[0.7] * len(np.unique(y_train)),
+    ...     classes=clf.classes_,
     ... )
 
     >>> predictions = controller.calibrate(X_calib, y_calib).predict(X_test)
@@ -164,6 +171,7 @@ class MultiClassificationLTTController(_BaseLTTController):
         confidence_level: float = 0.9,
         best_predict_param_choice: Union[Literal["auto"], ClassSpecificRisk] = "auto",
         list_predict_params: NDArray = np.linspace(0, 0.99, 100),
+        classes: Optional[ArrayLike] = None,
         fwer_method: Union[FWER_METHODS, FWERProcedure] = "bonferroni_holm",
     ):
         self.is_multi_risk = self._check_if_multi_risk_control(risks, target_level)
@@ -183,7 +191,10 @@ class MultiClassificationLTTController(_BaseLTTController):
         )
         self.fwer_method = self._check_fwer_method(fwer_method)
         self._learned_fixed_sequence: Optional[NDArray[Any]] = None
-        self._classes_: Optional[NDArray] = None
+        self._infer_classes = classes is None
+        self._classes_: Optional[NDArray] = (
+            None if classes is None else self._check_classes(classes)
+        )
 
         self.valid_predict_params: NDArray = np.array([])
         self.best_predict_param = None
@@ -224,7 +235,10 @@ class MultiClassificationLTTController(_BaseLTTController):
         Using the same data for both steps would invalidate guarantees.
         """
         y_calibrate_ = np.asarray(y_calibrate)
-        self._classes_ = np.unique(y_calibrate_)
+        if self._infer_classes:
+            self._classes_ = np.unique(y_calibrate_)
+        else:
+            self._check_labels_in_classes(y_calibrate_)
 
         original_params = self._predict_params
         if self.fwer_method == "split_fixed_sequence":
@@ -274,6 +288,32 @@ class MultiClassificationLTTController(_BaseLTTController):
         self._predict_params = original_params
 
         return self
+
+    @staticmethod
+    def _check_classes(classes: ArrayLike) -> NDArray:
+        """
+        Check that classes contains at least two distinct labels.
+        """
+        classes_ = np.asarray(classes)
+        if (
+            classes_.ndim != 1
+            or len(classes_) < 2
+            or len(np.unique(classes_)) != len(classes_)
+        ):
+            raise ValueError(
+                "classes must be a 1D array of at least two distinct class labels."
+            )
+        return classes_
+
+    def _check_labels_in_classes(self, y: NDArray) -> None:
+        """
+        Check that every label of y is one of the classes.
+        """
+        unknown_labels = np.setdiff1d(y, cast(NDArray, self._classes_))
+        if len(unknown_labels) > 0:
+            raise ValueError(
+                f"y contains labels that are not in classes: {unknown_labels.tolist()}."
+            )
 
     @staticmethod
     def _check_if_multi_risk_control(
@@ -417,6 +457,14 @@ class MultiClassificationLTTController(_BaseLTTController):
         predictions_proba = self._predict_function(X)
         predictions_proba = np.asarray(predictions_proba)
         self._check_predictions(predictions_proba)
+        if self._classes_ is not None and predictions_proba.shape[1] != len(
+            self._classes_
+        ):
+            raise ValueError(
+                f"predict_function returns {predictions_proba.shape[1]} columns "
+                f"but there are {len(self._classes_)} classes. Provide `classes` "
+                "matching the columns of predict_function's output."
+            )
         max_proba = predictions_proba.max(axis=1)
         predicted_index = predictions_proba.argmax(axis=1)
         if self._classes_ is None:

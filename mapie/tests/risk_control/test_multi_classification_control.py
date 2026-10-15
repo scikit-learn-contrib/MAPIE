@@ -426,3 +426,67 @@ class TestCheckIfMultiRiskControl:
                 risks=build_precision_ovr([0, 1, 2]),
                 fwer_method="fixed_sequence",
             )
+
+
+class TestClasses:
+    def test_classes_set_at_init(self) -> None:
+        mcc = MultiClassificationLTTController(
+            predict_function=dummy_predict,
+            target_level=dummy_target,
+            risks=build_precision_ovr([0, 1, 2]),
+            classes=[0, 1, 2],
+        )
+        np.testing.assert_array_equal(mcc._classes_, np.array([0, 1, 2]))
+
+    @pytest.mark.parametrize("classes", [[0], [0, 1, 1], [[0, 1], [1, 2]]])
+    def test_invalid_classes(self, classes) -> None:
+        with pytest.raises(ValueError, match=r"at least two distinct class labels"):
+            MultiClassificationLTTController(
+                predict_function=dummy_predict,
+                target_level=dummy_target,
+                risks=build_precision_ovr([0, 1, 2]),
+                classes=classes,
+            )
+
+    def test_check_labels_in_classes(self) -> None:
+        mcc = MultiClassificationLTTController(
+            predict_function=dummy_predict,
+            target_level=dummy_target,
+            risks=build_precision_ovr([0, 1, 2]),
+            classes=[0, 1, 2],
+        )
+        mcc._check_labels_in_classes(np.array([0, 2, 2]))
+        with pytest.raises(ValueError, match=r"not in classes: \[3\]"):
+            mcc._check_labels_in_classes(np.array([0, 3]))
+
+    def test_number_of_columns_must_match_classes(self) -> None:
+        predictions_proba = np.array([[0.1, 0.7, 0.2], [0.6, 0.3, 0.1]])
+        mcc = MultiClassificationLTTController(
+            predict_function=lambda X: predictions_proba,
+            target_level=dummy_target,
+            risks=build_precision_ovr([0, 1, 2]),
+            classes=[0, 1],
+        )
+        with pytest.raises(ValueError, match=r"returns 3 columns but there are 2"):
+            mcc._predict_pba_function(X_toy, np.array([0.3]))
+
+    def test_calibrate_with_class_missing_from_calibration_set(self) -> None:
+        """
+        When classes is provided, calibrate must not infer the classes from y:
+        if class 0 is absent from the calibration set, inferring them would
+        shift the columns of predict_proba and mislabel the predictions.
+        """
+        labels = np.array([0, 1, 2])
+        mask = y_toy % 3 != 0
+        X_calib, y_calib = X_toy[mask], labels[y_toy[mask] % 3]
+        clf_3 = LogisticRegression().fit(X_toy, labels[y_toy % 3])
+        mcc = MultiClassificationLTTController(
+            predict_function=clf_3.predict_proba,
+            target_level=[0.5, 0.5],
+            risks=build_precision_ovr([1, 2]),
+            classes=clf_3.classes_,
+        )
+        mcc.calibrate(X_calib, y_calib)
+        np.testing.assert_array_equal(mcc._classes_, clf_3.classes_)
+        y_pred = mcc._predict_pba_function(X_toy, np.array([0.0]))
+        assert 0 in y_pred
