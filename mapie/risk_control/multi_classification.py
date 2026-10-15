@@ -63,11 +63,10 @@ class MultiClassificationLTTController(_BaseLTTController):
         :func:`mapie.risk_control.risks.build_precision_ovr`, which builds
         one-vs-rest precision risks for a list of class labels.
 
-    target_level : Union[float, List[float]]
-        The maximum risk level (or minimum performance level). Must be between
-        0 and 1. If a single float is provided, it applies to every risk in
-        `risks`. Can be a list matching the length of `risks` to set a
-        different target level per risk.
+    target_level : List[float]
+        The maximum risk level (or minimum performance level) of each risk in
+        `risks`. Must be a list of the same length as `risks`, with values
+        between 0 and 1.
 
     confidence_level : float, default=0.9
         The confidence level with which the risks (or performance) are
@@ -98,9 +97,9 @@ class MultiClassificationLTTController(_BaseLTTController):
         - `"split_fixed_sequence"` : Split Fixed Sequence Testing (SFST). Requires
         calling `learn_fixed_sequence_order` on independent data before `calibrate`.
 
-        Note: `"fixed_sequence"` is not supported here, since
-        MultiClassificationLTTController always controls multiple risks (one per
-        tested class); use `"split_fixed_sequence"` instead.
+        Note: `"fixed_sequence"` is only supported when a single risk is
+        controlled and `list_predict_params` is 1D; otherwise, use
+        `"split_fixed_sequence"` instead.
 
     Attributes
     ----------
@@ -146,7 +145,7 @@ class MultiClassificationLTTController(_BaseLTTController):
     >>> controller = MultiClassificationLTTController(
     ...     predict_function=clf.predict_proba,
     ...     risks=build_precision_ovr(np.unique(y_train)),
-    ...     target_level=0.7,
+    ...     target_level=[0.7] * len(np.unique(y_train)),
     ... )
 
     >>> predictions = controller.calibrate(X_calib, y_calib).predict(X_test)
@@ -161,19 +160,16 @@ class MultiClassificationLTTController(_BaseLTTController):
         self,
         predict_function: Callable[..., NDArray],
         risks: list[ClassSpecificRisk],
-        target_level: Union[float, List[float]],
+        target_level: List[float],
         confidence_level: float = 0.9,
         best_predict_param_choice: Union[Literal["auto"], ClassSpecificRisk] = "auto",
         list_predict_params: NDArray = np.linspace(0, 0.99, 100),
         fwer_method: Union[FWER_METHODS, FWERProcedure] = "bonferroni_holm",
     ):
-        self.is_multi_risk = True
+        self.is_multi_risk = self._check_if_multi_risk_control(risks, target_level)
         self._predict_function = predict_function
         self._risk = risks
-        target_level_list = (
-            target_level if isinstance(target_level, list) else [target_level]
-        )
-        self._alpha = self._convert_target_level_to_alpha(target_level_list)
+        self._alpha = self._convert_target_level_to_alpha(target_level)
         self._delta = 1 - confidence_level
         self.is_multi_dimensional_param = self._check_if_multi_dimensional_param(
             list_predict_params
@@ -243,9 +239,6 @@ class MultiClassificationLTTController(_BaseLTTController):
             X_calibrate, self._predict_params, is_calibration_step=True
         )
         self._check_predictions_type(predictions_per_param, y_calibrate_)
-        # broadcast one _alpha_level per risk.
-        if self._alpha.shape[0] != len(self._risk):
-            self._alpha = np.repeat(self._alpha, len(self._risk))
         # aggregates all risks
         risk_values, eff_sample_sizes = self._get_risk_values_and_eff_sample_sizes(
             y_calibrate_, predictions_per_param, self._risk
@@ -281,6 +274,27 @@ class MultiClassificationLTTController(_BaseLTTController):
         self._predict_params = original_params
 
         return self
+
+    @staticmethod
+    def _check_if_multi_risk_control(
+        risks: list[ClassSpecificRisk],
+        target_level: List[float],
+    ) -> bool:
+        """
+        Check that risks and target levels are lists of the same non-zero
+        length, and return whether several risks are controlled.
+        """
+        if (
+            isinstance(risks, list)
+            and isinstance(target_level, list)
+            and len(risks) == len(target_level)
+            and len(risks) > 0
+        ):
+            return len(risks) > 1
+        raise ValueError(
+            "You must provide a list of risks and a list of target levels "
+            "of the same non-zero length."
+        )
 
     @staticmethod
     def _check_predictions_type(

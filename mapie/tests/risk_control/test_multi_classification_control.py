@@ -9,7 +9,7 @@ from mapie.risk_control import MultiClassificationLTTController
 from mapie.risk_control.risks import build_abstention_rate_ovr, build_precision_ovr
 
 random_state = 42
-dummy_target = 0.75
+dummy_target = [0.75, 0.75, 0.75]
 _Y_INT = np.array([0, 1, 2])
 _Y_STR = np.array(["a", "b", "c"])
 
@@ -66,7 +66,7 @@ class TestSplitFixedSequence:
         """
         mapie_clf = MultiClassificationLTTController(
             predict_function=clf.predict_proba,
-            target_level=0.75,
+            target_level=[0.7] * len(np.unique(y_toy)),
             risks=build_precision_ovr(np.unique(y_toy)),
             confidence_level=0.9,
             list_predict_params=np.linspace(0.9, 0.05, 90),
@@ -106,7 +106,7 @@ class TestMultiDimensionalStrClassesWorkflow:
         )
         mapie_clf = MultiClassificationLTTController(
             predict_function=predict_multi_dim_str,
-            target_level=0.5,
+            target_level=[0.5] * len(np.unique(y_toy_str)),
             risks=build_abstention_rate_ovr(np.unique(y_toy_str)),
             confidence_level=0.9,
             list_predict_params=params,
@@ -293,7 +293,7 @@ class TestSetBestPredictParam:
         risks = build_precision_ovr([0, 1])
         mcc = MultiClassificationLTTController(
             predict_function=dummy_predict,
-            target_level=dummy_target,
+            target_level=[0.75, 0.75],
             risks=risks,
         )
         mcc.valid_predict_params = valid_predict_params
@@ -377,3 +377,52 @@ class TestPredictPbaFunction:
         y_pred = mcc._predict_pba_function(X_toy, params)
 
         assert y_pred[0, 0] == "b"
+
+
+class TestCheckIfMultiRiskControl:
+    @pytest.mark.parametrize(
+        "n_risks, expected_is_multi_risk", [(1, False), (2, True), (3, True)]
+    )
+    def test_is_multi_risk(self, n_risks, expected_is_multi_risk) -> None:
+        """
+        A single risk must not be considered as multi risk, so that
+        fwer_method="fixed_sequence" is accepted.
+        """
+        mcc = MultiClassificationLTTController(
+            predict_function=dummy_predict,
+            target_level=[0.75] * n_risks,
+            risks=build_precision_ovr(list(range(n_risks))),
+        )
+        assert mcc.is_multi_risk is expected_is_multi_risk
+
+    @pytest.mark.parametrize(
+        "risks, target_level",
+        [
+            (build_precision_ovr([0, 1, 2]), 0.75),
+            (build_precision_ovr([0, 1, 2]), [0.75, 0.75]),
+            (build_precision_ovr([0, 1, 2])[0], [0.75]),
+            ([], []),
+        ],
+    )
+    def test_errors(self, risks, target_level) -> None:
+        with pytest.raises(ValueError, match=r"same non-zero length"):
+            MultiClassificationLTTController(
+                predict_function=dummy_predict,
+                target_level=target_level,
+                risks=risks,
+            )
+
+    def test_fixed_sequence_single_risk_only(self) -> None:
+        MultiClassificationLTTController(
+            predict_function=dummy_predict,
+            target_level=[0.75],
+            risks=build_precision_ovr([0]),
+            fwer_method="fixed_sequence",
+        )
+        with pytest.raises(ValueError, match=r"Fixed sequence testing cannot be used"):
+            MultiClassificationLTTController(
+                predict_function=dummy_predict,
+                target_level=dummy_target,
+                risks=build_precision_ovr([0, 1, 2]),
+                fwer_method="fixed_sequence",
+            )
