@@ -144,7 +144,7 @@ class _BaseLTTController:
         self.valid_predict_params = self._predict_params[valid_params_index]
 
         check_valid_ltt_params_index(
-            predict_params=self._predict_params, valid_index=self.valid_predict_params
+            predict_params=self._predict_params, valid_index=valid_params_index
         )
 
         if len(self.valid_predict_params) == 0:
