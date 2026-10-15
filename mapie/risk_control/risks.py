@@ -110,9 +110,7 @@ class _BaseRisk:
                 risk_value = 1 - risk_value
             return risk_value, effective_sample_size
         else:
-            # In this case, the corresponding lambda shouldn't be considered valid.
-            # In the current LTT implementation, providing n_obs=-1 will result
-            # in an infinite p_value, effectively invaliding the lambda
+            # Return -1 to ensure risk is not controled
             return 1, -1
 
     def get_risk_sequence(
