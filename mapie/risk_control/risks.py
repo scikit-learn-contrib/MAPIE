@@ -341,6 +341,7 @@ class BinaryRisk(_OccurrenceConditionRisk):
             higher_is_better=higher_is_better,
         )
 
+
 def build_recall_ovr(
     class_labels: List[Union[int, str]],
 ) -> List[_OccurrenceConditionRisk]:
@@ -411,6 +412,7 @@ def build_precision_ovr(
         )
         for class_label in class_labels
     ]
+
 
 class BinaryClassificationRisk(BinaryRisk):
     """
@@ -694,6 +696,7 @@ class RiskLoss:
         if bool(((loss < 0) | (loss > 1)).any()):
             raise ValueError("The risk values must lie in [0, 1].")
         return loss
+
 
 RiskLossNames = Literal["recall", "miscoverage"]
 RiskLossLike = Union[RiskLoss, RiskLossNames]
