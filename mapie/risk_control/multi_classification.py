@@ -376,8 +376,7 @@ class MultiClassificationLTTController(_BaseLTTController):
             )
 
     def _predict_pba_function(self, X, params) -> NDArray:
-        predictions_proba = self._predict_function(X)
-        predictions_proba = np.asarray(predictions_proba)
+        predictions_proba = np.asarray(self._predict_function(X))
         self._check_predictions(predictions_proba)
         if self._classes_ is not None and predictions_proba.shape[1] != len(
             self._classes_
