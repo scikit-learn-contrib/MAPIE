@@ -14,6 +14,8 @@ from mapie.risk_control.fwer_control import (
     control_fwer,
 )
 
+from mapie.utils import check_valid_ltt_params_index
+
 from .methods import compute_hoeffding_bentkus_p_value
 from .risks import ClassSpecificRisk
 
@@ -33,7 +35,11 @@ class _BaseLTTController:
     _risk: Sequence[ClassSpecificRisk]
     _alpha: NDArray
     _learned_fixed_sequence: Optional[NDArray[Any]]
+    _delta: float
+    fwer_method: Union[FWER_METHODS, FWERProcedure]
+    valid_predict_params: NDArray
     best_predict_param: Optional[Union[float, Tuple[float, ...]]]
+    p_values: Optional[NDArray]
 
     def _get_predictions_per_param(
         self, X: ArrayLike, params: NDArray, is_calibration_step: bool = False
@@ -55,6 +61,82 @@ class _BaseLTTController:
         label-related state. Can be overridden by subclasses.
         """
         return np.asarray(y, dtype=int)
+
+    # All subfunctions are unit-tested. To avoid having to write
+    # tests just to make sure those subfunctions are called,
+    # we don't include ._calibrate in the coverage report
+    def _calibrate(  # pragma: no cover
+        self, X_calibrate: ArrayLike, y_calibrate: ArrayLike
+    ) -> None:
+        """
+        Find the valid predict params and the best one (if any), and set the
+        attributes valid_predict_params, best_predict_param and p_values.
+        Shared by the `calibrate` method of the subclasses.
+        """
+        y_calibrate_ = self._prepare_y(y_calibrate)
+
+        original_params = self._predict_params
+        if self.fwer_method == "split_fixed_sequence":
+            if self._learned_fixed_sequence is None:
+                raise ValueError(
+                    "You must call 'learn_fixed_sequence_order' before 'calibrate' "
+                    "when using fwer_method='split_fixed_sequence'."
+                )
+            self._predict_params = self._learned_fixed_sequence
+
+        predictions_per_param = self._get_predictions_per_param(
+            X_calibrate, self._predict_params, is_calibration_step=True
+        )
+        self._check_calibration_predictions(predictions_per_param, y_calibrate_)
+
+        risk_values, eff_sample_sizes = self._get_risk_values_and_eff_sample_sizes(
+            y_calibrate_, predictions_per_param, self._risk
+        )
+        (valid_index, p_values) = ltt_procedure(
+            risk_values,
+            np.expand_dims(self._alpha, axis=1),
+            self._delta,
+            eff_sample_sizes,
+            True,
+            fwer_method=self.fwer_method,
+        )
+        valid_params_index = valid_index[0]
+
+        self.valid_predict_params = self._predict_params[valid_params_index]
+
+        check_valid_ltt_params_index(
+            predict_params=self._predict_params, valid_index=self.valid_predict_params
+        )
+
+        if len(self.valid_predict_params) == 0:
+            self.best_predict_param = None
+        else:
+            self._set_best_predict_param(
+                y_calibrate_,
+                predictions_per_param,
+                valid_params_index,
+                risk_values,
+            )
+
+        self.p_values = p_values
+        self._predict_params = original_params
+
+    def _check_calibration_predictions(
+        self, predictions_per_param: NDArray, y_calibrate_: NDArray
+    ) -> None:
+        """
+        Hook called by `_calibrate` on the predictions computed for each
+        parameter. Does nothing by default; can be overridden by subclasses.
+        """
+
+    def _set_best_predict_param(
+        self,
+        y_calibrate_: NDArray,
+        predictions_per_param: NDArray,
+        valid_params_index: List[Any],
+        risk_values: NDArray,
+    ) -> None:
+        raise NotImplementedError  # pragma: no cover
 
     def _check_fwer_method(self, fwer_method):
         if isinstance(fwer_method, str):

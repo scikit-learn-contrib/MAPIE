@@ -9,10 +9,8 @@ from mapie.risk_control.fwer_control import (
     FWER_METHODS,
     FWERProcedure,
 )
-from mapie.utils import check_valid_ltt_params_index
 
 from ._base_controller import _BaseLTTController
-from ._base_controller import ltt_procedure
 from .risks import ClassSpecificRisk
 
 
@@ -200,9 +198,6 @@ class MultiClassificationLTTController(_BaseLTTController):
         self.best_predict_param = None
         self.p_values: Optional[NDArray] = None
 
-    # All subfunctions are unit-tested. To avoid having to write
-    # tests just to make sure those subfunctions are called,
-    # we don't include .calibrate in the coverage report
     def calibrate(  # pragma: no cover
         self, X_calibrate: ArrayLike, y_calibrate: ArrayLike
     ) -> MultiClassificationLTTController:
@@ -234,55 +229,7 @@ class MultiClassificationLTTController(_BaseLTTController):
 
         Using the same data for both steps would invalidate guarantees.
         """
-        y_calibrate_ = self._prepare_y(y_calibrate)
-
-        original_params = self._predict_params
-        if self.fwer_method == "split_fixed_sequence":
-            if self._learned_fixed_sequence is None:
-                raise ValueError(
-                    "You must call 'learn_fixed_sequence_order' before 'calibrate' "
-                    "when using fwer_method='split_fixed_sequence'."
-                )
-            self._predict_params = self._learned_fixed_sequence
-
-        predictions_per_param = self._get_predictions_per_param(
-            X_calibrate, self._predict_params, is_calibration_step=True
-        )
-        self._check_predictions_type(predictions_per_param, y_calibrate_)
-        # aggregates all risks
-        risk_values, eff_sample_sizes = self._get_risk_values_and_eff_sample_sizes(
-            y_calibrate_, predictions_per_param, self._risk
-        )
-        (valid_index, p_values) = ltt_procedure(
-            risk_values,
-            np.expand_dims(self._alpha, axis=1),
-            self._delta,
-            eff_sample_sizes,
-            True,
-            fwer_method=self.fwer_method,
-        )
-        valid_params_index = valid_index[0]
-
-        self.valid_predict_params = self._predict_params[valid_params_index]
-
-        check_valid_ltt_params_index(
-            predict_params=self._predict_params, valid_index=self.valid_predict_params
-        )
-
-        if len(self.valid_predict_params) == 0:
-            self.best_predict_param = None
-
-        else:
-            self._set_best_predict_param(
-                y_calibrate_,
-                predictions_per_param,
-                valid_params_index,
-                risk_values,
-            )
-
-        self.p_values = p_values
-        self._predict_params = original_params
-
+        self._calibrate(X_calibrate, y_calibrate)
         return self
 
     def _prepare_y(self, y: ArrayLike) -> NDArray:
@@ -343,6 +290,11 @@ class MultiClassificationLTTController(_BaseLTTController):
             "You must provide a list of risks and a list of target levels "
             "of the same non-zero length."
         )
+
+    def _check_calibration_predictions(
+        self, predictions_per_param: NDArray, y_calibrate_: NDArray
+    ) -> None:
+        self._check_predictions_type(predictions_per_param, y_calibrate_)
 
     @staticmethod
     def _check_predictions_type(
