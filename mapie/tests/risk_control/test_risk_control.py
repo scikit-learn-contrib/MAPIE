@@ -22,7 +22,6 @@ from mapie.risk_control import abstention_rate
 from mapie.risk_control.risks import (
     ClassSpecificRisk,
     build_recall_ovr,
-    build_abstention_rate_ovr,
 )
 
 lambdas = np.array([0.5, 0.9])
@@ -301,15 +300,15 @@ def test_build_recall_ovr(class_labels, y_true, y_pred):
         ),
     ],
 )
-def test_build_abstention_rate_ovr(class_labels, y_pred):
+def test_abstention_rate(class_labels, y_pred):
     """
-    build_abstention_rate_ovr's risk_occurrence must flag abstained (NaN)
-    samples without raising, both for a numeric float y_pred (int class
-    labels) and for an object-dtype y_pred mixing strings and NaN (str
-    class labels) -- the exact shapes produced by default_agg_class_pba.
+    abstention_rate's risk_occurrence must flag abstained (NaN) samples
+    without raising, both for a numeric float y_pred (int class labels) and
+    for an object-dtype y_pred mixing strings and NaN (str class labels) --
+    the exact shapes produced by default_agg_class_pba.
     """
     y_true = np.repeat(class_labels[0], len(y_pred))
-    risk = build_abstention_rate_ovr()[0]
+    risk = abstention_rate
 
     value, n = risk.get_value_and_effective_sample_size(y_true, y_pred)
 

@@ -341,7 +341,6 @@ class BinaryRisk(_OccurrenceConditionRisk):
             higher_is_better=higher_is_better,
         )
 
-
 def build_recall_ovr(
     class_labels: List[Union[int, str]],
 ) -> List[_OccurrenceConditionRisk]:
@@ -412,26 +411,6 @@ def build_precision_ovr(
         )
         for class_label in class_labels
     ]
-
-
-def build_abstention_rate_ovr() -> List[_OccurrenceConditionRisk]:
-    """
-    Build a single `BinaryRisk` instance defining the abstention rate,
-    i.e. the proportion of samples for which `y_pred` is `NaN`.
-
-    Returns
-    -------
-    List[BinaryRisk]
-        A single-element list containing the abstention risk.
-    """
-    return [
-        BinaryRisk(
-            risk_occurrence=lambda y_true, y_pred: y_pred != y_pred,
-            risk_condition=lambda y_true, y_pred: np.repeat(True, len(y_true)),
-            higher_is_better=False,
-        )
-    ]
-
 
 class BinaryClassificationRisk(BinaryRisk):
     """
@@ -715,7 +694,6 @@ class RiskLoss:
         if bool(((loss < 0) | (loss > 1)).any()):
             raise ValueError("The risk values must lie in [0, 1].")
         return loss
-
 
 RiskLossNames = Literal["recall", "miscoverage"]
 RiskLossLike = Union[RiskLoss, RiskLossNames]
