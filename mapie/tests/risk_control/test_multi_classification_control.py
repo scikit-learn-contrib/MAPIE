@@ -6,7 +6,7 @@ from sklearn.datasets import make_classification
 from sklearn.linear_model import LogisticRegression
 
 from mapie.risk_control import MultiClassificationLTTController, abstention_rate
-from mapie.risk_control.risks import build_abstention_rate_ovr, build_precision_ovr
+from mapie.risk_control.risks import build_precision_ovr
 
 random_state = 42
 dummy_target = [0.75, 0.75, 0.75]
@@ -94,8 +94,8 @@ class TestMultiDimensionalStrClassesWorkflow:
         """
         Reproduce a full workflow combining multi-dimensional predict params
         (predict_function returns labels directly, bypassing
-        _predict_pba_function) with string class labels: build one-vs-rest
-        abstention rate risks from string classes, calibrate, then predict.
+        _predict_pba_function) with string class labels: control the abstention
+        rate with string classes, calibrate, then predict.
         """
         params = np.array(
             [
@@ -106,8 +106,8 @@ class TestMultiDimensionalStrClassesWorkflow:
         )
         mapie_clf = MultiClassificationLTTController(
             predict_function=predict_multi_dim_str,
-            target_level=[0.5] * len(np.unique(y_toy_str)),
-            risks=build_abstention_rate_ovr(np.unique(y_toy_str)),
+            target_level=[0.5],
+            risks=[abstention_rate],
             confidence_level=0.9,
             list_predict_params=params,
         )
