@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, List, Union, cast
 
 import numpy as np
 import pytest
@@ -6,7 +6,7 @@ from sklearn.datasets import make_classification
 from sklearn.linear_model import LogisticRegression
 
 from mapie.risk_control import MultiClassificationLTTController, abstention_rate
-from mapie.risk_control.risks import build_precision_ovr
+from mapie.risk_control.risks import build_abstention_rate_ovr, build_precision_ovr
 
 random_state = 42
 dummy_target = [0.75, 0.75, 0.75]
@@ -106,7 +106,7 @@ class TestMultiDimensionalStrClassesWorkflow:
         )
         mapie_clf = MultiClassificationLTTController(
             predict_function=predict_multi_dim_str,
-            target_level=0.5,
+            target_level=[0.5],
             risks=build_abstention_rate_ovr(),
             confidence_level=0.9,
             list_predict_params=params,
@@ -543,14 +543,14 @@ class TestLearnFixedSequenceOrder:
             mcc = MultiClassificationLTTController(
                 predict_function=clf_3.predict_proba,
                 target_level=[0.7] * 3,
-                risks=build_precision_ovr(class_labels),
+                risks=build_precision_ovr(cast(List[Union[int, str]], class_labels)),
                 list_predict_params=np.linspace(0.9, 0.05, 90),
                 fwer_method="split_fixed_sequence",
             )
             mcc.learn_fixed_sequence_order(X_3, y_labels)
             sequences.append(mcc._learned_fixed_sequence)
 
-        assert len(sequences[0]) > 1
+        assert sequences[0] is not None and len(sequences[0]) > 1
         np.testing.assert_array_equal(sequences[0], sequences[1])
 
 

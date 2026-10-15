@@ -1241,7 +1241,7 @@ def test_calibrate_uses_sequence_when_split_fixed():
 
 def test_prepare_y_converts_labels_to_int() -> None:
     bcc = BinaryClassificationController(
-        predict_function=lambda X: np.full((len(X), 2), 0.5),
+        predict_function=lambda X: np.full((len(np.asarray(X)), 2), 0.5),
         risk="precision",
         target_level=0.8,
     )

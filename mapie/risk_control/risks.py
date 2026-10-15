@@ -344,7 +344,7 @@ class BinaryRisk(_OccurrenceConditionRisk):
 
 def build_recall_ovr(
     class_labels: List[Union[int, str]],
-) -> List[ClassSpecificRisk]:
+) -> List[_OccurrenceConditionRisk]:
     """
     Build one-vs-rest `ClassSpecificRisk` instances defining recall for
     each of the given class labels
@@ -380,7 +380,7 @@ def build_recall_ovr(
 
 def build_precision_ovr(
     class_labels: List[Union[int, str]],
-) -> List[ClassSpecificRisk]:
+) -> List[_OccurrenceConditionRisk]:
     """
     Build one-vs-rest `ClassSpecificRisk` instances defining precision for
     each of the given class labels
@@ -414,19 +414,18 @@ def build_precision_ovr(
     ]
 
 
-def build_abstention_rate_ovr() -> List[ClassSpecificRisk]:
+def build_abstention_rate_ovr() -> List[_OccurrenceConditionRisk]:
     """
-    Build a single `ClassSpecificRisk` instance defining the abstention rate,
+    Build a single `BinaryRisk` instance defining the abstention rate,
     i.e. the proportion of samples for which `y_pred` is `NaN`.
 
     Returns
     -------
-    List[ClassSpecificRisk]
+    List[BinaryRisk]
         A single-element list containing the abstention risk.
     """
     return [
-        ClassSpecificRisk(
-            class_label="global_risk",
+        BinaryRisk(
             risk_occurrence=lambda y_true, y_pred: y_pred != y_pred,
             risk_condition=lambda y_true, y_pred: np.repeat(True, len(y_true)),
             higher_is_better=False,

@@ -22,6 +22,7 @@ from mapie.risk_control import abstention_rate
 from mapie.risk_control.risks import (
     ClassSpecificRisk,
     build_recall_ovr,
+    build_abstention_rate_ovr,
 )
 
 lambdas = np.array([0.5, 0.9])
@@ -350,7 +351,7 @@ def test_class_specific_risk_non_binary_occurrence_raises() -> None:
     """
     bad_risk = ClassSpecificRisk(
         class_label=1,
-        risk_occurrence=lambda y_true, y_pred: 0.5 * np.ones(len(y_true)),
+        risk_occurrence=lambda y_true, y_pred: 0.5 * np.ones(len(y_true)),  # type: ignore[arg-type,return-value]
         risk_condition=lambda y_true, y_pred: np.repeat(True, len(y_true)),
         higher_is_better=False,
     )

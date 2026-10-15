@@ -11,9 +11,7 @@ from mapie.risk_control.fwer_control import (
 )
 
 from ._base_controller import _BaseLTTController
-from .risks import BinaryRisk, ClassSpecificRisk
-
-_MulticlassRisk = Union[ClassSpecificRisk, BinaryRisk]
+from .risks import BinaryRisk, ClassSpecificRisk, _OccurrenceConditionRisk
 
 
 class MultiClassificationLTTController(_BaseLTTController):
@@ -169,10 +167,12 @@ class MultiClassificationLTTController(_BaseLTTController):
     def __init__(
         self,
         predict_function: Callable[..., NDArray],
-        risks: list[_MulticlassRisk],
+        risks: list[_OccurrenceConditionRisk],
         target_level: List[float],
         confidence_level: float = 0.9,
-        best_predict_param_choice: Union[Literal["auto"], _MulticlassRisk] = "auto",
+        best_predict_param_choice: Union[
+            Literal["auto"], _OccurrenceConditionRisk
+        ] = "auto",
         list_predict_params: NDArray = np.linspace(0, 0.99, 100),
         classes: Optional[ArrayLike] = None,
         fwer_method: Union[FWER_METHODS, FWERProcedure] = "bonferroni_holm",
@@ -266,7 +266,7 @@ class MultiClassificationLTTController(_BaseLTTController):
 
     @staticmethod
     def _check_if_multi_risk_control(
-        risks: list[_MulticlassRisk],
+        risks: list[_OccurrenceConditionRisk],
         target_level: List[float],
     ) -> bool:
         """
@@ -308,11 +308,12 @@ class MultiClassificationLTTController(_BaseLTTController):
             )
 
     def _set_best_predict_param_choice(
-        self, best_predict_param_choice: Union[Literal["auto"], _MulticlassRisk]
-    ) -> _MulticlassRisk:
+        self,
+        best_predict_param_choice: Union[Literal["auto"], _OccurrenceConditionRisk],
+    ) -> _OccurrenceConditionRisk:
         if best_predict_param_choice == "auto":
             # when multi risk, we minimize the first risk in the list
-            return cast(_MulticlassRisk, self._risk[0])
+            return cast(_OccurrenceConditionRisk, self._risk[0])
         if isinstance(best_predict_param_choice, (ClassSpecificRisk, BinaryRisk)):
             return best_predict_param_choice
         raise TypeError(
