@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Callable, List, Literal, Optional, Union, cast
+from typing import Callable, List, Literal, Optional, Union, cast
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -173,30 +173,19 @@ class MultiClassificationLTTController(_BaseLTTController):
         fwer_method: Union[FWER_METHODS, FWERProcedure] = "bonferroni_holm",
     ):
         self.is_multi_risk = self._check_if_multi_risk_control(risks, target_level)
-        self._predict_function = predict_function
-        self._risk = risks
-        self._alpha = self._convert_target_level_to_alpha(target_level)
-        self._delta = 1 - confidence_level
-        self.is_multi_dimensional_param = self._check_if_multi_dimensional_param(
-            list_predict_params
+        self._init_ltt(
+            predict_function,
+            risks,
+            target_level,
+            confidence_level,
+            best_predict_param_choice,
+            list_predict_params,
+            fwer_method,
         )
-        self._best_predict_param_choice = self._set_best_predict_param_choice(
-            best_predict_param_choice
-        )
-        self._predict_params = list_predict_params
-        self.is_multi_dimensional_param = self._check_if_multi_dimensional_param(
-            self._predict_params
-        )
-        self.fwer_method = self._check_fwer_method(fwer_method)
-        self._learned_fixed_sequence: Optional[NDArray[Any]] = None
         self._infer_classes = classes is None
         self._classes_: Optional[NDArray] = (
             None if classes is None else self._check_classes(classes)
         )
-
-        self.valid_predict_params: NDArray = np.array([])
-        self.best_predict_param = None
-        self.p_values: Optional[NDArray] = None
 
     def calibrate(  # pragma: no cover
         self, X_calibrate: ArrayLike, y_calibrate: ArrayLike

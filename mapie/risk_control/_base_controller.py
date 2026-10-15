@@ -56,6 +56,44 @@ class _BaseLTTController:
             )
         return y_pred
 
+    def _init_ltt(
+        self,
+        predict_function: Callable[..., Any],
+        risks: Sequence[ClassSpecificRisk],
+        target_level: List[float],
+        confidence_level: float,
+        best_predict_param_choice: Any,
+        list_predict_params: NDArray,
+        fwer_method: Union[FWER_METHODS, FWERProcedure],
+    ) -> None:
+        """
+        Set the attributes shared by the LTT controllers. Subclasses must set
+        `is_multi_risk` beforehand, as it is used to check the FWER method and
+        to choose the best predict param.
+        """
+        self._predict_function = predict_function
+        self._risk = risks
+        self._alpha = self._convert_target_level_to_alpha(target_level)
+        self._delta = 1 - confidence_level
+        self._best_predict_param_choice = self._set_best_predict_param_choice(
+            best_predict_param_choice
+        )
+        self._predict_params = list_predict_params
+        self.is_multi_dimensional_param = self._check_if_multi_dimensional_param(
+            self._predict_params
+        )
+        self.fwer_method = self._check_fwer_method(fwer_method)
+        self._learned_fixed_sequence = None
+
+        self.valid_predict_params = np.array([])
+        self.best_predict_param = None
+        self.p_values = None
+
+    def _set_best_predict_param_choice(
+        self, best_predict_param_choice: Any
+    ) -> ClassSpecificRisk:
+        raise NotImplementedError  # pragma: no cover
+
     def _prepare_y(self, y: ArrayLike) -> NDArray:
         """
         Convert the labels given to `calibrate` into an array, and set any

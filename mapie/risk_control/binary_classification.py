@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import warnings
-from typing import Any, Callable, List, Literal, Optional, Tuple, Union, cast
+from typing import Callable, List, Literal, Union, cast
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -176,10 +176,9 @@ class BinaryClassificationController(_BaseLTTController):
         fwer_method: Union[FWER_METHODS, FWERProcedure] = "bonferroni_holm",
     ):
         self.is_multi_risk = self._check_if_multi_risk_control(risk, target_level)
-        self._predict_function = predict_function
         risk_list = risk if isinstance(risk, list) else [risk]
         try:
-            self._risk = [
+            risks = [
                 binary_risk_choice_map[risk] if isinstance(risk, str) else risk
                 for risk in risk_list
             ]
@@ -191,23 +190,15 @@ class BinaryClassificationController(_BaseLTTController):
         target_level_list = (
             target_level if isinstance(target_level, list) else [target_level]
         )
-        self._alpha = self._convert_target_level_to_alpha(target_level_list)
-        self._delta = 1 - confidence_level
-
-        self._best_predict_param_choice = self._set_best_predict_param_choice(
-            best_predict_param_choice
+        self._init_ltt(
+            predict_function,
+            risks,
+            target_level_list,
+            confidence_level,
+            best_predict_param_choice,
+            list_predict_params,
+            fwer_method,
         )
-
-        self._predict_params = list_predict_params
-        self.is_multi_dimensional_param = self._check_if_multi_dimensional_param(
-            self._predict_params
-        )
-        self.fwer_method = self._check_fwer_method(fwer_method)
-        self._learned_fixed_sequence: Optional[NDArray[Any]] = None
-
-        self.valid_predict_params: NDArray = np.array([])
-        self.best_predict_param: Optional[Union[float, Tuple[float, ...]]] = None
-        self.p_values: Optional[NDArray] = None
 
     def calibrate(  # pragma: no cover
         self, X_calibrate: ArrayLike, y_calibrate: ArrayLike
