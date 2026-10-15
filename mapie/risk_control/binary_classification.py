@@ -303,31 +303,25 @@ class BinaryClassificationController(_BaseLTTController):
         Checks if predictions are probabilities for one-dimensional parameters,
         or binary predictions for multi-dimensional parameters.
         """
-        if (
-            not self.is_multi_dimensional_param
-            and np.logical_or(
-                predictions_per_param == 0, predictions_per_param == 1
-            ).all()
-        ):
-            warnings.warn(
-                "All predictions are either 0 or 1 while the parameters are one-dimensional. "
-                "Make sure that the provided predict_function is a "
-                "predict_proba method or a function that outputs probabilities.",
-            )
-
-        if (
-            self.is_multi_dimensional_param
-            and not np.logical_or.reduce(
+        if self.is_multi_dimensional_param:
+            if not np.logical_or.reduce(
                 (
                     predictions_per_param == 0,
                     predictions_per_param == 1,
                     np.isnan(predictions_per_param),
                 )
-            ).all()
-        ):
-            raise ValueError(
-                "The provided predict_function with multi-dimensional "
-                "parameters must return binary predictions (0, 1, np.nan)."
+            ).all():
+                raise ValueError(
+                    "The provided predict_function with multi-dimensional "
+                    "parameters must return binary predictions (0, 1, np.nan)."
+                )
+        elif np.logical_or(
+            predictions_per_param == 0, predictions_per_param == 1
+        ).all():
+            warnings.warn(
+                "All predictions are either 0 or 1 while the parameters are one-dimensional. "
+                "Make sure that the provided predict_function is a "
+                "predict_proba method or a function that outputs probabilities.",
             )
 
     @staticmethod
