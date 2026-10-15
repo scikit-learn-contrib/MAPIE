@@ -324,33 +324,6 @@ class MultiClassificationLTTController(_BaseLTTController):
         else:
             raise NotImplementedError
 
-    def _set_best_predict_param(
-        self,
-        y_calibrate_: NDArray,
-        predictions_per_param: NDArray,
-        valid_params_index: List[Any],
-        risk_values: NDArray,
-    ):
-        secondary_risks_per_param, _ = self._get_risk_values_and_eff_sample_sizes(
-            y_calibrate_,
-            predictions_per_param[valid_params_index],
-            [self._best_predict_param_choice],
-        )
-
-        best_index = np.flatnonzero(
-            secondary_risks_per_param == secondary_risks_per_param.min()
-        )
-        # Break ties on the minimum secondary risk by selecting, among the tied
-        # parameters, the one that maximizes the first risk (to be less
-        # conservative).
-        first_risk_values = risk_values[0, valid_params_index]
-        best_index = best_index[np.argmax(first_risk_values[best_index])]
-        best_predict_param = self.valid_predict_params[best_index]
-        if isinstance(best_predict_param, np.ndarray):
-            self.best_predict_param = tuple(best_predict_param.tolist())
-        else:
-            self.best_predict_param = float(best_predict_param)
-
     def _get_predictions_per_param_mono_param(
         self, X, params, is_calibration_step=False
     ):

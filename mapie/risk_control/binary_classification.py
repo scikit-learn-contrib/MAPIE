@@ -276,34 +276,6 @@ class BinaryClassificationController(_BaseLTTController):
             "(e.g. 'precision', 'accuracy', 'false_positive_rate')."
         )
 
-    def _set_best_predict_param(
-        self,
-        y_calibrate_: NDArray,
-        predictions_per_param: NDArray,
-        valid_params_index: List[Any],
-        risk_values: NDArray,
-    ):
-        secondary_risks_per_param, _ = self._get_risk_values_and_eff_sample_sizes(
-            y_calibrate_,
-            predictions_per_param[valid_params_index],
-            [self._best_predict_param_choice],
-        )
-        best_index = np.flatnonzero(
-            secondary_risks_per_param == secondary_risks_per_param.min()
-        )
-        if len(best_index) > 1:
-            # When several parameters reach the minimum secondary risk, break ties by
-            # selecting the one that maximizes the first risk (te be less conservative).
-            first_risk_values = risk_values[0, valid_params_index]
-            best_index = best_index[np.argmax(first_risk_values[best_index])]
-        else:
-            best_index = best_index[0]
-        best_predict_param = self.valid_predict_params[best_index]
-        if isinstance(best_predict_param, np.ndarray):
-            self.best_predict_param = tuple(best_predict_param.tolist())
-        else:
-            self.best_predict_param = float(best_predict_param)
-
     def _get_predictions_per_param_mono_param(
         self, X, params, is_calibration_step=False
     ):
