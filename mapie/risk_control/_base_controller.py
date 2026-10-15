@@ -49,6 +49,13 @@ class _BaseLTTController:
             )
         return y_pred
 
+    def _prepare_y(self, y: ArrayLike) -> NDArray:
+        """
+        Convert the labels given to `calibrate` into an array, and set any
+        label-related state. Can be overridden by subclasses.
+        """
+        return np.asarray(y, dtype=int)
+
     def _check_fwer_method(self, fwer_method):
         if isinstance(fwer_method, str):
             if fwer_method not in FWER_IMPLEMENTED:

@@ -234,11 +234,7 @@ class MultiClassificationLTTController(_BaseLTTController):
 
         Using the same data for both steps would invalidate guarantees.
         """
-        y_calibrate_ = np.asarray(y_calibrate)
-        if self._infer_classes:
-            self._classes_ = np.unique(y_calibrate_)
-        else:
-            self._check_labels_in_classes(y_calibrate_)
+        y_calibrate_ = self._prepare_y(y_calibrate)
 
         original_params = self._predict_params
         if self.fwer_method == "split_fixed_sequence":
@@ -288,6 +284,18 @@ class MultiClassificationLTTController(_BaseLTTController):
         self._predict_params = original_params
 
         return self
+
+    def _prepare_y(self, y: ArrayLike) -> NDArray:
+        """
+        Convert the labels into an array, infer the classes from them if they
+        were not provided, otherwise check that they belong to the classes.
+        """
+        y_ = np.asarray(y)
+        if self._infer_classes:
+            self._classes_ = np.unique(y_)
+        else:
+            self._check_labels_in_classes(y_)
+        return y_
 
     @staticmethod
     def _check_classes(classes: ArrayLike) -> NDArray:

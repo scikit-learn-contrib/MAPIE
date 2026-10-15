@@ -490,3 +490,27 @@ class TestClasses:
         np.testing.assert_array_equal(mcc._classes_, clf_3.classes_)
         y_pred = mcc._predict_pba_function(X_toy, np.array([0.0]))
         assert 0 in y_pred
+
+
+class TestPrepareY:
+    def test_infers_classes_from_y(self) -> None:
+        mcc = MultiClassificationLTTController(
+            predict_function=dummy_predict,
+            target_level=dummy_target,
+            risks=build_precision_ovr([0, 1, 2]),
+        )
+        y_ = mcc._prepare_y(["b", "a", "c", "a"])
+        np.testing.assert_array_equal(y_, np.array(["b", "a", "c", "a"]))
+        np.testing.assert_array_equal(mcc._classes_, np.array(["a", "b", "c"]))
+
+    def test_keeps_given_classes(self) -> None:
+        mcc = MultiClassificationLTTController(
+            predict_function=dummy_predict,
+            target_level=dummy_target,
+            risks=build_precision_ovr([0, 1, 2]),
+            classes=[0, 1, 2],
+        )
+        mcc._prepare_y([1, 2])
+        np.testing.assert_array_equal(mcc._classes_, np.array([0, 1, 2]))
+        with pytest.raises(ValueError, match=r"not in classes"):
+            mcc._prepare_y([1, 5])

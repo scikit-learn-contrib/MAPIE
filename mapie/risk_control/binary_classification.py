@@ -244,7 +244,7 @@ class BinaryClassificationController(_BaseLTTController):
 
         Using the same data for both steps would invalidate guarantees.
         """
-        y_calibrate_ = np.asarray(y_calibrate, dtype=int)
+        y_calibrate_ = self._prepare_y(y_calibrate)
 
         original_params = self._predict_params
         if self.fwer_method == "split_fixed_sequence":
