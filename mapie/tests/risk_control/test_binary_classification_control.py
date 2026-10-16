@@ -1237,3 +1237,14 @@ def test_calibrate_uses_sequence_when_split_fixed():
 
     assert np.array_equiv(bcc._predict_params, predict_params)
     assert np.array_equiv(bcc._learned_fixed_sequence, learned)
+
+
+def test_prepare_y_converts_labels_to_int() -> None:
+    bcc = BinaryClassificationController(
+        predict_function=lambda X: np.full((len(np.asarray(X)), 2), 0.5),
+        risk="precision",
+        target_level=0.8,
+    )
+    y_ = bcc._prepare_y([True, False, True])
+    assert y_.dtype == int
+    np.testing.assert_array_equal(y_, np.array([1, 0, 1]))

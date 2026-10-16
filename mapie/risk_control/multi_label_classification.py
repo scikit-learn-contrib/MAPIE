@@ -21,8 +21,9 @@ from .methods import (
     find_best_predict_param,
     find_precision_best_predict_param,
     get_r_hat_plus,
-    ltt_procedure,
 )
+
+from ._base_controller import ltt_procedure
 from .risks import precision, recall
 
 

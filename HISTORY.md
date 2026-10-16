@@ -18,6 +18,7 @@
 - Fix `AbsoluteQuantileRegressionScore` to raise a `ValueError` when
   instantiated with `sym=True`, since this score is asymmetrical by
   construction. The default value of `sym` is now `False`. (issue #989)
+- Add `MultiClassificationLTTController` for risk control with multiclassification problems. 
 - Fix `QuantileRegressionScore` reporting twice the effective number of calibration
   samples.
 - Fix `ConformalizedQuantileRegressor` to select the intended split-conformal
