@@ -816,18 +816,14 @@ def _compute_regression_quantile(
     alpha_cor = np.ceil(alpha_ref * (n_calib + 1)) / n_calib
 
     # The conformal quantile at a level does not exist when the corrected
-    # level exceeds 1.0 (i.e. ceil(alpha_ref * (n + 1)) > n). The previous
-    # clip to 1.0 silently returned the extreme order statistic — a finite
-    # bound — instead of +inf / an error. Handle the infeasible case next
-    # to the arithmetic so every caller is covered (asymmetric scores that
-    # halve the effective n, and allow_infinite_bounds=True which skips the
-    # calibration-size guard entirely). See issues #974 and #980.
+    # level exceeds 1.0 (i.e. ceil(alpha_ref * (n + 1)) > n)
     quantile: NDArray = np.empty((n_ref, len(alpha_np)))
     for j, (_alpha, _alpha_cor) in enumerate(zip(alpha_ref, alpha_cor)):
         if _alpha_cor > 1.0:
             if unbounded:
                 quantile[:, j] = signed * np.inf
             else:
+                # TODO: use external function to compute number of needed samples
                 need = int(np.ceil((_alpha) * (n_calib + 1)))
                 raise ValueError(
                     "The number of calibration samples "
