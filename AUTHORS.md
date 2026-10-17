@@ -64,5 +64,6 @@
 * Shivam Lalakiya <shivamlalakiya151299@gmail.com>
 * Sasha Mitchell <sash.t.mitchell@gmail.com>
 * Jakub Krasuski <Blizzeq>
+* Syed Ahnaf Raza <syahra712>
 
 To be continued ...
