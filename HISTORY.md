@@ -27,6 +27,8 @@
   previous computation selected the next higher order statistic, making
   intervals unnecessarily conservative. (issue #991)
 - Fix `CrossConformalizedQuantileRegressor` CV+ algorithm to compute quantiles of pprediction + scores instead of quantiles of aggregated predictions + scores.
+- Fix `train_conformalize_test_split` to accept SciPy sparse matrices as `X`. The
+  size check used `len(X)`, which raises `TypeError` for sparse matrices. (issue #1002)
 
 
 ## 1.5.0 (2026-xx-xx)
