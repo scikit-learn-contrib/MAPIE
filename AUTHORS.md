@@ -3,9 +3,8 @@
 ## Development Lead
 
 * Vincent Blot <vincent.blot@capgemini.com>
-* Adrien Le Coz <adrien.le-coz@inria.fr>
-* Hassan Maissoro <hassan.maissoro@capgemini.com>
 * Geoffray Brelurut <geoffray.brelurut@capgemini.com>
+* Candice Moyet <candice.moyet@inria.fr>
 
 ## Emeritus Core Developers
 
@@ -14,6 +13,8 @@
 * Thibault Cordier <thibault.a.cordier@capgemini.com>
 * Louis Lacombe <louis.lacombe@capgemini.com>
 * Valentin Laurent <valentin.laurent@capgemini.com>
+* Adrien Le Coz <adrien.le-coz@inria.fr>
+* Hassan Maissoro <hassan.maissoro@capgemini.com>
 
 ## Contributors
 
@@ -64,6 +65,7 @@
 * Shivam Lalakiya <shivamlalakiya151299@gmail.com>
 * Sasha Mitchell <sash.t.mitchell@gmail.com>
 * Jakub Krasuski <Blizzeq>
+* Théodore Rezel <theodore.rezel@capgemini.com>
 * Syed Ahnaf Raza <syahra712>
 
 To be continued ...
