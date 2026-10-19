@@ -6,27 +6,19 @@
 - Add educational MAPIE notebooks covering regression and conformal prediction
   for language models. Shown in the documentation homepage and All Examples.
 - Fix `_compute_classification_quantile` to select the intended split-conformal
-  order statistic. For some calibration sizes and confidence levels, the previous
-  computation selected the next higher order statistic, making prediction sets
-  unnecessarily conservative. Classification and regression now apply the same
-  finite-sample correction. (issue #479)
+  order statistic. (issue #479)
 - Fix `OnlineMartingaleTest.compute_p_value` to put the smoothing term's `+1`
-  inside the tie count rather than outside it. The p-value stayed valid, but
-  the biased mean caused the default `jumper_martingale` exchangeability test
-  to over-reject relative to `test_level`. (issue #984)
+  inside the tie count rather than outside it. (issue #984)
 - Fix the RCPS Bernstein bound to use each lambda's loss variance.
 - Fix `AbsoluteQuantileRegressionScore` to raise a `ValueError` when
-  instantiated with `sym=True`, since this score is asymmetrical by
-  construction. The default value of `sym` is now `False`. (issue #989)
-- Add `MultiClassificationLTTController` for risk control with multiclassification problems. 
+  instantiated with `sym=False`. (issue #989)
 - Fix `QuantileRegressionScore` reporting twice the effective number of calibration
   samples.
 - Fix `ConformalizedQuantileRegressor` to select the intended split-conformal
   order statistic, using the same finite-sample correction as the other
-  regression methods. For some calibration sizes and confidence levels, the
-  previous computation selected the next higher order statistic, making
-  intervals unnecessarily conservative. (issue #991)
+  regression methods. (issue #991)
 - Fix `CrossConformalizedQuantileRegressor` CV+ algorithm to compute quantiles of pprediction + scores instead of quantiles of aggregated predictions + scores.
+- Add `MultiClassificationLTTController` for risk control with multiclassification problems. 
 
 
 ## 1.5.0 (2026-xx-xx)
