@@ -55,6 +55,11 @@ def summarize_interval(y_true: np.ndarray, y_pis: np.ndarray) -> tuple[float, fl
     return float(coverage), float(width)
 
 
+def point_rmse(y_true: np.ndarray, y_pred: np.ndarray) -> float:
+    """Compute the root mean squared error of the point predictions."""
+    return float(np.sqrt(np.mean((y_true - y_pred) ** 2)))
+
+
 def plot_prediction_intervals(
     ax: plt.Axes,
     X_test: np.ndarray,
@@ -151,6 +156,7 @@ for method_name, method in METHODS.items():
             "aggregation": "auto",
             "coverage": coverage,
             "mean_width": width,
+            "point_rmse": point_rmse(y_test, y_pred),
         }
     )
 
@@ -159,9 +165,11 @@ for method_name, method in METHODS.items():
 # 4. Comparison of the point aggregation strategies
 # --------------------------------------------------------------------------
 # The aggregation strategy is used to combine the predictions of the regressors
-# trained on each cross-validation fold, so it impacts the interval bounds as
-# well as the point predictions. We keep the interval construction method fixed
-# to ``plus`` and vary the point aggregation strategy.
+# trained on each cross-validation fold into the point prediction. The ``plus``
+# interval bounds do not depend on it: each of them is the prediction of the
+# fold(s) that did not see the corresponding conformalization sample. We keep
+# the interval construction method fixed to ``plus`` and vary the point
+# aggregation strategy, which therefore only changes the point predictions.
 #
 # ``None`` is not part of the comparison: it predicts points with an estimator
 # fitted on the entire data, which only the ``base`` method fits.
@@ -197,6 +205,7 @@ for aggregation_name, aggregation in AGGREGATIONS.items():
             "aggregation": aggregation_name,
             "coverage": coverage,
             "mean_width": width,
+            "point_rmse": point_rmse(y_test, y_pred),
         }
     )
 
@@ -249,7 +258,10 @@ for ax, (aggregation_name, (y_pred, y_pis)) in zip(axs, aggregation_results.item
         y_pred=y_pred,
         y_pis=y_pis,
         title=f"Aggregation: {aggregation_name}",
-        subtitle=f"coverage={coverage:.3f} | width={width:.3f}",
+        subtitle=(
+            f"coverage={coverage:.3f} | width={width:.3f} | "
+            f"rmse={point_rmse(y_test, y_pred):.3f}"
+        ),
     )
 
 axs[0].legend(loc="upper left")
