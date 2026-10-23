@@ -18,12 +18,6 @@
 
 **An open-source Python library for quantifying uncertainties and controlling the risks of machine learning models.**
 
-🚀 MAPIE in 2026 🚀 New features have been implemented, starting with the application of **risk control** to emerging use cases such as **LLM-as-Judge** and **image segmentation**. In addition, **exchangeability tests** have been introduced to help users verify when MAPIE can be legitimately applied. Also, new **adaptive** conformal prediction methods have been added. Finally, the documentation has been updated with a new design!
-
-🎉 MAPIE in 2025 🎉 MAPIE v1 is live! This new version introduces major changes to the API. Check out the [release notes](doc/content/getting-started/v1-release-notes.md).
-
-See [GitHub Releases](https://github.com/scikit-learn-contrib/MAPIE/releases) and [HISTORY.md](https://github.com/scikit-learn-contrib/MAPIE/blob/master/HISTORY.md) for up-to-date details on the new features.
-
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/scikit-learn-contrib/MAPIE/refs/heads/master/doc/images/educational_visual.png" width="500" alt="Educational visual for MAPIE">
@@ -35,13 +29,19 @@ MAPIE allows you to:
 
 - **Compute prediction intervals or prediction sets** for regression,
   classification, and time series by estimating your model uncertainty on a
-  conformalization dataset.
+  conformalization dataset. Note that prediction intervals are not credibility intervals, nor confidence intervals.
 - **Control risks** of more complex tasks such as multi-label classification
   and semantic segmentation in computer vision, providing probabilistic
   guarantees on metrics like recall and precision.
-- Easily use **any model (scikit-learn, TensorFlow, PyTorch)** thanks to scikit-learn-compatible wrapper if needed. MAPIE is part of the scikit-learn-contrib ecosystem.
+- Easily use **any model (scikit-learn, TensorFlow, PyTorch)** (thus being model agnostic) thanks to scikit-learn-compatible wrapper if needed. MAPIE is part of the scikit-learn-contrib ecosystem.
 
-MAPIE relies notably on the fields of Conformal Prediction and Distribution-Free Inference. It implements **peer-reviewed** algorithms that are  **model and use case agnostic** and possesses **theoretical guarantees** under minimal assumptions on the data and the model.
+MAPIE relies notably on the fields of Conformal Prediction and Distribution-Free Inference. It implements **peer-reviewed** algorithms that are  **model and use case agnostic** (but still needs appropriate datasets for conformalization) and possesses **theoretical guarantees** under minimal assumptions on the data and the model.
+
+🚀 MAPIE in 2026 🚀 New features have been implemented, starting with the application of **risk control** to emerging use cases such as **LLM-as-Judge** and **image segmentation**. In addition, **exchangeability tests** have been introduced to help users verify when MAPIE can be legitimately applied. Also, new **adaptive** conformal prediction methods have been added. Finally, the documentation has been updated with a new design!
+
+🎉 MAPIE in 2025 🎉 MAPIE v1 is live! This new version introduces major changes to the API. Check out the [release notes](doc/content/getting-started/v1-release-notes.md).
+
+See [GitHub Releases](https://github.com/scikit-learn-contrib/MAPIE/releases) and [HISTORY.md](https://github.com/scikit-learn-contrib/MAPIE/blob/master/HISTORY.md) for up-to-date details on the new features. If you have question about how Mapie works under the hood, please refer to our [full documentation](https://mapie.readthedocs.io/en/latest/)
 
 ## 🛠 Requirements & installation
 
