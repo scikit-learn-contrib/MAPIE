@@ -19,6 +19,8 @@ jobs:
         uses: actions/setup-python@v6
         with:
           python-version: "3.x"
+      - name: Upgrade pip
+        run: python -m pip install --upgrade pip
       - name: Install pypa/build
         run: python3 -m pip install --upgrade build --user
       - name: Build a binary wheel and a source tarball
@@ -58,6 +60,8 @@ jobs:
         uses: actions/setup-python@v6
         with:
           python-version: "3.x"
+      - name: Upgrade pip
+        run: python -m pip install --upgrade pip
       - name: Resolve package version from tag
         id: package-version
         run: |

@@ -35,6 +35,8 @@ jobs:
           # Reuse pip downloads/wheels between runs to speed up CI.
           cache: pip
           cache-dependency-path: pyproject.toml
+      - name: Upgrade pip
+        run: python -m pip install --upgrade pip
       - name: Install project with development extras
         run: python -m pip install -e '.[dev]'
       - name: Check linting
@@ -98,6 +100,8 @@ jobs:
           # Reuse pip downloads/wheels between runs to speed up CI.
           cache: pip
           cache-dependency-path: pyproject.toml
+      - name: Upgrade pip
+        run: python -m pip install --upgrade pip
       - name: Install minimum dependency constraints
         # Force the lowest supported dependency set for compatibility checks.
         if: ${{ matrix.use-pinned-deps }}
@@ -138,6 +142,8 @@ jobs:
           check-latest: true
           cache: pip
           cache-dependency-path: pyproject.toml
+      - name: Upgrade pip
+        run: python -m pip install --upgrade pip
       - name: Install project with development extras
         run: python -m pip install -e '.[dev]'
       - name: Upgrade core scientific dependencies
