@@ -66,5 +66,6 @@
 * Sasha Mitchell <sash.t.mitchell@gmail.com>
 * Jakub Krasuski <Blizzeq>
 * Théodore Rezel <theodore.rezel@capgemini.com>
+* Sebastián Breguel <sebastianbreguel>
 
 To be continued ...

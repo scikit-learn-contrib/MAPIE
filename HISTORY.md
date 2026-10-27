@@ -1,6 +1,8 @@
 # History
 ## 1.x.x (2026-xx-xx)
 
+- Fix `expected_calibration_error` overwriting a non zero-one binary `y_true`
+  in place, and returning a wrong score for labels such as -1 and 0.
 - Add a v0.x migration pointer to the quick start and fix the README link to
   the v1 release notes. (issue #915)
 - Add educational MAPIE notebooks covering regression and conformal prediction
