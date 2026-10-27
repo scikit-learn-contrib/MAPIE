@@ -66,6 +66,7 @@ dev = [
     "mypy==1.19.1",
     "pandas==2.3.3",
     "pre-commit==4.0.1",
+    "virtualenv==21.15.0",
     "pytest==9.0.3",
     "pytest-cov==7.0.0",
     "pytest-xdist==3.8.0",
@@ -86,7 +87,7 @@ docs = [
     "ruff==0.14.3",
     "pymdown-extensions==11.0.1",
     "pandas==2.3.3",
-    "typing_extensions==4.15.0",
+    "typing_extensions==4.16.0",
     "torch==2.13.0",
     "pytorch-lightning==2.6.5",
     "albumentations==2.0.8",
@@ -212,3 +213,7 @@ docstring-code-line-length = "dynamic"
 omit = [
     "mapie/_example_utils.py",
 ]
+
+[tool.uv]
+# uv < 0.13.4 trusts the compromised eMudhra/emSign root CA.
+required-version = ">=0.13.4"

@@ -47,7 +47,7 @@ MAPIE relies notably on the fields of Conformal Prediction and Distribution-Free
 
 MAPIE runs on:
 
-- Python >=3.9
+- Python >=3.10
 - NumPy >=1.23
 - scikit-learn >=1.4
 
