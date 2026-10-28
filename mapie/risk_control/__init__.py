@@ -1,4 +1,5 @@
 from .binary_classification import BinaryClassificationController
+from .binary_classification_crc import BinaryClassificationCRController
 from .fwer_control import (
     FWERBonferroniCorrection,
     FWERBonferroniHolm,
@@ -60,6 +61,7 @@ __all__ = [
     "MultiClassificationLTTController",
     "SemanticSegmentationController",
     "BinaryClassificationController",
+    "BinaryClassificationCRController",
     "BinaryRisk",
     "BinaryClassificationRisk",
     "ContinuousRisk",
