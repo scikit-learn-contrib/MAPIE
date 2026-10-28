@@ -1064,8 +1064,9 @@ def _check_binary_zero_one(y_true: ArrayLike) -> NDArray:
             np.unique(y_true)
         ) == 2:
             idx_min = np.where(y_true == np.min(y_true))[0]
-            y_true[idx_min] = 0
             idx_max = np.where(y_true == np.max(y_true))[0]
+            y_true = y_true.copy()
+            y_true[idx_min] = 0
             y_true[idx_max] = 1
             return y_true
         else:
