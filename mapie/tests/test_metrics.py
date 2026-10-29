@@ -309,6 +309,34 @@ def test_ece_scores() -> None:
     assert np.round(scr, 4) == 0.5363
 
 
+class TestExpectedCalibrationErrorArrayLike:
+    @pytest.mark.parametrize(
+        "scores",
+        [
+            [0.8, 0.7, 0.6],
+            ((0.8, 0.2), (0.3, 0.7), (0.6, 0.4)),
+        ],
+    )
+    def test_default_score_inputs(self, scores: ArrayLike) -> None:
+        score = expected_calibration_error(np.ones(3), scores, num_bins=3)
+        assert score == pytest.approx(0.3)
+
+    @pytest.mark.parametrize(
+        "scores,labels",
+        [
+            (np.array([[0.8, 0.2], [0.3, 0.7], [0.6, 0.4]]), [0, 1, 0]),
+            (np.array([[0.8, 0.2], [0.3, 0.7], [0.6, 0.4]]), (0, 1, 0)),
+            ([[0.8, 0.2], [0.3, 0.7], [0.6, 0.4]], np.array([0, 1, 0])),
+            (((0.8, 0.2), (0.3, 0.7), (0.6, 0.4)), np.array([0, 1, 0])),
+        ],
+    )
+    def test_classwise_inputs(self, scores: ArrayLike, labels: ArrayLike) -> None:
+        score = expected_calibration_error(
+            np.ones(3), scores, num_bins=3, classwise=True, class_labels=labels
+        )
+        assert score == pytest.approx(0.3)
+
+
 def test_ece_classwise_basic() -> None:
     """
     Test that classwise ECE returns a float for valid 2D input.
