@@ -125,12 +125,10 @@ def train_conformalize_test_split(
         random_state=random_state,
         shuffle=shuffle,
     )
-
     if isinstance(train_size, float):
-        test_size_after_split = test_size / (1 - train_size)
+        test_size_after_split = round(test_size * len(X))
     else:
         test_size_after_split = test_size
-
     X_conformalize, X_test, y_conformalize, y_test = train_test_split(
         X_conformalize_test,
         y_conformalize_test,
