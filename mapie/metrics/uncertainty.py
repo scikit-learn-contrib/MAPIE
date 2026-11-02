@@ -176,6 +176,16 @@ def auarc(
     order = np.argsort(-confidence_arr, kind="stable")
     correctness_sorted = correctness_arr[order]
 
+    # Samples with equal confidence have no meaningful order between them,
+    # so each one gets the mean correctness of its tie group. This gives the
+    # expected curve over all orderings of the ties, independent of the order
+    # in which the samples were passed.
+    _, group_starts, group_sizes = np.unique(
+        -confidence_arr[order], return_index=True, return_counts=True
+    )
+    group_means = np.add.reduceat(correctness_sorted, group_starts) / group_sizes
+    correctness_sorted = np.repeat(group_means, group_sizes)
+
     # accuracy_at_k[k] = accuracy when we retain the top k most
     # confident samples (k = n, n-1, ..., 1).
     cumulative_correct = np.cumsum(correctness_sorted)
