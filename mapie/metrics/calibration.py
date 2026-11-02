@@ -177,7 +177,7 @@ def expected_calibration_error(
     """
     split_strategy = _check_split_strategy(split_strategy)
     num_bins = _check_number_bins(num_bins)
-    y_scores = cast(NDArray, y_scores)
+    y_scores = np.asarray(y_scores)
 
     # classwise ECE
     if classwise:
@@ -188,7 +188,7 @@ def expected_calibration_error(
             )
         if class_labels is None:
             raise ValueError("class_labels must be provided when classwise=True.")
-        class_labels = cast(NDArray, class_labels)
+        class_labels = np.asarray(class_labels)
         n_classes = y_scores.shape[1]
         ece = float(0.0)
         for c in range(n_classes):
