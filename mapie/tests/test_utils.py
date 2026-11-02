@@ -113,6 +113,29 @@ class TestTrainConformalizeTestSplit:
         assert len(X_conformalize) == 20
         assert len(X_test) == 20
 
+    @pytest.mark.parametrize(
+        "n_samples, expected_sizes",
+        [
+            (1000, (800, 100, 100)),
+            (10, (8, 1, 1)),
+        ],
+    )
+    def test_3_float_sizes_avoid_rounding_errors(self, n_samples, expected_sizes):
+        X = np.arange(n_samples).reshape(-1, 1)
+        y = np.arange(n_samples)
+
+        result = train_conformalize_test_split(
+            X,
+            y,
+            train_size=0.8,
+            conformalize_size=0.1,
+            test_size=0.1,
+            random_state=random_state,
+        )
+
+        assert tuple(len(part) for part in result[:3]) == expected_sizes
+        assert tuple(len(part) for part in result[3:]) == expected_sizes
+
     def test_3_ints(self, dataset):
         X, y = dataset
         (X_train, X_conformalize, X_test, y_train, y_conformalize, y_test) = (
