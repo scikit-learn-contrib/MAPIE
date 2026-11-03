@@ -92,7 +92,7 @@ uv run pre-commit install
 
 ## Make your contribution visible
 
-1. If your change is user-facing (bug fix, feature, ...), add a line to describe it in [HISTORY.md](https://github.com/scikit-learn-contrib/MAPIE/blob/master/HISTORY.md)
+1. If your change is user-facing (bug fix, feature, ...), add a short line to describe it in [HISTORY.md](https://github.com/scikit-learn-contrib/MAPIE/blob/master/HISTORY.md)
 2. If you want to be acknowledged for your contribution, add your name to the Contributors section of [AUTHORS.md](https://github.com/scikit-learn-contrib/MAPIE/blob/master/AUTHORS.md)
 
 
@@ -167,8 +167,8 @@ mkdocs serve
 Read the Docs builds the documentation from `mkdocs.yml`. Check the Read the Docs build linked from the pull request when documentation changes are submitted.
 
 
+## LLM Usage
 
-
-
-
-
+If you use an LLM for your contribution, please follow these guidelines:
+- Be transparent by stating in your PR description which LLM you used and for what purpose.
+- Carefully review and verify all LLM-generated content, including code and the PR or issue description. Do not publish a PR or an issue without reviewing it first.

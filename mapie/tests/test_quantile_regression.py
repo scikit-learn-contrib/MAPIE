@@ -453,8 +453,10 @@ def test_for_small_dataset() -> None:
 
 
 def test_compute_regression_quantile_raises_when_level_infeasible() -> None:
-    """A corrected level above 1.0 must raise, not silently clip to max(scores)."""
-    # n_eff=7, alpha_up=0.95 -> ceil(0.95 * 8) / 7 = 1.142... > 1.0
+    """
+    A corrected level above 1.0 must raise, not silently clip to max(scores).
+    In this example : n_eff=7, alpha_up=0.95 -> ceil(0.95 * 8) / 7 = 1.142... > 1.0
+    """
     scores = np.linspace(-1, 1, 7).reshape(-1, 1)
     alpha_up = np.array([0.95])
     with pytest.raises(ValueError, match="too low to reach the requested level"):

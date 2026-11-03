@@ -7,6 +7,7 @@ from .fwer_control import (
     control_fwer,
 )
 from .multi_label_classification import MultiLabelClassificationController
+from .multi_classification import MultiClassificationLTTController
 from .risks import (
     BinaryRisk,
     BinaryClassificationRisk,
@@ -56,6 +57,7 @@ __all__ = [
     "miscoverage_loss",
     "recall_loss",
     "MultiLabelClassificationController",
+    "MultiClassificationLTTController",
     "SemanticSegmentationController",
     "BinaryClassificationController",
     "BinaryRisk",

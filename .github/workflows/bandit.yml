@@ -1,11 +1,6 @@
 name: Bandit
 
-on:
-  push:
-    branches:
-      - master
-  pull_request:
-    types: [opened, synchronize, reopened, ready_for_review]
+on: workflow_dispatch
 
 jobs:
     analyze:
@@ -15,3 +10,5 @@ jobs:
         steps:
             - name: Perform Bandit Analysis
               uses: PyCQA/bandit-action@v1
+              with:
+                python-version: '3.10'

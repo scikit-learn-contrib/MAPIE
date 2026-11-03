@@ -13,6 +13,7 @@ MAPIE is a scikit-learn-compatible library for uncertainty quantification (confo
 - Prefer clean, minimal, readable code. The simplest solution that fully solves the problem is the best one.
 - Make the smallest change that accomplishes the task. Don't refactor, rename, or reformat code unrelated to what you were asked to do.
 - Match the style, naming, and idioms of the surrounding code rather than introducing new patterns.
+- Keep comments, docstrings and PR description as concise as possible.
 
 ## Environment & common commands
 
@@ -51,7 +52,7 @@ Pre-commit hooks (format-fix, lint, type-check; not tests) can be installed with
 - `ruff` lint rule set is narrow (`E4`, `E7`, `E9`, `F`); line length 88; target Python 3.9 (the library must run on 3.9+).
 - Public classes/functions need numpy-style docstrings with a runnable doctest. `BinaryClassificationController` is cited as the reference example.
 - Any estimator must follow the scikit-learn API (`BaseEstimator` + the relevant mixin, `clone`-able, `check_is_fitted`).
-- User-facing changes get a line in `HISTORY.md`.
+- User-facing changes are briefly described in the `HISTORY.md`.
 - A new method should be backed by a peer-reviewed publication; otherwise it goes under `mapie/experimental/`.
 
 ## Architecture
