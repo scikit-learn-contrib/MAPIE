@@ -8,6 +8,7 @@ from unittest.mock import patch
 import numpy as np
 import pytest
 from numpy.typing import ArrayLike, NDArray
+from scipy.sparse import csr_matrix
 from sklearn.datasets import make_classification, make_regression
 from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.model_selection import BaseCrossValidator, KFold, LeaveOneOut, ShuffleSplit
@@ -221,6 +222,38 @@ class TestTrainConformalizeTestSplit:
             )
         )
         assert np.array_equal(np.concatenate((y_train, y_conformalize, y_test)), y)
+
+    @pytest.mark.parametrize(
+        "train_size, conformalize_size, test_size",
+        [(60, 20, 20), (0.6, 0.2, 0.2)],
+    )
+    def test_sparse_X_matches_dense_X(
+        self, dataset, train_size, conformalize_size, test_size
+    ):
+        X, y = dataset
+        sparse_splits = train_conformalize_test_split(
+            csr_matrix(X),
+            y,
+            train_size=train_size,
+            conformalize_size=conformalize_size,
+            test_size=test_size,
+            random_state=random_state,
+        )
+        dense_splits = train_conformalize_test_split(
+            X,
+            y,
+            train_size=train_size,
+            conformalize_size=conformalize_size,
+            test_size=test_size,
+            random_state=random_state,
+        )
+        X_sparse_splits, y_sparse_splits = sparse_splits[:3], sparse_splits[3:]
+        X_dense_splits, y_dense_splits = dense_splits[:3], dense_splits[3:]
+        assert [X_part.shape[0] for X_part in X_sparse_splits] == [60, 20, 20]
+        for X_sparse_part, X_dense_part in zip(X_sparse_splits, X_dense_splits):
+            np.testing.assert_array_equal(X_sparse_part.toarray(), X_dense_part)
+        for y_sparse_part, y_dense_part in zip(y_sparse_splits, y_dense_splits):
+            np.testing.assert_array_equal(y_sparse_part, y_dense_part)
 
 
 class TestCheckValidLTTParamsIndex:
