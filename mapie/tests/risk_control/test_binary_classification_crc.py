@@ -236,3 +236,9 @@ def test_expected_risk_is_controlled_on_synthetic_data(monotonicity):
     assert mean_risk <= alpha + 3 * standard_error
     # the procedure should not be trivially conservative
     assert mean_risk >= alpha - 0.05
+
+
+def test_calibrate_empty_calibration_set_raises():
+    controller = make()
+    with pytest.raises(ValueError, match="at least one sample"):
+        controller.calibrate(np.empty((0, 1)), np.array([]))

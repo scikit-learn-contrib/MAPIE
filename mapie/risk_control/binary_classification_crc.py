@@ -206,6 +206,9 @@ class BinaryClassificationCRController(BaseEstimator):
         """
         self._check_parameters()
 
+        if len(y_calibrate) == 0:
+            raise ValueError("The calibration set must contain at least one sample.")
+
         y = self._encode_labels(y_calibrate)
         proba = self._get_positive_proba(X_calibrate)
 
@@ -213,9 +216,6 @@ class BinaryClassificationCRController(BaseEstimator):
             raise ValueError(
                 "X_calibrate and y_calibrate must have the same number of samples."
             )
-
-        if len(y) == 0:
-            raise ValueError("The calibration set must contain at least one sample.")
 
         thresholds = np.unique(np.concatenate([[-np.inf], proba, [np.inf]]))
 
