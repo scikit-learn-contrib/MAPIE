@@ -206,7 +206,7 @@ class BinaryClassificationCRController(BaseEstimator):
         """
         self._check_parameters()
 
-        if len(y_calibrate) == 0:
+        if np.asarray(y_calibrate).size == 0:
             raise ValueError("The calibration set must contain at least one sample.")
 
         y = self._encode_labels(y_calibrate)
