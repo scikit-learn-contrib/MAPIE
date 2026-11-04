@@ -19,6 +19,7 @@
   regression methods. (issue #991)
 - Fix `CrossConformalizedQuantileRegressor` CV+ algorithm to compute quantiles of pprediction + scores instead of quantiles of aggregated predictions + scores.
 - Add `MultiClassificationLTTController` for risk control with multiclassification problems. 
+- Add `BinaryClassificationCRController` for Conformal Risk Control in binary classification, with custom bounded monotone per-example losses. (issue #1001)
 
 
 ## 1.5.0 (2026-xx-xx)
