@@ -20,6 +20,8 @@ This directory contains educational notebooks, some of which have been imported 
 control methods from the MAPIE library for binary text classification
 - `binary_risk_control_for_llm_correction.ipynb` : completed version of the binary
 risk control.
+- `classification_use_case.ipynb` : conformal prediction on a classification example
+- `classification_use_case_correction.ipynb` : completed version
 
 The `cosmosqa_10k.json`, `use_case_files/`, and `utils/` contents are copied
 from the same source because the notebooks depend on them.
