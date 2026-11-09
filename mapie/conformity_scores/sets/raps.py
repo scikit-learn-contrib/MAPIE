@@ -84,7 +84,8 @@ class RAPSConformityScore(APSConformityScore):
         """
         super().set_external_attributes(**kwargs)
         self.label_encoder_ = cast(LabelEncoder, label_encoder)
-        self.size_raps = size_raps
+        if size_raps is not None:
+            self.size_raps = size_raps
 
     def split_data(
         self,

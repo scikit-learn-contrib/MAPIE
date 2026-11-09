@@ -20,6 +20,7 @@ from typing_extensions import Self
 
 from mapie.classification import SplitConformalClassifier, CrossConformalClassifier
 from mapie.conformity_scores import (
+    APSConformityScore,
     LACConformityScore,
     RAPSConformityScore,
     GammaConformityScore,
@@ -224,6 +225,93 @@ def test_split(params: dict) -> None:
         n_classes,
         n_confidence_level,
     )
+
+
+def _make_raps_data(n_conformalize: int = 100) -> Tuple[NDArray, NDArray, Any]:
+    rng = np.random.default_rng(0)
+    means = np.array([[0.0, 0.0], [2.0, 0.0], [0.0, 2.0], [2.0, 2.0]])
+    y_train = rng.integers(0, 4, 400)
+    estimator = LogisticRegression().fit(
+        means[y_train] + rng.normal(size=(400, 2)), y_train
+    )
+    y_conformalize = rng.integers(0, 4, n_conformalize)
+    X_conformalize = means[y_conformalize] + rng.normal(size=(n_conformalize, 2))
+    return X_conformalize, y_conformalize, estimator
+
+
+@pytest.mark.parametrize("size_raps", [0.2, 0.5])
+def test_split_raps_preserves_configured_size(size_raps: float) -> None:
+    """Test that RAPS uses and preserves its configured split size."""
+    X_conformalize, y_conformalize, estimator = _make_raps_data()
+    score = RAPSConformityScore(size_raps=size_raps)
+    classifier = SplitConformalClassifier(
+        estimator=estimator,
+        conformity_score=score,
+        prefit=True,
+        random_state=RANDOM_STATE,
+    )
+
+    classifier.conformalize(X_conformalize, y_conformalize)
+
+    assert len(X_conformalize) - score.n_samples_ == int(
+        np.ceil(size_raps * len(X_conformalize))
+    )
+    assert score.size_raps == size_raps
+
+
+def test_split_raps_uses_default_size() -> None:
+    """Test that RAPS keeps and uses its documented default split size."""
+    X_conformalize, y_conformalize, estimator = _make_raps_data()
+    score = RAPSConformityScore()
+    classifier = SplitConformalClassifier(
+        estimator=estimator,
+        conformity_score=score,
+        prefit=True,
+        random_state=RANDOM_STATE,
+    )
+
+    classifier.conformalize(X_conformalize, y_conformalize)
+
+    assert len(X_conformalize) - score.n_samples_ == 20
+    assert score.size_raps == 0.2
+
+
+def test_raps_set_external_attributes_overrides_size() -> None:
+    """Test that an explicit external RAPS size overrides its configuration."""
+    score = RAPSConformityScore()
+
+    score.set_external_attributes(size_raps=0.5)
+
+    assert score.size_raps == 0.5
+
+
+def test_split_raps_default_size_allows_four_classes() -> None:
+    """Test that the default RAPS split supports four classes on 30 samples."""
+    X_conformalize, y_conformalize, estimator = _make_raps_data(30)
+    score = RAPSConformityScore()
+    classifier = SplitConformalClassifier(
+        estimator=estimator,
+        conformity_score=score,
+        prefit=True,
+        random_state=RANDOM_STATE,
+    )
+
+    classifier.conformalize(X_conformalize, y_conformalize)
+
+    assert len(X_conformalize) - score.n_samples_ == 6
+
+
+def test_split_aps_is_unaffected_by_raps_configuration() -> None:
+    """Test that APS conformalization remains available."""
+    X_conformalize, y_conformalize, estimator = _make_raps_data()
+    classifier = SplitConformalClassifier(
+        estimator=estimator,
+        conformity_score=APSConformityScore(),
+        prefit=True,
+        random_state=RANDOM_STATE,
+    )
+
+    classifier.conformalize(X_conformalize, y_conformalize)
 
 
 params_test_cases_classification_cross = [
