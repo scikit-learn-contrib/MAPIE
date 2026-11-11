@@ -65,6 +65,7 @@
 * Shivam Lalakiya <shivamlalakiya151299@gmail.com>
 * Sasha Mitchell <sash.t.mitchell@gmail.com>
 * Jakub Krasuski <Blizzeq>
+* ktz03
 * Théodore Rezel <theodore.rezel@capgemini.com>
 
 To be continued ...
