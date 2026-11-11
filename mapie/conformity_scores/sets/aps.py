@@ -151,6 +151,7 @@ class APSConformityScore(NaiveConformityScore):
         conformity_scores, self.cutoff = self.get_true_label_cumsum_proba(
             y, y_pred, classes
         )
+        self.non_randomized_conformity_scores_ = conformity_scores.copy()
         y_proba_true = np.take_along_axis(y_pred, y_enc.reshape(-1, 1), axis=1)
         random_state = check_random_state(self.random_state)
         u = random_state.uniform(size=len(y_pred)).reshape(-1, 1)
@@ -164,6 +165,7 @@ class APSConformityScore(NaiveConformityScore):
         alpha_np: NDArray,
         cv: Optional[Union[int, str, BaseCrossValidator]],
         agg_scores: Optional[str] = "mean",
+        include_last_label: Optional[Union[bool, str]] = True,
         **kwargs,
     ) -> NDArray:
         """
@@ -188,11 +190,22 @@ class APSConformityScore(NaiveConformityScore):
 
             By default `"mean"`.
 
+        include_last_label: Optional[Union[bool, str]]
+            Whether or not to include last label in prediction sets.
+            Choose among `False`, `True` or `"randomized"`.
+
+            By default `True`.
+
         Returns
         --------
         NDArray
             Array of quantiles with respect to alpha_np.
         """
+        if include_last_label is False and hasattr(
+            self, "non_randomized_conformity_scores_"
+        ):
+            conformity_scores = self.non_randomized_conformity_scores_
+
         n = len(conformity_scores)
 
         if cv == "prefit" or agg_scores in ["mean"]:
