@@ -1,6 +1,9 @@
 # History
 ## 1.x.x (2026-xx-xx)
 
+- Fix `auarc` to average correctness over samples with tied confidence. The
+  score previously depended on the order in which tied samples were passed,
+  e.g. for split-conformal regression where all intervals share one width.
 - Add a v0.x migration pointer to the quick start and fix the README link to
   the v1 release notes. (issue #915)
 - Add educational MAPIE notebooks covering regression and conformal prediction
