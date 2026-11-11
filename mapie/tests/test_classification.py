@@ -25,7 +25,7 @@ from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.preprocessing import OneHotEncoder
 from typing_extensions import TypedDict
 
-from mapie.classification import _MapieClassifier
+from mapie.classification import SplitConformalClassifier, _MapieClassifier
 from mapie.conformity_scores import (
     APSConformityScore,
     BaseClassificationScore,
@@ -35,7 +35,11 @@ from mapie.conformity_scores import (
     TopKConformityScore,
 )
 from mapie.metrics.classification import classification_coverage_score
-from mapie.utils import check_is_fitted, check_proba_normalized
+from mapie.utils import (
+    _compute_classification_quantile,
+    check_is_fitted,
+    check_proba_normalized,
+)
 
 random_state = 42
 
@@ -249,7 +253,7 @@ COVERAGES = {
     "aps_not_include": 5 / 9,
     "aps_randomized": 5 / 9,
     "aps_include_cv_mean": 1.0,
-    "aps_not_include_cv_mean": 5 / 9,
+    "aps_not_include_cv_mean": 7 / 9,
     "aps_randomized_cv_mean": 8 / 9,
     "aps_include_cv_crossval": 4 / 9,
     "aps_not_include_cv_crossval": 1 / 9,
@@ -352,10 +356,10 @@ y_toy_mapie = {
         [True, False, False],
         [True, False, False],
         [True, False, False],
-        [False, True, False],
-        [False, True, False],
-        [False, True, False],
-        [False, True, False],
+        [True, True, False],
+        [True, True, False],
+        [False, True, True],
+        [False, True, True],
         [False, False, True],
         [False, False, True],
     ],
@@ -1707,3 +1711,62 @@ def test_sample_weight_as_top_level_kwarg_raises() -> None:
     mapie_clf = _MapieClassifier(estimator=clf, cv="prefit")
     with pytest.raises(TypeError, match="fit_params"):
         mapie_clf.fit(X_toy, y_toy, sample_weight=np.ones(len(X_toy)))
+
+
+def test_aps_include_last_label_modes_and_coverage() -> None:
+    """Test that include_last_label=False uses non-randomized calibration threshold and covers."""
+    X, y = make_classification(
+        n_samples=1000,
+        n_classes=4,
+        n_informative=6,
+        random_state=42,
+    )
+    X_train, X_cal, y_train, y_cal = train_test_split(
+        X[:500], y[:500], test_size=0.5, random_state=42
+    )
+    X_test, y_test = X[500:], y[500:]
+    clf = LogisticRegression().fit(X_train, y_train)
+
+    mapie = SplitConformalClassifier(
+        estimator=clf,
+        confidence_level=0.9,
+        conformity_score="aps",
+        prefit=True,
+        random_state=42,
+    )
+    mapie.conformalize(X_cal, y_cal)
+
+    cs_func = mapie._mapie_classifier.conformity_score_function_
+    y_pred_proba_cal = clf.predict_proba(X_cal)
+    expected_non_rand_scores, _ = cs_func.get_true_label_cumsum_proba(
+        y_cal, y_pred_proba_cal, clf.classes_
+    )
+    expected_q_non_rand = _compute_classification_quantile(
+        expected_non_rand_scores, np.array([0.1])
+    )
+    expected_q_rand = _compute_classification_quantile(
+        mapie.conformity_scores, np.array([0.1])
+    )
+
+    assert expected_q_non_rand > expected_q_rand
+
+    # include_last_label=False uses non-randomized threshold
+    _, sets_false = mapie.predict_set(
+        X_test, conformity_score_params={"include_last_label": False}
+    )
+    np.testing.assert_allclose(cs_func.quantiles_, expected_q_non_rand)
+    coverage_false = classification_coverage_score(y_test, sets_false)[0]
+    assert coverage_false >= 0.9 - 1 / np.sqrt(len(y_test))
+
+    # include_last_label=True uses randomized threshold
+    _, sets_true = mapie.predict_set(
+        X_test, conformity_score_params={"include_last_label": True}
+    )
+    np.testing.assert_allclose(cs_func.quantiles_, expected_q_rand)
+
+    # include_last_label="randomized" uses randomized threshold
+    _, sets_rand = mapie.predict_set(
+        X_test, conformity_score_params={"include_last_label": "randomized"}
+    )
+    np.testing.assert_allclose(cs_func.quantiles_, expected_q_rand)
+
