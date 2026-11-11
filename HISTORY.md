@@ -19,6 +19,11 @@
   regression methods. (issue #991)
 - Fix `CrossConformalizedQuantileRegressor` CV+ algorithm to compute quantiles of pprediction + scores instead of quantiles of aggregated predictions + scores.
 - Add `MultiClassificationLTTController` for risk control with multiclassification problems. 
+- Fix `APSConformityScore` under-coverage when predicting with
+  `include_last_label=False`: the calibration quantile now uses the
+  non-randomized cumulative scores so the threshold matches the deterministic
+  prediction rule; `include_last_label=True` and `include_last_label="randomized"`
+  are unaffected. (issue #1021)
 
 
 ## 1.5.0 (2026-xx-xx)
