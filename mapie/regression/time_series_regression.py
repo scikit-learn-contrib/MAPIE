@@ -7,6 +7,8 @@ import numpy as np
 from numpy.typing import ArrayLike, NDArray
 from sklearn.base import RegressorMixin
 from sklearn.model_selection import BaseCrossValidator
+from sklearn.utils import _safe_indexing, indexable
+from sklearn.utils.validation import column_or_1d
 
 from mapie.conformity_scores import BaseRegressionScore
 from mapie.regression.regression import _MapieRegressor
@@ -254,8 +256,8 @@ class TimeSeriesRegressor(_MapieRegressor):
         X: ArrayLike of shape (n_samples, n_features)
             Input data.
 
-        y: ArrayLike of shape (n_samples_test,)
-            Input labels.
+        y: ArrayLike of shape (n_samples,)
+            Input labels in the same row order as `X`.
 
         ensemble: bool
             Boolean determining whether the predictions are ensembled or not.
@@ -290,8 +292,7 @@ class TimeSeriesRegressor(_MapieRegressor):
         Raises
         ------
         ValueError
-            If the length of `y` is greater than
-            the length of the training set.
+            If `X` and `y` contain different numbers of samples.
         """
         if self.method != "aci":
             raise AttributeError(
@@ -301,7 +302,7 @@ class TimeSeriesRegressor(_MapieRegressor):
 
         check_is_fitted(self)
         self._check_gamma(gamma)
-        X, y = cast(NDArray, X), cast(NDArray, y)
+        X, targets = indexable(X, column_or_1d(y))
 
         self._get_alpha()
         alpha = self._transform_confidence_level_to_alpha_array(confidence_level)
@@ -309,8 +310,8 @@ class TimeSeriesRegressor(_MapieRegressor):
             alpha = np.array(list(self.current_alpha.keys()))
         alpha_np = cast(NDArray, alpha)
 
-        for x_row, y_row in zip(X, y):
-            x = np.expand_dims(x_row, axis=0)
+        for row, y_row in enumerate(targets):
+            x = _safe_indexing(X, slice(row, row + 1))
             _, y_pred_bounds = self.predict(
                 x,
                 ensemble=ensemble,
