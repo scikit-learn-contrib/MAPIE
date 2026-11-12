@@ -3,8 +3,10 @@ from __future__ import annotations
 from typing import Any, Optional, Tuple, Union
 
 import numpy as np
+import pandas as pd
 import pytest
 from numpy.typing import NDArray
+from scipy.sparse import csr_matrix
 from sklearn import __version__ as sklearn_version
 from sklearn.datasets import make_regression
 from sklearn.linear_model import LinearRegression
@@ -473,6 +475,46 @@ def test_aci__get_alpha_with_unknown_alpha() -> None:
         X_toy, y_toy, gamma=0.1, confidence_level=0.8
     )
     np.testing.assert_allclose(mapie_ts_reg.current_alpha[0.2], 0.3, rtol=1e-3)
+
+
+class TestACIAdaptationInputs:
+    @pytest.mark.parametrize("input_format", ["numpy", "pandas", "sparse"])
+    @pytest.mark.filterwarnings("error:X does not have valid feature names:UserWarning")
+    def test_processes_every_observation(self, input_format: str) -> None:
+        X_train, y_train = X[:50, :2], y[:50]
+        X_next, y_next = X[50:53, :2], np.full(3, 1e6)
+        if input_format == "pandas":
+            columns = ["lag_1", "lag_2"]
+            index = pd.date_range("2024-01-01", periods=3)
+            X_train = pd.DataFrame(X_train, columns=columns)
+            X_next = pd.DataFrame(X_next, columns=columns, index=index)
+            y_next = pd.Series(y_next, index=index)
+        elif input_format == "sparse":
+            X_next = csr_matrix(X_next)
+
+        regressor = TimeSeriesRegressor(method="aci").fit(X_train, y_train)
+        regressor.adapt_conformal_inference(
+            X_next, y_next, gamma=0.02, confidence_level=0.8
+        )
+
+        # Each of the three targets lies outside its predicted interval.
+        assert regressor.current_alpha[0.2] == pytest.approx(0.152)
+
+    @pytest.mark.parametrize("n_rows, n_targets", [(3, 2), (2, 3)])
+    def test_rejects_mismatched_lengths(self, n_rows: int, n_targets: int) -> None:
+        regressor = TimeSeriesRegressor(method="aci").fit(X[:50], y[:50])
+        regressor.predict(X[50:51], confidence_level=0.8)
+        previous_alpha = regressor.current_alpha.copy()
+
+        with pytest.raises(ValueError, match="inconsistent numbers of samples"):
+            regressor.adapt_conformal_inference(
+                X[50 : 50 + n_rows],
+                np.full(n_targets, 1e6),
+                gamma=0.02,
+                confidence_level=0.8,
+            )
+
+        assert regressor.current_alpha == previous_alpha
 
 
 @pytest.mark.parametrize("method", ["wrong_method"])
