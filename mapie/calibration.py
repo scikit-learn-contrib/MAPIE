@@ -601,7 +601,8 @@ class TopLabelCalibrator(BaseEstimator, ClassifierMixin):
         n = _num_samples(max_prob)
         calibrated_test_values = np.full((n, self.n_classes_), np.nan)
 
-        for idx, label in enumerate(np.unique(y_pred)):
+        for label in np.unique(y_pred):
+            idx = int(np.flatnonzero(self.classes_ == label)[0])
             self._pred_proba_calib(
                 idx,
                 label,
