@@ -660,6 +660,9 @@ def test_invalid_alpha(alpha: Any) -> None:
         [0.05, 0.95],
         (0.05, 0.95),
         np.array([0.05, 0.95]),
+        np.float32(0.95),
+        np.float16(0.95),
+        np.array([0.05, 0.95], dtype=np.float32),
         None,
     ],
 )
