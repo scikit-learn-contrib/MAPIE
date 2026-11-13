@@ -470,15 +470,15 @@ results_binning = {
         1,
     ],
     "array split": [
-        0.62689056,
+        0.16413419,
+        0.29534353,
+        0.40518559,
+        0.52721004,
+        0.61879477,
+        0.68998682,
         0.74743526,
-        0.87642114,
-        0.88321124,
-        0.8916548,
-        0.94083846,
-        0.94999075,
-        0.98759822,
-        0.99610621,
+        0.82999425,
+        0.89165480,
         np.inf,
     ],
 }
@@ -1417,3 +1417,31 @@ def test_va_calibrator_p0_p1_output_inductive_multiclass() -> None:
     assert isinstance(p0_p1, list)
     # Should have C*(C-1)/2 = 3 pairs for 3 classes
     assert len(p0_p1) == 3
+
+
+class TestArraySplitCalibrationBins:
+    @pytest.mark.parametrize(
+        "order", [[0, 1, 2, 3, 4, 5], [0, 3, 1, 4, 2, 5], [5, 4, 3, 2, 1, 0]]
+    )
+    def test_expected_calibration_error_is_order_invariant(self, order):
+        scores = np.array([0.1, 0.2, 0.3, 0.7, 0.8, 0.9])
+        targets = np.array([0, 0, 0, 1, 1, 1])
+        result = expected_calibration_error(
+            targets[order], scores[order], num_bins=2, split_strategy="array split"
+        )
+        assert result == pytest.approx(0.2)
+
+    @pytest.mark.parametrize(
+        "order", [[0, 1, 2, 3, 4, 5], [0, 3, 1, 4, 2, 5], [5, 4, 3, 2, 1, 0]]
+    )
+    def test_top_label_ece_is_order_invariant(self, order):
+        scores = np.array([0.51, 0.55, 0.6, 0.7, 0.8, 0.9])
+        targets = np.array([0, 0, 0, 1, 1, 1])
+        result = top_label_ece(
+            targets[order],
+            scores[order],
+            y_score_arg=np.ones(6),
+            num_bins=2,
+            split_strategy="array split",
+        )
+        assert result == pytest.approx((0.51 + 0.55 + 0.6 + 0.3 + 0.2 + 0.1) / 6)

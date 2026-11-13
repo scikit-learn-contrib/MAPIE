@@ -1,6 +1,9 @@
 # History
 ## 1.x.x (2026-xx-xx)
 
+- Fix array-split calibration bins to sort probabilities before splitting,
+  making calibration errors independent of sample order.
+
 - Add a v0.x migration pointer to the quick start and fix the README link to
   the v1 release notes. (issue #915)
 - Add educational MAPIE notebooks covering regression and conformal prediction
