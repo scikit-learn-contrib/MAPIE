@@ -1,6 +1,9 @@
 # History
 ## 1.x.x (2026-xx-xx)
 
+- Fix `TopLabelCalibrator.predict_proba` to retain the fitted class columns
+  when a prediction batch contains only some classes.
+
 - Add a v0.x migration pointer to the quick start and fix the README link to
   the v1 release notes. (issue #915)
 - Add educational MAPIE notebooks covering regression and conformal prediction
