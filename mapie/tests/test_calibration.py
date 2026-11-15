@@ -1,6 +1,8 @@
 from inspect import signature
 from typing import Any, Optional, Union
 
+import warnings
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -553,6 +555,20 @@ def test_va_invalid_cv_argument(cv: str) -> None:
     with pytest.raises(ValueError, match=r".*Invalid cv argument*"):
         va_cal = VennAbersCalibrator(estimator=GaussianNB(), cv=cv)
         va_cal.fit(X_binary_train, y_binary_train)
+
+
+def test_va_no_runtime_warnings() -> None:
+    """Calibration must not leak the internal divide-by-zero warnings."""
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        va_cal = VennAbersCalibrator(estimator=GaussianNB(), cv=None, inductive=True)
+        va_cal.fit(X_binary_train, y_binary_train)
+        va_cal.predict_proba(X_binary_test)
+
+    runtime_warnings = [
+        warning for warning in caught if issubclass(warning.category, RuntimeWarning)
+    ]
+    assert runtime_warnings == []
 
 
 def test_va_prefit_unfitted_estimator_raises_error() -> None:

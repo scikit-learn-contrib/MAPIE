@@ -16,6 +16,16 @@ def _geo_mean(a):
     return a.prod(axis=1) ** (1.0 / a.shape[1])
 
 
+def _nanmin_without_warning(values):
+    """Return ``np.nanmin`` without warning when every value is NaN."""
+    return np.nanmin(values) if not np.all(np.isnan(values)) else np.nan
+
+
+def _nanmax_without_warning(values):
+    """Return ``np.nanmax`` without warning when every value is NaN."""
+    return np.nanmax(values) if not np.all(np.isnan(values)) else np.nan
+
+
 def calc_p0p1(p_cal, y_cal, precision=None):
     """
     Function that calculates isotonic calibration vectors
@@ -105,16 +115,20 @@ def calc_p0p1(p_cal, y_cal, precision=None):
         P1[i, :] = P1[i, :] - 1
 
         if i == 0:
-            grads = np.divide(P1[:, 1], P1[:, 0])
-            grad = np.nanmin(grads)
+            # Zero denominators are expected here and handled by the NaN-aware
+            # reductions below; do not warn about them on every calibration.
+            with np.errstate(divide="ignore", invalid="ignore"):
+                grads = np.divide(P1[:, 1], P1[:, 0])
+            grad = _nanmin_without_warning(grads)
             p1[i, 1] = grad
             c_point = 0
         else:
             imp_point = P1[c_point, 1] + (P1[i, 0] - P1[c_point, 0]) * grad
 
             if P1[i, 1] < imp_point:
-                grads = np.divide((P1[i:, 1] - P1[i, 1]), (P1[i:, 0] - P1[i, 0]))
-                if np.sum(np.isnan(np.nanmin(grads))) == 0:
+                with np.errstate(divide="ignore", invalid="ignore"):
+                    grads = np.divide((P1[i:, 1] - P1[i, 1]), (P1[i:, 0] - P1[i, 0]))
+                if not np.all(np.isnan(grads)):
                     grad = np.nanmin(grads)
                 c_point = i
                 p1[i, 1] = grad
@@ -130,15 +144,17 @@ def calc_p0p1(p_cal, y_cal, precision=None):
         P0[i, 0] = P0[i, 0] + 1
 
         if i == len(p1) - 1:
-            grads = np.divide((P0[:, 1] - P0[i, 1]), (P0[:, 0] - P0[i, 0]))
-            grad = np.nanmax(grads)
+            with np.errstate(divide="ignore", invalid="ignore"):
+                grads = np.divide((P0[:, 1] - P0[i, 1]), (P0[:, 0] - P0[i, 0]))
+            grad = _nanmax_without_warning(grads)
             p0[i, 1] = grad
             c_point = i
         else:
             imp_point = P0[c_point, 1] + (P0[i, 0] - P0[c_point, 0]) * grad
 
             if P0[i, 1] < imp_point:
-                grads = np.divide((P0[:, 1] - P0[i, 1]), (P0[:, 0] - P0[i, 0]))
+                with np.errstate(divide="ignore", invalid="ignore"):
+                    grads = np.divide((P0[:, 1] - P0[i, 1]), (P0[:, 0] - P0[i, 0]))
                 grads[i:] = 0
                 grad = np.nanmax(grads)
                 c_point = i
