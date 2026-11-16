@@ -2,16 +2,14 @@
 RAPS: Regularized Adaptive Prediction Sets
 ===========================================
 
-In this example, we demonstrate the Regularized Adaptive Prediction Sets
-(RAPS) method introduced by Angelopoulos et al. (2021). RAPS extends the
-Adaptive Prediction Sets (APS) method by adding a regularization penalty
-that encourages smaller prediction sets without sacrificing coverage.
+In this example, we show how to use the Regularized Adaptive Prediction Sets
+(RAPS) method introduced by Angelopoulos et al. (2021) with
+:class:`~mapie.classification.SplitConformalClassifier`.
 
-We compare the prediction sets obtained by APS and RAPS on a multi-class
-classification task. Both methods guarantee marginal coverage, but RAPS
-uses a learned penalty (lambda, k) to discourage including low-probability
-classes — an advantage that is most visible with many classes or weak
-classifiers.
+RAPS extends the Adaptive Prediction Sets (APS) method with a regularization
+penalty that discourages including low-probability classes in the prediction
+sets. The penalty is controlled by two hyperparameters (lambda and k), which
+MAPIE tunes automatically on a fraction of the conformalization data.
 
 Reference:
 Anastasios Nikolas Angelopoulos, Stephen Bates, Michael Jordan,
@@ -30,13 +28,12 @@ from sklearn.datasets import make_classification
 from sklearn.ensemble import GradientBoostingClassifier
 
 from mapie.classification import SplitConformalClassifier
+from mapie.conformity_scores import RAPSConformityScore
 from mapie.metrics.classification import (
     classification_coverage_score,
     classification_mean_width_score,
 )
 from mapie.utils import train_conformalize_test_split
-
-np.random.seed(42)
 
 X, y = make_classification(
     n_samples=5000,
@@ -48,7 +45,7 @@ X, y = make_classification(
 )
 
 (X_train, X_conf, X_test, y_train, y_conf, y_test) = train_conformalize_test_split(
-    X, y, train_size=0.4, conformalize_size=0.4, test_size=0.2
+    X, y, train_size=0.4, conformalize_size=0.4, test_size=0.2, random_state=42
 )
 
 ##############################################################################
@@ -59,135 +56,60 @@ clf.fit(X_train, y_train)
 print(f"Test accuracy: {clf.score(X_test, y_test):.3f}")
 
 ##############################################################################
-# Now we compare APS and RAPS. Both produce valid prediction sets (coverage
-# \>= 1 - alpha), but RAPS adds a regularization penalty that shrinks the
-# average set size.
+# We wrap the fitted classifier in a
+# :class:`~mapie.classification.SplitConformalClassifier` using the RAPS
+# conformity score. ``size_raps`` sets the fraction of the conformalization
+# data used to tune the regularization hyperparameters; the rest is used to
+# compute the conformity scores.
 
 confidence_levels = [0.90, 0.95]
 
-results = {}
-for method in ["aps", "raps"]:
-    mapie_clf = SplitConformalClassifier(
-        estimator=clf,
-        confidence_level=confidence_levels,
-        conformity_score=method,
-        prefit=True,
-        random_state=42,
-    )
-    mapie_clf.conformalize(X_conf, y_conf)
-    y_pred, y_pred_set = mapie_clf.predict_set(
-        X_test, conformity_score_params={"include_last_label": True}
-    )
-    results[method] = {
-        "coverage": classification_coverage_score(y_test, y_pred_set),
-        "width": classification_mean_width_score(y_pred_set),
-    }
+mapie_clf = SplitConformalClassifier(
+    estimator=clf,
+    confidence_level=confidence_levels,
+    conformity_score=RAPSConformityScore(size_raps=0.2),
+    prefit=True,
+    random_state=42,
+)
+mapie_clf.conformalize(X_conf, y_conf)
+y_pred, y_pred_set = mapie_clf.predict_set(
+    X_test, conformity_score_params={"include_last_label": True}
+)
 
 ##############################################################################
-# Let's compare the coverage and average prediction set size for both methods.
+# ``y_pred_set`` is a boolean array of shape
+# ``(n_samples, n_classes, n_confidence_levels)``. Let's look at the prediction
+# sets of the first few test samples at the 90% confidence level.
 
-print(f"{'Method':<8} {'Conf. Level':<13} {'Coverage':<10} {'Avg. Size':<10}")
-print("-" * 43)
-for method in ["aps", "raps"]:
-    for i, cl in enumerate(confidence_levels):
-        print(
-            f"{method.upper():<8} {cl:<13.2f} "
-            f"{results[method]['coverage'][i]:<10.3f} "
-            f"{results[method]['width'][i]:<10.3f}"
-        )
+for i in range(5):
+    labels = np.where(y_pred_set[i, :, 0])[0]
+    print(f"Sample {i}: true={y_test[i]}, predicted={y_pred[i]}, set={labels}")
 
 ##############################################################################
-# We visualize the average prediction set sizes.
+# We check that the empirical coverage reaches the target and report the
+# average prediction set size.
 
-fig, ax = plt.subplots(figsize=(8, 5))
-x = np.arange(len(confidence_levels))
-width = 0.35
+coverage = classification_coverage_score(y_test, y_pred_set)
+width = classification_mean_width_score(y_pred_set)
 
-bars_aps = ax.bar(
-    x - width / 2,
-    results["aps"]["width"],
-    width,
-    label="APS",
-    color="#1f77b4",
-)
-bars_raps = ax.bar(
-    x + width / 2,
-    results["raps"]["width"],
-    width,
-    label="RAPS",
-    color="#ff7f0e",
-)
-
-ax.set_xlabel("Confidence Level")
-ax.set_ylabel("Average Prediction Set Size")
-ax.set_title("APS vs RAPS: Average Prediction Set Size")
-ax.set_xticks(x)
-ax.set_xticklabels([f"{cl:.0%}" for cl in confidence_levels])
-ax.legend()
-ax.set_ylim(0)
-
-for bar in bars_aps:
-    ax.annotate(
-        f"{bar.get_height():.2f}",
-        xy=(bar.get_x() + bar.get_width() / 2, bar.get_height()),
-        ha="center",
-        va="bottom",
-        fontsize=9,
-    )
-for bar in bars_raps:
-    ax.annotate(
-        f"{bar.get_height():.2f}",
-        xy=(bar.get_x() + bar.get_width() / 2, bar.get_height()),
-        ha="center",
-        va="bottom",
-        fontsize=9,
-    )
-
-plt.tight_layout()
-plt.show()
-
-##############################################################################
-# We also compare the coverage to confirm both methods remain valid.
-
-fig, ax = plt.subplots(figsize=(8, 5))
-
-bars_aps = ax.bar(
-    x - width / 2,
-    results["aps"]["coverage"],
-    width,
-    label="APS",
-    color="#1f77b4",
-)
-bars_raps = ax.bar(
-    x + width / 2,
-    results["raps"]["coverage"],
-    width,
-    label="RAPS",
-    color="#ff7f0e",
-)
-
+print(f"{'Conf. Level':<13} {'Coverage':<10} {'Avg. Size':<10}")
+print("-" * 33)
 for i, cl in enumerate(confidence_levels):
-    ax.axhline(y=cl, color="red", linestyle="--", alpha=0.5)
-
-ax.set_xlabel("Confidence Level")
-ax.set_ylabel("Empirical Coverage")
-ax.set_title("APS vs RAPS: Coverage (dashed red = target)")
-ax.set_xticks(x)
-ax.set_xticklabels([f"{cl:.0%}" for cl in confidence_levels])
-ax.legend()
-ax.set_ylim(0.8, 1.0)
-
-plt.tight_layout()
-plt.show()
+    print(f"{cl:<13.2f} {coverage[i]:<10.3f} {width[i]:<10.3f}")
 
 ##############################################################################
-# Both methods achieve at least the target coverage (above the dashed red
-# line), confirming their theoretical validity. The regularization penalty in
-# RAPS is most effective in settings with many classes and weak classifiers,
-# where APS tends to include many low-probability classes. In favorable
-# scenarios, RAPS can significantly reduce average set size.
-#
-# The key parameter controlling RAPS behavior is `size_raps`, which determines
-# the fraction of calibration data used to tune the regularization
-# hyperparameters (lambda and k). By default, it is set to 0.2. Increasing
-# it gives more data for tuning but less for computing conformity scores.
+# Finally, we plot the distribution of prediction set sizes. RAPS is adaptive:
+# easy samples get small sets (often a single class), while harder samples get
+# larger sets.
+
+set_sizes = y_pred_set.sum(axis=1)
+bins = np.arange(1, set_sizes.max() + 2) - 0.5
+
+fig, axs = plt.subplots(1, len(confidence_levels), figsize=(10, 4), sharey=True)
+for i, (ax, cl) in enumerate(zip(axs, confidence_levels)):
+    ax.hist(set_sizes[:, i], bins=bins, edgecolor="black")
+    ax.set_title(f"Confidence level {cl:.0%}")
+    ax.set_xlabel("Prediction set size")
+axs[0].set_ylabel("Number of test samples")
+plt.tight_layout()
+plt.show()
