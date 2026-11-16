@@ -19,6 +19,7 @@
   regression methods. (issue #991)
 - Fix `CrossConformalizedQuantileRegressor` CV+ algorithm to compute quantiles of pprediction + scores instead of quantiles of aggregated predictions + scores.
 - Add `MultiClassificationLTTController` for risk control with multiclassification problems. 
+- Extend the APS non-randomized calibration threshold correction to cross-validation aggregation when `include_last_label=False`. (issue #1021)
 
 
 ## 1.5.0 (2026-xx-xx)
