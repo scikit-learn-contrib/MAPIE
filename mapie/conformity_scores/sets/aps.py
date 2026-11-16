@@ -151,6 +151,7 @@ class APSConformityScore(NaiveConformityScore):
         conformity_scores, self.cutoff = self.get_true_label_cumsum_proba(
             y, y_pred, classes
         )
+        self.non_randomized_conformity_scores_ = conformity_scores.copy()
         y_proba_true = np.take_along_axis(y_pred, y_enc.reshape(-1, 1), axis=1)
         random_state = check_random_state(self.random_state)
         u = random_state.uniform(size=len(y_pred)).reshape(-1, 1)
@@ -381,7 +382,12 @@ class APSConformityScore(NaiveConformityScore):
         if cv == "prefit" or agg_scores in ["mean"]:
             thresholds = self.quantiles_
         else:
-            thresholds = conformity_scores.ravel()
+            if include_last_label is False and hasattr(
+                self, "non_randomized_conformity_scores_"
+            ):
+                thresholds = self.non_randomized_conformity_scores_.ravel()
+            else:
+                thresholds = conformity_scores.ravel()
 
         # sort labels by decreasing probability
         y_pred_proba_cumsum, y_pred_index_last, y_pred_proba_last = (
