@@ -177,3 +177,65 @@ def test_get_last_included_proba_shape(k_lambda, include_last_label):
     assert y_p_p_c.shape == (len(X), len(np.unique(y)), len(thresholds))
     assert y_p_i_l.shape == (len(X), 1, len(thresholds))
     assert y_p_p_i_l.shape == (len(X), 1, len(thresholds))
+
+
+def test_aps_crossval_uses_non_randomized_scores_for_exclusive_last_label(
+    monkeypatch,
+) -> None:
+    """Use non-randomized calibration scores for deterministic APS crossval."""
+    clf = LogisticRegression().fit(X_toy, y_toy)
+    y_pred_proba_cal = clf.predict_proba(X_toy)
+
+    score = APSConformityScore()
+    score.set_external_attributes(
+        classes=np.unique(y_toy),
+        random_state=random_state,
+    )
+    randomized_scores = score.get_conformity_scores(
+        y_toy,
+        y_pred_proba_cal,
+        y_enc=y_toy,
+    )
+    expected_scores, _ = score.get_true_label_cumsum_proba(
+        y_toy,
+        y_pred_proba_cal,
+        np.unique(y_toy),
+    )
+    np.testing.assert_allclose(score.non_randomized_conformity_scores_, expected_scores)
+
+    captured_thresholds = []
+
+    def capture_thresholds(
+        y_pred_proba, thresholds, include_last_label, **kwargs
+    ):
+        captured_thresholds.append(np.array(thresholds, copy=True))
+        n_samples, _, n_thresholds = y_pred_proba.shape
+        return (
+            np.zeros_like(y_pred_proba),
+            np.zeros((n_samples, 1, n_thresholds), dtype=int),
+            np.full((n_samples, 1, n_thresholds), 0.1),
+        )
+
+    monkeypatch.setattr(score, "_get_last_included_proba", capture_thresholds)
+    score.quantiles_ = np.array([1.0])
+    y_pred_proba_test = np.repeat(
+        y_pred_proba_cal[:1, :, np.newaxis],
+        len(randomized_scores),
+        axis=2,
+    )
+
+    prediction_sets = score.get_prediction_sets(
+        y_pred_proba=y_pred_proba_test,
+        conformity_scores=randomized_scores,
+        alpha_np=np.array([0.2]),
+        cv=3,
+        agg_scores="crossval",
+        include_last_label=False,
+    )
+
+    np.testing.assert_allclose(
+        captured_thresholds[0],
+        expected_scores.ravel(),
+    )
+    assert prediction_sets.shape == (1, len(np.unique(y_toy)), 1)
+
