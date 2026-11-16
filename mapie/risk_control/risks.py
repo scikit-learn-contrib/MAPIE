@@ -12,8 +12,8 @@ if TYPE_CHECKING:
 
 class _BaseRisk:
     """
-    Base class factoring out the logic shared between `BinaryRisk` and
-    `ContinuousRisk`.
+    Base class factoring out the logic shared between `BinaryRisk`,
+    `ClassSpecificRisk` and `ContinuousRisk`.
 
     Subclasses must implement `_compute_values_and_effective_mask`, which
     returns, for each sample, (i) the per-sample risk value and (ii) whether the
@@ -110,9 +110,7 @@ class _BaseRisk:
                 risk_value = 1 - risk_value
             return risk_value, effective_sample_size
         else:
-            # In this case, the corresponding lambda shouldn't be considered valid.
-            # In the current LTT implementation, providing n_obs=-1 will result
-            # in an infinite p_value, effectively invaliding the lambda
+            # Return -1 to ensure risk is not controled
             return 1, -1
 
     def get_risk_sequence(
@@ -145,7 +143,138 @@ class _BaseRisk:
         return cast(NDArray, risk_sequence)
 
 
-class BinaryRisk(_BaseRisk):
+class _OccurrenceConditionRisk(_BaseRisk):
+    """
+    Base class factoring out the logic shared between `BinaryRisk` and
+    `ClassSpecificRisk`: a risk (or performance metric) defined by an occurrence
+    and a condition, i.e. `sum(occurrence if condition) / sum(condition)`.
+
+    Parameters
+    ----------
+    risk_occurrence : Callable[[NDArray, NDArray], NDArray]
+        A function defining the occurrence of the risk for a given sample.
+        Must take `y_true` and `y_pred` as input and return a boolean array.
+
+    risk_condition : Callable[[NDArray, NDArray], NDArray]
+        A function defining the condition of the risk for a given sample.
+        Must take `y_true` and `y_pred` as input and return a boolean array.
+
+    higher_is_better : bool
+        Whether this instance is a risk (higher_is_better=False) or a
+        performance metric (higher_is_better=True).
+    """
+
+    def __init__(
+        self,
+        risk_occurrence: Callable[
+            [NDArray[np.integer], NDArray[np.integer]], NDArray[np.bool_]
+        ],
+        risk_condition: Callable[
+            [NDArray[np.integer], NDArray[np.integer]], NDArray[np.bool_]
+        ],
+        higher_is_better: bool,
+    ):
+        super().__init__(higher_is_better=higher_is_better)
+        self._risk_occurrence = risk_occurrence
+        self._risk_condition = risk_condition
+
+    def _compute_values_and_effective_mask(
+        self,
+        y_true: NDArray,
+        y_pred: NDArray,
+    ) -> Tuple[NDArray, NDArray]:
+        risk_occurrences = np.asarray(self._risk_occurrence(y_true, y_pred))
+        self._check_occurrences_are_binary(risk_occurrences)
+        risk_conditions = self._risk_condition(y_true, y_pred)
+        return risk_occurrences.astype(int), risk_conditions
+
+    @staticmethod
+    def _check_occurrences_are_binary(occurrences: NDArray) -> None:
+        """
+        Check that the per-sample occurrences are binary indicators.
+
+        These risks are controlled with the binary Hoeffding-Bentkus
+        p-values, which require the per-sample risk values to be binary
+        indicators: booleans, or numeric values strictly equal to ``0`` or
+        ``1``. The predefined risks satisfy this by construction, but a custom
+        ``risk_occurrence`` returning anything else (e.g. ``0.5`` or ``2``)
+        would break the guarantee.
+
+        Raises
+        ------
+        ValueError
+            If any occurrence value is neither a boolean nor equal to 0 or 1.
+        """
+        if occurrences.dtype == bool:
+            return
+        is_binary = np.isin(occurrences, [0, 1])
+        if not is_binary.all():
+            invalid_values = np.unique(occurrences[~is_binary])
+            raise ValueError(
+                "The per-sample values returned by `risk_occurrence` must be "
+                "binary indicators (booleans, or values equal to 0 or 1), but the "
+                f"following invalid values were found: {invalid_values}. Make sure "
+                "`risk_occurrence` returns a boolean array."
+            )
+
+
+class ClassSpecificRisk(_OccurrenceConditionRisk):
+    """
+    Define a class-specific risk (or performance metric), to be used for
+    multiclass classification problems handled one-vs-rest, e.g. with
+    `MultiClassificationLTTController`.
+
+    `risk_occurrence` and `risk_condition` receive the ground truth `y_true`
+    and the predictions `y_pred` as they are, not binarized: they are
+    responsible for singling out `class_label` (see e.g.
+    :func:`mapie.risk_control.risks.build_precision_ovr`).
+
+    Parameters
+    ----------
+    class_label : Union[int, str]
+        The class this risk is evaluated for.
+
+    risk_occurrence : Callable[[NDArray, NDArray], NDArray]
+        A function defining the occurrence of the risk for a given sample.
+        Must take `y_true` and `y_pred` as input and return a boolean array.
+
+    risk_condition : Callable[[NDArray, NDArray], NDArray]
+        A function defining the condition of the risk for a given sample.
+        Must take `y_true` and `y_pred` as input and return a boolean array.
+
+    higher_is_better : bool
+        Whether this ClassSpecificRisk instance is a risk
+        (higher_is_better=False) or a performance metric (higher_is_better=True).
+
+    Attributes
+    ----------
+    class_label : Union[int, str]
+        See params.
+
+    higher_is_better : bool
+        See params.
+    """
+
+    def __init__(
+        self,
+        class_label: Union[int, str],
+        risk_occurrence: Callable[
+            [NDArray[np.integer], NDArray[np.integer]], NDArray[np.bool_]
+        ],
+        risk_condition: Callable[
+            [NDArray[np.integer], NDArray[np.integer]], NDArray[np.bool_]
+        ],
+        higher_is_better: bool,
+    ):
+        super().__init__(
+            risk_occurrence=risk_occurrence,
+            risk_condition=risk_condition,
+            higher_is_better=higher_is_better,
+        )
+        self.class_label = class_label
+
+
+class BinaryRisk(_OccurrenceConditionRisk):
     """
     Define a risk (or a performance metric) to be used with the
     BinaryClassificationController. Predefined instances are implemented,
@@ -206,48 +335,83 @@ class BinaryRisk(_BaseRisk):
         ],
         higher_is_better: bool,
     ):
-        super().__init__(higher_is_better=higher_is_better)
-        self._risk_occurrence = risk_occurrence
-        self._risk_condition = risk_condition
+        super().__init__(
+            risk_occurrence=risk_occurrence,
+            risk_condition=risk_condition,
+            higher_is_better=higher_is_better,
+        )
 
-    def _compute_values_and_effective_mask(
-        self,
-        y_true: NDArray,
-        y_pred: NDArray,
-    ) -> Tuple[NDArray, NDArray]:
-        risk_occurrences = np.asarray(self._risk_occurrence(y_true, y_pred))
-        self._check_occurrences_are_binary(risk_occurrences)
-        risk_conditions = self._risk_condition(y_true, y_pred)
-        return risk_occurrences.astype(int), risk_conditions
 
-    @staticmethod
-    def _check_occurrences_are_binary(occurrences: NDArray) -> None:
-        """
-        Check that the per-sample occurrences are binary indicators.
+def build_recall_ovr(
+    class_labels: List[Union[int, str]],
+) -> List[_OccurrenceConditionRisk]:
+    """
+    Build one-vs-rest `ClassSpecificRisk` instances defining recall for
+    each of the given class labels
+    Parameters
+    ----------
+    class_labels : List[Union[int, str]]
+        The class labels precision is evaluated for.
 
-        A ``BinaryRisk`` is controlled with the binary Hoeffding-Bentkus
-        p-values, which require the per-sample risk values to be binary
-        indicators: booleans, or numeric values strictly equal to ``0`` or
-        ``1``. The predefined risks satisfy this by construction, but a custom
-        ``risk_occurrence`` returning anything else (e.g. ``0.5`` or ``2``)
-        would break the guarantee.
+    Returns
+    -------
+    List[ClassSpecificRisk]
+        One precision risk per class label in `class_labels`.
+    """
 
-        Raises
-        ------
-        ValueError
-            If any occurrence value is neither a boolean nor equal to 0 or 1.
-        """
-        if occurrences.dtype == bool:
-            return
-        is_binary = np.isin(occurrences, [0, 1])
-        if not is_binary.all():
-            invalid_values = np.unique(occurrences[~is_binary])
-            raise ValueError(
-                "The per-sample values returned by `risk_occurrence` must be "
-                "binary indicators (booleans, or values equal to 0 or 1), but the "
-                f"following invalid values were found: {invalid_values}. Make sure "
-                "`risk_occurrence` returns a boolean array."
-            )
+    def _make_risk_condition(
+        class_label: Union[int, str],
+    ) -> Callable[[NDArray, NDArray], NDArray]:
+        def risk_condition(y_true: NDArray, y_pred: NDArray) -> NDArray:
+            return cast(NDArray, y_true.ravel() == class_label)
+
+        return risk_condition
+
+    return [
+        ClassSpecificRisk(
+            class_label=class_label,
+            risk_occurrence=lambda y_true, y_pred: y_pred.ravel() == y_true.ravel(),
+            risk_condition=_make_risk_condition(class_label),
+            higher_is_better=True,
+        )
+        for class_label in class_labels
+    ]
+
+
+def build_precision_ovr(
+    class_labels: List[Union[int, str]],
+) -> List[_OccurrenceConditionRisk]:
+    """
+    Build one-vs-rest `ClassSpecificRisk` instances defining precision for
+    each of the given class labels
+    Parameters
+    ----------
+    class_labels : List[Union[int, str]]
+        The class labels precision is evaluated for.
+
+    Returns
+    -------
+    List[ClassSpecificRisk]
+        One precision risk per class label in `class_labels`.
+    """
+
+    def _make_risk_condition(
+        class_label: Union[int, str],
+    ) -> Callable[[NDArray, NDArray], NDArray]:
+        def risk_condition(y_true: NDArray, y_pred: NDArray) -> NDArray:
+            return cast(NDArray, y_pred.ravel() == class_label)
+
+        return risk_condition
+
+    return [
+        ClassSpecificRisk(
+            class_label=class_label,
+            risk_occurrence=lambda y_true, y_pred: y_pred.ravel() == y_true.ravel(),
+            risk_condition=_make_risk_condition(class_label),
+            higher_is_better=True,
+        )
+        for class_label in class_labels
+    ]
 
 
 class BinaryClassificationRisk(BinaryRisk):
@@ -305,7 +469,6 @@ ContinuousRiskLike = Union[
 
 RiskLike = Union[BinaryRiskLike, ContinuousRiskLike]
 
-
 precision = BinaryRisk(
     risk_occurrence=lambda y_true, y_pred: y_pred.ravel() == y_true.ravel(),
     risk_condition=lambda y_true, y_pred: y_pred.ravel() == 1,
@@ -348,7 +511,9 @@ negative_predictive_value = BinaryRisk(
 npv = negative_predictive_value
 
 abstention_rate = BinaryRisk(
-    risk_occurrence=lambda y_true, y_pred: np.isnan(y_pred),
+    # y_pred != y_pred is True only for NaN, and unlike np.isnan it also handles
+    # object arrays mixing string labels and NaN (multiclass with str labels).
+    risk_occurrence=lambda y_true, y_pred: y_pred != y_pred,
     risk_condition=lambda y_true, y_pred: np.repeat(True, len(y_true)),
     higher_is_better=False,
 )
@@ -360,7 +525,6 @@ _best_predict_param_choice_map = {
     accuracy: accuracy,
     false_positive_rate: recall,
 }
-
 
 binary_risk_choice_map = {
     "precision": precision,

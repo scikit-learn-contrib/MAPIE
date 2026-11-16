@@ -25,6 +25,7 @@ from mapie.utils import (
     _check_if_param_in_allowed_values,
     _check_lower_upper_bounds,
     _check_null_weight,
+    _compute_regression_quantile,
     _fit_estimator,
     _prepare_params,
     _raise_error_if_fit_called_in_prefit_mode,
@@ -818,21 +819,13 @@ class _QuantileConformalizer(_Conformalizer, ABC):
         NDArray of shape (n_samples, n_quantiles)
             Fold predictions aggregated for each sample and each quantile.
         """
-        pinball_weights = 1 / (
-            np.asarray(self.pinball_losses[level], dtype=float) + 1e-8
-        )
-        y_preds = np.asarray(y_preds, dtype=float)
-
         # Losses are of shape (n_split, n_quantiles), one per fold and per quantile.
         # A single loss per fold is broadcast to every quantile.
-        if pinball_weights.ndim == 1:
-            pinball_weights = pinball_weights[:, np.newaxis]
-        weights = pinball_weights / pinball_weights.sum(axis=0, keepdims=True)
+        losses = np.asarray(self.pinball_losses[level], dtype=float)
+        weights = 1 / (losses.reshape(len(losses), -1) + 1e-8)
+        weights /= weights.sum(axis=0)
 
-        # Reduce the fold axis, keeping one prediction per sample and per quantile.
-        weighted_values = np.sum(weights[np.newaxis, :, :] * y_preds, axis=1)
-
-        return np.asarray(weighted_values)
+        return np.asarray(np.einsum("fq,sfq->sq", weights, np.asarray(y_preds)))
 
     # TODO: A structure can handle quantiles fitting and prediction to avoid code duplication between conformalizer
     def _predict_quantiles(
@@ -906,9 +899,17 @@ class _QuantileConformalizer(_Conformalizer, ABC):
         y_pred_center = self._base_central_estimator_[0].predict(X, **predict_params)
         return np.column_stack((y_pred_low, y_pred_up, y_pred_center))
 
-    def _predict_aggregate(self, X: ArrayLike, level: str, **predict_params):
+    def _get_prediction_matrix(
+        self, X: ArrayLike, level: str, **predict_params
+    ) -> NDArray:
         """
-        Predicts the lower and upper quantiles for the given input data X using the specified level and aggregation function.
+        Predicts the lower, upper and central quantiles with each cross-validation fold.
+
+        Returns
+        -------
+        NDArray of shape (n_samples, n_split, 3)
+            Predictions of each fold, the columns being the lower, upper and central
+            quantiles.
         """
         n_split = len(self.estimators_[level]["lower"])
         n_quantiles = len(self.quantiles[level])
@@ -925,25 +926,78 @@ class _QuantileConformalizer(_Conformalizer, ABC):
                 pred_matrix[:, i, 2] = self._predict_center(
                     X, index=i, **predict_params
                 )
+        return pred_matrix
 
+    def _aggregate_center(self, pred_matrix: NDArray, level: str) -> NDArray:
+        """
+        Aggregates the central predictions of the folds with `agg_function`.
+
+        Parameters
+        ----------
+        pred_matrix : NDArray of shape (n_samples, n_split, 3)
+            Predictions of each fold, see `_get_prediction_matrix`.
+        level : str
+            The confidence level whose pinball losses are used as weights.
+
+        Returns
+        -------
+        NDArray of shape (n_samples,)
+            Aggregated central prediction.
+        """
         if self.agg_function == "pinball_weighted_mean":
-            y_pred = self._pinball_weighted_mean(pred_matrix[:, :, :n_quantiles], level)
-            if n_quantiles < 3:
-                y_pred_multi_center = np.mean(
-                    pred_matrix[:, :, 2], axis=1, keepdims=True
-                )
-                y_pred = np.hstack((y_pred, y_pred_multi_center))
-        else:
-            y_pred = aggregate_all(self.agg_function, pred_matrix)
+            # The losses hold a column for the central quantile only when it is
+            # fitted along the bounds, otherwise it is plainly averaged.
+            if len(self.quantiles[level]) == 3:
+                return self._pinball_weighted_mean(pred_matrix, level)[:, 2]
+            return cast(NDArray, np.mean(pred_matrix[:, :, 2], axis=1))
+        return cast(NDArray, aggregate_all(self.agg_function, pred_matrix[:, :, 2]))
 
-        # `"minmax"` only changes how the bounds are aggregated: the central
-        # prediction keeps the aggregation requested by the user, so that it matches
-        # the point predicted by `predict`.
-        if self.method == "minmax":
-            y_pred[:, 0] = np.min(pred_matrix[:, :, 0], axis=1)
-            y_pred[:, 1] = np.max(pred_matrix[:, :, 1], axis=1)
+    def _predict_minmax(
+        self, X: ArrayLike, level: str, **predict_params
+    ) -> Tuple[NDArray, NDArray, NDArray]:
+        """
+        Predicts the central, lower and upper quantiles for the CV-minmax algorithm.
 
-        return y_pred
+        The bounds are the minimum and the maximum over the folds of the lower and
+        upper quantiles, whereas the central prediction aggregates the folds with
+        `agg_function`.
+
+        Returns
+        -------
+        Tuple[NDArray, NDArray, NDArray]
+            Central prediction, lower and upper bounds, each of shape
+            `(n_samples,)`.
+        """
+        pred_matrix = self._get_prediction_matrix(X, level, **predict_params)
+        return (
+            self._aggregate_center(pred_matrix, level),
+            np.min(pred_matrix[:, :, 0], axis=1),
+            np.max(pred_matrix[:, :, 1], axis=1),
+        )
+
+    def _predict_plus(
+        self, X: ArrayLike, level: str, **predict_params
+    ) -> Tuple[NDArray, NDArray, NDArray]:
+        """
+        Predicts the central, lower and upper quantiles for the CV+ algorithm.
+
+        As for `CrossConformalRegressor`, the bounds hold one prediction per
+        conformalization sample, aggregating the folds that did not see it with
+        `_aggregate_with_mask`. The central prediction aggregates all the folds with
+        `agg_function`.
+
+        Returns
+        -------
+        Tuple[NDArray, NDArray, NDArray]
+            Central prediction of shape `(n_samples,)`, lower and upper bounds of
+            shape `(n_samples, n_samples_conformalization)`.
+        """
+        pred_matrix = self._get_prediction_matrix(X, level, **predict_params)
+        return (
+            self._aggregate_center(pred_matrix, level),
+            self._aggregate_with_mask(pred_matrix[:, :, 0], self.k_),
+            self._aggregate_with_mask(pred_matrix[:, :, 1], self.k_),
+        )
 
     def _predict(
         self, X: ArrayLike, ensemble: bool = False, **predict_params
@@ -1007,10 +1061,10 @@ class _QuantileConformalizer(_Conformalizer, ABC):
         """
         if self.method == "base":
             y_pred = self._predict_base(X, level=level, **predict_params)
-        else:
-            y_pred = self._predict_aggregate(X, level=level, **predict_params)
-
-        return y_pred[:, 2], y_pred[:, 0], y_pred[:, 1]
+            return y_pred[:, 2], y_pred[:, 0], y_pred[:, 1]
+        if self.method == "plus":
+            return self._predict_plus(X, level, **predict_params)
+        return self._predict_minmax(X, level, **predict_params)
 
 
 class CrossConformalizedQuantileRegressor(_QuantileConformalizer):
@@ -1055,7 +1109,12 @@ class CrossConformalizedQuantileRegressor(_QuantileConformalizer):
         when `cv` is a cross-validator, which carries its own randomness.
 
     central_estimator : Optional[RegressorMixin], default=None
-        Optional estimator used to predict the central value directly.
+        Optional estimator used to predict the central value directly. It only needs
+        `fit` and `predict`, and does not have to be a quantile regressor. It only
+        provides the point predictions: the bounds of the intervals do not depend on
+        it. With `method="base"` it is fitted on the entire data, otherwise one copy
+        is fitted per cross-validation fold and aggregated by
+        `aggregate_point_predictions`.
 
     fit_central_estimator : bool, default=True
         Whether to fit an estimator dedicated to the central prediction.
@@ -1116,6 +1175,7 @@ class CrossConformalizedQuantileRegressor(_QuantileConformalizer):
         self.fit_central_estimator = fit_central_estimator
         self.quantiles = {str(alpha): self._check_alpha(alpha) for alpha in self.alpha}
         self.agg_function = "mean"
+        self.use_split_method_ = False
 
     # ---------------------Fit and Conformalize
     # TODO: Nearly duplicated from CrossConformalRegressor -> should be factorize in next refacto
@@ -1226,7 +1286,9 @@ class CrossConformalizedQuantileRegressor(_QuantileConformalizer):
                 trained on each cross-validation fold
             - "pinball_weighted_mean": Aggregates the predictions of the regressors
                 trained on each cross-validation fold using a weighted mean, where the
-                weights are the pinball losses of each fold.
+                weights are the pinball losses of each fold. When a
+                `central_estimator` is given, its pinball losses are not available:
+                the central predictions are then averaged without weights.
 
             The three aggregations above are invalid with `method="base"`.
 
@@ -1326,7 +1388,9 @@ class CrossConformalizedQuantileRegressor(_QuantileConformalizer):
               trained on each cross-validation fold
             - "pinball_weighted_mean": Aggregates the predictions of the regressors
               trained on each cross-validation fold using a weighted mean, where the
-              weights are the pinball losses of each fold.
+              weights are the pinball losses of each fold. When a
+              `central_estimator` is given, its pinball losses are not available:
+              the central predictions are then averaged without weights.
 
             The three aggregations above are invalid with `method="base"`.
 
@@ -2314,8 +2378,7 @@ class _MapieQuantileRegressor(_MapieRegressor):
         alpha = self.alpha if symmetry else self.alpha / 2
         _check_alpha_and_n_samples(alpha, self.n_calib_samples)
 
-        n = self.n_calib_samples
-        q = (1 - (alpha)) * (1 + (1 / n))
+        alpha_ref = np.array([1 - alpha])
 
         y_preds = np.full(
             shape=(3, _num_samples(X)),
@@ -2325,16 +2388,17 @@ class _MapieQuantileRegressor(_MapieRegressor):
         for i, est in enumerate(self.estimators_):
             y_preds[i] = est.predict(X, **predict_params)
         _check_lower_upper_bounds(y_preds[0], y_preds[1], y_preds[2])
+        scores = self.conformity_scores
         quantile: NDArray
         if symmetry:
             quantile = np.full(
-                2, np.quantile(self.conformity_scores[2], q, method="higher")
+                2, _compute_regression_quantile(scores[2], alpha_ref).item()
             )
         else:
             quantile = np.array(
                 [
-                    np.quantile(self.conformity_scores[0], q, method="higher"),
-                    np.quantile(self.conformity_scores[1], q, method="higher"),
+                    _compute_regression_quantile(scores[0], alpha_ref).item(),
+                    _compute_regression_quantile(scores[1], alpha_ref).item(),
                 ]
             )
         y_pred_low = y_preds[0][:, np.newaxis] - quantile[0]

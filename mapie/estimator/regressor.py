@@ -95,7 +95,7 @@ class _Conformalizer(ABC):
 
         Returns
         -------
-        ArrayLike of shape (n_samples_test,)
+        ArrayLike of shape (n_samples_test, n_samples_conformalization)
             Array of aggregated predictions for each testing sample.
         """
         if self.agg_function not in self.ALLOWED_AGG_FUNCTIONS:

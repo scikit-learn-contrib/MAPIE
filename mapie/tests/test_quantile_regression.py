@@ -10,6 +10,7 @@ from numpy.typing import NDArray
 from sklearn.base import BaseEstimator, RegressorMixin, clone
 from sklearn.compose import ColumnTransformer
 from sklearn.datasets import make_regression
+from sklearn.dummy import DummyRegressor
 from sklearn.ensemble import GradientBoostingRegressor, RandomForestClassifier
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LinearRegression, QuantileRegressor
@@ -25,11 +26,12 @@ from mapie.conformity_scores import (
     QuantileRegressionScore,
 )
 from mapie.regression.quantile_regression import (
+    ConformalizedQuantileRegressor,
     CrossConformalizedQuantileRegressor,
     _QuantileConformalizer,
     _MapieQuantileRegressor,
 )
-from mapie.utils import check_is_fitted
+from mapie.utils import _compute_regression_quantile, check_is_fitted
 
 X_toy = np.array(
     [0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5]
@@ -450,6 +452,27 @@ def test_for_small_dataset() -> None:
         mapie_reg.conformalize(X_calib_toy_small, y_calib_toy_small)
 
 
+def test_compute_regression_quantile_raises_when_level_infeasible() -> None:
+    """
+    A corrected level above 1.0 must raise, not silently clip to max(scores).
+    In this example : n_eff=7, alpha_up=0.95 -> ceil(0.95 * 8) / 7 = 1.142... > 1.0
+    """
+    scores = np.linspace(-1, 1, 7).reshape(-1, 1)
+    alpha_up = np.array([0.95])
+    with pytest.raises(ValueError, match="too low to reach the requested level"):
+        _compute_regression_quantile(scores, alpha_up, axis=0, unbounded=False)
+
+
+def test_compute_regression_quantile_returns_inf_when_unbounded_and_infeasible() -> (
+    None
+):
+    """With unbounded=True the infeasible level yields +inf, not the sample max."""
+    scores = np.linspace(-1, 1, 7).reshape(-1, 1)
+    alpha_up = np.array([0.95])
+    q = _compute_regression_quantile(scores, alpha_up, axis=0, unbounded=True)
+    assert np.all(np.isinf(q))
+
+
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
 @pytest.mark.parametrize("estimator", ESTIMATOR)
 @pytest.mark.parametrize(
@@ -620,6 +643,45 @@ def test_prefit_different_type_list_tuple_array(alpha: float) -> None:
     np.testing.assert_allclose(y_pis_prefit_list, y_pis_prefit_array)
 
 
+@pytest.mark.parametrize(
+    "n_calib, alpha, symmetry",
+    [
+        (199, 0.1, True),
+        (29, 0.1, True),
+        (6, 0.3, True),
+        (199, 0.1, False),
+        (39, 0.1, False),
+        (26, 0.3, False),
+    ],
+)
+def test_correction_is_conformal_order_statistic(
+    n_calib: int, alpha: float, symmetry: bool
+) -> None:
+    """
+    Test that the correction is the k-th smallest conformity score, with
+    k = ceil((1 - level) * (n + 1)) and level = alpha (symmetric) or alpha / 2
+    (asymmetric). The quantile estimators all predict 0, so the conformity
+    scores are -y, y and |y|.
+    """
+    X_calib_ = np.zeros((n_calib, 1))
+    y_calib_ = np.random.RandomState(random_state).normal(size=n_calib)
+    zero = DummyRegressor(strategy="constant", constant=0.0).fit(X_calib_, y_calib_)
+    cqr = ConformalizedQuantileRegressor(
+        [zero, zero, zero], confidence_level=1 - alpha, prefit=True
+    ).conformalize(X_calib_, y_calib_)
+    _, y_pis = cqr.predict_interval(X_calib_[:1], symmetric_correction=symmetry)
+
+    if symmetry:
+        k = int(np.ceil((1 - alpha) * (n_calib + 1)))
+        up = np.sort(np.abs(y_calib_))[k - 1]
+        low = -up
+    else:
+        k = int(np.ceil((1 - alpha / 2) * (n_calib + 1)))
+        low = -np.sort(-y_calib_)[k - 1]
+        up = np.sort(y_calib_)[k - 1]
+    np.testing.assert_array_equal(y_pis[0, :, 0], [low, up])
+
+
 @pytest.mark.parametrize("estimator", ESTIMATOR)
 def test_pipeline_compatibility(estimator: RegressorMixin) -> None:
     """Check that MAPIE works on pipeline based on pandas dataframes"""
@@ -749,6 +811,15 @@ def test_absolute_quantile_regression_score_conformity_scores() -> None:
 
     expected_scores = np.maximum(y_pred[0] - y, y - y_pred[1])
     np.testing.assert_allclose(conformity_scores, expected_scores)
+
+
+def test_absolute_quantile_regression_score_rejects_sym_false() -> None:
+    """Test that sym=False raises, since this score is symmetrical by construction."""
+    with pytest.raises(
+        ValueError,
+        match=r".*cannot be instantiated with sym=False.*",
+    ):
+        AbsoluteQuantileRegressionScore(sym=False)
 
 
 def test_quantile_conformalizer_check_alpha_without_central_estimator() -> None:
@@ -1133,6 +1204,8 @@ def test_quantile_conformalizer_predict_returns_center_lower_upper() -> None:
     conformalizer.quantiles = {level: np.array([0.1, 0.9, 0.5])}
     conformalizer.method = "plus"
     conformalizer.agg_function = "mean"
+    conformalizer.use_split_method_ = False
+    conformalizer.k_ = np.array([[1.0], [1.0]])
     conformalizer.estimators_ = {
         level: {
             "lower": [FixedPredictor(np.array([1.0, 2.0]))],
@@ -1146,11 +1219,11 @@ def test_quantile_conformalizer_predict_returns_center_lower_upper() -> None:
     )
 
     assert y_pred_central.shape == (2,)
-    assert y_pred_low.shape == (2, 1)
-    assert y_pred_up.shape == (2, 1)
+    assert y_pred_low.shape == (2, 2, 1)
+    assert y_pred_up.shape == (2, 2, 1)
     np.testing.assert_allclose(y_pred_central, np.array([2.0, 3.0]))
-    np.testing.assert_allclose(y_pred_low, np.array([[1.0], [2.0]]))
-    np.testing.assert_allclose(y_pred_up, np.array([[3.0], [4.0]]))
+    np.testing.assert_allclose(y_pred_low, np.array([[[1.0], [1.0]], [[2.0], [2.0]]]))
+    np.testing.assert_allclose(y_pred_up, np.array([[[3.0], [3.0]], [[4.0], [4.0]]]))
 
 
 def test_quantile_conformalizer_predict_multiple_predictions_mean_aggregation() -> None:
@@ -1160,6 +1233,10 @@ def test_quantile_conformalizer_predict_multiple_predictions_mean_aggregation() 
     level = str(conformalizer.alpha[0])
     conformalizer.quantiles = {level: np.array([0.1, 0.9, 0.5])}
     conformalizer.method = "plus"
+    # Two conformalization samples, the first one seen by the first fold only and the
+    # second one by the second fold only.
+    conformalizer.use_split_method_ = False
+    conformalizer.k_ = np.array([[1.0, np.nan], [np.nan, 1.0]])
     conformalizer.agg_function = "mean"
     conformalizer.estimators_ = {
         level: {
@@ -1183,8 +1260,9 @@ def test_quantile_conformalizer_predict_multiple_predictions_mean_aggregation() 
     )
 
     np.testing.assert_allclose(y_pred_central, np.array([3.0, 4.0]))
-    np.testing.assert_allclose(y_pred_low, np.array([[2.0], [3.0]]))
-    np.testing.assert_allclose(y_pred_up, np.array([[6.0], [7.0]]))
+    # One bound per test sample, conformalization sample and level.
+    np.testing.assert_allclose(y_pred_low, np.array([[[1.0], [3.0]], [[2.0], [4.0]]]))
+    np.testing.assert_allclose(y_pred_up, np.array([[[5.0], [7.0]], [[6.0], [8.0]]]))
 
 
 def test_quantile_conformalizer_predict_multiple_predictions_minmax() -> None:
@@ -1276,6 +1354,10 @@ def test_quantile_conformalizer_predict_center_from_central_estimators() -> None
     # aggregate along with them.
     conformalizer.quantiles = {level: np.array([0.1, 0.9])}
     conformalizer.method = "plus"
+    # Two conformalization samples, the first one seen by the first fold only and the
+    # second one by the second fold only.
+    conformalizer.use_split_method_ = False
+    conformalizer.k_ = np.array([[1.0, np.nan], [np.nan, 1.0]])
     conformalizer.agg_function = "mean"
     conformalizer.estimators_ = {
         level: {
@@ -1299,8 +1381,9 @@ def test_quantile_conformalizer_predict_center_from_central_estimators() -> None
     )
 
     np.testing.assert_allclose(y_pred_central, np.array([3.0, 4.0]))
-    np.testing.assert_allclose(y_pred_low, np.array([[2.0], [3.0]]))
-    np.testing.assert_allclose(y_pred_up, np.array([[6.0], [7.0]]))
+    # One bound per test sample, conformalization sample and level.
+    np.testing.assert_allclose(y_pred_low, np.array([[[1.0], [3.0]], [[2.0], [4.0]]]))
+    np.testing.assert_allclose(y_pred_up, np.array([[[5.0], [7.0]], [[6.0], [8.0]]]))
 
 
 def test_quantile_conformalizer_predict_center_pinball_weighted_mean() -> None:
@@ -1314,7 +1397,16 @@ def test_quantile_conformalizer_predict_center_pinball_weighted_mean() -> None:
     level = str(conformalizer.alpha[0])
     conformalizer.quantiles = {level: np.array([0.1, 0.9])}
     conformalizer.method = "plus"
+    # Two conformalization samples, the first one seen by the first fold only and the
+    # second one by the second fold only.
+    conformalizer.use_split_method_ = False
+    conformalizer.k_ = np.array([[1.0, np.nan], [np.nan, 1.0]])
+    # Two conformalization samples, the first one seen by the first fold only and the
+    # second one by the second fold only.
+    conformalizer.use_split_method_ = False
+    conformalizer.k_ = np.array([[1.0, np.nan], [np.nan, 1.0]])
     conformalizer.agg_function = "pinball_weighted_mean"
+    conformalizer.ALLOWED_AGG_FUNCTIONS = ["mean", "median", "pinball_weighted_mean"]
     # Weights of the two folds are 0.75 and 0.25.
     conformalizer.pinball_losses = {level: np.array([1.0, 3.0])}
     conformalizer.estimators_ = {
@@ -1339,8 +1431,9 @@ def test_quantile_conformalizer_predict_center_pinball_weighted_mean() -> None:
     )
 
     np.testing.assert_allclose(y_pred_central, np.array([3.0, 4.0]))
-    np.testing.assert_allclose(y_pred_low, np.array([[1.5], [2.5]]))
-    np.testing.assert_allclose(y_pred_up, np.array([[5.5], [6.5]]))
+    # One bound per test sample, conformalization sample and level.
+    np.testing.assert_allclose(y_pred_low, np.array([[[1.0], [3.0]], [[2.0], [4.0]]]))
+    np.testing.assert_allclose(y_pred_up, np.array([[[5.0], [7.0]], [[6.0], [8.0]]]))
 
 
 def test_quantile_conformalizer_pinball_weighted_mean() -> None:
@@ -1945,7 +2038,7 @@ def test_cross_conformalized_quantile_regressor_pinball_weighted_mean_end_to_end
 ):
     """Test predict_interval with pinball_weighted_mean on the real aggregation path.
 
-    The stubbed test above bypasses the conformity score, hence `_predict_aggregate`.
+    The stubbed test above bypasses the conformity score, hence `_predict_plus`.
     Here the whole pipeline runs, so the pinball weights are actually applied to the
     fold predictions.
     """
@@ -1976,6 +2069,50 @@ def test_cross_conformalized_quantile_regressor_pinball_weighted_mean_end_to_end
     )
     assert np.all(y_pred >= fold_centers.min(axis=0) - 1e-8)
     assert np.all(y_pred <= fold_centers.max(axis=0) + 1e-8)
+
+
+def test_cross_conformalized_quantile_regressor_plus_uses_aggregate_with_mask() -> None:
+    """Test that "plus" bounds hold one prediction per conformalization sample.
+
+    Each bound aggregates, with `_aggregate_with_mask`, the folds that did not see the
+    sample, whereas the central prediction aggregates all the folds.
+    """
+    reg = CrossConformalizedQuantileRegressor(
+        estimator=gb,
+        confidence_level=0.8,
+        cv=KFold(n_splits=3, shuffle=True, random_state=random_state),
+        method="plus",
+    )
+    reg.fit_conformalize(X_train, y_train)
+    level = str(reg.alpha[0])
+
+    y_center, y_low, y_up = reg._predict_plus(X_calib, level)
+
+    fold_preds = reg._get_prediction_matrix(X_calib, level)
+    assert y_low.shape == y_up.shape == (X_calib.shape[0], X_train.shape[0])
+    np.testing.assert_allclose(
+        y_low, reg._aggregate_with_mask(fold_preds[:, :, 0], reg.k_)
+    )
+    np.testing.assert_allclose(y_center, fold_preds[:, :, 2].mean(axis=1))
+
+
+def test_cross_conformalized_quantile_regressor_minmax_bounds() -> None:
+    """Test that "minmax" bounds are the extrema of the folds, apart from the center."""
+    reg = CrossConformalizedQuantileRegressor(
+        estimator=gb,
+        confidence_level=0.8,
+        cv=KFold(n_splits=3, shuffle=True, random_state=random_state),
+        method="minmax",
+    )
+    reg.fit_conformalize(X_train, y_train)
+    level = str(reg.alpha[0])
+
+    y_center, y_low, y_up = reg._predict_minmax(X_calib, level)
+
+    fold_preds = reg._get_prediction_matrix(X_calib, level)
+    np.testing.assert_allclose(y_low, fold_preds[:, :, 0].min(axis=1))
+    np.testing.assert_allclose(y_up, fold_preds[:, :, 1].max(axis=1))
+    np.testing.assert_allclose(y_center, fold_preds[:, :, 2].mean(axis=1))
 
 
 def test_cross_conformalized_quantile_regressor_predict_interval_invalid_aggregation() -> (
@@ -2510,6 +2647,24 @@ def test_asymmetric_bounds_split_the_miscoverage_between_both_sides() -> None:
     assert 0.03 < miss_low < 0.07
     assert 0.03 < miss_up < 0.07
     assert 0.08 < miss_low + miss_up < 0.12
+
+
+def test_effective_calibration_samples_are_counted_per_side() -> None:
+    """
+    Test the two-row layout of the asymmetric scores does not inflate the effective
+    sample count: it must match what a one-dimensional asymmetric score reports for the
+    same number of calibration samples, since both calibrate each side at `alpha / 2`.
+    """
+    n_calib = 15
+    asymmetric = QuantileRegressionScore().get_effective_calibration_samples(
+        np.zeros((2, n_calib))
+    )
+    symmetric = AbsoluteQuantileRegressionScore().get_effective_calibration_samples(
+        np.zeros(n_calib)
+    )
+
+    assert asymmetric == n_calib // 2
+    assert symmetric == n_calib
 
 
 def test_cross_conformalized_quantile_regressor_fits_central_estimator() -> None:

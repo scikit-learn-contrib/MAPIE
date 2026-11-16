@@ -211,9 +211,9 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
         for ind_alpha, _alpha in enumerate(alpha_np):
             _alpha = float(_alpha)
             betas = np.linspace(
-                _alpha / (n + 1),
+                1 - (n / (n + 1)),
                 _alpha,
-                num=n,
+                num=100,
                 endpoint=True,
             )
             one_alpha_beta = np.nanquantile(
@@ -327,6 +327,20 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
             return bounds_np
 
         levels_np = np.ravel(np.asarray(levels, dtype=float))
+
+        # The `"plus"` method of `_QuantileConformalizer` predicts one bound per
+        # conformalization sample and per level, hence the level axis comes last.
+        if bounds_np.ndim == 3:
+            columns = [
+                int(np.flatnonzero(np.isclose(levels_np, alpha))[0])
+                for alpha in alpha_np
+            ]
+            return (
+                bounds_np[..., columns[0]]
+                if len(columns) == 1
+                else bounds_np[..., columns]
+            )
+
         if levels_np.size < 2 or bounds_np.shape[1] != levels_np.size:
             return bounds_np
 
@@ -530,7 +544,9 @@ class BaseRegressionScore(BaseConformityScore, metaclass=ABCMeta):
         n: int
             The effective number of calibration samples.
         """
+        scores = scores[0] if scores.ndim > 1 else scores
         n: int = np.sum(~np.isnan(scores))
+        # if is needed for bi-lateral quantile
         if not self.sym:
             n //= 2
         return n

@@ -15,7 +15,13 @@ from mapie.risk_control.methods import (
     _check_risk_monotonicity,
     compute_hoeffding_bentkus_p_value,
     find_precision_best_predict_param,
-    ltt_procedure,
+    get_r_hat_plus,
+)
+from mapie.risk_control._base_controller import ltt_procedure
+from mapie.risk_control import abstention_rate
+from mapie.risk_control.risks import (
+    ClassSpecificRisk,
+    build_recall_ovr,
 )
 
 lambdas = np.array([0.5, 0.9])
@@ -246,6 +252,83 @@ def test_ltt_fst_increasing():
     assert np.array_equal(valid_index_1, valid_index_2)
 
 
+@pytest.mark.parametrize(
+    "class_labels, y_true, y_pred",
+    [
+        ([0, 1, 2], np.array([0, 1, 2, 1, 0]), np.array([0, 1, 1, 1, 2])),
+        (
+            ["a", "b"],
+            np.array(["a", "b", "a", "b"]),
+            np.array(["a", "a", "a", "b"]),
+        ),
+    ],
+)
+def test_build_recall_ovr(class_labels, y_true, y_pred):
+    """
+    build_recall_ovr's ClassSpecificRisk for a given class_label must return
+    1 - recall (recall is a performance metric, so higher_is_better=True),
+    where recall = (correctly predicted samples among y_true == class_label)
+    / (number of samples with y_true == class_label).
+    """
+    risks = build_recall_ovr(class_labels)
+    for risk, class_label in zip(risks, class_labels):
+        condition = y_true == class_label
+        n_effective = condition.sum()
+        recall = (y_pred[condition] == y_true[condition]).sum() / n_effective
+
+        value, n = risk.get_value_and_effective_sample_size(y_true, y_pred)
+
+        assert n == n_effective
+        assert value == pytest.approx(1 - recall)
+
+
+@pytest.mark.parametrize(
+    "class_labels, y_pred",
+    [
+        # int class labels: default_agg_class_pba's np.where upcasts to a
+        # plain float array, NaN marking abstention.
+        ([0, 1, 2], np.array([0.0, np.nan, 2.0])),
+        # str class labels: default_agg_class_pba's np.where keeps an
+        # object array mixing strings and NaN, which np.isnan can't handle.
+        (
+            ["a", "b", "c"],
+            np.where(
+                [True, False, True],
+                np.array(["a", "b", "c"], dtype=object),
+                np.nan,
+            ),
+        ),
+    ],
+)
+def test_abstention_rate(class_labels, y_pred):
+    """
+    abstention_rate's risk_occurrence must flag abstained (NaN) samples
+    without raising, both for a numeric float y_pred (int class labels) and
+    for an object-dtype y_pred mixing strings and NaN (str class labels) --
+    the exact shapes produced by default_agg_class_pba.
+    """
+    y_true = np.repeat(class_labels[0], len(y_pred))
+    risk = abstention_rate
+
+    value, n = risk.get_value_and_effective_sample_size(y_true, y_pred)
+
+    assert n == len(y_pred)
+    assert value == 1 / 3
+
+
+def test_bernstein_bound_uses_each_lambda_variance() -> None:
+    """
+    Test that each lambda is used to compute the Bernstein bound.
+    If the bound is not computed over every lambda, r_hat_plus will be NaN.
+    """
+    risks = np.array([[1.0], [1.0], [1.0], [1.0], [1.0]])
+    delta = 0.1
+    _, r_hat_plus = get_r_hat_plus(
+        risks, np.array([0.1]), "rcps", "bernstein", delta, None
+    )
+    assert not np.isnan(r_hat_plus).any()
+
+
 def test_ltt_fst_decreasing_reorder():
     r_hat = np.array([[5.0, 4.0, 3.0, 2.0, 1.0]])
     n_obs = np.ones_like(r_hat)
@@ -258,3 +341,44 @@ def test_ltt_fst_decreasing_reorder():
         r_hat, alpha_np, 0.1, n_obs, fwer_method=FWERFixedSequenceTesting()
     )
     assert np.array_equal(valid_index_1, valid_index_2)
+
+
+def test_class_specific_risk_non_binary_occurrence_raises() -> None:
+    """
+    A ClassSpecificRisk is controlled with the binary Hoeffding-Bentkus
+    p-values too, so an occurrence which is not a 0/1/bool indicator must raise.
+    """
+    bad_risk = ClassSpecificRisk(
+        class_label=1,
+        risk_occurrence=lambda y_true, y_pred: 0.5 * np.ones(len(y_true)),  # type: ignore[arg-type,return-value]
+        risk_condition=lambda y_true, y_pred: np.repeat(True, len(y_true)),
+        higher_is_better=False,
+    )
+    y_true, y_pred = np.array([0, 1, 2, 1]), np.array([0, 1, 1, 1])
+    with pytest.raises(ValueError, match=r".*must be binary indicators.*"):
+        bad_risk.get_value_and_effective_sample_size(y_true, y_pred)
+    with pytest.raises(ValueError, match=r".*must be binary indicators.*"):
+        bad_risk.get_risk_sequence(y_true, y_pred)
+
+
+@pytest.mark.parametrize(
+    "y_pred",
+    [
+        np.array([0.0, np.nan, 2.0]),
+        np.where(
+            [True, False, True],
+            np.array(["a", "b", "c"], dtype=object),
+            np.nan,
+        ),
+    ],
+)
+def test_abstention_rate_binary_risk(y_pred) -> None:
+    """
+    The binary abstention_rate risk must flag abstained (NaN) samples for a
+    float y_pred as well as for an object-dtype y_pred mixing strings and NaN.
+    """
+    y_true = np.repeat(y_pred[0], len(y_pred))
+    value, n = abstention_rate.get_value_and_effective_sample_size(y_true, y_pred)
+
+    assert n == len(y_pred)
+    assert value == 1 / 3

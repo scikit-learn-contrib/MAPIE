@@ -33,15 +33,15 @@ class QuantileRegressionScore(BaseRegressionScore):
 
         Parameters
         ----------
-        y: NDArray[float] of shape (2, n_samples)
+        y: NDArray[float] of shape (n_samples,)
             Observed target values.
 
-        y_pred: NDArray[float] of shape (n_samples,)
-            Predicted target values.
+        y_pred: NDArray[float] of shape (3, n_samples)
+            Predicted lower, upper quantiles and central prediction.
 
         Returns
         -------
-        NDArray[float] of shape (n_samples, 2)
+        NDArray[float] of shape (2, n_samples)
             Signed conformity scores.
         """
         return np.vstack((y - y_pred[0], y - y_pred[1]))
@@ -80,6 +80,13 @@ class AbsoluteQuantileRegressionScore(QuantileRegressionScore):
         self,
         sym: bool = True,
     ) -> None:
+        if not sym:
+            raise ValueError(
+                "AbsoluteQuantileRegressionScore is an asymmetrical conformity "
+                "score by construction (it combines the lower and upper "
+                "quantile residuals via a max operation). "
+                "It cannot be instantiated with sym=False."
+            )
         super().__init__(sym=sym, consistency_check=False)
 
     def get_conformity_scores(
