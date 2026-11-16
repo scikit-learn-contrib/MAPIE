@@ -205,9 +205,7 @@ def test_aps_crossval_uses_non_randomized_scores_for_exclusive_last_label(
 
     captured_thresholds = []
 
-    def capture_thresholds(
-        y_pred_proba, thresholds, include_last_label, **kwargs
-    ):
+    def capture_thresholds(y_pred_proba, thresholds, include_last_label, **kwargs):
         captured_thresholds.append(np.array(thresholds, copy=True))
         n_samples, _, n_thresholds = y_pred_proba.shape
         return (
@@ -238,4 +236,3 @@ def test_aps_crossval_uses_non_randomized_scores_for_exclusive_last_label(
         expected_scores.ravel(),
     )
     assert prediction_sets.shape == (1, len(np.unique(y_toy)), 1)
-
