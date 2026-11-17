@@ -226,6 +226,35 @@ def test_split(params: dict) -> None:
     )
 
 
+def _make_raps_data(n_conformalize: int = 100) -> Tuple[NDArray, NDArray, Any]:
+    rng = np.random.default_rng(0)
+    means = np.array([[0.0, 0.0], [2.0, 0.0], [0.0, 2.0], [2.0, 2.0]])
+    y_train = rng.integers(0, 4, 400)
+    estimator = LogisticRegression().fit(
+        means[y_train] + rng.normal(size=(400, 2)), y_train
+    )
+    y_conformalize = rng.integers(0, 4, n_conformalize)
+    X_conformalize = means[y_conformalize] + rng.normal(size=(n_conformalize, 2))
+    return X_conformalize, y_conformalize, estimator
+
+
+def test_split_raps_preserves_configured_size() -> None:
+    """Test that RAPS uses and preserves its configured split size."""
+    X_conformalize, y_conformalize, estimator = _make_raps_data()
+    score = RAPSConformityScore(size_raps=0.5)
+    classifier = SplitConformalClassifier(
+        estimator=estimator,
+        conformity_score=score,
+        prefit=True,
+        random_state=RANDOM_STATE,
+    )
+
+    classifier.conformalize(X_conformalize, y_conformalize)
+
+    assert len(X_conformalize) - score.n_samples_ == 50
+    assert score.size_raps == 0.5
+
+
 params_test_cases_classification_cross = [
     {
         "__init__": {
