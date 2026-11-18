@@ -182,6 +182,7 @@ def _check_train_conf_test_proportions(
             "should be either all int or all float."
         )
 
+
 # TODO : remove dependance to scikit-learn function _check_null_weight
 def _check_null_weight(
     sample_weight: Optional[ArrayLike], X: ArrayLike, y: ArrayLike
