@@ -1,6 +1,8 @@
 # History
 ## 1.x.x (2026-xx-xx)
 
+- Stop Venn-Abers calibration from emitting ``RuntimeWarning``\ s for the
+  expected zero denominators and all-NaN reductions. (issue #1030)
 - Add a v0.x migration pointer to the quick start and fix the README link to
   the v1 release notes. (issue #915)
 - Add educational MAPIE notebooks covering regression and conformal prediction
