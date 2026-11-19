@@ -438,6 +438,7 @@ def _check_alpha(
     ----------
     alpha: Union[float, Iterable[float]]
         Can be a float, a list of floats, or a ArrayLike of floats.
+        Numpy floating scalars (e.g. ``np.float32``) are accepted as well.
         Between 0 and 1, represent the uncertainty of the confidence interval.
         Lower alpha produce larger (more conservative) prediction intervals.
         alpha is the complement of the target coverage level.
@@ -461,7 +462,7 @@ def _check_alpha(
     """
     if alpha is None:
         return alpha
-    if isinstance(alpha, float):
+    if isinstance(alpha, (float, np.floating)):
         alpha_np = np.array([alpha])
     elif isinstance(alpha, Iterable):
         alpha_np = np.array(alpha)
@@ -474,10 +475,11 @@ def _check_alpha(
             "Invalid confidence_level or alpha. "
             "Please provide a one-dimensional list of values."
         )
-    if alpha_np.dtype.type not in [np.float64, np.float32]:
+    if not np.issubdtype(alpha_np.dtype, np.floating):
         raise ValueError(
             "Invalid confidence_level or alpha. Allowed values are Iterable of floats."
         )
+    alpha_np = alpha_np.astype(float)
     if np.any(np.logical_or(alpha_np < 0, alpha_np > 1)):
         raise ValueError(
             "Invalid confidence_level or alpha. Allowed values are between 0 and 1."
