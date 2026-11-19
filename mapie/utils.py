@@ -21,7 +21,12 @@ from sklearn.model_selection import (
 from sklearn.pipeline import Pipeline
 from sklearn.utils import _safe_indexing
 from sklearn.utils.multiclass import type_of_target
-from sklearn.utils.validation import _check_sample_weight, _num_features, column_or_1d
+from sklearn.utils.validation import (
+    _check_sample_weight,
+    _num_features,
+    _num_samples,
+    column_or_1d,
+)
 
 
 # This function is the only public utility of MAPIE as of v1 release
@@ -116,7 +121,9 @@ def train_conformalize_test_split(
     [2]
     """
 
-    _check_train_conf_test_proportions(train_size, conformalize_size, test_size, len(X))
+    _check_train_conf_test_proportions(
+        train_size, conformalize_size, test_size, _num_samples(X)
+    )
 
     X_train, X_conformalize_test, y_train, y_conformalize_test = train_test_split(
         X,
