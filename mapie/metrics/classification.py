@@ -58,7 +58,7 @@ def classification_coverage_score(y_true: NDArray, y_pred_set: NDArray) -> NDArr
     The effective coverage is obtained by estimating the fraction
     of true labels that lie within the prediction sets.
 
-    Prediction sets obtained by the `predict` method can be passed directly to the
+    Prediction sets obtained by the `predict_set` method can be passed directly to the
     `y_pred_set` argument (see example below).
 
     Beside this intended use, this function also works with:
@@ -70,7 +70,8 @@ def classification_coverage_score(y_true: NDArray, y_pred_set: NDArray) -> NDArr
     Parameters
     ----------
     y_true: NDArray of shape (n_samples,)
-        True labels.
+        True labels as zero-based integer column indices in `y_pred_set`.
+        Map other class labels using the class order of the prediction sets.
 
     y_pred_set: NDArray of shape (n_samples, n_class, n_confidence_level)
         Prediction sets with different confidence levels, given by booleans of labels
@@ -108,12 +109,19 @@ def classification_coverage_score(y_true: NDArray, y_pred_set: NDArray) -> NDArr
     >>> coverage = classification_coverage_score(y_test, predicted_sets)[0]
     """
     _check_arrays_length(y_true, y_pred_set)
-    _check_array_nan(y_true)
-    _check_array_inf(y_true)
     _check_array_nan(y_pred_set)
     _check_array_inf(y_pred_set)
 
+    y_true = np.asarray(y_true)
     y_pred_set = _check_array_shape_classification(y_true, y_pred_set)
+    n_classes = y_pred_set.shape[1]
+    if y_true.dtype.kind not in ("i", "u") or np.any(
+        (y_true < 0) | (y_true >= n_classes)
+    ):
+        raise ValueError(
+            f"y_true must contain integer class indices in [0, {n_classes})."
+        )
+
     if len(y_true.shape) != 2:
         y_true = cast(NDArray, column_or_1d(y_true))
         y_true = np.expand_dims(y_true, axis=1)
@@ -139,7 +147,7 @@ def classification_ssc(
     Parameters
     ----------
     y_true: NDArray of shape (n_samples,)
-        True labels.
+        True labels as zero-based integer column indices in `y_pred_set`.
     y_pred_set: NDArray of shape (n_samples, n_class, n_confidence_level) or (n_samples, n_class)
         Prediction sets given by booleans of labels.
     num_bins: int or None
@@ -209,7 +217,7 @@ def classification_ssc_score(
     Parameters
     ----------
     y_true: NDArray of shape (n_samples,)
-        True labels.
+        True labels as zero-based integer column indices in `y_pred_set`.
     y_pred_set: NDArray of shape (n_samples, n_class, n_confidence_level) or (n_samples, n_class)
         Prediction sets given by booleans of labels.
     num_bins: int or None

@@ -2,7 +2,7 @@
 Testing for metrics module.
 """
 
-from typing import Union
+from typing import Callable, Union
 
 import numpy as np
 import pytest
@@ -597,6 +597,46 @@ def test_classification_coverage_score_ypredset_invalid_shape() -> None:
     with pytest.raises(ValueError):
         classification_coverage_score(
             np.expand_dims(y_true_class, axis=1), y_pred_set[:, 0]
+        )
+
+
+class TestClassificationClassIndices:
+    @pytest.mark.parametrize(
+        "metric",
+        [classification_coverage_score, classification_ssc, classification_ssc_score],
+    )
+    def test_rejects_negative_labels(
+        self, metric: Callable[[NDArray, NDArray], NDArray]
+    ) -> None:
+        y = np.array([-1, 1, 1])
+        prediction_sets = np.array([[False, True], [True, True], [False, False]])
+
+        with pytest.raises(ValueError, match="integer class indices"):
+            metric(y, prediction_sets)
+
+    @pytest.mark.parametrize(
+        "y",
+        [
+            np.array([0, 2], dtype=np.uint64),
+            np.array([0.0, 1.0]),
+            np.array(["negative", "positive"]),
+            np.array([0, 1], dtype="timedelta64[D]"),
+            np.array([[0, -1], [1, 0]]),
+        ],
+        ids=["too-large", "float", "string", "timedelta", "negative-at-second-level"],
+    )
+    def test_rejects_invalid_indices(self, y: NDArray) -> None:
+        with pytest.raises(ValueError, match="integer class indices"):
+            classification_coverage_score(y, np.ones((2, 2, 2), dtype=bool))
+
+    def test_uses_class_index_at_each_confidence_level(self) -> None:
+        y = np.array([[0, 1], [1, 0]], dtype=np.int8)
+        prediction_sets = np.zeros((2, 256, 2), dtype=bool)
+        prediction_sets[:, 0, 0] = True
+        prediction_sets[:, 1, 1] = True
+
+        np.testing.assert_array_equal(
+            classification_coverage_score(y, prediction_sets), [0.5, 0.5]
         )
 
 
