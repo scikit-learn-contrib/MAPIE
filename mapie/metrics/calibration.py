@@ -45,7 +45,7 @@ def _get_binning_groups(
     elif strategy == "uniform":
         bins = np.linspace(0.0, 1.0, num_bins)
     else:
-        bin_groups = np.array_split(y_score, num_bins)
+        bin_groups = np.array_split(np.sort(y_score), num_bins)
         bins = np.sort(
             np.array([bin_group.max() for bin_group in bin_groups[:-1]] + [np.inf])
         )
