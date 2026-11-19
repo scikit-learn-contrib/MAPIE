@@ -106,6 +106,13 @@ def auarc(
     the accuracy on retained samples is recorded. The AUARC is the
     area under this curve, normalised to [0, 1].
 
+    Samples with exactly equal confidence have no meaningful order, so
+    they are not ranked one after another. Within a tied group, each
+    sample is given the mean correctness of the group, which is the
+    expected curve over all orderings of the ties. The result does not
+    depend on the order of the inputs, and it differs from keeping or
+    rejecting the whole tied group at once.
+
     A higher AUARC means that rejecting low-confidence predictions
     leads to a larger accuracy gain — i.e. the confidence is
     actionable for selective prediction / human-in-the-loop
