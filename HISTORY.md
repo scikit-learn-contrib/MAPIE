@@ -12,6 +12,8 @@
 - Fix `OnlineMartingaleTest.compute_p_value` to put the smoothing term's `+1`
   inside the tie count rather than outside it. (issue #984)
 - Fix the RCPS Bernstein bound to use each lambda's loss variance.
+- Fix `TopLabelCalibrator.predict_proba` to retain the fitted class columns
+  when a prediction batch contains only some classes.
 - Fix `AbsoluteQuantileRegressionScore` to raise a `ValueError` when
   instantiated with `sym=False`. (issue #989)
 - Fix `QuantileRegressionScore` reporting twice the effective number of calibration
