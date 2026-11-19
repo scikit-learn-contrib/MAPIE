@@ -143,6 +143,29 @@ class TestAuarc:
         conf_good = np.array([0.1, 0.2, 0.8, 0.9], dtype=float)
         assert auarc(correctness, conf_bad) < auarc(correctness, conf_good)
 
+    def test_tied_confidence_is_order_independent(self):
+        """
+        Tied confidences give no ranking, so the score must not depend on
+        the input order. With all samples tied, every retention level has
+        the overall accuracy.
+        """
+        tied = np.ones(4, dtype=float)
+        assert_allclose(auarc([0, 0, 1, 1], tied), 0.5)
+        assert_allclose(auarc([1, 1, 0, 0], tied), 0.5)
+
+    def test_partial_ties_are_averaged(self):
+        """
+        Within a tie group, each sample counts with the group's mean
+        correctness.
+        """
+        correctness = np.array([1, 0, 1, 0], dtype=float)
+        confidence = np.array([0.9, 0.5, 0.5, 0.1], dtype=float)
+        # k=1→1.0, k=2→(1+0.5)/2, k=3→(1+0.5+0.5)/3, k=4→2/4
+        expected = np.mean([1.0, 0.75, 2 / 3, 0.5])
+        assert_allclose(auarc(correctness, confidence), expected)
+        swapped = correctness[[0, 2, 1, 3]]
+        assert_allclose(auarc(swapped, confidence), expected)
+
     def test_raises_on_nan(self):
         with pytest.raises(ValueError, match="NaN"):
             auarc([0, np.nan, 1], [0.1, 0.2, 0.3])

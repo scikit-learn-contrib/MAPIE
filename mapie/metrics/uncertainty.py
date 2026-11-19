@@ -106,6 +106,13 @@ def auarc(
     the accuracy on retained samples is recorded. The AUARC is the
     area under this curve, normalised to [0, 1].
 
+    Samples with exactly equal confidence have no meaningful order, so
+    they are not ranked one after another. Within a tied group, each
+    sample is given the mean correctness of the group, which is the
+    expected curve over all orderings of the ties. The result does not
+    depend on the order of the inputs, and it differs from keeping or
+    rejecting the whole tied group at once.
+
     A higher AUARC means that rejecting low-confidence predictions
     leads to a larger accuracy gain — i.e. the confidence is
     actionable for selective prediction / human-in-the-loop
@@ -175,6 +182,16 @@ def auarc(
     # Sort by descending confidence: retain highest confidence first.
     order = np.argsort(-confidence_arr, kind="stable")
     correctness_sorted = correctness_arr[order]
+
+    # Samples with equal confidence have no meaningful order between them,
+    # so each one gets the mean correctness of its tie group. This gives the
+    # expected curve over all orderings of the ties, independent of the order
+    # in which the samples were passed.
+    _, group_starts, group_sizes = np.unique(
+        -confidence_arr[order], return_index=True, return_counts=True
+    )
+    group_means = np.add.reduceat(correctness_sorted, group_starts) / group_sizes
+    correctness_sorted = np.repeat(group_means, group_sizes)
 
     # accuracy_at_k[k] = accuracy when we retain the top k most
     # confident samples (k = n, n-1, ..., 1).
