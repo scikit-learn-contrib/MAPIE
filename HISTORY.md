@@ -3,6 +3,8 @@
 
 - Reject invalid class indices in classification coverage metrics so negative
   labels cannot select the wrong prediction-set column.
+- Keep cross-validation groups aligned when removing zero-weight samples in
+  conformal classification and regression.
 - Add a v0.x migration pointer to the quick start and fix the README link to
   the v1 release notes. (issue #915)
 - Add educational MAPIE notebooks covering regression and conformal prediction
