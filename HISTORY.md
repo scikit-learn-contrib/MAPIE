@@ -1,9 +1,8 @@
 # History
 ## 1.x.x (2026-xx-xx)
 
-- Fix `TopLabelCalibrator.predict_proba` to retain the fitted class columns
-  when a prediction batch contains only some classes.
-
+- Keep cross-validation groups aligned when removing zero-weight samples in
+  conformal classification and regression.
 - Add a v0.x migration pointer to the quick start and fix the README link to
   the v1 release notes. (issue #915)
 - Add educational MAPIE notebooks covering regression and conformal prediction
@@ -13,6 +12,8 @@
 - Fix `OnlineMartingaleTest.compute_p_value` to put the smoothing term's `+1`
   inside the tie count rather than outside it. (issue #984)
 - Fix the RCPS Bernstein bound to use each lambda's loss variance.
+- Fix `TopLabelCalibrator.predict_proba` to retain the fitted class columns
+  when a prediction batch contains only some classes.
 - Fix `AbsoluteQuantileRegressionScore` to raise a `ValueError` when
   instantiated with `sym=False`. (issue #989)
 - Fix `QuantileRegressionScore` reporting twice the effective number of calibration

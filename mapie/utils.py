@@ -183,11 +183,18 @@ def _check_train_conf_test_proportions(
         )
 
 
+# TODO : remove dependance to scikit-learn function _check_null_weight
 def _check_null_weight(
     sample_weight: Optional[ArrayLike], X: ArrayLike, y: ArrayLike
 ) -> Tuple[Optional[NDArray], ArrayLike, ArrayLike]:
     """
     Check sample weights and remove samples with null sample weights.
+
+    Note: The parameters of this function are named X and y to match the
+    _check_sample_weight function from sklearn that is used here. However,
+    it can sometimes be called with arrays that are not exactly the training
+    data, but for which we want to apply the same transformation in order to
+    avoid code duplication.
 
     Parameters
     ----------

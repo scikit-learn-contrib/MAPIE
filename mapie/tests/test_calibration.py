@@ -233,6 +233,34 @@ def test_shape_of_output(
     assert calib_.shape == (len(y), mapie_cal.n_classes_)
 
 
+@pytest.mark.parametrize("labels", [[-10, 20, 40], ["ant", "bee", "cat"]])
+@pytest.mark.parametrize("calibrate_last_class", [True, False])
+def test_top_label_columns_independent_of_prediction_batch(
+    labels, calibrate_last_class
+) -> None:
+    X = np.arange(18).reshape(-1, 1)
+    y = np.repeat(labels, 6)
+    estimator = GaussianNB().fit(X, y)
+    calibration_size = 18 if calibrate_last_class else 12
+    calibrator = TopLabelCalibrator(
+        estimator=estimator, calibrator="isotonic", cv="prefit"
+    ).fit(X[:calibration_size], y[:calibration_size])
+    full = calibrator.predict_proba(X)
+
+    for indices in ([17], [1, 17], [17, 8]):
+        subset = calibrator.predict_proba(X[indices])
+        np.testing.assert_allclose(subset, full[indices], equal_nan=True)
+        expected_columns = np.searchsorted(
+            estimator.classes_, estimator.predict(X[indices])
+        )
+        np.testing.assert_array_equal(np.where(~np.isnan(subset))[1], expected_columns)
+        if not calibrate_last_class:
+            rows = estimator.predict(X[indices]) == labels[-1]
+            np.testing.assert_allclose(
+                subset[rows, -1], estimator.predict_proba(X[indices])[rows, -1]
+            )
+
+
 def test_number_of_classes_equal_calibrators() -> None:
     """
     Test that the number of calibrators is the same as the number
@@ -1417,31 +1445,3 @@ def test_va_calibrator_p0_p1_output_inductive_multiclass() -> None:
     assert isinstance(p0_p1, list)
     # Should have C*(C-1)/2 = 3 pairs for 3 classes
     assert len(p0_p1) == 3
-
-
-@pytest.mark.parametrize("labels", [[-10, 20, 40], ["ant", "bee", "cat"]])
-@pytest.mark.parametrize("calibrate_last_class", [True, False])
-def test_top_label_columns_independent_of_prediction_batch(
-    labels, calibrate_last_class
-) -> None:
-    X = np.arange(18).reshape(-1, 1)
-    y = np.repeat(labels, 6)
-    estimator = GaussianNB().fit(X, y)
-    calibration_size = 18 if calibrate_last_class else 12
-    calibrator = TopLabelCalibrator(
-        estimator=estimator, calibrator="isotonic", cv="prefit"
-    ).fit(X[:calibration_size], y[:calibration_size])
-    full = calibrator.predict_proba(X)
-
-    for indices in ([17], [1, 17], [17, 8]):
-        subset = calibrator.predict_proba(X[indices])
-        np.testing.assert_allclose(subset, full[indices], equal_nan=True)
-        expected_columns = np.searchsorted(
-            estimator.classes_, estimator.predict(X[indices])
-        )
-        np.testing.assert_array_equal(np.where(~np.isnan(subset))[1], expected_columns)
-        if not calibrate_last_class:
-            rows = estimator.predict(X[indices]) == labels[-1]
-            np.testing.assert_allclose(
-                subset[rows, -1], estimator.predict_proba(X[indices])[rows, -1]
-            )
