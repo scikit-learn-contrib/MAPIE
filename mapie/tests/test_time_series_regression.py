@@ -187,6 +187,29 @@ def test_results_for_alpha_as_float_and_arraylike(strategy: str, alpha: Any) -> 
 
 
 @pytest.mark.parametrize("strategy", [*STRATEGIES])
+def test_results_for_numpy_floating_confidence_level(strategy: str) -> None:
+    """A numpy floating scalar or array behaves like its python float.
+
+    ``predict`` reaches ``_check_alpha`` directly, so a ``np.float32`` or
+    ``np.float16`` value used to raise instead of predicting.
+    """
+    mapie_ts_reg = TimeSeriesRegressor(**STRATEGIES[strategy])
+    mapie_ts_reg.fit(X, y)
+
+    cases = [
+        (np.float64(0.9), float(np.float64(0.9))),
+        (np.float32(0.9), float(np.float32(0.9))),
+        (np.float16(0.9), float(np.float16(0.9))),
+        (np.array([0.9], dtype=np.float32), [float(np.float32(0.9))]),
+    ]
+    for confidence_level, equivalent in cases:
+        y_pred, y_pis = mapie_ts_reg.predict(X, confidence_level=confidence_level)
+        y_pred_ref, y_pis_ref = mapie_ts_reg.predict(X, confidence_level=equivalent)
+        np.testing.assert_array_equal(y_pred, y_pred_ref)
+        np.testing.assert_array_equal(y_pis, y_pis_ref)
+
+
+@pytest.mark.parametrize("strategy", [*STRATEGIES])
 def test_results_for_ordered_alpha(strategy: str) -> None:
     """
     Test that prediction intervals lower (upper) bounds give
