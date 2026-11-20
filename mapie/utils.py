@@ -3,7 +3,7 @@ import logging
 import warnings
 from collections.abc import Iterable as IterableType
 from decimal import Decimal
-from math import isclose
+from math import ceil, floor, isclose
 from typing import Any, Iterable, List, Optional, Tuple, Union, cast
 
 import numpy as np
@@ -118,23 +118,25 @@ def train_conformalize_test_split(
 
     _check_train_conf_test_proportions(train_size, conformalize_size, test_size, len(X))
 
+    if isinstance(train_size, float):
+        n_train = floor(train_size * len(X))
+        n_test = ceil(test_size * len(X))
+    else:
+        n_train = train_size
+        n_test = test_size
+
     X_train, X_conformalize_test, y_train, y_conformalize_test = train_test_split(
         X,
         y,
-        train_size=train_size,
+        train_size=n_train,
         random_state=random_state,
         shuffle=shuffle,
     )
 
-    if isinstance(train_size, float):
-        test_size_after_split = test_size / (1 - train_size)
-    else:
-        test_size_after_split = test_size
-
     X_conformalize, X_test, y_conformalize, y_test = train_test_split(
         X_conformalize_test,
         y_conformalize_test,
-        test_size=test_size_after_split,
+        test_size=n_test,
         random_state=random_state,
         shuffle=shuffle,
     )
