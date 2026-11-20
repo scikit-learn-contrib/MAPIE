@@ -118,6 +118,7 @@ class TestTrainConformalizeTestSplit:
         [
             (1000, (800, 100, 100)),
             (10, (8, 1, 1)),
+            (101, (80, 10, 11)),
         ],
     )
     def test_3_float_sizes_avoid_rounding_errors(self, n_samples, expected_sizes):
