@@ -1,6 +1,10 @@
 # History
 ## 1.x.x (2026-xx-xx)
+
 - Fix `train_conformalize_test_split` producing incorrect split sizes due to floating-point precision errors. (issue #1018)
+
+- Keep cross-validation groups aligned when removing zero-weight samples in conformal classification and regression.
+
 - Add a v0.x migration pointer to the quick start and fix the README link to
   the v1 release notes. (issue #915)
 - Add educational MAPIE notebooks covering regression and conformal prediction

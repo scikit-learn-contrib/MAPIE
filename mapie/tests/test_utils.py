@@ -10,9 +10,17 @@ import pytest
 from numpy.typing import ArrayLike, NDArray
 from sklearn.datasets import make_classification, make_regression
 from sklearn.linear_model import LinearRegression, LogisticRegression
-from sklearn.model_selection import BaseCrossValidator, KFold, LeaveOneOut, ShuffleSplit
+from sklearn.model_selection import (
+    BaseCrossValidator,
+    GroupKFold,
+    KFold,
+    LeaveOneOut,
+    ShuffleSplit,
+)
 from sklearn.pipeline import Pipeline
 
+from mapie.classification import CrossConformalClassifier
+from mapie.regression import CrossConformalRegressor
 from mapie.regression.quantile_regression import _MapieQuantileRegressor
 from mapie.utils import (
     NotFittedError,
@@ -58,6 +66,17 @@ def dataset():
         n_samples=100, n_features=2, noise=1.0, random_state=random_state
     )
     return X, y
+
+
+@pytest.fixture(scope="module")
+def classification_dataset():
+    return make_classification(
+        n_samples=500,
+        n_features=10,
+        n_informative=5,
+        n_redundant=1,
+        random_state=42,
+    )
 
 
 class TestTrainConformalizeTestSplit:
@@ -517,6 +536,49 @@ def test_check_null_weight_with_zeros() -> None:
     np.testing.assert_almost_equal(np.array(y_out), np.array([7, 9, 11, 13, 15]))
 
 
+@pytest.mark.parametrize("task", ["classification", "regression"])
+def test_group_sample_weights_match_explicit_filtering(
+    task, dataset, classification_dataset
+):
+    if task == "classification":
+        X, y = classification_dataset
+        conformal_class = CrossConformalClassifier
+        estimator = LogisticRegression()
+        prediction_method = "predict_set"
+    else:
+        X, y = dataset
+        conformal_class = CrossConformalRegressor
+        estimator = LinearRegression(n_jobs=1)
+        prediction_method = "predict_interval"
+
+    groups = np.arange(len(y)) % 6
+    weights = np.linspace(1.0, 2.0, len(y))
+    weights[[0, 7, 14]] = 0
+    keep = weights != 0
+
+    expected = conformal_class(
+        estimator=estimator, cv=GroupKFold(3), confidence_level=0.8, n_jobs=1
+    ).fit_conformalize(
+        X[keep],
+        y[keep],
+        groups=groups[keep],
+        fit_params={"sample_weight": weights[keep]},
+    )
+    expected_predictions = getattr(expected, prediction_method)(X[:3])
+    assert expected_predictions[0].shape == (3,)
+    assert expected.conformity_scores.shape[0] == keep.sum()
+
+    actual = conformal_class(
+        estimator=estimator, cv=GroupKFold(3), confidence_level=0.8, n_jobs=1
+    ).fit_conformalize(X, y, groups=groups, fit_params={"sample_weight": weights})
+
+    np.testing.assert_allclose(actual.conformity_scores, expected.conformity_scores)
+    for actual_values, expected_values in zip(
+        getattr(actual, prediction_method)(X[:3]), expected_predictions
+    ):
+        np.testing.assert_allclose(actual_values, expected_values)
+
+
 @pytest.mark.filterwarnings(
     "ignore:Estimator exposes fitted-like attributes.*:UserWarning"
 )
@@ -623,7 +685,9 @@ def test_split_conformal_regressor_pipeline_sample_weight() -> None:
     assert intervals.shape[0] == len(X_test)
 
 
-def test_split_conformal_classifier_pipeline_sample_weight() -> None:
+def test_split_conformal_classifier_pipeline_sample_weight(
+    classification_dataset,
+) -> None:
     """Test that SplitConformalClassifier.fit() routes sample_weight in Pipeline.
 
     Regression test for https://github.com/scikit-learn-contrib/MAPIE/issues/798
@@ -634,13 +698,7 @@ def test_split_conformal_classifier_pipeline_sample_weight() -> None:
     from mapie.classification import SplitConformalClassifier
     from mapie.utils import train_conformalize_test_split
 
-    X, y = make_classification(
-        n_samples=500,
-        n_features=10,
-        n_informative=5,
-        n_redundant=1,
-        random_state=42,
-    )
+    X, y = classification_dataset
     (X_train, X_conf, X_test, y_train, y_conf, y_test) = train_conformalize_test_split(
         X,
         y,

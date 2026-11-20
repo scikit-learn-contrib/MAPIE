@@ -1503,6 +1503,8 @@ class _MapieRegressor(RegressorMixin, BaseEstimator):
 
         # Handle sample_weight from fit_params
         sample_weight = self._fit_params.pop("sample_weight", None)
+        if groups is not None and sample_weight is not None:
+            _, groups, _ = _check_null_weight(sample_weight, groups, y)
         sample_weight, X, y = _check_null_weight(sample_weight, X, y)
         if sample_weight is not None:
             self._fit_params["sample_weight"] = sample_weight
